@@ -1,0 +1,157 @@
+<header class="fixed top-0 inset-x-0 z-50 bg-white/40 backdrop-blur-md border-b border-white/20">
+  <nav class="flex items-center justify-between p-4 lg:px-10">
+    <div class="flex items-center gap-3 min-w-0">
+      <div
+        class="flex-shrink-0 w-12 h-12 bg-white rounded-full flex items-center justify-center transform hover:rotate-20 transition-all cursor-pointer shadow-lg overflow-hidden border border-white/10 group">
+        <img src="/logos/logo.png" alt="Logo"
+          class="w-full h-full object-center object-contain p-1 group-hover:scale-150 transition-transform">
+      </div>
+      <a href="#" class="text-xl md:text-2xl font-bold text-gray-900 tracking-tight truncate">SoftCode<span
+          class="text-indigo-600">Solution</span></a>
+    </div>
+
+    <div class="hidden lg:flex lg:gap-x-10">
+      <a href="#" class="text-sm font-semibold text-gray-700 hover:text-indigo-600 transition">Home</a>
+      <a href="#solutions" class="text-sm font-semibold text-gray-700 hover:text-indigo-600 transition">Solutions</a>
+      <a href="#technology" class="text-sm font-semibold text-gray-700 hover:text-indigo-600 transition">Technology</a>
+      <a href="#how-it-works" class="text-sm font-semibold text-gray-700 hover:text-indigo-600 transition">How It
+        Works</a>
+      <a href="#store" class="text-sm font-semibold text-gray-700 hover:text-indigo-600 transition">Store</a>
+
+      <a routerLink="/scsbot-ai" routerLinkActive="text-indigo-600"
+        class="text-sm font-semibold text-gray-700 hover:text-indigo-600 transition cursor-pointer">
+        🚀 SCSBOT AI
+      </a>
+    </div>
+
+    <div class="flex items-center gap-x-4 flex-shrink-0">
+      <div class="hidden lg:flex items-center gap-x-6">
+        <a href="/login"
+          class="flex items-center gap-2 text-sm font-semibold text-gray-800 hover:text-indigo-600 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2">
+            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3" />
+          </svg> Login
+        </a>
+        <a href="/register"
+          class="flex items-center gap-2 rounded-full bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg hover:bg-indigo-500 transition-all">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8M19 8v6M22 11h-6" />
+          </svg> Register
+        </a>
+      </div>
+
+      <div class="flex lg:hidden">
+        <button (click)="toggleMenu()" class="p-2 rounded-xl bg-white/50 border border-white shadow-sm">
+          <svg *ngIf="!isMenuOpen" class="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor">
+            <path stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+          </svg>
+          <svg *ngIf="isMenuOpen" class="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div *ngIf="isMenuOpen"
+    class="lg:hidden bg-white/95 backdrop-blur-lg border-b border-pink-50 px-6 py-8 space-y-4 shadow-xl">
+    <a href="#" (click)="toggleMenu()"
+      class="block text-lg font-semibold text-gray-900 hover:text-indigo-600 transition">Home</a>
+    <a href="#solutions" (click)="toggleMenu()"
+      class="block text-lg font-semibold text-gray-900 hover:text-indigo-600 transition">Solutions</a>
+    <a href="#technology" (click)="toggleMenu()"
+      class="block text-lg font-semibold text-gray-900 hover:text-indigo-600 transition">Technology</a>
+    <a href="#store" (click)="toggleMenu()"
+      class="block text-lg font-semibold text-gray-900 hover:text-indigo-600 transition text-indigo-600">Store</a>
+    <a href="#about" (click)="toggleMenu()"
+      class="block text-lg font-semibold text-gray-900 hover:text-indigo-600 transition">About</a>
+
+    <a routerLink="/scsbot-ai" routerLinkActive="text-indigo-600" (click)="toggleMenu()"
+      class="block text-lg font-semibold text-gray-700 hover:text-indigo-600 transition cursor-pointer">
+      🚀 SCSBOT AI
+    </a>
+
+    <div class="pt-4 flex flex-col gap-3">
+      <a href="/login" (click)="toggleMenu()"
+        class="w-full py-4 text-center text-lg font-bold text-gray-800 bg-gray-100 rounded-2xl hover:bg-gray-200 transition-all">
+        Login
+      </a>
+      <a href="/register" (click)="toggleMenu()"
+        class="w-full py-4 text-center text-lg font-bold text-white bg-indigo-600 rounded-2xl shadow-lg hover:bg-indigo-700 transition-all">
+        Register
+      </a>
+    </div>
+  </div>
+</header>
+
+<main class="relative min-h-screen flex items-center bg-white overflow-x-hidden max-w-full"
+  style="background: radial-gradient(circle, rgb(175, 130, 152) 0%, rgb(245, 245, 237) 100%);">
+  <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+    <div
+      class="absolute top-[10%] left-[10%] sm:left-[20%] w-[300px] sm:w-[600px] h-[300px] sm:h-[600px] bg-pink-100 rounded-full blur-[80px] sm:blur-[120px] opacity-70 animate-blob">
+    </div>
+    <div
+      class="absolute bottom-[0%] right-[0%] w-[250px] sm:w-[500px] h-[250px] sm:h-[500px] bg-pink-50 rounded-full blur-[80px] sm:blur-[120px] opacity-60 animate-blob animation-delay-2000">
+    </div>
+  </div>
+
+  <div class="container mx-auto px-6 lg:px-10 relative z-10 pt-28 pb-12 overflow-hidden max-w-full">
+    <div class="flex flex-col lg:flex-row items-center justify-between gap-12">
+      <div class="w-full lg:w-1/2 space-y-8 animate-fade-in text-center lg:text-left">
+        <div class="perspective-1000 flex justify-center lg:justify-start">
+          <div
+            class="group relative inline-flex items-center px-6 py-2 text-sm font-bold text-violet-600 bg-white rounded-full transition-all duration-500 ease-out hover:-translate-y-2 hover:rotate-x-12 cursor-pointer shadow-sm">
+            <span class="relative flex items-center gap-2">
+              <span class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+              SoftCodeSolution Tenancy-Scalable Technology
+            </span>
+          </div>
+        </div>
+
+        <h1
+          class="text-3xl sm:text-4xl md:text-4xl lg:text-4xl xl:text-4xl font-black text-slate-900 leading-[1.1] tracking-tighter">
+          Powering the Future with High-Performance <br class="hidden md:block" /> <span
+            class="text-indigo-600">SoftCodeSolution</span>
+        </h1>
+        <p class="text-sm md:text-base text-slate-500 max-w-lg mx-auto lg:mx-0 leading-relaxed font-medium">
+          SoftCodeSolution is redefining the benchmarks of software engineering. Powered by our Native Golang Engine and
+          Angular 3D Architecture, we deliver lightning-fast performance and immersive user experiences. Our proprietary
+          Hybrid-Sync Protocol ensures your business remains operational both online and offline, without any
+          interruption. By eliminating third-party API dependencies, we provide bank-grade RBAC Security and
+          enterprise-level features at a highly affordable rental cost.
+        </p>
+
+        <div class="flex flex-col sm:flex-row justify-center lg:justify-start gap-4">
+          <a href="/register"
+            class="px-8 py-4 bg-indigo-600 text-white text-center rounded-2xl font-bold shadow-xl hover:bg-indigo-700 transition-all hover:-translate-y-1 w-full sm:w-auto">
+            Get Started
+          </a>
+        </div>
+      </div>
+
+      <div class="w-full lg:w-1/2 flex justify-center items-center relative overflow-hidden max-w-full">
+        <div
+          class="relative w-64 h-64 sm:w-80 sm:h-80 lg:w-[450px] lg:h-[450px] flex items-center justify-center min-w-0 max-w-full">
+          <div class="absolute inset-10 bg-pink-200/30 rounded-full blur-3xl animate-pulse"></div>
+          <div class="absolute z-10 animate-spin" style="animation-duration: 10s;">
+            <div
+              class="w-40 h-40 sm:w-44 sm:h-44 md:w-72 md:h-72 bg-pink/40 backdrop-blur-xl rounded-[2.5rem] md:rounded-[3rem] border border-pink-100/50 animate-zoom-popup shadow-lg flex-shrink-0">
+            </div>
+          </div>
+          <div class="relative z-20 text-center pointer-events-none px-4">
+            <span
+              class="block text-4xl sm:text-5xl lg:text-5xl font-black text-slate-900 tracking-tighter animate-zoom-popup">SCS</span>
+            <div class="flex items-center gap-3 min-w-0">
+              <a href="#"
+                class="text-xl md:text-2xl font-bold text-gray-900 tracking-tight truncate animate-zoom-popup">SoftCode<span
+                  class="text-indigo-600">Solution</span></a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>

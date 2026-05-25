@@ -1,0 +1,90 @@
+<div *ngIf="isOpen" (click)="closeModal()"
+    class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] transition-opacity"></div>
+
+<div *ngIf="isOpen" class="fixed inset-0 z-[110] flex items-center justify-center p-4">
+    <div
+        class="relative bg-white rounded-3xl shadow-2xl max-w-2xl w-full overflow-hidden transform transition-all border border-slate-100">
+
+        <button (click)="closeModal()"
+            class="absolute top-6 right-6 text-slate-400 hover:text-emerald-600 transition-colors z-50">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+        </button>
+
+        <div class="p-8 md:p-10 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center mb-10 border-b border-slate-100 pb-8">
+                <div class="bg-emerald-600 p-4 rounded-2xl mr-6 shadow-xl shadow-emerald-200">
+                    <svg class="w-9 h-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z">
+                        </path>
+                    </svg>
+                </div>
+                <div>
+                    <h2 class="text-3xl font-black text-slate-900 tracking-tight">Triple-Layer</h2>
+                    <p class="text-emerald-600 font-bold text-xs uppercase tracking-[0.2em] mt-1">Go Back</p>
+                </div>
+            </div>
+
+            <div class="grid gap-6">
+
+                <div
+                    class="group flex items-start p-5 rounded-2xl bg-slate-50 border border-slate-100 hover:border-emerald-200 transition-all duration-300">
+                    <div class="bg-white p-3 rounded-xl shadow-sm mr-5">
+                        <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
+                            </path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-slate-900 text-lg">Layer 1: Local Vault</h4>
+                        <p class="text-sm text-slate-600 leading-relaxed mt-1">The first copy stays on your local
+                            machine. It’s encrypted and optimized for instant access even without internet.</p>
+                    </div>
+                </div>
+
+                <div
+                    class="group flex items-start p-5 rounded-2xl bg-slate-50 border border-slate-100 hover:border-emerald-200 transition-all duration-300">
+                    <div class="bg-white p-3 rounded-xl shadow-sm mr-5">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z">
+                            </path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-slate-900 text-lg">Layer 2: Secure Cloud Node</h4>
+                        <p class="text-sm text-slate-600 leading-relaxed mt-1">A real-time copy is stored in our
+                            enterprise-grade cloud servers. Access your business data from anywhere in the world.</p>
+                    </div>
+                </div>
+
+                <div
+                    class="group flex items-start p-5 rounded-2xl bg-slate-50 border border-slate-100 hover:border-emerald-200 transition-all duration-300">
+                    <div class="bg-white p-3 rounded-xl shadow-sm mr-5">
+                        <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z">
+                            </path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-slate-900 text-lg">Layer 3: Office Mirror Site</h4>
+                        <p class="text-sm text-slate-600 leading-relaxed mt-1">The final safety net. A third backup is
+                            synced to your physical office mirror hardware for ultimate disaster recovery.</p>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="mt-12">
+                <button (click)="closeModal()"
+                    class="w-full bg-emerald-900 text-white font-black py-5 rounded-2xl hover:bg-emerald-600 transition-all duration-300 shadow-xl shadow-emerald-200 uppercase tracking-widest text-sm">
+                    Confirm Infrastructure Safety
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

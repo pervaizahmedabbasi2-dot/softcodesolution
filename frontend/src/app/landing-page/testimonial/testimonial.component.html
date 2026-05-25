@@ -1,0 +1,63 @@
+<section id="testimonial" class="py-24 bg-slate-50 overflow-hidden">
+  <div class="container mx-auto px-4">
+
+    <div class="max-w-4xl mx-auto text-center mb-20">
+      <span
+        class="text-blue-600 font-black tracking-[0.3em] uppercase text-[10px] border-b-2 border-blue-600 pb-2 text-center inline-block italic">
+        Client Stories
+      </span>
+      <h2 class="text-4xl md:text-5xl font-black text-slate-900 mt-6 leading-tight italic">
+        Trusted by <span class="text-blue-600">Industry</span> Leaders
+      </h2>
+      <p class="text-slate-600 mt-6 text-lg font-medium max-w-2xl mx-auto">
+        See how SoftCodeSolution is powering School/College Management, Pharmacy Medical, and Gym & Fitness
+        industries with our cutting-edge tech stack.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+
+      <div *ngFor="let item of testimonials"
+        class="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100 hover:shadow-[0_30px_60px_rgba(0,0,0,0.05)] transition-all duration-500 group relative">
+
+        <div
+          class="absolute top-8 right-10 text-6xl text-slate-100 font-serif opacity-50 group-hover:text-blue-100 transition-colors">
+          "</div>
+
+        <div class="flex items-center gap-5 mb-8">
+          <div [class]="item.colorClass"
+            class="w-16 h-16 rounded-2xl flex items-center justify-center font-black text-2xl shadow-inner">
+            {{ item.initial }}
+          </div>
+          <div>
+            <h4 class="font-bold text-slate-900 text-lg leading-none">{{ item.name }}</h4>
+            <p class="text-[10px] text-blue-600 font-black uppercase tracking-widest mt-2 italic">{{ item.role }}</p>
+          </div>
+        </div>
+
+        <p class="text-slate-600 leading-relaxed italic font-medium relative z-10">
+          "{{ item.feedback }}"
+        </p>
+
+        <div class="mt-8 pt-6 border-t border-slate-50 flex items-center justify-between">
+          <div class="flex text-yellow-400 text-sm">
+            <span *ngFor="let star of getStars(item.stars)">★</span>
+          </div>
+          <span class="text-[9px] font-bold text-slate-300 uppercase tracking-widest">Industry Leader</span>
+        </div>
+      </div>
+
+    </div>
+
+    <div
+      class="mt-20 flex flex-wrap justify-center items-center gap-x-12 opacity-50 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-700">
+      <div class="px-6 py-2 border-r border-slate-200 last:border-0 font-black text-slate-400 italic">50+ Schools
+        Managed</div>
+      <div class="px-6 py-2 border-r border-slate-200 last:border-0 font-black text-slate-400 italic">100+ Pharmacy
+        Stores</div>
+      <div class="px-6 py-2 border-r border-slate-200 last:border-0 font-black text-slate-400 italic">30+ Fitness
+        Centers</div>
+    </div>
+
+  </div>
+</section>
