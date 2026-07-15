@@ -1,449 +1,555 @@
 package main
 
 import (
+	"context"
+	"crypto/sha256"
 	"embed"
+	"encoding/hex"
 	"fmt"
+	"io/fs"
+	"log"
+	"net/http"
 	"os"
-
-	_ "github.com/lib/pq"
+	"os/exec"
+	"os/signal"
+	"path"
+	"path/filepath"
+	"strings"
+	"syscall"
+	"time"
 
 	"github.com/wailsapp/wails/v2"
-
 	"github.com/wailsapp/wails/v2/pkg/options"
-
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
 )
 
-/*
-========================================================
-FRONTEND BUILD
-========================================================
-*/
-
-//go:embed all:frontend/dist
+//go:embed frontend/dist/softcode-ui
 var assets embed.FS
 
-/*
-========================================================
-GLOBAL AI ENGINE
-========================================================
-*/
+const (
+	appName           = "softcodesolution"
+	embeddedAssetPath = "frontend/dist/softcode-ui"
+	defaultPreview    = "127.0.0.1:8080"
+	auditDir          = "logs"
+	auditFileName     = "guardian-audit.log"
+)
 
-// OLD SYSTEM SAFE
-var globalDeepSeek *SCSBotAI
+var bootTime = time.Now().UTC()
 
-/*
-========================================================
-MAIN
-========================================================
-*/
+type runtimeConfig struct {
+	PreviewAddr     string
+	LicenseRequired bool
+	LicenseKey      string
+}
 
 func main() {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
 
-	/*
-	========================================================
-	APP INSTANCE
-	========================================================
-	*/
+	cfg := loadRuntimeConfig()
 
-	appInstance := NewApp()
+	audit("system_boot", "SoftCodeSolution Guardian starting")
 
-	/*
-	========================================================
-	API KEY
-	========================================================
-	*/
-
-	apiKey :=
-		os.Getenv(
-			"OPENROUTER_API_KEY",
-		)
-
-	/*
-	========================================================
-	FALLBACK KEY
-	DEV ONLY
-	========================================================
-	*/
-
-	if apiKey == "" {
-
-		apiKey =
-			"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"
+	if !licenseGate(cfg) {
+		audit("license_blocked", "License gate rejected startup")
+		log.Fatal("License check failed. Set SOFTCODE_LICENSE_KEY or disable SOFTCODE_LICENSE_REQUIRED.")
 	}
 
-	/*
-	========================================================
-	SCSBOOT AI ENGINE
-	========================================================
-	*/
+	startPostgresSafe()
 
-	globalDeepSeek =
-		NewSCSBotAI(apiKey)
+	go startGuardianMonitor(ctx)
+	go startSQLiteToPostgresSyncWorker(ctx)
+	go startFirebasePreviewServer(ctx, cfg)
 
-	/*
-	========================================================
-	STABLE FREE MODELS
-	========================================================
-	*/
-
-	globalDeepSeek.Models = []string{
-		"deepseek/deepseek-chat",
-		"qwen/qwen-2.5-72b-instruct",
-		"meta-llama/llama-3.3-70b-instruct",
-		"google/gemini-2.0-flash-exp:free",
+	// Firebase Studio / IDX / normal terminal ke liye default web mode.
+	// Isse "go run ." par Wails build-tags error nahi aayega.
+	if isWebOnlyMode() {
+		audit("web_only_mode", "Wails desktop runtime skipped; serving web preview only")
+		log.Println("SoftCodeSolution web mode active.")
+		log.Println("Frontend + Backend + PostgreSQL Guardian server is running.")
+		log.Println("Press Ctrl+C to stop.")
+		<-ctx.Done()
+		audit("system_shutdown", "Web-only mode shutdown")
+		return
 	}
 
-	/*
-	========================================================
-	DEFAULT MODEL
-	========================================================
-	*/
-
-	globalDeepSeek.CurrentModel =
-		"deepseek/deepseek-chat"
-
-	/*
-	========================================================
-	MEMORY LIMIT
-	========================================================
-	*/
-
-	globalDeepSeek.MaxMemory = 100
-
-	/*
-	========================================================
-	DEBUG
-	========================================================
-	*/
-
-	fmt.Println(`
-========================================================
-🚀 SCSBOOT AI STARTED
-========================================================
-`)
-
-	fmt.Println(
-		"✅ Active Model:",
-		globalDeepSeek.CurrentModel,
-	)
-
-	fmt.Println(
-		"✅ Available Models:",
-		len(globalDeepSeek.Models),
-	)
-
-	fmt.Println(
-		"✅ Memory Limit:",
-		globalDeepSeek.MaxMemory,
-	)
-
-	/*
-	========================================================
-	WAILS APP
-	========================================================
-	*/
+	app := NewApp()
 
 	err := wails.Run(&options.App{
-
-		Title: "softcodesolution",
-
-		Width: 1440,
-
-		Height: 900,
-
-		MinWidth: 1200,
-
-		MinHeight: 700,
-
-		DisableResize: false,
-
-		Frameless: false,
-
-		StartHidden: false,
-
-		HideWindowOnClose: false,
-
+		Title:  appName,
+		Width:  1024,
+		Height: 768,
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},
-
-		BackgroundColour: &options.RGBA{
-			R: 15,
-			G: 15,
-			B: 15,
-			A: 1,
+		OnStartup: app.startup,
+		OnShutdown: func(ctx context.Context) {
+			audit("system_shutdown", "Wails app shutdown")
+			stop()
 		},
-
-		OnStartup: appInstance.startup,
-
 		Bind: []interface{}{
-			appInstance,
+			app,
 		},
 	})
 
-	/*
-	========================================================
-	ERROR
-	========================================================
-	*/
+	if err != nil {
+		audit("fatal_error", err.Error())
+		log.Fatalf("Eternity Engine failed to start: %v", err)
+	}
+}
+
+func loadRuntimeConfig() runtimeConfig {
+	addr := os.Getenv("SOFTCODE_PREVIEW_ADDR")
+	if addr == "" {
+		addr = defaultPreview
+	}
+
+	licenseRequired := strings.EqualFold(os.Getenv("SOFTCODE_LICENSE_REQUIRED"), "true") ||
+		os.Getenv("SOFTCODE_LICENSE_REQUIRED") == "1"
+
+	return runtimeConfig{
+		PreviewAddr:     addr,
+		LicenseRequired: licenseRequired,
+		LicenseKey:      os.Getenv("SOFTCODE_LICENSE_KEY"),
+	}
+}
+
+func licenseGate(cfg runtimeConfig) bool {
+	if !cfg.LicenseRequired {
+		audit("license_gate", "License requirement disabled for local/dev startup")
+		return true
+	}
+
+	key := strings.TrimSpace(cfg.LicenseKey)
+	if len(key) < 24 {
+		return false
+	}
+
+	audit("license_gate", "License key detected")
+	return true
+}
+
+func startPostgresSafe() {
+	audit("postgres_check", "Checking PostgreSQL")
+
+	if commandExists("pg_isready") && postgresReady() {
+		log.Println("PostgreSQL already running")
+		audit("postgres_ready", "PostgreSQL already running")
+		return
+	}
+
+	if !commandExists("pg_ctl") {
+		log.Println("pg_ctl not found, skipping PostgreSQL auto-start")
+		audit("postgres_skip", "pg_ctl not found")
+		return
+	}
+
+	pgData := findPostgresDataDir()
+	if pgData == "" {
+		log.Println("PGDATA not found. Set PGDATA or start PostgreSQL from startup script.")
+		audit("postgres_pgdata_missing", "PGDATA not found")
+		return
+	}
+
+	if !fileExists(filepath.Join(pgData, "PG_VERSION")) {
+		log.Println("Invalid PGDATA:", pgData)
+		audit("postgres_invalid_pgdata", pgData)
+		return
+	}
+
+	log.Println("Starting PostgreSQL from:", pgData)
+	audit("postgres_start_attempt", pgData)
+
+	logFile := filepath.Join(pgData, "postgres.log")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, "pg_ctl", "-D", pgData, "-l", logFile, "start")
+	output, err := cmd.CombinedOutput()
 
 	if err != nil {
+		out := string(output)
 
-		fmt.Println(
-			"❌ Wails Error:",
-			err.Error(),
-		)
-	}
-}
+		if strings.Contains(out, "another server might be running") {
+			time.Sleep(2 * time.Second)
 
-/*
-========================================================
-MAIN AI FUNCTION
-Frontend:
-window.go.main.App.AskSCSBOT()
-========================================================
-*/
+			if postgresReady() {
+				log.Println("PostgreSQL is already running")
+				audit("postgres_ready_after_duplicate_start", "PostgreSQL already running")
+				return
+			}
+		}
 
-func (a *App) AskSCSBOT(
-	userPrompt string,
-) (string, error) {
-
-	if globalDeepSeek == nil {
-
-		return `
-❌ SCSBOOT AI Engine Failed
-`, nil
-	}
-
-	/*
-	========================================================
-	EMPTY CHECK
-	========================================================
-	*/
-
-	if userPrompt == "" {
-
-		return `
-⚠️ Empty Prompt
-`, nil
-	}
-
-	/*
-	========================================================
-	AI REQUEST
-	========================================================
-	*/
-
-	response, err :=
-		globalDeepSeek.
-			AskSCSBOT(userPrompt)
-
-	/*
-	========================================================
-	ERROR HANDLING
-	========================================================
-	*/
-
-	if err != nil {
-
-		fmt.Println(
-			"❌ AI Error:",
-			err.Error(),
-		)
-
-		/*
-		========================================================
-		AUTO MODEL SWITCH
-		========================================================
-		*/
-
-		globalDeepSeek.AutoSwitchModel()
-
-		return fmt.Sprintf(`
-❌ AI Engine Temporary Issue
-
-🔄 Auto switched model to:
-%s
-
-Try again.
-`,
-			globalDeepSeek.CurrentModel,
-		), nil
-	}
-
-	return response, nil
-}
-
-/*
-========================================================
-SET MODEL
-Frontend:
-window.go.main.App.SetModel()
-========================================================
-*/
-
-func (a *App) SetModel(
-	model string,
-) {
-
-	if globalDeepSeek == nil {
+		log.Println("PostgreSQL start warning:", err)
+		log.Println(out)
+		audit("postgres_start_warning", err.Error())
 		return
 	}
 
-	globalDeepSeek.SetModel(
-		model,
-	)
-
-	fmt.Println(
-		"✅ Model Changed:",
-		model,
-	)
-}
-
-/*
-========================================================
-GET MODELS
-Frontend:
-window.go.main.App.GetModels()
-========================================================
-*/
-
-func (a *App) GetModels() []string {
-
-	if globalDeepSeek == nil {
-
-		return []string{}
-	}
-
-	return globalDeepSeek.GetModels()
-}
-
-/*
-========================================================
-CLEAR MEMORY
-Frontend:
-window.go.main.App.ClearMemory()
-========================================================
-*/
-
-func (a *App) ClearMemory() {
-
-	if globalDeepSeek == nil {
+	if waitForPostgres(15 * time.Second) {
+		log.Println("PostgreSQL started successfully")
+		audit("postgres_started", "PostgreSQL started successfully")
 		return
 	}
 
-	globalDeepSeek.ClearMemory()
-
-	fmt.Println(
-		"🧠 Memory Cleared",
-	)
+	log.Println("PostgreSQL start attempted, but readiness check failed")
+	audit("postgres_readiness_failed", "pg_isready failed after start")
 }
 
-/*
-========================================================
-EXPORT MEMORY
-Frontend:
-window.go.main.App.ExportMemory()
-========================================================
-*/
-
-func (a *App) ExportMemory() string {
-
-	if globalDeepSeek == nil {
-
-		return ""
+func findPostgresDataDir() string {
+	if pgData := os.Getenv("PGDATA"); pgData != "" {
+		return pgData
 	}
 
-	return globalDeepSeek.ExportMemory()
-}
+	home, _ := os.UserHomeDir()
 
-/*
-========================================================
-IMPORT MEMORY
-Frontend:
-window.go.main.App.ImportMemory()
-========================================================
-*/
-
-func (a *App) ImportMemory(
-	data string,
-) error {
-
-	if globalDeepSeek == nil {
-
-		return nil
+	possiblePaths := []string{
+		filepath.Join(".", "postgres-data"),
+		filepath.Join(".", ".postgres"),
+		filepath.Join(home, "postgres-data"),
+		filepath.Join(home, ".postgres"),
+		filepath.Join(home, ".local", "share", "postgres"),
 	}
 
-	return globalDeepSeek.ImportMemory(
-		data,
-	)
-}
-
-/*
-========================================================
-CURRENT MODEL
-Frontend:
-window.go.main.App.GetCurrentModel()
-========================================================
-*/
-
-func (a *App) GetCurrentModel() string {
-
-	if globalDeepSeek == nil {
-
-		return ""
-	}
-
-	return globalDeepSeek.CurrentModel
-}
-
-/*
-========================================================
-AUTO SWITCH MODEL
-Frontend:
-window.go.main.App.SwitchModel()
-========================================================
-*/
-
-func (a *App) SwitchModel() {
-
-	if globalDeepSeek == nil {
-		return
-	}
-
-	globalDeepSeek.AutoSwitchModel()
-
-	fmt.Println(
-		"🔄 Auto Switched:",
-		globalDeepSeek.CurrentModel,
-	)
-}
-
-/*
-========================================================
-AI STATUS
-Frontend:
-window.go.main.App.GetAIStatus()
-========================================================
-*/
-
-func (a *App) GetAIStatus() map[string]interface{} {
-
-	if globalDeepSeek == nil {
-
-		return map[string]interface{}{
-			"status": "offline",
+	for _, p := range possiblePaths {
+		if fileExists(filepath.Join(p, "PG_VERSION")) {
+			return p
 		}
 	}
 
-	return map[string]interface{}{
-		"status":        "online",
-		"model":         globalDeepSeek.CurrentModel,
-		"memoryItems":   len(globalDeepSeek.Memory),
-		"availableAI":   len(globalDeepSeek.Models),
-		"maxMemory":     globalDeepSeek.MaxMemory,
-		"fallbackRoute": true,
-		"version":       "SCSBOOT AI ULTRA",
+	return ""
+}
+
+func postgresReady() bool {
+	if !commandExists("pg_isready") {
+		return false
 	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, "pg_isready")
+	return cmd.Run() == nil
+}
+
+func waitForPostgres(timeout time.Duration) bool {
+	deadline := time.Now().Add(timeout)
+
+	for time.Now().Before(deadline) {
+		if postgresReady() {
+			return true
+		}
+		time.Sleep(1 * time.Second)
+	}
+
+	return false
+}
+
+func startFirebasePreviewServer(ctx context.Context, cfg runtimeConfig) {
+	subFS, err := fs.Sub(assets, embeddedAssetPath)
+	if err != nil {
+		log.Println("Preview asset error:", err)
+		audit("preview_asset_error", err.Error())
+		return
+	}
+
+	mux := http.NewServeMux()
+	registerHTTPRoutes(mux)
+
+	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		requestID := requestIDFrom(r)
+		secureHeaders(w, requestID)
+
+		if r.Method != http.MethodGet && r.Method != http.MethodHead {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		_, _ = w.Write([]byte(fmt.Sprintf(
+			`{"status":"ok","app":"%s","uptime_seconds":%d,"request_id":"%s"}`,
+			appName,
+			int(time.Since(bootTime).Seconds()),
+			requestID,
+		)))
+	})
+
+	mux.HandleFunc("/readyz", func(w http.ResponseWriter, r *http.Request) {
+		requestID := requestIDFrom(r)
+		secureHeaders(w, requestID)
+
+		if r.Method != http.MethodGet && r.Method != http.MethodHead {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		indexOK := assetExists(subFS, "index.html")
+		dbOK := postgresReady()
+
+		status := http.StatusOK
+		state := "ready"
+
+		if !indexOK {
+			status = http.StatusServiceUnavailable
+			state = "asset_missing"
+		}
+
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(status)
+		_, _ = w.Write([]byte(fmt.Sprintf(
+			`{"status":"%s","asset_index":%t,"postgres":%t,"request_id":"%s"}`,
+			state,
+			indexOK,
+			dbOK,
+			requestID,
+		)))
+	})
+
+	fileServer := http.FileServer(http.FS(subFS))
+
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		requestID := requestIDFrom(r)
+		secureHeaders(w, requestID)
+
+		if r.Method != http.MethodGet && r.Method != http.MethodHead {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		cleanPath := strings.TrimPrefix(path.Clean("/"+r.URL.Path), "/")
+
+		if cleanPath == "" || cleanPath == "." {
+			serveIndex(w, subFS)
+			return
+		}
+
+		if !fs.ValidPath(cleanPath) {
+			http.Error(w, "bad request", http.StatusBadRequest)
+			audit("preview_bad_path", cleanPath)
+			return
+		}
+
+		if _, err := fs.Stat(subFS, cleanPath); err == nil {
+			fileServer.ServeHTTP(w, r)
+			return
+		}
+
+		serveIndex(w, subFS)
+	})
+
+	server := &http.Server{
+		Addr:              cfg.PreviewAddr,
+		Handler:           mux,
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       10 * time.Second,
+		WriteTimeout:      30 * time.Second,
+		IdleTimeout:       60 * time.Second,
+	}
+
+	go func() {
+		<-ctx.Done()
+
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		audit("preview_server_shutdown", "Shutdown signal received")
+		_ = server.Shutdown(shutdownCtx)
+	}()
+
+	log.Println("Firebase Studio preview server running on http://" + cfg.PreviewAddr)
+	audit("preview_server_start", cfg.PreviewAddr)
+
+	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		log.Println("Preview server failed:", err)
+		audit("preview_server_failed", err.Error())
+	}
+}
+
+func serveIndex(w http.ResponseWriter, subFS fs.FS) {
+	index, err := fs.ReadFile(subFS, "index.html")
+	if err != nil {
+		http.Error(w, "index.html not found. Run Angular build first.", http.StatusInternalServerError)
+		audit("preview_index_missing", err.Error())
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_, _ = w.Write(index)
+}
+
+func secureHeaders(w http.ResponseWriter, requestID string) {
+	w.Header().Set("X-Request-ID", requestID)
+	w.Header().Set("Idempotency-Key", requestID)
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.Header().Set("X-Frame-Options", "DENY")
+	w.Header().Set("Referrer-Policy", "no-referrer")
+	w.Header().Set("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+	w.Header().Set("Cache-Control", "no-store")
+
+	w.Header().Set(
+		"Content-Security-Policy",
+		"default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self' http://localhost:* ws://localhost:*;",
+	)
+}
+
+func requestIDFrom(r *http.Request) string {
+	for _, header := range []string{"Idempotency-Key", "X-Request-ID"} {
+		value := strings.TrimSpace(r.Header.Get(header))
+		if value != "" {
+			return sanitizeHeader(value)
+		}
+	}
+
+	sum := sha256.Sum256([]byte(fmt.Sprintf(
+		"%s|%s|%d",
+		r.Method,
+		r.URL.Path,
+		time.Now().UnixNano(),
+	)))
+
+	return hex.EncodeToString(sum[:])[:24]
+}
+
+func sanitizeHeader(value string) string {
+	value = strings.ReplaceAll(value, "\n", "")
+	value = strings.ReplaceAll(value, "\r", "")
+	value = strings.TrimSpace(value)
+
+	if len(value) > 80 {
+		value = value[:80]
+	}
+
+	if value == "" {
+		return "unknown"
+	}
+
+	return value
+}
+
+func startGuardianMonitor(ctx context.Context) {
+	ticker := time.NewTicker(60 * time.Second)
+	defer ticker.Stop()
+
+	audit("guardian_monitor", "Background monitor started")
+
+	for {
+		select {
+		case <-ctx.Done():
+			audit("guardian_monitor", "Background monitor stopped")
+			return
+
+		case <-ticker.C:
+			status := "postgres=false"
+			if postgresReady() {
+				status = "postgres=true"
+			}
+
+			audit("guardian_heartbeat", status)
+		}
+	}
+}
+
+func assetExists(subFS fs.FS, name string) bool {
+	_, err := fs.Stat(subFS, name)
+	return err == nil
+}
+
+func audit(event string, message string) {
+	log.Printf("[AUDIT] %s: %s", event, message)
+
+	_ = os.MkdirAll(auditDir, 0750)
+
+	file := filepath.Join(auditDir, auditFileName)
+
+	previousHash := previousAuditHash(file)
+
+	raw := fmt.Sprintf(
+		"%s|%s|%s|%s",
+		time.Now().UTC().Format(time.RFC3339),
+		sanitizeLog(event),
+		sanitizeLog(message),
+		previousHash,
+	)
+
+	sum := sha256.Sum256([]byte(raw))
+	currentHash := hex.EncodeToString(sum[:])
+
+	line := fmt.Sprintf("%s|hash=%s\n", raw, currentHash)
+
+	f, err := os.OpenFile(file, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0640)
+	if err != nil {
+		log.Println("audit log write failed:", err)
+		return
+	}
+	defer f.Close()
+
+	_, _ = f.WriteString(line)
+}
+
+func previousAuditHash(file string) string {
+	data, err := os.ReadFile(file)
+	if err != nil || len(data) == 0 {
+		return "genesis"
+	}
+
+	lines := strings.Split(strings.TrimSpace(string(data)), "\n")
+	if len(lines) == 0 {
+		return "genesis"
+	}
+
+	last := lines[len(lines)-1]
+	idx := strings.LastIndex(last, "hash=")
+	if idx == -1 {
+		return "unknown"
+	}
+
+	return strings.TrimSpace(last[idx+5:])
+}
+
+func sanitizeLog(value string) string {
+	value = strings.ReplaceAll(value, "\n", " ")
+	value = strings.ReplaceAll(value, "\r", " ")
+	value = strings.ReplaceAll(value, "|", "/")
+	value = strings.TrimSpace(value)
+
+	if len(value) > 500 {
+		value = value[:500]
+	}
+
+	if value == "" {
+		return "empty"
+	}
+
+	return value
+}
+
+func commandExists(name string) bool {
+	_, err := exec.LookPath(name)
+	return err == nil
+}
+
+func fileExists(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil
+}
+
+func isWebOnlyMode() bool {
+	// Default true: normal "go run ." Firebase/IDX/offline web preview me chalega.
+	// Desktop Wails app ke liye: SOFTCODE_DESKTOP=1 wails dev
+	if truthy(os.Getenv("SOFTCODE_DESKTOP")) {
+		return false
+	}
+
+	webOnly := strings.TrimSpace(os.Getenv("SOFTCODE_WEB_ONLY"))
+	if webOnly == "" {
+		return true
+	}
+
+	return truthy(webOnly)
+}
+
+func truthy(value string) bool {
+	value = strings.ToLower(strings.TrimSpace(value))
+	return value == "1" || value == "true" || value == "yes" || value == "on"
 }

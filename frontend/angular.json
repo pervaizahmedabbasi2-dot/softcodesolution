@@ -5,7 +5,8 @@
     "packageManager": "npm",
     "cache": {
       "enabled": false
-    }
+    },
+    "analytics": false
   },
   "newProjectRoot": "projects",
   "projects": {
@@ -21,6 +22,7 @@
           "options": {
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
+            "outputPath": "dist/softcode-ui",
             "assets": [
               "src/favicon.ico",
               "src/assets",
@@ -53,18 +55,32 @@
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
+            },
+            "idx": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true
             }
           },
           "defaultConfiguration": "production"
         },
         "serve": {
           "builder": "@angular/build:dev-server",
+          "options": {
+            "host": "0.0.0.0",
+            "port": 4200
+          },
           "configurations": {
             "production": {
               "buildTarget": "softcode-ui:build:production"
             },
             "development": {
               "buildTarget": "softcode-ui:build:development"
+            },
+            "idx": {
+              "buildTarget": "softcode-ui:build:idx",
+              "host": "0.0.0.0",
+              "port": 4200
             }
           },
           "defaultConfiguration": "development"

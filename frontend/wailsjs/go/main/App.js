@@ -10,38 +10,22 @@ export function ClearMemory() {
   return window['go']['main']['App']['ClearMemory']();
 }
 
+export function ConnectDatabase() {
+  return window['go']['main']['App']['ConnectDatabase']();
+}
+
 export function ExportMemory() {
   return window['go']['main']['App']['ExportMemory']();
-}
-
-export function GetAIStatus() {
-  return window['go']['main']['App']['GetAIStatus']();
-}
-
-export function GetCurrentModel() {
-  return window['go']['main']['App']['GetCurrentModel']();
 }
 
 export function GetModels() {
   return window['go']['main']['App']['GetModels']();
 }
 
-export function ImportMemory(arg1) {
-  return window['go']['main']['App']['ImportMemory'](arg1);
-}
-
-export function LoginUser(arg1, arg2) {
-  return window['go']['main']['App']['LoginUser'](arg1, arg2);
-}
-
-export function RegisterUser(arg1, arg2, arg3, arg4) {
-  return window['go']['main']['App']['RegisterUser'](arg1, arg2, arg3, arg4);
+export function RegisterUser(arg1, arg2) {
+  return window['go']['main']['App']['RegisterUser'](arg1, arg2);
 }
 
 export function SetModel(arg1) {
   return window['go']['main']['App']['SetModel'](arg1);
-}
-
-export function SwitchModel() {
-  return window['go']['main']['App']['SwitchModel']();
 }

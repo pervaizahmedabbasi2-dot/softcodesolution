@@ -1,0 +1,243 @@
+<!-- SCS_DASHBOARD_ALL_CLIENTS_COMPONENT_V1_START -->
+      <div *ngIf="activeView === 'all-tenants' && userRole === 'SUPER_ADMIN'" class="px-8 py-7 max-w-[98rem] mx-auto space-y-6">
+        <!-- Client Management Hero Strip -->
+        <div class="relative overflow-hidden rounded-[2rem] shadow-2xl" style="background:linear-gradient(135deg,#1e40af 0%,#1e3a8a 45%,#0f172a 100%)">
+          <div class="absolute inset-0 opacity-10" style="background-image:radial-gradient(circle,#fff 1px,transparent 1px);background-size:28px 28px"></div>
+          <div class="absolute -top-16 -right-16 w-80 h-80 rounded-full opacity-15" style="background:radial-gradient(circle,#60a5fa,transparent)"></div>
+
+          <div class="relative px-7 py-7 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+            <div>
+              <div class="flex flex-wrap items-center gap-2 mb-3">
+                <span class="px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[3px] text-white/80"
+                  style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.18)">Superadmin</span>
+                <span *ngIf="lastRefreshedAt" class="text-[10px] text-white/50 font-bold">
+                  Updated {{ lastRefreshedAt }} · Auto in {{ autoRefreshCountdown }}s
+                </span>
+              </div>
+
+              <h1 class="text-3xl font-black text-white uppercase tracking-tight leading-tight">
+                Client Management<span class="text-blue-300">.</span>
+              </h1>
+              <p class="text-sm text-white/45 font-medium mt-2">
+                {{ allSuperadminClients.length }} total · {{ superadminClients.length }} showing
+              </p>
+            </div>
+
+            <div class="hidden md:grid grid-cols-2 gap-3 min-w-[280px]">
+              <div class="rounded-2xl p-4 backdrop-blur-sm" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">
+                <p class="text-[9px] font-black text-white/40 uppercase tracking-widest mb-1">Active</p>
+                <p class="text-3xl font-black text-white">{{ clientTotals.approved }}</p>
+              </div>
+              <div class="rounded-2xl p-4 backdrop-blur-sm" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">
+                <p class="text-[9px] font-black text-white/40 uppercase tracking-widest mb-1">Pending</p>
+                <p class="text-3xl font-black text-white">{{ clientTotals.pending }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+          <div *ngFor="let tab of [
+            {key:'pending', label:'Pending', count:clientTotals.pending, icon:icons.Clock, pulse:'bg-amber-400', txt:'Review'},
+            {key:'approved', label:'Active', count:clientTotals.approved, icon:icons.UserCheck, pulse:'bg-emerald-400', txt:'Manage'},
+            {key:'rejected', label:'Rejected', count:clientTotals.rejected, icon:icons.UserX, pulse:'bg-red-400', txt:'View'},
+            {key:'all', label:'All Clients', count:clientTotals.all, icon:icons.Database, pulse:'bg-blue-400', txt:'View All'}
+          ]" (click)="changeClientStatusTab(tab.key)"
+            class="relative overflow-hidden rounded-2xl p-6 cursor-pointer group transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
+            [style.background]="clientStatusTab === tab.key ? 'linear-gradient(135deg,#1e40af,#1e3a8a)' : '#ffffff'"
+            [style.border]="clientStatusTab === tab.key ? 'none' : '1px solid #e2e8f0'">
+            
+            <!-- Bottom Right Gradient Circle -->
+            <div class="absolute -bottom-6 -right-6 w-28 h-28 rounded-full opacity-20"
+              [style.background]="clientStatusTab === tab.key ? 'radial-gradient(circle,#60a5fa,transparent)' : 'radial-gradient(circle,#cbd5e1,transparent)'"></div>
+            
+            <!-- Icon & Live Pill -->
+            <div class="flex items-start justify-between mb-6 relative z-10">
+              <div class="w-11 h-11 rounded-xl flex items-center justify-center transition-colors"
+                   [class.bg-white/20]="clientStatusTab === tab.key" [class.text-white]="clientStatusTab === tab.key"
+                   [class.bg-slate-50]="clientStatusTab !== tab.key" [class.text-slate-600]="clientStatusTab !== tab.key" [class.border]="clientStatusTab !== tab.key" [class.border-slate-100]="clientStatusTab !== tab.key">
+                <lucide-icon [name]="tab.icon" class="w-5 h-5"></lucide-icon>
+              </div>
+              <div class="flex items-center gap-1 px-2 py-1 rounded-full transition-colors" 
+                   [style.background]="clientStatusTab === tab.key ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.04)'">
+                <div class="w-1.5 h-1.5 rounded-full animate-pulse" [ngClass]="tab.pulse"></div>
+                <span class="text-[9px] font-black uppercase tracking-widest"
+                      [class.text-white]="clientStatusTab === tab.key" [class.opacity-70]="clientStatusTab === tab.key"
+                      [class.text-slate-500]="clientStatusTab !== tab.key">Live</span>
+              </div>
+            </div>
+            
+            <!-- Text & Count -->
+            <div class="relative z-10">
+              <p class="text-[10px] font-black uppercase tracking-widest mb-1 transition-colors"
+                 [class.text-white]="clientStatusTab === tab.key" [class.opacity-50]="clientStatusTab === tab.key"
+                 [class.text-slate-400]="clientStatusTab !== tab.key">{{ tab.label }}</p>
+              <p class="text-4xl font-black leading-none transition-colors"
+                 [class.text-white]="clientStatusTab === tab.key"
+                 [class.text-slate-800]="clientStatusTab !== tab.key">{{ tab.count }}</p>
+            </div>
+            
+            <!-- Hover Arrow Reaction -->
+            <div class="flex items-center gap-1 mt-4 text-xs font-bold transition-all relative z-10"
+                 [class.text-white]="clientStatusTab === tab.key" [class.opacity-60]="clientStatusTab === tab.key" [class.group-hover:opacity-100]="clientStatusTab === tab.key"
+                 [class.text-slate-400]="clientStatusTab !== tab.key" [class.group-hover:text-blue-600]="clientStatusTab !== tab.key"
+                 [class.group-hover:gap-2]="true">
+              <span>{{ tab.txt }}</span><lucide-icon [name]="icons.ArrowUpRight" class="w-3.5 h-3.5"></lucide-icon>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="actionMessage && !popupOpen"
+          class="fixed bottom-8 right-8 z-[200] flex items-center gap-3 px-6 py-4 rounded-2xl text-sm font-black uppercase tracking-widest animate-[bounce_0.5s_ease-out]"
+          style="background: #eef0f5; box-shadow: 12px 12px 24px rgba(0,0,0,0.1), -12px -12px 24px rgba(255,255,255,0.9); border: 1.5px solid rgba(255,255,255,0.8);"
+          [class.border-emerald-300]="actionSuccess" [class.text-emerald-800]="actionSuccess"
+          [class.border-red-300]="!actionSuccess" [class.text-red-800]="!actionSuccess">
+          <div class="w-8 h-8 rounded-full flex items-center justify-center shadow-inner"
+            [class.bg-emerald-100]="actionSuccess" [class.bg-red-100]="!actionSuccess">
+            <div class="w-3 h-3 rounded-full shadow-md animate-pulse" [class.bg-emerald-500]="actionSuccess" [class.bg-red-500]="!actionSuccess"></div>
+          </div>
+          {{ actionMessage }}
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+          <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-xl bg-slate-900 flex items-center justify-center">
+                <lucide-icon [name]="icons.Database" class="w-4 h-4 text-white"></lucide-icon>
+              </div>
+              <div>
+                <h2 class="text-sm font-black text-slate-900 uppercase tracking-tight">Client Database</h2>
+                <p class="text-[11px] font-medium text-slate-400 mt-0.5">
+                  <span class="font-black text-slate-600">{{ superadminClients.length }}</span> shown ·
+                  <span class="font-black text-slate-600">{{ clientTotal }}</span> filtered ·
+                  <span class="font-black text-slate-600">{{ allSuperadminClients.length }}</span> total
+                  <span *ngIf="clientStatusTab !== 'all'" class="ml-1 text-blue-500">· {{ clientStatusTab }}</span>
+                  <span *ngIf="clientSearch" class="ml-1 text-blue-500">· "{{ clientSearch }}"</span>
+                </p>
+              </div>
+            </div>
+
+            <!-- Client Table Search Bar -->
+            <div class="flex flex-wrap items-center gap-2">
+              <div class="relative">
+                <lucide-icon [name]="icons.Search" class="w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></lucide-icon>
+                <input #clientSearchInput [value]="clientSearch" (input)="searchClients(clientSearchInput.value)" placeholder="Search name, email, company..."
+                  class="pl-10 pr-4 py-3 w-72 rounded-xl border border-slate-200 bg-white text-sm font-medium outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all">
+              </div>
+              <button (click)="clientSearchInput.value=''; searchClients('')"
+                class="px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-500 text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center gap-1.5">
+                <lucide-icon [name]="icons.X" class="w-3 h-3"></lucide-icon> Clear
+              </button>
+            </div>
+          </div>
+
+          <div *ngIf="isClientsLoading && allSuperadminClients.length === 0" class="py-20 flex flex-col items-center justify-center gap-3">
+            <div class="w-9 h-9 border-4 border-slate-100 border-t-blue-600 rounded-full animate-spin"></div>
+            <p class="text-slate-400 font-black uppercase tracking-widest text-xs">Loading Records...</p>
+          </div>
+
+          <div *ngIf="!isClientsLoading && superadminClients.length === 0" class="py-20 flex flex-col items-center justify-center text-center">
+            <div class="w-9 h-9 bg-slate-50 rounded-full flex items-center justify-center mb-3 border-2 border-dashed border-slate-200">
+              <lucide-icon [name]="icons.Users" class="w-7 h-7 text-slate-300"></lucide-icon>
+            </div>
+            <p class="text-slate-600 font-black uppercase tracking-widest text-sm">No Records Found</p>
+            <button (click)="loadSuperadminClients(true)" class="mt-5 px-6 py-3 rounded-xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all">Reload</button>
+          </div>
+
+          <div *ngIf="superadminClients.length > 0" class="overflow-x-auto">
+            <table class="w-full text-left">
+              <thead>
+                <tr class="bg-slate-50 border-b border-slate-100">
+                  <th class="px-5 py-3.5 text-[10px] font-black text-slate-400 uppercase tracking-widest w-10">#</th>
+                  <th class="px-5 py-3.5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Client</th>
+                  <th class="px-5 py-3.5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Contact</th>
+                  <th class="px-5 py-3.5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Company</th>
+                  <th class="px-5 py-3.5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Location</th>
+                  <th class="px-5 py-3.5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Status</th>
+                  <th class="px-5 py-3.5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Plan</th>
+                  <th class="px-5 py-3.5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Joined</th>
+                  <th class="px-5 py-3.5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let client of superadminClients; let i = index" class="border-b border-slate-50 hover:bg-blue-50/30 transition-colors duration-100">
+                  <td class="px-5 py-4"><span class="text-[11px] font-black text-slate-300">{{ (clientPage-1)*clientLimit + i + 1 }}</span></td>
+                  <td class="px-5 py-4">
+                    <div class="flex items-center gap-3">
+                      <div class="w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs flex-shrink-0 shadow-sm"
+                        [class.bg-emerald-100]="client.status==='approved'" [class.text-emerald-700]="client.status==='approved'"
+                        [class.bg-amber-100]="client.status!=='approved'&&client.status!=='rejected'" [class.text-amber-700]="client.status!=='approved'&&client.status!=='rejected'"
+                        [class.bg-red-100]="client.status==='rejected'" [class.text-red-700]="client.status==='rejected'">
+                        {{ getInitials(client.full_name) }}
+                      </div>
+                      <div>
+                        <p class="text-sm font-black text-slate-800 leading-tight">{{ client.full_name || '—' }}</p>
+                        <p class="text-[10px] font-medium text-slate-400 uppercase">{{ client.auth_role || 'Pending' }}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-5 py-4">
+                    <p class="text-xs font-bold text-blue-600">{{ client.email }}</p>
+                    <p class="text-[11px] text-slate-400 mt-0.5">{{ client.country_code||'' }}{{ client.phone?' '+client.phone:'—' }}</p>
+                  </td>
+                  <td class="px-5 py-4">
+                    <p class="text-sm font-black text-slate-700 leading-tight">{{ client.company_name||'—' }}</p>
+                    <span class="text-[10px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md inline-block mt-0.5 uppercase">{{ client.business_type||'General' }}</span>
+                  </td>
+                  <td class="px-5 py-4">
+                    <p class="text-xs font-bold text-slate-600">{{ client.city||'—' }}</p>
+                    <p class="text-[11px] text-slate-400">{{ client.country||'' }}</p>
+                  </td>
+                  <td class="px-5 py-4 text-center">
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border whitespace-nowrap"
+                      [class.bg-amber-50]="client.status==='pending'||client.status==='pending_verification'" [class.text-amber-700]="client.status==='pending'||client.status==='pending_verification'" [class.border-amber-200]="client.status==='pending'||client.status==='pending_verification'"
+                      [class.bg-emerald-50]="client.status==='approved'" [class.text-emerald-700]="client.status==='approved'" [class.border-emerald-200]="client.status==='approved'"
+                      [class.bg-red-50]="client.status==='rejected'" [class.text-red-700]="client.status==='rejected'" [class.border-red-200]="client.status==='rejected'">
+                      <span class="w-1.5 h-1.5 rounded-full" [class.bg-amber-500]="client.status==='pending'||client.status==='pending_verification'" [class.bg-emerald-500]="client.status==='approved'" [class.bg-red-500]="client.status==='rejected'"></span>
+                      {{ client.status==='pending_verification'?'Pending':client.status }}
+                    </span>
+                  </td>
+                  <td class="px-5 py-4">
+                    <p class="text-sm font-black text-slate-700">{{ client.plan_name||'Free' }}</p>
+                    <p class="text-[10px] text-slate-400 uppercase">{{ client.subscription_status||'—' }}</p>
+                  </td>
+                  <td class="px-5 py-4"><p class="text-xs font-bold text-slate-500 whitespace-nowrap">{{ client.created_at||'—' }}</p></td>
+                  <td class="px-5 py-4">
+                    <div class="flex items-center justify-end gap-1.5">
+                      <button (click)="openClientDetail(client)" class="flex items-center gap-1 px-3 py-2 rounded-lg bg-slate-100 hover:bg-blue-600 hover:text-white text-slate-600 text-[10px] font-black uppercase tracking-widest transition-all">
+                        <lucide-icon [name]="icons.Eye" class="w-3.5 h-3.5"></lucide-icon>
+                      </button>
+                      <button *ngIf="client.status!=='approved'" (click)="requestApproveClient(client)" [disabled]="isClientActionBusy"
+                        class="flex items-center gap-1 px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-widest transition-all">
+                        <lucide-icon [name]="icons.CheckCircle2" class="w-3.5 h-3.5"></lucide-icon>
+                      </button>
+                      <button *ngIf="client.status!=='rejected'" (click)="requestRejectClient(client)" [disabled]="isClientActionBusy"
+                        class="flex items-center gap-1 px-3 py-2 rounded-lg border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-50">
+                        <lucide-icon [name]="icons.XCircle" class="w-3.5 h-3.5"></lucide-icon>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div *ngIf="clientTotal > clientLimit" class="px-6 py-4 border-t border-slate-100 bg-slate-50/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+              Page <span class="font-black text-slate-700">{{ clientPage }}</span> of <span class="font-black text-slate-700">{{ clientTotalPages }}</span> · <span class="font-black text-slate-700">{{ clientTotal }}</span> records
+            </p>
+            <div class="flex items-center gap-2">
+              <button (click)="previousClientPage()" [disabled]="clientPage<=1" class="px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all">Prev</button>
+              <div class="flex gap-1">
+                <button *ngFor="let p of [1,2,3,4,5].filter(p => p <= clientTotalPages)" (click)="clientPage=p; applyClientLocalView()"
+                  class="w-9 h-9 rounded-xl text-[11px] font-black transition-all"
+                  [class.bg-slate-900]="clientPage===p" [class.text-white]="clientPage===p"
+                  [class.bg-white]="clientPage!==p" [class.border]="clientPage!==p" [class.border-slate-200]="clientPage!==p" [class.text-slate-600]="clientPage!==p">{{ p }}</button>
+                <span *ngIf="clientTotalPages > 5" class="w-9 h-9 flex items-center justify-center text-slate-400 text-sm">…</span>
+              </div>
+              <button (click)="nextClientPage()" [disabled]="clientPage>=clientTotalPages" class="px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all">Next</button>
+            </div>
+          </div>
+        </div>
+      </div>
+<!-- SCS_DASHBOARD_ALL_CLIENTS_COMPONENT_V1_END -->

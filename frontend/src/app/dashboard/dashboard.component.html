@@ -1,151 +1,659 @@
-<div class="min-h-screen flex overflow-hidden font-sans text-slate-800"
-    [style.background-color]="customTheme.background">
+<div class="min-h-screen flex overflow-hidden font-sans" [style.background-color]="customTheme.background">
 
-    <aside [class.w-0]="!isSidebarOpen" [class.w-80]="isSidebarOpen" [style.background-color]="customTheme.sidebar"
-        class="h-screen flex flex-col transition-all duration-500 relative z-50 shadow-2xl overflow-hidden">
-
-        <div class="p-8 flex items-center justify-between border-b border-white/10 flex-shrink-0">
-            <div (click)="toggleSidebar()" class="flex gap-2.5 cursor-pointer">
-                <div class="w-3.5 h-3.5 rounded-full bg-[#ff5f56]"></div>
-                <div class="w-3.5 h-3.5 rounded-full bg-[#ffbd2e]"></div>
-                <div class="w-3.5 h-3.5 rounded-full bg-[#27c93f]"></div>
-            </div>
-            <span *ngIf="isSidebarOpen"
-                class="text-[10px] font-black tracking-[4px] text-white/30 uppercase italic">Softcode V2</span>
+  <aside [class.w-0]="!isSidebarOpen" [class.w-72]="isSidebarOpen" [style.background-color]="customTheme.sidebar"
+    class="h-screen flex flex-col transition-all duration-300 z-50 overflow-hidden flex-shrink-0 shadow-2xl">
+    <div class="px-5 py-5 flex items-center justify-between border-b border-white/10 flex-shrink-0">
+      <div (click)="toggleSidebar()" class="flex gap-1.5 cursor-pointer items-center py-1">
+        <div class="w-3 h-3 rounded-full bg-[#ff5f56]"></div>
+        <div class="w-3 h-3 rounded-full bg-[#ffbd2e]"></div>
+        <div class="w-3 h-3 rounded-full bg-[#27c93f]"></div>
+      </div>
+      <div *ngIf="isSidebarOpen" class="flex items-center gap-2">
+        <div class="w-6 h-6 rounded-lg bg-white/20 flex items-center justify-center">
+          <lucide-icon [name]="icons.Zap" class="w-3.5 h-3.5 text-white"></lucide-icon>
         </div>
+        <span class="text-[11px] font-black tracking-[3px] text-white/60 uppercase">SoftCode</span>
+      </div>
+    </div>
+    <nav *ngIf="isSidebarOpen" class="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
+      <button (click)="navigateTo('home')"
+        class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold transition-all"
+        [class.bg-white]="activeView === 'home'" [class.text-slate-900]="activeView === 'home'"
+        [class.shadow-md]="activeView === 'home'" [class.font-black]="activeView === 'home'"
+        [class.text-white]="activeView !== 'home'" [class.hover:bg-white/10]="activeView !== 'home'">
+        <lucide-icon [name]="icons.LayoutDashboard" class="w-4 h-4 flex-shrink-0"></lucide-icon>
+        <span>Overview</span>
+      </button>
+      <div *ngIf="userRole === 'CLIENT'" class="pt-3 space-y-0.5">
+        <p class="px-4 py-1.5 text-[9px] font-black text-white/30 uppercase tracking-widest">Modules</p>
+        <div *ngFor="let cat of categories">
+          <button (click)="toggleDropdown(cat.id)"
+            class="w-full flex items-center justify-between px-4 py-3 text-white/70 hover:bg-white/10 hover:text-white rounded-xl text-xs font-medium transition-all">
+            <div class="flex items-center gap-3">
+              <lucide-icon [name]="cat.icon" class="w-4 h-4 flex-shrink-0"></lucide-icon>
+              <span>{{ cat.label }}</span>
+            </div>
+            <lucide-icon [name]="icons.ChevronDown" class="w-3 h-3 opacity-40 transition-transform"
+              [style.transform]="openDropdowns[cat.id] ? 'rotate(180deg)' : ''"></lucide-icon>
+          </button>
+          <div *ngIf="openDropdowns[cat.id]" class="ml-11 mt-0.5 mb-2 space-y-0.5">
+            <a (click)="navigateTo(cat.id + '-list')" class="block px-3 py-2 text-[11px] font-medium text-white/50 hover:text-white cursor-pointer rounded-lg hover:bg-white/5 transition-all">{{ cat.list }}</a>
+            <a (click)="navigateTo(cat.id + '-add')" class="block px-3 py-2 text-[11px] font-medium text-white/50 hover:text-white cursor-pointer rounded-lg hover:bg-white/5 transition-all">{{ cat.add }}</a>
+          </div>
+        </div>
+      </div>
+      <div *ngIf="userRole === 'SUPER_ADMIN'" class="pt-3 space-y-0.5">
+        <p class="px-4 py-1.5 text-[9px] font-black text-white/30 uppercase tracking-widest">Management</p>
+        <button (click)="navigateTo('all-tenants')"
+          class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-medium transition-all text-white"
+          [class.bg-white/15]="activeView === 'all-tenants'" [class.font-black]="activeView === 'all-tenants'"
+          [class.hover:bg-white/10]="activeView !== 'all-tenants'">
+          <lucide-icon [name]="icons.Users" class="w-4 h-4 text-emerald-400 flex-shrink-0"></lucide-icon>
+          <span>All Clients</span>
+          <span *ngIf="clientTotals.pending > 0" class="ml-auto bg-amber-400 text-slate-900 text-[9px] font-black px-2 py-0.5 rounded-full">{{ clientTotals.pending }}</span>
+        </button>
+        <button (click)="navigateTo('analytics')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-medium text-white/70 hover:bg-white/10 hover:text-white transition-all">
+          <lucide-icon [name]="icons.BarChart2" class="w-4 h-4 text-purple-400 flex-shrink-0"></lucide-icon><span>Analytics</span>
+        </button>
+        <button (click)="navigateTo('settings')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-medium text-white/70 hover:bg-white/10 hover:text-white transition-all">
+          <lucide-icon [name]="icons.Settings" class="w-4 h-4 text-slate-400 flex-shrink-0"></lucide-icon><span>Settings</span>
+        </button>
+      </div>
+    </nav>
+    <div class="p-3 border-t border-white/10 flex-shrink-0" *ngIf="isSidebarOpen">
+      <div class="rounded-xl p-3 flex items-center gap-3 text-white mb-2" style="background:rgba(255,255,255,0.07)">
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center font-black text-xs flex-shrink-0" style="background:rgba(255,255,255,0.2)">{{ getInitials(userName) }}</div>
+        <div class="flex-1 min-w-0">
+          <p class="text-[11px] font-black truncate">{{ userName }}</p>
+          <p class="text-[9px] font-medium opacity-40 uppercase tracking-wider">{{ userRole === 'SUPER_ADMIN' ? 'Super Admin' : 'Business Admin' }}</p>
+        </div>
+        <div class="w-2 h-2 rounded-full flex-shrink-0" [class.bg-emerald-400]="isOnline" [class.animate-pulse]="isOnline" [class.bg-red-400]="!isOnline"></div>
+      </div>
+      <button (click)="logout()" class="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-white/50 hover:bg-red-500/20 hover:text-red-300 text-[11px] font-bold transition-all">
+        <lucide-icon [name]="icons.LogOut" class="w-3.5 h-3.5"></lucide-icon> Sign Out
+      </button>
+    </div>
+</aside>
 
-        <nav *ngIf="isSidebarOpen" class="flex-1 overflow-y-auto px-4 py-6 space-y-2 custom-scrollbar">
-            <button (click)="navigateTo('home')"
-                class="w-full flex items-center gap-4 px-5 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all mb-4 shadow-lg border border-white/10"
-                [style.background-color]="activeView === 'home' ? 'white' : 'transparent'"
-                [style.color]="activeView === 'home' ? customTheme.sidebar : 'white'">
-                <lucide-icon [name]="icons.LayoutDashboard" class="w-4 h-4"></lucide-icon> Dashboard
+  <main class="flex-1 flex flex-col h-screen overflow-hidden min-w-0">
+
+<!-- SCS_FRONT_DASHBOARD_SAAS_OVERVIEW_REMOVED_RESTORE_OLD_DASHBOARD -->
+
+
+    <header [style.background-color]="customTheme.header" class="h-14 border-b border-slate-200/80 px-6 flex items-center justify-between flex-shrink-0 z-40">
+      <div class="flex items-center gap-3">
+        <button *ngIf="!isSidebarOpen" (click)="toggleSidebar()" class="p-2 bg-slate-100 rounded-lg hover:bg-slate-200 transition-all">
+          <div class="flex gap-1.5">
+            <div class="w-2 h-2 rounded-full bg-[#ff5f56]"></div>
+            <div class="w-2 h-2 rounded-full bg-[#ffbd2e]"></div>
+            <div class="w-2 h-2 rounded-full bg-[#27c93f]"></div>
+          </div>
+        </button>
+        <div class="flex items-center gap-2 text-sm">
+          <span class="font-black text-slate-800 uppercase tracking-tight">SoftCode</span>
+          <span class="text-slate-300">/</span>
+          <span class="font-medium text-slate-500 capitalize">{{ activeView === 'home' ? 'Overview' : activeView === 'all-tenants' ? 'Clients' : activeView }}</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="hidden lg:flex items-center gap-1.5 text-[11px] font-bold text-slate-400">
+          <lucide-icon [name]="icons.Calendar" class="w-3.5 h-3.5"></lucide-icon>
+          {{ currentDate }} · {{ currentTime }}
+        </div>
+        <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-wider transition-all"
+          [class.bg-emerald-50]="isOnline" [class.border-emerald-200]="isOnline" [class.text-emerald-700]="isOnline"
+          [class.bg-red-50]="!isOnline" [class.border-red-200]="!isOnline" [class.text-red-700]="!isOnline">
+          <div class="w-1.5 h-1.5 rounded-full" [class.bg-emerald-500]="isOnline" [class.animate-pulse]="isOnline" [class.bg-red-500]="!isOnline"></div>
+          {{ isOnline ? 'Live' : 'Offline' }}
+          <span *ngIf="isOnline" class="hidden sm:inline text-emerald-400 font-medium">· {{ autoRefreshCountdown }}s</span>
+        </div>
+        <div class="relative">
+          <button (click)="toggleThemeMenu()" class="p-2 bg-slate-100 rounded-xl hover:bg-slate-200 transition-all">
+            <lucide-icon [name]="icons.Palette" class="w-4 h-4 text-slate-500"></lucide-icon>
+          </button>
+          <div *ngIf="isThemeMenuOpen" class="absolute right-0 top-full mt-2 w-60 bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/50 p-5 z-50">
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Theme</p>
+            <div class="space-y-3">
+              <div *ngFor="let part of ['sidebar', 'header', 'background', 'footer']">
+                <label class="text-[9px] font-black uppercase mb-1.5 block text-slate-400 tracking-widest">{{ part }}</label>
+                <div class="flex gap-1.5">
+                  <button *ngFor="let c of colorOptions" (click)="updateColor(part, c.code)" [style.background-color]="c.code" class="w-5 h-5 rounded-full border border-slate-200 hover:scale-125 transition-transform shadow-sm"></button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="flex-1 overflow-y-auto">
+
+      <!-- SCS_DASHBOARD_OVERVIEW_HOST_V1 -->
+      <app-dashboard-overview
+        [activeView]="activeView"
+        [userRole]="userRole"
+        [userName]="userName"
+        [clientTotals]="clientTotals"
+        [autoRefreshCountdown]="autoRefreshCountdown"
+        [categories]="categories"
+        [icons]="icons"
+        [isClientsLoading]="isClientsLoading"
+        [allSuperadminClients]="allSuperadminClients"
+        [lastRefreshedAt]="lastRefreshedAt"
+        [getGreeting]="overviewGetGreeting"
+        [getInitials]="overviewGetInitials"
+        (navigate)="navigateTo($event)"
+        (statusTabChange)="changeClientStatusTab($event)"
+        (clientOpen)="openClientDetail($event)">
+      </app-dashboard-overview>
+
+      <!-- SCS_DASHBOARD_ALL_CLIENTS_HOST_V1 -->
+      <app-dashboard-all-clients
+        [activeView]="activeView"
+        [userRole]="userRole"
+        [lastRefreshedAt]="lastRefreshedAt"
+        [autoRefreshCountdown]="autoRefreshCountdown"
+        [clientTotals]="clientTotals"
+        [clientStatusTab]="clientStatusTab"
+        [actionMessage]="actionMessage"
+        [actionSuccess]="actionSuccess"
+        [popupOpen]="popupOpen"
+        [clientSearch]="clientSearch"
+        [isClientsLoading]="isClientsLoading"
+        [allSuperadminClients]="allSuperadminClients"
+        [superadminClients]="superadminClients"
+        [isClientActionBusy]="isClientActionBusy"
+        [clientTotal]="clientTotal"
+        [clientLimit]="clientLimit"
+        [clientPage]="clientPage"
+        [clientTotalPages]="clientTotalPages"
+        [icons]="icons"
+        [getInitials]="allClientsGetInitials"
+        (statusTabChange)="changeClientStatusTab($event)"
+        (searchChange)="searchClients($event)"
+        (reloadClients)="loadSuperadminClients(true)"
+        (clientOpen)="openClientDetail($event)"
+        (approveClient)="requestApproveClient($event)"
+        (rejectClient)="requestRejectClient($event)"
+        (previousPage)="previousClientPage()"
+        (nextPage)="nextClientPage()"
+        (pageSelect)="allClientsSelectPage($event)">
+      </app-dashboard-all-clients>
+
+      <!-- SCS_SUPERADMIN_PLATFORM_EXPANSION_PAGES_START -->
+      <!-- SCS_DASHBOARD_SYSTEM_HEALTH_HOST_V1 -->
+      <app-dashboard-system-health
+        *ngIf="activeView === 'system-health'"
+        [page]="superadminSaasPages[activeView]"
+        [userRole]="userRole"
+        (navigateView)="navigateTo($event)">
+      </app-dashboard-system-health>
+
+      <!-- Shared renderer remains locked for other pages -->
+      <ng-container *ngIf="activeView !== 'system-health'">
+      <ng-container *ngIf="superadminSaasPages[activeView] as saasPage">
+        <div *ngIf="userRole === 'SUPER_ADMIN'" class="px-8 py-7 max-w-[98rem] mx-auto space-y-6">
+          <div class="relative overflow-hidden rounded-[2rem] shadow-2xl" style="background:linear-gradient(135deg,#1e40af 0%,#1e3a8a 45%,#0f172a 100%)">
+            <div class="absolute inset-0 opacity-10" style="background-image:radial-gradient(circle,#fff 1px,transparent 1px);background-size:28px 28px"></div>
+            <div class="absolute -top-16 -right-16 w-80 h-80 rounded-full opacity-15" style="background:radial-gradient(circle,#60a5fa,transparent)"></div>
+
+            <div class="relative px-7 py-7 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+              <div>
+                <div class="flex flex-wrap items-center gap-2 mb-3">
+                  <span class="px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[3px] text-white/80"
+                    style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.18)">
+                    {{ saasPage.badge }}
+                  </span>
+                  <span class="text-[10px] text-white/50 font-bold">Frontend shell · backend next phase</span>
+                </div>
+
+                <h1 class="text-3xl font-black text-white uppercase tracking-tight leading-tight">
+                  {{ saasPage.title }}<span class="text-blue-300">.</span>
+                </h1>
+                <p class="text-sm text-white/45 font-medium mt-2 max-w-2xl">
+                  {{ saasPage.subtitle }}
+                </p>
+              </div>
+
+              <div class="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center ring-1 ring-white/15">
+                <lucide-icon [name]="saasPage.icon" class="w-8 h-8 text-white"></lucide-icon>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap gap-2">
+            <button
+              type="button"
+              *ngFor="let link of saasPage.quickLinks"
+              (click)="navigateTo(link.view)"
+              class="px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 text-[10px] font-black uppercase tracking-widest hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 transition-all"
+            >
+              {{ link.title }}
             </button>
+          </div>
 
-            <div *ngIf="userRole === 'CLIENT'">
-                <div *ngFor="let cat of categories">
-                    <button (click)="toggleDropdown(cat.id)"
-                        class="w-full flex items-center justify-between px-5 py-3.5 text-white/80 hover:bg-white/10 hover:text-white rounded-2xl font-bold transition-all group">
-                        <div class="flex items-center gap-4">
-                            <lucide-icon [name]="cat.icon"
-                                class="w-4 h-4 group-hover:scale-110 transition-transform"></lucide-icon>
-                            <span class="text-[11px] uppercase tracking-wider">{{ cat.label }}</span>
-                        </div>
-                        <lucide-icon [name]="icons.Plus" class="w-3 h-3 opacity-50 transition-transform"
-                            [style.transform]="openDropdowns[cat.id] ? 'rotate(45deg)' : ''"></lucide-icon>
-                    </button>
-                    <div *ngIf="openDropdowns[cat.id]"
-                        class="ml-6 mt-1 mb-3 space-y-1 animate-in slide-in-from-top-2 duration-300">
-                        <a (click)="navigateTo(cat.id + '-list')"
-                            class="flex items-center gap-2 px-4 py-2 text-[10px] font-black text-white/60 hover:text-white cursor-pointer uppercase tracking-widest border-l-2 border-white/10 hover:border-white transition-all">{{
-                            cat.list }}</a>
-                        <a (click)="navigateTo(cat.id + '-add')"
-                            class="flex items-center gap-2 px-4 py-2 text-[10px] font-black text-white/60 hover:text-white cursor-pointer uppercase tracking-widest border-l-2 border-white/10 hover:border-white transition-all">{{
-                            cat.add }}</a>
-                    </div>
+          <!-- SAAS_CONTROL_REAL_PANEL -->
+          <!-- SCS_SAAS_BUSINESS_ASSIGNMENT_UI_V1_START -->
+          <!-- SCS_DASHBOARD_SAAS_CONTROL_HOST_V1 -->
+          <app-dashboard-saas-control
+            [activeView]="activeView"
+            [selectedClient]="selectedClient"
+            [superadminClients]="superadminClients"
+            [tenantSubscription]="tenantSubscription"
+            [saasClientBillingCycle]="saasClientBillingCycle"
+            [saasClientPlanLoading]="saasClientPlanLoading"
+            [saasClientPlanSaving]="saasClientPlanSaving"
+            [saasClientPlanMessage]="saasClientPlanMessage"
+            [saasClientPlanOk]="saasClientPlanOk"
+            [saasClientSelectedPlanId]="saasClientSelectedPlanId"
+            [scsSuperModuleSearch]="scsSuperModuleSearch"
+            [scsSuperModuleCategory]="scsSuperModuleCategory"
+            [isModulesLoading]="isModulesLoading"
+            [businessLabelFn]="saasControlBusinessLabel"
+            [enabledCountFn]="saasControlEnabledCount"
+            [assignablePlansFn]="saasControlAssignablePlans"
+            [businessPlanPriceFn]="saasControlBusinessPlanPrice"
+            [businessPlanModuleCountFn]="saasControlBusinessPlanModuleCount"
+            [businessPlanModuleNamesFn]="saasControlBusinessPlanModuleNames"
+            [selectedPackageTotalFn]="saasControlSelectedPackageTotal"
+            [categoriesFn]="saasControlSuperCategories"
+            [moduleCategoryLabelFn]="saasControlModuleCategoryLabel"
+            [visibleModulesFn]="saasControlSuperVisibleModules"
+            [trackModuleFn]="saasControlSuperTrackModule"
+            [moduleSavingFn]="saasControlSuperModuleSaving"
+            [isModuleEnabledFn]="saasControlSuperIsModuleEnabled"
+            [modulePriceFn]="saasControlSuperModulePrice"
+            (clientSelect)="saasControlSelectClient($event)"
+            (billingCycleChange)="saasControlSetBillingCycle($event)"
+            (planSelect)="saasControlSelectPlan($event)"
+            (assignPlan)="saasControlAssignPlan()"
+            (moduleSearchChange)="saasControlSetModuleSearch($event)"
+            (moduleCategoryChange)="saasControlSetModuleCategory($event)"
+            (moduleEnabledChange)="saasControlSetModuleEnabled($event)">
+          </app-dashboard-saas-control>
+          <!-- SCS_SAAS_BUSINESS_ASSIGNMENT_UI_V1_END -->
+
+                    <!-- SCS_PLAN_BUILDER_REAL_START -->
+          <!-- SCS_DASHBOARD_PLANS_PRICING_HOST_V1 -->
+          <app-dashboard-plans-pricing
+            [activeView]="activeView"
+            [businessPlanLoading]="businessPlanLoading"
+            [businessPlanMessage]="businessPlanMessage"
+            [businessPlanOk]="businessPlanOk"
+            [businessPlanPlans]="businessPlanPlans"
+            [businessPlanSaving]="businessPlanSaving"
+            [businessPlanSelectedInfo]="businessPlanSelectedInfo"
+            [businessPlanSelectedType]="businessPlanSelectedType"
+            [businessPlanTypes]="businessPlanTypes"
+            [planBuilderDraft]="planBuilderDraft"
+            [planBuilderSearch]="planBuilderSearch"
+            [planBuilderSelectedPlanId]="planBuilderSelectedPlanId"
+            [filteredBusinessPlanModules]="filteredBusinessPlanModules"
+            [businessPlanIsCustomFn]="plansPricingIsCustom"
+            [businessPlanModuleScopeFn]="plansPricingModuleScope"
+            [formatModuleCategoryFn]="plansPricingFormatModuleCategory"
+            [isPlanBuilderModuleSelectedFn]="plansPricingIsModuleSelected"
+            [planBuilderModuleCountFn]="plansPricingModuleCount"
+            (ensureLoaded)="businessPlanEnsureLoaded()"
+            (businessTypeSelect)="selectBusinessPlanType($event)"
+            (planOpen)="openBusinessPlanMatrixPlan($event)"
+            (draftFieldChange)="plansPricingSetDraftField($event)"
+            (savePlan)="saveBusinessPlanMatrix()"
+            (searchChange)="plansPricingSetSearch($event)"
+            (moduleToggle)="togglePlanBuilderModule($event)">
+          </app-dashboard-plans-pricing>
+          <!-- SCS_PLAN_BUILDER_REAL_END -->
+
+          <div *ngIf="activeView !== 'module-catalog' && activeView !== 'saas-control' && activeView !== 'plans-pricing'" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5">
+            <div *ngFor="let group of saasPage.groups" class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+              <div class="px-5 py-4 border-b border-slate-100">
+                <p class="text-[10px] font-black uppercase tracking-[0.25em] text-blue-500">Module Group</p>
+                <h3 class="mt-1 text-sm font-black text-slate-900 uppercase tracking-tight">{{ group.title }}</h3>
+              </div>
+
+              <div class="p-3 space-y-1">
+                <div *ngFor="let item of group.items" class="flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-slate-50 transition-colors">
+                  <div class="flex items-center gap-2.5">
+                    <div class="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0"></div>
+                    <span class="text-xs font-semibold text-slate-700">{{ item }}</span>
+                  </div>
+                  <span class="text-[9px] font-black uppercase tracking-widest text-slate-300">Soon</span>
                 </div>
+              </div>
             </div>
+          </div>
 
-            <div *ngIf="userRole === 'SUPER_ADMIN'" class="space-y-1">
-                <p class="px-5 py-2 text-[9px] font-black text-white/30 uppercase tracking-widest">SaaS Management</p>
-                <button (click)="navigateTo('all-tenants')"
-                    class="w-full flex items-center gap-4 px-5 py-3 text-white/80 hover:bg-white/10 rounded-2xl font-bold transition-all">
-                    <lucide-icon [name]="icons.Users" class="w-4 h-4 text-emerald-400"></lucide-icon>
-                    <span class="text-[11px] uppercase">Manage All Clients</span>
-                </button>
-            </div>
-        </nav>
-
-        <div class="px-4 pb-4" *ngIf="isSidebarOpen">
-            <button (click)="logout()"
-                class="w-full flex items-center gap-4 px-5 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all text-white/70 hover:bg-red-500 hover:text-white group border border-white/5">
-                <lucide-icon [name]="icons.LogOut"
-                    class="w-4 h-4 group-hover:scale-110 transition-transform"></lucide-icon> Logout System
-            </button>
+          <!-- SCS_DASHBOARD_MODULE_CATALOG_PANEL_HOST_V1 -->
+          <app-dashboard-module-catalog
+            mode="panel"
+            [activeView]="activeView"
+            [moduleCatalog]="moduleCatalog"
+            [moduleCatalogCategories]="moduleCatalogCategories"
+            [filteredModuleCatalog]="filteredModuleCatalog"
+            [moduleCatalogCategory]="moduleCatalogCategory"
+            [moduleCatalogSearch]="moduleCatalogSearch"
+            [moduleCatalogEditorOpen]="moduleCatalogEditorOpen"
+            [moduleCatalogEditorMode]="moduleCatalogEditorMode"
+            [moduleCatalogEditorBusy]="moduleCatalogEditorBusy"
+            [moduleCatalogEditorMessage]="moduleCatalogEditorMessage"
+            [moduleCatalogEditorOk]="moduleCatalogEditorOk"
+            [moduleCatalogDraft]="moduleCatalogDraft"
+            [countModulesByCategoryFn]="moduleCatalogCountByCategory"
+            [formatModuleCategoryFn]="moduleCatalogFormatCategory"
+            [editorTitleFn]="moduleCatalogEditorTitleFn"
+            (categoryChange)="moduleCatalogSetCategory($event)"
+            (searchChange)="moduleCatalogSetSearch($event)"
+            (createModule)="openModuleCatalogCreate()"
+            (reloadCatalog)="loadModuleCatalogForSuperadmin()"
+            (editModule)="openModuleCatalogEdit($event)"
+            (closeEditor)="closeModuleCatalogEditor()"
+            (draftFieldChange)="moduleCatalogSetDraftField($event)"
+            (saveEditor)="saveModuleCatalogEditor()"
+          ></app-dashboard-module-catalog>
         </div>
+      </ng-container>
+      </ng-container>
 
-        <div class="p-6 border-t border-white/10">
-            <div class="bg-white/5 rounded-2xl p-4 flex items-center gap-3 text-white border border-white/5">
-                <div
-                    class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center font-black text-xs italic">
-                    PA</div>
-                <div *ngIf="isSidebarOpen">
-                    <p class="text-[10px] font-black uppercase">{{ userName }}</p>
-                    <p class="text-[8px] font-bold opacity-50 uppercase tracking-tighter">{{ userRole === 'SUPER_ADMIN'
-                        ? 'SoftCode CEO' : 'Business Admin' }}</p>
-                </div>
-            </div>
-        </div>
-    </aside>
+      <!-- SCS_DASHBOARD_MODULE_CATALOG_MODAL_HOST_V1 -->
+      <app-dashboard-module-catalog
+        mode="modal"
+        [activeView]="activeView"
+        [moduleCatalog]="moduleCatalog"
+        [moduleCatalogCategories]="moduleCatalogCategories"
+        [filteredModuleCatalog]="filteredModuleCatalog"
+        [moduleCatalogCategory]="moduleCatalogCategory"
+        [moduleCatalogSearch]="moduleCatalogSearch"
+        [moduleCatalogEditorOpen]="moduleCatalogEditorOpen"
+        [moduleCatalogEditorMode]="moduleCatalogEditorMode"
+        [moduleCatalogEditorBusy]="moduleCatalogEditorBusy"
+        [moduleCatalogEditorMessage]="moduleCatalogEditorMessage"
+        [moduleCatalogEditorOk]="moduleCatalogEditorOk"
+        [moduleCatalogDraft]="moduleCatalogDraft"
+        [countModulesByCategoryFn]="moduleCatalogCountByCategory"
+        [formatModuleCategoryFn]="moduleCatalogFormatCategory"
+        [editorTitleFn]="moduleCatalogEditorTitleFn"
+        (categoryChange)="moduleCatalogSetCategory($event)"
+        (searchChange)="moduleCatalogSetSearch($event)"
+        (createModule)="openModuleCatalogCreate()"
+        (reloadCatalog)="loadModuleCatalogForSuperadmin()"
+        (editModule)="openModuleCatalogEdit($event)"
+        (closeEditor)="closeModuleCatalogEditor()"
+        (draftFieldChange)="moduleCatalogSetDraftField($event)"
+        (saveEditor)="saveModuleCatalogEditor()"
+      ></app-dashboard-module-catalog>
 
-    <main class="flex-1 flex flex-col h-screen overflow-hidden">
-        <header [style.background-color]="customTheme.header"
-            class="h-24 border-b border-slate-200 px-10 flex items-center justify-between flex-shrink-0 z-40">
-            <div class="flex items-center gap-6">
-                <div *ngIf="!isSidebarOpen" (click)="toggleSidebar()"
-                    class="flex gap-2 cursor-pointer p-3 bg-slate-100 rounded-xl">
-                    <div class="w-2.5 h-2.5 rounded-full bg-[#ff5f56]"></div>
-                    <div class="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]"></div>
-                    <div class="w-2.5 h-2.5 rounded-full bg-[#27c93f]"></div>
-                </div>
-                <h2 class="text-xl font-black text-slate-900 italic uppercase">Admin Core</h2>
-            </div>
-            <div class="relative">
-                <button (click)="toggleThemeMenu()"
-                    class="flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-sm hover:bg-slate-200 transition-all">
-                    <lucide-icon [name]="icons.Palette" class="w-4 h-4 text-blue-600"></lucide-icon> Customize Colors
-                </button>
-                <div *ngIf="isThemeMenuOpen"
-                    class="absolute right-0 top-full mt-4 w-72 bg-white rounded-[2rem] shadow-2xl border border-slate-100 p-6 z-50 animate-in slide-in-from-top-2">
-                    <div class="space-y-4">
-                        <div *ngFor="let part of ['sidebar', 'header', 'background', 'footer']">
-                            <label class="text-[9px] font-black uppercase mb-2 block text-slate-400 tracking-widest">{{
-                                part }}</label>
-                            <div class="flex flex-wrap gap-2">
-                                <button *ngFor="let c of colorOptions" (click)="updateColor(part, c.code)"
-                                    [style.background-color]="c.code"
-                                    class="w-6 h-6 rounded-full border border-slate-200 hover:scale-110 transition-transform shadow-sm"></button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </header>
+      <!-- SCS_SUPERADMIN_PLATFORM_EXPANSION_PAGES_END -->
 
-        <div class="flex-1 overflow-y-auto p-12">
-            <div *ngIf="activeView === 'home'" class="max-w-7xl mx-auto space-y-12">
-                <div class="text-center">
-                    <h1 class="text-5xl font-black text-slate-900 italic uppercase leading-tight">Welcome <br> <span
-                            class="text-blue-600">{{ userName }}</span></h1>
-                </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                    <ng-container *ngIf="userRole === 'CLIENT'">
-                        <div *ngFor="let cat of categories" (click)="toggleDropdown(cat.id)"
-                            class="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm hover:-translate-y-3 transition-all duration-500 group cursor-pointer text-center">
-                            <div
-                                class="w-16 h-16 rounded-[2rem] bg-slate-50 text-blue-600 flex items-center justify-center mx-auto mb-6 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-inner">
-                                <lucide-icon [name]="cat.icon" class="w-8 h-8"></lucide-icon></div>
-                            <h3
-                                class="text-sm font-black text-slate-800 uppercase tracking-widest italic leading-tight">
-                                {{ cat.label }}</h3>
-                        </div>
-                    </ng-container>
-                    <ng-container *ngIf="userRole === 'SUPER_ADMIN'">
-                        <div class="bg-white p-8 rounded-[3rem] border-2 border-blue-600 shadow-xl text-center">
-                            <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Total Software
-                                Clients</h3>
-                            <p class="text-3xl font-black text-blue-600">Active Control</p>
-                        </div>
-                    </ng-container>
-                </div>
-            </div>
-        </div>
 
-        <footer [style.background-color]="customTheme.footer"
-            class="h-16 border-t border-slate-200 px-12 flex items-center justify-center text-[9px] font-black text-slate-400 uppercase tracking-[4px]">
-            <div class="flex items-center justify-center gap-3 text-center">
-                <span>© 2026 <span class="text-slate-400">SOFTCODE SOLUTION</span>. ALL RIGHTS RESERVED.</span>
-            </div>
-        </footer>
-    </main>
+    </div>
+
+    <footer [style.background-color]="customTheme.footer" class="h-12 border-t border-slate-200 px-8 flex items-center justify-between flex-shrink-0">
+      <span class="text-[9px] font-black text-slate-400 uppercase tracking-[3px]">© 2026 SoftCode Solution</span>
+      <div class="flex items-center gap-2">
+        <div class="w-1.5 h-1.5 rounded-full" [class.bg-emerald-500]="isOnline" [class.animate-pulse]="isOnline" [class.bg-red-400]="!isOnline"></div>
+        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{{ isOnline ? 'All Systems Live' : 'Connection Lost' }}</span>
+      </div>
+    </footer>
+  </main>
 </div>
+
+
+  
+
+<div *ngIf="confirmOpen" class="fixed inset-0 z-[150] flex items-center justify-center px-4" style="background:rgba(15,23,42,0.65);backdrop-filter:blur(16px)">
+  <div class="w-full max-w-sm rounded-[1.5rem] overflow-hidden transform transition-all animate-[bounce-in_0.4s_cubic-bezier(0.175,0.885,0.32,1.275)]" 
+    style="background:#eef0f5;box-shadow:25px 25px 60px rgba(0,0,0,0.4),-15px -15px 40px rgba(255,255,255,0.7);border:1.5px solid rgba(255,255,255,0.9)">
+    <div class="h-2 w-full" [class.bg-emerald-500]="!confirmDanger" [class.bg-red-500]="confirmDanger"></div>
+    <div class="p-10 text-center relative overflow-hidden">
+      <div class="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-40 rounded-full opacity-20 blur-xl"
+        [class.bg-emerald-400]="!confirmDanger" [class.bg-red-400]="confirmDanger"></div>
+
+      <div class="relative w-20 h-20 rounded-[1.75rem] mx-auto mb-6 flex items-center justify-center border border-white/50"
+        style="box-shadow:10px 10px 25px rgba(0,0,0,0.1),-10px -10px 25px rgba(255,255,255,0.8), inset 2px 2px 5px rgba(255,255,255,0.5);background:#eef0f5">
+        <lucide-icon [name]="confirmDanger ? icons.AlertTriangle : icons.Info" class="w-9 h-9 drop-shadow-md"
+          [class.text-emerald-600]="!confirmDanger" [class.text-red-600]="confirmDanger"></lucide-icon>
+      </div>
+      <h3 class="text-lg font-black text-slate-900 uppercase tracking-tight drop-shadow-sm relative z-10">{{ confirmTitle }}</h3>
+      <p class="text-sm font-bold text-slate-500 mt-3 leading-relaxed max-w-xs mx-auto relative z-10">{{ confirmMessage }}</p>
+      <div class="flex gap-3 mt-8 relative z-10">
+        <button (click)="closeConfirm()" class="flex-1 py-4 rounded-[1.5rem] text-slate-700 text-[11px] font-black uppercase tracking-widest transition-all hover:-translate-y-1 active:translate-y-0"
+          style="background:#eef0f5;box-shadow:6px 6px 15px rgba(0,0,0,0.05),-6px -6px 15px rgba(255,255,255,0.8)">Cancel</button>
+        <button (click)="runConfirm()" class="flex-1 py-4 rounded-[1.5rem] text-white text-[11px] font-black uppercase tracking-widest transition-all shadow-[0_10px_20px_-5px_rgba(0,0,0,0.3)] hover:-translate-y-1 active:translate-y-0"
+          [style.background]="confirmDanger ? 'linear-gradient(135deg,#dc2626,#b91c1c)' : 'linear-gradient(135deg,#059669,#047857)'">
+          Confirm
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="popupOpen" class="fixed inset-0 z-[160] flex items-center justify-center px-4" style="background:rgba(15,23,42,0.65);backdrop-filter:blur(16px)">
+  <div class="w-full max-w-sm rounded-[2.5rem] overflow-hidden transform transition-all animate-[bounce-in_0.4s_cubic-bezier(0.175,0.885,0.32,1.275)]" 
+    style="background:#eef0f5;box-shadow:25px 25px 60px rgba(0,0,0,0.4),-15px -15px 40px rgba(255,255,255,0.7);border:1.5px solid rgba(255,255,255,0.9)">
+    <div class="h-2 w-full" [style.background]="popupSuccess ? 'linear-gradient(90deg,#10b981,#34d399)' : 'linear-gradient(90deg,#ef4444,#f87171)'"></div>
+    <div class="p-10 text-center relative overflow-hidden">
+      <div class="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-40 rounded-full opacity-20 blur-xl"
+        [class.bg-emerald-400]="popupSuccess" [class.bg-red-400]="!popupSuccess"></div>
+
+      <div class="relative w-24 h-24 rounded-[2rem] mx-auto mb-6 flex items-center justify-center border border-white/50"
+        [style.background]="popupSuccess ? 'linear-gradient(135deg,#d1fae5,#a7f3d0)' : 'linear-gradient(135deg,#fee2e2,#fecaca)'"
+        style="box-shadow:10px 10px 25px rgba(0,0,0,0.1),-10px -10px 25px rgba(255,255,255,0.8), inset 2px 2px 5px rgba(255,255,255,0.5)">
+        <lucide-icon [name]="popupSuccess ? icons.CheckCircle2 : icons.XCircle" class="w-9 h-9 drop-shadow-md"
+          [class.text-emerald-600]="popupSuccess" [class.text-red-600]="!popupSuccess"></lucide-icon>
+      </div>
+      <h3 class="text-2xl font-black text-slate-900 uppercase tracking-tight drop-shadow-sm relative z-10">{{ popupTitle }}</h3>
+      <p class="text-sm font-bold text-slate-500 mt-3 leading-relaxed max-w-xs mx-auto relative z-10">{{ popupMessage }}</p>
+      
+      <button (click)="closeActionPopup()" class="mt-8 w-full py-4 rounded-[1.5rem] text-white text-[11px] font-black uppercase tracking-widest transition-all shadow-[0_10px_20px_-5px_rgba(0,0,0,0.3)] hover:-translate-y-1 active:translate-y-0 relative z-10"
+        [style.background]="popupSuccess ? 'linear-gradient(135deg,#059669,#047857)' : 'linear-gradient(135deg,#dc2626,#b91c1c)'">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCS_SUPERADMIN_PROFILE_FINAL_POPUP_REMOVED_SAFE -->
+
+
+
+
+<!-- SCS_SELECTEDCLIENT_RESTORED_POPUP_REMOVED_SAFE -->
+<!-- SCS_EYE_CLIENT_POPUP_V2_REMOVED_SECURE_REBUILD -->
+
+
+<!-- SCS_CLIENT_POPUP_SECURE_START -->
+<div *ngIf="clientPopup" class="fixed inset-0 z-[9999] flex items-end justify-center bg-slate-950/65 p-0 backdrop-blur-xl sm:items-center sm:p-4" (click)="closeClientPopupSecure()">
+  <div class="flex h-[100dvh] w-full flex-col overflow-hidden bg-white shadow-2xl sm:h-[94vh] sm:max-w-6xl sm:rounded-[2rem] sm:border sm:border-white/60" (click)="$event.stopPropagation()">
+
+    <div class="relative overflow-hidden bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 px-4 py-5 text-white sm:px-6">
+      <div class="absolute -right-20 -top-20 h-56 w-56 rounded-full bg-blue-400/20 blur-3xl"></div>
+      <div class="relative flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div class="flex min-w-0 items-center gap-4">
+          <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-2xl font-black uppercase ring-1 ring-white/15 sm:h-16 sm:w-16">
+            {{ clientPopupInitial() }}
+          </div>
+          <div class="min-w-0">
+            <p class="text-[10px] font-black uppercase tracking-[0.28em] text-white/45">Secure Client Control</p>
+            <h2 class="mt-1 truncate text-xl font-black uppercase tracking-tight sm:text-2xl">{{ clientPopup.full_name || clientPopup.company_name || 'Client' }}</h2>
+            <p class="mt-1 truncate text-xs font-bold text-blue-100 sm:text-sm">{{ clientPopup.email || 'No email' }}</p>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <span class="rounded-full bg-white/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest ring-1 ring-white/15">
+                {{ clientPopupStatusLabel(clientPopup.status) }}
+              </span>
+              <span class="rounded-full bg-white/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest ring-1 ring-white/15">
+                {{ clientPopup.tenant_id || 'no-tenant' }}
+              </span>
+              <span class="rounded-full bg-white/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest ring-1 ring-white/15">
+                {{ clientPopup.business_type || 'general' }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap gap-2">
+          <button type="button" *ngIf="clientPopup.status !== 'approved'" (click)="clientPopupStatusAction('approve')" [disabled]="clientPopupBusy" class="rounded-full bg-emerald-500 px-4 py-2 text-xs font-black uppercase tracking-widest text-white shadow-lg shadow-emerald-950/20 disabled:opacity-50">Approve</button>
+          <button type="button" *ngIf="clientPopup.status !== 'rejected'" (click)="clientPopupStatusAction('reject')" [disabled]="clientPopupBusy" class="rounded-full bg-rose-500 px-4 py-2 text-xs font-black uppercase tracking-widest text-white shadow-lg shadow-rose-950/20 disabled:opacity-50">Reject</button>
+          <button type="button" (click)="clientPopupStatusAction('suspend')" [disabled]="clientPopupBusy" class="rounded-full bg-amber-400 px-4 py-2 text-xs font-black uppercase tracking-widest text-slate-950 shadow-lg shadow-amber-950/20 disabled:opacity-50">Suspend</button>
+          <button type="button" (click)="closeClientPopupSecure()" class="rounded-full bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-widest text-white ring-1 ring-white/15">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="border-b border-slate-200 bg-white px-3 py-3 sm:px-5">
+      <div class="flex gap-2 overflow-x-auto pb-1">
+        <button type="button" (click)="setClientPopupTab('overview')" class="shrink-0 rounded-full px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all" [class.bg-slate-950]="clientPopupTab==='overview'" [class.text-white]="clientPopupTab==='overview'" [class.bg-slate-100]="clientPopupTab!=='overview'" [class.text-slate-500]="clientPopupTab!=='overview'">Overview</button>
+        <button type="button" (click)="setClientPopupTab('edit')" class="shrink-0 rounded-full px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all" [class.bg-slate-950]="clientPopupTab==='edit'" [class.text-white]="clientPopupTab==='edit'" [class.bg-slate-100]="clientPopupTab!=='edit'" [class.text-slate-500]="clientPopupTab!=='edit'">Edit Info</button>
+        <button type="button" (click)="setClientPopupTab('status')" class="shrink-0 rounded-full px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all" [class.bg-slate-950]="clientPopupTab==='status'" [class.text-white]="clientPopupTab==='status'" [class.bg-slate-100]="clientPopupTab!=='status'" [class.text-slate-500]="clientPopupTab!=='status'">Status</button>
+        <button type="button" (click)="setClientPopupTab('access')" class="shrink-0 rounded-full px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all" [class.bg-slate-950]="clientPopupTab==='access'" [class.text-white]="clientPopupTab==='access'" [class.bg-slate-100]="clientPopupTab!=='access'" [class.text-slate-500]="clientPopupTab!=='access'">Access & Security</button>
+        <button type="button" (click)="setClientPopupTab('audit')" class="shrink-0 rounded-full px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all" [class.bg-slate-950]="clientPopupTab==='audit'" [class.text-white]="clientPopupTab==='audit'" [class.bg-slate-100]="clientPopupTab!=='audit'" [class.text-slate-500]="clientPopupTab!=='audit'">Audit</button>
+      </div>
+    </div>
+
+    <div *ngIf="clientPopupMessage" class="border-b px-5 py-3 text-xs font-bold" [class.bg-emerald-50]="clientPopupMessageOk" [class.text-emerald-700]="clientPopupMessageOk" [class.border-emerald-200]="clientPopupMessageOk" [class.bg-rose-50]="!clientPopupMessageOk" [class.text-rose-700]="!clientPopupMessageOk" [class.border-rose-200]="!clientPopupMessageOk">
+      {{ clientPopupMessage }}
+    </div>
+
+    <main class="flex-1 overflow-y-auto bg-slate-50 p-4 sm:p-6">
+      <section *ngIf="clientPopupTab === 'overview'" class="grid gap-4 lg:grid-cols-[1fr_340px]">
+        <div class="rounded-[1.5rem] bg-white p-5 ring-1 ring-slate-100">
+          <p class="text-[10px] font-black uppercase tracking-[0.25em] text-blue-500">Overview</p>
+          <h3 class="mt-1 text-xl font-black text-slate-950">Client identity</h3>
+
+          <div class="mt-5 grid gap-3 sm:grid-cols-2">
+            <div class="rounded-2xl bg-slate-50 p-4"><p class="text-[9px] font-black uppercase tracking-widest text-slate-400">Full Name</p><p class="mt-1 text-sm font-black text-slate-900">{{ clientPopup.full_name || '—' }}</p></div>
+            <div class="rounded-2xl bg-slate-50 p-4"><p class="text-[9px] font-black uppercase tracking-widest text-slate-400">Company</p><p class="mt-1 text-sm font-black text-slate-900">{{ clientPopup.company_name || '—' }}</p></div>
+            <div class="rounded-2xl bg-slate-50 p-4"><p class="text-[9px] font-black uppercase tracking-widest text-slate-400">Email</p><p class="mt-1 break-all text-sm font-black text-slate-900">{{ clientPopup.email || '—' }}</p></div>
+            <div class="rounded-2xl bg-slate-50 p-4"><p class="text-[9px] font-black uppercase tracking-widest text-slate-400">Phone</p><p class="mt-1 text-sm font-black text-slate-900">{{ clientPopup.country_code || '' }} {{ clientPopup.phone || '—' }}</p></div>
+            <div class="rounded-2xl bg-slate-50 p-4"><p class="text-[9px] font-black uppercase tracking-widest text-slate-400">Business</p><p class="mt-1 text-sm font-black text-slate-900">{{ clientPopup.business_type || '—' }}</p></div>
+            <div class="rounded-2xl bg-slate-50 p-4"><p class="text-[9px] font-black uppercase tracking-widest text-slate-400">Location</p><p class="mt-1 text-sm font-black text-slate-900">{{ clientPopup.city || '—' }}, {{ clientPopup.country || '—' }}</p></div>
+          </div>
+        </div>
+
+        <div class="rounded-[1.5rem] bg-slate-950 p-5 text-white">
+          <p class="text-[10px] font-black uppercase tracking-[0.25em] text-white/40">Security Rule</p>
+          <h3 class="mt-2 text-xl font-black">No plain password view</h3>
+          <p class="mt-3 text-sm font-bold leading-relaxed text-white/60">
+            Admin password dekh nahi sakta. Safe flow: reset link send karo, ya one-time temporary password generate karo with force change.
+          </p>
+          <button type="button" (click)="setClientPopupTab('access')" class="mt-5 w-full rounded-2xl bg-white px-5 py-3 text-xs font-black uppercase tracking-widest text-slate-950">Access & Security</button>
+        </div>
+      </section>
+
+      <section *ngIf="clientPopupTab === 'edit'" class="rounded-[1.5rem] bg-white p-5 ring-1 ring-slate-100">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p class="text-[10px] font-black uppercase tracking-[0.25em] text-blue-500">Basic CRUD</p>
+            <h3 class="mt-1 text-xl font-black text-slate-950">Edit client information</h3>
+          </div>
+          <button type="button" (click)="saveClientPopupInfo()" [disabled]="clientPopupBusy" class="rounded-full bg-slate-950 px-6 py-3 text-xs font-black uppercase tracking-widest text-white disabled:opacity-50">Save Changes</button>
+        </div>
+
+        <div class="mt-5 grid gap-4 md:grid-cols-2">
+          <label><span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Full Name</span><input class="mt-1 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold outline-none focus:border-blue-400" [value]="clientPopupDraft.full_name || ''" (input)="setClientPopupField('full_name', $any($event.target).value)"></label>
+          <label><span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Email</span><input class="mt-1 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-400" [value]="clientPopupDraft.email || ''" disabled></label>
+          <label><span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Country Code</span><input class="mt-1 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold outline-none focus:border-blue-400" [value]="clientPopupDraft.country_code || ''" (input)="setClientPopupField('country_code', $any($event.target).value)"></label>
+          <label><span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Phone</span><input class="mt-1 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold outline-none focus:border-blue-400" [value]="clientPopupDraft.phone || ''" (input)="setClientPopupField('phone', $any($event.target).value)"></label>
+          <label><span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Company</span><input class="mt-1 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold outline-none focus:border-blue-400" [value]="clientPopupDraft.company_name || ''" (input)="setClientPopupField('company_name', $any($event.target).value)"></label>
+          <label><span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Business Type</span><input class="mt-1 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold outline-none focus:border-blue-400" [value]="clientPopupDraft.business_type || ''" (input)="setClientPopupField('business_type', $any($event.target).value)"></label>
+          <label><span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Business Size</span><input class="mt-1 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold outline-none focus:border-blue-400" [value]="clientPopupDraft.business_size || ''" (input)="setClientPopupField('business_size', $any($event.target).value)"></label>
+          <label><span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Country</span><input class="mt-1 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold outline-none focus:border-blue-400" [value]="clientPopupDraft.country || ''" (input)="setClientPopupField('country', $any($event.target).value)"></label>
+          <label><span class="text-[10px] font-black uppercase tracking-widest text-slate-400">City</span><input class="mt-1 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold outline-none focus:border-blue-400" [value]="clientPopupDraft.city || ''" (input)="setClientPopupField('city', $any($event.target).value)"></label>
+          <label><span class="text-[10px] font-black uppercase tracking-widest text-slate-400">State</span><input class="mt-1 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold outline-none focus:border-blue-400" [value]="clientPopupDraft.state || ''" (input)="setClientPopupField('state', $any($event.target).value)"></label>
+          <label class="md:col-span-2"><span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Address</span><input class="mt-1 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold outline-none focus:border-blue-400" [value]="clientPopupDraft.address || ''" (input)="setClientPopupField('address', $any($event.target).value)"></label>
+        </div>
+      </section>
+
+      <section *ngIf="clientPopupTab === 'status'" class="rounded-[1.5rem] bg-white p-5 ring-1 ring-slate-100">
+        <p class="text-[10px] font-black uppercase tracking-[0.25em] text-blue-500">Status Manager</p>
+        <h3 class="mt-1 text-xl font-black text-slate-950">Pending / Approved / Rejected / Suspended</h3>
+
+        <div class="mt-5 grid gap-3 md:grid-cols-4">
+          <div class="rounded-2xl bg-slate-50 p-4">
+            <p class="text-[9px] font-black uppercase tracking-widest text-slate-400">Current Status</p>
+            <p class="mt-2 text-lg font-black capitalize text-slate-950">{{ clientPopupStatusLabel(clientPopup.status) }}</p>
+          </div>
+          <button type="button" (click)="clientPopupStatusAction('approve')" [disabled]="clientPopupBusy" class="rounded-2xl bg-emerald-600 px-4 py-5 text-xs font-black uppercase tracking-widest text-white disabled:opacity-50">Approve</button>
+          <button type="button" (click)="clientPopupStatusAction('reject')" [disabled]="clientPopupBusy" class="rounded-2xl bg-rose-600 px-4 py-5 text-xs font-black uppercase tracking-widest text-white disabled:opacity-50">Reject</button>
+          <button type="button" (click)="clientPopupStatusAction('suspend')" [disabled]="clientPopupBusy" class="rounded-2xl bg-amber-400 px-4 py-5 text-xs font-black uppercase tracking-widest text-slate-950 disabled:opacity-50">Suspend</button>
+        </div>
+
+        <div class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <p class="text-xs font-bold text-slate-500">
+            Modules, plan, pricing aur billing yahan nahi honge. Woh Module Catalog / Plans & Pricing / Business Suites cards me manage honge.
+          </p>
+        </div>
+      </section>
+
+      <section *ngIf="clientPopupTab === 'access'" class="grid gap-4 lg:grid-cols-2">
+        <div class="rounded-[1.5rem] bg-white p-5 ring-1 ring-slate-100">
+          <p class="text-[10px] font-black uppercase tracking-[0.25em] text-blue-500">Password Recovery</p>
+          <h3 class="mt-1 text-xl font-black text-slate-950">Safe password reset</h3>
+          <p class="mt-2 text-sm font-bold leading-relaxed text-slate-500">
+            Best option reset link hai. Plain password kabhi show nahi karna. Temp password sirf emergency me one-time hona chahiye.
+          </p>
+
+          <div class="mt-5 grid gap-3 sm:grid-cols-2">
+            <button type="button" (click)="sendClientPasswordResetLink()" [disabled]="clientPopupBusy" class="rounded-2xl bg-blue-600 px-5 py-4 text-xs font-black uppercase tracking-widest text-white disabled:opacity-50">Send Reset Link</button>
+            <button type="button" (click)="generateClientTemporaryPassword()" [disabled]="clientPopupBusy" class="rounded-2xl bg-slate-950 px-5 py-4 text-xs font-black uppercase tracking-widest text-white disabled:opacity-50">Generate Temp Password</button>
+          </div>
+
+          <div *ngIf="clientPopupTempPassword" class="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+            <p class="text-[10px] font-black uppercase tracking-widest text-amber-700">One-time temporary password</p>
+            <div class="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center">
+              <code class="flex-1 rounded-xl bg-white px-4 py-3 text-sm font-black text-slate-900 ring-1 ring-amber-200">{{ clientPopupTempPassword }}</code>
+              <button type="button" (click)="copyClientPopupTempPassword()" class="rounded-xl bg-amber-400 px-4 py-3 text-xs font-black uppercase tracking-widest text-slate-950">Copy</button>
+            </div>
+            <p class="mt-2 text-xs font-bold text-amber-700">Secure channel se share karo. Client next login par password change kare.</p>
+          </div>
+        </div>
+
+        <div class="rounded-[1.5rem] bg-white p-5 ring-1 ring-slate-100">
+          <p class="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400">Access Control</p>
+          <h3 class="mt-1 text-xl font-black text-slate-950">Login/session actions</h3>
+
+          <div class="mt-5 grid gap-3 sm:grid-cols-2">
+            <button type="button" (click)="clientPopupAccessAction('Force logout', '/api/superadmin/clients/force-logout')" class="rounded-2xl bg-slate-100 px-5 py-4 text-xs font-black uppercase tracking-widest text-slate-700">Force Logout</button>
+            <button type="button" (click)="clientPopupAccessAction('Unlock account', '/api/superadmin/clients/unlock')" class="rounded-2xl bg-slate-100 px-5 py-4 text-xs font-black uppercase tracking-widest text-slate-700">Unlock Account</button>
+            <button type="button" (click)="clientPopupAccessAction('Disable login', '/api/superadmin/clients/login/disable')" class="rounded-2xl bg-rose-50 px-5 py-4 text-xs font-black uppercase tracking-widest text-rose-700">Disable Login</button>
+            <button type="button" (click)="clientPopupAccessAction('Enable login', '/api/superadmin/clients/login/enable')" class="rounded-2xl bg-emerald-50 px-5 py-4 text-xs font-black uppercase tracking-widest text-emerald-700">Enable Login</button>
+          </div>
+
+          <div class="mt-5 rounded-2xl bg-slate-50 p-4">
+            <p class="text-[9px] font-black uppercase tracking-widest text-slate-400">Auth Status</p>
+            <p class="mt-1 text-sm font-black text-slate-900">{{ clientPopup.auth_status || 'unknown' }}</p>
+          </div>
+        </div>
+      </section>
+
+      <section *ngIf="clientPopupTab === 'audit'" class="space-y-3">
+        <div class="rounded-[1.5rem] bg-white p-5 ring-1 ring-slate-100">
+          <p class="text-[10px] font-black uppercase tracking-[0.25em] text-blue-500">Audit</p>
+          <h3 class="mt-1 text-xl font-black text-slate-950">Popup action log</h3>
+        </div>
+
+        <div *ngFor="let item of clientPopupAudit" class="rounded-[1.25rem] bg-white p-4 ring-1 ring-slate-100">
+          <p class="text-sm font-black text-slate-900">{{ item.action }}</p>
+          <p class="mt-1 text-xs font-bold text-slate-500">{{ item.detail }}</p>
+          <p class="mt-2 text-[10px] font-black uppercase tracking-widest text-slate-400">{{ item.time }}</p>
+        </div>
+
+        <div *ngIf="clientPopupAudit.length === 0" class="rounded-[1.25rem] bg-white p-5 text-sm font-bold text-slate-500 ring-1 ring-slate-100">
+          No audit entries yet.
+        </div>
+      </section>
+    </main>
+
+    <div class="border-t border-slate-200 bg-white px-4 py-3 sm:px-6">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p class="text-xs font-bold text-slate-400">
+          Secure popup only: CRUD, status, password/access, audit. Modules/plans/prices are handled in their own cards.
+        </p>
+        <div class="flex gap-2">
+          <button type="button" (click)="setClientPopupTab('edit')" class="rounded-full bg-white px-5 py-3 text-xs font-black uppercase tracking-widest text-slate-700 ring-1 ring-slate-200">Edit</button>
+          <button type="button" (click)="closeClientPopupSecure()" class="rounded-full bg-slate-950 px-6 py-3 text-xs font-black uppercase tracking-widest text-white">Done</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+<!-- SCS_CLIENT_POPUP_SECURE_END -->
+

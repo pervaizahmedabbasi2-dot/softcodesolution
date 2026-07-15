@@ -7,17 +7,18 @@ import { LegalComponent } from './landing-page/legal/legal.component';
 import { MirroringComponent } from './landing-page/mirroring/mirroring.component';
 import { HybridSyncComponent } from './landing-page/hybrid-sync/hybrid-sync.component';
 import { TripleBackupComponent } from './landing-page/triple-backup/triple-backup.component';
-import { ScsbotAiComponent } from './scsbot-ai/scsbot-ai.component'; // 🔥 🔥 SCSBOT AI NAYA IMPORT 🔥 🔥
+
 
 export const routes: Routes = [
     { path: '', component: LandingPageComponent },
     { path: 'login', component: LoginComponent },
     { path: 'register', component: RegisterComponent },
     { path: 'dashboard', component: DashboardComponent },
+    { path: 'superadmin', component: DashboardComponent },
     { path: 'legal', component: LegalComponent },
     { path: 'mirroring', component: MirroringComponent },
     { path: 'hybrid-sync', component: HybridSyncComponent },
     { path: 'triple-backup', component: TripleBackupComponent },
-    { path: 'scsbot-ai', component: ScsbotAiComponent }, // 🔥 🔥 SCSBOT AI NAYA ROUTE 🔥 🔥
+    
     { path: '**', redirectTo: '' }
 ];

@@ -1,0 +1,437 @@
+<!-- SCS_DASHBOARD_SAAS_CONTROL_COMPONENT_V1_START -->
+          <div *ngIf="activeView === 'saas-control'"
+            class="space-y-5 rounded-[2rem] border border-slate-200 bg-slate-50 p-4 shadow-xl sm:p-5">
+
+            <div class="overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 p-5 text-white shadow-2xl sm:p-6">
+              <div class="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+                <div>
+                  <p class="text-[10px] font-black uppercase tracking-[0.32em] text-blue-200">
+                    Business-wise subscription engine
+                  </p>
+                  <h2 class="mt-2 text-2xl font-black tracking-tight">
+                    SaaS Control Center
+                  </h2>
+                  <p class="mt-2 max-w-3xl text-sm font-bold leading-relaxed text-white/55">
+                    Client ka official business resolve hota hai, phir usi business ka
+                    Starter, Pro ya Enterprise price aur included modules assign hote hain.
+                  </p>
+                </div>
+
+                <div class="w-full xl:max-w-md">
+                  <label class="text-[10px] font-black uppercase tracking-widest text-white/45">
+                    Select approved client
+                  </label>
+
+                  <select
+                    class="mt-2 w-full rounded-2xl border border-white/15 bg-white/10 px-4 py-3 text-sm font-black text-white outline-none"
+                    [value]="selectedClient?.id || ''"
+                    (change)="selectSaasControlClient($any($event.target).value)">
+
+                    <option value="" class="text-slate-900">
+                      Select client
+                    </option>
+
+                    <option
+                      *ngFor="let client of superadminClients"
+                      [value]="client.id"
+                      [disabled]="client.status !== 'approved'"
+                      class="text-slate-900">
+                      {{ client.company_name || client.full_name || client.email }}
+                      — {{ client.business_type }}
+                      — {{ client.status }}
+                    </option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="!selectedClient"
+              class="rounded-[1.75rem] border border-dashed border-slate-300 bg-white p-12 text-center">
+              <p class="text-lg font-black text-slate-900">
+                Client select karo
+              </p>
+              <p class="mt-2 text-sm font-bold text-slate-400">
+                Approved client select karne ke baad business plans aur modules yahan load honge.
+              </p>
+            </div>
+
+            <ng-container *ngIf="selectedClient">
+              <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <div class="rounded-[1.5rem] bg-white p-5 ring-1 ring-slate-100">
+                  <p class="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                    Client
+                  </p>
+                  <p class="mt-2 truncate text-base font-black text-slate-950">
+                    {{ selectedClient.company_name || selectedClient.full_name }}
+                  </p>
+                  <p class="mt-1 truncate text-xs font-bold text-slate-400">
+                    {{ selectedClient.email }}
+                  </p>
+                </div>
+
+                <div class="rounded-[1.5rem] bg-white p-5 ring-1 ring-slate-100">
+                  <p class="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                    Official business
+                  </p>
+                  <p class="mt-2 text-base font-black text-blue-700">
+                    {{ saasClientBusinessLabel() }}
+                  </p>
+                  <p class="mt-1 text-xs font-bold text-slate-400">
+                    Registered: {{ selectedClient.business_type }}
+                  </p>
+                </div>
+
+                <div class="rounded-[1.5rem] bg-white p-5 ring-1 ring-slate-100">
+                  <p class="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                    Current subscription
+                  </p>
+                  <p class="mt-2 text-base font-black uppercase text-slate-950">
+                    {{ tenantSubscription.plan_id || 'No plan' }}
+                  </p>
+                  <p class="mt-1 text-xs font-bold text-slate-400">
+                    {{ tenantSubscription.billing_cycle || 'monthly' }}
+                    / Rs {{ tenantSubscription.amount || 0 | number:'1.0-0' }}
+                  </p>
+                </div>
+
+                <div class="rounded-[1.5rem] bg-slate-950 p-5 text-white">
+                  <p class="text-[9px] font-black uppercase tracking-widest text-white/40">
+                    Enabled access
+                  </p>
+                  <p class="mt-2 text-2xl font-black">
+                    {{ scsSuperEnabledCount() }}
+                  </p>
+                  <p class="mt-1 text-xs font-bold text-white/45">
+                    Active tenant modules
+                  </p>
+                </div>
+              </div>
+
+              <div class="rounded-[1.75rem] bg-white p-5 ring-1 ring-slate-100 sm:p-6">
+                <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                  <div>
+                    <p class="text-[10px] font-black uppercase tracking-[0.25em] text-blue-500">
+                      Business plans
+                    </p>
+                    <h3 class="mt-1 text-xl font-black text-slate-950">
+                      {{ saasClientBusinessLabel() }}
+                    </h3>
+                  </div>
+
+                  <div class="inline-flex rounded-2xl bg-slate-100 p-1">
+                    <button
+                      type="button"
+                      (click)="saasClientSetBillingCycle('monthly')"
+                      class="rounded-xl px-5 py-2.5 text-xs font-black uppercase tracking-widest"
+                      [class.bg-white]="saasClientBillingCycle === 'monthly'"
+                      [class.text-slate-950]="saasClientBillingCycle === 'monthly'"
+                      [class.shadow]="saasClientBillingCycle === 'monthly'"
+                      [class.text-slate-400]="saasClientBillingCycle !== 'monthly'">
+                      Monthly
+                    </button>
+
+                    <button
+                      type="button"
+                      (click)="saasClientSetBillingCycle('yearly')"
+                      class="rounded-xl px-5 py-2.5 text-xs font-black uppercase tracking-widest"
+                      [class.bg-white]="saasClientBillingCycle === 'yearly'"
+                      [class.text-slate-950]="saasClientBillingCycle === 'yearly'"
+                      [class.shadow]="saasClientBillingCycle === 'yearly'"
+                      [class.text-slate-400]="saasClientBillingCycle !== 'yearly'">
+                      Yearly
+                    </button>
+                  </div>
+                </div>
+
+                <div *ngIf="saasClientPlanLoading"
+                  class="mt-5 rounded-2xl bg-slate-50 p-8 text-center text-sm font-black text-slate-400">
+                  Loading business plans...
+                </div>
+
+                <div *ngIf="!saasClientPlanLoading"
+                  class="mt-5 grid gap-4 lg:grid-cols-3">
+
+                  <button
+                    type="button"
+                    *ngFor="let plan of saasAssignablePlans()"
+                    (click)="saasClientSelectPlan($any(plan).id || $any(plan).plan_id)"
+                    class="rounded-[1.5rem] border p-5 text-left transition-all"
+                    [class.border-blue-500]="saasClientSelectedPlanId === ($any(plan).id || $any(plan).plan_id)"
+                    [class.bg-blue-50]="saasClientSelectedPlanId === ($any(plan).id || $any(plan).plan_id)"
+                    [class.shadow-lg]="saasClientSelectedPlanId === ($any(plan).id || $any(plan).plan_id)"
+                    [class.border-slate-200]="saasClientSelectedPlanId !== ($any(plan).id || $any(plan).plan_id)"
+                    [class.bg-white]="saasClientSelectedPlanId !== ($any(plan).id || $any(plan).plan_id)">
+
+                    <div class="flex items-start justify-between gap-3">
+                      <div>
+                        <p class="text-[10px] font-black uppercase tracking-widest text-blue-500">
+                          {{ $any(plan).name || $any(plan).plan_name || ($any(plan).id || $any(plan).plan_id) }}
+                        </p>
+                        <p class="mt-2 text-2xl font-black text-slate-950">
+                          Rs {{ saasBusinessPlanPrice(plan) | number:'1.0-0' }}
+                        </p>
+                        <p class="mt-1 text-xs font-bold text-slate-400">
+                          per {{ saasClientBillingCycle === 'yearly' ? 'year' : 'month' }}
+                        </p>
+                      </div>
+
+                      <span class="rounded-full bg-slate-950 px-3 py-1 text-[9px] font-black uppercase tracking-widest text-white">
+                        {{ saasBusinessPlanModuleCount(plan) }} modules
+                      </span>
+                    </div>
+
+                    <p class="mt-4 text-xs font-bold leading-relaxed text-slate-500">
+                      {{ saasBusinessPlanModuleNames(plan) }}
+                    </p>
+                  </button>
+                </div>
+
+                <div class="mt-5 flex flex-col gap-3 rounded-2xl bg-slate-950 p-4 text-white sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p class="text-[9px] font-black uppercase tracking-widest text-white/40">
+                      Selected package total
+                    </p>
+                    <p class="mt-1 text-xl font-black">
+                      Rs {{ saasSelectedPackageTotal() | number:'1.0-0' }}
+                    </p>
+                    <p class="mt-1 text-xs font-bold text-white/45">
+                      Plan base + enabled manual addons only
+                    </p>
+
+                    <div class="mt-4 space-y-2 text-xs font-bold text-white/80">
+
+                      <div class="flex justify-between">
+                        <span>Billing</span>
+                        <span>{{ saasClientBillingCycle | titlecase }}</span>
+                      </div>
+
+                      <div class="flex justify-between">
+                        <span>Selected Plan</span>
+                        <span>{{ saasClientSelectedPlanId || '-' }}</span>
+                      </div>
+
+                      <div class="flex justify-between">
+                        <span>Enabled Modules</span>
+                        <span>{{ scsSuperEnabledCount() }}</span>
+                      </div>
+
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    (click)="assignSaasClientBusinessPlan()"
+                    [disabled]="
+                      saasClientPlanSaving ||
+                      saasClientPlanLoading ||
+                      !saasClientSelectedPlanId ||
+                      selectedClient.status !== 'approved'
+                    "
+                    class="rounded-2xl bg-white px-6 py-3 text-xs font-black uppercase tracking-widest text-slate-950 disabled:cursor-not-allowed disabled:opacity-40">
+                    {{ saasClientPlanSaving ? 'Assigning...' : 'Assign Business Plan' }}
+                  </button>
+                </div>
+
+
+                <div class="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+
+                  <h4 class="text-sm font-black text-slate-900">
+                    Business Plan Summary
+                  </h4>
+
+                  <div class="mt-4 grid gap-3 md:grid-cols-2">
+
+                    <div>
+                      <div class="text-[10px] font-black uppercase text-slate-400">
+                        Business
+                      </div>
+                      <div class="font-bold text-slate-900">
+                        {{ saasClientBusinessLabel() }}
+                      </div>
+                    </div>
+
+                    <div>
+                      <div class="text-[10px] font-black uppercase text-slate-400">
+                        Selected Plan
+                      </div>
+                      <div class="font-bold text-slate-900">
+                        {{ saasClientSelectedPlanId || '-' }}
+                      </div>
+                    </div>
+
+                    <div>
+                      <div class="text-[10px] font-black uppercase text-slate-400">
+                        Billing
+                      </div>
+                      <div class="font-bold text-slate-900">
+                        {{ saasClientBillingCycle | titlecase }}
+                      </div>
+                    </div>
+
+                    <div>
+                      <div class="text-[10px] font-black uppercase text-slate-400">
+                        Enabled Modules
+                      </div>
+                      <div class="font-bold text-slate-900">
+                        {{ scsSuperEnabledCount() }}
+                      </div>
+                    </div>
+
+                  </div>
+
+                </div>
+
+                <p *ngIf="saasClientPlanMessage"
+                  class="mt-4 rounded-2xl px-4 py-3 text-xs font-black"
+                  [class.bg-emerald-50]="saasClientPlanOk"
+                  [class.text-emerald-700]="saasClientPlanOk"
+                  [class.bg-rose-50]="!saasClientPlanOk"
+                  [class.text-rose-700]="!saasClientPlanOk">
+                  {{ saasClientPlanMessage }}
+                </p>
+              </div>
+
+              <div class="rounded-[1.75rem] bg-white p-5 ring-1 ring-slate-100 sm:p-6">
+                <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                  <div>
+                    <p class="text-[10px] font-black uppercase tracking-[0.25em] text-emerald-600">
+                      Tenant modules
+                    </p>
+                    <h3 class="mt-1 text-xl font-black text-slate-950">
+                      Included plan access + manual addons
+                    </h3>
+                  </div>
+
+                  <div class="grid gap-2 sm:grid-cols-2">
+                    <input
+                      class="rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold outline-none focus:border-blue-400"
+                      placeholder="Search modules"
+                      [value]="scsSuperModuleSearch"
+                      (input)="scsSuperSetModuleSearch($any($event.target).value)">
+
+                    <div class="flex gap-2">
+
+                      <button
+                        type="button"
+                        (click)="scsEnableSelectedModules()"
+                        class="rounded-xl bg-indigo-700 px-4 py-3 text-xs font-black uppercase text-white">
+                        Enable Selected
+                      </button>
+
+                      <button
+                        type="button"
+                        (click)="scsDisableSelectedModules()"
+                        class="rounded-xl bg-amber-600 px-4 py-3 text-xs font-black uppercase text-white">
+                        Disable Selected
+                      </button>
+
+                    </div>
+
+                    <select
+                      class="rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold outline-none"
+                      [value]="scsSuperModuleCategory"
+                      (change)="scsSuperSetModuleCategory($any($event.target).value)">
+                      <option value="all">All categories</option>
+                      <option
+                        *ngFor="let category of scsSuperCategories()"
+                        [value]="category">
+                        {{ moduleCategoryLabel(category) }}
+                      </option>
+                    </select>
+                  </div>
+                </div>
+
+                <div *ngIf="isModulesLoading"
+                  class="mt-5 rounded-2xl bg-slate-50 p-8 text-center text-sm font-black text-slate-400">
+                  Loading tenant modules...
+                </div>
+
+                <div *ngIf="!isModulesLoading"
+                  class="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+
+                  <button
+                    type="button"
+                    *ngFor="let module of scsSuperVisibleModules(); trackBy: scsSuperTrackModule"
+                    (click)="scsSuperSetModuleEnabled(module, !scsSuperIsModuleEnabled(module))"
+                    [disabled]="scsSuperModuleSaving(module)"
+                    class="flex items-center justify-between gap-4 rounded-2xl border p-4 text-left transition-all disabled:opacity-50"
+                    (contextmenu)="scsToggleModuleSelection(module); false"
+                    [class.ring-4]="scsIsModuleSelected(module)"
+                    [class.ring-indigo-500]="scsIsModuleSelected(module)"
+                    [class.border-emerald-200]="scsSuperIsModuleEnabled(module)"
+                    [class.bg-emerald-50]="scsSuperIsModuleEnabled(module)"
+                    [class.border-slate-200]="!scsSuperIsModuleEnabled(module)"
+                    [class.bg-slate-50]="!scsSuperIsModuleEnabled(module)">
+
+                    <div class="min-w-0">
+                      <p class="truncate text-sm font-black text-slate-950">
+                        {{ module.name }}
+                      </p>
+                      <p class="mt-1 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                        {{ moduleCategoryLabel(module.category) }}
+                      </p>
+
+                      <div class="mt-2 flex flex-wrap gap-2">
+
+                        <span
+                          *ngIf="module.source==='plan'"
+                          class="rounded-full bg-blue-600 px-2 py-1 text-[9px] font-black uppercase text-white">
+                          Included
+                        </span>
+
+                        <span
+                          *ngIf="module.source!=='plan'"
+                          class="rounded-full bg-orange-500 px-2 py-1 text-[9px] font-black uppercase text-white">
+                          Manual Addon
+                        </span>
+
+                      </div>
+                      <div class="mt-2 flex items-center justify-between">
+
+                        <span class="text-xs font-bold text-slate-500">
+                          Rs {{ scsSuperModulePrice(module) | number:'1.0-0' }}
+                        </span>
+
+                        <span
+                          class="rounded-full bg-slate-900 px-2 py-1 text-[9px] font-black uppercase tracking-wider text-white">
+                          Price
+                        </span>
+
+                      </div>
+                    </div>
+
+                    <span
+                      class="shrink-0 rounded-full px-3 py-1.5 text-[9px] font-black uppercase tracking-widest"
+                      [class.bg-emerald-600]="scsSuperIsModuleEnabled(module)"
+                      [class.text-white]="scsSuperIsModuleEnabled(module)"
+                      [class.bg-white]="!scsSuperIsModuleEnabled(module)"
+                      [class.text-slate-500]="!scsSuperIsModuleEnabled(module)">
+                      {{ scsSuperModuleSaving(module)
+                        ? 'Saving...'
+                        : (scsSuperIsModuleEnabled(module) ? 'Enabled' : 'Disabled') }}
+                    </span>
+                  </button>
+                </div>
+
+                <div
+                  *ngIf="!isModulesLoading && scsSuperVisibleModules().length===0"
+                  class="mt-6 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-10 text-center">
+
+                  <div class="text-5xl">
+                    📦
+                  </div>
+
+                  <h3 class="mt-4 text-lg font-black text-slate-900">
+                    No modules found
+                  </h3>
+
+                  <p class="mt-2 text-sm font-bold text-slate-500">
+                    Is business/category/search ke liye koi module available nahi hai.
+                  </p>
+
+                </div>
+
+              </div>
+            </ng-container>
+          </div>
+<!-- SCS_DASHBOARD_SAAS_CONTROL_COMPONENT_V1_END -->
