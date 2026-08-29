@@ -1,0 +1,231 @@
+<div class="h-full bg-slate-50 p-4 sm:p-8">
+  <div class="mx-auto max-w-7xl">
+    
+    <!-- Header -->
+    <div class="mb-8">
+      <div class="flex items-center gap-3 mb-2">
+        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-green-500/10 text-green-500">
+          <lucide-icon [img]="myIcons.WalletCards" [size]="20" [strokeWidth]="2.5"></lucide-icon>
+        </div>
+        <h1 class="text-2xl font-black tracking-tight text-slate-900">Payments, Billing & Subscriptions</h1>
+      </div>
+      <p class="text-sm font-medium text-slate-500">Enterprise billing management — invoices, subscriptions, transaction history and revenue analytics for all platform tenants.</p>
+    </div>
+
+    <!-- Analytics Cards -->
+    <div *ngIf="activeTab === 'invoices'" class="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div class="rounded-[1.25rem] bg-white p-5 ring-1 ring-slate-100 shadow-sm flex items-center gap-4">
+        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500">
+          <lucide-icon [img]="myIcons.Activity" [size]="24" [strokeWidth]="2"></lucide-icon>
+        </div>
+        <div>
+          <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Revenue</p>
+          <p class="text-xl font-black text-slate-900">PKR 16,800</p>
+        </div>
+      </div>
+      <div class="rounded-[1.25rem] bg-white p-5 ring-1 ring-slate-100 shadow-sm flex items-center gap-4">
+        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-500/10 text-purple-500">
+          <lucide-icon [img]="myIcons.CreditCard" [size]="24" [strokeWidth]="2"></lucide-icon>
+        </div>
+        <div>
+          <p class="text-xs font-bold uppercase tracking-wider text-slate-400">MRR</p>
+          <p class="text-xl font-black text-slate-900">PKR 23,100</p>
+        </div>
+      </div>
+      <div class="rounded-[1.25rem] bg-white p-5 ring-1 ring-slate-100 shadow-sm flex items-center gap-4">
+        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500">
+          <lucide-icon [img]="myIcons.CheckCircle2" [size]="24" [strokeWidth]="2"></lucide-icon>
+        </div>
+        <div>
+          <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Active Subs</p>
+          <p class="text-xl font-black text-slate-900">5</p>
+        </div>
+      </div>
+      <div class="rounded-[1.25rem] bg-white p-5 ring-1 ring-slate-100 shadow-sm flex items-center gap-4">
+        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-red-500/10 text-red-500">
+          <lucide-icon [img]="myIcons.Clock" [size]="24" [strokeWidth]="2"></lucide-icon>
+        </div>
+        <div>
+          <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Overdue</p>
+          <p class="text-xl font-black text-slate-900">PKR 7,000</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="rounded-[1.5rem] bg-white shadow-sm ring-1 ring-slate-100 overflow-hidden">
+      <div class="flex flex-col gap-4 border-b border-slate-100 p-5 lg:flex-row lg:items-center lg:justify-between"> 
+        <div class="flex flex-wrap gap-2 p-1 rounded-xl bg-slate-50 w-full lg:w-auto">
+          <button (click)="setTab('invoices')" [class.bg-white]="activeTab === 'invoices'" [class.shadow-sm]="activeTab === 'invoices'" [class.text-slate-900]="activeTab === 'invoices'" [class.text-slate-500]="activeTab !== 'invoices'" class="rounded-lg px-4 py-2 text-sm font-bold transition-all">Invoices</button>
+          <button (click)="setTab('approvals')" [class.bg-white]="activeTab === 'approvals'" [class.shadow-sm]="activeTab === 'approvals'" [class.text-slate-900]="activeTab === 'approvals'" [class.text-slate-500]="activeTab !== 'approvals'" class="rounded-lg px-4 py-2 text-sm font-bold transition-all flex items-center gap-2">Approvals <span class="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full" *ngIf="pendingApprovals.length">{{ pendingApprovals.length }}</span></button>
+          <button (click)="setTab('wallet')" [class.bg-white]="activeTab === 'wallet'" [class.shadow-sm]="activeTab === 'wallet'" [class.text-slate-900]="activeTab === 'wallet'" [class.text-slate-500]="activeTab !== 'wallet'" class="rounded-lg px-4 py-2 text-sm font-bold transition-all">Wallet</button>
+          <button (click)="setTab('coupons')" [class.bg-white]="activeTab === 'coupons'" [class.shadow-sm]="activeTab === 'coupons'" [class.text-slate-900]="activeTab === 'coupons'" [class.text-slate-500]="activeTab !== 'coupons'" class="rounded-lg px-4 py-2 text-sm font-bold transition-all">Coupons</button>
+          <button (click)="setTab('tax')" [class.bg-white]="activeTab === 'tax'" [class.shadow-sm]="activeTab === 'tax'" [class.text-slate-900]="activeTab === 'tax'" [class.text-slate-500]="activeTab !== 'tax'" class="rounded-lg px-4 py-2 text-sm font-bold transition-all">Tax Rules</button>
+        </div>
+        
+        <div class="relative max-w-sm w-full">
+          <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-400">
+            <lucide-icon [img]="myIcons.Search" [size]="16"></lucide-icon>
+          </div>
+          <input type="text" placeholder="Search records..." class="h-10 w-full rounded-xl border-0 bg-slate-50 pl-10 pr-4 text-sm font-medium text-slate-900 ring-1 ring-inset ring-slate-200 placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-green-500">
+        </div>
+      </div>
+
+      <div *ngIf="isLoading" class="p-12 flex flex-col items-center justify-center text-slate-400">
+        <lucide-icon [img]="myIcons.RefreshCcw" [size]="32" class="animate-spin mb-4"></lucide-icon>
+        <p class="text-sm font-bold tracking-wider uppercase">Loading {{activeTab}}...</p>
+      </div>
+
+      <!-- INVOICES TAB -->
+      <div *ngIf="!isLoading && activeTab === 'invoices'" class="overflow-x-auto">
+        <div *ngIf="invoices.length === 0" class="p-12 text-center text-slate-400">
+          <p class="font-medium text-sm">No invoices found in database.</p>
+        </div>
+        <table *ngIf="invoices.length > 0" class="w-full text-left text-sm whitespace-nowrap">
+          <thead class="bg-slate-50/50 text-xs font-bold uppercase tracking-wider text-slate-400">
+            <tr>
+              <th class="px-6 py-4">Invoice No</th>
+              <th class="px-6 py-4">Tenant</th>
+              <th class="px-6 py-4">Status</th>
+              <th class="px-6 py-4">Amount</th>
+              <th class="px-6 py-4">Date</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
+            <tr *ngFor="let inv of invoices" class="hover:bg-slate-50/50 transition-colors">
+              <td class="px-6 py-4 text-slate-900 font-bold">{{ inv.invoice_number }}</td>
+              <td class="px-6 py-4">{{ inv.tenant_id }}</td>
+              <td class="px-6 py-4">
+                <span class="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-600">{{ inv.status }}</span>
+              </td>
+              <td class="px-6 py-4 font-bold text-slate-900">{{ inv.currency }} {{ inv.total }}</td>
+              <td class="px-6 py-4 text-slate-500">{{ inv.created_at | date }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- APPROVALS TAB -->
+      <div *ngIf="!isLoading && activeTab === 'approvals'" class="overflow-x-auto">
+        <div *ngIf="pendingApprovals.length === 0" class="p-12 text-center text-slate-400">
+          <div class="mx-auto w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
+            <lucide-icon [img]="myIcons.Shield" [size]="24"></lucide-icon>
+          </div>
+          <p class="font-bold text-slate-900 mb-1">No Pending Approvals</p>
+          <p class="text-sm">All manual payments have been processed.</p>
+        </div>
+        <table *ngIf="pendingApprovals.length > 0" class="w-full text-left text-sm whitespace-nowrap">
+          <thead class="bg-slate-50/50 text-xs font-bold uppercase tracking-wider text-slate-400">
+            <tr>
+              <th class="px-6 py-4">Tenant / Invoice</th>
+              <th class="px-6 py-4">Method</th>
+              <th class="px-6 py-4">Amount</th>
+              <th class="px-6 py-4">Agent Notes</th>
+              <th class="px-6 py-4 text-right">Action</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
+            <tr *ngFor="let txn of pendingApprovals" class="hover:bg-slate-50/50 transition-colors">
+              <td class="px-6 py-4">
+                <p class="font-bold text-slate-900">{{ txn.company_name || txn.tenant_id }}</p>
+                <p class="text-xs text-slate-500">{{ txn.invoice_id || 'Wallet Deposit' }}</p>
+              </td>
+              <td class="px-6 py-4">
+                <span class="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-600 uppercase">{{ txn.method }}</span>
+              </td>
+              <td class="px-6 py-4 font-bold text-slate-900">{{ txn.currency }} {{ txn.amount }}</td>
+              <td class="px-6 py-4 text-slate-500 truncate max-w-[200px]">{{ txn.proof_note }}</td>
+              <td class="px-6 py-4 text-right">
+                <button (click)="approvePayment(txn.id)" class="bg-emerald-50 text-emerald-600 hover:bg-emerald-100 px-4 py-2 rounded-lg font-bold text-xs mr-2 transition-colors">Approve</button>
+                <button class="bg-red-50 text-red-600 hover:bg-red-100 px-4 py-2 rounded-lg font-bold text-xs transition-colors">Reject</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- WALLET TAB -->
+      <div *ngIf="!isLoading && activeTab === 'wallet'" class="p-6">
+        <div *ngIf="!walletBalance" class="text-center text-slate-400 p-8">
+           <p>Enter a Tenant ID in search to view their wallet balance.</p>
+        </div>
+        <div *ngIf="walletBalance" class="rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center max-w-md mx-auto">
+          <lucide-icon [img]="myIcons.WalletCards" [size]="48" class="text-slate-300 mx-auto mb-4"></lucide-icon>
+          <p class="text-sm font-bold uppercase tracking-widest text-slate-400 mb-2">Current Balance</p>
+          <h2 class="text-4xl font-black text-slate-900">{{walletBalance?.currency || 'USD'}} {{walletBalance?.balance || 0}}</h2>
+          <div class="mt-8 flex gap-4 justify-center">
+            <button class="bg-slate-900 text-white px-6 py-3 rounded-xl font-bold hover:bg-slate-800 transition-colors">Deposit Funds</button>
+            <button class="bg-white text-slate-900 px-6 py-3 rounded-xl font-bold border border-slate-200 hover:bg-slate-50 transition-colors">Deduct</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- COUPONS TAB -->
+      <div *ngIf="!isLoading && activeTab === 'coupons'" class="overflow-x-auto">
+        <div class="p-4 border-b border-slate-100 bg-slate-50 flex justify-end">
+          <button class="bg-green-500 text-white px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 hover:bg-green-600 transition-colors">
+            <lucide-icon [img]="myIcons.Plus" [size]="16"></lucide-icon> Create Coupon
+          </button>
+        </div>
+        <div *ngIf="coupons.length === 0" class="p-12 text-center text-slate-400">
+          <p class="font-medium text-sm">No coupons found in database.</p>
+        </div>
+        <table *ngIf="coupons.length > 0" class="w-full text-left text-sm whitespace-nowrap">
+          <thead class="bg-slate-50/50 text-xs font-bold uppercase tracking-wider text-slate-400">
+            <tr>
+              <th class="px-6 py-4">Code</th>
+              <th class="px-6 py-4">Type</th>
+              <th class="px-6 py-4">Value</th>
+              <th class="px-6 py-4">Uses</th>
+              <th class="px-6 py-4">Status</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
+            <tr *ngFor="let coupon of coupons">
+              <td class="px-6 py-4 text-slate-900 font-bold tracking-widest">{{ coupon.code }}</td>
+              <td class="px-6 py-4 uppercase text-xs">{{ coupon.type }}</td>
+              <td class="px-6 py-4 font-bold text-green-600">{{ coupon.type === 'percentage' ? coupon.value + '%' : coupon.currency + ' ' + coupon.value }}</td>
+              <td class="px-6 py-4">{{ coupon.current_uses }} / {{ coupon.max_uses || '∞' }}</td>
+              <td class="px-6 py-4">
+                <span [class.bg-emerald-50]="coupon.status === 'active'" [class.text-emerald-600]="coupon.status === 'active'" class="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-600 uppercase">{{ coupon.status }}</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- TAX RULES TAB -->
+      <div *ngIf="!isLoading && activeTab === 'tax'" class="overflow-x-auto">
+        <div class="p-4 border-b border-slate-100 bg-slate-50 flex justify-end">
+          <button class="bg-slate-900 text-white px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 hover:bg-slate-800 transition-colors">
+            <lucide-icon [img]="myIcons.Plus" [size]="16"></lucide-icon> Add Tax Rule
+          </button>
+        </div>
+        <div *ngIf="taxRules.length === 0" class="p-12 text-center text-slate-400">
+          <p class="font-medium text-sm">No tax rules found in database.</p>
+        </div>
+        <table *ngIf="taxRules.length > 0" class="w-full text-left text-sm whitespace-nowrap">
+          <thead class="bg-slate-50/50 text-xs font-bold uppercase tracking-wider text-slate-400">
+            <tr>
+              <th class="px-6 py-4">Country / State</th>
+              <th class="px-6 py-4">Tax Name</th>
+              <th class="px-6 py-4">Rate (%)</th>
+              <th class="px-6 py-4">Status</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
+            <tr *ngFor="let tax of taxRules" class="hover:bg-slate-50/50 transition-colors">
+              <td class="px-6 py-4 text-slate-900 font-bold">{{ tax.country }} <span *ngIf="tax.state" class="text-slate-400 text-xs">({{tax.state}})</span></td>
+              <td class="px-6 py-4">{{ tax.tax_name }}</td>
+              <td class="px-6 py-4 font-black text-slate-900">{{ tax.tax_rate }}%</td>
+              <td class="px-6 py-4">
+                <span class="rounded-lg bg-emerald-50 text-emerald-600 px-2.5 py-1 text-xs font-bold uppercase">{{ tax.status }}</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+    </div>
+  </div>
+</div>

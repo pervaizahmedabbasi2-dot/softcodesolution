@@ -1,0 +1,131 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div>
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-white">License Management</h2>
+      <p class="text-gray-500 dark:text-gray-400">Issue, track, and manage software licenses.</p>
+    </div>
+    <div class="flex gap-2 w-full sm:w-auto">
+      <button class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2 font-medium w-full sm:w-auto shadow-sm">
+        <lucide-icon [name]="icons.Key || 'key'" class="w-4 h-4"></lucide-icon>
+        Generate License
+      </button>
+    </div>
+  </div>
+
+  <!-- Metrics -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm flex items-center gap-4">
+      <div class="w-12 h-12 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400">
+        <lucide-icon [name]="icons.CheckCircle || 'check-circle'" class="w-6 h-6"></lucide-icon>
+      </div>
+      <div>
+        <p class="text-sm text-gray-500 dark:text-gray-400 font-medium">Active Licenses</p>
+        <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ activeCount }}</p>
+      </div>
+    </div>
+    <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm flex items-center gap-4">
+      <div class="w-12 h-12 rounded-lg bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center text-yellow-600 dark:text-yellow-400">
+        <lucide-icon [name]="icons.Clock || 'clock'" class="w-6 h-6"></lucide-icon>
+      </div>
+      <div>
+        <p class="text-sm text-gray-500 dark:text-gray-400 font-medium">Expired</p>
+        <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ expiredCount }}</p>
+      </div>
+    </div>
+    <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm flex items-center gap-4">
+      <div class="w-12 h-12 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-red-600 dark:text-red-400">
+        <lucide-icon [name]="icons.XCircle || 'x-circle'" class="w-6 h-6"></lucide-icon>
+      </div>
+      <div>
+        <p class="text-sm text-gray-500 dark:text-gray-400 font-medium">Revoked / Suspended</p>
+        <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ revokedCount }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700">
+    <div class="relative w-full sm:w-96">
+      <lucide-icon [name]="icons.Search || 'search'" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"></lucide-icon>
+      <input type="text" placeholder="Search clients, licenses..." [value]="searchQuery" (input)="setSearch($any($event.target).value)" class="w-full pl-9 pr-4 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 dark:text-white transition-all">
+    </div>
+    <div class="flex gap-2 w-full sm:w-auto">
+      <select [value]="filterStatus" (change)="setFilter($any($event.target).value)" class="w-full sm:w-auto px-3 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 dark:text-white transition-all">
+        <option value="all">All Status</option>
+        <option value="active">Active</option>
+        <option value="expired">Expired</option>
+        <option value="revoked">Revoked</option>
+        <option value="trial">Trial</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-sm whitespace-nowrap">
+        <thead class="bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700">
+          <tr>
+            <th class="px-6 py-3 font-medium text-gray-500 dark:text-gray-400">License Key</th>
+            <th class="px-6 py-3 font-medium text-gray-500 dark:text-gray-400">Client</th>
+            <th class="px-6 py-3 font-medium text-gray-500 dark:text-gray-400">Product & Type</th>
+            <th class="px-6 py-3 font-medium text-gray-500 dark:text-gray-400">Status</th>
+            <th class="px-6 py-3 font-medium text-gray-500 dark:text-gray-400">Domains</th>
+            <th class="px-6 py-3 font-medium text-gray-500 dark:text-gray-400">Expires</th>
+            <th class="px-6 py-3 text-right font-medium text-gray-500 dark:text-gray-400">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+          <tr *ngFor="let lic of filteredLicenses" class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-2">
+                <div class="font-mono text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-900 px-2 py-1 rounded">{{ lic.keyMasked }}</div>
+                <button class="text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400" title="Copy Key">
+                  <lucide-icon [name]="icons.Copy || 'copy'" class="w-4 h-4"></lucide-icon>
+                </button>
+              </div>
+              <div class="text-xs text-gray-500 mt-1">{{ lic.id }}</div>
+            </td>
+            <td class="px-6 py-4">
+              <div class="font-medium text-gray-900 dark:text-white">{{ lic.client }}</div>
+            </td>
+            <td class="px-6 py-4">
+              <div class="text-gray-900 dark:text-white">{{ lic.product }}</div>
+              <div class="text-xs text-gray-500 capitalize">{{ lic.type }}</div>
+            </td>
+            <td class="px-6 py-4">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                [ngClass]="{
+                  'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400': lic.status === 'active',
+                  'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400': lic.status === 'revoked' || lic.status === 'suspended',
+                  'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400': lic.status === 'expired'
+                }">
+                {{ lic.status | titlecase }}
+              </span>
+            </td>
+            <td class="px-6 py-4">
+              <div class="flex flex-col gap-1">
+                <span *ngFor="let domain of lic.domains" class="text-gray-600 dark:text-gray-300">{{ domain }}</span>
+              </div>
+            </td>
+            <td class="px-6 py-4">
+              <div class="text-gray-900 dark:text-white">{{ lic.expiresAt | date:'mediumDate' }}</div>
+              <div class="text-xs text-gray-500">Issued: {{ lic.issuedAt | date:'mediumDate' }}</div>
+            </td>
+            <td class="px-6 py-4 text-right">
+              <button class="p-2 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                <lucide-icon [name]="icons.MoreVertical || 'more-vertical'" class="w-4 h-4"></lucide-icon>
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="filteredLicenses.length === 0">
+            <td colspan="7" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
+              No licenses found matching your criteria.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

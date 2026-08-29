@@ -1,0 +1,24 @@
+.scs-module-manager{
+position:fixed;
+top:0;
+right:0;
+width:420px;
+height:100%;
+background:#fff;
+box-shadow:-6px 0 25px rgba(0,0,0,.15);
+padding:20px;
+z-index:9999;
+overflow:auto;
+}
+
+.header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:16px;
+}
+
+.module-row{
+padding:10px;
+border-bottom:1px solid #e5e7eb;
+}

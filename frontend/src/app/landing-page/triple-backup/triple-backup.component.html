@@ -1,0 +1,352 @@
+<div
+  *ngIf="isOpen"
+  class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm"
+>
+  <div
+    class="relative w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white shadow-2xl"
+  >
+
+    <!-- Header -->
+    <div class="border-b border-slate-100 px-6 py-5 sm:px-8">
+      <div class="flex items-start justify-between gap-4">
+
+        <div>
+          <p class="text-xs font-bold uppercase tracking-[0.2em] text-emerald-600">
+            Enterprise Data Protection
+          </p>
+
+          <h2 class="mt-2 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
+            Five-Layer Disaster Protection
+          </h2>
+
+          <p class="mt-3 text-sm leading-6 text-slate-600">
+            A controlled protection architecture combining recovery artifacts,
+            office mirror protection, offsite integrity, reconciliation,
+            and continuous Guardian supervision.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          (click)="closeModal()"
+          aria-label="Close"
+          class="shrink-0 rounded-full px-3 py-1 text-2xl leading-none text-slate-400 transition hover:bg-slate-100 hover:text-slate-900"
+        >
+          ×
+        </button>
+
+      </div>
+    </div>
+
+    <!-- Five Layers -->
+    <div class="space-y-4 px-6 py-6 sm:px-8">
+
+      <!-- Layer 1 -->
+      <div class="rounded-xl border border-slate-200 bg-slate-50 p-5">
+        <div class="flex items-start gap-4">
+
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-sm font-black text-emerald-700">
+            01
+          </div>
+
+          <div class="min-w-0">
+            <p class="text-[10px] font-black uppercase tracking-widest text-emerald-600">
+              Layer 1 · Integrity
+            </p>
+
+            <h3 class="mt-1 text-lg font-black text-slate-900">
+              Artifact Integrity
+            </h3>
+
+            <p class="mt-2 text-sm leading-6 text-slate-600">
+              Primary recovery artifacts are checked for corruption and
+              integrity failure before they are trusted for recovery.
+            </p>
+
+            <div class="mt-4">
+              <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                Verification
+              </p>
+              <p class="mt-1 text-sm font-bold text-slate-800">
+                SHA-based recovery integrity verification
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Layer 2 -->
+      <div class="rounded-xl border border-slate-200 bg-slate-50 p-5">
+        <div class="flex items-start gap-4">
+
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-sm font-black text-blue-700">
+            02
+          </div>
+
+          <div class="min-w-0">
+            <p class="text-[10px] font-black uppercase tracking-widest text-blue-600">
+              Layer 2 · Mirror
+            </p>
+
+            <h3 class="mt-1 text-lg font-black text-slate-900">
+              Mirror Protection
+            </h3>
+
+            <p class="mt-2 text-sm leading-6 text-slate-600">
+              Office mirror corruption or deletion can be detected and
+              routed through recovery to restore the mirror state.
+            </p>
+
+            <div class="mt-4">
+              <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                Recovery
+              </p>
+              <p class="mt-1 text-sm font-bold text-slate-800">
+                Mirror corruption and deletion detection
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Layer 3 -->
+      <div class="rounded-xl border border-slate-200 bg-slate-50 p-5">
+        <div class="flex items-start gap-4">
+
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-violet-100 text-sm font-black text-violet-700">
+            03
+          </div>
+
+          <div class="min-w-0">
+            <p class="text-[10px] font-black uppercase tracking-widest text-violet-600">
+              Layer 3 · Offsite
+            </p>
+
+            <h3 class="mt-1 text-lg font-black text-slate-900">
+              Offsite Tamper Detection
+            </h3>
+
+            <p class="mt-2 text-sm leading-6 text-slate-600">
+              Offsite package integrity is verified so unauthorized
+              modification or tampering can be detected.
+            </p>
+
+            <div class="mt-4">
+              <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                Protection
+              </p>
+              <p class="mt-1 text-sm font-bold text-slate-800">
+                Offsite package integrity verification
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Layer 4 -->
+      <div class="rounded-xl border border-slate-200 bg-slate-50 p-5">
+        <div class="flex items-start gap-4">
+
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-sm font-black text-amber-700">
+            04
+          </div>
+
+          <div class="min-w-0">
+            <p class="text-[10px] font-black uppercase tracking-widest text-amber-600">
+              Layer 4 · Control
+            </p>
+
+            <h3 class="mt-1 text-lg font-black text-slate-900">
+              Reconciliation
+            </h3>
+
+            <p class="mt-2 text-sm leading-6 text-slate-600">
+              Recovery state is reconciled and recovery events are persisted
+              so healing remains controlled and auditable.
+            </p>
+
+            <div class="mt-4">
+              <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                Control Plane
+              </p>
+              <p class="mt-1 text-sm font-bold text-slate-800">
+                Recovery reconciliation and event persistence
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Layer 5 -->
+      <div class="rounded-xl border border-slate-200 bg-slate-50 p-5">
+        <div class="flex items-start gap-4">
+
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-rose-100 text-sm font-black text-rose-700">
+            05
+          </div>
+
+          <div class="min-w-0">
+            <p class="text-[10px] font-black uppercase tracking-widest text-rose-600">
+              Layer 5 · Resilience
+            </p>
+
+            <h3 class="mt-1 text-lg font-black text-slate-900">
+              Recovery &amp; Guardian
+            </h3>
+
+            <p class="mt-2 text-sm leading-6 text-slate-600">
+              Process failure and disaster scenarios are exercised through
+              recovery orchestration, while Guardian provides continuous
+              supervision and recovery reconciliation.
+            </p>
+
+            <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+
+              <div class="rounded-lg border border-slate-200 bg-white p-3">
+                <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                  Recovery
+                </p>
+                <p class="mt-1 text-sm font-bold text-slate-800">
+                  Controlled recovery orchestration
+                </p>
+              </div>
+
+              <div class="rounded-lg border border-slate-200 bg-white p-3">
+                <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                  Guardian
+                </p>
+                <p class="mt-1 text-sm font-bold text-slate-800">
+                  Continuous supervision and reconciliation
+                </p>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Recovery Capabilities -->
+    <div class="mx-6 mb-6 rounded-xl bg-slate-950 p-5 text-white sm:mx-8 sm:p-6">
+
+      <p class="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400">
+        Recovery Capabilities
+      </p>
+
+      <h3 class="mt-2 text-xl font-black">
+        Protection is continuously verified, not just described.
+      </h3>
+
+      <p class="mt-3 text-sm leading-6 text-slate-300">
+        Data Protection recovery flows exercise corruption, deletion,
+        tampering, reconciliation, and process-failure scenarios through
+        controlled verification.
+      </p>
+
+      <div class="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+
+        <div class="rounded-lg bg-white/5 p-4">
+          <p class="text-xs font-black text-emerald-400">Integrity</p>
+          <p class="mt-1 text-sm font-bold text-white">
+            SHA-based recovery integrity verification
+          </p>
+        </div>
+
+        <div class="rounded-lg bg-white/5 p-4">
+          <p class="text-xs font-black text-emerald-400">Auto-Healing</p>
+          <p class="mt-1 text-sm font-bold text-white">
+            Mirror and offsite corruption recovery flows
+          </p>
+        </div>
+
+        <div class="rounded-lg bg-white/5 p-4">
+          <p class="text-xs font-black text-emerald-400">Rollback</p>
+          <p class="mt-1 text-sm font-bold text-white">
+            Controlled restore and rollback orchestration
+          </p>
+        </div>
+
+        <div class="rounded-lg bg-white/5 p-4">
+          <p class="text-xs font-black text-emerald-400">Guardian</p>
+          <p class="mt-1 text-sm font-bold text-white">
+            Continuous supervision and recovery reconciliation
+          </p>
+        </div>
+
+      </div>
+
+      <!-- Disaster Verification -->
+      <div class="mt-4 rounded-lg border border-emerald-400/20 bg-emerald-400/5 p-4">
+
+        <p class="text-[10px] font-black uppercase tracking-widest text-emerald-300">
+          Real Disaster Verification
+        </p>
+
+        <p class="mt-2 text-sm leading-6 text-slate-200">
+          Recovery architecture is exercised against isolated disaster
+          scenarios including primary artifact destruction, office mirror
+          destruction, offsite tampering, complete recovery-tree loss,
+          and recovery rebuild with integrity verification.
+        </p>
+
+        <p class="mt-3 text-xs leading-5 text-slate-400">
+          Verification is performed in isolated test environments.
+          Production databases and live recovery data are not used for
+          destructive testing.
+        </p>
+
+      </div>
+
+    </div>
+
+    <!-- Architecture -->
+    <div class="grid grid-cols-1 gap-3 border-t border-slate-100 px-6 py-5 sm:grid-cols-3 sm:px-8">
+
+      <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
+        <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+          Architecture
+        </p>
+        <p class="mt-1 text-sm font-black text-slate-900">
+          Five-layer protection
+        </p>
+      </div>
+
+      <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
+        <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+          Recovery
+        </p>
+        <p class="mt-1 text-sm font-black text-slate-900">
+          Detect → Reconcile → Heal
+        </p>
+      </div>
+
+      <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
+        <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+          Supervision
+        </p>
+        <p class="mt-1 text-sm font-black text-slate-900">
+          Guardian controlled recovery
+        </p>
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="border-t border-slate-100 px-6 py-4 text-right sm:px-8">
+      <button
+        type="button"
+        (click)="closeModal()"
+        class="rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-slate-800"
+      >
+        Go Back
+      </button>
+    </div>
+
+  </div>
+</div>
