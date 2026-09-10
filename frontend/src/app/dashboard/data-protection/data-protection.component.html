@@ -3310,6 +3310,209 @@
 
 <!-- 757.7O AUDIT / INTEGRITY END -->
 
+
+<!-- SCS_POINT9_CODE_SOURCE_RECOVERY_UI_V2 -->
+<section id="code-source-recovery" class="mt-3 scroll-mt-6">
+  <div class="overflow-hidden rounded-[16px] border border-slate-200 bg-white shadow-sm">
+
+    <div class="border-b border-slate-100 bg-slate-950 p-4 text-white">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <p class="text-[9px] font-black uppercase tracking-[0.18em] text-emerald-400">
+            CODE SOURCE RECOVERY
+          </p>
+
+          <h2 class="mt-1 text-lg font-black tracking-tight sm:text-xl">
+            Source recovery posture
+          </h2>
+
+          <p class="mt-1.5 text-[11px] font-medium leading-5 text-slate-400">
+            Live recovery state from the existing authoritative recovery-status API.
+          </p>
+        </div>
+
+        <span
+          class="inline-flex w-fit items-center rounded-full border px-3 py-1.5 text-[8px] font-black uppercase tracking-[0.12em]"
+          [ngClass]="
+            recoveryStatus?.recovery_ready === true
+              ? 'border-emerald-400/30 bg-emerald-400/10 text-emerald-300'
+              : 'border-amber-400/30 bg-amber-400/10 text-amber-300'
+          "
+        >
+          {{
+            recoveryStatus?.state ||
+            (recoveryStatus?.recovery_ready ? 'READY' : 'NOT READY')
+          }}
+        </span>
+      </div>
+    </div>
+
+    <div class="grid gap-2.5 p-3.5 sm:grid-cols-2 sm:p-4 lg:grid-cols-3">
+
+      <div class="rounded-[14px] border border-slate-200 bg-slate-50 p-3">
+        <p class="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">
+          Current Commit
+        </p>
+        <p class="mt-1.5 break-all font-mono text-[10px] font-bold text-slate-950">
+          {{ recoveryStatus?.current_commit || '—' }}
+        </p>
+      </div>
+
+      <div class="rounded-[14px] border border-slate-200 bg-slate-50 p-3">
+        <p class="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">
+          Last Known Good
+        </p>
+        <p class="mt-1.5 break-all font-mono text-[10px] font-bold text-slate-950">
+          {{ recoveryStatus?.last_known_good_commit || '—' }}
+        </p>
+      </div>
+
+      <div class="rounded-[14px] border border-slate-200 bg-slate-50 p-3">
+        <p class="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">
+          Selected Source
+        </p>
+        <p class="mt-1.5 text-xs font-black uppercase text-slate-950">
+          {{ recoveryStatus?.selected_source || '—' }}
+        </p>
+      </div>
+
+      <div class="rounded-[14px] border border-slate-200 bg-white p-3">
+        <p class="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">
+          Selected Commit
+        </p>
+        <p class="mt-1.5 break-all font-mono text-[10px] font-bold text-slate-950">
+          {{ recoveryStatus?.selected_commit || '—' }}
+        </p>
+      </div>
+
+      <div class="rounded-[14px] border border-slate-200 bg-white p-3">
+        <div class="flex items-center justify-between gap-2">
+          <span class="text-xs font-bold text-slate-500">
+            Integrity
+          </span>
+
+          <span
+            class="rounded-full border px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.1em]"
+            [ngClass]="
+              recoveryStatus?.integrity_verified === true
+                ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                : 'border-amber-200 bg-amber-50 text-amber-700'
+            "
+          >
+            {{
+              recoveryStatus?.integrity_verified === true
+                ? 'VERIFIED'
+                : 'NOT VERIFIED'
+            }}
+          </span>
+        </div>
+      </div>
+
+      <div class="rounded-[14px] border border-slate-200 bg-white p-3">
+        <div class="flex items-center justify-between gap-2">
+          <span class="text-xs font-bold text-slate-500">
+            GitHub
+          </span>
+
+          <span
+            class="rounded-full border px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.1em]"
+            [ngClass]="
+              recoveryStatus?.github_available === true
+                ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                : 'border-amber-200 bg-amber-50 text-amber-700'
+            "
+          >
+            {{
+              recoveryStatus?.github_available === true
+                ? 'AVAILABLE'
+                : 'UNAVAILABLE'
+            }}
+          </span>
+        </div>
+      </div>
+
+      <div class="rounded-[14px] border border-slate-200 bg-white p-3">
+        <div class="flex items-center justify-between gap-2">
+          <span class="text-xs font-bold text-slate-500">
+            Restore
+          </span>
+
+          <span class="text-[9px] font-black uppercase text-slate-950">
+            {{
+              recoveryStatus?.restored === true
+                ? 'RESTORED'
+                : 'NOT RESTORED'
+            }}
+          </span>
+        </div>
+      </div>
+
+      <div class="rounded-[14px] border border-slate-200 bg-white p-3">
+        <div class="flex items-center justify-between gap-2">
+          <span class="text-xs font-bold text-slate-500">
+            Rebuild
+          </span>
+
+          <span class="text-[9px] font-black uppercase text-slate-950">
+            {{
+              recoveryStatus?.rebuilt === true
+                ? 'REBUILT'
+                : 'NOT REBUILT'
+            }}
+          </span>
+        </div>
+      </div>
+
+      <div class="rounded-[14px] border border-slate-200 bg-white p-3">
+        <div class="flex items-center justify-between gap-2">
+          <span class="text-xs font-bold text-slate-500">
+            Recovery Ready
+          </span>
+
+          <span
+            class="rounded-full border px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.1em]"
+            [ngClass]="
+              recoveryStatus?.recovery_ready === true
+                ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                : 'border-amber-200 bg-amber-50 text-amber-700'
+            "
+          >
+            {{
+              recoveryStatus?.recovery_ready === true
+                ? 'READY'
+                : 'NOT READY'
+            }}
+          </span>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="border-t border-slate-100 bg-slate-50/70 p-3.5 sm:p-4">
+      <p class="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">
+        Recovery Decision
+      </p>
+
+      <p class="mt-1.5 text-xs font-medium leading-5 text-slate-600">
+        {{
+          recoveryStatus?.reason ||
+          'No recovery decision reported yet.'
+        }}
+      </p>
+
+      <p
+        *ngIf="recoveryStatus?.observed_at"
+        class="mt-1.5 text-[9px] font-semibold text-slate-400"
+      >
+        Observed:
+        {{ recoveryStatus.observed_at | date: 'medium' }}
+      </p>
+    </div>
+
+  </div>
+</section>
+<!-- /SCS_POINT9_CODE_SOURCE_RECOVERY_UI_V2 -->
+
 <!-- 757.7P CONTINUOUS GUARDIAN -->
 
 <section id="guardian-monitoring" class="mt-3 scroll-mt-6">

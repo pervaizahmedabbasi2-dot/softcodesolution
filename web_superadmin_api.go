@@ -63,6 +63,12 @@ func handleSuperadminClients(w http.ResponseWriter, r *http.Request) {
 	}
 
 	limit := 50
+	if limit < 1 {
+		limit = 50
+	}
+	if limit > 50 {
+		limit = 50
+	}
 	if raw := strings.TrimSpace(r.URL.Query().Get("limit")); raw != "" {
 		if v, err := strconv.Atoi(raw); err == nil && v > 0 {
 			limit = v

@@ -1,6 +1,5 @@
 import { Component, EventEmitter, Input, Output, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
 import { BackendService } from '../../services/backend.service';
 import { ApiGatewayService } from '../services/api-gateway.service';
@@ -9,27 +8,14 @@ interface ApiEndpoint { method:string; path:string; description:string; status:'
 interface ApiKey { id:string; name:string; keyMasked:string; clientName:string; created:string; lastUsed:string; status:'active'|'revoked'|'expired'; scopes:string[]; }
 interface SecurityRule { id:string; type:'cors'|'ip_whitelist'|'ip_blacklist'|'header_policy'; value:string; enabled:boolean; description:string; }
 interface ApiLog { time:string; method:string; path:string; status:number; latency:number; clientName:string; ip:string; }
-
-interface GatewayRateLimitPolicy {
-  id?: string;
-  tenant_id?: string;
-  api_key_id?: string | null;
-  path_pattern: string;
-  window_seconds: number;
-  max_requests: number;
-  enabled: boolean;
-}
-
 type GatewayTab = 'endpoints'|'keys'|'rate-limits'|'security'|'logs';
 
-@Component({ selector:'app-dashboard-api-gateway', standalone:true, imports:[CommonModule,FormsModule,LucideAngularModule], templateUrl:'./api-gateway.component.html', styles:[':host{display:block;width:100%;}'] })
+@Component({ selector:'app-dashboard-api-gateway', standalone:true, imports:[CommonModule,LucideAngularModule], templateUrl:'./api-gateway.component.html', styles:[':host{display:block;width:100%;}'] })
 export class DashboardApiGatewayComponent implements OnInit {
   private readonly apiGateway = inject(ApiGatewayService);
 
   ngOnInit(): void {
     void this.loadApiKeys();
-    void this.loadSecurityPolicyUI();
-    void this.loadRateLimitPolicies();
   }
   @Input() activeView = '';
   @Input() icons: any = {};
@@ -78,51 +64,6 @@ export class DashboardApiGatewayComponent implements OnInit {
   apiKeys: ApiKey[] = [];
   isApiKeysLoading = false;
   apiKeysError = "";
-
-  createKeyOpen = false;
-  createKeyBusy = false;
-  createKeyError = '';
-  createKeySuccess = '';
-  oneTimeSecret = '';
-
-  newKeyName = '';
-  newKeyTenantId = '';
-  newKeyScopes: string[] = ['read'];
-  newKeyExpiry = '';
-
-  rotateBusyId = '';
-  rotateError = '';
-
-  securityPolicyLoading = false;
-  securityPolicySaving = false;
-  securityPolicyError = '';
-  securityPolicySuccess = '';
-
-  securityPolicy = {
-    tenant_id: '',
-    enabled: true,
-    allowed_ips: [] as string[],
-    allowed_origins: [] as string[],
-    require_origin: false,
-    max_body_bytes: 2097152
-  };
-
-  securityPolicyIPsText = '';
-  securityPolicyOriginsText = '';
-
-  rateLimitPolicies: GatewayRateLimitPolicy[] = [];
-  rateLimitLoading = false;
-  rateLimitSaving = false;
-  rateLimitError = '';
-  rateLimitSuccess = '';
-
-  rateLimitDraft: GatewayRateLimitPolicy = {
-    path_pattern: '*',
-    window_seconds: 60,
-    max_requests: 60,
-    enabled: true
-  };
-
 
   securityRules: SecurityRule[] = [
     { id:'s1', type:'cors', value:'*.softcodesolution.com', enabled:true, description:'Allow all SCS subdomains' },
@@ -191,212 +132,4 @@ async revokeKey(keyId: string): Promise<void> {
       this.isApiKeysLoading = false;
     }
   }
-
-
-  async createApiKeyFromUI(): Promise<void> {
-    const name = this.newKeyName.trim();
-
-    if (!name) {
-      this.createKeyError = 'API key name is required';
-      return;
-    }
-
-    if (!this.newKeyScopes.length) {
-      this.createKeyError = 'Select at least one scope';
-      return;
-    }
-
-    this.createKeyBusy = true;
-    this.createKeyError = '';
-    this.createKeySuccess = '';
-    this.oneTimeSecret = '';
-
-    try {
-      const result = await this.apiGateway.createApiKey({
-        name,
-        tenant_id: this.newKeyTenantId.trim() || undefined,
-        scopes: this.newKeyScopes,
-        expires_at: this.newKeyExpiry || undefined
-      });
-
-      this.oneTimeSecret =
-        typeof result?.secret === 'string'
-          ? result.secret
-          : typeof result?.api_key === 'string'
-            ? result.api_key
-            : '';
-
-      this.createKeySuccess = 'API key created successfully';
-      this.createKeyOpen = false;
-
-      await this.loadApiKeys();
-    } catch (error) {
-      this.createKeyError =
-        error instanceof Error
-          ? error.message
-          : 'Unable to create API key';
-    } finally {
-      this.createKeyBusy = false;
-    }
-  }
-
-
-
-  async rotateKeyFromUI(keyId: string): Promise<void> {
-    this.rotateBusyId = keyId;
-    this.rotateError = '';
-    this.oneTimeSecret = '';
-
-    try {
-      const result = await this.apiGateway.rotateApiKey(keyId);
-
-      this.oneTimeSecret =
-        typeof result?.secret === 'string'
-          ? result.secret
-          : typeof result?.api_key === 'string'
-            ? result.api_key
-            : '';
-
-      await this.loadApiKeys();
-    } catch (error) {
-      this.rotateError =
-        error instanceof Error
-          ? error.message
-          : 'Unable to rotate API key';
-    } finally {
-      this.rotateBusyId = '';
-    }
-  }
-
-
-
-  toggleCreateKeyScope(scope: string): void {
-    if (this.newKeyScopes.includes(scope)) {
-      this.newKeyScopes =
-        this.newKeyScopes.filter(item => item !== scope);
-      return;
-    }
-
-    this.newKeyScopes = [...this.newKeyScopes, scope];
-  }
-
-  hasCreateKeyScope(scope: string): boolean {
-    return this.newKeyScopes.includes(scope);
-  }
-
-
-
-  async loadSecurityPolicyUI(): Promise<void> {
-    this.securityPolicyLoading = true;
-    this.securityPolicyError = '';
-
-    try {
-      this.securityPolicy =
-        await this.apiGateway.loadSecurityPolicy();
-
-      this.securityPolicyIPsText =
-        (this.securityPolicy.allowed_ips || []).join('\n');
-
-      this.securityPolicyOriginsText =
-        (this.securityPolicy.allowed_origins || []).join('\n');
-    } catch (error) {
-      this.securityPolicyError =
-        error instanceof Error
-          ? error.message
-          : 'Unable to load security policy';
-    } finally {
-      this.securityPolicyLoading = false;
-    }
-  }
-
-  async saveSecurityPolicyUI(): Promise<void> {
-    this.securityPolicySaving = true;
-    this.securityPolicyError = '';
-    this.securityPolicySuccess = '';
-
-    try {
-      const allowedIPs =
-        this.securityPolicyIPsText
-          .split('\n')
-          .map(value => value.trim())
-          .filter(Boolean);
-
-      const allowedOrigins =
-        this.securityPolicyOriginsText
-          .split('\n')
-          .map(value => value.trim())
-          .filter(Boolean);
-
-      this.securityPolicy =
-        await this.apiGateway.saveSecurityPolicy({
-          enabled: this.securityPolicy.enabled,
-          allowed_ips: allowedIPs,
-          allowed_origins: allowedOrigins,
-          require_origin: this.securityPolicy.require_origin,
-          max_body_bytes: this.securityPolicy.max_body_bytes
-        });
-
-      this.securityPolicySuccess =
-        'Security policy saved successfully';
-    } catch (error) {
-      this.securityPolicyError =
-        error instanceof Error
-          ? error.message
-          : 'Unable to save security policy';
-    } finally {
-      this.securityPolicySaving = false;
-    }
-  }
-
-
-
-  async loadRateLimitPolicies(): Promise<void> {
-    this.rateLimitLoading = true;
-    this.rateLimitError = '';
-
-    try {
-      this.rateLimitPolicies =
-        await this.apiGateway.listRateLimitPolicies() as GatewayRateLimitPolicy[];
-    } catch (error) {
-      this.rateLimitError =
-        error instanceof Error
-          ? error.message
-          : 'Unable to load rate-limit policies';
-      this.rateLimitPolicies = [];
-    } finally {
-      this.rateLimitLoading = false;
-    }
-  }
-
-  async saveRateLimitPolicyUI(): Promise<void> {
-    this.rateLimitSaving = true;
-    this.rateLimitError = '';
-    this.rateLimitSuccess = '';
-
-    try {
-      await this.apiGateway.saveRateLimitPolicy({
-        path_pattern:
-          this.rateLimitDraft.path_pattern.trim() || '*',
-        window_seconds:
-          Math.max(1, Number(this.rateLimitDraft.window_seconds) || 60),
-        max_requests:
-          Math.max(1, Number(this.rateLimitDraft.max_requests) || 60),
-        enabled:
-          !!this.rateLimitDraft.enabled
-      });
-
-      this.rateLimitSuccess =
-        'Rate-limit policy saved successfully';
-
-      await this.loadRateLimitPolicies();
-    } catch (error) {
-      this.rateLimitError =
-        error instanceof Error
-          ? error.message
-          : 'Unable to save rate-limit policy';
-    } finally {
-      this.rateLimitSaving = false;
-    }
-  }
-
 }

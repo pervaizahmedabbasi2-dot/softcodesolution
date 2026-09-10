@@ -1,0 +1,78 @@
+import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { LucideAngularModule } from 'lucide-angular';
+import { BackendService } from '../../services/backend.service';
+
+interface ApiEndpoint { method:string; path:string; description:string; status:'live'|'deprecated'|'disabled'; rateLimit:number; avgLatency:number; callsToday:number; auth:string; }
+interface ApiKey { id:string; name:string; keyMasked:string; clientName:string; created:string; lastUsed:string; status:'active'|'revoked'|'expired'; scopes:string[]; }
+interface SecurityRule { id:string; type:'cors'|'ip_whitelist'|'ip_blacklist'|'header_policy'; value:string; enabled:boolean; description:string; }
+interface ApiLog { time:string; method:string; path:string; status:number; latency:number; clientName:string; ip:string; }
+type GatewayTab = 'endpoints'|'keys'|'rate-limits'|'security'|'logs';
+
+@Component({ selector:'app-dashboard-api-gateway', standalone:true, imports:[CommonModule,LucideAngularModule], templateUrl:'./api-gateway.component.html', styles:[':host{display:block;width:100%;}'] })
+export class DashboardApiGatewayComponent {
+  @Input() activeView = '';
+  @Input() icons: any = {};
+  @Output() navigate = new EventEmitter<string>();
+  private readonly backend = inject(BackendService);
+  activeTab: GatewayTab = 'endpoints';
+  searchQuery = '';
+
+  endpoints: ApiEndpoint[] = [
+    { method:'POST', path:'/api/auth/login', description:'User authentication and session creation', status:'live', rateLimit:30, avgLatency:45, callsToday:1284, auth:'Public' },
+    { method:'POST', path:'/api/auth/register', description:'New client registration with Argon2id', status:'live', rateLimit:10, avgLatency:120, callsToday:87, auth:'Public' },
+    { method:'GET', path:'/api/auth/me', description:'Current session user profile', status:'live', rateLimit:60, avgLatency:12, callsToday:4521, auth:'Session' },
+    { method:'GET', path:'/api/superadmin/clients', description:'List all registered clients with pagination', status:'live', rateLimit:60, avgLatency:38, callsToday:892, auth:'SuperAdmin' },
+    { method:'POST', path:'/api/superadmin/clients/approve', description:'Approve pending client registration', status:'live', rateLimit:30, avgLatency:65, callsToday:23, auth:'SuperAdmin' },
+    { method:'GET', path:'/api/superadmin/rbac/roles', description:'RBAC roles listing with permissions', status:'live', rateLimit:60, avgLatency:22, callsToday:345, auth:'SuperAdmin' },
+    { method:'POST', path:'/api/superadmin/rbac/roles/save', description:'Create or update RBAC role', status:'live', rateLimit:20, avgLatency:78, callsToday:12, auth:'SuperAdmin' },
+    { method:'GET', path:'/api/superadmin/modules', description:'Platform module catalog', status:'live', rateLimit:60, avgLatency:18, callsToday:567, auth:'SuperAdmin' },
+    { method:'POST', path:'/api/superadmin/subscriptions/save', description:'Save tenant subscription plan', status:'live', rateLimit:15, avgLatency:95, callsToday:8, auth:'SuperAdmin' },
+    { method:'GET', path:'/api/client/modules', description:'Tenant-scoped module access list', status:'live', rateLimit:60, avgLatency:15, callsToday:2100, auth:'Client' },
+    { method:'GET', path:'/api/superadmin/rbac/audit', description:'Security audit trail', status:'live', rateLimit:30, avgLatency:55, callsToday:156, auth:'SuperAdmin' },
+    { method:'GET', path:'/healthz', description:'Health check probe', status:'live', rateLimit:120, avgLatency:2, callsToday:8640, auth:'Public' },
+    { method:'GET', path:'/readyz', description:'Readiness probe with DB check', status:'live', rateLimit:120, avgLatency:8, callsToday:8640, auth:'Public' },
+  ];
+
+  apiKeys: ApiKey[] = [
+    { id:'k1', name:'Production Key', keyMasked:'sk_live_****Xk9m', clientName:'SoftCode Platform', created:'2026-01-15', lastUsed:'Just now', status:'active', scopes:['read','write','admin'] },
+    { id:'k2', name:'Staging Key', keyMasked:'sk_test_****Bp3n', clientName:'Dev Environment', created:'2026-03-20', lastUsed:'2 hours ago', status:'active', scopes:['read','write'] },
+    { id:'k3', name:'Client Portal', keyMasked:'sk_live_****Lm7q', clientName:'Client Dashboard', created:'2026-05-10', lastUsed:'5 min ago', status:'active', scopes:['read'] },
+    { id:'k4', name:'Old Integration', keyMasked:'sk_live_****Wd2r', clientName:'Legacy System', created:'2025-08-01', lastUsed:'90 days ago', status:'revoked', scopes:['read'] },
+  ];
+
+  securityRules: SecurityRule[] = [
+    { id:'s1', type:'cors', value:'*.softcodesolution.com', enabled:true, description:'Allow all SCS subdomains' },
+    { id:'s2', type:'cors', value:'localhost:4200', enabled:true, description:'Angular dev server' },
+    { id:'s3', type:'ip_whitelist', value:'10.0.0.0/8', enabled:true, description:'Internal network range' },
+    { id:'s4', type:'ip_blacklist', value:'45.33.32.0/24', enabled:false, description:'Blocked scanner range' },
+    { id:'s5', type:'header_policy', value:'X-Request-ID required', enabled:true, description:'Enforce request tracing' },
+    { id:'s6', type:'header_policy', value:'Strict-Transport-Security', enabled:true, description:'HSTS enforcement' },
+  ];
+
+  recentLogs: ApiLog[] = [
+    { time:'12:45:02', method:'GET', path:'/api/superadmin/clients', status:200, latency:34, clientName:'Admin Panel', ip:'10.0.1.15' },
+    { time:'12:44:58', method:'POST', path:'/api/auth/login', status:200, latency:89, clientName:'Web Portal', ip:'192.168.1.100' },
+    { time:'12:44:45', method:'GET', path:'/api/client/modules', status:200, latency:12, clientName:'Tenant App', ip:'10.0.2.30' },
+    { time:'12:44:30', method:'POST', path:'/api/auth/login', status:401, latency:15, clientName:'Unknown', ip:'45.33.32.88' },
+    { time:'12:44:12', method:'GET', path:'/healthz', status:200, latency:1, clientName:'K8s Probe', ip:'10.0.0.1' },
+    { time:'12:43:55', method:'POST', path:'/api/superadmin/rbac/roles/save', status:200, latency:72, clientName:'Admin Panel', ip:'10.0.1.15' },
+    { time:'12:43:40', method:'GET', path:'/api/superadmin/rbac/audit', status:200, latency:48, clientName:'Admin Panel', ip:'10.0.1.15' },
+    { time:'12:43:22', method:'POST', path:'/api/register', status:201, latency:145, clientName:'Public Site', ip:'203.45.67.89' },
+  ];
+
+  get totalEndpoints():number{return this.endpoints.length;}
+  get liveEndpoints():number{return this.endpoints.filter(e=>e.status==='live').length;}
+  get activeKeys():number{return this.apiKeys.filter(k=>k.status==='active').length;}
+  get avgLatency():number{const l=this.endpoints.filter(e=>e.status==='live');if(!l.length)return 0;return Math.round(l.reduce((s,e)=>s+e.avgLatency,0)/l.length);}
+  get totalCallsToday():number{return this.endpoints.reduce((s,e)=>s+e.callsToday,0);}
+  get filteredEndpoints():ApiEndpoint[]{const q=this.searchQuery.trim().toLowerCase();if(!q)return this.endpoints;return this.endpoints.filter(e=>e.path.toLowerCase().includes(q)||e.method.toLowerCase().includes(q)||e.description.toLowerCase().includes(q)||e.auth.toLowerCase().includes(q));}
+
+  setTab(tab:any):void{this.activeTab=tab;}
+  setSearch(v:string):void{this.searchQuery=v;}
+  methodColor(m:string):string{switch(m){case'GET':return'bg-emerald-100 text-emerald-700';case'POST':return'bg-blue-100 text-blue-700';case'PUT':return'bg-amber-100 text-amber-700';case'DELETE':return'bg-rose-100 text-rose-700';default:return'bg-slate-100 text-slate-700';}}
+  statusColor(s:number):string{if(s>=200&&s<300)return'text-emerald-600';if(s>=400&&s<500)return'text-amber-600';return'text-rose-600';}
+  revokeKey(keyId:string):void{this.apiKeys=this.apiKeys.map(k=>k.id===keyId?{...k,status:'revoked' as const}:k);}
+  toggleRule(ruleId:string):void{this.securityRules=this.securityRules.map(r=>r.id===ruleId?{...r,enabled:!r.enabled}:r);}
+  navigateTo(view:string):void{this.navigate.emit(view);}
+}

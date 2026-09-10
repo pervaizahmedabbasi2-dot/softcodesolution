@@ -1,0 +1,264 @@
+<section class="px-8 py-7 max-w-[98rem] mx-auto space-y-6">
+
+  <!-- Analytics header -->
+  <div class="relative overflow-hidden rounded-[2rem] shadow-2xl"
+       style="background:linear-gradient(135deg,#312e81 0%,#1e1b4b 48%,#0f172a 100%)">
+
+    <div class="absolute inset-0 opacity-10"
+         style="background-image:radial-gradient(circle,#fff 1px,transparent 1px);background-size:28px 28px">
+    </div>
+
+    <div class="relative px-7 py-7 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+
+      <div>
+        <div class="flex flex-wrap items-center gap-2 mb-3">
+          <span class="px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[3px] text-white/80"
+                style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.18)">
+            PLATFORM ANALYTICS
+          </span>
+
+          <span class="px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest text-indigo-100 bg-indigo-400/15 ring-1 ring-indigo-300/20">
+            FRONTEND FOUNDATION
+          </span>
+        </div>
+
+        <h1 class="text-3xl font-black text-white uppercase tracking-tight leading-tight">
+          Analytics<span class="text-indigo-300">.</span>
+        </h1>
+
+        <p class="text-sm text-white/55 font-medium mt-2 max-w-2xl">
+          Central analytics workspace for tenant growth, revenue, module adoption,
+          operational activity and platform performance.
+        </p>
+      </div>
+
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+
+        <div class="flex items-center gap-1 p-1 rounded-xl bg-white/10 ring-1 ring-white/10">
+          <button
+            *ngFor="let period of periods"
+            type="button"
+            (click)="selectPeriod(period)"
+            class="px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all"
+            [class.bg-white]="selectedPeriod === period"
+            [class.text-slate-900]="selectedPeriod === period"
+            [class.text-white]="selectedPeriod !== period"
+            [class.hover:bg-white/10]="selectedPeriod !== period">
+            {{ period }}
+          </button>
+        </div>
+
+        <button
+          type="button"
+          class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-white text-slate-900 text-[10px] font-black uppercase tracking-widest shadow-lg hover:bg-indigo-50 transition-all">
+          <lucide-icon [name]="icons.Download" class="w-4 h-4"></lucide-icon>
+          Export
+        </button>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Metrics -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+
+    <article
+      *ngFor="let metric of metrics"
+      class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+
+      <div class="flex items-start justify-between gap-4">
+
+        <div class="w-11 h-11 rounded-xl bg-indigo-50 flex items-center justify-center">
+          <lucide-icon
+            [name]="metric.icon"
+            class="w-5 h-5 text-indigo-600">
+          </lucide-icon>
+        </div>
+
+        <span class="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-widest"
+              [class.text-emerald-600]="metric.positive"
+              [class.text-slate-400]="!metric.positive">
+          <lucide-icon
+            [name]="metric.positive ? icons.ArrowUpRight : icons.ArrowDownRight"
+            class="w-3.5 h-3.5">
+          </lucide-icon>
+          {{ metric.trend }}
+        </span>
+
+      </div>
+
+      <p class="mt-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+        {{ metric.label }}
+      </p>
+
+      <p class="mt-1 text-3xl font-black tracking-tight text-slate-900">
+        {{ metric.value }}
+      </p>
+
+      <p class="mt-2 text-[10px] font-semibold text-slate-400">
+        {{ metric.detail }}
+      </p>
+
+    </article>
+
+  </div>
+
+  <!-- Main analytics workspace -->
+  <div class="grid grid-cols-1 xl:grid-cols-3 gap-5">
+
+    <article class="xl:col-span-2 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+
+      <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between gap-4">
+
+        <div>
+          <p class="text-[9px] font-black uppercase tracking-[0.25em] text-indigo-500">
+            Growth Intelligence
+          </p>
+
+          <h2 class="mt-1 text-lg font-black text-slate-900">
+            Platform Trends
+          </h2>
+
+          <p class="mt-1 text-[11px] text-slate-400 font-medium">
+            Visualization layer is ready for verified backend analytics data.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          class="w-10 h-10 rounded-xl border border-slate-200 flex items-center justify-center hover:bg-slate-50 transition-all"
+          title="Filter analytics">
+          <lucide-icon
+            [name]="icons.Filter"
+            class="w-4 h-4 text-slate-500">
+          </lucide-icon>
+        </button>
+
+      </div>
+
+      <div class="p-6 space-y-7">
+
+        <div *ngFor="let chart of series">
+
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-[10px] font-black uppercase tracking-widest text-slate-500">
+              {{ chart.label }}
+            </span>
+
+            <span class="text-[9px] font-bold text-slate-300">
+              {{ selectedPeriod }}
+            </span>
+          </div>
+
+          <div class="h-44 flex items-end gap-2 sm:gap-3 border-b border-l border-slate-100 px-3 pb-0">
+
+            <div
+              *ngFor="let value of chart.values"
+              class="flex-1 min-w-0 flex items-end h-full">
+
+              <div
+                class="w-full rounded-t-lg bg-indigo-100 border border-indigo-200 transition-all hover:bg-indigo-200"
+                [style.height.%]="barHeight(value, chart.values)"
+                [title]="value.toString()">
+              </div>
+
+            </div>
+
+          </div>
+
+          <div class="flex justify-between mt-2 text-[8px] font-bold uppercase tracking-wider text-slate-300">
+            <span>Start</span>
+            <span>Current period</span>
+          </div>
+
+        </div>
+
+      </div>
+
+    </article>
+
+    <!-- Operational signals -->
+    <article class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+
+      <div class="px-6 py-5 border-b border-slate-100">
+        <p class="text-[9px] font-black uppercase tracking-[0.25em] text-emerald-500">
+          Analytics Control
+        </p>
+
+        <h2 class="mt-1 text-lg font-black text-slate-900">
+          Data Readiness
+        </h2>
+      </div>
+
+      <div class="p-5 space-y-3">
+
+        <div
+          *ngFor="let signal of operationalSignals"
+          class="flex items-start gap-3 p-4 rounded-xl bg-slate-50 border border-slate-100">
+
+          <div class="w-9 h-9 rounded-lg bg-white flex items-center justify-center border border-slate-100 flex-shrink-0">
+            <lucide-icon
+              [name]="signal.icon"
+              class="w-4 h-4 text-slate-500">
+            </lucide-icon>
+          </div>
+
+          <div class="min-w-0">
+            <p class="text-[9px] font-black uppercase tracking-widest text-slate-400">
+              {{ signal.label }}
+            </p>
+
+            <p class="mt-1 text-xs font-bold text-slate-700">
+              {{ signal.value }}
+            </p>
+          </div>
+
+        </div>
+
+        <div class="mt-4 p-4 rounded-xl border border-indigo-100 bg-indigo-50/60">
+          <div class="flex items-start gap-3">
+            <lucide-icon
+              [name]="icons.TrendingUp"
+              class="w-4 h-4 text-indigo-600 mt-0.5 flex-shrink-0">
+            </lucide-icon>
+
+            <p class="text-[10px] leading-5 font-semibold text-indigo-900">
+              Frontend analytics workspace is established without inventing
+              production metrics. Backend aggregation will be connected in its
+              own verified point.
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </article>
+
+  </div>
+
+  <!-- Analytics domains -->
+  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+
+    <div
+      *ngFor="let domain of [
+        { title: 'Tenant Analytics', text: 'Growth, activation, retention and tenant lifecycle.' },
+        { title: 'Revenue Analytics', text: 'Subscriptions, billing, invoices and commercial trends.' },
+        { title: 'Module Analytics', text: 'Entitlements, adoption, usage and module performance.' },
+        { title: 'Operational Analytics', text: 'Platform activity, health, sync and system events.' }
+      ]"
+      class="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+
+      <div class="w-2 h-2 rounded-full bg-indigo-500 mb-4"></div>
+
+      <h3 class="text-xs font-black uppercase tracking-tight text-slate-900">
+        {{ domain.title }}
+      </h3>
+
+      <p class="mt-2 text-[10px] leading-5 font-medium text-slate-400">
+        {{ domain.text }}
+      </p>
+
+    </div>
+
+  </div>
+
+</section>
