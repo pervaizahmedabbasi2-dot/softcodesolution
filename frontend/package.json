@@ -4,11 +4,11 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "dev": "ng serve",
+    "dev": "ng serve --host 0.0.0.0 --port 3000 --hmr=false --live-reload=false",
     "idx": "ng serve --host 0.0.0.0 --port ${PORT:-4200}",
     "online": "ng serve --host 0.0.0.0 --port 4200",
     "preview": "npm run idx",
-    "build": "ng build",
+    "build": "NG_BUILD_MAX_WORKERS=1 ng build",
     "build:idx": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
@@ -24,9 +24,7 @@
     "@angular/router": "^21.2.0",
     "lucide-angular": "^1.0.0",
     "rxjs": "~7.8.0",
-    "tslib": "^2.3.0"
-  },
-  "devDependencies": {
+    "tslib": "^2.3.0",
     "@angular/build": "^21.2.7",
     "@angular/cli": "^21.2.7",
     "@angular/compiler-cli": "^21.2.0",

@@ -1,0 +1,69 @@
+
+<div class="p-6 md:p-8 space-y-8 animate-fade-in pb-24">
+  <div class="flex items-center justify-between">
+    <div>
+      <h2 class="text-xl font-bold tracking-tight text-slate-900">Developer Hub & Webhooks</h2>
+      <p class="text-sm text-slate-500 mt-1">Manage API integrations, outgoing webhooks, and events.</p>
+    </div>
+    <button class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm rounded-lg text-sm font-semibold transition-all flex items-center gap-2">
+      <lucide-icon name="Plus" class="w-4 h-4"></lucide-icon>
+      New Endpoint
+    </button>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div class="lg:col-span-2 space-y-4">
+       <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+               <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+               <h3 class="font-bold text-slate-900">Salesforce Sync</h3>
+            </div>
+            <span class="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-md uppercase">POST</span>
+          </div>
+          <p class="text-xs text-slate-500 font-mono mb-4 break-all">https://api.salesforce.com/services/data/v60.0/sobjects/Account</p>
+          <div class="flex items-center gap-4 text-xs font-medium">
+             <span class="text-slate-500"><span class="text-slate-900 font-bold">14.2k</span> calls/day</span>
+             <span class="text-slate-500"><span class="text-emerald-600 font-bold">99.9%</span> success</span>
+          </div>
+       </div>
+
+       <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+               <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+               <h3 class="font-bold text-slate-900">Legacy ERP Notification</h3>
+            </div>
+            <span class="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-md uppercase">POST</span>
+          </div>
+          <p class="text-xs text-slate-500 font-mono mb-4 break-all">https://erp.internal.acme.corp/webhooks/billing_update</p>
+          <div class="flex items-center gap-4 text-xs font-medium">
+             <span class="text-slate-500"><span class="text-slate-900 font-bold">840</span> calls/day</span>
+             <span class="text-slate-500"><span class="text-rose-600 font-bold">82.1%</span> success (Failing)</span>
+          </div>
+       </div>
+    </div>
+
+    <div class="bg-slate-50 border border-slate-200 rounded-xl p-6">
+       <h3 class="font-bold text-slate-900 mb-4">Event Topics</h3>
+       <div class="space-y-3">
+          <label class="flex items-center gap-3">
+             <input type="checkbox" checked class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-600">
+             <span class="text-sm font-medium text-slate-700">tenant.created</span>
+          </label>
+          <label class="flex items-center gap-3">
+             <input type="checkbox" checked class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-600">
+             <span class="text-sm font-medium text-slate-700">subscription.updated</span>
+          </label>
+          <label class="flex items-center gap-3">
+             <input type="checkbox" class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-600">
+             <span class="text-sm font-medium text-slate-700">user.login_failed</span>
+          </label>
+          <label class="flex items-center gap-3">
+             <input type="checkbox" class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-600">
+             <span class="text-sm font-medium text-slate-700">payment.failed</span>
+          </label>
+       </div>
+    </div>
+  </div>
+</div>

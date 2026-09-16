@@ -50,7 +50,7 @@ interface GuardianSupervisorTelemetry {
   styleUrl: './data-protection.component.css',
 })
 export class DashboardDataProtectionComponent implements OnInit, OnDestroy {
-  failoverStatus: any = null;
+  failoverStatus: any = { state: "UNKNOWN", message: "Checking failover readiness…" };
   failoverBusy = false;
 
   loading = true;
@@ -325,12 +325,12 @@ export class DashboardDataProtectionComponent implements OnInit, OnDestroy {
   }
 
   get latestRecoveryId(): string {
-    return this.recoveryStatus?.latest_recovery_point?.id || this.latestBackup?.id || '—';
+    return this.recoveryStatus?.latest_recovery_point?.id || this.latestBackup?.id || null;
   }
 
   get latestRecoveryTime(): string {
     return (
-      this.recoveryStatus?.latest_recovery_point?.created_at || this.latestBackup?.created_at || '—'
+      this.recoveryStatus?.latest_recovery_point?.created_at || this.latestBackup?.created_at || null
     );
   }
 

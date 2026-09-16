@@ -1,0 +1,22 @@
+
+> softcodesolution@0.0.0 dev
+> ng serve --host 0.0.0.0 --port 3000 --hmr=false --live-reload=false
+
+Prebundling has been configured but will not be used because caching has been disabled.
+
+Warning: This is a simple server for use in testing or debugging Angular applications
+locally. It hasn't been reviewed for security issues.
+
+Binding this server to an open connection can result in compromising your application or
+computer. Using a different host than the one passed to the "--host" flag might result in
+websocket connection issues.
+    
+An unhandled exception occurred: Port 3000 is already in use. Use '--port' to specify a different port.
+See "/tmp/ng-PcjxFD/angular-errors.log" for further details.
+npm error Lifecycle script `dev` failed with error:
+npm error code 127
+npm error path /app/applet/frontend
+npm error workspace softcodesolution@0.0.0
+npm error location /app/applet/frontend
+npm error command failed
+npm error command sh -c ng serve --host 0.0.0.0 --port 3000 --hmr=false --live-reload=false

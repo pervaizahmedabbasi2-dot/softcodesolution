@@ -1,3 +1,4 @@
+import { RouterModule } from '@angular/router';
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LegalComponent } from '../legal/legal.component';

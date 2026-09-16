@@ -1,5 +1,6 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, Input, Output, EventEmitter, OnInit, inject } from '@angular/core';
+import { CommonModule, Location } from '@angular/common';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-legal',
@@ -7,13 +8,31 @@ import { CommonModule } from '@angular/common';
   imports: [CommonModule],
   templateUrl: './legal.component.html'
 })
-export class LegalComponent {
+export class LegalComponent implements OnInit {
   @Input() isOpen: boolean = false;
   @Input() activeTab: string = 'terms';
   @Output() closeEvent = new EventEmitter<void>();
 
+  private router = inject(Router, { optional: true });
+  private location = inject(Location, { optional: true });
+  isRouted: boolean = false;
+
+  ngOnInit() {
+    if (this.router && this.router.url.includes('legal')) {
+      this.isRouted = true;
+      this.isOpen = true;
+    }
+  }
+
   closeModal() {
     this.closeEvent.emit();
+    if (this.isRouted) {
+      if (this.location) {
+        this.location.back();
+      } else if (this.router) {
+        this.router.navigate(['/']);
+      }
+    }
   }
 
   printSection() {

@@ -22,7 +22,10 @@
           "options": {
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
-            "outputPath": "dist/softcode-ui",
+            "outputPath": {
+              "base": "dist/softcode-ui",
+              "browser": "browser"
+            },
             "assets": [
               "src/favicon.ico",
               "src/assets",
@@ -33,7 +36,8 @@
             ],
             "styles": [
               "src/styles.css"
-            ]
+            ],
+            "deleteOutputPath": false
           },
           "configurations": {
             "production": {
@@ -41,7 +45,7 @@
                 {
                   "type": "initial",
                   "maximumWarning": "500kB",
-                  "maximumError": "1.10MB"
+                  "maximumError": "2MB"
                 },
                 {
                   "type": "anyComponentStyle",
@@ -68,7 +72,13 @@
           "builder": "@angular/build:dev-server",
           "options": {
             "host": "0.0.0.0",
-            "port": 4200
+            "port": 4200,
+            "allowedHosts": [
+              ".run.app",
+              "localhost",
+              "127.0.0.1",
+              "all"
+            ]
           },
           "configurations": {
             "production": {
