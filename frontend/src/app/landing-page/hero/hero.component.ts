@@ -1,11 +1,12 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router'; // 🔥 RouterLink ko active karne ke liye zaroori import
+import { PwaInstallComponent } from '../../pwa-install.component';
 
 @Component({
   selector: 'app-hero',
   standalone: true,
-  imports: [CommonModule, RouterModule], // 🔥 RouterModule ko yahan include kar diya taake page navigation chale
+  imports: [CommonModule, RouterModule, PwaInstallComponent], // 🔥 RouterModule ko yahan include kar diya taake page navigation chale
   templateUrl: './hero.component.html',
   styleUrls: ['./hero.component.css']
 })

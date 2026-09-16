@@ -1,0 +1,66 @@
+
+<div class="p-6 md:p-8 space-y-8 animate-fade-in pb-24">
+  <div class="flex items-center justify-between">
+    <div>
+      <h2 class="text-xl font-bold tracking-tight text-slate-900">Security & NOC</h2>
+      <p class="text-sm text-slate-500 mt-1">Real-time threat intelligence and global network operations center.</p>
+    </div>
+    <div class="flex items-center gap-3">
+      <button class="px-4 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg text-sm font-semibold transition-all">
+        Export Audit
+      </button>
+      <button class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white shadow-sm rounded-lg text-sm font-semibold transition-all flex items-center gap-2">
+        <lucide-icon name="ShieldAlert" class="w-4 h-4"></lucide-icon>
+        Lockdown Mode
+      </button>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-sm font-bold text-slate-700">Active Threats Blocked</h3>
+        <span class="p-2 bg-emerald-50 rounded-lg text-emerald-600">
+          <lucide-icon name="ShieldCheck" class="w-5 h-5"></lucide-icon>
+        </span>
+      </div>
+      <p class="text-3xl font-black text-slate-900">14,293</p>
+      <p class="text-xs text-emerald-600 font-medium mt-1">↓ 12% from last hour (Auto-mitigated)</p>
+    </div>
+    <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-sm font-bold text-slate-700">WAF Rules Triggered</h3>
+        <span class="p-2 bg-amber-50 rounded-lg text-amber-600">
+          <lucide-icon name="AlertTriangle" class="w-5 h-5"></lucide-icon>
+        </span>
+      </div>
+      <p class="text-3xl font-black text-slate-900">892</p>
+      <p class="text-xs text-amber-600 font-medium mt-1">Action Required on 3 IPs</p>
+    </div>
+    <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-sm font-bold text-slate-700">Global DDoS Status</h3>
+        <span class="p-2 bg-slate-50 rounded-lg text-slate-600">
+          <lucide-icon name="Activity" class="w-5 h-5"></lucide-icon>
+        </span>
+      </div>
+      <p class="text-xl font-bold text-slate-900">Normal</p>
+      <p class="text-xs text-slate-500 mt-1">Traffic across 14 regions</p>
+    </div>
+  </div>
+
+  <div class="bg-slate-900 rounded-xl border border-slate-800 p-6 overflow-hidden relative shadow-lg">
+    <div class="flex justify-between items-center mb-6">
+      <h3 class="text-white font-bold">Live Traffic Matrix (NOC)</h3>
+      <span class="flex items-center gap-2 text-xs text-emerald-400">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        Live Monitoring
+      </span>
+    </div>
+    <div class="h-64 w-full bg-slate-800/50 rounded-lg border border-slate-700/50 flex items-center justify-center relative overflow-hidden">
+        <!-- Mock Map Visual -->
+        <div class="absolute inset-0 opacity-20 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PHBhdGggZD0iTTAgMGgyMHYyMEgwem0xMCAxMGgxMHYxMEgxMHoiIGZpbGw9IiNmZmYiIGZpbGwtcnVsZT0iZXZlbm9kZCIvPjwvc3ZnPg==')] [background-size:20px_20px]"></div>
+        <p class="text-slate-400 font-medium z-10 font-mono text-sm">[ Map Visualization Offline in Preview ]</p>
+    </div>
+  </div>
+</div>

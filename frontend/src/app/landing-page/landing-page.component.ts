@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HeroComponent } from './hero/hero.component';
 import { SolutionsComponent } from './solutions/solutions.component';
@@ -9,7 +9,6 @@ import { TestimonialComponent } from './testimonial/testimonial.component';
 import { FaqComponent } from './faq/faq.component';
 import { AboutComponent } from './about/about.component';
 import { FooterComponent } from './footer/footer.component';
-// Contact Support Component ko wapas import kiya
 import { ContactSupportComponent } from './contact-support/contact-support.component';
 
 @Component({
@@ -26,10 +25,12 @@ import { ContactSupportComponent } from './contact-support/contact-support.compo
     FaqComponent,
     AboutComponent,
     FooterComponent,
-    ContactSupportComponent // <-- Imports array mein add kiya
+    ContactSupportComponent
   ],
   template: `
-    <app-hero></app-hero>
+    <div id="hero-section">
+      <app-hero></app-hero>
+    </div>
 
     <app-solutions></app-solutions>
 
@@ -52,4 +53,10 @@ import { ContactSupportComponent } from './contact-support/contact-support.compo
     <app-footer></app-footer>
   `
 })
-export class LandingPageComponent { }
+export class LandingPageComponent { 
+
+
+
+
+
+}

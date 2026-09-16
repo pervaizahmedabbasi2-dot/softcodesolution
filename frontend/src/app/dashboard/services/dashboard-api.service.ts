@@ -11,7 +11,20 @@ export class DashboardApiService {
   // SCS_PHASE669_DASHBOARD_API_REQUEST
   // Shared authenticated API reader.
   // Uses existing backend routes only.
-  private async requestJSON<T = any>(path: string, fallback: T): Promise<T> {
+
+  private async safeJson(response: Response, fallback: any = null): Promise<any> {
+    try {
+      const text = await response.text();
+      if (!text || text.trim().startsWith('<')) {
+        return fallback;
+      }
+      return JSON.parse(text);
+    } catch (e) {
+      return fallback;
+    }
+  }
+
+private async requestJSON<T = any>(path: string, fallback: T): Promise<T> {
     try {
       const response = await fetch(this.apiBase + path, {
         method: 'GET',
@@ -21,12 +34,14 @@ export class DashboardApiService {
         },
         cache: 'no-store',
       });
-
       if (!response.ok) {
         return fallback;
       }
-
-      return (await response.json()) as T;
+      const text = await response.text();
+      if (!text || text.trim().startsWith('<')) {
+         return fallback;
+      }
+      return JSON.parse(text) as T;
     } catch {
       return fallback;
     }
@@ -110,7 +125,7 @@ export class DashboardApiService {
         },
       });
 
-      return await response.json();
+      return await this.safeJson(response);
     } catch (error) {
       return {
         ok: false,
@@ -140,11 +155,11 @@ export class DashboardApiService {
       items: [],
     });
 
-    if (Array.isArray(result?.items)) {
+    if (result && typeof result === 'object' && Array.isArray(result.items)) {
       return result.items;
     }
 
-    if (Array.isArray(result?.tenants)) {
+    if (result && typeof result === 'object' && Array.isArray(result.tenants)) {
       return result.tenants;
     }
 
@@ -216,7 +231,7 @@ export class DashboardApiService {
         },
       );
 
-      const result = await response.json();
+      const result = await this.safeJson(response);
 
       if (!response.ok) {
         return [];
@@ -241,7 +256,7 @@ export class DashboardApiService {
         cache: 'no-store',
       });
 
-      const result = await response.json();
+      const result = await this.safeJson(response);
 
       if (!response.ok) {
         return {
@@ -274,7 +289,7 @@ export class DashboardApiService {
         },
       );
 
-      const result = await response.json();
+      const result = await this.safeJson(response);
 
       if (!response.ok) {
         return {
@@ -313,7 +328,7 @@ export class DashboardApiService {
         },
       );
 
-      const result = await response.json();
+      const result = await this.safeJson(response);
 
       if (!response.ok) {
         return {
@@ -367,7 +382,7 @@ export class DashboardApiService {
       body: JSON.stringify({}),
     });
 
-    const result = await response.json();
+    const result = await this.safeJson(response);
 
     if (!response.ok) {
       throw new Error(result?.message || result?.status?.message || 'Failover evaluation failed.');
@@ -385,7 +400,7 @@ export class DashboardApiService {
       body: JSON.stringify({}),
     });
 
-    const result = await response.json();
+    const result = await this.safeJson(response);
 
     if (!response.ok) {
       throw new Error(result?.message || result?.status?.message || 'Failover promotion failed.');

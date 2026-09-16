@@ -852,7 +852,7 @@ export class DashboardRbacComponent {
       permissions: {
         ...role.permissions,
         [moduleCode]: {
-          ...(role.permissions[moduleCode] || this.emptyRow()),
+          ...((role.permissions || {})[moduleCode] || this.emptyRow()),
           [action]: enabled
         }
       }
@@ -881,7 +881,7 @@ export class DashboardRbacComponent {
     if (!role || role.isSystem) return;
 
     this.patchRole(roleId, current => {
-      const row = { ...(current.permissions[moduleCode] || this.emptyRow()) };
+      const row = { ...((current.permissions || {})[moduleCode] || this.emptyRow()) };
 
       for (const key of this.allActionKeys()) {
         row[key] = enabled;
@@ -915,7 +915,7 @@ export class DashboardRbacComponent {
     if (!role || role.isSystem) return;
 
     this.patchRole(roleId, current => {
-      const nextPermissions = { ...current.permissions };
+      const nextPermissions = { ...(current.permissions || {}) };
 
       for (const module of this.modules) {
         const row = { ...(nextPermissions[module.code] || this.emptyRow()) };
