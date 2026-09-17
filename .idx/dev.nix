@@ -289,7 +289,7 @@ EOF
               echo "Starting Angular frontend on IDX port: $PORT"
               echo "Frontend /api, /healthz, /readyz will proxy to Go backend 8080"
 
-              npx ng serve \
+              ./node_modules/.bin/ng serve \
                 --host 0.0.0.0 \
                 --port "$PORT" \
                 --proxy-config proxy.conf.json
