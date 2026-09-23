@@ -15,6 +15,8 @@ type supervisorTelemetryResponse struct {
 	IncidentCount     int              `json:"incident_count"`
 	CurrentOperation  string           `json:"current_operation"`
 	LastHeartbeat     time.Time        `json:"last_heartbeat"`
+	CurrentCommit       string           `json:"current_commit"`
+	LastKnownGoodCommit string           `json:"last_known_good_commit"`
 	Incidents         []map[string]any `json:"incidents,omitempty"`
 }
 
@@ -463,15 +465,29 @@ func (a *API) GetRecoveryStatus(
 		overallStatus = "FAILED"
 	}
 
+	telemetryPath := "backend/guardian/data/supervisor-telemetry.json"
+	currentCommit := ""
+	lastKnownGood := ""
+	if payload, err := os.ReadFile(telemetryPath); err == nil {
+		var telemetry supervisorTelemetryResponse
+		if json.Unmarshal(payload, &telemetry) == nil {
+			currentCommit = telemetry.CurrentCommit
+			lastKnownGood = telemetry.LastKnownGoodCommit
+		}
+	}
+
 	writeBackupJSON(
 		w,
 		http.StatusOK,
 		map[string]any{
-			"ok":                    true,
-			"status":                overallStatus,
+			"ok":                     true,
+			"status":                 overallStatus,
 			"score":                 score,
 			"total_backups":         len(backups),
 			"latest_recovery_point": latest,
+			"current_commit":         currentCommit,
+			"last_known_good_commit": lastKnownGood,
+			"recovery_ready":         lastKnownGood != "",
 			"layers": map[string]any{
 				"layer1_core":          layer1Status,
 				"layer2_office_mirror": layer2Status,
@@ -618,6 +634,10 @@ func RegisterHTTPRoutes(
 
 	mux.HandleFunc(
 		"/api/recovery/supervisor-telemetry",
+		api.GetSupervisorTelemetry,
+	)
+	mux.HandleFunc(
+		"/api/superadmin/recovery/supervisor-telemetry",
 		api.GetSupervisorTelemetry,
 	)
 
