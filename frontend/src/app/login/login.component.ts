@@ -135,56 +135,26 @@ export class LoginComponent implements OnInit {
     const password = this.loginForm.value.password || '';
 
     try {
-      // Mocking the backend login for superadmin since we don't have a backend running yet
-      if (sanitizedEmail === 'superadmin@softcodesolution.local' && password === 'SuperStrongPass123!') {
-        setTimeout(() => {
-          this.isLoading = false;
-          if (this.rememberMe) {
-            localStorage.setItem('scs_remembered_email', sanitizedEmail);
-          } else {
-            localStorage.removeItem('scs_remembered_email');
-          }
-          localStorage.setItem('scs_auth_mock', 'true');
-          this.redirectPath = '/dashboard';
-          this.showSuccessPopup = true;
-          this.cdr.detectChanges();
-        }, 1000);
-        return;
-      }
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email: sanitizedEmail, password: password })
+      });
+      const result = await res.json().catch(() => null);
 
-      // Preview & Development Authentication Handler
-      const isOk = true;
-      const result: any = { 
-        ok: true, 
-        data: { 
-          user: { 
-            id: 'scs-usr-' + Date.now().toString(36), 
-            email: sanitizedEmail, 
-            role: sanitizedEmail.includes('admin') ? 'super_admin' : 'client_admin',
-            full_name: sanitizedEmail.split('@')[0].replace('.', ' ').toUpperCase()
-          },
-          token: 'scs-session-token-' + Date.now()
-        } 
-      };
-      
-      if (isOk) {
+      if (res.ok && result?.ok) {
         if (this.rememberMe) {
           localStorage.setItem('scs_remembered_email', sanitizedEmail);
         } else {
           localStorage.removeItem('scs_remembered_email');
         }
-
-        // Set auth session mock so authGuard allows entering dashboard
-        localStorage.setItem('scs_auth_mock', 'true');
-        localStorage.setItem('auth_token', result.data.token);
-        localStorage.setItem('user_data', JSON.stringify(result.data.user));
-        localStorage.setItem('scs_tenant_id', 'tenant_enterprise_01');
-
-        this.redirectPath = typeof result.redirect === 'string' ? result.redirect : '/dashboard';
+        localStorage.removeItem('scs_auth_mock');
+        this.redirectPath = result.redirect || '/dashboard';
         this.showSuccessPopup = true;
       } else {
         this.showLoginError = true;
-        this.notification.error(result.message || 'Invalid email or password');
+        this.notification.error(result?.message || 'Invalid email or password');
       }
     } catch (error) {
       console.error('Login failed:', error);

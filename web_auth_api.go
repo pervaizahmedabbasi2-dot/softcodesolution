@@ -510,7 +510,7 @@ func setAuthCookie(w http.ResponseWriter, token string, expiresAt time.Time) {
 		Expires:  expiresAt,
 		MaxAge:   maxAge,
 		HttpOnly: true,
-		Secure:   truthy(os.Getenv("SCS_COOKIE_SECURE")),
+		Secure: true,
 		SameSite: http.SameSiteLaxMode,
 	})
 }
@@ -522,7 +522,7 @@ func clearAuthCookie(w http.ResponseWriter) {
 		Path:     "/",
 		MaxAge:   -1,
 		HttpOnly: true,
-		Secure:   truthy(os.Getenv("SCS_COOKIE_SECURE")),
+		Secure: true,
 		SameSite: http.SameSiteLaxMode,
 	})
 }

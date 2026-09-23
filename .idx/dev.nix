@@ -198,18 +198,24 @@
     "target": "http://127.0.0.1:8080",
     "secure": false,
     "changeOrigin": true,
+    "cookieDomainRewrite": "",
+    "cookiePathRewrite": "/",
     "logLevel": "debug"
   },
   "/healthz": {
     "target": "http://127.0.0.1:8080",
     "secure": false,
     "changeOrigin": true,
+    "cookieDomainRewrite": "",
+    "cookiePathRewrite": "/",
     "logLevel": "debug"
   },
   "/readyz": {
     "target": "http://127.0.0.1:8080",
     "secure": false,
     "changeOrigin": true,
+    "cookieDomainRewrite": "",
+    "cookiePathRewrite": "/",
     "logLevel": "debug"
   }
 }
@@ -289,7 +295,7 @@ EOF
               echo "Starting Angular frontend on IDX port: $PORT"
               echo "Frontend /api, /healthz, /readyz will proxy to Go backend 8080"
 
-              ./node_modules/.bin/ng serve \
+              /home/user/softcodesolution/node_modules/.bin/ng serve \
                 --host 0.0.0.0 \
                 --port "$PORT" \
                 --proxy-config proxy.conf.json
