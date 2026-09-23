@@ -29,5 +29,5 @@ softcodesolution
 .scs-cleanup-manifest.json
 node_modules
 node_modules
-backend/backup/
+
 *.tar.gz
