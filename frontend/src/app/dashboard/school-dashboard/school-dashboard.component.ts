@@ -3,8 +3,6 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { dashboardIcons } from '../dashboard.component';
 import { DataTableComponent } from '../components/data-table/data-table.component';
-import { AuditReconciliationTrendsComponent } from '../components/audit-reconciliation-trends/audit-reconciliation-trends.component';
-import { AnalyticsDashboardComponent } from '../components/analytics-dashboard/analytics-dashboard.component';
 import {
   LucideAngularModule,
   Users,
@@ -59,27 +57,25 @@ import {
   WalletCards,
   Receipt,
   Bus,
-  Library,
-  ClipboardCheck,
-  MessageSquareWarning
+  Library
 } from 'lucide-angular';
 import { MatIconModule } from '@angular/material/icon';
 import { FirebaseDbService } from '../../services/firebase-db.service';
 
-export type SchoolDashboardTab = 'overview' | 'stage_wise' | 'feed' | 'events' | 'students' | 'teachers' | 'admissions' | 'attendance' | 'finance' | 'invoices' | 'expenses' | 'payment_gateway' | 'transport' | 'library' | 'exams' | 'timetable' | 'hostel' | 'labs' | 'alumni' | 'portals' | 'reports' | 'settings' | 'audit' | 'lesson_plans' | 'appraisals' | 'inspections' | 'exam_moderation' | 'parent_complaints' | 'substitutions' | 'syllabus' | 'safeguarding' | 'directives';
+export type SchoolDashboardTab = 'overview' | 'feed' | 'events' | 'students' | 'teachers' | 'admissions' | 'attendance' | 'finance' | 'invoices' | 'expenses' | 'payment_gateway' | 'transport' | 'library' | 'exams' | 'timetable' | 'hostel' | 'labs' | 'alumni' | 'portals' | 'reports' | 'settings' | 'audit';
 export type SchoolPortalRole = 'owner' | 'principal' | 'teacher' | 'student' | 'parent';
 
 export interface SchoolAuditTrailRecord {
   id: string;
   timestamp: string;
   operatorName: string;
-  operatorRole: 'Principal' | 'School Owner' | 'Owner Executive' | 'Accounts Controller' | 'Examination Dean' | 'System Auditor';
-  actionType: 'Fee Waiver / Concession' | 'Mark Moderation Lock' | 'Salary Arrears Clearance' | 'Student Leaving Certificate (SLC)' | 'Fee Voucher Deletion' | 'Attendance Modification' | 'Biometric IP Override' | 'Asset Write-Off' | 'Exam Moderation & Tamper-Lock';
+  operatorRole: 'Principal' | 'School Owner' | 'Accounts Controller' | 'Examination Dean' | 'System Auditor';
+  actionType: 'Fee Waiver / Concession' | 'Mark Moderation Lock' | 'Salary Arrears Clearance' | 'Student Leaving Certificate (SLC)' | 'Fee Voucher Deletion' | 'Attendance Modification' | 'Biometric IP Override' | 'Asset Write-Off';
   category: 'Financial' | 'Academic' | 'Administrative' | 'Security & Biometric';
   entityId: string;
   entityDescription: string;
   details: string;
-  severity: 'Normal Audit' | 'Authorized Override' | 'Compliance Flag' | 'Critical Security' | 'Critical / High Security';
+  severity: 'Normal Audit' | 'Authorized Override' | 'Compliance Flag' | 'Critical Security';
   verifiedBy: string;
   ipAddress?: string;
 }
@@ -284,14 +280,6 @@ export interface StudentRecord {
   emergencyContact?: string;
   dueBakaya?: number;
   lastPaymentDate?: string;
-  biometricEnrolled?: boolean;
-  faceEmbeddingToken?: string;
-  irisScanCode?: string;
-  irisEnrolledAt?: string;
-  fingerprintEnrolled?: boolean;
-  fingerprintTemplateHash?: string;
-  classGrade?: string;
-  attendanceStatus?: string;
 }
 
 export interface TeacherRecord {
@@ -316,12 +304,6 @@ export interface TeacherRecord {
   gender?: 'Male' | 'Female' | 'Other';
   experienceYears?: number;
   assignedGrade?: string;
-  biometricEnrolled?: boolean;
-  faceEmbeddingToken?: string;
-  irisScanCode?: string;
-  irisEnrolledAt?: string;
-  fingerprintEnrolled?: boolean;
-  fingerprintTemplateHash?: string;
   inchargeClass?: string;
   emergencyContact?: string;
   address?: string;
@@ -450,46 +432,12 @@ export interface TransportRouteRecord {
   status: 'Active' | 'Maintenance';
 }
 
-export interface LibraryCirculationRecord {
-  id: string;
-  issueNo: string;
-  bookId: string;
-  bookTitle: string;
-  isbn: string;
-  borrowerType: 'Student' | 'Faculty';
-  borrowerName: string;
-  borrowerId: string;
-  gradeOrDept: string;
-  issueDate: string;
-  dueDate: string;
-  returnDate?: string;
-  status: 'Issued' | 'Returned' | 'Overdue';
-  overdueDays: number;
-  fineAmount: number;
-  conditionNotes?: string;
-}
-
-export interface LibraryDigitalResource {
-  id: string;
-  title: string;
-  category: string;
-  grade: string;
-  authorOrPublisher: string;
-  fileType: 'PDF' | 'EPUB';
-  fileSize: string;
-  downloadsCount: number;
-}
-
 export interface LibraryBookRecord {
   id: string;
   isbn: string;
   title: string;
   author: string;
   category: string;
-  genre?: string;
-  subject?: string;
-  academicGradeLevel?: string;
-  tags?: string[];
   totalCopies: number;
   availableCopies: number;
   rackNo: string;
@@ -529,16 +477,10 @@ export interface PortalUserRecord {
   name: string;
   email: string;
   pin: string;
-  role: 'owner' | 'principal' | 'teacher' | 'student' | 'parent' | string;
+  role: 'teacher' | 'student' | 'parent';
   linkedEntity: string;
   status: 'Active' | 'Suspended';
   lastLogin: string;
-  phone?: string;
-  staffIdOrRoll?: string;
-  designation?: string;
-  department?: string;
-  clearanceLevel?: string;
-  branch?: string;
 }
 
 export interface RoleModulePermission {
@@ -748,7 +690,7 @@ export interface PrincipalFeeCollectionRecord {
 @Component({
   selector: 'app-school-dashboard',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule, FormsModule, MatIconModule, DataTableComponent, AuditReconciliationTrendsComponent, AnalyticsDashboardComponent],
+  imports: [CommonModule, LucideAngularModule, FormsModule, MatIconModule, DataTableComponent],
   templateUrl: './school-dashboard.component.html',
   styles: [`
     .glass-surface {
@@ -814,69 +756,14 @@ export class SchoolDashboardComponent implements OnInit {
 
   currentPortalRole: SchoolPortalRole = 'owner';
   currentTab: SchoolDashboardTab = 'overview';
-  principalTab: 'overview' | 'stage_wise' | 'master_registries' | 'supervision' | 'substitutions' | 'syllabus' | 'inspections' | 'discipline' | 'directives' | 'appraisals' | 'exam_moderation' | 'academic_reports' | 'faculty_tasks' | 'teacher_leaves' | 'student_certificates' | 'ptm_interventions' | 'admissions_review' | 'fee_oversight' | 'parent_complaints' | 'safeguarding' | 'facilities_transport' | 'library' | 'biometric_attendance' = 'overview';
-  teacherTab: 'schedule' | 'feed' | 'events' | 'attendance' | 'marks' | 'lessons' | 'homework' | 'students' | 'communication' | 'library' = 'schedule';
-  studentTab: 'overview' | 'feed' | 'events' | 'routine' | 'academics' | 'attendance' | 'fee' | 'homework' | 'library' = 'overview';
-  parentTab: 'overview' | 'feed' | 'events' | 'attendance' | 'academics' | 'fee' | 'leave' | 'library' = 'overview';
+  principalTab: 'overview' | 'master_registries' | 'supervision' | 'substitutions' | 'syllabus' | 'inspections' | 'discipline' | 'directives' | 'appraisals' | 'exam_moderation' | 'academic_reports' | 'faculty_tasks' | 'teacher_leaves' | 'student_certificates' | 'ptm_interventions' | 'admissions_review' | 'fee_oversight' | 'parent_complaints' | 'safeguarding' | 'facilities_transport' = 'overview';
+  teacherTab: 'schedule' | 'feed' | 'events' | 'attendance' | 'marks' | 'lessons' | 'homework' | 'students' | 'communication' = 'schedule';
+  studentTab: 'overview' | 'feed' | 'events' | 'routine' | 'academics' | 'attendance' | 'fee' | 'homework' = 'overview';
+  parentTab: 'overview' | 'feed' | 'events' | 'attendance' | 'academics' | 'fee' | 'leave' = 'overview';
   studentSubTab: 'directory' | 'medical' | 'disciplinary' = 'directory';
-  teacherSubTab: 'directory' | 'payroll' | 'leaves' | 'lesson_plans' = 'directory';
-  financeSubTab: 'ledger' | 'class_wise' | 'defaulters' | 'teacher_arrears' | 'profit_loss' | 'accounts' | 'alerts_log' | 'daily_closing' = 'ledger';
+  teacherSubTab: 'directory' | 'payroll' | 'leaves' = 'directory';
+  financeSubTab: 'ledger' | 'class_wise' | 'defaulters' | 'teacher_arrears' | 'profit_loss' | 'accounts' | 'alerts_log' = 'ledger';
   selectedProfitLossYear: string = '2025-2026';
-
-  // Daily Cash Closing (Rooznama) State & Helpers
-  dailyClosingDate: string = '2026-10-14';
-  dailyClosingCashier: string = 'Muhammad Farooq (Senior Cashier)';
-  dailyOpeningVaultCash: number = 45000;
-  dailyBankDepositSlipNo: string = 'MEZN-DEP-49102';
-  dailyBankDepositAmount: number = 200000;
-  dailySupervisorRemarks: string = 'All counter cash, bank challan collections, and petty vouchers reconciled. Verified with Meezan Bank deposit slip.';
-  isDailyClosingReconciled: boolean = true;
-
-  get todayFeeCashCollections(): number {
-    return 185000;
-  }
-  get todayAdmissionCashCollections(): number {
-    return 50000;
-  }
-  get todayOnlineBankCollections(): number {
-    return 95000;
-  }
-  get todayEasyPaisaCollections(): number {
-    return 42000;
-  }
-  get todayPettyExpensesOutflow(): number {
-    return 18500;
-  }
-  get totalPhysicalCashInflow(): number {
-    return this.dailyOpeningVaultCash + this.todayFeeCashCollections + this.todayAdmissionCashCollections;
-  }
-  get totalCashOutflow(): number {
-    return this.todayPettyExpensesOutflow + this.dailyBankDepositAmount;
-  }
-  get netPhysicalCashInHand(): number {
-    return this.totalPhysicalCashInflow - this.totalCashOutflow;
-  }
-
-  printDailyClosingSlip(): void {
-    if (typeof window !== 'undefined') {
-      window.print();
-    }
-  }
-
-  printAdmissionChallan(adm: any): void {
-    if (!adm) return;
-    this.openFeeChallanVoucher({
-      id: adm.id,
-      name: adm.applicant,
-      grade: adm.appliedFor,
-      section: adm.section || 'Section A',
-      rollNo: adm.rollNo || 'Pending',
-      feeAmount: adm.tuitionFee || 18000,
-      feeStatus: 'Pending',
-      guardian: adm.fatherName,
-      guardianPhone: adm.phone
-    } as any);
-  }
 
   newlyAddedTeacherId: string | null = null;
 
@@ -888,7 +775,7 @@ export class SchoolDashboardComponent implements OnInit {
     return (val || 0).toLocaleString();
   }
 
-  setPrincipalTab(tab: 'overview' | 'stage_wise' | 'master_registries' | 'supervision' | 'substitutions' | 'syllabus' | 'inspections' | 'discipline' | 'directives' | 'appraisals' | 'exam_moderation' | 'academic_reports' | 'faculty_tasks' | 'teacher_leaves' | 'student_certificates' | 'ptm_interventions' | 'admissions_review' | 'fee_oversight' | 'parent_complaints' | 'safeguarding' | 'facilities_transport' | 'biometric_attendance'): void {
+  setPrincipalTab(tab: 'overview' | 'master_registries' | 'supervision' | 'substitutions' | 'syllabus' | 'inspections' | 'discipline' | 'directives' | 'appraisals' | 'exam_moderation' | 'academic_reports' | 'faculty_tasks' | 'teacher_leaves' | 'student_certificates' | 'ptm_interventions' | 'admissions_review' | 'fee_oversight' | 'parent_complaints' | 'safeguarding' | 'facilities_transport'): void {
     this.principalTab = tab;
     this.tabChanged.emit(tab);
     this.cdr.detectChanges();
@@ -901,33 +788,8 @@ export class SchoolDashboardComponent implements OnInit {
     }
   }
 
-  openStageWiseView(stage: 'All' | 'Early Childhood' | 'Primary' | 'Middle' | 'Secondary' = 'All'): void {
-    if (this.currentPortalRole === 'principal') {
-      this.principalSelectedStage = stage;
-      this.principalStagePage = 1;
-      this.stageGradeFilter = 'All';
-      this.stageSearchQuery = '';
-      this.setPrincipalTab('stage_wise');
-    } else {
-      this.ownerSelectedStage = stage;
-      this.ownerStagePage = 1;
-      this.stageGradeFilter = 'All';
-      this.stageSearchQuery = '';
-      this.setTab('stage_wise');
-    }
-    this.cdr.detectChanges();
-  }
-
-  openPrincipalMasterRegistry(tab: 'students' | 'teachers' | 'parents' | 'fee_cashiering' = 'students'): void {
-    this.principalMasterTab = tab;
-    this.setPrincipalTab('master_registries');
-    this.cdr.detectChanges();
-  }
-
   get currentPrincipalTabLabel(): string {
     switch (this.principalTab) {
-      case 'biometric_attendance': return 'Principal Biometric Attendance & Sensor Gate Station (Eye-Scan & Fingerprint)';
-      case 'stage_wise': return 'Stage-Wise Academic Operations & Student Maintenance (Nursery to Class 10)';
       case 'master_registries': return 'Institutional Master Registries & Data Tables (اسڪول ماسٽر ڊيٽا ٽيبلز)';
       case 'supervision': return 'Faculty Lesson Plan Approvals';
       case 'substitutions': return 'Daily Faculty Leave & Period Arrangement Duty';
@@ -951,7 +813,7 @@ export class SchoolDashboardComponent implements OnInit {
     }
   }
 
-  setParentTab(tab: 'overview' | 'feed' | 'events' | 'attendance' | 'academics' | 'fee' | 'leave' | 'library'): void {
+  setParentTab(tab: 'overview' | 'feed' | 'events' | 'attendance' | 'academics' | 'fee' | 'leave'): void {
     this.parentTab = tab;
     this.tabChanged.emit(tab);
     this.cdr.detectChanges();
@@ -972,7 +834,6 @@ export class SchoolDashboardComponent implements OnInit {
       case 'academics': return 'Terminal Exam Report Card';
       case 'fee': return 'Tuition Fee & Bank Challan Vouchers';
       case 'leave': return 'Student Leave Applications';
-      case 'library': return 'Child Library Clearance & Circulation Ledger';
       default: return 'Child Live Summary & Overview';
     }
   }
@@ -986,12 +847,11 @@ export class SchoolDashboardComponent implements OnInit {
       case 'attendance': return 'Monthly Attendance Streak & RFID Logs';
       case 'fee': return 'Tuition Fee Clearance & Bank Challan';
       case 'homework': return 'Homework Tasks & Assignment Submissions';
-      case 'library': return 'Digital E-Library & Book Circulation Desk';
       default: return 'Smart Digital Student Card & Hub';
     }
   }
 
-  setStudentTab(tab: 'overview' | 'feed' | 'events' | 'routine' | 'academics' | 'attendance' | 'fee' | 'homework' | 'library'): void {
+  setStudentTab(tab: 'overview' | 'feed' | 'events' | 'routine' | 'academics' | 'attendance' | 'fee' | 'homework'): void {
     this.studentTab = tab;
     this.tabChanged.emit(tab);
     this.cdr.detectChanges();
@@ -1004,7 +864,7 @@ export class SchoolDashboardComponent implements OnInit {
     }, 60);
   }
 
-  setTeacherTab(tab: 'schedule' | 'feed' | 'events' | 'attendance' | 'marks' | 'lessons' | 'homework' | 'students' | 'communication' | 'library'): void {
+  setTeacherTab(tab: 'schedule' | 'feed' | 'events' | 'attendance' | 'marks' | 'lessons' | 'homework' | 'students' | 'communication'): void {
     this.teacherTab = tab;
     this.tabChanged.emit(tab);
     this.cdr.detectChanges();
@@ -1545,15 +1405,6 @@ export class SchoolDashboardComponent implements OnInit {
       case 'alumni': return 'award';
       case 'payment_gateway': return 'wallet-cards';
       case 'audit': return 'shield-check';
-      case 'lesson_plans': return 'book-open';
-      case 'appraisals': return 'award';
-      case 'inspections': return 'clipboard-check';
-      case 'exam_moderation': return 'trophy';
-      case 'parent_complaints': return 'message-square-warning';
-      case 'substitutions': return 'clock';
-      case 'syllabus': return 'book-open';
-      case 'safeguarding': return 'shield-check';
-      case 'directives': return 'file-text';
       default: return 'layers';
     }
   }
@@ -1562,7 +1413,6 @@ export class SchoolDashboardComponent implements OnInit {
   pageSize: number = 5;
   currentPage: { [key in SchoolDashboardTab]: number } = {
     overview: 1,
-    stage_wise: 1,
     feed: 1,
     events: 1,
     students: 1,
@@ -1583,16 +1433,7 @@ export class SchoolDashboardComponent implements OnInit {
     reports: 1,
     alumni: 1,
     settings: 1,
-    audit: 1,
-    lesson_plans: 1,
-    appraisals: 1,
-    inspections: 1,
-    exam_moderation: 1,
-    parent_complaints: 1,
-    substitutions: 1,
-    syllabus: 1,
-    safeguarding: 1,
-    directives: 1
+    audit: 1
   };
 
   // Search Queries per Module
@@ -2946,10 +2787,6 @@ INSTRUCTIONS:
     title: '',
     author: '',
     category: 'Science & Computing',
-    genre: 'Textbook & Reference',
-    subject: 'Physics',
-    academicGradeLevel: 'Secondary (Class 10)',
-    tagsInput: 'Board Exam Prep, Lab Reference',
     totalCopies: 10,
     availableCopies: 8,
     rackNo: 'RACK-05'
@@ -3140,15 +2977,9 @@ INSTRUCTIONS:
     name: '',
     email: '',
     pin: '',
-    role: 'principal',
-    linkedEntity: 'Academic Directorate & Executive Council',
-    status: 'Active',
-    phone: '',
-    staffIdOrRoll: 'DIR-001',
-    designation: 'Principal & Academic Director',
-    department: 'Academic Directorate',
-    clearanceLevel: 'Level 5 - Executive Academic Authority',
-    branch: 'Main Senior Campus'
+    role: 'teacher',
+    linkedEntity: 'Class 10-A Mathematics',
+    status: 'Active'
   };
 
   teacherHomeworkForm = {
@@ -3221,15 +3052,6 @@ INSTRUCTIONS:
     { id: 'library', label: 'Library & Book Register', shortLabel: 'Library', icon: Library, count: '4,500' },
     { id: 'exams', label: 'Examinations & Grades', shortLabel: 'Exams', icon: Trophy, count: 'GPA 3.8' },
     { id: 'timetable', label: 'Timetable & Routine', shortLabel: 'Timetable', icon: Calendar, count: '8 Periods' },
-    { id: 'lesson_plans', label: 'Lesson Plans & Quality Supervision', shortLabel: 'Lesson Plans', icon: BookOpen, badge: 'Approval' },
-    { id: 'appraisals', label: 'Faculty Appraisals & Scoring', shortLabel: 'Appraisals', icon: Award, badge: 'KPI' },
-    { id: 'inspections', label: 'Campus Walkthrough & Quality Audits', shortLabel: 'Inspections', icon: ClipboardCheck, badge: 'Daily' },
-    { id: 'exam_moderation', label: 'Exam Paper Moderation & Lock', shortLabel: 'Moderation', icon: Trophy, badge: 'Exams' },
-    { id: 'parent_complaints', label: 'Parent Grievance & Complaints Desk', shortLabel: 'Grievance', icon: MessageSquareWarning, badge: 'Desk' },
-    { id: 'substitutions', label: 'Period Substitutions & Cover Duty', shortLabel: 'Cover Duty', icon: Clock, badge: 'Daily' },
-    { id: 'syllabus', label: 'Syllabus Coverage Tracker', shortLabel: 'Syllabus', icon: BookOpen, badge: 'Pacing' },
-    { id: 'safeguarding', label: 'Child Safeguarding & Safety', shortLabel: 'Safeguarding', icon: ShieldCheck, badge: 'Safety' },
-    { id: 'directives', label: 'Executive Directives & Circulars', shortLabel: 'Directives', icon: FileText, badge: 'Official' },
     { id: 'alumni', label: 'Alumni & Graduate Archive', shortLabel: 'Alumni', icon: Award, count: '450+' },
     { id: 'portals', label: 'Role Portals & RBAC', shortLabel: 'Portals', icon: ShieldCheck, count: '3 Portals' },
     { id: 'reports', label: 'Certificates & Transcripts', shortLabel: 'Reports', icon: FileText, badge: 'SLC/PDF' },
@@ -3240,7 +3062,7 @@ INSTRUCTIONS:
   gradeOptions = ['All', 'Class Nursery', 'Class KG', 'Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5', 'Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10'];
 
   // Institutional Audit, Internal Control & Compliance State
-  auditSubTab: 'overview' | 'analytics' | 'logs' | 'reconciliation' | 'waivers' | 'academic' | 'slc' | 'compliance' = 'overview';
+  auditSubTab: 'overview' | 'logs' | 'reconciliation' | 'waivers' | 'academic' | 'slc' | 'compliance' = 'overview';
   auditSearchQuery: string = '';
   selectedAuditCategoryFilter: string = 'All';
   selectedAuditSeverityFilter: string = 'All';
@@ -3494,173 +3316,6 @@ INSTRUCTIONS:
   parentMessages: ParentMessageRecord[] = [];
   transportRoutes: TransportRouteRecord[] = [];
   libraryBooks: LibraryBookRecord[] = [];
-  libraryCirculations: LibraryCirculationRecord[] = [];
-  libraryDigitalResources: LibraryDigitalResource[] = [];
-  librarySubTab: 'circulation' | 'catalog' | 'digital_resources' = 'circulation';
-  circulationSearchQuery: string = '';
-  circulationStatusFilter: 'All' | 'Issued' | 'Overdue' | 'Returned' = 'All';
-  circulationCategoryFilter: string = 'All';
-
-  // Configurable Fine Rate Settings & Granular Staff Permissions
-  dailyFineRatePKR: number = 50;
-  isFineSettingsModalOpen: boolean = false;
-  activeLibraryStaffRole: 'Principal / Admin' | 'Senior Librarian' | 'Assistant Librarian' = 'Senior Librarian';
-
-  // Classification Filters (Genre, Subject, Grade Level)
-  catalogGenreFilter: string = 'All';
-  catalogSubjectFilter: string = 'All';
-  catalogGradeFilter: string = 'All';
-  isCheckoutModalOpen: boolean = false;
-  checkoutForm = {
-    bookId: '',
-    borrowerType: 'Student' as 'Student' | 'Faculty',
-    studentId: '',
-    studentName: '',
-    grade: '',
-    issuePeriodDays: 14,
-    notes: ''
-  };
-  selectedCirculationSlip: LibraryCirculationRecord | null = null;
-  isBorrowSlipModalOpen: boolean = false;
-
-  // Barcode / ISBN Scanner Modal State
-  isBarcodeScannerModalOpen: boolean = false;
-  isCameraActive: boolean = false;
-  cameraStream: MediaStream | null = null;
-  scannedIsbnResult: string = '';
-  barcodeScanTargetMode: 'checkout' | 'checkin' | 'search' = 'checkout';
-  manualIsbnInput: string = '';
-
-  // Automated Overdue Reminder Modal State
-  isLibraryPDFModalOpen: boolean = false;
-  isAutomatedReminderModalOpen: boolean = false;
-  selectedReminderCirculation: LibraryCirculationRecord | null = null;
-  reminderChannels = {
-    sms: true,
-    portal: true,
-    email: true,
-    whatsapp: true
-  };
-  reminderTemplateText: string = 'Dear Student/Parent, This is an automated reminder from Campus Library. Your borrowed book "{book_title}" was due on {due_date}. Overdue fine accrued: PKR {fine_amount}. Please return or renew at the Library Desk today to avoid SLC clearance hold.';
-  isDispatchingReminders: boolean = false;
-  dispatchProgressText: string = '';
-
-  // Fee Defaulter Restructuring & Legal Promissory Bond State
-  isPromissoryModalOpen: boolean = false;
-  selectedPromissoryDefaulter: StudentFeeDefaulterRecord | null = null;
-  promissoryForm = {
-    downPayment: 10000,
-    installmentsCount: 3,
-    firstInstallmentDate: 'Dec 05, 2026',
-    waiverAmount: 0,
-    cnicNo: '35202-1928374-1',
-    witnessName: 'Malik Zahid (Guardian Relation)',
-    notes: 'Post-dated Cheque #402919 Meezan Bank attached for security clearance.'
-  };
-  promissoryBondNo: string = '';
-
-  // Faculty Substitution Duty Slip PDF Modal State
-  isSubstitutionPDFModalOpen: boolean = false;
-
-  // Multi-Modal Biometric & RFID Attendance Kiosk Suite
-  isBiometricKioskModalOpen: boolean = false;
-  isOwnerPolicyModalOpen: boolean = false;
-  activeScanMethod: 'iris' | 'fingerprint' | 'rfid' | 'manual' = 'iris';
-  kioskVerificationMode: 'iris' | 'fingerprint' | 'rfid' = 'iris';
-  targetScanRole: 'Student' | 'Teacher' | 'Staff' | 'All' = 'All';
-  kioskScanStatus: 'Idle' | 'Scanning' | 'Verified' | 'Denied' = 'Idle';
-  kioskMatchedPerson: any = null;
-  kioskConfidenceScore: string = '99.8%';
-  manualRfidInput: string = '';
-  kioskSelectedCandidateId: string = '';
-  fingerprintMinutiaeScore: string = '99.4%';
-  fingerprintRidgePointsMatched: number = 118;
-
-  get presentCount(): number {
-    return this.attendanceSummary?.presentToday || (this.activeStudents ? this.activeStudents.filter(s => s.status === 'Present').length : 0);
-  }
-
-  // Initial Biometric Eye Iris Enrollment Registration State
-  isBiometricEnrollmentModalOpen: boolean = false;
-  isFaceEnrollmentModalOpen: boolean = false;
-  isSecureEyeOverlayOpen: boolean = false;
-  selectedEnrollmentMemberId: string = '';
-  selectedEnrollmentRole: 'Student' | 'Teacher' = 'Student';
-  enrollmentScanStatus: 'Idle' | 'Scanning' | 'Enrolled' = 'Idle';
-  enrollmentStep: 'camera' | 'analyzing' | 'complete' = 'camera';
-  enrollmentMode: 'select_existing' | 'register_new' = 'select_existing';
-
-  newEnrollmentUser = {
-    name: '',
-    rollOrId: '',
-    gradeOrRole: 'Class 9',
-    section: 'A',
-    fatherName: '',
-    role: 'Student' as 'Student' | 'Teacher'
-  };
-
-  isAutoScanActive: boolean = true;
-  autoScanCountdown: number = 3;
-  autoScanProgress: number = 0;
-  autoScanTimerRef: any = null;
-  targetVerificationMemberId: string = '';
-  targetVerificationRole: 'Student' | 'Teacher' = 'Student';
-  cameraFacingMode: 'user' | 'environment' = 'user';
-  cameraPermissionError: string = '';
-  enrolledCapturedImage: string = '';
-  verificationCapturedImage: string = '';
-
-  secureEyeScanStatus: 'Scanning' | 'Verifying' | 'Verified' | 'Unenrolled' | 'Denied' = 'Scanning';
-  matchedBiometricProfile: any = null;
-  secureEyeLivenessScore: string = '99.6%';
-  faceQualityMetrics = {
-    lightingScore: 98,
-    faceAngleScore: 97,
-    eyePupilFocusScore: 99,
-    livenessPass: true,
-    token: 'SEC-FACE-256-8819-AZ90'
-  };
-
-  manualAttendanceForm = {
-    personId: 'ST-1001',
-    personName: 'Zayan Khan',
-    role: 'Student' as 'Student' | 'Teacher' | 'Staff',
-    status: 'Present' as 'Present' | 'Late' | 'Absent' | 'On Duty',
-    notes: 'Verified by Principal Gate Duty'
-  };
-
-  // School Owner Policy Control Matrix
-  ownerBiometricPolicy = {
-    irisRetinalEnabled: true,
-    fingerprintEnabled: true,
-    rfidCardEnabled: true,
-    manualRollCallEnabled: true,
-    livenessVerification: true,
-    principalBiometricAccessGranted: true,
-    studentAllowedModes: { iris: true, fingerprint: true, rfid: true, manual: true },
-    teacherAllowedModes: { iris: true, fingerprint: true, rfid: true, manual: true },
-    staffAllowedModes: { iris: true, fingerprint: true, rfid: true, manual: true },
-    antiSpoofingConfidenceThreshold: 95,
-    antiSpoofingStrictness: 'High-Security Strict',
-    geofenceHardwareBinding: true
-  };
-
-  biometricScanLogs: Array<{
-    id: string;
-    timestamp: string;
-    personName: string;
-    role: string;
-    mode: string;
-    confidence: string;
-    status: string;
-    ipDevice: string;
-  }> = [
-    { id: 'LOG-8810', timestamp: '08:14:02 AM', personName: 'Zayan Khan (Class 10-A)', role: 'Student', mode: '👁️ Retinal Iris Scan', confidence: '99.8%', status: 'Present (On-Time)', ipDevice: 'KIOSK-GATE-1 (192.168.1.102)' },
-    { id: 'LOG-8809', timestamp: '08:12:45 AM', personName: 'Prof. Tariq Mehmood', role: 'Teacher', mode: '👆 Biometric Fingerprint', confidence: '99.4%', status: 'Present (On-Time)', ipDevice: 'STAFF-TERMINAL-2 (192.168.1.105)' },
-    { id: 'LOG-8808', timestamp: '08:10:11 AM', personName: 'Dr. Rehan Alvi', role: 'Teacher', mode: '💳 Smart RFID Card', confidence: '100%', status: 'Present (On-Time)', ipDevice: 'ADMIN-GATEWAY (192.168.1.100)' },
-    { id: 'LOG-8807', timestamp: '08:05:30 AM', personName: 'Areeba Fatima (Class 9-B)', role: 'Student', mode: '👁️ Retinal Iris Scan', confidence: '98.9%', status: 'Present (On-Time)', ipDevice: 'KIOSK-GATE-1 (192.168.1.102)' }
-  ];
-
   visitorGatePasses: VisitorGatePassRecord[] = [];
   studentMedicalRecords: StudentMedicalRecord[] = [];
   disciplinaryIncidents: DisciplinaryIncidentRecord[] = [];
@@ -4010,38 +3665,6 @@ INSTRUCTIONS:
     this.openSendAlertModal(data);
   }
 
-  navigateOwnerMatrix(key: string): void {
-    if (key === 'directives') this.setTab('directives');
-    else if (key === 'academic_reports' || key === 'audit') {
-      this.setTab('audit');
-      this.setAuditSubTab('overview');
-    }
-    else if (key === 'admissions_review') this.openAddAdmissionModal();
-    else if (key === 'student_certificates') {
-      this.setTab('audit');
-      this.setAuditSubTab('slc');
-    }
-    else if (key === 'ptm_interventions') this.setTab('reports');
-    else if (key === 'supervision' || key === 'lesson_plans') this.setTab('lesson_plans');
-    else if (key === 'syllabus') this.setTab('syllabus');
-    else if (key === 'substitutions') this.setTab('substitutions');
-    else if (key === 'exam_moderation') this.setTab('exam_moderation');
-    else if (key === 'faculty_tasks') this.setTab('teachers');
-    else if (key === 'teacher_leaves') this.setTab('teachers');
-    else if (key === 'appraisals') this.setTab('appraisals');
-    else if (key === 'fee_oversight') {
-      this.setTab('audit');
-      this.setAuditSubTab('waivers');
-    }
-    else if (key === 'discipline') this.setTab('safeguarding');
-    else if (key === 'safeguarding') this.setTab('safeguarding');
-    else if (key === 'parent_complaints') this.setTab('parent_complaints');
-    else if (key === 'inspections') this.setTab('inspections');
-    else if (key === 'facilities_transport' || key === 'transport') this.setTab('transport');
-    else this.setTab(key as any);
-    this.cdr.detectChanges();
-  }
-
   setPrincipalMasterTab(tab: 'students' | 'teachers' | 'parents' | 'fee_cashiering') {
     this.principalMasterTab = tab;
     this.cdr.detectChanges();
@@ -4090,386 +3713,6 @@ INSTRUCTIONS:
         el.scrollBy({ left: scrollAmount, behavior: 'smooth' });
       }
     }
-  }
-
-  // ==========================================
-  // ENTERPRISE FIVE-PORTALS HUGE DATA EXTENSIONS
-  // ==========================================
-
-  // 1. SCHOOL OWNER PORTAL EXTENSIONS
-  selectedSchoolBranch: string = 'Main Campus (Sector F-8)';
-  schoolBranches: string[] = [
-    'Main Campus (Sector F-8)',
-    'Junior Wing (Sector H-9)',
-    'Girls Executive College (Sector E-11)'
-  ];
-
-  branchComparisonMetrics = [
-    { branch: 'Main Campus (Sector F-8)', students: 680, faculty: 48, revenue: 2240000, expenses: 1450000, margin: '35.2%', status: 'Primary Revenue Hub' },
-    { branch: 'Junior Wing (Sector H-9)', students: 340, faculty: 24, revenue: 1120000, expenses: 880000, margin: '21.4%', status: 'Growing Enrollment' },
-    { branch: 'Girls Executive College (Sector E-11)', students: 220, faculty: 14, revenue: 690000, expenses: 490000, margin: '28.9%', status: 'High Merit Stream' }
-  ];
-
-  defaulterAgingBuckets = {
-    thirtyDays: { count: 3, amount: 76000, recoveryRate: 91 },
-    sixtyDays: { count: 2, amount: 109000, recoveryRate: 74 },
-    ninetyDaysPlus: { count: 1, amount: 66000, recoveryRate: 48 }
-  };
-
-  isHistoricalDataLocked: boolean = true;
-  toggleHistoricalDataLock(): void {
-    this.isHistoricalDataLocked = !this.isHistoricalDataLocked;
-    this.showToast(this.isHistoricalDataLocked
-      ? '🔒 Global Audit Lock Activated: Historical fee & academic records sealed against backdating.'
-      : '⚠️ Global Audit Lock Deactivated: Authorized modifications permitted by School Owner.',
-      this.isHistoricalDataLocked ? 'info' : 'warning');
-  }
-
-  // WHATSAPP BATCH REMINDERS ENGINE
-  isWhatsappReminderModalOpen: boolean = false;
-  whatsappModalActiveTab: 'dispatch' | 'logs' = 'dispatch';
-  whatsappTemplateType: 'gentle' | 'urgent' | 'khata_hold' | 'custom' = 'gentle';
-  whatsappCustomTemplate: string = 'Respected {parent_name}, this is an automated reminder regarding the monthly tuition fee for {student_name} ({amount}) due on {due_date}. Kindly clear dues online: {payment_link}';
-  whatsappSelectedAgingTier: 'ALL' | '1-30' | '31-60' | '90+' = 'ALL';
-  whatsappSelectedBranch: string = 'All Branches';
-  isSendingWhatsappBatch: boolean = false;
-  whatsappSendProgress: number = 0;
-  whatsappBatchStatusMessage: string = '';
-  whatsappDispatchedLogs: any[] = [];
-
-  overdueStudentsList = [
-    { id: 'STU-1001', studentName: 'Zayan Ahmed Khan', rollNo: '1001', grade: 'Class 10-A', parentName: 'Tariq Ahmed Khan', parentPhone: '+92 300 8554210', amount: 28000, dueDate: '2026-10-15', agingDays: 20, tier: '1-30', branch: 'Main Campus (Sector F-8)', selected: true, status: '1-30 Days Overdue' },
-    { id: 'STU-1024', studentName: 'Hamza Raza', rollNo: '1024', grade: 'Class 9-B', parentName: 'Raza Muhammad', parentPhone: '+92 321 9988112', amount: 24000, dueDate: '2026-10-18', agingDays: 17, tier: '1-30', branch: 'Main Campus (Sector F-8)', selected: true, status: '1-30 Days Overdue' },
-    { id: 'STU-0712', studentName: 'Aria Noor Lodhi', rollNo: '0712', grade: 'Class 7-C', parentName: 'Farhan Lodhi', parentPhone: '+92 333 5544332', amount: 24000, dueDate: '2026-10-12', agingDays: 23, tier: '1-30', branch: 'Junior Wing (Sector H-9)', selected: true, status: '1-30 Days Overdue' },
-    { id: 'STU-1105', studentName: 'Bilal Hassan', rollNo: '1105', grade: 'Class 8-A', parentName: 'Hassan Mahmood', parentPhone: '+92 301 4433221', amount: 52000, dueDate: '2026-09-15', agingDays: 50, tier: '31-60', branch: 'Junior Wing (Sector H-9)', selected: true, status: '31-60 Days Overdue' },
-    { id: 'STU-1208', studentName: 'Zainab Fatima', rollNo: '1208', grade: 'Class 11-Pre-Med', parentName: 'Dr. Shahzad Qureshi', parentPhone: '+92 312 6677889', amount: 57000, dueDate: '2026-09-10', agingDays: 55, tier: '31-60', branch: 'Girls Executive College (Sector E-11)', selected: true, status: '31-60 Days Overdue' },
-    { id: 'STU-1050', studentName: 'Mustafa Ali', rollNo: '1050', grade: 'Class 10-B', parentName: 'Usman Ali Sheikh', parentPhone: '+92 345 8899001', amount: 66000, dueDate: '2026-08-01', agingDays: 95, tier: '90+', branch: 'Main Campus (Sector F-8)', selected: true, status: 'Khata Hold (90+ Days)' }
-  ];
-
-  dispatchBulkDefaulterReminders(tierFilter?: string): void {
-    if (tierFilter) {
-      this.whatsappSelectedAgingTier = tierFilter as any;
-    }
-    this.isWhatsappReminderModalOpen = true;
-  }
-
-  closeWhatsappReminderModal(): void {
-    this.isWhatsappReminderModalOpen = false;
-  }
-
-  getFilteredOverdueStudents(): any[] {
-    return this.overdueStudentsList.filter(stu => {
-      const matchTier = this.whatsappSelectedAgingTier === 'ALL' || stu.tier === this.whatsappSelectedAgingTier;
-      const matchBranch = this.whatsappSelectedBranch === 'All Branches' || stu.branch === this.whatsappSelectedBranch;
-      return matchTier && matchBranch;
-    });
-  }
-
-  toggleSelectAllOverdue(event: any): void {
-    const isChecked = event.target.checked;
-    this.getFilteredOverdueStudents().forEach(s => s.selected = isChecked);
-  }
-
-  getSelectedOverdueCount(): number {
-    return this.getFilteredOverdueStudents().filter(s => s.selected).length;
-  }
-
-  getSelectedOverdueTotalAmount(): number {
-    return this.getFilteredOverdueStudents()
-      .filter(s => s.selected)
-      .reduce((sum, s) => sum + s.amount, 0);
-  }
-
-  getWhatsappPreviewText(sampleStudent?: any): string {
-    const sample = sampleStudent || this.getFilteredOverdueStudents()[0] || this.overdueStudentsList[0];
-    if (!sample) return '';
-    const parentName = sample.parentName;
-    const studentName = sample.studentName;
-    const amountStr = `PKR ${sample.amount.toLocaleString()}`;
-    const dueDate = sample.dueDate;
-    const agingDays = sample.agingDays;
-    const schoolName = 'Al-Huda Model Academy';
-    const paymentLink = `https://alhuda.softcode.app/pay?id=${sample.id}`;
-
-    if (this.whatsappTemplateType === 'gentle') {
-      return `*Fee Payment Reminder - ${schoolName}*\n\nRespected *${parentName}*,\n\nThis is a gentle reminder regarding the outstanding monthly tuition fee for *${studentName}* (${sample.grade}).\n\n📌 *Outstanding Amount:* ${amountStr}\n📅 *Due Date:* ${dueDate}\n⏳ *Overdue Status:* ${agingDays} Days\n\nKindly clear the dues at your earliest convenience via the online portal or school accounts office:\n🔗 ${paymentLink}\n\nThank you for your cooperation.\n*Accounts & Finance Directorate*`;
-    } else if (this.whatsappTemplateType === 'urgent') {
-      return `⚠️ *URGENT FEE NOTICE - ${schoolName}*\n\nDear Parent/Guardian *${parentName}*,\n\nThe tuition fee for *${studentName}* of ${amountStr} is currently *${agingDays} days overdue* (Due Date: ${dueDate}).\n\nTo avoid administrative late surcharges and uninterrupted portal access, please settle the balance immediately:\n🔗 Instant Payment: ${paymentLink}\n\nIf payment has already been made, kindly ignore this automated notice.\n*Accounts Office - ${schoolName}*`;
-    } else if (this.whatsappTemplateType === 'khata_hold') {
-      return `⛔ *FINAL NOTICE / KHATA HOLD WARNING - ${schoolName}*\n\nAttention: *${parentName}*,\n\nRe: *${studentName}* (${sample.grade})\nOutstanding Dues: *${amountStr}* (${agingDays}+ Days Overdue)\n\nPlease be advised that student records and LMS access will be temporarily held if dues are not settled by end of week.\n\nSettle Dues Online: ${paymentLink}\nContact Accounts: 0300-SOFTCODE\n*Executive Directorate - ${schoolName}*`;
-    } else {
-      return (this.whatsappCustomTemplate || '')
-        .replace(/\{parent_name\}/g, parentName)
-        .replace(/\{student_name\}/g, studentName)
-        .replace(/\{amount\}/g, amountStr)
-        .replace(/\{due_date\}/g, dueDate)
-        .replace(/\{aging_days\}/g, agingDays)
-        .replace(/\{school_name\}/g, schoolName)
-        .replace(/\{payment_link\}/g, paymentLink);
-    }
-  }
-
-  getDirectWhatsappUrl(student: any): string {
-    const text = this.getWhatsappPreviewText(student);
-    const cleanPhone = (student.parentPhone || '').replace(/\D/g, '');
-    const formattedPhone = cleanPhone.startsWith('92') ? cleanPhone : cleanPhone.startsWith('0') ? '92' + cleanPhone.slice(1) : cleanPhone;
-    return `https://wa.me/${formattedPhone}?text=${encodeURIComponent(text)}`;
-  }
-
-  async triggerBatchWhatsappDispatch(): Promise<void> {
-    const selectedList = this.getFilteredOverdueStudents().filter(s => s.selected);
-    if (selectedList.length === 0) {
-      this.showToast('⚠️ Please select at least one overdue student record to send WhatsApp reminders.', 'warning');
-      return;
-    }
-
-    this.isSendingWhatsappBatch = true;
-    this.whatsappSendProgress = 15;
-    this.whatsappBatchStatusMessage = `Connecting to WhatsApp API Gateway for ${selectedList.length} parent WhatsApp numbers...`;
-
-    try {
-      await new Promise(r => setTimeout(r, 400));
-      this.whatsappSendProgress = 50;
-      this.whatsappBatchStatusMessage = `Compiling localized WhatsApp message payloads & encryption tokens...`;
-
-      const response = await fetch('/api/notifications/dispatch-whatsapp-reminders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          reminders: selectedList,
-          templateType: this.whatsappTemplateType,
-          customTemplate: this.whatsappCustomTemplate,
-          schoolName: 'Al-Huda Model Academy'
-        })
-      });
-
-      this.whatsappSendProgress = 85;
-      this.whatsappBatchStatusMessage = `Transmitting batch WhatsApp notifications...`;
-      await new Promise(r => setTimeout(r, 400));
-
-      const data = await response.json();
-      this.whatsappSendProgress = 100;
-
-      if (data.ok) {
-        if (Array.isArray(data.reminders)) {
-          this.whatsappDispatchedLogs = [...data.reminders, ...this.whatsappDispatchedLogs];
-        }
-        this.showToast(`📲 WhatsApp Batch Reminders dispatched successfully to ${data.totalProcessed || selectedList.length} parent WhatsApp numbers!`, 'success');
-        this.whatsappModalActiveTab = 'logs';
-      } else {
-        this.showToast(`⚠️ Batch Reminders sent: ${data.message || 'Queued'}`, 'info');
-      }
-    } catch (err: any) {
-      this.showToast(`📲 Batch WhatsApp Reminders sent to ${selectedList.length} guardians!`, 'success');
-      this.whatsappModalActiveTab = 'logs';
-    } finally {
-      this.isSendingWhatsappBatch = false;
-      this.cdr.detectChanges();
-    }
-  }
-
-  // 2. PRINCIPAL PORTAL EXTENSIONS
-  substituteSmartSuggestions = [
-    { absentFaculty: 'Prof. Rehan Alvi (Physics)', absentReason: 'Casual Leave (Approved)', period: 'Period 3 (09:45 - 10:30 AM)', grade: 'Class 10-A', subject: 'Physics', suggestedSubstitute: 'Prof. Tariq Mehmood', freeStatus: 'Free (Period 3 Open)', matchConfidence: '98% STEM Faculty Match' },
-    { absentFaculty: 'Ms. Fatima Zahra (English)', absentReason: 'University Research Seminar', period: 'Period 4 (10:30 - 11:15 AM)', grade: 'Class 8-B', subject: 'English Literature', suggestedSubstitute: 'Miss Amna Farooq', freeStatus: 'Free (Period 4 Open)', matchConfidence: '95% Humanities Match' },
-    { absentFaculty: 'Ms. Hira Naeem (Chemistry)', absentReason: 'Medical Appointment', period: 'Period 6 (12:15 - 01:00 PM)', grade: 'Class 9-CS', subject: 'Chemistry Lab', suggestedSubstitute: 'Dr. Sarah Jenkins', freeStatus: 'Free (Period 6 Open)', matchConfidence: '99% Chemistry HOD Match' }
-  ];
-
-  autoAllotSubstitutePeriod(item: any): void {
-    const newSub: SubstituteArrangementRecord = {
-      id: 'SUB-' + Math.floor(100 + Math.random() * 899),
-      date: new Date().toISOString().slice(0, 10),
-      period: item.period,
-      grade: item.grade,
-      subject: item.subject,
-      absentTeacher: item.absentFaculty,
-      substituteTeacher: item.suggestedSubstitute,
-      roomNo: 'Room 204',
-      status: 'Assigned',
-      assignedBy: 'Dr. Tahir Malik (Principal - Smart Auto-Matcher)'
-    };
-    this.substituteArrangements.unshift(newSub);
-    const idx = this.substituteSmartSuggestions.indexOf(item);
-    if (idx !== -1) this.substituteSmartSuggestions.splice(idx, 1);
-    this.showToast(`✅ Auto-matched! ${item.suggestedSubstitute} allocated to ${item.grade} (${item.period}).`, 'success');
-  }
-
-  moderationGracePoints: number = 2;
-  moderationBellCurveData = [
-    { grade: 'A+ (90-100%)', count: 18, percentage: 22, barColor: 'bg-emerald-500' },
-    { grade: 'A (80-89%)', count: 28, percentage: 35, barColor: 'bg-teal-500' },
-    { grade: 'B (70-79%)', count: 22, percentage: 27, barColor: 'bg-indigo-500' },
-    { grade: 'C (60-69%)', count: 9, percentage: 11, barColor: 'bg-amber-500' },
-    { grade: 'F (<50%)', count: 3, percentage: 5, barColor: 'bg-rose-500' }
-  ];
-
-  applyExamModerationCurve(delta: number): void {
-    this.moderationGracePoints = Math.max(0, Math.min(5, this.moderationGracePoints + delta));
-    this.showToast(`Moderation Curve adjusted to +${this.moderationGracePoints} grace marks. Grade distribution recalculated!`, 'info');
-  }
-
-  liveGateBiometricStream = [
-    { id: 'BIO-981', name: 'Zayan Ahmed Khan', rollNo: '1001', grade: 'Class 10-A', time: '07:48:12 AM', gate: 'Main Senior Turnstile 01', rfid: 'RFID-88219', status: 'On-Time', photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150' },
-    { id: 'BIO-982', name: 'Prof. Tariq Mehmood', rollNo: 'FAC-MTH-105', grade: 'HOD Mathematics', time: '07:49:05 AM', gate: 'Faculty Biometric Terminal', rfid: 'RFID-FAC-01', status: 'On-Time', photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150' },
-    { id: 'BIO-983', name: 'Omar Farooq Malik', rollNo: '0903', grade: 'Class 8-B', time: '08:08:44 AM', gate: 'Junior Wing Turnstile 02', rfid: 'RFID-0903', status: 'Late (+8 Min)', photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=150' },
-    { id: 'BIO-984', name: 'Aria Noor Lodhi', rollNo: '0712', grade: 'Class 7-C', time: '07:51:30 AM', gate: 'Junior Wing Turnstile 02', rfid: 'RFID-0712', status: 'On-Time', photo: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150' }
-  ];
-
-  admissionsPipelineStages = [
-    { stage: 'Diagnostic Assessment', count: 3, applicants: ['Rayyan Kashif (Grade 9)', 'Hamdan Raza (Class 6)', 'Ayesha Zubair (Class 1)'] },
-    { stage: 'Principal Interview', count: 2, applicants: ['Zoya Daniyal (Grade 11)', 'Mustafa Shah (Grade 10)'] },
-    { stage: 'Document Clearance', count: 1, applicants: ['Muhammad Arham (Nursery)'] },
-    { stage: 'Principal Signed & Enrolled', count: 4, applicants: ['Eshal Tariq (KG)', 'Syed Huzaifa (Class 9)', 'Zainab Noor (Class 8)', 'Aria Noor (Class 7)'] }
-  ];
-
-  escalateComplaintToBOG(complaintId: string): void {
-    const c = this.parentComplaintList.find(x => x.id === complaintId);
-    if (c) {
-      c.status = 'Escalated to Board of Governors';
-      this.showToast(`Grievance #${complaintId} escalated to BOG Executive Committee with 24h SLA.`, 'warning');
-    }
-  }
-
-  // 3. TEACHER FAST SPREADSHEET & RESOURCE BANK
-  isFastSpreadsheetMode: boolean = false;
-  toggleFastSpreadsheetMode(): void {
-    this.isFastSpreadsheetMode = !this.isFastSpreadsheetMode;
-    this.showToast(this.isFastSpreadsheetMode
-      ? '⚡ Fast Spreadsheet Grid Active: Edit marks directly with Keyboard Navigation & instant auto-grading!'
-      : 'Standard Gradebook Card View activated.', 'info');
-  }
-
-  teacherSubjectResourceBank = [
-    { id: 'RES-01', title: 'Grade 10 Physics Mechanics Scheme of Work 2026-27', format: 'PDF Document', size: '2.4 MB', grade: 'Class 10', subject: 'Physics', downloads: 84 },
-    { id: 'RES-02', title: 'Calculus & Vectors Past Board Exam Question Bank (2018-2025)', format: 'Word / DOCX', size: '4.8 MB', grade: 'Class 10', subject: 'Mathematics', downloads: 142 },
-    { id: 'RES-03', title: 'Python Loops & Algorithms Interactive Lab Worksheets', format: 'ZIP Archive', size: '8.1 MB', grade: 'Class 9', subject: 'Computer Science', downloads: 65 },
-    { id: 'RES-04', title: 'FBISE Biology Model Papers & Marking Rubrics', format: 'PDF Document', size: '3.1 MB', grade: 'Class 10', subject: 'Biology', downloads: 110 }
-  ];
-
-  downloadSubjectResource(res: any): void {
-    this.showToast(`📥 Downloading "${res.title}" (${res.size})...`, 'success');
-  }
-
-  // 4. STUDENT WORKFLOW EXTENSIONS
-  currentClassPeriodInfo = {
-    period: 'P3',
-    periodCode: 'P3',
-    subject: 'Calculus & Vector Analysis',
-    subjectName: 'Calculus & Vector Analysis',
-    teacher: 'Prof. Tariq Mehmood',
-    teacherName: 'Prof. Tariq Mehmood',
-    room: 'Lecture Hall 3 (Senior Wing)',
-    roomLocation: 'Lecture Hall 3 (Senior Wing)',
-    timeSlot: '09:30 AM - 10:15 AM',
-    minutesRemaining: 22,
-    countdown: '22m Left',
-    nextClass: 'Applied Physics Practical in Lab-1 at 11:30 AM'
-  };
-
-  studentSyllabusMilestones = [
-    { subject: 'Advanced Mathematics', coveredChapters: 10, totalChapters: 12, completedPct: 83, percentage: 83, chaptersCovered: '10 of 12 Chapters', status: 'Ahead of Target' },
-    { subject: 'Physics & Optics', coveredChapters: 8, totalChapters: 10, completedPct: 80, percentage: 80, chaptersCovered: '8 of 10 Chapters', status: 'On Track' },
-    { subject: 'Chemistry Reagents', coveredChapters: 7, totalChapters: 9, completedPct: 78, percentage: 78, chaptersCovered: '7 of 9 Chapters', status: 'On Track' },
-    { subject: 'Computer Science & AI', coveredChapters: 9, totalChapters: 10, completedPct: 90, percentage: 90, chaptersCovered: '9 of 10 Chapters', status: 'Ahead of Target' },
-    { subject: 'English Rhetoric', coveredChapters: 11, totalChapters: 12, completedPct: 92, percentage: 92, chaptersCovered: '11 of 12 Chapters', status: 'Completed Revision' }
-  ];
-
-  studentLibraryLocker = [
-    { id: 'LIB-101', accessionNo: 'ACC-9921', bookTitle: 'University Physics with Modern Physics 14th Ed.', title: 'University Physics with Modern Physics 14th Ed.', author: 'Hugh D. Young', fine: 'Rs. 0 (Nil)', isbn: '978-0133969290', issuedDate: '10 Oct 2026', dueDate: '30 Oct 2026', daysRemaining: 6, status: 'Active Reading' },
-    { id: 'LIB-102', accessionNo: 'ACC-9924', bookTitle: 'Calculus: Early Transcendentals (Stewart)', title: 'Calculus: Early Transcendentals (Stewart)', author: 'James Stewart', fine: 'Rs. 0 (Nil)', isbn: '978-1285741550', issuedDate: '14 Oct 2026', dueDate: '04 Nov 2026', daysRemaining: 11, status: 'Active Reading' }
-  ];
-
-  downloadStudentDigitalFeeSlip(): void {
-    const student = this.activeStudents[0];
-    if (student) {
-      this.openFeeChallanVoucher(student);
-    }
-  }
-
-  // 5. PARENTS MULTI-CHILD & LIVE GPS BUS TRACKER
-  parentFamilyAccount = {
-    guardianName: 'Tariq Ahmed Khan',
-    fatherName: 'Tariq Ahmed Khan',
-    guardianCnic: '35202-8472910-1',
-    guardianPhone: '+92 300 8472910',
-    totalChildren: 2,
-    totalChildrenEnrolled: 2,
-    combinedTuitionFee: 'Rs. 54,500/mo',
-    consolidatedFeeStatus: 'All School Accounts Fully Balanced ✓',
-    familyMonthlyBilling: 54500,
-    familyAmountPaid: 54500,
-    familyBakayaDue: 0,
-    compositeStatus: 'All School Accounts Fully Balanced ✓',
-    children: [
-      { studentId: 'ST-1001', name: 'Zayan Ahmed Khan', grade: 'Class 10-A', rollNo: '1001', duesStatus: 'Clear' },
-      { studentId: 'ST-1002', name: 'Areeba Tariq Khan', grade: 'Class 7-B', rollNo: '7024', duesStatus: 'Clear' }
-    ]
-  };
-
-  busGpsTrackingState = {
-    busNo: 'School Bus #04',
-    routeTitle: 'Sector F-8, F-10, F-11 & E-11 Margalla Express',
-    driverName: 'Ch. Aslam Javed',
-    driverPhone: '+92 313 5544332',
-    currentSpeed: '36 km/h',
-    currentLocation: 'Sector F-10/2 Roundabout, Margalla Avenue',
-    nextDropStop: 'House 42, St 18, F-8/2 (Zayan Home)',
-    etaMinutes: 7,
-    eta: '7 mins (Drop-off 02:18 PM)',
-    status: 'In Transit · Smooth Traffic',
-    batteryLevel: '94%',
-    gpsSignal: 'Strong 4G LTE',
-    stops: [
-      { stopName: 'Campus Terminal', time: '01:45 PM', status: 'Departed', isCompleted: true },
-      { stopName: 'F-10 Markaz Stop', time: '02:02 PM', status: 'Passed', isCompleted: true },
-      { stopName: 'F-10/2 Roundabout', time: '02:11 PM', status: 'Current Location', isCompleted: false },
-      { stopName: 'House 42, St 18 (Home)', time: '02:18 PM', status: 'Upcoming Drop', isCompleted: false }
-    ]
-  };
-
-  callBusDriver(): void {
-    if (typeof window !== 'undefined') {
-      window.location.href = `tel:${this.busGpsTrackingState.driverPhone}`;
-    }
-    this.showToast(`📞 Dialing Bus Driver ${this.busGpsTrackingState.driverName} (${this.busGpsTrackingState.driverPhone})...`, 'info');
-  }
-
-  parentLiveGateLogs = [
-    { id: 'GL-1', date: 'Today, 24 Oct 2026', childName: 'Zayan Ahmed Khan', photo: 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=120&auto=format&fit=crop&q=80', event: 'Campus Entry Gate Swiped', type: 'Campus Entry (Gate 1)', time: '07:48 AM', gate: 'Senior Wing Turnstile 01', rfid: 'RFID-88219 (Zayan)', status: 'On-Time (Present)', alertStatus: 'SMS & App Alert Delivered' },
-    { id: 'GL-2', date: 'Yesterday, 23 Oct 2026', childName: 'Zayan Ahmed Khan', photo: 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=120&auto=format&fit=crop&q=80', event: 'Campus Departure Gate Swiped', type: 'Campus Exit (Bus #04)', time: '01:45 PM', gate: 'Main Exit Turnstile 01', rfid: 'RFID-88219 (Zayan)', status: 'Boarded Bus #04', alertStatus: 'Parent SMS Sent ✓' },
-    { id: 'GL-3', date: 'Yesterday, 23 Oct 2026', childName: 'Zayan Ahmed Khan', photo: 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=120&auto=format&fit=crop&q=80', event: 'Campus Entry Gate Swiped', type: 'Campus Entry (Gate 1)', time: '07:45 AM', gate: 'Senior Wing Turnstile 01', rfid: 'RFID-88219 (Zayan)', status: 'On-Time (Present)', alertStatus: 'Parent SMS Sent ✓' }
-  ];
-
-  instantLeaveForm = {
-    childId: 'ST-1001',
-    childName: 'Zayan Ahmed Khan',
-    leaveType: 'Medical & Health',
-    fromDate: new Date().toISOString().slice(0, 10),
-    toDate: new Date().toISOString().slice(0, 10),
-    startDate: new Date().toISOString().slice(0, 10),
-    endDate: new Date().toISOString().slice(0, 10),
-    reason: 'Mild fever and doctor appointment.',
-    attachedMedicalSlip: 'Prescription_Clinic_Oct26.pdf'
-  };
-
-  submitInstantParentLeave(): void {
-    if (!this.instantLeaveForm.reason) {
-      this.showToast('Please state the reason for student leave.', 'warning');
-      return;
-    }
-    const newLeave: ParentLeaveRecord = {
-      id: 'LEV-' + Math.floor(100 + Math.random() * 899),
-      childName: this.instantLeaveForm.childName,
-      childId: this.instantLeaveForm.childId,
-      fromDate: this.instantLeaveForm.fromDate || this.instantLeaveForm.startDate,
-      toDate: this.instantLeaveForm.toDate || this.instantLeaveForm.endDate,
-      reason: `${this.instantLeaveForm.leaveType}: ${this.instantLeaveForm.reason}`,
-      status: 'Approved',
-      submittedDate: 'Just now'
-    };
-    this.parentLeaveRequests.unshift(newLeave);
-    this.saveStateToStorage();
-    this.showToast(`✅ Official Leave Slip submitted for ${this.instantLeaveForm.childName}! Principal auto-verified with Doctor note.`, 'success');
   }
 
   // ==========================================
@@ -4623,13 +3866,8 @@ INSTRUCTIONS:
     const plan = this.teacherLessonPlans.find(p => p.id === planId);
     if (plan) {
       plan.status = 'Approved';
-      const actor = (this.currentPortalRole === 'owner' || this.isOwnerSession) ? 'School Owner / Directorate' : 'Principal Office';
-      plan.principalRemarks = `Approved by ${actor}`;
-      plan.approvedAt = new Date().toISOString();
-      this.showToast(`✓ Lesson Plan [${planId}] approved by ${actor}!`, 'success');
-      try {
-        localStorage.setItem('scs_school_lessons_v1', JSON.stringify(this.teacherLessonPlans));
-      } catch {}
+      plan.principalRemarks = 'Approved by Principal Office';
+      this.showToast(`✓ Lesson Plan [${planId}] approved!`, 'success');
     }
   }
 
@@ -4637,12 +3875,8 @@ INSTRUCTIONS:
     const plan = this.teacherLessonPlans.find(p => p.id === planId);
     if (plan) {
       plan.status = 'Revision Requested';
-      const actor = (this.currentPortalRole === 'owner' || this.isOwnerSession) ? 'School Owner / Directorate' : 'Principal Office';
-      plan.principalRemarks = `Revision requested by ${actor}.`;
+      plan.principalRemarks = 'Revision requested by Principal Office.';
       this.showToast(`⚠️ Revision requested for Lesson Plan [${planId}]`, 'warning');
-      try {
-        localStorage.setItem('scs_school_lessons_v1', JSON.stringify(this.teacherLessonPlans));
-      } catch {}
     }
   }
 
@@ -5823,15 +5057,6 @@ INSTRUCTIONS:
     else if (a === 'library') this.setTab('library');
     else if (a === 'portals') this.setTab('portals');
     else if (a === 'notices') this.openNoticeModal();
-    else if (a === 'lesson_plans' || a === 'lesson-plans' || a === 'lesson_plan' || a === 'supervision') this.setTab('lesson_plans');
-    else if (a === 'appraisals' || a === 'faculty-appraisals') this.setTab('appraisals');
-    else if (a === 'inspections' || a === 'walkthrough') this.setTab('inspections');
-    else if (a === 'exam_moderation' || a === 'moderation') this.setTab('exam_moderation');
-    else if (a === 'parent_complaints' || a === 'complaints') this.setTab('parent_complaints');
-    else if (a === 'substitutions' || a === 'period-cover') this.setTab('substitutions');
-    else if (a === 'syllabus') this.setTab('syllabus');
-    else if (a === 'safeguarding') this.setTab('safeguarding');
-    else if (a === 'directives') this.setTab('directives');
     else if (a === 'audit' || a === 'school_audit' || a === 'school-audit' || a === 'compliance') this.setTab('audit');
     else if (a === 'admin_settings' || a === 'admin-settings' || a === 'settings') this.setTab('settings');
     else if (a === 'password_change' || a === 'password-change') this.openPasswordModal();
@@ -5937,17 +5162,8 @@ INSTRUCTIONS:
       if (savedAnnouncements) this.announcements = JSON.parse(savedAnnouncements);
       else this.announcements = this.getInitialAnnouncements();
 
-      if (savedUsers) {
-        try {
-          this.portalUsers = JSON.parse(savedUsers);
-          if (!this.portalUsers.some(u => u.role === 'principal')) {
-            const initPrincipal = this.getInitialPortalUsers().find(u => u.role === 'principal');
-            if (initPrincipal) this.portalUsers.unshift(initPrincipal);
-          }
-        } catch {
-          this.portalUsers = this.getInitialPortalUsers();
-        }
-      } else {
+      if (savedUsers) this.portalUsers = JSON.parse(savedUsers);
+      else {
         this.portalUsers = this.getInitialPortalUsers();
         try { localStorage.setItem('scs_school_portal_users_v1', JSON.stringify(this.portalUsers)); } catch {}
       }
@@ -5983,33 +5199,6 @@ INSTRUCTIONS:
       else this.schoolAssets = this.getInitialAssets();
 
       if (savedPayrolls) this.staffPayrolls = JSON.parse(savedPayrolls);
-    else this.staffPayrolls = this.getInitialPayrolls();
-
-    const savedBooks = localStorage.getItem('scs_school_library_books_v1');
-    if (savedBooks) {
-      try { this.libraryBooks = JSON.parse(savedBooks); } catch { this.libraryBooks = this.getInitialLibraryBooks(); }
-    } else {
-      this.libraryBooks = this.getInitialLibraryBooks();
-    }
-
-    const savedCirculations = localStorage.getItem('scs_school_library_circulations_v1');
-    if (savedCirculations) {
-      try { this.libraryCirculations = JSON.parse(savedCirculations); } catch { this.libraryCirculations = this.getInitialLibraryCirculations(); }
-    } else {
-      this.libraryCirculations = this.getInitialLibraryCirculations();
-    }
-
-    const savedDigital = localStorage.getItem('scs_school_library_digital_v1');
-    if (savedDigital) {
-      try { this.libraryDigitalResources = JSON.parse(savedDigital); } catch { this.libraryDigitalResources = this.getInitialDigitalResources(); }
-    } else {
-      this.libraryDigitalResources = this.getInitialDigitalResources();
-    }
-
-    const savedRate = localStorage.getItem('scs_school_library_fine_rate_v1');
-    if (savedRate) {
-      this.dailyFineRatePKR = Number(savedRate) || 50;
-    }
       else this.staffPayrolls = this.getInitialPayrolls();
 
       if (savedStaffLeaves) this.staffLeaveRequests = JSON.parse(savedStaffLeaves);
@@ -6079,11 +5268,6 @@ INSTRUCTIONS:
         try { this.facilityMaintenanceLogs = JSON.parse(savedPrincipalFacilities); } catch {}
       }
 
-      const savedBioPolicy = localStorage.getItem('scs_attendance_biometric_policy_v1');
-      if (savedBioPolicy) {
-        try { this.ownerBiometricPolicy = { ...this.ownerBiometricPolicy, ...JSON.parse(savedBioPolicy) }; } catch {}
-      }
-
       const savedDocked = localStorage.getItem('scs_school_sidebar_docked');
       if (savedDocked !== null) {
         try { this.isSidebarDocked = JSON.parse(savedDocked); } catch {}
@@ -6097,7 +5281,6 @@ INSTRUCTIONS:
       }
 
       this.recalculateDefaulters();
-      this.checkAndUpdateOverdueBooks();
     } catch {
       this.activeStudents = this.getInitialStudents();
       this.teachers = this.getInitialTeachers();
@@ -6151,9 +5334,6 @@ INSTRUCTIONS:
       localStorage.setItem('scs_school_disciplinary_v1', JSON.stringify(this.disciplinaryIncidents));
       localStorage.setItem('scs_school_assets_v1', JSON.stringify(this.schoolAssets));
       localStorage.setItem('scs_school_payrolls_v1', JSON.stringify(this.staffPayrolls));
-      localStorage.setItem('scs_school_library_books_v1', JSON.stringify(this.libraryBooks));
-      localStorage.setItem('scs_school_library_circulations_v1', JSON.stringify(this.libraryCirculations));
-      localStorage.setItem('scs_school_library_digital_v1', JSON.stringify(this.libraryDigitalResources));
       localStorage.setItem('scs_school_staff_leaves_v1', JSON.stringify(this.staffLeaveRequests));
       localStorage.setItem('scs_school_fee_defaulters_v1', JSON.stringify(this.studentFeeDefaulters));
       localStorage.setItem('scs_school_profit_loss_v1', JSON.stringify(this.profitLossLedger));
@@ -7374,232 +6554,17 @@ INSTRUCTIONS:
     ];
   }
 
-  getInitialLibraryCirculations(): LibraryCirculationRecord[] {
-    return [
-      {
-        id: 'CIR-801',
-        issueNo: 'CIR-2026-081',
-        bookId: 'BK-1002',
-        bookTitle: 'Fundamentals of Quantum Physics & Labs',
-        isbn: '978-0070281219',
-        borrowerType: 'Student',
-        borrowerName: 'Rayyan Kashif',
-        borrowerId: '1091',
-        gradeOrDept: 'Grade 9 Computer Science',
-        issueDate: 'Oct 22, 2026',
-        dueDate: 'Nov 05, 2026',
-        status: 'Overdue',
-        overdueDays: 2,
-        fineAmount: 40,
-        conditionNotes: 'Good condition with protective plastic cover'
-      },
-      {
-        id: 'CIR-802',
-        issueNo: 'CIR-2026-082',
-        bookId: 'BK-1001',
-        bookTitle: 'Advanced Calculus & Analytical Geometry',
-        isbn: '978-0199535569',
-        borrowerType: 'Student',
-        borrowerName: 'Zayan Ahmed Khan',
-        borrowerId: '1001',
-        gradeOrDept: 'Grade 10-A Science',
-        issueDate: 'Oct 28, 2026',
-        dueDate: 'Nov 11, 2026',
-        status: 'Issued',
-        overdueDays: 0,
-        fineAmount: 0,
-        conditionNotes: 'Original textbook, verified barcode'
-      },
-      {
-        id: 'CIR-803',
-        issueNo: 'CIR-2026-083',
-        bookId: 'BK-1003',
-        bookTitle: 'Introduction to Algorithms & Data Structures',
-        isbn: '978-0262033848',
-        borrowerType: 'Student',
-        borrowerName: 'Amna Salman',
-        borrowerId: '1102',
-        gradeOrDept: 'Grade 10-A Science',
-        issueDate: 'Oct 29, 2026',
-        dueDate: 'Nov 12, 2026',
-        status: 'Issued',
-        overdueDays: 0,
-        fineAmount: 0,
-        conditionNotes: 'Brand new copy'
-      },
-      {
-        id: 'CIR-804',
-        issueNo: 'CIR-2026-084',
-        bookId: 'BK-1004',
-        bookTitle: 'Complete Works of Shakespeare & Rhetoric',
-        isbn: '978-0141439518',
-        borrowerType: 'Faculty',
-        borrowerName: 'Ms. Sarah Jenkins',
-        borrowerId: 'USR-802',
-        gradeOrDept: 'Faculty of English Literature',
-        issueDate: 'Oct 15, 2026',
-        dueDate: 'Nov 15, 2026',
-        status: 'Issued',
-        overdueDays: 0,
-        fineAmount: 0,
-        conditionNotes: 'Faculty semester research loan'
-      },
-      {
-        id: 'CIR-805',
-        issueNo: 'CIR-2026-085',
-        bookId: 'BK-1005',
-        bookTitle: 'Campbell Biology Concepts & Connections',
-        isbn: '978-0134296012',
-        borrowerType: 'Student',
-        borrowerName: 'Bilal Haider',
-        borrowerId: '1088',
-        gradeOrDept: 'Grade 9 Pre-Medical',
-        issueDate: 'Oct 10, 2026',
-        dueDate: 'Oct 24, 2026',
-        returnDate: 'Oct 23, 2026',
-        status: 'Returned',
-        overdueDays: 0,
-        fineAmount: 0,
-        conditionNotes: 'Returned in pristine condition. Clearance issued.'
-      },
-      {
-        id: 'CIR-806',
-        issueNo: 'CIR-2026-086',
-        bookId: 'BK-1006',
-        bookTitle: 'Organic Chemistry Structure & Function',
-        isbn: '978-1464120275',
-        borrowerType: 'Student',
-        borrowerName: 'Dania Tariq',
-        borrowerId: '1074',
-        gradeOrDept: 'Grade 10-B Pre-Medical',
-        issueDate: 'Oct 18, 2026',
-        dueDate: 'Nov 01, 2026',
-        status: 'Overdue',
-        overdueDays: 6,
-        fineAmount: 120,
-        conditionNotes: 'Overdue reminder notice dispatched via SMS'
-      },
-      {
-        id: 'CIR-807',
-        issueNo: 'CIR-2026-087',
-        bookId: 'BK-1007',
-        bookTitle: 'Islamic History & Jurisprudence (Tareekh-e-Islam)',
-        isbn: '978-9694160451',
-        borrowerType: 'Student',
-        borrowerName: 'Hamza Shafiq',
-        borrowerId: '1062',
-        gradeOrDept: 'Grade 8-A',
-        issueDate: 'Nov 01, 2026',
-        dueDate: 'Nov 15, 2026',
-        status: 'Issued',
-        overdueDays: 0,
-        fineAmount: 0,
-        conditionNotes: 'Standard library loan'
-      },
-      {
-        id: 'CIR-808',
-        issueNo: 'CIR-2026-088',
-        bookId: 'BK-1008',
-        bookTitle: 'Cambridge O Level Pakistan Studies (2059)',
-        isbn: '978-0190700249',
-        borrowerType: 'Student',
-        borrowerName: 'Zainab Bibi',
-        borrowerId: '1051',
-        gradeOrDept: 'Cambridge O-2 Section',
-        issueDate: 'Oct 14, 2026',
-        dueDate: 'Oct 28, 2026',
-        returnDate: 'Oct 27, 2026',
-        status: 'Returned',
-        overdueDays: 0,
-        fineAmount: 0,
-        conditionNotes: 'Returned. Library dues NIL.'
-      }
-    ];
-  }
-
-  getInitialDigitalResources(): LibraryDigitalResource[] {
-    return [
-      {
-        id: 'EBOOK-01',
-        title: 'Federal Board Class 10 Physics Solved Past Papers (2020-2026)',
-        category: 'Physics',
-        grade: 'Class 10',
-        authorOrPublisher: 'FBISE Academic Wing',
-        fileType: 'PDF',
-        fileSize: '14.2 MB',
-        downloadsCount: 342
-      },
-      {
-        id: 'EBOOK-02',
-        title: 'Cambridge IGCSE & O-Level Computer Science Coursebook (3rd Edition)',
-        category: 'Computer Science',
-        grade: 'O-Levels',
-        authorOrPublisher: 'Cambridge University Press',
-        fileType: 'PDF',
-        fileSize: '28.5 MB',
-        downloadsCount: 519
-      },
-      {
-        id: 'EBOOK-03',
-        title: 'HSSC Mathematics Key Formulae, Proofs & Calculus Guide',
-        category: 'Mathematics',
-        grade: 'Class 11-12',
-        authorOrPublisher: 'Punjab Curriculum & Textbook Board',
-        fileType: 'PDF',
-        fileSize: '6.8 MB',
-        downloadsCount: 288
-      },
-      {
-        id: 'EBOOK-04',
-        title: 'Oxford Progressive English Reader 9 & Advanced Grammar Compendium',
-        category: 'English Literature',
-        grade: 'Class 9',
-        authorOrPublisher: 'Oxford University Press Pakistan',
-        fileType: 'PDF',
-        fileSize: '9.4 MB',
-        downloadsCount: 195
-      },
-      {
-        id: 'EBOOK-05',
-        title: 'Kulliyat-e-Iqbal (Allama Iqbal Urdu Poetry with Analytical Commentary)',
-        category: 'Urdu Literature',
-        grade: 'All Grades',
-        authorOrPublisher: 'Iqbal Academy Pakistan',
-        fileType: 'PDF',
-        fileSize: '18.0 MB',
-        downloadsCount: 467
-      },
-      {
-        id: 'EBOOK-06',
-        title: 'General Chemistry & Laboratory Safety Protocols Manual',
-        category: 'Chemistry',
-        grade: 'Class 9-10',
-        authorOrPublisher: 'Al-Huda Science Faculty',
-        fileType: 'PDF',
-        fileSize: '8.1 MB',
-        downloadsCount: 176
-      }
-    ];
-  }
-
   getInitialLibraryBooks(): LibraryBookRecord[] {
     return [
       { id: 'BK-1001', isbn: '978-0199535569', title: 'Advanced Calculus & Analytical Geometry', author: 'Dr. S.M. Yusuf', category: 'Mathematics', totalCopies: 25, availableCopies: 18, rackNo: 'Rack M-02' },
       { id: 'BK-1002', isbn: '978-0070281219', title: 'Fundamentals of Quantum Physics & Labs', author: 'Halliday & Resnick', category: 'Physics', totalCopies: 20, availableCopies: 12, rackNo: 'Rack P-01' },
-      { id: 'BK-1003', isbn: '978-0262033848', title: 'Introduction to Algorithms & Data Structures', author: 'Cormen, Leiserson, Rivest', category: 'Computer Science', totalCopies: 18, availableCopies: 11, rackNo: 'Rack CS-04' },
-      { id: 'BK-1004', isbn: '978-0141439518', title: 'Complete Works of Shakespeare & Rhetoric', author: 'William Shakespeare', category: 'English Literature', totalCopies: 15, availableCopies: 10, rackNo: 'Rack L-03' },
-      { id: 'BK-1005', isbn: '978-0134296012', title: 'Campbell Biology Concepts & Connections', author: 'Martha R. Taylor', category: 'Biology', totalCopies: 22, availableCopies: 17, rackNo: 'Rack B-01' },
-      { id: 'BK-1006', isbn: '978-1464120275', title: 'Organic Chemistry Structure & Function', author: 'K. Peter C. Vollhardt', category: 'Chemistry', totalCopies: 16, availableCopies: 9, rackNo: 'Rack C-02' },
-      { id: 'BK-1007', isbn: '978-9694160451', title: 'Islamic History & Jurisprudence (Tareekh-e-Islam)', author: 'Maulana Akbar Shah', category: 'Islamic Studies', totalCopies: 30, availableCopies: 24, rackNo: 'Rack IS-01' },
-      { id: 'BK-1008', isbn: '978-0190700249', title: 'Cambridge O Level Pakistan Studies (2059)', author: 'Nigel Kelly', category: 'Cambridge O-Levels', totalCopies: 24, availableCopies: 19, rackNo: 'Rack O-03' },
-      { id: 'BK-1009', isbn: '978-9693510003', title: 'Bang-e-Dra & Baal-e-Jibreel (Critical Analysis)', author: 'Dr. Rafiuddin Hashmi', category: 'Urdu Literature', totalCopies: 20, availableCopies: 16, rackNo: 'Rack U-02' },
-      { id: 'BK-1010', isbn: '978-0198428121', title: 'Oxford Pure Mathematics for Cambridge A-Levels', author: 'Jean Linsky', category: 'Mathematics', totalCopies: 15, availableCopies: 12, rackNo: 'Rack M-05' }
+      { id: 'BK-1003', isbn: '978-0262033848', title: 'Introduction to Algorithms & Data Structures', author: 'Cormen, Leiserson & Rivest', category: 'Computer Science', totalCopies: 30, availableCopies: 24, rackNo: 'Rack CS-05' },
+      { id: 'BK-1004', isbn: '978-0141439518', title: 'Complete Works of Shakespeare & Rhetoric', author: 'William Shakespeare', category: 'English Literature', totalCopies: 15, availableCopies: 9, rackNo: 'Rack ENG-03' }
     ];
   }
 
   getInitialPortalUsers(): PortalUserRecord[] {
     return [
-      { id: 'USR-601', name: 'Prof. Dr. Tahir Malik', email: 'principal@alhuda.edu.pk', pin: '9900', role: 'principal', linkedEntity: 'Academic Directorate & Examination Council', status: 'Active', lastLogin: 'Today at 07:30 AM', staffIdOrRoll: 'DIR-001', designation: 'Principal & Academic Director', department: 'Academic Directorate', clearanceLevel: 'Level 5 - Executive Authority', phone: '+92 300 9876543' },
       { id: 'USR-801', name: 'Prof. Tariq Mehmood', email: 'tariq.math@alhuda.edu.pk', pin: '8821', role: 'teacher', linkedEntity: 'Grade 10-A Mathematics', status: 'Active', lastLogin: 'Today at 08:12 AM' },
       { id: 'USR-802', name: 'Ms. Sarah Jenkins', email: 'sarah.eng@alhuda.edu.pk', pin: '4410', role: 'teacher', linkedEntity: 'Grade 11-C English Literature', status: 'Active', lastLogin: 'Yesterday at 04:30 PM' },
       { id: 'USR-803', name: 'Dr. Rehan Alvi', email: 'rehan.phy@alhuda.edu.pk', pin: '1920', role: 'teacher', linkedEntity: 'Grade 10-B Physics & Labs', status: 'Active', lastLogin: 'Today at 09:05 AM' },
@@ -7845,7 +6810,7 @@ INSTRUCTIONS:
   }
 
   // --- ROLE SWITCHING AND PORTAL CONTROLS ---
-  switchPortal(role: SchoolPortalRole | string, personaId?: string) {
+  switchPortal(role: SchoolPortalRole, personaId?: string) {
     if (role === 'owner' && !this.isOwnerSession) {
       this.showToast('Access restricted: Only School Owner or Administrator can access Owner ERP.', 'warning');
       return;
@@ -7859,7 +6824,7 @@ INSTRUCTIONS:
       }
     }
 
-    this.currentPortalRole = role as SchoolPortalRole;
+    this.currentPortalRole = role;
     if (personaId) {
       if (role === 'teacher') this.activeTeacherId = personaId;
       else if (role === 'student') this.activeStudentId = personaId;
@@ -7879,7 +6844,7 @@ INSTRUCTIONS:
       student: 'Student Academic Portal',
       parent: 'Parent & Guardian Portal'
     };
-    this.showToast(`Switched view to ${roleLabels[role as SchoolPortalRole] || role}`, 'info');
+    this.showToast(`Switched view to ${roleLabels[role]}`, 'info');
     this.cdr.detectChanges();
   }
 
@@ -8017,55 +6982,11 @@ INSTRUCTIONS:
       name: '',
       email: '',
       pin: Math.floor(1000 + Math.random() * 9000).toString(),
-      role: 'principal',
-      linkedEntity: 'Academic Directorate & Executive Council',
-      status: 'Active',
-      phone: '',
-      staffIdOrRoll: `DIR-${Math.floor(100 + Math.random() * 900)}`,
-      designation: 'Principal & Academic Director',
-      department: 'Academic Directorate',
-      clearanceLevel: 'Level 5 - Executive Academic Authority',
-      branch: 'Main Senior Campus'
+      role: 'teacher',
+      linkedEntity: 'Grade 10-A Mathematics',
+      status: 'Active'
     };
     this.isPortalUserModalOpen = true;
-    this.cdr.detectChanges();
-  }
-
-  onPortalRoleChange() {
-    const r = this.portalUserForm.role;
-    if (r === 'principal') {
-      if (!this.portalUserForm.designation) this.portalUserForm.designation = 'Principal & Academic Director';
-      if (!this.portalUserForm.staffIdOrRoll || this.portalUserForm.staffIdOrRoll.startsWith('ST-') || this.portalUserForm.staffIdOrRoll.startsWith('TCH-')) {
-        this.portalUserForm.staffIdOrRoll = `DIR-${Math.floor(100 + Math.random() * 900)}`;
-      }
-      this.portalUserForm.department = 'Academic Directorate';
-      this.portalUserForm.clearanceLevel = 'Level 5 - Executive Academic Authority';
-      this.portalUserForm.linkedEntity = 'Academic Directorate & Executive Council';
-      if (!this.portalUserForm.email || this.portalUserForm.email.includes('teacher') || this.portalUserForm.email.includes('student')) {
-        this.portalUserForm.email = 'principal@alhuda.edu.pk';
-      }
-    } else if (r === 'teacher') {
-      this.portalUserForm.designation = 'Senior Subject Teacher';
-      this.portalUserForm.staffIdOrRoll = `TCH-${Math.floor(100 + Math.random() * 900)}`;
-      this.portalUserForm.department = 'Department of Sciences';
-      this.portalUserForm.clearanceLevel = 'Level 3 - Faculty & Grading Authority';
-      this.portalUserForm.linkedEntity = 'Grade 10-A Mathematics';
-      if (this.portalUserForm.email === 'principal@alhuda.edu.pk') this.portalUserForm.email = '';
-    } else if (r === 'student') {
-      this.portalUserForm.designation = 'Enrolled Student';
-      this.portalUserForm.staffIdOrRoll = `ST-${Math.floor(1000 + Math.random() * 9000)}`;
-      this.portalUserForm.department = 'Class 10-A (Matric / O-Levels)';
-      this.portalUserForm.clearanceLevel = 'Level 1 - Student Academic Access';
-      this.portalUserForm.linkedEntity = `Roll #${this.portalUserForm.staffIdOrRoll} (Grade 10-A)`;
-      if (this.portalUserForm.email === 'principal@alhuda.edu.pk') this.portalUserForm.email = '';
-    } else if (r === 'parent') {
-      this.portalUserForm.designation = 'Parent / Guardian';
-      this.portalUserForm.staffIdOrRoll = `GRD-${Math.floor(100 + Math.random() * 900)}`;
-      this.portalUserForm.department = 'Family Guardian Wing';
-      this.portalUserForm.clearanceLevel = 'Level 1 - Parent View Access';
-      this.portalUserForm.linkedEntity = 'Guardian of Student ST-1001';
-      if (this.portalUserForm.email === 'principal@alhuda.edu.pk') this.portalUserForm.email = '';
-    }
     this.cdr.detectChanges();
   }
 
@@ -8084,33 +7005,25 @@ INSTRUCTIONS:
 
   savePortalUser() {
     if (!this.portalUserForm.name || !this.portalUserForm.email) {
-      this.showToast('Please enter Full Name and Email Address.', 'warning');
+      this.showToast('Please enter Name and Email Address.', 'warning');
       return;
     }
     if (this.activePortalUserForEdit) {
       Object.assign(this.activePortalUserForEdit, this.portalUserForm);
       this.showToast(`Updated credentials for ${this.portalUserForm.name}`, 'success');
     } else {
-      const role = this.portalUserForm.role || 'principal';
-      const prefix = role === 'principal' ? 'DIR' : (role === 'teacher' ? 'TCH' : (role === 'student' ? 'ST' : 'GRD'));
       const newUser: PortalUserRecord = {
         id: `USR-${Math.floor(800 + Math.random() * 199)}`,
         name: this.portalUserForm.name || '',
         email: this.portalUserForm.email || '',
         pin: this.portalUserForm.pin || '1234',
-        role: role,
-        linkedEntity: this.portalUserForm.linkedEntity || 'General Campus Scope',
+        role: this.portalUserForm.role || 'teacher',
+        linkedEntity: this.portalUserForm.linkedEntity || 'General',
         status: this.portalUserForm.status || 'Active',
-        lastLogin: 'Never logged in',
-        phone: this.portalUserForm.phone || '+92 300 0000000',
-        staffIdOrRoll: this.portalUserForm.staffIdOrRoll || `${prefix}-${Math.floor(100 + Math.random() * 900)}`,
-        designation: this.portalUserForm.designation || (role === 'principal' ? 'Principal & Academic Director' : 'Academic Member'),
-        department: this.portalUserForm.department || 'Academic Directorate',
-        clearanceLevel: this.portalUserForm.clearanceLevel || 'Level 3 - Standard Access',
-        branch: this.portalUserForm.branch || 'Main Executive Campus'
+        lastLogin: 'Never logged in'
       };
       this.portalUsers.unshift(newUser);
-      this.showToast(`Created new ${role.toUpperCase()} portal access account for ${newUser.name}!`, 'success');
+      this.showToast(`Created new ${newUser.role} portal access for ${newUser.name}`, 'success');
     }
     this.saveStateToStorage();
     this.closePortalUserModal();
@@ -8267,9 +7180,6 @@ INSTRUCTIONS:
   // --- EXISTING OWNER ERP METHODS ---
   setTab(tab: SchoolDashboardTab | string): void {
     this.currentTab = tab as SchoolDashboardTab;
-    if (tab === 'library') {
-      this.checkAndUpdateOverdueBooks();
-    }
     this.tabChanged.emit(tab);
     this.cdr.detectChanges();
   }
@@ -9218,28 +8128,8 @@ INSTRUCTIONS:
     this.showToast(`Cleared fee payment of PKR ${newRecord.amount} for ${s.name}`, 'success');
   }
 
-  openFeeChallanVoucher(student?: StudentRecord | null) {
-    if (!student) {
-      this.voucherStudent = {
-        id: 'ST-1030',
-        name: 'Pervaiz Ahmed Abbasi',
-        guardian: 'Ghansi',
-        grade: 'Class 1',
-        rollNo: '1030',
-        feeAmount: 12500,
-        feeStatus: 'Pending',
-        section: 'A'
-      } as any;
-    } else {
-      this.voucherStudent = {
-        ...student,
-        name: student.name || 'Pervaiz Ahmed Abbasi',
-        guardian: student.guardian || 'Ghansi',
-        grade: student.grade || 'Class 1',
-        rollNo: student.rollNo || '1030',
-        feeAmount: student.feeAmount || 12500
-      };
-    }
+  openFeeChallanVoucher(student: StudentRecord) {
+    this.voucherStudent = student;
     this.isFeeChallanVoucherOpen = true;
     this.cdr.detectChanges();
   }
@@ -9461,102 +8351,12 @@ INSTRUCTIONS:
     this.cdr.detectChanges();
   }
 
-  // --- REAL-TIME ADMISSION FORM VALIDATION & AUTO-FORMATTING ---
-  get applicantValidation() {
-    const val = (this.admissionForm.applicant || '').trim();
-    if (!val) return { valid: false, message: 'Applicant full name is required' };
-    if (val.length < 3) return { valid: false, message: 'Name must be at least 3 characters long' };
-    return { valid: true, message: 'Student name verified' };
-  }
-
-  get fatherNameValidation() {
-    const val = (this.admissionForm.fatherName || '').trim();
-    if (!val) return { valid: false, message: 'Father / Guardian name is required' };
-    if (val.length < 3) return { valid: false, message: 'Name must be at least 3 characters long' };
-    return { valid: true, message: 'Guardian verified' };
-  }
-
-  get phoneValidation() {
-    const val = (this.admissionForm.phone || '').trim();
-    if (!val) return { valid: false, message: 'Contact phone / WhatsApp is required' };
-    const cleanDigits = val.replace(/[^0-9]/g, '');
-    if (cleanDigits.length < 10 || cleanDigits.length > 13) {
-      return { valid: false, message: 'Enter a valid 10-12 digit mobile number (e.g. +92 300 1234567)' };
-    }
-    return { valid: true, message: 'Contact number verified' };
-  }
-
-  get cnicValidation() {
-    const val = (this.admissionForm.fatherCnic || '').trim();
-    if (!val) return { valid: true, message: 'Optional NADRA CNIC' };
-    const cleanDigits = val.replace(/[^0-9]/g, '');
-    if (cleanDigits.length !== 13) {
-      return { valid: false, message: 'CNIC must be 13 digits (e.g. 35202-1234567-1)' };
-    }
-    return { valid: true, message: 'CNIC format verified' };
-  }
-
-  get bformValidation() {
-    const val = (this.admissionForm.studentBForm || '').trim();
-    if (!val) return { valid: true, message: 'Optional NADRA B-Form' };
-    const cleanDigits = val.replace(/[^0-9]/g, '');
-    if (cleanDigits.length !== 13) {
-      return { valid: false, message: 'B-Form must be 13 digits (e.g. 37405-1234567-1)' };
-    }
-    return { valid: true, message: 'B-Form format verified' };
-  }
-
-  get isAdmissionFormValid(): boolean {
-    return this.applicantValidation.valid &&
-           this.fatherNameValidation.valid &&
-           this.phoneValidation.valid &&
-           this.cnicValidation.valid &&
-           this.bformValidation.valid;
-  }
-
-  formatCnicInput(field: 'fatherCnic' | 'studentBForm') {
-    let raw = (this.admissionForm[field] || '').replace(/[^0-9]/g, '');
-    if (raw.length > 13) raw = raw.slice(0, 13);
-    if (raw.length > 12) {
-      this.admissionForm[field] = `${raw.slice(0, 5)}-${raw.slice(5, 12)}-${raw.slice(12)}`;
-    } else if (raw.length > 5) {
-      this.admissionForm[field] = `${raw.slice(0, 5)}-${raw.slice(5)}`;
-    } else {
-      this.admissionForm[field] = raw;
-    }
-  }
-
-  formatPhoneInput() {
-    let raw = (this.admissionForm.phone || '').trim();
-    if (raw.startsWith('03') && raw.length === 11) {
-      this.admissionForm.phone = `+92 ${raw.slice(1, 4)} ${raw.slice(4)}`;
-    }
-  }
-
   saveAdmission() {
-    if (!this.applicantValidation.valid) {
-      this.showToast(`⚠️ Student Name Error: ${this.applicantValidation.message}`, 'warning');
-      return;
-    }
-    if (!this.fatherNameValidation.valid) {
-      this.showToast(`⚠️ Father Name Error: ${this.fatherNameValidation.message}`, 'warning');
-      return;
-    }
-    if (!this.phoneValidation.valid) {
-      this.showToast(`⚠️ Contact Phone Error: ${this.phoneValidation.message}`, 'warning');
-      return;
-    }
-    if (!this.cnicValidation.valid) {
-      this.showToast(`⚠️ Guardian CNIC Error: ${this.cnicValidation.message}`, 'warning');
-      return;
-    }
-    if (!this.bformValidation.valid) {
-      this.showToast(`⚠️ Student B-Form Error: ${this.bformValidation.message}`, 'warning');
+    if (!this.admissionForm.applicant || !this.admissionForm.fatherName || !this.admissionForm.phone) {
+      this.showToast('Please fill in Applicant Full Name, Father / Guardian Name, and Contact Phone.', 'warning');
       return;
     }
 
-    const father = this.admissionForm.fatherName.trim();
-    const phoneNum = this.admissionForm.phone.trim();
     const roll = this.admissionForm.rollNo || (this.activeStudents.length + 1001).toString();
     const finalMonthlyFee = Math.round(Math.max(0, Number(this.admissionForm.tuitionFee || 18000) * (1 - (Number(this.admissionForm.discount || 0) / 100))));
     const admId = `ADM-2026-${Math.floor(1000 + Math.random() * 9000)}`;
@@ -9564,15 +8364,15 @@ INSTRUCTIONS:
     const newStudent: StudentRecord = {
       id: `ST-${roll}`,
       name: this.admissionForm.applicant.trim(),
-      grade: this.admissionForm.appliedFor || 'Class 9',
+      grade: this.admissionForm.appliedFor,
       section: this.admissionForm.section || 'A',
       status: 'Present',
       attendance: '100%',
       image: this.admissionForm.gender === 'Female'
         ? 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=200'
         : 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=200',
-      guardian: father,
-      guardianPhone: phoneNum,
+      guardian: this.admissionForm.fatherName.trim(),
+      guardianPhone: this.admissionForm.phone.trim(),
       guardianEmail: this.admissionForm.email ? this.admissionForm.email.trim() : undefined,
       guardianRelation: this.admissionForm.relation || 'Father',
       guardianCnic: this.admissionForm.fatherCnic ? this.admissionForm.fatherCnic.trim() : undefined,
@@ -10083,45 +8883,13 @@ INSTRUCTIONS:
     }
   }
 
-  // --- LIBRARY CRUD & FINE SETTINGS ---
-  openFineSettingsModal(): void {
-    if (this.activeLibraryStaffRole === 'Assistant Librarian') {
-      this.showToast('Permission Restricted: Assistant Librarians cannot alter fine penalty rates.', 'warning');
-      return;
-    }
-    this.isFineSettingsModalOpen = true;
-    this.cdr.detectChanges();
-  }
-
-  closeFineSettingsModal(): void {
-    this.isFineSettingsModalOpen = false;
-    this.cdr.detectChanges();
-  }
-
-  saveFineRateSettings(): void {
-    this.dailyFineRatePKR = Math.max(1, Number(this.dailyFineRatePKR) || 50);
-    this.checkAndUpdateOverdueBooks();
-    try {
-      localStorage.setItem('scs_school_library_fine_rate_v1', String(this.dailyFineRatePKR));
-    } catch {}
-    this.closeFineSettingsModal();
-    this.showToast(`Daily late penalty rate updated to PKR ${this.dailyFineRatePKR}/day. Overdue fines recalculated!`, 'success');
-  }
-
+  // --- LIBRARY CRUD ---
   openAddLibraryModal() {
-    if (this.activeLibraryStaffRole === 'Assistant Librarian') {
-      this.showToast('Permission Restricted: Assistant Librarians cannot catalog new titles.', 'warning');
-      return;
-    }
     this.libraryForm = {
       isbn: `ISBN-${Math.floor(1000 + Math.random() * 9000)}`,
       title: '',
       author: '',
       category: 'Science & Computing',
-      genre: 'Textbook & Reference',
-      subject: 'Physics',
-      academicGradeLevel: 'Secondary (Class 10)',
-      tagsInput: 'Board Exam Prep, Lab Reference',
       totalCopies: 10,
       availableCopies: 8,
       rackNo: 'RACK-05'
@@ -10140,21 +8908,12 @@ INSTRUCTIONS:
       this.showToast('Please enter Book Title and Author Name.', 'warning');
       return;
     }
-    const tagsArr = (this.libraryForm.tagsInput || '')
-      .split(',')
-      .map(t => t.trim())
-      .filter(t => t.length > 0);
-
     const newBook: LibraryBookRecord = {
       id: `BK-${Math.floor(100 + Math.random() * 900)}`,
       isbn: this.libraryForm.isbn || `ISBN-${Math.floor(1000 + Math.random() * 9000)}`,
       title: this.libraryForm.title,
       author: this.libraryForm.author,
       category: this.libraryForm.category || 'General Literature',
-      genre: this.libraryForm.genre || 'Textbook & Reference',
-      subject: this.libraryForm.subject || 'General',
-      academicGradeLevel: this.libraryForm.academicGradeLevel || 'All Grades',
-      tags: tagsArr.length > 0 ? tagsArr : ['Catalog Entry'],
       totalCopies: Number(this.libraryForm.totalCopies) || 10,
       availableCopies: Number(this.libraryForm.availableCopies) || 10,
       rackNo: this.libraryForm.rackNo || 'RACK-01'
@@ -10162,1492 +8921,15 @@ INSTRUCTIONS:
     this.libraryBooks.unshift(newBook);
     this.saveStateToStorage();
     this.closeLibraryModal();
-    this.showToast(`Cataloged new book with classification tags: "${newBook.title}"`, 'success');
+    this.showToast(`Cataloged new book: "${newBook.title}"`, 'success');
   }
 
   deleteLibrary(bk: LibraryBookRecord) {
-    if (this.activeLibraryStaffRole === 'Assistant Librarian') {
-      this.showToast('Permission Restricted: Assistant Librarians cannot delete catalog records.', 'warning');
-      return;
-    }
     if (confirm(`Are you sure you want to remove "${bk.title}" from library catalog?`)) {
       this.libraryBooks = this.libraryBooks.filter(b => b.id !== bk.id);
       this.saveStateToStorage();
       this.showToast(`Removed book "${bk.title}"`, 'warning');
     }
-  }
-
-  get filteredCatalogBooks(): LibraryBookRecord[] {
-    let list = this.libraryBooks;
-    const q = (this.librarySearchQuery || '').toLowerCase().trim();
-    if (q) {
-      list = list.filter(bk =>
-        (bk.title || '').toLowerCase().includes(q) ||
-        (bk.author || '').toLowerCase().includes(q) ||
-        (bk.isbn || '').toLowerCase().includes(q) ||
-        (bk.category || '').toLowerCase().includes(q) ||
-        (bk.genre || '').toLowerCase().includes(q) ||
-        (bk.subject || '').toLowerCase().includes(q) ||
-        (bk.academicGradeLevel || '').toLowerCase().includes(q) ||
-        (bk.tags || []).some(t => t.toLowerCase().includes(q))
-      );
-    }
-    if (this.catalogGenreFilter !== 'All') {
-      list = list.filter(bk => bk.genre === this.catalogGenreFilter);
-    }
-    if (this.catalogSubjectFilter !== 'All') {
-      list = list.filter(bk => bk.subject === this.catalogSubjectFilter);
-    }
-    if (this.catalogGradeFilter !== 'All') {
-      list = list.filter(bk => bk.academicGradeLevel === this.catalogGradeFilter);
-    }
-    return list;
-  }
-
-  parseLibraryDate(dateStr: string): Date | null {
-    if (!dateStr) return null;
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return null;
-    return d;
-  }
-
-  checkAndUpdateOverdueBooks(): void {
-    if (!this.libraryCirculations || !this.libraryCirculations.length) return;
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    let updatedCount = 0;
-    let newlyOverdueCount = 0;
-
-    this.libraryCirculations.forEach(circ => {
-      if (circ.status === 'Issued' || circ.status === 'Overdue') {
-        const due = this.parseLibraryDate(circ.dueDate);
-        if (due) {
-          due.setHours(0, 0, 0, 0);
-          if (today.getTime() > due.getTime()) {
-            const diffTime = today.getTime() - due.getTime();
-            const diffDays = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
-            const fine = diffDays * (Number(this.dailyFineRatePKR) || 50);
-
-            if (circ.status === 'Issued') {
-              newlyOverdueCount++;
-            }
-            circ.status = 'Overdue';
-            circ.overdueDays = diffDays;
-            circ.fineAmount = fine;
-            updatedCount++;
-          } else if (today.getTime() <= due.getTime() && circ.status === 'Overdue') {
-            circ.status = 'Issued';
-            circ.overdueDays = 0;
-            circ.fineAmount = 0;
-            updatedCount++;
-          }
-        }
-      }
-    });
-
-    if (updatedCount > 0) {
-      try {
-        localStorage.setItem('scs_school_library_circulations_v1', JSON.stringify(this.libraryCirculations));
-      } catch {}
-    }
-
-    if (newlyOverdueCount > 0) {
-      this.showToast(`Automated Audit: ${newlyOverdueCount} library circulation item(s) flagged OVERDUE with accrued fines!`, 'warning');
-    }
-  }
-
-  dispatchOverdueWhatsAppNotice(circ: LibraryCirculationRecord): void {
-    const msg = `*CAMPUS LIBRARY OVERDUE NOTICE*\nDear ${circ.borrowerName} (${circ.gradeOrDept}),\n\nThe book "*${circ.bookTitle}*" (ISBN: ${circ.isbn}, Token: ${circ.issueNo}) was due on *${circ.dueDate}*.\nIt is currently *${circ.overdueDays} day(s) OVERDUE* with an accumulated fine of *PKR ${circ.fineAmount}*.\n\nPlease return or renew this title at the Library Resource Desk immediately to clear library dues.\n\n_School Library Automation System_`;
-    const encoded = encodeURIComponent(msg);
-    if (typeof window !== 'undefined') {
-      window.open(`https://wa.me/?text=${encoded}`, '_blank');
-    }
-    this.showToast(`Overdue Notice dispatched to WhatsApp for ${circ.borrowerName}`, 'info');
-  }
-
-  get libraryCirculationStats() {
-    const totalBooksCount = this.libraryBooks.reduce((acc, b) => acc + (b.totalCopies || 0), 0);
-    const availableBooksCount = this.libraryBooks.reduce((acc, b) => acc + (b.availableCopies || 0), 0);
-    const activeCheckouts = this.libraryCirculations.filter(c => c.status === 'Issued');
-    const overdueCheckouts = this.libraryCirculations.filter(c => c.status === 'Overdue');
-    const returnedCheckouts = this.libraryCirculations.filter(c => c.status === 'Returned');
-    const totalFinesAccrued = overdueCheckouts.reduce((acc, c) => acc + (c.fineAmount || 0), 0);
-    const inCirculationCount = totalBooksCount - availableBooksCount;
-    const circulationRate = totalBooksCount > 0 
-      ? ((inCirculationCount / totalBooksCount) * 100).toFixed(1)
-      : '0';
-
-    return {
-      totalTitles: this.libraryBooks.length,
-      totalBooksCount,
-      availableBooksCount,
-      activeCheckoutsCount: activeCheckouts.length,
-      overdueCheckoutsCount: overdueCheckouts.length,
-      returnedCheckoutsCount: returnedCheckouts.length,
-      totalFinesAccrued,
-      inCirculationCount,
-      circulationRate
-    };
-  }
-
-  get filteredCirculations(): LibraryCirculationRecord[] {
-    let list = this.libraryCirculations;
-    const q = (this.circulationSearchQuery || '').toLowerCase().trim();
-    if (q) {
-      list = list.filter(c => 
-        (c.borrowerName || '').toLowerCase().includes(q) ||
-        (c.borrowerId || '').toLowerCase().includes(q) ||
-        (c.bookTitle || '').toLowerCase().includes(q) ||
-        (c.isbn || '').toLowerCase().includes(q) ||
-        (c.issueNo || '').toLowerCase().includes(q) ||
-        (c.gradeOrDept || '').toLowerCase().includes(q)
-      );
-    }
-    if (this.circulationStatusFilter !== 'All') {
-      list = list.filter(c => c.status === this.circulationStatusFilter);
-    }
-    if (this.circulationCategoryFilter !== 'All') {
-      const matchingBookIds = this.libraryBooks
-        .filter(b => b.category === this.circulationCategoryFilter)
-        .map(b => b.id);
-      list = list.filter(c => matchingBookIds.includes(c.bookId));
-    }
-    return list;
-  }
-
-  openCheckoutModal(bk?: LibraryBookRecord): void {
-    const defaultBook = bk || this.libraryBooks[0];
-    const defaultStudent = this.activeStudents[0];
-    this.checkoutForm = {
-      bookId: defaultBook ? defaultBook.id : '',
-      borrowerType: 'Student',
-      studentId: defaultStudent ? defaultStudent.rollNo || defaultStudent.id : '1091',
-      studentName: defaultStudent ? defaultStudent.name : 'Rayyan Kashif',
-      grade: defaultStudent ? defaultStudent.grade : 'Grade 9 Computer Science',
-      issuePeriodDays: 14,
-      notes: 'Issued under standard institutional library regulations.'
-    };
-    this.isCheckoutModalOpen = true;
-    this.cdr.detectChanges();
-  }
-
-  closeCheckoutModal(): void {
-    this.isCheckoutModalOpen = false;
-    this.cdr.detectChanges();
-  }
-
-  onCheckoutStudentChange(studentId: string): void {
-    const st = this.activeStudents.find(s => s.id === studentId || s.rollNo === studentId);
-    if (st) {
-      this.checkoutForm.studentId = st.rollNo || st.id;
-      this.checkoutForm.studentName = st.name;
-      this.checkoutForm.grade = st.grade;
-    }
-  }
-
-  confirmCheckoutBook(): void {
-    if (!this.checkoutForm.bookId) {
-      this.showToast('Please select a book title from the catalog.', 'warning');
-      return;
-    }
-    const bk = this.libraryBooks.find(b => b.id === this.checkoutForm.bookId);
-    if (!bk) {
-      this.showToast('Selected book could not be found.', 'warning');
-      return;
-    }
-    if (bk.availableCopies <= 0) {
-      this.showToast(`No copies of "${bk.title}" available on shelves.`, 'warning');
-      return;
-    }
-
-    const now = new Date();
-    const issueDateStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    const dueDateObj = new Date(now.getTime() + (Number(this.checkoutForm.issuePeriodDays) || 14) * 24 * 60 * 60 * 1000);
-    const dueDateStr = dueDateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-
-    const newCirculation: LibraryCirculationRecord = {
-      id: 'CIR-' + Date.now(),
-      issueNo: 'CIR-2026-' + String(this.libraryCirculations.length + 101).padStart(3, '0'),
-      bookId: bk.id,
-      bookTitle: bk.title,
-      isbn: bk.isbn,
-      borrowerType: this.checkoutForm.borrowerType,
-      borrowerName: this.checkoutForm.borrowerType === 'Student' ? (this.checkoutForm.studentName || 'Student') : 'Faculty Member',
-      borrowerId: this.checkoutForm.borrowerType === 'Student' ? (this.checkoutForm.studentId || 'RN-1099') : 'FAC-01',
-      gradeOrDept: this.checkoutForm.borrowerType === 'Student' ? (this.checkoutForm.grade || 'General') : 'Department of Science',
-      issueDate: issueDateStr,
-      dueDate: dueDateStr,
-      status: 'Issued',
-      overdueDays: 0,
-      fineAmount: 0,
-      conditionNotes: this.checkoutForm.notes || 'Issued in verified good condition'
-    };
-
-    bk.availableCopies = Math.max(0, bk.availableCopies - 1);
-    this.libraryCirculations.unshift(newCirculation);
-    this.saveStateToStorage();
-    this.checkAndUpdateOverdueBooks();
-    this.closeCheckoutModal();
-    this.showToast('Book "' + bk.title + '" checked out to ' + newCirculation.borrowerName + ' successfully!', 'success');
-  }
-
-  returnCirculationBook(rec: LibraryCirculationRecord): void {
-    if (rec.status === 'Returned') {
-      this.showToast('This book has already been marked returned.', 'info');
-      return;
-    }
-    rec.status = 'Returned';
-    rec.returnDate = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    const bk = this.libraryBooks.find(b => b.id === rec.bookId || b.title === rec.bookTitle);
-    if (bk) {
-      bk.availableCopies = Math.min(bk.totalCopies, bk.availableCopies + 1);
-    }
-    this.saveStateToStorage();
-    this.checkAndUpdateOverdueBooks();
-    this.showToast('Marked "' + rec.bookTitle + '" as returned by ' + rec.borrowerName + '. Inventory updated!', 'success');
-  }
-
-  renewCirculationBook(rec: LibraryCirculationRecord): void {
-    const currentDue = new Date(rec.dueDate);
-    const newDue = isNaN(currentDue.getTime()) ? new Date(Date.now() + 7 * 86400000) : new Date(currentDue.getTime() + 7 * 86400000);
-    rec.dueDate = newDue.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    if (rec.status === 'Overdue') {
-      rec.status = 'Issued';
-      rec.fineAmount = 0;
-      rec.overdueDays = 0;
-    }
-    this.saveStateToStorage();
-    this.checkAndUpdateOverdueBooks();
-    this.showToast('Renewed loan for "' + rec.bookTitle + '" (+7 Days). New due date: ' + rec.dueDate, 'info');
-  }
-
-  openBorrowSlipModal(rec: LibraryCirculationRecord): void {
-    this.selectedCirculationSlip = rec;
-    this.isBorrowSlipModalOpen = true;
-    this.cdr.detectChanges();
-  }
-
-  closeBorrowSlipModal(): void {
-    this.isBorrowSlipModalOpen = false;
-    this.selectedCirculationSlip = null;
-    this.cdr.detectChanges();
-  }
-
-  printBorrowSlip(): void {
-    if (typeof window !== 'undefined') window.print();
-  }
-
-  exportLibraryCirculationCSV(): void {
-    if (!this.libraryCirculations.length) {
-      this.showToast('No circulation records found to export', 'warning');
-      return;
-    }
-    const headers = [
-      'Sr No',
-      'Issue Token Ref',
-      'Book Title',
-      'ISBN Number',
-      'Borrower Full Name',
-      'Borrower Roll / Staff ID',
-      'Borrower Type',
-      'Class / Department',
-      'Issue Date',
-      'Due Date',
-      'Return Date',
-      'Circulation Status',
-      'Overdue Days',
-      'Late Fine Accrued (PKR)',
-      'Book Condition Remarks'
-    ];
-    const rows = this.libraryCirculations.map((c, i) => [
-      i + 1,
-      '"' + c.issueNo + '"',
-      '"' + c.bookTitle + '"',
-      '"' + c.isbn + '"',
-      '"' + c.borrowerName + '"',
-      '"' + c.borrowerId + '"',
-      '"' + c.borrowerType + '"',
-      '"' + c.gradeOrDept + '"',
-      '"' + c.issueDate + '"',
-      '"' + c.dueDate + '"',
-      '"' + (c.returnDate || 'Pending') + '"',
-      '"' + c.status + '"',
-      c.overdueDays,
-      c.fineAmount,
-      '"' + (c.conditionNotes || 'N/A') + '"'
-    ]);
-
-    const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', 'Library_Circulation_Ledger_2026.csv');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    this.showToast('Library Circulation Ledger exported successfully (CSV)', 'success');
-  }
-
-  openLibraryPDFReportModal(): void {
-    this.checkAndUpdateOverdueBooks();
-    this.isLibraryPDFModalOpen = true;
-    this.cdr.detectChanges();
-  }
-
-  closeLibraryPDFReportModal(): void {
-    this.isLibraryPDFModalOpen = false;
-    this.cdr.detectChanges();
-  }
-
-  printLibraryPDFReport(): void {
-    if (typeof window !== 'undefined') {
-      window.print();
-    }
-  }
-
-  // --- BARCODE / ISBN SCANNER METHODS ---
-  openBarcodeScannerModal(mode: 'checkout' | 'checkin' | 'search' = 'checkout'): void {
-    this.barcodeScanTargetMode = mode;
-    this.isBarcodeScannerModalOpen = true;
-    this.scannedIsbnResult = '';
-    this.manualIsbnInput = '';
-    this.isCameraActive = false;
-    this.cdr.detectChanges();
-    this.startCameraScanner();
-  }
-
-  closeBarcodeScannerModal(): void {
-    this.stopCameraStream();
-    this.isBarcodeScannerModalOpen = false;
-    this.cdr.detectChanges();
-  }
-
-  setBarcodeScanTargetMode(mode: 'checkout' | 'checkin' | 'search'): void {
-    this.barcodeScanTargetMode = mode;
-    this.cdr.detectChanges();
-  }
-
-  startCameraScanner(targetMode: 'user' | 'environment' = 'user', elementId: string = 'kiosk-iris-video-feed'): void {
-    this.cameraFacingMode = targetMode;
-    this.cameraPermissionError = '';
-    if (typeof navigator !== 'undefined' && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      this.stopCameraStream();
-
-      const bindStreamToElement = (stream: MediaStream) => {
-        this.cameraStream = stream;
-        this.isCameraActive = true;
-        this.cdr.detectChanges();
-
-        const tryAttach = (attemptsLeft: number) => {
-          const videoEl = (
-            document.getElementById(elementId) ||
-            document.getElementById('face-enrollment-video-feed') ||
-            document.getElementById('secure-eye-overlay-video-feed') ||
-            document.getElementById('kiosk-iris-video-feed') ||
-            document.getElementById('enrollment-iris-video-feed') ||
-            document.getElementById('barcode-video-feed')
-          ) as HTMLVideoElement;
-
-          if (videoEl) {
-            videoEl.srcObject = stream;
-            videoEl.play().catch(() => {});
-            if (targetMode === 'environment') {
-              this.attachBarcodeDetectionLoop(videoEl);
-            }
-          } else if (attemptsLeft > 0) {
-            setTimeout(() => tryAttach(attemptsLeft - 1), 100);
-          }
-        };
-
-        tryAttach(8);
-      };
-
-      navigator.mediaDevices.getUserMedia({ video: { facingMode: targetMode } })
-        .then((stream) => bindStreamToElement(stream))
-        .catch((err) => {
-          console.warn('Camera facingMode constraints failed, retrying standard video:', err);
-          navigator.mediaDevices.getUserMedia({ video: true })
-            .then((stream) => bindStreamToElement(stream))
-            .catch((cameraErr) => {
-              console.warn('Camera permission unavailable or denied in frame:', cameraErr);
-              this.isCameraActive = false;
-              this.cameraPermissionError = 'Device camera access is restricted or awaiting permission. Biometric sensor simulation active.';
-              this.cdr.detectChanges();
-            });
-        });
-    } else {
-      this.isCameraActive = false;
-      this.cameraPermissionError = 'Web camera API not supported on this browser. Interactive biometric sensor simulation active.';
-      this.cdr.detectChanges();
-    }
-  }
-
-  toggleCameraFacingMode(elementId: string = 'face-enrollment-video-feed'): void {
-    const newMode = this.cameraFacingMode === 'user' ? 'environment' : 'user';
-    this.startCameraScanner(newMode, elementId);
-  }
-
-  attachBarcodeDetectionLoop(videoEl: HTMLVideoElement): void {
-    if (typeof window !== 'undefined' && 'BarcodeDetector' in window) {
-      try {
-        const detector = new (window as any).BarcodeDetector({ formats: ['ean_13', 'ean_8', 'code_128', 'qr_code'] });
-        const interval = setInterval(() => {
-          if (!this.isCameraActive || !this.isBarcodeScannerModalOpen) {
-            clearInterval(interval);
-            return;
-          }
-          detector.detect(videoEl).then((barcodes: any[]) => {
-            if (barcodes && barcodes.length > 0) {
-              const rawValue = barcodes[0].rawValue;
-              if (rawValue) {
-                const matchedBk = this.libraryBooks.find(b => b.isbn.replace(/[^0-9]/g, '').includes(rawValue.replace(/[^0-9]/g, '')) || b.isbn === rawValue);
-                if (matchedBk) {
-                  clearInterval(interval);
-                  this.simulateBarcodeScan(matchedBk);
-                }
-              }
-            }
-          }).catch(() => {});
-        }, 600);
-      } catch (e) {
-        console.warn('BarcodeDetector API fallback active.');
-      }
-    }
-  }
-
-  stopCameraStream(): void {
-    if (this.cameraStream) {
-      this.cameraStream.getTracks().forEach(track => track.stop());
-      this.cameraStream = null;
-    }
-    this.isCameraActive = false;
-  }
-
-  processManualIsbnScan(): void {
-    const raw = (this.manualIsbnInput || '').trim();
-    if (!raw) {
-      this.showToast('Please enter an ISBN barcode or circulation ID.', 'warning');
-      return;
-    }
-    const bk = this.libraryBooks.find(b => 
-      b.isbn.toLowerCase().includes(raw.toLowerCase()) || 
-      b.id.toLowerCase() === raw.toLowerCase() ||
-      b.title.toLowerCase().includes(raw.toLowerCase())
-    );
-    if (bk) {
-      this.simulateBarcodeScan(bk);
-    } else {
-      const circ = this.libraryCirculations.find(c => c.issueNo.toLowerCase() === raw.toLowerCase() || c.id.toLowerCase() === raw.toLowerCase());
-      if (circ && this.barcodeScanTargetMode === 'checkin') {
-        this.returnCirculationBook(circ);
-        this.closeBarcodeScannerModal();
-      } else {
-        this.showToast(`No catalog book or circulation record matched ISBN/ID "${raw}"`, 'warning');
-      }
-    }
-  }
-
-  simulateBarcodeScan(bk: LibraryBookRecord): void {
-    this.scannedIsbnResult = bk.isbn;
-    
-    if (this.barcodeScanTargetMode === 'checkout') {
-      this.checkoutForm.bookId = bk.id;
-      this.showToast(`📷 Camera Barcode Matched: "${bk.title}" (ISBN: ${bk.isbn})`, 'success');
-      setTimeout(() => {
-        this.closeBarcodeScannerModal();
-        this.openCheckoutModal();
-      }, 450);
-    } else if (this.barcodeScanTargetMode === 'checkin') {
-      const activeCirc = this.libraryCirculations.find(c => (c.bookId === bk.id || c.bookTitle.toLowerCase() === bk.title.toLowerCase() || c.isbn === bk.isbn) && c.status !== 'Returned');
-      if (activeCirc) {
-        this.returnCirculationBook(activeCirc);
-        this.showToast(`📷 Camera Barcode Check-In Success: "${bk.title}" returned by ${activeCirc.borrowerName}.`, 'success');
-      } else {
-        this.showToast(`📷 ISBN Barcode "${bk.title}" matched, but no active borrowed copy found.`, 'info');
-      }
-      setTimeout(() => {
-        this.closeBarcodeScannerModal();
-      }, 450);
-    } else {
-      this.librarySearchQuery = bk.title;
-      this.showToast(`📷 Camera Barcode Catalog Filter: "${bk.title}"`, 'info');
-      setTimeout(() => {
-        this.closeBarcodeScannerModal();
-      }, 450);
-    }
-  }
-
-  // --- AUTOMATED OVERDUE REMINDER METHODS ---
-  openAutomatedReminderModal(circ?: LibraryCirculationRecord): void {
-    this.selectedReminderCirculation = circ || null;
-    this.isAutomatedReminderModalOpen = true;
-    this.isDispatchingReminders = false;
-    this.dispatchProgressText = '';
-    this.cdr.detectChanges();
-  }
-
-  closeAutomatedReminderModal(): void {
-    this.isAutomatedReminderModalOpen = false;
-    this.selectedReminderCirculation = null;
-    this.isDispatchingReminders = false;
-    this.cdr.detectChanges();
-  }
-
-  get overdueRemindersList(): LibraryCirculationRecord[] {
-    if (this.selectedReminderCirculation) {
-      return [this.selectedReminderCirculation];
-    }
-    return this.libraryCirculations.filter(c => c.status === 'Overdue');
-  }
-
-  confirmDispatchAutomatedReminders(): void {
-    const list = this.overdueRemindersList;
-    if (!list.length) {
-      this.showToast('No overdue circulations found to send reminders.', 'warning');
-      return;
-    }
-
-    this.isDispatchingReminders = true;
-    this.dispatchProgressText = 'Initializing SCS Telecom & WhatsApp Gateway...';
-    this.cdr.detectChanges();
-
-    setTimeout(() => {
-      this.dispatchProgressText = 'Formatting overdue fine ledger & SMS templates...';
-      this.cdr.detectChanges();
-    }, 700);
-
-    setTimeout(() => {
-      let sentCount = 0;
-      list.forEach(circ => {
-        sentCount++;
-        const logEntry = {
-          id: 'NOTIF-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
-          timestamp: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          recipient: circ.borrowerName + ' (' + circ.gradeOrDept + ')',
-          type: 'Library Overdue Fine Alert',
-          channel: 'SMS Gateway + In-App Portal + WhatsApp',
-          message: `Overdue book "${circ.bookTitle}" (${circ.overdueDays} days overdue). Accrued Fine: PKR ${circ.fineAmount}`,
-          status: 'Delivered'
-        };
-        if (this.dispatchAlertLogs) {
-          this.dispatchAlertLogs.unshift(logEntry as any);
-        }
-      });
-
-      try {
-        localStorage.setItem('scs_school_alert_logs_v1', JSON.stringify(this.dispatchAlertLogs));
-      } catch {}
-
-      this.isDispatchingReminders = false;
-      this.closeAutomatedReminderModal();
-      this.showToast(`Automated Overdue Reminders dispatched successfully to ${sentCount} borrower(s)!`, 'success');
-    }, 1600);
-  }
-
-  reserveBookForStudent(bk: LibraryBookRecord): void {
-    this.showToast(`Desk Reservation Placed: "${bk.title}" (Rack ${bk.rackNo}). Hold valid for 24 hours.`, 'success');
-  }
-
-  get studentLibraryCirculations(): LibraryCirculationRecord[] {
-    return this.libraryCirculations.filter(c => c.borrowerName.toLowerCase().includes('zayan') || c.borrowerId === '1001' || c.borrowerId === 'ST-1001');
-  }
-
-  // --- FEE DEFAULTER PROMISSORY NOTE & RESTRUCTURING METHODS ---
-  saveFeeDefaultersToStorage(): void {
-    if (typeof localStorage !== 'undefined') {
-      try {
-        localStorage.setItem('scs_school_fee_defaulters_v1', JSON.stringify(this.studentFeeDefaulters));
-      } catch {}
-    }
-  }
-
-  openPromissoryModal(defaulter: StudentFeeDefaulterRecord): void {
-    this.selectedPromissoryDefaulter = defaulter;
-    const bakaya = defaulter.totalRemainingBakaya || 15000;
-    this.promissoryForm.downPayment = Math.round(bakaya * 0.3);
-    this.promissoryForm.waiverAmount = 0;
-    this.promissoryForm.installmentsCount = 3;
-    this.promissoryForm.firstInstallmentDate = 'Dec 05, 2026';
-    this.promissoryForm.cnicNo = '35202-1928374-1';
-    this.promissoryForm.witnessName = 'Malik Zahid (Guardian Relation)';
-    this.promissoryForm.notes = 'Post-dated Cheque #402919 Meezan Bank attached for security clearance.';
-    this.promissoryBondNo = 'BOND-2026-' + Math.floor(1000 + Math.random() * 9000);
-    this.isPromissoryModalOpen = true;
-    this.cdr.detectChanges();
-  }
-
-  closePromissoryModal(): void {
-    this.isPromissoryModalOpen = false;
-    this.selectedPromissoryDefaulter = null;
-    this.cdr.detectChanges();
-  }
-
-  getCalculatedInstallments(): Array<{ num: number; dueDate: string; amount: number; status: string }> {
-    if (!this.selectedPromissoryDefaulter) return [];
-    const totalBakaya = this.selectedPromissoryDefaulter.totalRemainingBakaya || 0;
-    const remainingAfterDown = Math.max(0, totalBakaya - (this.promissoryForm.downPayment || 0) - (this.promissoryForm.waiverAmount || 0));
-    const count = Math.max(1, this.promissoryForm.installmentsCount || 1);
-    const installmentAmount = Math.round(remainingAfterDown / count);
-
-    const baseMonths = ['Dec 05, 2026', 'Jan 05, 2027', 'Feb 05, 2027', 'Mar 05, 2027'];
-    const list: Array<{ num: number; dueDate: string; amount: number; status: string }> = [];
-
-    for (let i = 0; i < count; i++) {
-      list.push({
-        num: i + 1,
-        dueDate: baseMonths[i] || `Month ${i + 1}`,
-        amount: i === count - 1 ? remainingAfterDown - installmentAmount * (count - 1) : installmentAmount,
-        status: 'Scheduled & Guaranteed'
-      });
-    }
-    return list;
-  }
-
-  savePromissoryAgreement(): void {
-    if (!this.selectedPromissoryDefaulter) return;
-    const d = this.selectedPromissoryDefaulter;
-    d.alertStatus = 'WhatsApp Reminder Sent';
-    d.lastAlertTimestamp = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' (Restructured)';
-    
-    this.saveFeeDefaultersToStorage();
-    
-    if (this.schoolAuditLogs) {
-      this.schoolAuditLogs.unshift({
-        id: 'AUDIT-' + Math.floor(10000 + Math.random() * 90000),
-        timestamp: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' + new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-        operatorName: 'Accounts Controller / Principal',
-        operatorRole: 'Accounts Controller',
-        actionType: 'Fee Waiver / Concession',
-        category: 'Financial',
-        entityId: d.rollNo,
-        entityDescription: `Promissory Bond ${this.promissoryBondNo} for ${d.studentName} (${d.grade})`,
-        details: `Restructured PKR ${d.totalRemainingBakaya.toLocaleString()} into ${this.promissoryForm.installmentsCount} installments with down payment PKR ${this.promissoryForm.downPayment.toLocaleString()}`,
-        severity: 'Authorized Override',
-        verifiedBy: 'Dr. Tahir Malik (Principal)'
-      });
-    }
-
-    this.showToast(`Promissory Agreement & Legal Bond ${this.promissoryBondNo} registered successfully for ${d.studentName}!`, 'success');
-    this.closePromissoryModal();
-  }
-
-  printPromissoryBond(): void {
-    if (typeof window !== 'undefined') {
-      window.print();
-    }
-  }
-
-  sendDefaulterWhatsAppDirect(defaulter: StudentFeeDefaulterRecord): void {
-    const phone = defaulter.guardianPhone ? defaulter.guardianPhone.replace(/[^0-9]/g, '') : '923001234567';
-    const msg = `Dear Guardian of ${defaulter.studentName} (${defaulter.grade}),\n\n` +
-      `This is an urgent notice from Data Click IT HUB School Accounts Directorate.\n` +
-      `Total Fee Bakaya Dues: PKR ${defaulter.totalRemainingBakaya.toLocaleString()} (${defaulter.unpaidMonthsCount} months unpaid).\n` +
-      `Unpaid Months: ${defaulter.unpaidMonthsList.join(', ')}.\n\n` +
-      `Please clear dues immediately or visit the Accounts Office to sign an Installment Restructuring Agreement to prevent student portal lock.\n\n` +
-      `Accounts Office Contact: +92 51 9283741`;
-    
-    if (typeof window !== 'undefined') {
-      window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
-    }
-    defaulter.alertStatus = 'WhatsApp Reminder Sent';
-    defaulter.lastAlertTimestamp = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    this.saveFeeDefaultersToStorage();
-    this.showToast(`WhatsApp reminder initialized for ${defaulter.studentName}`, 'success');
-  }
-
-  // --- FACULTY SUBSTITUTION DUTY ENHANCEMENTS ---
-  openSubstitutionPDFModal(): void {
-    this.isSubstitutionPDFModalOpen = true;
-    this.cdr.detectChanges();
-  }
-
-  closeSubstitutionPDFModal(): void {
-    this.isSubstitutionPDFModalOpen = false;
-    this.cdr.detectChanges();
-  }
-
-  printSubstitutionPDFReport(): void {
-    if (typeof window !== 'undefined') {
-      window.print();
-    }
-  }
-
-  sendSubstituteWhatsApp(sub: SubstituteArrangementRecord): void {
-    const msg = `Dear ${sub.substituteTeacher},\n\n` +
-      `OFFICIAL FACULTY COVER DUTY ASSIGNMENT\n` +
-      `--------------------------------------\n` +
-      `Date: ${sub.date}\n` +
-      `Target Class: ${sub.grade}\n` +
-      `Subject Period: ${sub.subject}\n` +
-      `Time Slot: ${sub.period} (${sub.roomNo || 'Main Classroom'})\n` +
-      `Absent Faculty: ${sub.absentTeacher}\n\n` +
-      `Please report promptly to the classroom to ensure seamless student supervision.\n\n` +
-      `Regards,\nPrincipal Directorate`;
-
-    if (typeof window !== 'undefined') {
-      window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
-    }
-    this.showToast(`WhatsApp substitution slip sent to ${sub.substituteTeacher}`, 'success');
-  }
-
-  // --- INITIAL BIOMETRIC EYE IRIS ENROLLMENT REGISTRATION ---
-  openBiometricEnrollmentModal(memberId?: string, role: 'Student' | 'Teacher' = 'Student'): void {
-    this.closeBiometricKioskModal();
-    this.openFaceEnrollmentModal(memberId, role);
-  }
-
-  closeBiometricEnrollmentModal(): void {
-    this.stopCameraStream();
-    this.isBiometricEnrollmentModalOpen = false;
-    this.enrollmentScanStatus = 'Idle';
-    this.cdr.detectChanges();
-  }
-
-  triggerBiometricEnrollmentScan(): void {
-    if (!this.selectedEnrollmentMemberId) {
-      this.showToast('Please select a student or teacher profile for eye iris & fingerprint enrollment.', 'warning');
-      return;
-    }
-    this.enrollmentScanStatus = 'Scanning';
-    this.cdr.detectChanges();
-
-    setTimeout(() => {
-      let memberName = 'Member';
-      if (this.selectedEnrollmentRole === 'Student') {
-        const st = this.activeStudents.find(s => s.id === this.selectedEnrollmentMemberId);
-        if (st) {
-          st.biometricEnrolled = true;
-          st.irisScanCode = 'IRIS-' + Math.floor(10000 + Math.random() * 89999);
-          st.irisEnrolledAt = new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
-          st.fingerprintEnrolled = true;
-          st.fingerprintTemplateHash = 'FP-SHA256-ST-' + st.rollNo + '-' + Math.floor(10000 + Math.random() * 89999);
-          st.faceEmbeddingToken = 'SEC-FACE-256-' + st.rollNo + '-X99';
-          memberName = st.name;
-        }
-      } else {
-        const tch = this.teachers.find(t => t.id === this.selectedEnrollmentMemberId);
-        if (tch) {
-          tch.biometricEnrolled = true;
-          tch.irisScanCode = 'IRIS-' + Math.floor(10000 + Math.random() * 89999);
-          tch.irisEnrolledAt = new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
-          tch.fingerprintEnrolled = true;
-          tch.fingerprintTemplateHash = 'FP-SHA256-TCH-' + tch.id + '-' + Math.floor(10000 + Math.random() * 89999);
-          tch.faceEmbeddingToken = 'SEC-FACE-256-' + tch.id + '-TCH';
-          memberName = tch.name;
-        }
-      }
-
-      this.saveStateToStorage();
-      this.enrollmentScanStatus = 'Enrolled';
-      this.showToast(`✅ Biometric Eye Iris & Fingerprint Profile for ${memberName} successfully registered & saved!`, 'success');
-      this.cdr.detectChanges();
-    }, 1800);
-  }
-
-  // --- FACE BIOMETRIC ENROLLMENT COMPONENT METHODS ---
-  openFaceEnrollmentModal(memberId?: string, role: 'Student' | 'Teacher' = 'Student'): void {
-    if (this.autoScanTimerRef) {
-      clearInterval(this.autoScanTimerRef);
-      this.autoScanTimerRef = null;
-    }
-    this.isFaceEnrollmentModalOpen = true;
-    this.enrollmentMode = 'select_existing';
-    this.selectedEnrollmentRole = role;
-    this.selectedEnrollmentMemberId = memberId || (role === 'Student' ? (this.activeStudents[0]?.id || '') : (this.teachers[0]?.id || ''));
-    this.enrollmentStep = 'camera';
-    this.enrolledCapturedImage = '';
-    this.cameraPermissionError = '';
-    this.cdr.detectChanges();
-    this.startCameraScanner('user', 'face-enrollment-video-feed');
-  }
-
-  closeFaceEnrollmentModal(): void {
-    if (this.autoScanTimerRef) {
-      clearInterval(this.autoScanTimerRef);
-      this.autoScanTimerRef = null;
-    }
-    this.stopCameraStream();
-    this.isFaceEnrollmentModalOpen = false;
-    this.enrollmentStep = 'camera';
-    this.enrolledCapturedImage = '';
-    this.cdr.detectChanges();
-  }
-
-  openInNewBrowserTab(): void {
-    if (typeof window !== 'undefined') {
-      window.open(window.location.href, '_blank');
-    }
-  }
-
-  captureViewfinderBiometricLandmarks(context: 'enrollment' | 'verification'): void {
-    const sample = 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&auto=format&fit=crop&q=80';
-    if (context === 'enrollment') {
-      this.enrolledCapturedImage = sample;
-      this.showToast('📸 Optical sensor captured eye & face landmarks from viewfinder! Processing registration...', 'info');
-      this.cdr.detectChanges();
-      this.executeFaceBiometricEnrollment();
-    } else {
-      this.verificationCapturedImage = sample;
-      this.showToast('👁️ Optical sensor captured live eye scan from viewfinder! Verifying candidate...', 'info');
-      this.cdr.detectChanges();
-      this.startSecureEyeMatchingLoop();
-    }
-  }
-
-  instantVerifyCandidate(): void {
-    let target: any = null;
-    if (this.targetVerificationRole === 'Student') {
-      target = this.activeStudents.find(s => s.id === this.targetVerificationMemberId) || this.activeStudents[0];
-    } else {
-      target = this.teachers.find(t => t.id === this.targetVerificationMemberId) || this.teachers[0];
-    }
-
-    if (!target) {
-      this.showToast('No member selected for verification.', 'warning');
-      return;
-    }
-
-    if (!target.biometricEnrolled) {
-      target.biometricEnrolled = true;
-      target.irisScanCode = 'IRIS-' + Math.floor(10000 + Math.random() * 89999);
-      target.faceEmbeddingToken = 'SEC-FACE-256-' + Math.floor(1000 + Math.random() * 8999);
-      this.showToast(`⚡ Instant biometric profile generated for ${target.name}!`, 'info');
-    }
-
-    this.verificationCapturedImage = target.image || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&auto=format&fit=crop&q=80';
-    this.startSecureEyeMatchingLoop();
-  }
-
-  autoEnrollAndMatchCurrent(): void {
-    this.instantVerifyCandidate();
-  }
-
-  triggerNativeCameraCapture(inputId: string): void {
-    if (typeof document !== 'undefined') {
-      const el = document.getElementById(inputId) as HTMLInputElement;
-      if (el) {
-        el.value = '';
-        el.click();
-      }
-    }
-  }
-
-  onMobilePhotoCaptured(event: any, context: 'enrollment' | 'verification'): void {
-    const file = event.target?.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (e: any) => {
-      const base64 = e.target.result;
-      if (context === 'enrollment') {
-        this.enrolledCapturedImage = base64;
-        this.cameraPermissionError = '';
-        this.showToast('📸 Real eye & face photo captured from phone camera! Tap "Process & Register" to complete.', 'success');
-        this.cdr.detectChanges();
-      } else {
-        this.verificationCapturedImage = base64;
-        this.cameraPermissionError = '';
-        this.showToast('👁️ Live eye verification photo captured! Matching with registered profile...', 'info');
-        this.cdr.detectChanges();
-        setTimeout(() => {
-          this.startSecureEyeMatchingLoop();
-        }, 600);
-      }
-    };
-    reader.readAsDataURL(file);
-  }
-
-  useSampleBiometricEyePhoto(context: 'enrollment' | 'verification'): void {
-    const sample = 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&auto=format&fit=crop&q=80';
-    if (context === 'enrollment') {
-      this.enrolledCapturedImage = sample;
-      this.showToast('🧪 Verified biometric eye & face sample loaded! Extracting landmarks...', 'info');
-      this.cdr.detectChanges();
-      setTimeout(() => {
-        this.executeFaceBiometricEnrollment();
-      }, 500);
-    } else {
-      this.verificationCapturedImage = sample;
-      this.showToast('🧪 Live verification eye sample loaded! Matching against database...', 'info');
-      this.cdr.detectChanges();
-      setTimeout(() => {
-        this.startSecureEyeMatchingLoop();
-      }, 500);
-    }
-  }
-
-  addNewMemberAndProceedToBiometric(): void {
-    if (!this.newEnrollmentUser.name.trim()) {
-      this.showToast('Please enter full name of student or faculty member.', 'warning');
-      return;
-    }
-    const rollId = this.newEnrollmentUser.rollOrId.trim() || String(Math.floor(10000000 + Math.random() * 90000000));
-    const newId = 'USER-' + Date.now().toString(36) + '-' + Math.floor(Math.random() * 1000);
-
-    if (this.newEnrollmentUser.role === 'Student') {
-      const newStudent: StudentRecord = {
-        id: newId,
-        name: this.newEnrollmentUser.name.trim(),
-        grade: this.newEnrollmentUser.gradeOrRole || 'Class 9',
-        section: this.newEnrollmentUser.section || 'A',
-        status: 'Absent',
-        attendance: '0%',
-        image: `https://images.unsplash.com/photo-${1534528741775 + Math.floor(Math.random() * 1000)}?w=150&auto=format&fit=crop&q=80`,
-        guardian: this.newEnrollmentUser.fatherName.trim() || 'Parent / Guardian',
-        guardianPhone: '+92 300 0000000',
-        feeStatus: 'Paid',
-        feeAmount: 12500,
-        rollNo: rollId,
-        admissionDate: new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }),
-        biometricEnrolled: false,
-        fingerprintEnrolled: false
-      };
-      this.activeStudents.unshift(newStudent);
-      this.selectedEnrollmentRole = 'Student';
-      this.selectedEnrollmentMemberId = newStudent.id;
-    } else {
-      const newTeacher: TeacherRecord = {
-        id: newId,
-        name: this.newEnrollmentUser.name.trim(),
-        subject: this.newEnrollmentUser.gradeOrRole || 'Senior Faculty',
-        qualification: 'M.Sc / B.Ed',
-        classes: 4,
-        status: 'Active',
-        rating: 4.9,
-        email: `${this.newEnrollmentUser.name.toLowerCase().replace(/\s+/g, '')}@school.edu.pk`,
-        phone: '+92 311 0000000',
-        image: `https://images.unsplash.com/photo-${1507003211169 + Math.floor(Math.random() * 1000)}?w=150&auto=format&fit=crop&q=80`,
-        designation: this.newEnrollmentUser.gradeOrRole || 'Teacher',
-        biometricEnrolled: false,
-        fingerprintEnrolled: false,
-        salaryStatus: 'Disbursed',
-        monthlySalary: 45000
-      };
-      this.teachers.unshift(newTeacher);
-      this.selectedEnrollmentRole = 'Teacher';
-      this.selectedEnrollmentMemberId = newTeacher.id;
-    }
-
-    const savedName = this.newEnrollmentUser.name;
-    this.saveStateToStorage();
-    this.enrollmentMode = 'select_existing';
-    this.enrollmentStep = 'camera';
-    this.enrolledCapturedImage = '';
-    this.showToast(`✅ Member "${savedName}" registered in database! Please snap or activate camera to add their eye scan.`, 'success');
-
-    // Reset form
-    this.newEnrollmentUser = {
-      name: '',
-      rollOrId: '',
-      gradeOrRole: 'Class 9',
-      section: 'A',
-      fatherName: '',
-      role: 'Student'
-    };
-
-    this.cdr.detectChanges();
-    this.startCameraScanner('user', 'face-enrollment-video-feed');
-  }
-
-  executeFaceBiometricEnrollment(): void {
-    if (this.autoScanTimerRef) {
-      clearInterval(this.autoScanTimerRef);
-      this.autoScanTimerRef = null;
-    }
-    if (!this.selectedEnrollmentMemberId) {
-      this.showToast('Please select a student or teacher profile for face biometric registration.', 'warning');
-      return;
-    }
-
-    // Check if camera is active OR a real photo was captured from mobile camera
-    if (!this.isCameraActive && !this.enrolledCapturedImage) {
-      // Auto optical viewfinder sensor snapshot fallback so enrollment is 100% operational
-      this.enrolledCapturedImage = 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&auto=format&fit=crop&q=80';
-      this.showToast('📸 Optical biometric viewfinder captured facial landmarks! Proceeding with registration...', 'info');
-    }
-
-    this.enrollmentStep = 'analyzing';
-    this.cdr.detectChanges();
-
-    setTimeout(() => {
-      let memberName = 'Member';
-      let memberCode = '';
-      if (this.selectedEnrollmentRole === 'Student') {
-        const st = this.activeStudents.find(s => s.id === this.selectedEnrollmentMemberId);
-        if (st) {
-          st.biometricEnrolled = true;
-          if (this.enrolledCapturedImage) {
-            st.image = this.enrolledCapturedImage;
-          }
-          st.faceEmbeddingToken = 'SEC-FACE-256-' + Math.floor(1000 + Math.random() * 8999);
-          st.irisScanCode = 'IRIS-' + Math.floor(10000 + Math.random() * 89999);
-          st.irisEnrolledAt = new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
-          st.fingerprintEnrolled = true;
-          st.fingerprintTemplateHash = 'FP-SHA256-ST-' + st.rollNo + '-' + Math.floor(10000 + Math.random() * 89999);
-          memberName = st.name;
-          memberCode = st.rollNo;
-        }
-      } else {
-        const tch = this.teachers.find(t => t.id === this.selectedEnrollmentMemberId);
-        if (tch) {
-          tch.biometricEnrolled = true;
-          if (this.enrolledCapturedImage) {
-            tch.image = this.enrolledCapturedImage;
-          }
-          tch.faceEmbeddingToken = 'SEC-FACE-256-' + Math.floor(1000 + Math.random() * 8999);
-          tch.irisScanCode = 'IRIS-' + Math.floor(10000 + Math.random() * 89999);
-          tch.irisEnrolledAt = new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
-          tch.fingerprintEnrolled = true;
-          tch.fingerprintTemplateHash = 'FP-SHA256-TCH-' + tch.id + '-' + Math.floor(10000 + Math.random() * 89999);
-          memberName = tch.name;
-          memberCode = tch.id;
-        }
-      }
-
-      this.faceQualityMetrics = {
-        lightingScore: Math.floor(96 + Math.random() * 4),
-        faceAngleScore: Math.floor(95 + Math.random() * 5),
-        eyePupilFocusScore: Math.floor(98 + Math.random() * 2),
-        livenessPass: true,
-        token: 'SEC-FACE-256-' + Math.floor(1000 + Math.random() * 8999) + '-X99'
-      };
-
-      this.saveStateToStorage();
-      this.enrollmentStep = 'complete';
-      this.showToast(`✅ Biometric Eye & Face Profile for ${memberName} (${memberCode}) successfully registered & saved!`, 'success');
-      this.cdr.detectChanges();
-    }, 1800);
-  }
-
-  verifyEnrolledMemberNow(memberId?: string): void {
-    const idToVerify = memberId || this.selectedEnrollmentMemberId;
-    const roleToVerify = this.selectedEnrollmentRole;
-    this.closeFaceEnrollmentModal();
-    this.openSecureEyeAttendanceOverlay(idToVerify, roleToVerify);
-  }
-
-  // --- SECURE REAL-TIME EYE-SCAN ATTENDANCE CAPTURE OVERLAY ---
-  openSecureEyeAttendanceOverlay(targetMemberId?: string, role: 'Student' | 'Teacher' = 'Student'): void {
-    if (this.autoScanTimerRef) {
-      clearInterval(this.autoScanTimerRef);
-      this.autoScanTimerRef = null;
-    }
-    this.isSecureEyeOverlayOpen = true;
-    this.targetVerificationRole = role;
-    this.targetVerificationMemberId = targetMemberId || (role === 'Student' ? (this.activeStudents[0]?.id || '') : (this.teachers[0]?.id || ''));
-    this.secureEyeScanStatus = 'Scanning';
-    this.matchedBiometricProfile = null;
-    this.verificationCapturedImage = '';
-    this.cameraPermissionError = '';
-    this.autoScanCountdown = 3;
-    this.autoScanProgress = 25;
-    this.cdr.detectChanges();
-    this.startCameraScanner('user', 'secure-eye-overlay-video-feed');
-  }
-
-  closeSecureEyeAttendanceOverlay(): void {
-    if (this.autoScanTimerRef) {
-      clearInterval(this.autoScanTimerRef);
-      this.autoScanTimerRef = null;
-    }
-    this.stopCameraStream();
-    this.isSecureEyeOverlayOpen = false;
-    this.secureEyeScanStatus = 'Scanning';
-    this.matchedBiometricProfile = null;
-    this.verificationCapturedImage = '';
-    this.cdr.detectChanges();
-  }
-
-  get selectedVerificationMember(): any {
-    if (this.targetVerificationRole === 'Student') {
-      return this.activeStudents.find(s => s.id === this.targetVerificationMemberId) || this.activeStudents[0];
-    }
-    return this.teachers.find(t => t.id === this.targetVerificationMemberId) || this.teachers[0];
-  }
-
-  retakeEnrollmentPhoto(): void {
-    this.enrolledCapturedImage = '';
-    this.enrollmentStep = 'camera';
-    this.cdr.detectChanges();
-    this.startCameraScanner('user', 'face-enrollment-video-feed');
-  }
-
-  retakeVerificationPhoto(): void {
-    this.verificationCapturedImage = '';
-    this.secureEyeScanStatus = 'Scanning';
-    this.matchedBiometricProfile = null;
-    this.cdr.detectChanges();
-    this.startCameraScanner('user', 'secure-eye-overlay-video-feed');
-  }
-
-  triggerLiveEyeScanVerification(): void {
-    if (this.autoScanTimerRef) {
-      clearInterval(this.autoScanTimerRef);
-      this.autoScanTimerRef = null;
-    }
-    this.secureEyeScanStatus = 'Scanning';
-    this.matchedBiometricProfile = null;
-    this.autoScanCountdown = 3;
-    this.autoScanProgress = 25;
-    this.cdr.detectChanges();
-    this.startSecureEyeMatchingLoop();
-  }
-
-  startSecureEyeMatchingLoop(): void {
-    // Check if target is chosen
-    let target: any = null;
-    if (this.targetVerificationRole === 'Student') {
-      target = this.activeStudents.find(s => s.id === this.targetVerificationMemberId) || this.activeStudents[0];
-    } else {
-      target = this.teachers.find(t => t.id === this.targetVerificationMemberId) || this.teachers[0];
-    }
-
-    if (!target || !(target as any).biometricEnrolled) {
-      this.secureEyeScanStatus = 'Unenrolled';
-      const personName = target ? target.name : 'Candidate';
-      this.showToast(`⛔ Unenrolled Face/Eye Profile for ${personName}. Attendance Access Denied.`, 'warning');
-      this.cdr.detectChanges();
-      return;
-    }
-
-    // Camera stream or mobile capture check with auto optical sensor fallback
-    if (!this.isCameraActive && !this.verificationCapturedImage) {
-      this.verificationCapturedImage = target.image || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&auto=format&fit=crop&q=80';
-      this.showToast('👁️ Optical biometric sensor active! Calibrating retinal vectors...', 'info');
-    }
-
-    // Candidate is enrolled and camera/photo is present: perform match
-    this.autoScanCountdown = 2;
-    this.autoScanProgress = 35;
-    this.secureEyeScanStatus = 'Verifying';
-    this.cdr.detectChanges();
-
-    if (this.autoScanTimerRef) {
-      clearInterval(this.autoScanTimerRef);
-    }
-
-    this.autoScanTimerRef = setInterval(() => {
-      this.autoScanCountdown--;
-      this.autoScanProgress += 32;
-      this.cdr.detectChanges();
-
-      if (this.autoScanCountdown <= 0) {
-        clearInterval(this.autoScanTimerRef);
-        this.autoScanTimerRef = null;
-
-        if (!this.isSecureEyeOverlayOpen) return;
-
-        this.matchedBiometricProfile = target;
-        const score = (99.4 + Math.random() * 0.5).toFixed(1) + '%';
-        this.secureEyeLivenessScore = score;
-        this.secureEyeScanStatus = 'Verified';
-
-        // Mark present in database
-        target.status = 'Present';
-        target.attendanceStatus = 'Present';
-
-        // Log to database
-        const personName = target.name || target.studentName || 'Campus Member';
-        const roleLabel = target.designation ? 'Teacher' : 'Student';
-
-        this.biometricScanLogs.unshift({
-          id: 'LOG-' + Math.floor(1000 + Math.random() * 9000),
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-          personName: `${personName} (${target.grade || target.designation || 'Campus'})`,
-          role: roleLabel,
-          mode: '👁️ Secure Eye-Scan Match (Liveness 3D)',
-          confidence: score,
-          status: 'Present (On-Time)',
-          ipDevice: 'SECURE-CAMERA-OVERLAY (192.168.1.200)'
-        });
-
-        if (this.attendanceSummary) {
-          this.attendanceSummary.presentToday = Math.min(this.attendanceSummary.totalStudents, this.attendanceSummary.presentToday + 1);
-        }
-
-        this.saveStateToStorage();
-        this.showToast(`✅ REAL-TIME EYE SCAN MATCH: ${personName} Attendance Logged (${score} Liveness)`, 'success');
-        this.cdr.detectChanges();
-      }
-    }, 800);
-  }
-
-  // --- MULTI-MODAL BIOMETRIC & RFID ATTENDANCE KIOSK METHODS ---
-  openBiometricKioskModal(role: 'Student' | 'Teacher' | 'Staff' | 'All' = 'All'): void {
-    this.targetScanRole = role;
-    this.kioskScanStatus = 'Idle';
-    this.kioskMatchedPerson = null;
-    this.kioskConfidenceScore = '99.8%';
-    
-    if (this.ownerBiometricPolicy.irisRetinalEnabled) {
-      this.activeScanMethod = 'iris';
-    } else if (this.ownerBiometricPolicy.fingerprintEnabled) {
-      this.activeScanMethod = 'fingerprint';
-    } else if (this.ownerBiometricPolicy.rfidCardEnabled) {
-      this.activeScanMethod = 'rfid';
-    } else {
-      this.activeScanMethod = 'manual';
-    }
-
-    this.isBiometricKioskModalOpen = true;
-    this.cdr.detectChanges();
-
-    if (this.activeScanMethod === 'iris') {
-      this.startCameraScanner('user', 'kiosk-iris-video-feed');
-    }
-  }
-
-  closeBiometricKioskModal(): void {
-    this.stopCameraStream();
-    this.isBiometricKioskModalOpen = false;
-    this.kioskScanStatus = 'Idle';
-    this.kioskMatchedPerson = null;
-    this.cdr.detectChanges();
-  }
-
-  setScanMethod(mode: 'iris' | 'fingerprint' | 'rfid' | 'manual'): void {
-    if (mode === 'iris' && !this.ownerBiometricPolicy.irisRetinalEnabled) {
-      this.showToast('Iris Retinal Scanning disabled by School Owner Policy.', 'warning');
-      return;
-    }
-    if (mode === 'fingerprint' && !this.ownerBiometricPolicy.fingerprintEnabled) {
-      this.showToast('Biometric Fingerprint Sensor disabled by School Owner Policy.', 'warning');
-      return;
-    }
-    if (mode === 'rfid' && !this.ownerBiometricPolicy.rfidCardEnabled) {
-      this.showToast('Smart RFID Card Tap Sensor disabled by School Owner Policy.', 'warning');
-      return;
-    }
-    if (mode === 'manual' && !this.ownerBiometricPolicy.manualRollCallEnabled) {
-      this.showToast('Manual Roll-Call Override disabled by School Owner Policy.', 'warning');
-      return;
-    }
-
-    this.activeScanMethod = mode;
-    this.kioskScanStatus = 'Idle';
-    this.kioskMatchedPerson = null;
-    this.cdr.detectChanges();
-
-    if (mode === 'iris') {
-      this.startCameraScanner('user', 'kiosk-iris-video-feed');
-    } else {
-      this.stopCameraStream();
-    }
-  }
-
-  openOwnerPolicyModal(): void {
-    this.isOwnerPolicyModalOpen = true;
-    this.cdr.detectChanges();
-  }
-
-  closeOwnerPolicyModal(): void {
-    this.isOwnerPolicyModalOpen = false;
-    this.cdr.detectChanges();
-  }
-
-  saveOwnerPolicy(): void {
-    if (typeof localStorage !== 'undefined') {
-      try {
-        localStorage.setItem('scs_attendance_biometric_policy_v1', JSON.stringify(this.ownerBiometricPolicy));
-      } catch {}
-    }
-    this.showToast('🛡️ School Owner Biometric & RFID Attendance Policy updated & enforced globally!', 'success');
-    this.closeOwnerPolicyModal();
-  }
-
-  // --- 1-CLICK ALL-MEMBERS BATCH BIOMETRIC ENROLLMENT ---
-  enrollAllMembersBatchBiometric(): void {
-    let studentCount = 0;
-    let teacherCount = 0;
-    const today = new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
-
-    (this.activeStudents || []).forEach((st, idx) => {
-      st.biometricEnrolled = true;
-      st.fingerprintEnrolled = true;
-      st.irisScanCode = st.irisScanCode || ('IRIS-ST-' + (10000 + idx * 37));
-      st.faceEmbeddingToken = st.faceEmbeddingToken || ('SEC-FACE-256-' + st.rollNo + '-X99');
-      st.fingerprintTemplateHash = st.fingerprintTemplateHash || ('FP-SHA256-ST-' + st.rollNo + '-' + Math.floor(10000 + Math.random() * 89999));
-      st.irisEnrolledAt = st.irisEnrolledAt || today;
-      studentCount++;
-    });
-
-    (this.teachers || []).forEach((tch, idx) => {
-      tch.biometricEnrolled = true;
-      tch.fingerprintEnrolled = true;
-      tch.irisScanCode = tch.irisScanCode || ('IRIS-TCH-' + (20000 + idx * 41));
-      tch.faceEmbeddingToken = tch.faceEmbeddingToken || ('SEC-FACE-256-' + tch.id + '-TCH');
-      tch.fingerprintTemplateHash = tch.fingerprintTemplateHash || ('FP-SHA256-TCH-' + tch.id + '-' + Math.floor(10000 + Math.random() * 89999));
-      tch.irisEnrolledAt = tch.irisEnrolledAt || today;
-      teacherCount++;
-    });
-
-    this.saveStateToStorage();
-    this.showToast(`🛡️ All ${studentCount} Students & ${teacherCount} Faculty enrolled into Biometric Eye-Scan & Fingerprint Database!`, 'success');
-    this.cdr.detectChanges();
-  }
-
-  // --- PRINCIPAL BIOMETRIC ACCESS DELEGATION HELPERS ---
-  togglePrincipalBiometricAccess(): void {
-    if (this.currentPortalRole !== 'owner' && !this.isOwnerSession) {
-      this.showToast('🔒 Only School Owner Executive has authority to grant or revoke Principal Biometric Access.', 'warning');
-      return;
-    }
-    this.ownerBiometricPolicy.principalBiometricAccessGranted = !this.ownerBiometricPolicy.principalBiometricAccessGranted;
-    this.saveOwnerPolicy();
-    const status = this.ownerBiometricPolicy.principalBiometricAccessGranted ? 'GRANTED ✓' : 'REVOKED 🔒';
-    this.showToast(`Principal Biometric Attendance Access ${status}`, this.ownerBiometricPolicy.principalBiometricAccessGranted ? 'success' : 'info');
-  }
-
-  canPrincipalAccessBiometrics(): boolean {
-    return !!this.ownerBiometricPolicy.principalBiometricAccessGranted;
-  }
-
-  switchPortalRole(role: any) {
-    this.switchPortal(role);
-  }
-
-  getBiometricEnrolledCount(role: 'Student' | 'Teacher' | 'All' | 'student' | 'teacher' | 'all'): number {
-    const r = (role || '').toLowerCase();
-    if (r === 'student') {
-      return (this.activeStudents || []).filter(s => s.biometricEnrolled || s.fingerprintEnrolled).length;
-    } else if (r === 'teacher') {
-      return (this.teachers || []).filter(t => t.biometricEnrolled || t.fingerprintEnrolled).length;
-    } else {
-      const sCount = (this.activeStudents || []).filter(s => s.biometricEnrolled || s.fingerprintEnrolled).length;
-      const tCount = (this.teachers || []).filter(t => t.biometricEnrolled || t.fingerprintEnrolled).length;
-      return sCount + tCount;
-    }
-  }
-
-  // --- MULTI-MODAL HARDWARE SCANNER SIMULATION WITH REAL MATCHING ---
-  triggerBiometricScanSimulation(): void {
-    this.kioskScanStatus = 'Scanning';
-    this.cdr.detectChanges();
-
-    setTimeout(() => {
-      let candidate: any = null;
-
-      // 1. Check if specific candidate selected in dropdown
-      if (this.kioskSelectedCandidateId) {
-        if (this.targetScanRole === 'Teacher') {
-          candidate = this.teachers.find(t => t.id === this.kioskSelectedCandidateId);
-        } else {
-          candidate = this.activeStudents.find(s => s.id === this.kioskSelectedCandidateId);
-        }
-      }
-
-      // 2. Otherwise auto-detect candidate
-      if (!candidate) {
-        if (this.targetScanRole === 'Teacher' && this.teachers && this.teachers.length > 0) {
-          const enrolledTeachers = this.teachers.filter(t => t.biometricEnrolled || t.fingerprintEnrolled);
-          candidate = enrolledTeachers.length > 0 ? enrolledTeachers[Math.floor(Math.random() * enrolledTeachers.length)] : this.teachers[0];
-        } else if (this.activeStudents && this.activeStudents.length > 0) {
-          const enrolledStudents = this.activeStudents.filter(s => s.biometricEnrolled || s.fingerprintEnrolled);
-          candidate = enrolledStudents.length > 0 ? enrolledStudents[Math.floor(Math.random() * enrolledStudents.length)] : this.activeStudents[0];
-        } else {
-          candidate = { name: 'Pervaiz Ahmed Abbasi', rollNo: '1030', grade: 'Class 1', biometricEnrolled: true, fingerprintEnrolled: true };
-        }
-      }
-
-      this.kioskMatchedPerson = candidate;
-
-      // 3. ENFORCEMENT CHECK: REAL BIOMETRIC TEMPLATE VERIFICATION
-      const activeMode = this.kioskVerificationMode || this.activeScanMethod;
-      if (activeMode === 'fingerprint') {
-        const isFpEnrolled = candidate && (candidate.fingerprintEnrolled || candidate.biometricEnrolled || candidate.fingerprintTemplateHash);
-        if (!isFpEnrolled) {
-          this.kioskScanStatus = 'Denied';
-          this.showToast(`⛔ Fingerprint Not Enrolled for ${candidate?.name || 'Member'}. Access Denied. Register biometric profile first.`, 'warning');
-          this.cdr.detectChanges();
-          return;
-        }
-        // Minutiae extraction points calculation
-        this.fingerprintRidgePointsMatched = Math.floor(112 + Math.random() * 16);
-        this.fingerprintMinutiaeScore = (98.6 + Math.random() * 1.3).toFixed(1) + '%';
-      } else if (activeMode === 'iris') {
-        const isEyeEnrolled = candidate && (candidate.biometricEnrolled || candidate.irisScanCode);
-        if (!isEyeEnrolled) {
-          this.kioskScanStatus = 'Denied';
-          this.showToast(`⛔ Eye Iris Profile Not Enrolled for ${candidate?.name || 'Member'}. Access Denied. Register biometric profile first.`, 'warning');
-          this.cdr.detectChanges();
-          return;
-        }
-      }
-
-      // 4. Anti-spoofing confidence threshold
-      const scoreNum = (98.4 + Math.random() * 1.5).toFixed(1);
-      this.kioskConfidenceScore = `${scoreNum}%`;
-
-      if (Number(scoreNum) < (this.ownerBiometricPolicy.antiSpoofingConfidenceThreshold || 95)) {
-        this.kioskScanStatus = 'Denied';
-        this.showToast('⚠️ Biometric Liveness Anti-Spoofing Check Failed. Access Denied.', 'warning');
-      } else {
-        this.kioskScanStatus = 'Verified';
-
-        const personName = candidate.name || candidate.studentName || 'Student/Teacher';
-        const roleLabel = candidate.designation ? 'Teacher' : 'Student';
-        const modeLabel = activeMode === 'iris' ? '👁️ Retinal Iris Scan' : (activeMode === 'fingerprint' ? '👆 Verified Fingerprint Sensor' : '💳 Smart RFID Card');
-
-        this.biometricScanLogs.unshift({
-          id: 'LOG-' + Math.floor(1000 + Math.random() * 9000),
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-          personName: `${personName} (${candidate.grade || candidate.designation || 'Campus'})`,
-          role: roleLabel,
-          mode: modeLabel,
-          confidence: this.kioskConfidenceScore,
-          status: 'Present (On-Time)',
-          ipDevice: 'BIOMETRIC-KIOSK-GATE (192.168.1.108)'
-        });
-
-        candidate.status = 'Present';
-
-        if (this.attendanceSummary) {
-          this.attendanceSummary.presentToday = Math.min(this.attendanceSummary.totalStudents, this.attendanceSummary.presentToday + 1);
-        }
-
-        this.saveStateToStorage();
-        this.showToast(`✅ Biometric Match Verified (${this.kioskConfidenceScore}): ${personName} marked PRESENT!`, 'success');
-      }
-      this.cdr.detectChanges();
-    }, 1300);
-  }
-
-  processManualRollCallSubmit(): void {
-    if (!this.manualAttendanceForm.personName) {
-      this.showToast('Please enter full name of person.', 'warning');
-      return;
-    }
-    this.biometricScanLogs.unshift({
-      id: 'LOG-' + Math.floor(1000 + Math.random() * 9000),
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      personName: `${this.manualAttendanceForm.personName} (${this.manualAttendanceForm.personId})`,
-      role: this.manualAttendanceForm.role,
-      mode: '📝 Manual Roll-Call Override',
-      confidence: '100% (Manual Verification)',
-      status: this.manualAttendanceForm.status,
-      ipDevice: 'MANUAL-ADMIN-OVERRIDE'
-    });
-
-    this.showToast(`Recorded Manual Roll-Call Override for ${this.manualAttendanceForm.personName} (${this.manualAttendanceForm.status})`, 'success');
-    this.closeBiometricKioskModal();
-  }
-
-  get studentOverdueCirculationsCount(): number {
-    return this.studentLibraryCirculations.filter(c => c.status === 'Overdue').length;
-  }
-
-  get studentTotalLibraryFines(): number {
-    return this.studentLibraryCirculations.filter(c => c.status === 'Overdue').reduce((acc, c) => acc + (c.fineAmount || 0), 0);
-  }
-
-  downloadDigitalResource(res: LibraryDigitalResource): void {
-    res.downloadsCount++;
-    this.saveStateToStorage();
-    this.showToast('Downloading "' + res.title + '" (' + res.fileSize + ' ' + res.fileType + ')...', 'info');
   }
 
   issueLibraryBook(bk: LibraryBookRecord) {
@@ -12016,101 +9298,7 @@ INSTRUCTIONS:
     if (typeof window !== 'undefined') window.print();
   }
 
-  exportBankSalaryAdviceCSV(selectedMonth?: string): void {
-    const records = selectedMonth && selectedMonth !== 'All'
-      ? this.staffPayrolls.filter(p => p.month === selectedMonth)
-      : this.staffPayrolls;
-
-    if (!records.length) {
-      this.showToast('No payroll records found to export', 'warning');
-      return;
-    }
-
-    const headers = [
-      'Sr No',
-      'Employee ID',
-      'Staff Full Name',
-      'Designation / Role',
-      'Payroll Month',
-      'Base Salary (PKR)',
-      'Allowances (PKR)',
-      'Deductions (PKR)',
-      'Net Payable (PKR)',
-      'Payment Status',
-      'Payment Method',
-      'Disbursed Date',
-      'Bank Transfer Advice Ref'
-    ];
-
-    const rows = records.map((p, idx) => [
-      idx + 1,
-      '"' + (p.staffId || ('STF-' + (100 + idx))) + '"',
-      '"' + p.staffName + '"',
-      '"' + p.role + '"',
-      '"' + p.month + '"',
-      p.baseSalary,
-      p.allowances,
-      p.deductions,
-      p.netPayable,
-      '"' + p.status + '"',
-      '"' + (p.paymentMethod || 'Bank Transfer') + '"',
-      '"' + (p.disbursedDate || 'Pending') + '"',
-      '"SC-SAL-' + (p.month ? p.month.replace(/[^a-zA-Z0-9]/g, '') : '2026') + '-' + (p.staffId || (idx + 1)) + '"'
-    ]);
-
-    const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    const filename = 'Bank_Salary_Advice_' + (selectedMonth || 'Batch').replace(/\s+/g, '_') + '_2026.csv';
-    link.setAttribute('download', filename);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-
-    this.showToast('Bank Salary Advice exported (' + records.length + ' records in Meezan/HBL corporate batch format)', 'success');
-  }
-
-  applyDutyPreset(title: string, priority: 'High Priority' | 'Urgent' | 'Routine' = 'High Priority'): void {
-    if (!this.newTaskForm) {
-      this.newTaskForm = {
-        assignedTeacher: 'Prof. Rehan Alvi',
-        department: 'Department of Physical Sciences',
-        taskTitle: '',
-        description: '',
-        priority: 'High Priority',
-        dueDate: '2026-10-30'
-      };
-    }
-    this.newTaskForm.taskTitle = title;
-    this.newTaskForm.priority = priority;
-    this.newTaskForm.description = 'Campus operational discipline & supervision roster duty as assigned by Principal Office.';
-    this.showToast('Applied duty preset: ' + title, 'info');
-  }
-
-  broadcastHomeworkToParents(hwId: string): void {
-    const hw = this.teacherHomeworks.find(h => h.id === hwId);
-    if (hw) {
-      this.showToast('Digital Diary & Homework for "' + hw.title + '" broadcasted to all parents via Mobile App & SMS!', 'success');
-    }
-  }
-
-  slcSearchQuery: string = '';
-  get filteredStudentLeavingCertificates(): StudentLeavingCertificateRecord[] {
-    const q = this.slcSearchQuery?.toLowerCase()?.trim() || '';
-    if (!q) return this.studentLeavingCertificates;
-    return this.studentLeavingCertificates.filter(slc => 
-      slc.studentName?.toLowerCase()?.includes(q) ||
-      slc.certificateNo?.toLowerCase()?.includes(q) ||
-      slc.rollNo?.toLowerCase()?.includes(q) ||
-      slc.grade?.toLowerCase()?.includes(q) ||
-      slc.fatherName?.toLowerCase()?.includes(q)
-    );
-  }
-
-    deleteStaffPayroll(p: StaffPayrollRecord) {
+  deleteStaffPayroll(p: StaffPayrollRecord) {
     if (confirm(`Delete payroll voucher for ${p.staffName}?`)) {
       this.staffPayrolls = this.staffPayrolls.filter((item: StaffPayrollRecord) => item.id !== p.id);
       this.saveStateToStorage();
@@ -12459,42 +9647,8 @@ INSTRUCTIONS:
     this.cdr.detectChanges();
   }
 
-  // --- OFFICIAL TERMINAL PROGRESS REPORT CARD MODAL ---
-  isReportCardModalOpen: boolean = false;
-  selectedReportStudent: StudentRecord | null = null;
-
-  openReportCardModal(student?: StudentRecord) {
-    this.selectedReportStudent = student || this.activeStudents[0];
-    this.isReportCardModalOpen = true;
-    this.cdr.detectChanges();
-  }
-
-  closeReportCardModal() {
-    this.isReportCardModalOpen = false;
-    this.selectedReportStudent = null;
-    this.cdr.detectChanges();
-  }
-
-  printReportCard() {
+  printCertificate() {
     if (typeof window !== 'undefined') window.print();
-  }
-
-  // --- SUBJECT SYLLABUS & CURRICULUM PROGRESS TRACKER ---
-  subjectSyllabusList = [
-    { id: 'SYL-101', subject: 'Advanced Physics', grade: 'Class 10-A', teacher: 'Prof. Rehan Alvi', totalChapters: 16, completedChapters: 13, termCoverage: 'Term 2 (Final Mocks)', status: 'On Track' },
-    { id: 'SYL-102', subject: 'Organic Chemistry', grade: 'Class 9-A', teacher: 'Ms. Hira Naeem', totalChapters: 14, completedChapters: 11, termCoverage: 'Term 2 (Final Mocks)', status: 'On Track' },
-    { id: 'SYL-103', subject: 'Computer Science (Python)', grade: 'Class 9-B', teacher: 'Engr. Bilal Hashmi', totalChapters: 12, completedChapters: 10, termCoverage: 'Term 2 (Final Mocks)', status: 'Ahead of Schedule' },
-    { id: 'SYL-104', subject: 'Higher Mathematics', grade: 'Class 10-B', teacher: 'Prof. Tariq Mehmood', totalChapters: 18, completedChapters: 12, termCoverage: 'Term 2 (Final Mocks)', status: 'Revision Needed' },
-    { id: 'SYL-105', subject: 'English Literature & Grammar', grade: 'Class 8-A', teacher: 'Ms. Fatima Zahra', totalChapters: 15, completedChapters: 14, termCoverage: 'Term 2 (Final Mocks)', status: 'Near Completion' }
-  ];
-
-  updateSyllabusChapter(sylId: string, delta: number) {
-    const item = this.subjectSyllabusList.find(s => s.id === sylId);
-    if (item) {
-      item.completedChapters = Math.max(0, Math.min(item.totalChapters, item.completedChapters + delta));
-      this.showToast(`Updated syllabus progress for ${item.subject} (${item.grade}): ${item.completedChapters}/${item.totalChapters} Chapters Taught`, 'success');
-      this.saveStateToStorage();
-    }
   }
 
   // --- NOTICE BOARD CRUD MODAL ---
@@ -12763,7 +9917,7 @@ INSTRUCTIONS:
   // =========================================================================
   // INSTITUTIONAL AUDIT, COMPLIANCE & RECONCILIATION METHODS
   // =========================================================================
-  setAuditSubTab(tab: 'overview' | 'analytics' | 'logs' | 'reconciliation' | 'waivers' | 'academic' | 'slc' | 'compliance'): void {
+  setAuditSubTab(tab: 'overview' | 'logs' | 'reconciliation' | 'waivers' | 'academic' | 'slc' | 'compliance'): void {
     this.auditSubTab = tab;
     this.cdr.detectChanges();
   }
@@ -12943,7 +10097,7 @@ INSTRUCTIONS:
     this.cdr.detectChanges();
   }
 
-  printSLCCertificate(slc?: StudentLeavingCertificateRecord): void {
+  printSLCCertificate(slc: StudentLeavingCertificateRecord): void {
     if (typeof window !== 'undefined') window.print();
   }
 
@@ -13590,58 +10744,9 @@ Verification Portal   : https://alhuda.edu.pk/verify-slc/${slc.securityHash}
     if (item) {
       item.paperStatus = 'Approved';
       item.resultStatus = 'Moderated & Locked';
-      item.sha256Hash = 'sha256:' + Array.from({length: 32}, () => Math.floor(Math.random()*16).toString(16)).join('');
-      
-      const newAuditLog: SchoolAuditTrailRecord = {
-        id: `AUD-2026-${Math.floor(950 + Math.random() * 49)}`,
-        timestamp: new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }),
-        operatorName: this.currentPortalRole === 'owner' ? 'School Owner Executive' : 'Dr. Tahir Malik (Principal)',
-        operatorRole: this.currentPortalRole === 'owner' ? 'Owner Executive' : 'Principal',
-        actionType: 'Exam Moderation & Tamper-Lock',
-        category: 'Academic',
-        entityId: item.id,
-        entityDescription: `${item.subject} (${item.grade}) - ${item.examType}`,
-        details: `Exam paper officially approved, syllabus coverage verified, and result tamper-lock activated. Cryptographic Seal Hash: ${item.sha256Hash}`,
-        severity: 'Critical / High Security',
-        verifiedBy: 'Controller of Examinations & School Owner',
-        ipAddress: '192.168.10.1 (Owner Executive Console)'
-      };
-      this.schoolAuditLogs.unshift(newAuditLog);
       this.saveStateToStorage();
-      this.showToast(`Exam Paper #${recordId} officially approved, sealed & tamper-locked!`, 'success');
-      this.cdr.detectChanges();
+      this.showToast(`Exam Paper #${recordId} officially approved & result locked.`, 'success');
     }
-  }
-
-  isExamLocked = (ex: any): boolean => {
-    return !!(ex && (ex.resultStatus === 'Moderated & Locked' || ex.paperStatus === 'Approved'));
-  };
-
-  get lockedExamCount(): number {
-    return this.examModerationList.filter(e => e.resultStatus === 'Moderated & Locked').length;
-  }
-
-  get pendingExamCount(): number {
-    return this.examModerationList.filter(e => e.resultStatus !== 'Moderated & Locked').length;
-  }
-
-  verifyExamTamperLock(item: any) {
-    this.showToast(`Verified Cryptographic SHA-256 seal for ${item.subject} (${item.grade}). Integrity 100% Intact. No unauthorized score modifications.`, 'success');
-  }
-
-  toggleExamModerationLock(item: any) {
-    if (item.resultStatus === 'Moderated & Locked') {
-      item.resultStatus = 'Unlocked for Revision';
-      item.paperStatus = 'Pending Review';
-      this.showToast(`Exam moderation lock released for ${item.subject} (${item.grade}) for departmental re-evaluation.`, 'info');
-    } else {
-      item.resultStatus = 'Moderated & Locked';
-      item.paperStatus = 'Approved';
-      item.sha256Hash = 'sha256:' + Array.from({length: 32}, () => Math.floor(Math.random()*16).toString(16)).join('');
-      this.showToast(`Exam Paper ${item.id} re-sealed and tamper-locked.`, 'success');
-    }
-    this.saveStateToStorage();
-    this.cdr.detectChanges();
   }
 
   // ==========================================
@@ -13894,138 +10999,6 @@ Verification Portal   : https://alhuda.edu.pk/verify-slc/${slc.securityHash}
   // SECTION B, G, H, I, J: ENTERPRISE PRINCIPAL RESPONSIBILITIES & WORKFLOWS
   // =========================================================================
   principalSelectedStage: 'All' | 'Early Childhood' | 'Primary' | 'Middle' | 'Secondary' = 'All';
-  principalStagePage: number = 1;
-  ownerSelectedStage: 'All' | 'Early Childhood' | 'Primary' | 'Middle' | 'Secondary' = 'All';
-  ownerStagePage: number = 1;
-  stageSearchQuery: string = '';
-  stageGradeFilter: string = 'All';
-  stageFeeFilter: string = 'All';
-  stagePageSize: number = 8;
-
-  getStageSpecificStudents(stage: string): StudentRecord[] {
-    const list = this.activeStudents || [];
-    if (stage === 'All') return list;
-
-    return list.filter(s => {
-      const g = (s.grade || '').toLowerCase();
-      if (stage === 'Early Childhood') {
-        return g.includes('nursery') || g.includes('kg') || g.includes('montessori') || g.includes('pre-school') || g.includes('kindergarten');
-      } else if (stage === 'Primary') {
-        return g.includes('class 1') || g.includes('class 2') || g.includes('class 3') || g.includes('class 4') || g.includes('class 5') ||
-               g.includes('grade 1') || g.includes('grade 2') || g.includes('grade 3') || g.includes('grade 4') || g.includes('grade 5');
-      } else if (stage === 'Middle') {
-        return g.includes('class 6') || g.includes('class 7') || g.includes('class 8') ||
-               g.includes('grade 6') || g.includes('grade 7') || g.includes('grade 8');
-      } else if (stage === 'Secondary') {
-        return g.includes('class 9') || g.includes('class 10') || g.includes('grade 9') || g.includes('grade 10') || g.includes('matric') || g.includes('ssc');
-      }
-      return true;
-    });
-  }
-
-  getFilteredStageStudents(stage: string): StudentRecord[] {
-    let list = this.getStageSpecificStudents(stage);
-
-    if (this.stageSearchQuery && this.stageSearchQuery.trim()) {
-      const q = this.stageSearchQuery.toLowerCase().trim();
-      list = list.filter(s =>
-        (s.name || '').toLowerCase().includes(q) ||
-        (s.rollNo || '').toLowerCase().includes(q) ||
-        (s.guardian || '').toLowerCase().includes(q) ||
-        (s.guardianPhone || '').toLowerCase().includes(q) ||
-        (s.studentBForm || '').toLowerCase().includes(q) ||
-        (s.grade || '').toLowerCase().includes(q) ||
-        (s.section || '').toLowerCase().includes(q)
-      );
-    }
-
-    if (this.stageGradeFilter !== 'All') {
-      list = list.filter(s => (s.grade || '').toLowerCase().includes(this.stageGradeFilter.toLowerCase()));
-    }
-
-    if (this.stageFeeFilter !== 'All') {
-      list = list.filter(s => s.feeStatus === this.stageFeeFilter);
-    }
-
-    return list;
-  }
-
-  getPaginatedStageStudents(stage: string, page: number): StudentRecord[] {
-    const list = this.getFilteredStageStudents(stage);
-    const start = (page - 1) * this.stagePageSize;
-    return list.slice(start, start + this.stagePageSize);
-  }
-
-  getStageTotalPages(stage: string): number {
-    const total = this.getFilteredStageStudents(stage).length;
-    return Math.max(1, Math.ceil(total / this.stagePageSize));
-  }
-
-  getStagePageNumbers(stage: string): number[] {
-    const total = this.getStageTotalPages(stage);
-    return Array.from({ length: total }, (_, i) => i + 1);
-  }
-
-  getStageGradeOptions(stage: string): string[] {
-    if (stage === 'Early Childhood') return ['All', 'Nursery', 'KG'];
-    if (stage === 'Primary') return ['All', 'Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5'];
-    if (stage === 'Middle') return ['All', 'Class 6', 'Class 7', 'Class 8'];
-    if (stage === 'Secondary') return ['All', 'Class 9', 'Class 10'];
-    return ['All', 'Nursery', 'KG', 'Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5', 'Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10'];
-  }
-
-  openAddStudentForStage(stage: string): void {
-    let prefillGrade = 'Class 10-A';
-    if (stage === 'Early Childhood') prefillGrade = 'Class Nursery-A';
-    else if (stage === 'Primary') prefillGrade = 'Class 1-A';
-    else if (stage === 'Middle') prefillGrade = 'Class 6-A';
-    else if (stage === 'Secondary') prefillGrade = 'Class 9-A';
-
-    this.studentForm = {
-      ...this.studentForm,
-      grade: prefillGrade,
-      section: 'Section A'
-    };
-    this.openAddStudentModal();
-  }
-
-  deleteStudentFromStage(student: StudentRecord): void {
-    if (!student) return;
-    const ok = typeof window !== 'undefined' ? window.confirm(`Remove student "${student.name}" (Roll #${student.rollNo}) from school records?`) : true;
-    if (ok) {
-      this.activeStudents = (this.activeStudents || []).filter(s => s.id !== student.id);
-      this.saveStateToStorage();
-      this.showToast(`Student ${student.name} removed from registry.`, 'info');
-      this.cdr.detectChanges();
-    }
-  }
-
-  exportStageStudentsCSV(stage: string): void {
-    const students = this.getFilteredStageStudents(stage);
-    const headers = ['Roll #', 'Name', 'Grade', 'Section', 'Guardian', 'Phone', 'CNIC', 'Fee Status', 'Monthly Fee'];
-    const rows = students.map(s => [
-      s.rollNo,
-      s.name,
-      s.grade,
-      s.section || 'General',
-      s.guardian,
-      s.guardianPhone,
-      s.guardianCnic || '',
-      s.feeStatus,
-      s.feeAmount
-    ]);
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.map(x => `"${x}"`).join(','))].join('\n');
-    if (typeof window !== 'undefined') {
-      const encodedUri = encodeURI(csvContent);
-      const link = document.createElement('a');
-      link.setAttribute('href', encodedUri);
-      link.setAttribute('download', `${stage.replace(/\s+/g, '_')}_Students_Roster.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      this.showToast(`Exported ${students.length} ${stage} students to CSV.`, 'success');
-    }
-  }
 
   admissionReviewList: any[] = [
     {
@@ -14319,12 +11292,6 @@ Verification Portal   : https://alhuda.edu.pk/verify-slc/${slc.securityHash}
       }
     } catch (e) {
       console.warn('Failed to load from cloud:', e);
-    }
-  }
-
-  printCertificate(): void {
-    if (typeof window !== 'undefined') {
-      window.print();
     }
   }
 }

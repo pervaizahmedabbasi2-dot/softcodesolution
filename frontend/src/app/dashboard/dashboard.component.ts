@@ -1,26 +1,15 @@
-<<<<<<< HEAD
 import { Component, OnInit, OnDestroy, ChangeDetectorRef, ViewChild, ViewContainerRef, HostListener, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LocalizationService, CountryInfo, LanguageInfo } from '../services/localization.service';
 import { DashboardAnalyticsComponent } from './analytics/analytics.component';
-=======
-import { Component, OnInit, OnDestroy, ChangeDetectorRef, ViewChild, ViewContainerRef } from '@angular/core';
-
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
 import { SecurityComponent } from './security/security.component';
 import { FeatureFlagsComponent } from './feature-flags/feature-flags.component';
 import { ComplianceComponent } from './compliance/compliance.component';
 import { WebhooksComponent } from './webhooks/webhooks.component';
 import { GlobalEdgeComponent } from './global-edge/global-edge.component';
-<<<<<<< HEAD
 import { DashboardDataProtectionComponent } from './data-protection/data-protection.component';
 import { BackupManagerComponent } from './backup-manager/backup-manager.component';
-=======
-import { DashboardAnalyticsComponent } from './analytics/analytics.component';
-
-import { CommonModule } from '@angular/common';
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
 import { DashboardOverviewComponent } from './overview/overview.component';
 import { DashboardAllClientsComponent } from './all-clients/all-clients.component';
 import { DashboardPlansPricingComponent } from './plans-pricing/plans-pricing.component';
@@ -30,7 +19,6 @@ import { DashboardSaasControlComponent } from './saas-control/saas-control.compo
 import { DashboardRbacComponent } from './rbac/rbac.component';
 import { DashboardApiGatewayComponent } from './api-gateway/api-gateway.component';
 import { DashboardPaymentsComponent } from './payments/payments.component';
-<<<<<<< HEAD
 import { DashboardLicenseComponent } from './license/license.component';
 import { ModuleManagerComponent } from './components/module-manager/module-manager.component';
 import { DashboardTeamsComponent } from './teams/teams.component';
@@ -221,13 +209,6 @@ import {
   ArrowRight,
   CalendarCheck
 } from 'lucide-angular';
-=======
-import { ModuleManagerComponent } from './components/module-manager/module-manager.component';
-import { Router } from '@angular/router';
-import { DashboardApiService } from './services/dashboard-api.service';
-import { ModuleRegistryService } from './services/module-registry.service';
-import { LucideAngularModule, Grip, Bell, CheckCircle2, AlertTriangle, LayoutDashboard, User, Image, Layers, Briefcase, Cpu, Users, Files, HelpCircle, Folder, CreditCard, BookOpen, Plus, Palette, Building2, Key, WalletCards, ShieldCheck, Network, BarChart3, Globe, RefreshCcw, Mail, Settings, MenuSquare, MessageSquare, LogOut, Search, X, XCircle, Clock, Database, ChevronDown, Eye, Pin, EyeOff, Copy, MoreVertical, MoreHorizontal, Pencil, TrendingUp, UserCheck, UserX, UserCog, Activity, Zap, ArrowUpRight, ArrowDownRight, Sparkles, CircleDot, Package, Server, Lock, BarChart2, PieChart, LineChart, Calendar, Star, Rocket, Shield, ShieldAlert, Wifi, WifiOff, Info, MapPin, Hash, Briefcase as BriefcaseIcon } from 'lucide-angular';
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
 
 type BackendRole = 'super_admin' | 'client_admin' | 'client_user' | 'support';
 type UiRole = 'SUPER_ADMIN' | 'CLIENT';
@@ -238,11 +219,7 @@ type PhaseTag = 'LIVE' | 'SUPPORT' | 'FUTURE';
 interface AuthMeResponse {
   ok: boolean;
   redirect?: string;
-<<<<<<< HEAD
   user?: { id: string; tenant_id: string; email: string; role: BackendRole; status: string; company_name?: string };
-=======
-  user?: { id: string; tenant_id: string; email: string; role: BackendRole; status: string };
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
 }
 
 interface DashboardCategory {
@@ -282,14 +259,11 @@ interface SuperadminClient {
   amount?: number;
   license_status?: string;
   enabled_modules?: number;
-<<<<<<< HEAD
   postal_code?: string;
   postalCode?: string;
   enable_passkey?: boolean;
   enablePasskey?: boolean;
   [key: string]: any;
-=======
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
 }
 
 interface TenantModule {
@@ -334,101 +308,21 @@ interface SuperadminClientsResponse {
   message?: string;
 }
 
-<<<<<<< HEAD
-=======
-export const dashboardIcons = { Grip,
-    Bell,
-    CheckCircle2,
-    AlertTriangle,
-    LayoutDashboard,
-    User,
-    Image,
-    Layers,
-    Briefcase,
-    Cpu,
-    Users,
-    Files,
-    HelpCircle,
-    Folder,
-    CreditCard,
-    BookOpen,
-    Plus,
-    Palette,
-    Building2,
-    Key,
-    WalletCards,
-    ShieldCheck,
-    Network,
-    BarChart3,
-    Globe,
-    RefreshCcw,
-    Mail,
-    Settings,
-    MenuSquare,
-    MessageSquare,
-    LogOut,
-    Search,
-    X,
-    XCircle,
-    Clock,
-    Database,
-    ChevronDown,
-    Eye, Pin, EyeOff, Copy, MoreVertical, MoreHorizontal,
-    Pencil,
-    TrendingUp,
-    UserCheck,
-    UserX,
-    UserCog,
-    Activity,
-    Zap,
-    ArrowUpRight,
-    ArrowDownRight,
-    Sparkles,
-    CircleDot,
-    Package,
-    Server,
-    Lock,
-    BarChart2,
-    PieChart,
-    LineChart,
-    Calendar,
-    Star,
-    Rocket,
-    Shield,
-    ShieldAlert,
-    Wifi,
-    WifiOff,
-    Info,
-    MapPin,
-    Hash,
-  };
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
 @Component({
   selector: 'app-dashboard',
   standalone: true,
   imports: [
-<<<<<<< HEAD
     CommonModule,
     LucideAngularModule,
     DashboardOverviewComponent,
     DashboardAnalyticsComponent,
-=======
-
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
     SecurityComponent,
     FeatureFlagsComponent,
     ComplianceComponent,
     WebhooksComponent,
     GlobalEdgeComponent,
-<<<<<<< HEAD
     DashboardDataProtectionComponent,
     BackupManagerComponent,
-=======
-    DashboardAnalyticsComponent,
-    CommonModule,
-    LucideAngularModule, 
-    DashboardOverviewComponent,
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
     DashboardAllClientsComponent,
     DashboardPlansPricingComponent,
     DashboardModuleCatalogComponent,
@@ -437,7 +331,6 @@ export const dashboardIcons = { Grip,
     DashboardRbacComponent,
     DashboardApiGatewayComponent,
     DashboardPaymentsComponent,
-<<<<<<< HEAD
     DashboardLicenseComponent,
     DashboardTeamsComponent,
     DashboardServicesCatalogComponent,
@@ -462,36 +355,10 @@ export const dashboardIcons = { Grip,
     CurrencyLanguageSelectorComponent,
     ModuleManagerComponent,
     FormsModule,
-=======
-    ModuleManagerComponent,
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
   ],
   templateUrl: './dashboard.component.html',
 })
 export class DashboardComponent implements OnInit, OnDestroy {
-<<<<<<< HEAD
-=======
-  readonly icons = dashboardIcons;
-  // SCS_NOTIFICATIONS_CENTER
-  isNotificationsOpen = false;
-  unreadNotifications = 3;
-  notifications = [
-    { id: 1, type: 'alert', title: 'High CPU Usage', message: 'Tenant #492 is utilizing 98% of their allocated compute limits.', time: '2 mins ago', read: false },
-    { id: 2, type: 'success', title: 'Global Backup Complete', message: 'All regional databases have been securely mirrored.', time: '1 hr ago', read: false },
-    { id: 3, type: 'info', title: 'New Multi-Tenant Node', message: 'Node EU-West-3 has successfully joined the cluster.', time: '3 hrs ago', read: false },
-    { id: 4, type: 'warning', title: 'API Rate Limit', message: 'Payment gateway API calls approaching 90% of quota.', time: '5 hrs ago', read: true }
-  ];
-
-  toggleNotifications() {
-    this.isNotificationsOpen = !this.isNotificationsOpen;
-  }
-
-  markAllAsRead() {
-    this.notifications.forEach(n => n.read = true);
-    this.unreadNotifications = 0;
-  }
-
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
   // SCS_PHASE52_LOCK_V1
   // Phase 5.2 Enterprise Dashboard Foundation
   // Status: LOCKED
@@ -503,7 +370,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   // SCS_MODULE_MANAGER_STATE_V1
 
-<<<<<<< HEAD
   selectedBusinessSuiteId = 'accounting_tax';
   showModuleManager = false;
   isBusinessHubsOpen = false;
@@ -531,9 +397,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     ];
     return hubViews.includes(this.activeView);
   }
-=======
-  showModuleManager = false;
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
 
   openModuleManager() {
     this.showModuleManager = true;
@@ -693,25 +556,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
           pinned: true,
           hidden: false,
         },
-<<<<<<< HEAD
-=======
-                {
-          code: 'global-edge',
-          label: 'Global Edge',
-          route: 'global-edge',
-          icon: 'Globe',
-          pinned: true,
-          hidden: false,
-        },
-        {
-          code: 'analytics',
-          label: 'Analytics',
-          route: 'analytics',
-          icon: 'BarChart3',
-          pinned: true,
-          hidden: false,
-        },
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
         { code: 'rbac', label: 'RBAC', route: 'rbac', icon: 'Shield', pinned: true, hidden: false },
         {
           code: 'license',
@@ -737,7 +581,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
           pinned: true,
           hidden: false,
         },
-<<<<<<< HEAD
         {
           code: 'saas-control',
           label: 'SaaS Control',
@@ -762,13 +605,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
           pinned: true,
           hidden: false,
         },
-=======
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
       ],
     },
   };
 
-<<<<<<< HEAD
   // --- ENTERPRISE SETTINGS & WORKSPACE CONTROLS ---
   settingsActiveTab: 'general' | 'multi-tenancy' | 'smtp' | 'whitelabel' | 'security' | 'business-catalog' = 'general';
   settingsSavedToast = false;
@@ -1093,8 +933,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     try { this.cdr.detectChanges(); } catch {}
   }
 
-=======
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
   // SCS_DASHBOARD_SAAS_CONTROL_BRIDGE_V1
   readonly saasControlBusinessLabel = (): string => this.saasClientBusinessLabel();
 
@@ -1223,7 +1061,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // using superadmin-scoped read data. Exiting restores everything.
   previewMode = false;
   previewClient: SuperadminClient | null = null;
-<<<<<<< HEAD
   activeSimulatedBusiness: EnterpriseBusinessItem | null = null;
   activeSimulatedRole: RbacRoleKey = 'owner';
   selectedBusinessSector: BusinessSectorId = 'ALL';
@@ -1242,23 +1079,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return (this.rbacRoleDefinitions as any)[key] || this.rbacRoleDefinitions['owner'];
   }
 
-=======
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
   private previewSnapshot: {
     userRole: UiRole;
     categories: DashboardCategory[];
     activeView: string;
-<<<<<<< HEAD
     previewBusiness?: EnterpriseBusinessItem | null;
     simulatedRole?: RbacRoleKey;
   } | null = null;
   clientPopupDraft: any = {};
   clientPopupTab: 'overview' | 'edit' | 'quotas' | 'team' | 'domains' | 'status' | 'access' | 'audit' = 'overview';
-=======
-  } | null = null;
-  clientPopupDraft: any = {};
-  clientPopupTab: 'overview' | 'edit' | 'status' | 'access' | 'audit' = 'overview';
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
   clientPopupBusy = false;
   clientPopupMessage = '';
   clientPopupMessageOk = true;
@@ -1568,11 +1397,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
       this.scsSuperApplyServerSubscription(data.subscription);
       this.scsSuperApplyLive();
-<<<<<<< HEAD
     } catch (error) {
-=======
-    } catch (error: any) {
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
       this.showActionPopup(
         'Modules Load Failed',
         error instanceof Error ? error.message : 'Modules load nahi huwe.',
@@ -1679,15 +1504,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
         'Plan assigned',
         this.selectedPlanId + ' / ' + this.selectedBillingCycle,
       );
-<<<<<<< HEAD
       this.showActionPopup('Plan Assigned ✓', 'Total: ' + this.scsSuperTotal(), true);
       await this.loadSuperadminClients(true);
     } catch (error) {
-=======
-      this.showActionPopup('Plan Assigned Success', 'Total: ' + this.scsSuperTotal(), true);
-      await this.loadSuperadminClients(true);
-    } catch (error: any) {
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
       this.tenantModules = beforeModules;
       this.tenantSubscription = beforeSub;
       this.scsSuperApplyLive();
@@ -1764,19 +1583,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
         (module as any).name || moduleId,
       );
       this.showActionPopup(
-<<<<<<< HEAD
         next ? 'Access Granted ✓' : 'Access Removed ✓',
         'Saved live to tenant_modules.',
         true,
       );
     } catch (error) {
-=======
-        next ? 'Access Granted Success' : 'Access Removed Success',
-        'Saved live to tenant_modules.',
-        true,
-      );
-    } catch (error: any) {
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
       this.tenantModules = beforeModules;
       this.tenantSubscription = beforeSub;
       this.scsSuperModuleEnabledState = beforeState;
@@ -1838,19 +1649,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
       this.scsSuperAuditAdd(next ? 'Module granted' : 'Module revoked', current.name || moduleId);
       this.showActionPopup(
-<<<<<<< HEAD
         next ? 'Access Granted ✓' : 'Access Removed ✓',
         'Saved live to tenant_modules.',
         true,
       );
     } catch (error) {
-=======
-        next ? 'Access Granted Success' : 'Access Removed Success',
-        'Saved live to tenant_modules.',
-        true,
-      );
-    } catch (error: any) {
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
       this.tenantModules = beforeModules;
       this.tenantSubscription = beforeSub;
       this.showActionPopup(
@@ -1899,15 +1702,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
       this.scsSuperApplyServerSubscription(data.subscription);
       this.scsSuperAuditAdd('Module price saved', module.name || module.id);
-<<<<<<< HEAD
       this.showActionPopup('Price Saved ✓', 'Total: ' + this.scsSuperTotal(), true);
       await this.loadSuperadminClients(true);
     } catch (error) {
-=======
-      this.showActionPopup('Price Saved Success', 'Total: ' + this.scsSuperTotal(), true);
-      await this.loadSuperadminClients(true);
-    } catch (error: any) {
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
       this.tenantModules = beforeModules;
       this.tenantSubscription = beforeSub;
       this.scsSuperApplyLive();
@@ -1945,15 +1742,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
   userName = 'Loading...';
   userEmail = '';
   userRole: UiRole = 'CLIENT';
-<<<<<<< HEAD
   companyName: string = 'SoftCode Solution';
-=======
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
   backendRole: BackendRole | null = null;
   tenantId = '';
   isAuthLoading = true;
 
-<<<<<<< HEAD
   get displayCompanyName(): string {
     if (this.previewClient?.company_name) {
       return this.previewClient.company_name;
@@ -2450,12 +2243,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
     this.showDynamicIsland(`Theme preset "${preset.toUpperCase()}" applied`, true);
   }
-=======
-  isSidebarOpen = true;
-  activeView: string = 'home';
-  openDropdowns: { [key: string]: boolean } = {};
-  isThemeMenuOpen = false;
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
 
   superadminClients: SuperadminClient[] = [];
   allSuperadminClients: SuperadminClient[] = [];
@@ -2743,11 +2530,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.planBuilderSelectedPlanId = payload.id;
       this.planBuilderMessage = 'Plan saved. Included modules: ' + payload.module_ids.length;
       this.planBuilderOk = true;
-<<<<<<< HEAD
       this.showActionPopup('Plan Saved ✓', updated?.name || payload.name, true);
-=======
-      this.showActionPopup('Plan Saved Success', updated?.name || payload.name, true);
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
     } catch (e: any) {
       this.planBuilderMessage = e?.message || 'Plan save failed';
       this.planBuilderOk = false;
@@ -2953,11 +2736,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         'Business plan saved. Included modules: ' + payload.module_ids.length;
       this.businessPlanOk = true;
       this.showActionPopup(
-<<<<<<< HEAD
         'Business Plan Saved ✓',
-=======
-        'Business Plan Saved Success',
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
         String(this.businessPlanSelectedInfo?.name || this.businessPlanSelectedType) +
           ' · ' +
           payload.plan_id,
@@ -3105,20 +2884,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.moduleCatalogEditorMessage = result.message || 'Module saved.';
       this.moduleCatalogEditorOk = true;
       this.showActionPopup(
-<<<<<<< HEAD
         this.moduleCatalogEditorMode === 'edit' ? 'Module Updated ✓' : 'Module Created ✓',
-=======
-        this.moduleCatalogEditorMode === 'edit' ? 'Module Updated Success' : 'Module Created Success',
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
         draft.name,
         true,
       );
       this.moduleCatalogEditorOpen = false;
-<<<<<<< HEAD
     } catch (error) {
-=======
-    } catch (error: any) {
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
       const msg = error instanceof Error ? error.message : 'Module save nahi hua.';
       this.moduleCatalogEditorMessage = msg;
       this.moduleCatalogEditorOk = false;
@@ -3130,7 +2901,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
   // SCS_MODULE_CATALOG_EDITOR_METHODS_END
 
-<<<<<<< HEAD
   async releaseAllEnterpriseModules(): Promise<void> {
     try {
       const res = await fetch('/api/superadmin/modules/release-all', {
@@ -3164,8 +2934,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-=======
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
   tenantSubscription: TenantSubscriptionSummary = {
     status: 'none',
     plan_id: '',
@@ -3400,13 +3168,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     },
     'business-suites': {
       icon: BriefcaseIcon,
-<<<<<<< HEAD
       phase: 'LIVE',
       badge: 'Business Apps (Live)',
-=======
-      phase: 'FUTURE',
-      badge: 'Business Apps',
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
       title: 'Business Suites',
       subtitle: 'Ready-made module groups for each client business type.',
       quickLinks: [
@@ -3588,13 +3351,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
       icon: Shield,
       list: 'rbac',
       add: 'rbac-add',
-<<<<<<< HEAD
       roles: ['super_admin', 'client_admin'],
       description: 'Role Based Access Control',
-=======
-      roles: ['super_admin'],
-      description: 'Role Based Access',
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
       color: 'bg-emerald-50 text-emerald-600',
       phase: 'LIVE',
     },
@@ -3604,7 +3362,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       icon: Network,
       list: 'Endpoints',
       add: 'Security Layer',
-<<<<<<< HEAD
       roles: ['super_admin', 'client_admin'],
       description: 'Endpoint management & security',
       color: 'cyan',
@@ -3612,42 +3369,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
     },
     {
       id: 'analytics',
-=======
-      roles: ['super_admin'],
-      description: 'Endpoint management & security',
-      color: 'cyan',
-      phase: 'FUTURE',
-    },
-    {
-      id: 'global-edge',
-      label: 'Edge Network',
-      icon: Network,
-      list: 'Global Map',
-      add: 'Regions',
-      roles: ['super_admin'],
-      description: 'Infrastructure topology',
-      color: 'slate',
-      phase: 'LIVE',
-    },
-
-    {
-    id: 'analytics',
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
       label: 'Analytics',
       icon: BarChart3,
       list: 'Usage Stats',
       add: 'Audit Logs',
-<<<<<<< HEAD
       roles: ['super_admin', 'client_admin', 'client_user'],
       description: 'Reports & audit trails',
       color: 'orange',
       phase: 'LIVE',
-=======
-      roles: ['super_admin', 'client_admin'],
-      description: 'Reports & audit trails',
-      color: 'orange',
-      phase: 'SUPPORT',
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
     },
     {
       id: 'frontend',
@@ -3655,17 +3384,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
       icon: Globe,
       list: 'Marketplace',
       add: 'Site Pages',
-<<<<<<< HEAD
       roles: ['super_admin', 'client_admin'],
       description: 'Marketplace & pages',
       color: 'teal',
       phase: 'LIVE',
-=======
-      roles: ['super_admin'],
-      description: 'Marketplace & pages',
-      color: 'teal',
-      phase: 'FUTURE',
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
     },
     {
       id: 'updater',
@@ -3673,17 +3395,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
       icon: RefreshCcw,
       list: 'Version Control',
       add: 'Plugins',
-<<<<<<< HEAD
       roles: ['super_admin', 'client_admin'],
       description: 'Version & plugin control',
       color: 'lime',
       phase: 'LIVE',
-=======
-      roles: ['super_admin'],
-      description: 'Version & plugin control',
-      color: 'lime',
-      phase: 'FUTURE',
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
     },
     {
       id: 'tenants',
@@ -3691,17 +3406,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
       icon: Building2,
       list: 'Multi Company',
       add: 'Company Create',
-<<<<<<< HEAD
       roles: ['super_admin', 'client_admin'],
       description: 'Multi-tenant architecture',
       color: 'blue',
       phase: 'LIVE',
-=======
-      roles: ['super_admin'],
-      description: 'Multi-tenant architecture',
-      color: 'blue',
-      phase: 'FUTURE',
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
     },
     {
       id: 'license',
@@ -3709,17 +3417,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
       icon: Key,
       list: 'Software Key',
       add: 'Device Binding',
-<<<<<<< HEAD
       roles: ['super_admin', 'client_admin'],
       description: 'Key & device management',
       color: 'amber',
       phase: 'LIVE',
-=======
-      roles: ['super_admin'],
-      description: 'Key & device management',
-      color: 'amber',
-      phase: 'FUTURE',
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
     },
     {
       id: 'payments-sys',
@@ -3727,17 +3428,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
       icon: WalletCards,
       list: 'Billing',
       add: 'Plans',
-<<<<<<< HEAD
       roles: ['super_admin', 'client_admin', 'client_user'],
       description: 'Billing & subscription plans',
       color: 'green',
       phase: 'LIVE',
-=======
-      roles: ['super_admin', 'client_admin'],
-      description: 'Billing & subscription plans',
-      color: 'green',
-      phase: 'FUTURE',
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
     },
     {
       id: 'admins',
@@ -3748,11 +3442,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       roles: ['super_admin', 'client_admin'],
       description: 'Admin user management',
       color: 'indigo',
-<<<<<<< HEAD
       phase: 'LIVE',
-=======
-      phase: 'SUPPORT',
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
     },
     {
       id: 'services',
@@ -3763,11 +3453,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       roles: ['super_admin', 'client_admin', 'client_user'],
       description: 'Service catalogue',
       color: 'purple',
-<<<<<<< HEAD
       phase: 'LIVE',
-=======
-      phase: 'SUPPORT',
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
     },
     {
       id: 'teams',
@@ -3775,17 +3461,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
       icon: Users,
       list: 'List Teams',
       add: 'Add New',
-<<<<<<< HEAD
       roles: ['super_admin', 'client_admin', 'client_user'],
       description: 'Team & member management',
       color: 'pink',
       phase: 'LIVE',
-=======
-      roles: ['super_admin', 'client_admin'],
-      description: 'Team & member management',
-      color: 'pink',
-      phase: 'FUTURE',
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
     },
     {
       id: 'blogs',
@@ -3793,17 +3472,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
       icon: BookOpen,
       list: 'List Blogs',
       add: 'Add New',
-<<<<<<< HEAD
       roles: ['super_admin', 'client_admin'],
       description: 'Content publishing',
       color: 'rose',
       phase: 'LIVE',
-=======
-      roles: ['super_admin'],
-      description: 'Content publishing',
-      color: 'rose',
-      phase: 'FUTURE',
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
     },
     {
       id: 'settings',
@@ -3811,25 +3483,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
       icon: Settings,
       list: 'General',
       add: 'Security',
-<<<<<<< HEAD
       roles: ['super_admin', 'client_admin', 'client_user'],
       description: 'System configuration',
       color: 'slate',
       phase: 'LIVE',
-=======
-      roles: ['super_admin', 'client_admin'],
-      description: 'System configuration',
-      color: 'slate',
-      phase: 'SUPPORT',
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
     },
   ];
 
   categories: DashboardCategory[] = [];
 
-<<<<<<< HEAD
   readonly icons = {
-    Truck,
     Video,
     Grip,
     LayoutDashboard,
@@ -3939,8 +3602,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     Phone,
     SlidersHorizontal,
   };
-=======
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
 
   private onlineHandler = () => {
     this.isOnline = true;
@@ -4017,12 +3678,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   async ngOnInit(): Promise<void> {
-<<<<<<< HEAD
     if (typeof window !== 'undefined' && window.innerWidth < 768) {
       this.isSidebarOpen = false;
     }
-=======
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
     // SCS_MODULE_REGISTRY_BOOTSTRAP_V1
     // SCS_PHASE623_SYNC_CALL
     this.syncModuleRegistry();
@@ -4038,19 +3696,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.clockTimer = setInterval(() => {
       this.updateDateTime();
       this.cdr.detectChanges();
-<<<<<<< HEAD
     }, 60000);
     setTimeout(async () => {
       await this.loadCurrentUser();
       await this.loadTripleBackupSummary();
       this.startAutoRefresh();
     }, 0);
-=======
-    }, 1000);
-    await this.loadCurrentUser();
-    await this.loadTripleBackupSummary();
-    this.startAutoRefresh();
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
   }
 
   ngOnDestroy(): void {
@@ -4126,15 +3777,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.lastRefreshedAt = now.toLocaleTimeString('en-US', {
         hour: '2-digit',
         minute: '2-digit',
-<<<<<<< HEAD
         second: '2-digit',
         hour12: true,
       });
-=======
-hour12: true,
-      second: '2-digit',
-});
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
     } catch {
     } finally {
       this.cdr.detectChanges();
@@ -4147,12 +3792,7 @@ hour12: true,
       hour: '2-digit',
       minute: '2-digit',
       hour12: true,
-<<<<<<< HEAD
     });
-=======
-      second: '2-digit',
-});
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
     this.currentDate = now.toLocaleDateString('en-US', {
       weekday: 'short',
       month: 'short',
@@ -4162,21 +3802,14 @@ hour12: true,
 
   getGreeting(): string {
     const h = new Date().getHours();
-<<<<<<< HEAD
     if (h < 12) return this.loc.t('good_morning');
     if (h < 17) return this.loc.t('good_afternoon');
     return this.loc.t('good_evening');
-=======
-    if (h < 12) return 'Good Morning';
-    if (h < 17) return 'Good Afternoon';
-    return 'Good Evening';
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
   }
 
   private async loadCurrentUser(): Promise<void> {
     this.isAuthLoading = true;
     try {
-<<<<<<< HEAD
       let result: AuthMeResponse | null = null;
       const rawUser = localStorage.getItem('user_data');
       if (rawUser) {
@@ -4200,32 +3833,6 @@ hour12: true,
         } as AuthMeResponse;
       }
       if (!result?.ok || !result.user) {
-=======
-      if (typeof localStorage !== 'undefined' && localStorage.getItem('scs_auth_mock') === 'true') {
-        const user = { role: 'super_admin' as BackendRole, email: 'superadmin@softcodesolution.local', name: 'Super Admin', tenant_id: 'tenant-1' };
-        this.userEmail = user.email;
-        this.tenantId = user.tenant_id || '';
-        this.backendRole = user.role;
-        this.userRole = user.role === 'super_admin' ? 'SUPER_ADMIN' : 'CLIENT';
-        this.userName = this.nameFromEmail(user.email);
-        this.categories = this.allCategories.filter((cat) => cat.roles.includes(user.role));
-        if (user.role === 'super_admin') {
-          this.activeView = 'home';
-          this.clientStatusTab = 'all';
-        }
-        this.isAuthLoading = false;
-        this.cdr.detectChanges();
-        return;
-      }
-
-      const response = await fetch('/api/auth/me', {
-        method: 'GET',
-        credentials: 'include',
-        cache: 'no-store',
-      });
-      const result = (await response.json().catch(() => null)) as AuthMeResponse | null;
-      if (!response.ok || !result?.ok || !result.user) {
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
         await this.router.navigateByUrl('/login');
         return;
       }
@@ -4235,7 +3842,6 @@ hour12: true,
       this.backendRole = user.role;
       this.userRole = user.role === 'super_admin' ? 'SUPER_ADMIN' : 'CLIENT';
       this.userName = this.nameFromEmail(user.email);
-<<<<<<< HEAD
       if (user.company_name) {
         this.companyName = user.company_name;
       } else if (user.role === 'super_admin') {
@@ -4243,13 +3849,10 @@ hour12: true,
       } else {
         this.companyName = 'Al-Huda Academy';
       }
-=======
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
       this.categories = this.allCategories.filter((cat) => cat.roles.includes(user.role));
       if (user.role === 'super_admin') {
         this.activeView = 'home';
         this.clientStatusTab = 'all';
-<<<<<<< HEAD
       } else {
         const savedPortal = localStorage.getItem('activeSchoolPortal');
         const savedRole = localStorage.getItem('activeSchoolRole');
@@ -4260,8 +3863,6 @@ hour12: true,
             this.activeSimulatedRole = savedRole as any;
           }
         }
-=======
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
       }
       if (this.router.url.startsWith('/superadmin') && user.role !== 'super_admin') {
         await this.router.navigateByUrl('/dashboard');
@@ -4293,13 +3894,9 @@ hour12: true,
     if (this.backendRole !== 'super_admin') return;
     this.isClientsLoading = this.allSuperadminClients.length === 0;
     this.actionMessage = '';
-<<<<<<< HEAD
     Promise.resolve().then(() => {
       try { this.cdr.detectChanges(); } catch {}
     });
-=======
-    this.cdr.detectChanges(); // 🚀 FIX: Show loading state immediately
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
 
     try {
       const limit = 100;
@@ -4318,16 +3915,8 @@ hour12: true,
         );
         const result: any = await response.json().catch(() => null);
         if (!response.ok || !result?.ok) {
-<<<<<<< HEAD
           this.actionMessage = result?.message || 'Could not load clients.';
           this.actionSuccess = false;
-=======
-          // Graceful fallback for UI prototype without backend
-          this.allSuperadminClients = [];
-          this.applyClientLocalView();
-          this.isClientsLoading = false;
-          this.cdr.detectChanges();
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
           return;
         }
         lastResult = result;
@@ -4344,28 +3933,18 @@ hour12: true,
       this.lastRefreshedAt = now.toLocaleTimeString('en-US', {
         hour: '2-digit',
         minute: '2-digit',
-<<<<<<< HEAD
         second: '2-digit',
         hour12: true,
       });
-=======
-hour12: true,
-      second: '2-digit',
-});
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
       this.autoRefreshCountdown = 30;
     } catch {
       this.actionMessage = 'Network error. Please retry.';
       this.actionSuccess = false;
     } finally {
       this.isClientsLoading = false;
-<<<<<<< HEAD
       Promise.resolve().then(() => {
         try { this.cdr.detectChanges(); } catch {}
       });
-=======
-      this.cdr.detectChanges(); // 🚀 FIX: Remove loading state and show data
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
     }
   }
 
@@ -4480,7 +4059,6 @@ hour12: true,
     return (this.icons as any)[iconName] || this.icons.Package;
   }
 
-<<<<<<< HEAD
   getOmniIcon(iconName: string): any {
     return (this.icons as any)[iconName] || this.icons.Sparkles;
   }
@@ -4507,22 +4085,6 @@ hour12: true,
 
   getBusinessIcon(iconName?: string): any {
     return (this.icons as any)[iconName || 'Briefcase'] || this.icons.Briefcase;
-  }
-
-  isBusinessActiveInSidebar(b: EnterpriseBusinessItem): boolean {
-    if (!b) return false;
-    if (this.activeSimulatedBusiness?.id === b.id) return true;
-    if (b.id === 'school_college' && (this.activeView === 'school-hub' || this.activeView.startsWith('school'))) return true;
-    if (b.dedicatedHubView && b.dedicatedHubView !== 'business-suites' && this.activeView === b.dedicatedHubView) {
-      if (b.id === 'hospital' || b.id === 'coaching_center') {
-        return this.activeSimulatedBusiness?.id === b.id;
-      }
-      return !this.activeSimulatedBusiness || this.activeSimulatedBusiness.id === b.id;
-    }
-    if (this.activeView === 'business-suites' && this.selectedBusinessSuiteId === (b.suiteId || b.id)) {
-      return true;
-    }
-    return false;
   }
 
   switchSimulatedRoleStr(role: string): void {
@@ -4872,85 +4434,13 @@ hour12: true,
   }
   // SCS_ENTERPRISE_RBAC_SIMULATION_ENGINE_V1_END
 
-=======
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
   // Enters preview mode for one client. Superadmin session/cookie
   // is untouched — only fetches this client's enabled modules via
   // the superadmin-scoped endpoint and renders them the same way
   // the client's own dashboard would.
   async previewClientDashboard(client: SuperadminClient | null): Promise<void> {
     if (!client) return;
-<<<<<<< HEAD
     this.launchClientPreviewWithRole(client, 'owner');
-=======
-
-    this.previewSnapshot = {
-      userRole: this.userRole,
-      categories: this.categories,
-      activeView: this.activeView,
-    };
-
-    try {
-      const params = new URLSearchParams();
-      params.set('client_id', String(client.id));
-      params.set('_live', String(Date.now()));
-
-      const response = await fetch('/api/superadmin/tenant-modules?' + params.toString(), {
-        method: 'GET',
-        credentials: 'include',
-        cache: 'no-store',
-      });
-      const result: any = await response.json().catch(() => null);
-
-      let modules: any[] = [];
-      if (response.ok && result?.ok && Array.isArray(result.modules)) {
-         modules = result.modules;
-      } else {
-         // Prototype fallback based on business type
-         const businessType = String(client.business_type || 'store');
-         modules = [
-            { id: 'dashboard', name: 'Analytics', route: 'dashboard', icon: 'BarChart3', enabled: true, category: 'core' },
-            { id: 'users', name: 'Users', route: 'users', icon: 'Users', enabled: true, category: 'core' }
-         ];
-         
-         if (businessType === 'store' || businessType === 'ecommerce') {
-             modules.push(
-               { id: 'inventory', name: 'Inventory', route: 'inventory', icon: 'Package', enabled: true, category: 'store' },
-               { id: 'pos', name: 'POS', route: 'pos', icon: 'CreditCard', enabled: true, category: 'store' }
-             );
-         } else if (businessType === 'clinic' || businessType === 'healthcare') {
-             modules.push(
-               { id: 'patients', name: 'Patients', route: 'patients', icon: 'Users', enabled: true, category: 'clinic' },
-               { id: 'appointments', name: 'Appointments', route: 'appointments', icon: 'Calendar', enabled: true, category: 'clinic' }
-             );
-         } else if (businessType === 'school' || businessType === 'education') {
-             modules.push(
-               { id: 'students', name: 'Students', route: 'students', icon: 'Users', enabled: true, category: 'school' },
-               { id: 'attendance', name: 'Attendance', route: 'attendance', icon: 'CheckCircle2', enabled: true, category: 'school' }
-             );
-         } else {
-             modules.push(
-               { id: 'projects', name: 'Projects', route: 'projects', icon: 'Folder', enabled: true, category: 'business' },
-               { id: 'billing', name: 'Billing', route: 'billing', icon: 'CreditCard', enabled: true, category: 'business' }
-             );
-         }
-      }
-
-      const enabledModules = (modules as TenantModule[]).filter((m: TenantModule) => !!m.enabled);
-
-      this.categories = enabledModules.map((m: TenantModule) => this.moduleToCategory(m));
-      this.userRole = 'CLIENT';
-      this.previewClient = client;
-      this.previewMode = true;
-      this.activeView = 'home';
-      this.closeClientPopupSecure();
-    } catch (e) {
-      this.showActionPopup('Preview Failed', 'Client dashboard preview load nahi hui.', false);
-      this.previewSnapshot = null;
-    } finally {
-      this.cdr.detectChanges();
-    }
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
   }
 
   exitClientPreview(): void {
@@ -4958,22 +4448,16 @@ hour12: true,
       this.userRole = this.previewSnapshot.userRole;
       this.categories = this.previewSnapshot.categories;
       this.activeView = this.previewSnapshot.activeView;
-<<<<<<< HEAD
       this.activeSimulatedBusiness = this.previewSnapshot.previewBusiness || null;
       this.activeSimulatedRole = this.previewSnapshot.simulatedRole || 'owner';
     } else {
-      this.activeView = 'home';
-=======
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
+      this.activeView = 'client-previews';
     }
     this.previewSnapshot = null;
     this.previewMode = false;
     this.previewClient = null;
-<<<<<<< HEAD
     this.activeSimulatedBusiness = null;
     this.showDynamicIsland('Exited Client Preview Mode', true);
-=======
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
     this.cdr.detectChanges();
   }
 
@@ -5054,7 +4538,6 @@ hour12: true,
       cache: 'no-store',
     });
     const result: any = await response.json().catch(() => null);
-<<<<<<< HEAD
     if (!response.ok || !result?.ok) {
       this.moduleCatalog = [
         { id: 'school_management', name: 'School Management', route: 'school-hub', icon: 'graduation-cap', category: 'school', enabled: true, price_monthly: 3500, price_yearly: 35000, source: 'system' },
@@ -5080,8 +4563,6 @@ hour12: true,
       this.cdr.detectChanges();
       return;
     }
-=======
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
     if (response.ok && result?.ok) {
       this.moduleCatalog = Array.isArray(result.catalog?.modules) ? result.catalog.modules : [];
 
@@ -5294,11 +4775,7 @@ hour12: true,
       this.selectedBillingCycle = this.saasClientBillingCycle;
 
       this.scsSuperApplyLive();
-<<<<<<< HEAD
     } catch (error) {
-=======
-    } catch (error: any) {
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
       this.saasClientPlanMessage =
         error instanceof Error ? error.message : 'Business plans load nahi huwe.';
 
@@ -5376,11 +4853,7 @@ hour12: true,
       this.saasClientPlanOk = true;
 
       this.showActionPopup(
-<<<<<<< HEAD
         'Business Plan Assigned ✓',
-=======
-        'Business Plan Assigned Success',
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
         this.saasClientBusinessLabel() +
           ' / ' +
           this.saasClientSelectedPlanId +
@@ -5388,11 +4861,7 @@ hour12: true,
           Number(result.subscription?.amount || 0),
         true,
       );
-<<<<<<< HEAD
     } catch (error) {
-=======
-    } catch (error: any) {
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
       this.saasClientPlanMessage =
         error instanceof Error ? error.message : 'Business plan save nahi hua.';
 
@@ -5574,11 +5043,7 @@ hour12: true,
         const updated = this.superadminClients.find((c) => c.id === currentID);
         if (updated) this.openClientDetail(updated);
         this.showActionPopup(
-<<<<<<< HEAD
           'Client Updated ✓',
-=======
-          'Client Updated Success',
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
           'Client information has been saved successfully.',
           true,
         );
@@ -5630,11 +5095,7 @@ hour12: true,
         this.closeClientDetail();
         await this.loadSuperadminClients(true);
         this.showActionPopup(
-<<<<<<< HEAD
           'Client Approved ✓',
-=======
-          'Client Approved Success',
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
           `${client.full_name || client.email} approved. Tenant access active.`,
           true,
         );
@@ -5684,7 +5145,6 @@ hour12: true,
     }
   }
 
-<<<<<<< HEAD
   async bulkApproveClients(ids: string[]): Promise<void> {
     if (!ids || ids.length === 0 || this.backendRole !== 'super_admin') return;
     this.isClientActionBusy = true;
@@ -5743,8 +5203,6 @@ hour12: true,
     }
   }
 
-=======
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
   async logout(): Promise<void> {
     try {
       await fetch('/api/auth/logout', {
@@ -5767,7 +5225,6 @@ hour12: true,
     }
   }
 
-<<<<<<< HEAD
   closeSidebarOnMobile(): void {
     if (this.isSidebarOpen && typeof window !== 'undefined' && window.innerWidth < 768) {
       this.isSidebarOpen = false;
@@ -5778,12 +5235,6 @@ hour12: true,
   }
 
   toggleSidebar(event?: any): void {
-=======
-  toggleSidebar(event?: Event): void {
-    if (event) {
-      event.stopPropagation();
-    }
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
     this.isSidebarOpen = !this.isSidebarOpen;
     this.cdr.detectChanges();
   }
@@ -5914,7 +5365,6 @@ hour12: true,
 
 
   async navigateTo(view: string): Promise<void> {
-<<<<<<< HEAD
     this.closeSidebarOnMobile();
     let target = view;
     if (view === 'rbac-list' || view === 'rbac-add') target = 'rbac';
@@ -5972,29 +5422,14 @@ hour12: true,
     }
 
     if (target === 'data-protection') {
-=======
-    this.activeView = view;
-
-    if (view === 'backup-manager') {
-      await this.loadBackupManager();
-    }
-
-    if (view === 'data-protection') {
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
       await this.loadDataProtection();
     }
 
     this.isThemeMenuOpen = false;
     this.cdr.detectChanges(); // 🚀 FIX
-<<<<<<< HEAD
     if (target === 'all-tenants' && this.backendRole === 'super_admin')
       await this.loadSuperadminClients(true);
     if (target === 'saas-control' && this.backendRole === 'super_admin') {
-=======
-    if (view === 'all-tenants' && this.backendRole === 'super_admin')
-      await this.loadSuperadminClients(true);
-    if (view === 'saas-control' && this.backendRole === 'super_admin') {
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
       await this.loadSuperadminClients(true);
       if (this.moduleCatalog.length === 0) await this.loadModuleCatalogForSuperadmin();
     }
@@ -6062,11 +5497,7 @@ hour12: true,
     } catch {}
   }
 
-<<<<<<< HEAD
   setClientPopupTab(tab: 'overview' | 'edit' | 'quotas' | 'team' | 'domains' | 'status' | 'access' | 'audit'): void {
-=======
-  setClientPopupTab(tab: 'overview' | 'edit' | 'status' | 'access' | 'audit'): void {
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
     this.clientPopupTab = tab;
     try {
       this.cdr.detectChanges();
@@ -6101,7 +5532,6 @@ hour12: true,
     ].slice(0, 40);
   }
 
-<<<<<<< HEAD
   // SCS_DYNAMIC_ISLAND_ENTERPRISE_STATE_V2
   dynamicIsland = {
     show: false,
@@ -6154,11 +5584,6 @@ hour12: true,
     this.clientPopupMessage = message;
     this.clientPopupMessageOk = ok;
     this.showDynamicIsland(message, ok);
-=======
-  clientPopupNotice(message: string, ok = true): void {
-    this.clientPopupMessage = message;
-    this.clientPopupMessageOk = ok;
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
     try {
       this.cdr.detectChanges();
     } catch {}
@@ -6208,13 +5633,8 @@ hour12: true,
 
       this.clientPopupAuditAdd('Client info saved', this.clientPopup?.email || String(currentID));
       this.clientPopupNotice('Client information saved.', true);
-<<<<<<< HEAD
       this.showActionPopup('Client Updated ✓', 'Client information saved successfully.', true);
     } catch (error) {
-=======
-      this.showActionPopup('Client Updated Success', 'Client information saved successfully.', true);
-    } catch (error: any) {
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
       const msg = error instanceof Error ? error.message : 'Client update failed.';
       this.clientPopupAuditAdd('Update failed', msg);
       this.clientPopupNotice(msg, false);
@@ -6269,13 +5689,8 @@ hour12: true,
 
       this.clientPopupAuditAdd('Status action', action);
       this.clientPopupNotice('Status updated: ' + action, true);
-<<<<<<< HEAD
       this.showActionPopup('Status Updated ✓', 'Client status action completed.', true);
     } catch (error) {
-=======
-      this.showActionPopup('Status Updated Success', 'Client status action completed.', true);
-    } catch (error: any) {
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
       const msg = error instanceof Error ? error.message : 'Status action failed.';
       this.clientPopupAuditAdd('Status action failed', action + ': ' + msg);
       this.clientPopupNotice(msg, false);
@@ -6319,13 +5734,8 @@ hour12: true,
         this.clientPopup.email || this.clientPopup.id,
       );
       this.clientPopupNotice('Secure password reset link sent.', true);
-<<<<<<< HEAD
       this.showActionPopup('Reset Link Sent ✓', 'Client ko secure reset link send ho gaya.', true);
     } catch (error) {
-=======
-      this.showActionPopup('Reset Link Sent Success', 'Client ko secure reset link send ho gaya.', true);
-    } catch (error: any) {
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
       const msg = error instanceof Error ? error.message : 'Reset link failed.';
       this.clientPopupAuditAdd('Password reset failed', msg);
       this.clientPopupNotice(msg, false);
@@ -6376,11 +5786,7 @@ hour12: true,
         'One-time temporary password generated. Client next login par password change karega.',
         true,
       );
-<<<<<<< HEAD
     } catch (error) {
-=======
-    } catch (error: any) {
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
       const msg = error instanceof Error ? error.message : 'Temporary password failed.';
       this.clientPopupAuditAdd('Temporary password failed', msg);
       this.clientPopupNotice(msg, false);
@@ -6403,7 +5809,6 @@ hour12: true,
     }
   }
 
-<<<<<<< HEAD
   async copyClientText(text: string, label: string = 'Copied'): Promise<void> {
     if (!text) return;
     try {
@@ -6448,22 +5853,6 @@ hour12: true,
       try {
         this.cdr.detectChanges();
       } catch {}
-=======
-  async clientPopupAccessAction(action: string, endpoint: string): Promise<void> {
-    if (!this.clientPopup) return;
-    this.clientPopupBusy = true;
-    try {
-      const res = await fetch(endpoint, { method: 'POST', body: JSON.stringify({ id: this.clientPopup.id, email: this.clientPopup.email }), headers: { 'Content-Type': 'application/json' } });
-      const data = await res.json().catch(() => null);
-      if (!res.ok) throw new Error('Request failed');
-      this.clientPopupNotice('Success', true);
-      this.showActionPopup('Success', 'Done', true);
-    } catch (e: any) {
-      this.clientPopupNotice('Failed', false);
-      this.showActionPopup('Failed', 'Error', false);
-    } finally {
-      this.clientPopupBusy = false;
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
     }
   }
 
@@ -6471,7 +5860,6 @@ hour12: true,
     this.clientPopupAuditAdd(action, 'Backend route next patch me add hoga.');
     this.clientPopupNotice(action + ' backend route next patch me add hoga.', false);
   }
-<<<<<<< HEAD
 
   // --- ENTERPRISE SUITE: OMNI-SEARCH, IMPERSONATION, NOTIFICATIONS & DRAWER ---
   isOmniSearchOpen = false;
@@ -7237,78 +6625,6 @@ hour12: true,
       return 'bg-gradient-to-tr from-blue-600 via-cyan-600 to-teal-500 text-white border border-white/30 shadow-md shadow-blue-600/30 group-hover:scale-105';
     }
 
-    // Accounting & Tax
-    if (key.includes('accounting') || key.includes('tax')) {
-      return 'bg-gradient-to-tr from-violet-600 via-indigo-600 to-purple-700 text-white border border-white/30 shadow-md shadow-violet-500/30 group-hover:scale-105';
-    }
-    // Fast Food & Pizzeria
-    if (key.includes('pizza') || key.includes('fastfood') || key.includes('fast_food')) {
-      return 'bg-gradient-to-tr from-red-500 via-orange-600 to-amber-500 text-white border border-white/30 shadow-md shadow-red-500/30 group-hover:scale-105';
-    }
-    // Super Mart & Grocery POS
-    if (key.includes('super_mart') || key.includes('grocery') || key.includes('mart')) {
-      return 'bg-gradient-to-tr from-emerald-600 via-teal-600 to-green-600 text-white border border-white/30 shadow-md shadow-emerald-500/30 group-hover:scale-105';
-    }
-    // Wholesale & FMCG Distribution
-    if (key.includes('wholesale') || key.includes('distribution') || key.includes('fmcg')) {
-      return 'bg-gradient-to-tr from-sky-600 via-blue-700 to-indigo-800 text-white border border-white/30 shadow-md shadow-sky-600/30 group-hover:scale-105';
-    }
-    // Construction & Contracting
-    if (key.includes('construction') || key.includes('contracting')) {
-      return 'bg-gradient-to-tr from-amber-500 via-orange-600 to-yellow-600 text-white border border-white/30 shadow-md shadow-amber-500/30 group-hover:scale-105';
-    }
-    // Manufacturing & Factory
-    if (key.includes('manufacturing') || key.includes('factory')) {
-      return 'bg-gradient-to-tr from-slate-700 via-zinc-800 to-slate-900 text-white border border-white/30 shadow-md shadow-slate-700/30 group-hover:scale-105';
-    }
-    // Logistics & Transport
-    if (key.includes('logistics') || key.includes('transport')) {
-      return 'bg-gradient-to-tr from-cyan-600 via-blue-600 to-teal-600 text-white border border-white/30 shadow-md shadow-cyan-600/30 group-hover:scale-105';
-    }
-    // Event Management & Wedding
-    if (key.includes('event') || key.includes('wedding')) {
-      return 'bg-gradient-to-tr from-fuchsia-500 via-pink-600 to-purple-600 text-white border border-white/30 shadow-md shadow-fuchsia-500/30 group-hover:scale-105';
-    }
-    // HR & Payroll
-    if (key.includes('hr_') || key.includes('payroll')) {
-      return 'bg-gradient-to-tr from-indigo-600 via-violet-600 to-purple-600 text-white border border-white/30 shadow-md shadow-indigo-600/30 group-hover:scale-105';
-    }
-    // Cleaning Services
-    if (key.includes('cleaning')) {
-      return 'bg-gradient-to-tr from-teal-500 via-emerald-600 to-cyan-600 text-white border border-white/30 shadow-md shadow-teal-500/30 group-hover:scale-105';
-    }
-    // Media & Digital Marketing
-    if (key.includes('media') || key.includes('marketing')) {
-      return 'bg-gradient-to-tr from-rose-500 via-orange-500 to-pink-600 text-white border border-white/30 shadow-md shadow-rose-500/30 group-hover:scale-105';
-    }
-    // eCommerce Store
-    if (key.includes('ecommerce') || key.includes('online_store')) {
-      return 'bg-gradient-to-tr from-purple-600 via-indigo-600 to-violet-700 text-white border border-white/30 shadow-md shadow-purple-600/30 group-hover:scale-105';
-    }
-    // Agriculture & Farm
-    if (key.includes('agriculture') || key.includes('farm')) {
-      return 'bg-gradient-to-tr from-green-600 via-emerald-600 to-lime-600 text-white border border-white/30 shadow-md shadow-green-600/30 group-hover:scale-105';
-    }
-    // Hospital IPD
-    if (key.includes('hospital')) {
-      return 'bg-gradient-to-tr from-red-500 via-rose-600 to-pink-600 text-white border border-white/30 shadow-md shadow-red-500/30 group-hover:scale-105';
-    }
-    // Dental Clinic
-    if (key.includes('dental')) {
-      return 'bg-gradient-to-tr from-cyan-500 via-teal-500 to-blue-500 text-white border border-white/30 shadow-md shadow-cyan-500/30 group-hover:scale-105';
-    }
-    // Coaching Academy
-    if (key.includes('coaching')) {
-      return 'bg-gradient-to-tr from-blue-700 via-indigo-700 to-blue-800 text-white border border-white/30 shadow-md shadow-blue-700/30 group-hover:scale-105';
-    }
-    // Home & Maintenance Services
-    if (key.includes('home_services') || key.includes('maintenance')) {
-      return 'bg-gradient-to-tr from-amber-600 via-orange-500 to-yellow-600 text-white border border-white/30 shadow-md shadow-amber-600/30 group-hover:scale-105';
-    }
-    // Solar & Renewable Energy
-    if (key.includes('solar') || key.includes('energy') || key.includes('renewable')) {
-      return 'bg-gradient-to-tr from-amber-400 via-yellow-500 to-orange-500 text-white border border-white/30 shadow-md shadow-amber-400/30 group-hover:scale-105';
-    }
     // Default
     return 'bg-gradient-to-tr from-indigo-600 via-indigo-600 to-blue-600 text-white border border-white/30 shadow-md shadow-indigo-600/30 group-hover:scale-105';
   }
@@ -7462,7 +6778,3 @@ export const dashboardIcons = {
     CalendarCheck,
     'calendar-check': CalendarCheck
   };
-=======
-  // SCS_CLIENT_POPUP_SECURE_METHODS_END
-}
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b

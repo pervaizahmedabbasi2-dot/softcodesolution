@@ -72,12 +72,9 @@ export class DashboardModuleCatalogComponent {
   @Output() reloadCatalog =
     new EventEmitter<void>();
 
-<<<<<<< HEAD
   @Output() releaseAllModules =
     new EventEmitter<void>();
 
-=======
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
   @Output() editModule =
     new EventEmitter<any>();
 

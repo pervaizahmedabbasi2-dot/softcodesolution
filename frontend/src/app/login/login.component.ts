@@ -1,19 +1,12 @@
 import { Component, OnInit, ChangeDetectorRef, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-<<<<<<< HEAD
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { NotificationService } from '../services/notification.service';
 import { BackendService } from '../services/backend.service';
 import { PwaInstallComponent } from '../pwa-install.component';
 import { LegalComponent } from '../landing-page/legal/legal.component';
 import { CurrencyLanguageSelectorComponent } from '../components/currency-language-selector/currency-language-selector.component';
-=======
-import { Router, RouterModule } from '@angular/router';
-import { NotificationService } from '../services/notification.service';
-import { PwaInstallComponent } from '../pwa-install.component';
-import { LegalComponent } from '../landing-page/legal/legal.component';
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
 
 function sanitizeInput(value: string): string {
   if (!value) return '';
@@ -28,11 +21,7 @@ function sanitizeInput(value: string): string {
 @Component({
   selector: 'app-login',
   standalone: true,
-<<<<<<< HEAD
   imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterModule, PwaInstallComponent, LegalComponent, CurrencyLanguageSelectorComponent],
-=======
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterModule, PwaInstallComponent, LegalComponent],
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
   templateUrl: './login.component.html'
 })
 export class LoginComponent implements OnInit {
@@ -40,7 +29,6 @@ export class LoginComponent implements OnInit {
 
   toggleMenu() {
     this.isMenuOpen = !this.isMenuOpen;
-<<<<<<< HEAD
     if (typeof document !== 'undefined') {
       if (this.isMenuOpen) {
         document.body.style.overflow = 'hidden';
@@ -67,29 +55,16 @@ export class LoginComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
   private notification = inject(NotificationService);
   private backendService = inject(BackendService);
-=======
-    this.cdr.detectChanges();
-  }
-
-  private fb = inject(FormBuilder);
-  private router = inject(Router);
-  private cdr = inject(ChangeDetectorRef);
-  private notification = inject(NotificationService);
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
 
   loginForm!: FormGroup;
   isLoading = false;
   showSuccessPopup = false;
   showLoginError = false;
   isPasswordVisible = false;
-<<<<<<< HEAD
   rememberMe = true;
 
   // Multi-Portal Gateway Selection
   portalType: 'owner' | 'teacher' | 'student' | 'parent' | 'staff' = 'owner';
-=======
-  rememberMe = false;
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
 
   showForgotPopup = false;
   showForgotSuccess = false;
@@ -112,7 +87,6 @@ export class LoginComponent implements OnInit {
   private redirectPath = '/dashboard';
 
   ngOnInit(): void {
-<<<<<<< HEAD
     const savedEmail = localStorage.getItem('scs_remembered_email');
     this.loginForm = this.fb.group({
       email: [savedEmail || '', [Validators.required]],
@@ -166,18 +140,6 @@ export class LoginComponent implements OnInit {
       });
     }
     this.cdr.detectChanges();
-=======
-    this.loginForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(8)]]
-    });
-
-    const savedEmail = localStorage.getItem('scs_remembered_email');
-    if (savedEmail) {
-      this.loginForm.get('email')?.setValue(savedEmail);
-      this.rememberMe = true;
-    }
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
   }
 
   togglePassword(): void {
@@ -236,7 +198,6 @@ export class LoginComponent implements OnInit {
     this.isLoading = true;
     this.cdr.detectChanges();
 
-<<<<<<< HEAD
     const rawInput = (this.loginForm.value.email || '').trim();
     const sanitizedEmail = sanitizeInput(rawInput).toLowerCase().trim();
     const password = this.loginForm.value.password || '';
@@ -394,40 +355,6 @@ export class LoginComponent implements OnInit {
       await this.router.navigateByUrl('/dashboard');
     } finally {
       this.isLoading = false;
-=======
-    const sanitizedEmail = sanitizeInput(this.loginForm.value.email || '').toLowerCase();
-    const password = this.loginForm.value.password || '';
-
-    try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ email: sanitizedEmail, password: password })
-      });
-      const result = await res.json().catch(() => null);
-
-      if (res.ok && result?.ok) {
-        if (this.rememberMe) {
-          localStorage.setItem('scs_remembered_email', sanitizedEmail);
-        } else {
-          localStorage.removeItem('scs_remembered_email');
-        }
-        localStorage.removeItem('scs_auth_mock');
-        this.redirectPath = result.redirect || '/dashboard';
-        this.showSuccessPopup = true;
-      } else {
-        this.showLoginError = true;
-        this.notification.error(result?.message || 'Invalid email or password');
-      }
-    } catch (error) {
-      console.error('Login failed:', error);
-      this.showLoginError = true;
-      this.notification.error('Network error. Please check connection.');
-    } finally {
-      this.isLoading = false;
-      this.loginForm.get('password')?.setValue('');
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
       this.cdr.detectChanges();
     }
   }

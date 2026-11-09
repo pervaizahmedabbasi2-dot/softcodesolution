@@ -1,6 +1,5 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-<<<<<<< HEAD
 import { LucideAngularModule, ShieldCheck, AlertTriangle, Activity, ShieldAlert, Plus, X, Trash2, Download, CheckCircle2, Lock, Unlock, Globe, RefreshCcw } from 'lucide-angular';
 
 export interface IpRule {
@@ -22,9 +21,6 @@ export interface ActiveSession {
   lastActive: string;
   isCurrent: boolean;
 }
-=======
-import { LucideAngularModule } from 'lucide-angular';
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
 
 @Component({
   selector: 'app-dashboard-security',
@@ -33,7 +29,6 @@ import { LucideAngularModule } from 'lucide-angular';
   templateUrl: './security.component.html'
 })
 export class SecurityComponent {
-<<<<<<< HEAD
   icons = {
     ShieldCheck,
     AlertTriangle,
@@ -190,6 +185,4 @@ export class SecurityComponent {
     a.click();
     URL.revokeObjectURL(url);
   }
-=======
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
 }
