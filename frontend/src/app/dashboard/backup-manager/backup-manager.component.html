@@ -1,0 +1,606 @@
+<section class="backup-manager">
+  <header class="backup-header">
+    <div>
+      <div class="eyebrow">DATA PROTECTION</div>
+
+      <h2>Backup Manager</h2>
+
+      <p>Manage verified PostgreSQL and SQLite backup points.</p>
+    </div>
+
+    <button type="button" class="primary-button" [disabled]="creating" (click)="createBackup()">
+      {{ creating ? 'Creating…' : 'Create Backup' }}
+    </button>
+  </header>
+
+  <div *ngIf="errorMessage" class="message error">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="successMessage" class="message success">
+    {{ successMessage }}
+  </div>
+
+
+  <!-- SCS_PHASE724C_THREE_LAYER_NULLSAFE -->
+
+  <section
+    class="triple-layer-panel"
+    *ngIf="!loading"
+  >
+
+    <div class="triple-layer-heading">
+
+      <div>
+        <span class="triple-layer-eyebrow">
+          DATA PROTECTION
+        </span>
+
+        <h3>
+          Triple Backup &amp; Recovery
+        </h3>
+
+        <p>
+          Three recovery layers: SQLite, PostgreSQL,
+          and Office Mirror.
+        </p>
+      </div>
+
+      <div class="triple-layer-total">
+        <strong>
+          {{
+            (latestBackup?.sqlite_sha256 ? 1 : 0) +
+            (latestBackup?.postgres_sha256 ? 1 : 0) +
+            (latestBackup?.office_mirror_verified ? 1 : 0)
+          }}/3
+        </strong>
+
+        <span>Layers Verified</span>
+      </div>
+
+    </div>
+
+
+    <div class="triple-layer-cards">
+
+      <!-- Layer 1 -->
+
+      <article class="triple-layer-card">
+
+        <div class="triple-layer-number">
+          01
+        </div>
+
+        <div class="triple-layer-body">
+
+          <span class="triple-layer-label">
+            LOCAL
+          </span>
+
+          <h4>SQLite</h4>
+
+          <p>
+            Offline-first local database snapshot.
+          </p>
+
+          <span
+            *ngIf="latestBackup?.sqlite_sha256"
+            class="triple-layer-status verified"
+          >
+            VERIFIED
+          </span>
+
+          <span
+            *ngIf="!latestBackup?.sqlite_sha256"
+            class="triple-layer-status unavailable"
+          >
+            UNAVAILABLE
+          </span>
+
+          <small>
+            SHA-256:
+            {{
+              latestBackup?.sqlite_sha256
+                ? (latestBackup?.sqlite_sha256 | slice:0:12) + '…'
+                : '—'
+            }}
+          </small>
+
+        </div>
+      </article>
+
+
+      <!-- Layer 2 -->
+
+      <article class="triple-layer-card">
+
+        <div class="triple-layer-number">
+          02
+        </div>
+
+        <div class="triple-layer-body">
+
+          <span class="triple-layer-label">
+            CLOUD
+          </span>
+
+          <h4>PostgreSQL</h4>
+
+          <p>
+            Online production database snapshot.
+          </p>
+
+          <span
+            *ngIf="latestBackup?.postgres_sha256"
+            class="triple-layer-status verified"
+          >
+            VERIFIED
+          </span>
+
+          <span
+            *ngIf="!latestBackup?.postgres_sha256"
+            class="triple-layer-status unavailable"
+          >
+            UNAVAILABLE
+          </span>
+
+          <small>
+            SHA-256:
+            {{
+              latestBackup?.postgres_sha256
+                ? (latestBackup?.postgres_sha256 | slice:0:12) + '…'
+                : '—'
+            }}
+          </small>
+
+        </div>
+      </article>
+
+
+      <!-- Layer 3 -->
+
+      <article class="triple-layer-card">
+
+        <div class="triple-layer-number">
+          03
+        </div>
+
+        <div class="triple-layer-body">
+
+          <span class="triple-layer-label">
+            OFFICE MIRROR
+          </span>
+
+          <h4>Full Recovery Package</h4>
+
+          <p>
+            Approved code + PostgreSQL + SQLite +
+            recovery metadata.
+          </p>
+
+          <span
+            *ngIf="latestBackup?.office_mirror_verified"
+            class="triple-layer-status verified"
+          >
+            VERIFIED
+          </span>
+
+          <span
+            *ngIf="
+              latestBackup?.office_mirror_path &&
+              !latestBackup?.office_mirror_verified
+            "
+            class="triple-layer-status pending"
+          >
+            PENDING
+          </span>
+
+          <span
+            *ngIf="!latestBackup?.office_mirror_path"
+            class="triple-layer-status unavailable"
+          >
+            NOT CREATED
+          </span>
+
+          <small>
+            {{
+              latestBackup?.office_mirror_path
+                ? 'Recovery package linked'
+                : 'No Office Mirror snapshot'
+            }}
+          </small>
+
+          <small
+            *ngIf="latestBackup?.office_mirror_sha256"
+          >
+            Mirror SHA-256:
+            {{
+              latestBackup?.office_mirror_sha256
+                | slice:0:12
+            }}…
+          </small>
+
+        </div>
+      </article>
+
+    </div>
+
+
+    <div
+      class="triple-layer-latest"
+      *ngIf="latestBackup as backup"
+    >
+
+      <strong>
+        Latest recovery point:
+      </strong>
+
+      {{ backup.created_at | date:'medium' }}
+
+      <span
+        *ngIf="backup.office_mirror_verified"
+      >
+        · Full recovery package verified
+      </span>
+
+      <span
+        *ngIf="
+          backup.office_mirror_path &&
+          !backup.office_mirror_verified
+        "
+      >
+        · Office Mirror code layer pending
+      </span>
+
+    </div>
+
+  </section>
+
+
+  <!-- SCS_PHASE746E_VISIBLE_EXTENDED_LAYERS -->
+
+  <section
+    class="triple-layer-panel"
+    *ngIf="!loading"
+  >
+
+    <div class="triple-layer-heading">
+
+      <div>
+        <span class="triple-layer-eyebrow">
+          EXTENDED PROTECTION
+        </span>
+
+        <h3>
+          Enterprise Recovery Layers
+        </h3>
+
+        <p>
+          Core protection is followed by independent
+          offsite storage and restore verification.
+        </p>
+      </div>
+
+      <div class="triple-layer-total">
+        <strong>
+          {{ offsiteStatus }}
+        </strong>
+
+        <span>
+          Layer 4 Status
+        </span>
+      </div>
+
+    </div>
+
+    <div class="triple-layer-cards">
+
+      <!-- LAYER 4 -->
+
+      <article class="triple-layer-card">
+
+        <div class="triple-layer-number">
+          04
+        </div>
+
+        <div class="triple-layer-body">
+
+          <span class="triple-layer-label">
+            OFFSITE
+          </span>
+
+          <h4>
+            Immutable / Offsite
+          </h4>
+
+          <p>
+            Independent Recovery Point copy with
+            SHA-256 and retention protection.
+          </p>
+
+          <span
+            class="triple-layer-status verified"
+            *ngIf="
+              latestBackup?.offsite_verified
+            "
+          >
+            VERIFIED
+          </span>
+
+          <span
+            class="triple-layer-status pending"
+            *ngIf="
+              !latestBackup?.offsite_verified &&
+              latestBackup?.offsite_status !== 'failed'
+            "
+          >
+            {{ offsiteStatus }}
+          </span>
+
+          <span
+            class="triple-layer-status unavailable"
+            *ngIf="
+              latestBackup?.offsite_status === 'failed'
+            "
+          >
+            FAILED
+          </span>
+
+          <small>
+            Provider:
+            {{
+              latestBackup?.offsite_provider ||
+              'Not configured'
+            }}
+          </small>
+
+          <small
+            *ngIf="
+              latestBackup?.offsite_sha256
+            "
+          >
+            SHA-256:
+            {{
+              latestBackup?.offsite_sha256
+                | slice:0:16
+            }}…
+          </small>
+
+          <small
+            *ngIf="
+              latestBackup?.offsite_retention_until
+            "
+          >
+            Retention:
+            {{
+              latestBackup?.offsite_retention_until
+                | date:'mediumDate'
+            }}
+          </small>
+
+        </div>
+
+      </article>
+
+      <!-- LAYER 5 -->
+
+      <article class="triple-layer-card">
+
+        <div class="triple-layer-number">
+          05
+        </div>
+
+        <div class="triple-layer-body">
+
+          <span class="triple-layer-label">
+            VERIFICATION
+          </span>
+
+          <h4>
+            Restore Verification
+          </h4>
+
+          <p>
+            Scheduled isolated recovery test proving
+            that the complete recovery chain can actually
+            be restored.
+          </p>
+
+          <span class="triple-layer-status unavailable">
+            {{ restoreVerificationStatus }}
+          </span>
+
+          <small>
+            Scheduled restore verification is not
+            implemented yet.
+          </small>
+
+        </div>
+
+      </article>
+
+      <!-- RECOVERY MANAGEMENT -->
+
+      <article class="triple-layer-card">
+
+        <div class="triple-layer-number">
+          ID
+        </div>
+
+        <div class="triple-layer-body">
+
+          <span class="triple-layer-label">
+            RECOVERY POINT
+          </span>
+
+          <h4>
+            {{ latestRecoveryId }}
+          </h4>
+
+          <p>
+            Current recovery identity visible with the
+            protection state of the latest snapshot.
+          </p>
+
+          <small>
+            Core Layers:
+            {{ coreRecoveryLabel }}
+          </small>
+
+          <small>
+            Recovery Points:
+            {{ backups.length }}
+          </small>
+
+          <small>
+            Storage:
+            {{ storageUsageLabel }}
+          </small>
+
+        </div>
+
+      </article>
+
+    </div>
+
+    <div
+      class="triple-layer-latest"
+      *ngIf="latestBackup"
+    >
+
+      Latest recovery point:
+      <strong>
+        {{
+          latestBackup.created_at
+            | date:'medium'
+        }}
+      </strong>
+
+      ·
+
+      Offsite:
+      <strong>
+        {{ offsiteStatus }}
+      </strong>
+
+      ·
+
+      Restore Verification:
+      <strong>
+        {{ restoreVerificationStatus }}
+      </strong>
+
+    </div>
+
+  </section>
+  <div *ngIf="loading" class="loading">Loading backup history…</div>
+
+  <div *ngIf="!loading && backups.length === 0" class="empty">No backup points found.</div>
+
+  <div *ngIf="!loading && backups.length" class="backup-table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Created</th>
+          <th>Status</th>
+          <th>Size</th>
+          <th>PostgreSQL SHA-256</th>
+          <th>SQLite SHA-256</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngFor="let backup of backups">
+          <td>
+            {{ backup.created_at ? (backup.created_at | date: 'medium') : '—' }}
+          </td>
+
+          <td>
+            <span class="status">
+              {{ backup.status || 'unknown' }}
+            </span>
+          </td>
+
+          <td>
+            {{ formatBytes(backup.size_bytes) }}
+          </td>
+
+          <td class="hash">
+            {{ backup.postgres_sha256 || '—' }}
+          </td>
+
+          <td class="hash">
+            {{ backup.sqlite_sha256 || '—' }}
+          </td>
+
+          <td class="actions">
+            <button
+              type="button"
+              class="secondary-button"
+              [disabled]="verifyingId === backup.id"
+              (click)="verifyBackup(backup)"
+            >
+              {{ verifyingId === backup.id ? 'Verifying…' : 'Verify' }}
+            </button>
+
+            <button
+              type="button"
+              class="danger-button"
+              [disabled]="restoringId === backup.id"
+              (click)="openRestore(backup)"
+            >
+              Restore
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div *ngIf="showRestoreConfirm && selectedBackup" class="restore-overlay">
+    <div class="restore-dialog">
+      <h3>Confirm Restore</h3>
+
+      <p>
+        This operation restores the selected verified backup. A pre-restore backup is created by the
+        backend before the restore operation.
+      </p>
+
+      <label> Restore target </label>
+
+      <select [(ngModel)]="restoreTarget">
+        <option value="local">Local SQLite</option>
+
+        <option value="postgres">PostgreSQL</option>
+
+        <option value="both">Both</option>
+      </select>
+
+      <div class="restore-warning">
+        Type confirmation is enforced by the backend as
+        <strong>RESTORE</strong>.
+      </div>
+
+      <div class="dialog-actions">
+        <button
+          type="button"
+          class="secondary-button"
+          [disabled]="!!restoringId"
+          (click)="cancelRestore()"
+        >
+          Cancel
+        </button>
+
+        <button
+          type="button"
+          class="danger-button"
+          [disabled]="!!restoringId"
+          (click)="confirmRestore()"
+        >
+          {{ restoringId ? 'Restoring…' : 'Confirm RESTORE' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</section>

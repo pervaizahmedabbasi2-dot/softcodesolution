@@ -1,0 +1,96 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fade-in">
+  
+  <!-- Banner -->
+  <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-slate-950 to-emerald-950 p-8 text-white shadow-xl border border-emerald-950/40">
+    <div class="absolute -right-10 -bottom-10 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div>
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-xs font-semibold uppercase tracking-wider mb-3">
+          <lucide-icon [name]="icons.ArrowUpCircle" class="w-3.5 h-3.5"></lucide-icon>
+          Zero-Downtime OTA Release Pipeline
+        </div>
+        <h1 class="text-3xl font-black tracking-tight text-white sm:text-4xl">Continuous Delivery & Version Control</h1>
+        <p class="mt-2 text-slate-300 text-sm max-w-2xl">
+          Automated canary deployments, SHA-256 cryptographic artifact validation, blue-green cluster rollouts, and instant automated rollback safeguards.
+        </p>
+      </div>
+
+      <button 
+        (click)="checkForUpdates()" 
+        [disabled]="isChecking"
+        class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-emerald-600/30 shrink-0">
+        <lucide-icon [name]="icons.RefreshCcw" class="w-4 h-4" [class.animate-spin]="isChecking"></lucide-icon>
+        {{ isChecking ? 'Checking Upstream Registry...' : 'Check For Updates' }}
+      </button>
+    </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8 pt-6 border-t border-slate-800">
+      <div>
+        <p class="text-xs font-medium text-slate-400">Current Production Build</p>
+        <p class="text-xl font-black text-emerald-400 mt-1 font-mono">{{ currentVersion }}</p>
+      </div>
+      <div>
+        <p class="text-xs font-medium text-slate-400">Zero-Downtime Guarantee</p>
+        <p class="text-2xl font-black text-white mt-1">100% <span class="text-xs text-emerald-400 font-normal">Active</span></p>
+      </div>
+      <div>
+        <p class="text-xs font-medium text-slate-400">Canary Traffic Split</p>
+        <p class="text-2xl font-black text-cyan-400 mt-1">15% <span class="text-xs text-slate-400 font-normal">Testing</span></p>
+      </div>
+      <div>
+        <p class="text-xs font-medium text-slate-400">Rollback Latency</p>
+        <p class="text-2xl font-black text-indigo-400 mt-1">&lt; 3.2s <span class="text-xs text-slate-400 font-normal">Instant</span></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Release Pipeline Cards -->
+  <div class="space-y-4">
+    <div *ngFor="let rel of releases" class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-all">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        <div>
+          <div class="flex items-center gap-3">
+            <span class="text-lg font-black text-slate-900 font-mono">{{ rel.version }}</span>
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider"
+                  [class.bg-emerald-100]="rel.channel === 'STABLE'" [class.text-emerald-800]="rel.channel === 'STABLE'"
+                  [class.bg-cyan-100]="rel.channel === 'CANARY'" [class.text-cyan-800]="rel.channel === 'CANARY'"
+                  [class.bg-slate-100]="rel.channel === 'LTS'" [class.text-slate-800]="rel.channel === 'LTS'">
+              {{ rel.channel }} Channel
+            </span>
+            <span class="text-xs text-slate-400 font-medium">Released: {{ rel.releaseDate }}</span>
+          </div>
+
+          <div class="mt-3 space-y-1">
+            <p *ngFor="let note of rel.changelog" class="text-xs text-slate-600 flex items-start gap-2">
+              <span class="text-emerald-500 font-bold">•</span>
+              <span>{{ note }}</span>
+            </p>
+          </div>
+
+          <div class="mt-4 pt-3 border-t border-slate-100 flex flex-wrap items-center gap-4 text-xs font-mono text-slate-500">
+            <span>Size: {{ rel.sizeMb }} MB</span>
+            <span>SHA-256: <span class="text-slate-800">{{ rel.sha256.substring(0, 16) }}...</span></span>
+            <span>Rollout: {{ rel.rolloutPercentage }}% Fleet</span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3 shrink-0 self-end lg:self-center">
+          <span *ngIf="rel.status === 'DEPLOYED'" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <lucide-icon [name]="icons.CheckCircle2" class="w-4 h-4 text-emerald-600"></lucide-icon>
+            Live Production
+          </span>
+
+          <button 
+            *ngIf="rel.status === 'ROLLING_OUT'"
+            (click)="promoteRelease(rel)"
+            [disabled]="deployingChannel === rel.version"
+            class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-all shadow-md flex items-center gap-1.5">
+            <lucide-icon [name]="icons.Play" class="w-3.5 h-3.5"></lucide-icon>
+            {{ deployingChannel === rel.version ? 'Promoting Fleet...' : 'Promote to 100%' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

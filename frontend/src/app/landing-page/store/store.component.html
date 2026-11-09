@@ -1,0 +1,545 @@
+<<<<<<< HEAD
+<section id="store" class="min-h-screen bg-slate-50/30 py-24 relative overflow-hidden">
+  <!-- Soft Background Accents -->
+  <div class="absolute top-0 left-0 w-full h-full -z-10 pointer-events-none">
+    <div class="absolute top-[10%] left-[5%] w-96 h-96 bg-indigo-100/40 rounded-full blur-[120px]"></div>
+    <div class="absolute bottom-[20%] right-[10%] w-[500px] h-[500px] bg-emerald-100/30 rounded-full blur-[150px]"></div>
+  </div>
+
+=======
+<section id="store" class="min-h-screen bg-slate-50 py-24 relative overflow-hidden">
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
+  <div class="container mx-auto px-6 lg:px-10 relative z-10">
+    <!-- SoftCodeSolution Premium Store Heading Section -->
+    <div class="w-full mb-16">
+      <div class="max-w-4xl mx-auto text-center">
+<<<<<<< HEAD
+        <div class="inline-flex items-center px-4 py-2 text-xs font-semibold text-indigo-700 bg-white/40 backdrop-blur-md border border-slate-200/50 rounded-full shadow-sm mb-6 uppercase tracking-widest">
+            SCS Premium Store
+        </div>
+        <!-- Responsive Heading -->
+        <h2 class="text-4xl md:text-6xl font-extrabold tracking-tight text-slate-900 mb-8">
+=======
+        <div class="inline-flex items-center px-4 py-2 text-xs font-semibold text-indigo-700 bg-white border border-slate-200 rounded-full shadow-sm mb-6 uppercase tracking-widest">
+            SCS Premium Store
+        </div>
+        <!-- Responsive Heading -->
+        <h2 class="text-3xl md:text-5xl font-extrabold tracking-tight text-slate-900 mb-6">
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
+          SCS<span class="text-indigo-600"> Premium Store</span>
+        </h2>
+        <!-- Responsive Paragraph -->
+        <div class="mt-6 flex justify-center">
+          <p class="text-lg md:text-xl text-slate-500 max-w-3xl leading-relaxed font-medium">
+<<<<<<< HEAD
+            Where Engineering Excellence Meets <span class="text-slate-900 font-semibold">Business Scalability</span>. 
+            Discover our curated collection of advanced software ecosystems.
+=======
+            Where Engineering Excellence Meets <span class="text-slate-900 font-semibold">Business Scalability</span>.
+            Our store is more than just a marketplace; it is a curated collection of the world's most advanced
+            software ecosystems designed to empower modern businesses. Every product in our store is a
+            masterpiece of digital engineering, crafted to provide a seamless transition into the future of
+            automated operations.
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
+          </p>
+        </div>
+      </div>
+    </div>
+
+<<<<<<< HEAD
+    <!-- Search Bar (Glassy) -->
+    <div class="flex justify-center mb-16 max-w-lg mx-auto">
+      <div class="relative w-full group">
+        <input [(ngModel)]="searchText" (input)="currentPage = 1" placeholder="Search software (e.g. School, Business)..."
+          class="w-full pl-14 pr-6 py-5 rounded-[2rem] bg-white/40 backdrop-blur-xl border border-white/40 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/50 text-slate-900 transition-all text-lg placeholder:text-slate-400">
+        <mat-icon class="absolute left-5 top-1/2 -translate-y-1/2 !w-6 !h-6 !text-[24px] text-slate-400 group-focus-within:text-indigo-600 transition-colors">search</mat-icon>
+      </div>
+    </div>
+
+    <!-- Tech Grid (Glassy Cards) -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div *ngFor="let p of displayProducts"
+        class="group bg-white/40 backdrop-blur-xl rounded-[2.5rem] border border-white/40 shadow-sm hover:-translate-y-2 hover:bg-white/60 hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-500 flex flex-col overflow-hidden cursor-pointer"
+        (click)="openModal(p)">
+        <div class="relative h-64 overflow-hidden bg-slate-100/50 flex items-center justify-center">
+          <img [src]="p.image" (error)="onImageError($event)" [alt]="p.title" class="w-full h-full object-cover group-hover:scale-105 transition duration-1000">
+          <!-- Glassy Overlay Badge -->
+          <div class="absolute top-4 right-4 px-3 py-1 bg-white/60 backdrop-blur-md rounded-full text-[10px] font-bold text-slate-700 border border-white/40 uppercase tracking-widest">
+            SCS Verified
+          </div>
+        </div>
+        <div class="p-8 flex flex-col flex-grow">
+          <h3 class="text-2xl font-bold mb-3 text-slate-900 tracking-tight group-hover:text-indigo-600 transition-colors">{{ p.title }}</h3>
+          <p class="text-slate-500 text-sm leading-relaxed mb-8 flex-grow line-clamp-3">
+            {{ p.desc }}
+          </p>
+          <div class="flex items-center justify-between mt-auto pt-6 border-t border-slate-100">
+            <div class="text-indigo-700 font-extrabold text-xl font-sans tracking-tight tabular-nums">
+              {{ formatProductPrice(p.price) }}
+            </div>
+            <div class="flex items-center gap-3">
+              <button (click)="$event.stopPropagation(); openModal(p)"
+                class="w-10 h-10 rounded-full bg-slate-100/50 text-slate-600 flex items-center justify-center hover:bg-white hover:text-indigo-600 border border-transparent hover:border-slate-200 transition-all">
+                <mat-icon class="!w-5 !h-5 !text-[20px]">visibility</mat-icon>
+              </button>
+              <button (click)="addToCart($event, p)"
+                class="px-4 py-2.5 rounded-2xl bg-indigo-600 text-white font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 active:scale-95 transition-all flex items-center gap-1.5 text-xs sm:text-sm">
+                <mat-icon class="!w-4 !h-4 !text-[18px]">add_shopping_cart</mat-icon>
+                <span class="whitespace-nowrap">Add to Cart</span>
+=======
+    <div class="flex justify-center mb-16">
+      <div class="relative w-full max-w-lg">
+        <input [(ngModel)]="searchText" (input)="currentPage = 1" placeholder="Search software..."
+          class="w-full pl-12 pr-6 py-4 rounded-2xl bg-white border border-slate-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-slate-900 transition-shadow">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-400 absolute left-4 top-1/2 transform -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </div>
+    </div>
+
+    <!-- Tech Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div *ngFor="let p of displayProducts"
+        class="group bg-slate-50/80 backdrop-blur-sm rounded-[2rem] border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:-translate-y-2 hover:shadow-[0_20px_40px_rgb(79,70,229,0.08)] transition-all duration-500 flex flex-col overflow-hidden">
+        <div class="relative h-64 overflow-hidden bg-white/50 flex items-center justify-center p-6">
+          <img [src]="p.image" class="w-full h-full object-contain group-hover:scale-105 transition duration-700">
+        </div>
+        <div class="p-8 flex flex-col flex-grow">
+          <h3 class="text-2xl font-bold mb-3 text-slate-900 tracking-tight">{{ p.title }}</h3>
+          <p class="text-slate-500 text-sm leading-relaxed mb-6 flex-grow line-clamp-3">
+            {{ p.desc }}
+          </p>
+          <div class="flex items-center justify-between mt-auto pt-6 border-t border-slate-50">
+            <div class="text-indigo-600 font-extrabold text-xl">
+              {{ p.price }}
+            </div>
+            <div class="flex gap-3">
+              <button (click)="openModal(p)"
+                class="px-5 py-2.5 rounded-xl bg-slate-50 text-slate-700 font-semibold border border-slate-200 hover:bg-slate-100 transition-all text-sm">
+                View
+              </button>
+              <button (click)="addToCart($event, p)"
+                class="px-5 py-2.5 rounded-xl bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-200 hover:bg-indigo-700 transition-all text-sm">
+                Add
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+<<<<<<< HEAD
+    <div *ngIf="!searchText" class="flex justify-center items-center gap-8 mt-16">
+      <button (click)="prevPage()" [disabled]="currentPage === 1"
+        class="w-12 h-12 flex items-center justify-center rounded-2xl bg-white/40 backdrop-blur-xl border border-white/40 text-slate-600 shadow-sm hover:bg-white hover:text-indigo-600 disabled:opacity-30 transition-all">
+        <mat-icon>chevron_left</mat-icon>
+      </button>
+      <span class="font-bold text-slate-500 text-sm">
+        Page <span class="text-slate-900 bg-white/50 px-2 py-1 rounded-lg border border-slate-200 mx-1">{{ currentPage }}</span> of {{ totalPages }}
+      </span>
+      <button (click)="nextPage()" [disabled]="currentPage === totalPages"
+        class="w-12 h-12 flex items-center justify-center rounded-2xl bg-white/40 backdrop-blur-xl border border-white/40 text-slate-600 shadow-sm hover:bg-white hover:text-indigo-600 disabled:opacity-30 transition-all">
+        <mat-icon>chevron_right</mat-icon>
+=======
+    <div *ngIf="!searchText" class="flex justify-center items-center gap-6 mt-16">
+      <button (click)="prevPage()" [disabled]="currentPage === 1"
+        class="px-6 py-3 rounded-xl bg-white border border-slate-200 text-slate-600 font-semibold shadow-sm hover:bg-slate-50 disabled:opacity-40 transition-all">
+        Previous
+      </button>
+      <span class="font-semibold text-slate-500">
+        Page <span class="text-slate-900">{{ currentPage }}</span> of {{ totalPages }}
+      </span>
+      <button (click)="nextPage()" [disabled]="currentPage === totalPages"
+        class="px-6 py-3 rounded-xl bg-white border border-slate-200 text-slate-600 font-semibold shadow-sm hover:bg-slate-50 disabled:opacity-40 transition-all">
+        Next
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
+      </button>
+    </div>
+  </div>
+</section>
+
+<<<<<<< HEAD
+<!-- Modal (Product Details - Perfectly Centered HiOS/iOS Layout) -->
+<div *ngIf="selectedProduct" 
+     class="fixed inset-0 bg-black/30 backdrop-blur-[2px] flex items-center justify-center z-[1200] p-2.5 sm:p-5 overflow-y-auto animate-fade-in">
+  <div class="bg-white/98 backdrop-blur-2xl w-full max-w-3xl rounded-3xl sm:rounded-[2.5rem] shadow-[0_25px_70px_-15px_rgba(0,0,0,0.25)] overflow-hidden border border-white/80 flex flex-col max-h-[92vh] sm:max-h-[88vh] my-auto transition-all duration-300 animate-slide-up">
+    
+    <!-- Modal Header -->
+    <div class="flex items-start justify-between p-6 sm:p-8 pb-4 shrink-0 border-b border-slate-100 bg-slate-50/50">
+        <div>
+            <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-[10px] font-black uppercase tracking-widest mb-3 border border-indigo-100/50">
+                <mat-icon class="!w-3.5 !h-3.5 !text-[14px]">verified</mat-icon>
+                <span>Enterprise Suite</span>
+            </div>
+=======
+<!-- Modal -->
+<div *ngIf="selectedProduct" class="fixed inset-0 bg-slate-900/40 flex items-center justify-center z-[100] p-4 sm:p-6">
+  <div class="bg-white w-full max-w-3xl rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl overflow-hidden animate-[fadeIn_.2s_ease-out] flex flex-col max-h-[90vh] sm:max-h-[85vh]">
+    
+    <!-- Modal Header (Sticky) -->
+    <div class="flex items-start justify-between p-6 sm:p-8 pb-0 shrink-0">
+        <div>
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+                {{ selectedProduct.title }}
+            </h2>
+        </div>
+<<<<<<< HEAD
+        <button type="button" (click)="closeModal()" class="w-10 h-10 bg-white hover:bg-slate-100 text-slate-400 hover:text-slate-900 rounded-full flex items-center justify-center transition-all shadow-xs border border-slate-200/60 cursor-pointer active:scale-95" aria-label="Close modal">
+            <mat-icon class="!text-[20px] !w-5 !h-5">close</mat-icon>
+        </button>
+    </div>
+
+    <!-- Modal Content -->
+    <div class="p-6 sm:p-8 overflow-y-auto flex-grow custom-scroll space-y-6">
+        <p class="text-slate-600 leading-relaxed text-sm sm:text-base font-medium">
+            {{ selectedProduct.desc }}
+        </p>
+        
+        <div>
+            <div class="flex items-center justify-between mb-4">
+                <span class="text-[11px] font-black text-slate-400 uppercase tracking-widest">Included Premium Modules ({{ selectedProduct.features.length }})</span>
+                <span class="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-100">100% Unlocked</span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div *ngFor="let f of selectedProduct.features"
+                    class="bg-slate-50/80 hover:bg-white text-slate-800 p-3.5 rounded-2xl text-xs sm:text-sm font-semibold border border-slate-200/60 flex items-center gap-3 transition-colors shadow-2xs">
+                    <div class="w-6 h-6 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0">
+                        <mat-icon class="!w-4 !h-4 !text-[16px]">check</mat-icon>
+                    </div>
+                    <span class="truncate">{{ f }}</span>
+                </div>
+=======
+        <button (click)="closeModal()" class="p-2 -mt-2 -mr-2 bg-slate-50 text-slate-500 rounded-full hover:bg-slate-100 hover:text-slate-900 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+    </div>
+
+    <!-- Modal Content (Scrollable) -->
+    <div class="p-6 sm:p-8 pt-4 overflow-y-auto flex-grow">
+        <p class="text-slate-500 mb-8 leading-relaxed text-base sm:text-lg font-medium">
+            {{ selectedProduct.desc }}
+        </p>
+        
+        <div class="mb-5">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Key Features</span>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <div *ngFor="let f of selectedProduct.features"
+                class="bg-slate-50 text-slate-700 p-4 rounded-2xl text-sm font-semibold border border-slate-100 flex items-start gap-3 hover:bg-indigo-50/50 hover:border-indigo-100 transition-colors">
+                <svg class="w-5 h-5 text-indigo-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span>{{ f }}</span>
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
+            </div>
+        </div>
+    </div>
+    
+<<<<<<< HEAD
+    <!-- Modal Footer -->
+    <div class="p-5 sm:p-6 border-t border-slate-100 bg-slate-50/80 shrink-0 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+        <div class="flex items-baseline gap-2">
+            <span class="text-slate-400 text-xs font-bold uppercase tracking-wider">Plan License:</span>
+            <span class="text-2xl sm:text-3xl font-extrabold text-indigo-700 font-sans tracking-tight tabular-nums">
+                {{ formatProductPrice(selectedProduct.price) }}
+            </span>
+            <span class="text-xs text-slate-400 font-medium">/ month</span>
+        </div>
+        <div class="flex items-center gap-3">
+            <button type="button" (click)="closeModal()"
+                class="flex-1 sm:flex-none px-6 py-3 bg-white text-slate-700 font-bold rounded-xl border border-slate-200 hover:bg-slate-50 active:scale-95 transition-all text-xs uppercase tracking-wider cursor-pointer">
+                Close
+            </button>
+            <button type="button" (click)="addToCart($event, selectedProduct)"
+                class="flex-1 sm:flex-none px-7 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 active:scale-95 text-white font-black rounded-xl shadow-md shadow-indigo-500/25 transition-all flex items-center justify-center gap-2 text-xs uppercase tracking-wider cursor-pointer">
+                <mat-icon class="!text-[18px] !w-4 !h-4">add_shopping_cart</mat-icon>
+                <span>Add to Cart</span>
+            </button>
+        </div>
+    </div>
+  </div>
+</div>
+
+<!-- 🔥 LIVE ONLINE PAYMENT GATEWAY & CHECKOUT MODAL (HiOS & Apple Standard) -->
+<div *ngIf="checkoutProduct" class="fixed inset-0 bg-black/30 backdrop-blur-[2px] flex items-center justify-center z-[1200] p-2.5 sm:p-5 overflow-y-auto animate-fade-in">
+  <div class="bg-white/98 backdrop-blur-2xl w-full max-w-xl rounded-3xl sm:rounded-[2.5rem] shadow-[0_25px_70px_-15px_rgba(0,0,0,0.25)] overflow-hidden border border-white/80 flex flex-col max-h-[92vh] sm:max-h-[88vh] my-auto transition-all duration-300 animate-slide-up">
+    
+    <!-- Modal Header -->
+    <div class="p-5 sm:p-6 border-b border-slate-100 flex items-center justify-between shrink-0 bg-slate-50/60">
+      <div class="flex items-center gap-3 sm:gap-4">
+        <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-700 to-violet-600 text-white flex items-center justify-center shadow-md shadow-indigo-500/20">
+          <mat-icon class="!text-[22px] !w-5 !h-5">lock</mat-icon>
+        </div>
+        <div>
+          <h3 class="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight leading-tight">Enterprise Checkout</h3>
+          <p class="text-[11px] sm:text-xs text-slate-500 font-medium">Encrypted Multi-Channel Activation Gateway</p>
+        </div>
+      </div>
+      <button type="button" (click)="closeCheckout()" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full text-slate-400 hover:text-slate-900 bg-white hover:bg-slate-100 border border-slate-200/60 transition-all flex items-center justify-center cursor-pointer active:scale-95" aria-label="Close checkout">
+        <mat-icon class="!text-[18px] !w-4 !h-4">close</mat-icon>
+      </button>
+    </div>
+
+    <!-- Modal Body (If not yet paid) -->
+    <div *ngIf="!checkoutSuccessData" class="p-5 sm:p-7 overflow-y-auto space-y-6 flex-grow custom-scroll">
+      
+      <!-- Order Summary Card (Clean White Aesthetic Matching Header) -->
+      <div class="bg-white rounded-2xl sm:rounded-3xl p-5 text-slate-900 shadow-xs relative overflow-hidden border border-slate-200/80">
+        <div class="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div class="min-w-0">
+            <span class="inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.2em] text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-full border border-indigo-100">
+              <span class="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse"></span>
+              Selected License
+            </span>
+            <h4 class="text-xl sm:text-2xl font-black mt-2 text-slate-900 truncate">{{ checkoutProduct.title }}</h4>
+            <p class="text-xs text-slate-500 font-medium">Instant Multi-Tenant Provisioning • 99.99% SLA</p>
+          </div>
+          <div class="text-left sm:text-right shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
+            <p class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Total Due</p>
+            <p class="text-2xl sm:text-3xl font-extrabold font-sans text-indigo-600 tracking-tight tabular-nums">{{ getCalculatedAmount() }}</p>
+          </div>
+        </div>
+
+        <!-- Billing Cycle Segmented Switch -->
+        <div class="mt-4 pt-4 border-t border-slate-100 grid grid-cols-2 gap-2 text-xs font-bold">
+          <button type="button" (click)="customerDetails.billingCycle = 'monthly'"
+                  class="py-2.5 px-3 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer border"
+                  [class.bg-slate-900]="customerDetails.billingCycle === 'monthly'"
+                  [class.text-white]="customerDetails.billingCycle === 'monthly'"
+                  [class.border-slate-900]="customerDetails.billingCycle === 'monthly'"
+                  [class.shadow-xs]="customerDetails.billingCycle === 'monthly'"
+                  [class.bg-slate-50]="customerDetails.billingCycle !== 'monthly'"
+                  [class.border-slate-200]="customerDetails.billingCycle !== 'monthly'"
+                  [class.text-slate-600]="customerDetails.billingCycle !== 'monthly'"
+                  [class.hover:bg-slate-100]="customerDetails.billingCycle !== 'monthly'">
+            <span>Monthly Cycle</span>
+          </button>
+          <button type="button" (click)="customerDetails.billingCycle = 'yearly'"
+                  class="py-2.5 px-3 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer border relative"
+                  [class.bg-indigo-600]="customerDetails.billingCycle === 'yearly'"
+                  [class.text-white]="customerDetails.billingCycle === 'yearly'"
+                  [class.border-indigo-600]="customerDetails.billingCycle === 'yearly'"
+                  [class.shadow-xs]="customerDetails.billingCycle === 'yearly'"
+                  [class.bg-slate-50]="customerDetails.billingCycle !== 'yearly'"
+                  [class.border-slate-200]="customerDetails.billingCycle !== 'yearly'"
+                  [class.text-slate-600]="customerDetails.billingCycle !== 'yearly'"
+                  [class.hover:bg-slate-100]="customerDetails.billingCycle !== 'yearly'">
+            <span>Annual (Save 20%)</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Payment Method Selection (HiOS 3-Option Segmented Grid) -->
+      <div>
+        <label class="block font-black text-slate-900 text-xs uppercase tracking-wider mb-3">Choose Payment Method</label>
+        <div class="grid grid-cols-3 gap-2 sm:gap-3">
+          <!-- 1. Stripe / Card -->
+          <button type="button" (click)="setGateway('stripe', 'Credit / Debit Card (Stripe)')"
+                  class="p-3 sm:p-3.5 rounded-2xl border transition-all text-center flex flex-col items-center gap-1.5 cursor-pointer"
+                  [class.border-indigo-600]="customerDetails.gatewayId === 'stripe'"
+                  [class.bg-indigo-50/50]="customerDetails.gatewayId === 'stripe'"
+                  [class.shadow-xs]="customerDetails.gatewayId === 'stripe'"
+                  [class.border-slate-200]="customerDetails.gatewayId !== 'stripe'"
+                  [class.bg-white]="customerDetails.gatewayId !== 'stripe'">
+            <mat-icon class="!w-5 !h-5 !text-[20px]" [class.text-indigo-600]="customerDetails.gatewayId === 'stripe'" [class.text-slate-400]="customerDetails.gatewayId !== 'stripe'">credit_card</mat-icon>
+            <span class="text-[11px] sm:text-xs font-bold text-slate-900">Card / Visa</span>
+          </button>
+
+          <!-- 2. Mobile Wallet -->
+          <button type="button" (click)="setGateway('jazzcash', 'JazzCash / EasyPaisa Mobile Wallet')"
+                  class="p-3 sm:p-3.5 rounded-2xl border transition-all text-center flex flex-col items-center gap-1.5 cursor-pointer"
+                  [class.border-indigo-600]="customerDetails.gatewayId === 'jazzcash'"
+                  [class.bg-indigo-50/50]="customerDetails.gatewayId === 'jazzcash'"
+                  [class.shadow-xs]="customerDetails.gatewayId === 'jazzcash'"
+                  [class.border-slate-200]="customerDetails.gatewayId !== 'jazzcash'"
+                  [class.bg-white]="customerDetails.gatewayId !== 'jazzcash'">
+            <mat-icon class="!w-5 !h-5 !text-[20px]" [class.text-indigo-600]="customerDetails.gatewayId === 'jazzcash'" [class.text-slate-400]="customerDetails.gatewayId !== 'jazzcash'">account_balance_wallet</mat-icon>
+            <span class="text-[11px] sm:text-xs font-bold text-slate-900">Mobile Wallet</span>
+          </button>
+
+          <!-- 3. Bank Transfer -->
+          <button type="button" (click)="setGateway('bank_transfer', 'Direct Bank Wire (Meezan / Raast)')"
+                  class="p-3 sm:p-3.5 rounded-2xl border transition-all text-center flex flex-col items-center gap-1.5 cursor-pointer"
+                  [class.border-indigo-600]="customerDetails.gatewayId === 'bank_transfer'"
+                  [class.bg-indigo-50/50]="customerDetails.gatewayId === 'bank_transfer'"
+                  [class.shadow-xs]="customerDetails.gatewayId === 'bank_transfer'"
+                  [class.border-slate-200]="customerDetails.gatewayId !== 'bank_transfer'"
+                  [class.bg-white]="customerDetails.gatewayId !== 'bank_transfer'">
+            <mat-icon class="!w-5 !h-5 !text-[20px]" [class.text-indigo-600]="customerDetails.gatewayId === 'bank_transfer'" [class.text-slate-400]="customerDetails.gatewayId !== 'bank_transfer'">account_balance</mat-icon>
+            <span class="text-[11px] sm:text-xs font-bold text-slate-900">Bank Wire</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Payment Method Content -->
+      <div class="space-y-4">
+          <!-- A. Card Elements -->
+          <div *ngIf="customerDetails.gatewayId === 'stripe'" class="bg-slate-50/70 p-4 sm:p-5 rounded-2xl border border-slate-200/80 space-y-3.5">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-700">PCI-DSS Encrypted Card Details</span>
+              <div class="flex items-center gap-1.5">
+                <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-blue-600 text-white">VISA</span>
+                <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-orange-600 text-white">MC</span>
+                <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-slate-900 text-white">AMEX</span>
+              </div>
+            </div>
+
+            <!-- Virtual Card Preview Sheen -->
+            <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-4 rounded-xl shadow-md space-y-3 font-mono text-xs">
+              <div class="flex justify-between items-center text-[10px] text-slate-400">
+                <span>SOFTCODE ENTERPRISE PAY</span>
+                <mat-icon class="!text-[16px] !w-4 !h-4 text-emerald-400">verified_user</mat-icon>
+              </div>
+              <div class="tracking-widest text-sm font-bold text-slate-100">
+                {{ cardDetails.number || '•••• •••• •••• ••••' }}
+              </div>
+              <div class="flex justify-between text-[10px] text-slate-300">
+                <span>{{ cardDetails.holder || customerDetails.name || 'CARDHOLDER NAME' }}</span>
+                <span>{{ cardDetails.expiry || 'MM/YY' }}</span>
+              </div>
+            </div>
+
+            <div class="space-y-2.5">
+                <input placeholder="Card Number (0000 0000 0000 0000)" [(ngModel)]="cardDetails.number" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white font-mono text-xs sm:text-sm focus:border-indigo-600 focus:outline-none" />
+                <div class="grid grid-cols-2 gap-2.5">
+                    <input placeholder="MM / YY" [(ngModel)]="cardDetails.expiry" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white font-mono text-xs sm:text-sm focus:border-indigo-600 focus:outline-none" />
+                    <input placeholder="CVV / CVC" type="password" maxlength="4" [(ngModel)]="cardDetails.cvc" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white font-mono text-xs sm:text-sm focus:border-indigo-600 focus:outline-none" />
+                </div>
+            </div>
+          </div>
+
+          <!-- B. JazzCash / EasyPaisa Form -->
+          <div *ngIf="customerDetails.gatewayId === 'jazzcash'" class="bg-slate-50/70 p-4 sm:p-5 rounded-2xl border border-slate-200/80 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-700">Mobile Wallet Account</span>
+              <span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100">JazzCash / EasyPaisa / Raast</span>
+            </div>
+            <input placeholder="Mobile Account Number (03xx-xxxxxxx)" [(ngModel)]="customerDetails.phone" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white font-mono text-xs sm:text-sm focus:border-indigo-600 focus:outline-none" />
+            <p class="text-[11px] text-slate-500 font-medium">You will receive an in-app MPIN prompt on your smartphone to confirm the subscription fee.</p>
+          </div>
+
+          <!-- C. Bank Transfer Details -->
+          <div *ngIf="customerDetails.gatewayId === 'bank_transfer'" class="bg-indigo-50/40 p-4 sm:p-5 rounded-2xl border border-indigo-100 space-y-3">
+            <div class="space-y-1.5 text-xs text-slate-700">
+              <div class="flex justify-between">
+                <span class="text-slate-500">Bank:</span>
+                <strong class="text-slate-900">Meezan Bank Limited</strong>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-500">Account Title:</span>
+                <strong class="text-slate-900">SoftCodeSolution Tech Pvt Ltd</strong>
+              </div>
+              <div class="flex items-center justify-between bg-white p-2.5 rounded-xl border border-indigo-100 mt-2">
+                <div class="font-mono font-black text-indigo-700 text-xs select-all">
+                  PK42MEZN0001090123456789
+                </div>
+                <button type="button" (click)="copyIban()" class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold text-[10px] transition-colors cursor-pointer active:scale-95">
+                  {{ copiedIban ? 'Copied!' : 'Copy IBAN' }}
+                </button>
+              </div>
+            </div>
+            <input placeholder="Transaction ID / Deposit Slip Number" [(ngModel)]="customerDetails.slipRef" class="w-full px-3.5 py-2.5 rounded-xl border border-indigo-200 bg-white font-mono text-xs sm:text-sm focus:border-indigo-600 focus:outline-none" />
+          </div>
+      </div>
+
+      <!-- Subscriber Info (Clean Form) -->
+      <div class="space-y-3 pt-2">
+        <label class="block font-black text-slate-900 text-xs uppercase tracking-wider">Subscriber Details (For License & Receipt)</label>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <input placeholder="Full Name *" [(ngModel)]="customerDetails.name" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white font-medium text-xs sm:text-sm focus:border-indigo-600 focus:outline-none" />
+          <input placeholder="Email Address *" type="email" [(ngModel)]="customerDetails.email" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white font-medium text-xs sm:text-sm focus:border-indigo-600 focus:outline-none" />
+        </div>
+        <input placeholder="WhatsApp Number for Instant Activation Alerts (Optional)" [(ngModel)]="customerDetails.phone" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white font-medium text-xs sm:text-sm focus:border-indigo-600 focus:outline-none" />
+      </div>
+
+      <!-- Inline Validation Error Banner (No blocking window.alerts) -->
+      <div *ngIf="validationError" class="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs font-semibold flex items-center gap-2 animate-fade-in">
+        <mat-icon class="!text-[18px] !w-4 !h-4 text-rose-600">error</mat-icon>
+        <span>{{ validationError }}</span>
+      </div>
+
+    </div>
+
+    <!-- Success Screen -->
+    <div *ngIf="checkoutSuccessData" class="p-6 sm:p-8 text-center space-y-5 animate-fade-in flex-grow flex flex-col items-center justify-center">
+      <div class="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-100 animate-bounce">
+        <mat-icon class="!w-8 !h-8 !text-[32px]">check_circle</mat-icon>
+      </div>
+      <div>
+        <h3 class="text-2xl font-black text-slate-900 tracking-tight">Activation Confirmed!</h3>
+        <p class="text-slate-500 font-medium text-xs sm:text-sm mt-1">Your license for <strong>{{ checkoutSuccessData.softwareTitle }}</strong> is ready.</p>
+      </div>
+
+      <div class="bg-slate-50 rounded-2xl p-5 space-y-2.5 text-xs max-w-md w-full text-left border border-slate-200/70">
+        <div class="flex justify-between border-b border-slate-200/60 pb-2">
+          <span class="text-slate-500">Invoice:</span>
+          <span class="font-mono font-bold text-slate-900">{{ checkoutSuccessData.invoiceNumber }}</span>
+        </div>
+        <div class="flex justify-between border-b border-slate-200/60 pb-2">
+          <span class="text-slate-500">Amount Paid:</span>
+          <span class="font-black text-indigo-700">{{ checkoutSuccessData.amount }}</span>
+        </div>
+        <div class="flex justify-between border-b border-slate-200/60 pb-2">
+          <span class="text-slate-500">Status:</span>
+          <span class="px-2 py-0.5 rounded-full font-black text-[10px] bg-emerald-100 text-emerald-800 uppercase tracking-widest">
+            {{ checkoutSuccessData.status }}
+          </span>
+        </div>
+        <div class="flex justify-between pt-1">
+          <span class="text-slate-500">Receipts Sent:</span>
+          <span class="font-bold text-emerald-600">WhatsApp ✓ · SMS ✓ · Email ✓</span>
+        </div>
+      </div>
+
+      <button type="button" (click)="closeCheckout()" class="px-8 py-3 rounded-xl bg-slate-900 text-white font-bold uppercase tracking-wider text-xs hover:bg-slate-800 transition-all shadow-md cursor-pointer active:scale-95">
+        Done & Explore Store
+      </button>
+    </div>
+
+    <!-- Modal Footer (If not yet paid) -->
+    <div *ngIf="!checkoutSuccessData" class="p-4 sm:p-5 border-t border-slate-100 bg-slate-50/80 shrink-0 flex items-center justify-between gap-3">
+      <div class="hidden sm:flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+        <mat-icon class="!w-3.5 !h-3.5 !text-[14px] text-emerald-600">lock</mat-icon>
+        <span>256-Bit SSL Encrypted</span>
+      </div>
+      <div class="flex items-center gap-2.5 w-full sm:w-auto">
+        <button type="button" (click)="closeCheckout()" class="flex-1 sm:flex-none px-5 py-3 rounded-xl border border-slate-200 bg-white text-slate-700 font-bold text-xs uppercase tracking-wider hover:bg-slate-50 active:scale-95 transition-all cursor-pointer">
+          Cancel
+        </button>
+        <button type="button" (click)="processCustomerPayment()" [disabled]="isSubmittingCheckout"
+                class="flex-1 sm:flex-none px-7 py-3 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-700 to-indigo-800 hover:from-indigo-500 hover:to-indigo-700 active:scale-95 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-indigo-500/25 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed">
+          <mat-icon *ngIf="!isSubmittingCheckout" class="!w-4 !h-4 !text-[16px]">verified_user</mat-icon>
+          <span *ngIf="isSubmittingCheckout" class="inline-block w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+          <span>{{ isSubmittingCheckout ? 'Authorizing Activation...' : 'Authorize & Pay' }}</span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+=======
+    <!-- Modal Footer (Sticky) -->
+    <div class="p-6 sm:p-8 border-t border-slate-100 bg-white shrink-0 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3 sm:gap-4">
+        <button (click)="closeModal()"
+            class="w-full sm:w-auto px-8 py-4 sm:py-3.5 bg-white text-slate-600 font-bold rounded-2xl sm:rounded-xl border border-slate-200 hover:bg-slate-50 transition-all text-center">
+            Cancel
+        </button>
+        <button (click)="addToCart($event, selectedProduct)"
+            class="w-full sm:w-auto px-8 py-4 sm:py-3.5 bg-indigo-600 text-white font-bold rounded-2xl sm:rounded-xl shadow-[0_8px_20px_rgb(79,70,229,0.2)] hover:bg-indigo-700 transition-all flex items-center justify-center gap-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            <span>Add to Cart</span>
+            <span class="w-px h-4 bg-white/30"></span>
+            <span>{{ selectedProduct.price }}</span>
+        </button>
+    </div>
+  </div>
+</div>
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b

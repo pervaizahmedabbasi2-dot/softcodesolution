@@ -1,0 +1,869 @@
+<div class="h-full bg-slate-50 p-4 sm:p-8">
+  <div class="mx-auto max-w-7xl">
+    
+    <!-- Header -->
+    <div class="mb-8">
+      <div class="flex items-center gap-3 mb-2">
+        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-green-500/10 text-green-500">
+          <lucide-icon [img]="myIcons.WalletCards" [size]="20" [strokeWidth]="2.5"></lucide-icon>
+        </div>
+        <h1 class="text-2xl font-black tracking-tight text-slate-900">Payments, Billing & Subscriptions</h1>
+      </div>
+      <p class="text-sm font-medium text-slate-500">Enterprise billing management — invoices, subscriptions, transaction history and revenue analytics for all platform tenants.</p>
+    </div>
+
+    <!-- Analytics Cards -->
+    <div *ngIf="activeTab === 'invoices'" class="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div class="rounded-[1.25rem] bg-white p-5 ring-1 ring-slate-100 shadow-sm flex items-center gap-4">
+        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500">
+          <lucide-icon [img]="myIcons.Activity" [size]="24" [strokeWidth]="2"></lucide-icon>
+        </div>
+        <div>
+          <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Revenue</p>
+          <p class="text-xl font-black text-slate-900">PKR 16,800</p>
+        </div>
+      </div>
+      <div class="rounded-[1.25rem] bg-white p-5 ring-1 ring-slate-100 shadow-sm flex items-center gap-4">
+        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-500/10 text-purple-500">
+          <lucide-icon [img]="myIcons.CreditCard" [size]="24" [strokeWidth]="2"></lucide-icon>
+        </div>
+        <div>
+          <p class="text-xs font-bold uppercase tracking-wider text-slate-400">MRR</p>
+          <p class="text-xl font-black text-slate-900">PKR 23,100</p>
+        </div>
+      </div>
+      <div class="rounded-[1.25rem] bg-white p-5 ring-1 ring-slate-100 shadow-sm flex items-center gap-4">
+        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500">
+          <lucide-icon [img]="myIcons.CheckCircle2" [size]="24" [strokeWidth]="2"></lucide-icon>
+        </div>
+        <div>
+          <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Active Subs</p>
+          <p class="text-xl font-black text-slate-900">5</p>
+        </div>
+      </div>
+      <div class="rounded-[1.25rem] bg-white p-5 ring-1 ring-slate-100 shadow-sm flex items-center gap-4">
+        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-red-500/10 text-red-500">
+          <lucide-icon [img]="myIcons.Clock" [size]="24" [strokeWidth]="2"></lucide-icon>
+        </div>
+        <div>
+          <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Overdue</p>
+          <p class="text-xl font-black text-slate-900">PKR 7,000</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="rounded-[1.5rem] bg-white shadow-sm ring-1 ring-slate-100 overflow-hidden">
+      <div class="flex flex-col gap-4 border-b border-slate-100 p-5 lg:flex-row lg:items-center lg:justify-between"> 
+        <div class="flex flex-wrap gap-2 p-1 rounded-xl bg-slate-50 w-full lg:w-auto">
+<<<<<<< HEAD
+          <button (click)="setTab('gateways')" [class.bg-white]="activeTab === 'gateways'" [class.shadow-sm]="activeTab === 'gateways'" [class.text-indigo-600]="activeTab === 'gateways'" [class.text-slate-500]="activeTab !== 'gateways'" class="rounded-lg px-4 py-2 text-sm font-bold transition-all flex items-center gap-1.5">
+            <lucide-icon [img]="myIcons.Settings" [size]="14"></lucide-icon>
+            <span>Payment Gateways</span>
+            <span class="bg-indigo-100 text-indigo-700 text-[10px] px-1.5 py-0.5 rounded-full font-bold">Live</span>
+          </button>
+          <button (click)="setTab('notifications')" [class.bg-white]="activeTab === 'notifications'" [class.shadow-sm]="activeTab === 'notifications'" [class.text-indigo-600]="activeTab === 'notifications'" [class.text-slate-500]="activeTab !== 'notifications'" class="rounded-lg px-4 py-2 text-sm font-bold transition-all flex items-center gap-1.5">
+            <lucide-icon [img]="myIcons.MessageSquare" [size]="14"></lucide-icon>
+            <span>Alerts & Notifications</span>
+            <span class="bg-emerald-100 text-emerald-800 text-[10px] px-1.5 py-0.5 rounded-full font-bold">WhatsApp / SMS / Email</span>
+          </button>
+=======
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
+          <button (click)="setTab('invoices')" [class.bg-white]="activeTab === 'invoices'" [class.shadow-sm]="activeTab === 'invoices'" [class.text-slate-900]="activeTab === 'invoices'" [class.text-slate-500]="activeTab !== 'invoices'" class="rounded-lg px-4 py-2 text-sm font-bold transition-all">Invoices</button>
+          <button (click)="setTab('approvals')" [class.bg-white]="activeTab === 'approvals'" [class.shadow-sm]="activeTab === 'approvals'" [class.text-slate-900]="activeTab === 'approvals'" [class.text-slate-500]="activeTab !== 'approvals'" class="rounded-lg px-4 py-2 text-sm font-bold transition-all flex items-center gap-2">Approvals <span class="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full" *ngIf="pendingApprovals.length">{{ pendingApprovals.length }}</span></button>
+          <button (click)="setTab('wallet')" [class.bg-white]="activeTab === 'wallet'" [class.shadow-sm]="activeTab === 'wallet'" [class.text-slate-900]="activeTab === 'wallet'" [class.text-slate-500]="activeTab !== 'wallet'" class="rounded-lg px-4 py-2 text-sm font-bold transition-all">Wallet</button>
+          <button (click)="setTab('coupons')" [class.bg-white]="activeTab === 'coupons'" [class.shadow-sm]="activeTab === 'coupons'" [class.text-slate-900]="activeTab === 'coupons'" [class.text-slate-500]="activeTab !== 'coupons'" class="rounded-lg px-4 py-2 text-sm font-bold transition-all">Coupons</button>
+          <button (click)="setTab('tax')" [class.bg-white]="activeTab === 'tax'" [class.shadow-sm]="activeTab === 'tax'" [class.text-slate-900]="activeTab === 'tax'" [class.text-slate-500]="activeTab !== 'tax'" class="rounded-lg px-4 py-2 text-sm font-bold transition-all">Tax Rules</button>
+        </div>
+        
+        <div class="relative max-w-sm w-full">
+          <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-400">
+            <lucide-icon [img]="myIcons.Search" [size]="16"></lucide-icon>
+          </div>
+          <input type="text" placeholder="Search records..." class="h-10 w-full rounded-xl border-0 bg-slate-50 pl-10 pr-4 text-sm font-medium text-slate-900 ring-1 ring-inset ring-slate-200 placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-green-500">
+        </div>
+      </div>
+
+<<<<<<< HEAD
+      <!-- Action Message Banner -->
+      <div *ngIf="gatewayActionMsg" class="p-3 mx-5 mt-4 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs font-bold flex items-center justify-between animate-fade-in">
+        <div class="flex items-center gap-2">
+          <lucide-icon [img]="myIcons.CheckCircle2" [size]="16" class="text-emerald-600"></lucide-icon>
+          <span>{{ gatewayActionMsg }}</span>
+        </div>
+        <button (click)="gatewayActionMsg = ''" class="text-emerald-600 hover:text-emerald-900">✕</button>
+      </div>
+
+=======
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
+      <div *ngIf="isLoading" class="p-12 flex flex-col items-center justify-center text-slate-400">
+        <lucide-icon [img]="myIcons.RefreshCcw" [size]="32" class="animate-spin mb-4"></lucide-icon>
+        <p class="text-sm font-bold tracking-wider uppercase">Loading {{activeTab}}...</p>
+      </div>
+
+<<<<<<< HEAD
+      <!-- GATEWAYS TAB (SUPERADMIN INTEGRATIONS) -->
+      <div *ngIf="!isLoading && activeTab === 'gateways'" class="p-6 space-y-8 animate-fade-in">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-indigo-50/70 border border-indigo-100 rounded-2xl p-5">
+          <div>
+            <span class="text-[10px] font-mono uppercase tracking-widest text-indigo-700 font-bold bg-indigo-100 px-2 py-0.5 rounded-md">Live Platform Gateways</span>
+            <h3 class="text-base font-extrabold text-slate-900 mt-1">Multi-Channel Customer Payment Processing</h3>
+            <p class="text-xs text-slate-600 mt-0.5">Configure your merchant credentials. Payments collected from Store and Registration automatically credit your bank account.</p>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-100 text-emerald-800 text-xs font-bold">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span>Checkout Engine Live</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- 4 Gateway Cards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div *ngFor="let gw of gateways" class="bg-white border rounded-2xl p-5 transition-all shadow-xs flex flex-col justify-between"
+               [class.border-indigo-300]="gw.enabled"
+               [class.border-slate-200]="!gw.enabled"
+               [class.bg-slate-50]="!gw.enabled">
+            <div>
+              <div class="flex items-start justify-between gap-3 mb-3">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-xl flex items-center justify-center"
+                       [class.bg-blue-100]="gw.id === 'stripe'"
+                       [class.text-blue-600]="gw.id === 'stripe'"
+                       [class.bg-red-100]="gw.id === 'jazzcash'"
+                       [class.text-red-600]="gw.id === 'jazzcash'"
+                       [class.bg-emerald-100]="gw.id === 'easypaisa'"
+                       [class.text-emerald-600]="gw.id === 'easypaisa'"
+                       [class.bg-amber-100]="gw.id === 'bank_transfer'"
+                       [class.text-amber-700]="gw.id === 'bank_transfer'">
+                    <lucide-icon [img]="myIcons.CreditCard" [size]="20" *ngIf="gw.id === 'stripe'"></lucide-icon>
+                    <lucide-icon [img]="myIcons.Smartphone" [size]="20" *ngIf="gw.id === 'jazzcash' || gw.id === 'easypaisa'"></lucide-icon>
+                    <lucide-icon [img]="myIcons.Landmark" [size]="20" *ngIf="gw.id === 'bank_transfer'"></lucide-icon>
+                  </div>
+                  <div>
+                    <h4 class="text-sm font-bold text-slate-900">{{ gw.name }}</h4>
+                    <span class="text-[10px] font-mono text-slate-500 uppercase">{{ gw.type }} • {{ gw.currency }}</span>
+                  </div>
+                </div>
+
+                <!-- Toggle Switch -->
+                <button (click)="toggleGateway(gw)"
+                        class="px-2.5 py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1.5"
+                        [class.bg-emerald-100]="gw.enabled"
+                        [class.text-emerald-800]="gw.enabled"
+                        [class.bg-slate-200]="!gw.enabled"
+                        [class.text-slate-600]="!gw.enabled">
+                  <span class="w-2 h-2 rounded-full" [class.bg-emerald-500]="gw.enabled" [class.bg-slate-400]="!gw.enabled"></span>
+                  <span>{{ gw.enabled ? 'Active' : 'Disabled' }}</span>
+                </button>
+              </div>
+
+              <p class="text-xs text-slate-500 mb-4 leading-relaxed">{{ gw.description }}</p>
+
+              <!-- Gateway Parameters Specs -->
+              <div class="bg-slate-50 rounded-xl p-3 border border-slate-100 space-y-1.5 text-xs">
+                <div *ngIf="gw.id === 'stripe'" class="flex justify-between items-center text-slate-600">
+                  <span class="font-medium">Stripe Mode:</span>
+                  <span class="font-mono px-2 py-0.5 rounded bg-amber-100 text-amber-800 text-[10px] font-bold">{{ gw.testMode ? 'Sandbox (Test)' : 'Production (Live)' }}</span>
+                </div>
+                <div *ngIf="gw.merchantId" class="flex justify-between items-center text-slate-600">
+                  <span class="font-medium">Merchant ID:</span>
+                  <span class="font-mono text-slate-900 font-semibold">{{ gw.merchantId }}</span>
+                </div>
+                <div *ngIf="gw.bankName" class="flex justify-between items-center text-slate-600">
+                  <span class="font-medium">Bank & Title:</span>
+                  <span class="font-semibold text-slate-900 truncate max-w-[200px]">{{ gw.bankName }} ({{ gw.accountTitle }})</span>
+                </div>
+                <div *ngIf="gw.iban" class="flex justify-between items-center text-slate-600">
+                  <span class="font-medium">IBAN / Raast:</span>
+                  <span class="font-mono text-[11px] font-bold text-slate-900">{{ gw.iban }}</span>
+                </div>
+                <div class="flex justify-between items-center text-slate-600">
+                  <span class="font-medium">Processing Fee:</span>
+                  <span class="text-slate-700 font-semibold">{{ gw.feePercent }}% {{ gw.feeFixed ? '+ $' + gw.feeFixed : '' }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card Footer -->
+            <div class="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between">
+              <div class="flex flex-wrap gap-1">
+                <span *ngFor="let m of gw.acceptedMethods" class="px-2 py-0.5 rounded bg-slate-100 text-slate-600 text-[10px] font-medium">{{ m }}</span>
+              </div>
+              <button (click)="openEditGateway(gw)"
+                      class="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition-colors flex items-center gap-1.5 shrink-0">
+                <lucide-icon [img]="myIcons.Settings" [size]="12"></lucide-icon>
+                <span>Edit Credentials</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Customer Transactions Table -->
+        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+          <div class="p-4 bg-slate-50/70 border-b border-slate-200 flex items-center justify-between text-xs">
+            <span class="font-bold text-slate-800">Recent Customer Gateway Transactions</span>
+            <span class="text-slate-500 font-mono text-[11px]">{{ transactions.length }} Processed</span>
+          </div>
+          <!-- Mobile Transactions Cards (Mobile View) -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 md:hidden">
+            <div *ngFor="let tx of transactions" class="apple-card rounded-2xl border border-slate-200/90 p-4 bg-white shadow-2xs space-y-3">
+              <div class="flex items-center justify-between gap-2">
+                <span class="font-mono text-xs font-black text-slate-900 bg-slate-100 px-2.5 py-0.5 rounded-md">{{ tx.invoiceNumber }}</span>
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider"
+                      [class.bg-emerald-100]="tx.status === 'PAID'"
+                      [class.text-emerald-800]="tx.status === 'PAID'"
+                      [class.bg-amber-100]="tx.status === 'PENDING_APPROVAL'"
+                      [class.text-amber-800]="tx.status === 'PENDING_APPROVAL'">
+                  {{ tx.status }}
+                </span>
+              </div>
+
+              <div>
+                <h4 class="font-bold text-slate-900 text-sm">{{ tx.customerName }}</h4>
+                <p class="text-xs text-slate-500 font-medium">{{ tx.customerEmail }}</p>
+              </div>
+
+              <div class="space-y-1 text-xs bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                <div class="flex items-center justify-between">
+                  <span class="text-slate-400 font-medium">Software:</span>
+                  <span class="font-bold text-slate-800 truncate max-w-[160px]">{{ tx.softwareTitle }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-slate-400 font-medium">Gateway:</span>
+                  <span class="font-bold text-indigo-600 text-[11px]">{{ tx.paymentMethod }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-slate-400 font-medium">Amount:</span>
+                  <span class="font-mono font-black text-slate-900 text-sm">{{ tx.amount }}</span>
+                </div>
+              </div>
+
+              <div class="text-[10px] text-slate-400 font-mono text-right pt-1 border-t border-slate-100">
+                {{ tx.createdAt | date:'short' }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Desktop Transactions Table (Desktop View) -->
+          <div class="hidden md:block overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-600">
+              <thead class="bg-slate-50 font-bold uppercase text-[10px] text-slate-400 border-b border-slate-200">
+                <tr>
+                  <th class="px-4 py-3">Invoice #</th>
+                  <th class="px-4 py-3">Customer</th>
+                  <th class="px-4 py-3">Software Package</th>
+                  <th class="px-4 py-3">Gateway Method</th>
+                  <th class="px-4 py-3 text-right">Amount</th>
+                  <th class="px-4 py-3">Status</th>
+                  <th class="px-4 py-3">Date</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                <tr *ngFor="let tx of transactions" class="hover:bg-slate-50/60 transition-colors">
+                  <td class="px-4 py-3 font-mono font-bold text-slate-900">{{ tx.invoiceNumber }}</td>
+                  <td class="px-4 py-3 font-medium text-slate-900">{{ tx.customerName }}<br><span class="text-[10px] text-slate-400 font-normal">{{ tx.customerEmail }}</span></td>
+                  <td class="px-4 py-3 text-slate-800">{{ tx.softwareTitle }}</td>
+                  <td class="px-4 py-3"><span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-[11px] font-semibold">{{ tx.paymentMethod }}</span></td>
+                  <td class="px-4 py-3 text-right font-mono font-bold text-slate-900">{{ tx.amount }}</td>
+                  <td class="px-4 py-3">
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                          [class.bg-emerald-100]="tx.status === 'PAID'"
+                          [class.text-emerald-800]="tx.status === 'PAID'"
+                          [class.bg-amber-100]="tx.status === 'PENDING_APPROVAL'"
+                          [class.text-amber-800]="tx.status === 'PENDING_APPROVAL'">
+                      {{ tx.status }}
+                    </span>
+                  </td>
+                  <td class="px-4 py-3 text-slate-400 text-[11px] whitespace-nowrap">{{ tx.createdAt | date:'short' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- NOTIFICATIONS & ALERTS TAB (WHATSAPP, SMS, EMAIL) -->
+      <div *ngIf="!isLoading && activeTab === 'notifications'" class="p-6 space-y-8 animate-fade-in">
+        <!-- Dual Scope Architecture Banner -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- 1. Platform Revenue Notifications (SoftCodeSolution Company) -->
+          <div class="bg-indigo-50/70 border border-indigo-200/80 rounded-2xl p-5 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] font-mono uppercase tracking-widest text-indigo-700 font-bold bg-indigo-100 px-2 py-0.5 rounded">SoftCodeSolution Company Level</span>
+              <span class="w-2 h-2 rounded-full bg-indigo-600"></span>
+            </div>
+            <h4 class="text-sm font-extrabold text-slate-900">Platform Software Sales Alerts</h4>
+            <p class="text-xs text-slate-600 leading-relaxed">
+              When customers buy any software package from the Store, automated notifications are triggered:
+            </p>
+            <ul class="text-[11px] text-slate-600 space-y-1 list-disc list-inside">
+              <li><strong>Buyer Receipt:</strong> WhatsApp & SMS license credentials + Email PDF invoice.</li>
+              <li><strong>SoftCodeSolution Admin:</strong> Instant WhatsApp & Email sales alert with revenue amount.</li>
+            </ul>
+          </div>
+
+          <!-- 2. Tenant Business Customer Notifications -->
+          <div class="bg-emerald-50/70 border border-emerald-200/80 rounded-2xl p-5 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] font-mono uppercase tracking-widest text-emerald-800 font-bold bg-emerald-100 px-2 py-0.5 rounded">Tenant Business Level</span>
+              <span class="w-2 h-2 rounded-full bg-emerald-600"></span>
+            </div>
+            <h4 class="text-sm font-extrabold text-slate-900">Tenant Client & Operations Alerts</h4>
+            <p class="text-xs text-slate-600 leading-relaxed">
+              When a subscriber uses their business suite (Clinic, Salon, Auto Workshop, Restaurant, etc.):
+            </p>
+            <ul class="text-[11px] text-slate-600 space-y-1 list-disc list-inside">
+              <li><strong>Their Customers:</strong> WhatsApp/SMS for appointments, repair job updates, and delivery.</li>
+              <li><strong>Tenant Owner:</strong> Live notification of new customer transactions and cashier closings.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Channel Status Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <!-- WhatsApp Business Cloud API -->
+          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold">
+                💬
+              </div>
+              <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">Connected (Live)</span>
+            </div>
+            <div>
+              <h5 class="text-sm font-bold text-slate-900">WhatsApp Business API</h5>
+              <p class="text-xs text-slate-500 mt-0.5">Meta Cloud API • Instant 2-way messaging & interactive templates with buttons.</p>
+            </div>
+            <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-600">
+              <span>Avg Delivery:</span>
+              <strong class="font-mono text-emerald-700">1.2 Seconds</strong>
+            </div>
+          </div>
+
+          <!-- High-Speed SMS Gateway -->
+          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center font-bold">
+                📱
+              </div>
+              <span class="px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 text-[10px] font-bold">Telco Gateway Live</span>
+            </div>
+            <div>
+              <h5 class="text-sm font-bold text-slate-900">Telecom SMS Gateway</h5>
+              <p class="text-xs text-slate-500 mt-0.5">Zong, Jazz, Telenor, Ufone multi-route direct alphanumeric SMS sender.</p>
+            </div>
+            <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-600">
+              <span>Success Rate:</span>
+              <strong class="font-mono text-blue-700">99.8% Delivered</strong>
+            </div>
+          </div>
+
+          <!-- Transactional Email Gateway -->
+          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="w-10 h-10 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center font-bold">
+                📧
+              </div>
+              <span class="px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 text-[10px] font-bold">SMTP / DKIM Verified</span>
+            </div>
+            <div>
+              <h5 class="text-sm font-bold text-slate-900">Transactional Email Engine</h5>
+              <p class="text-xs text-slate-500 mt-0.5">Automated HTML tax invoices, PDF dossiers, and receipts with zero spam rate.</p>
+            </div>
+            <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-600">
+              <span>Domain Score:</span>
+              <strong class="font-mono text-purple-700">100% Inbox Rate</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Interactive Test Notification Dispatcher Box -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div>
+              <h4 class="text-sm font-extrabold text-slate-900">Test Multi-Channel Dispatcher</h4>
+              <p class="text-xs text-slate-500 mt-0.5">Send a real-time trial WhatsApp, SMS, or Email message to any contact number or address.</p>
+            </div>
+            <span class="text-[10px] font-mono text-indigo-600 font-bold bg-indigo-50 px-2 py-1 rounded-md">Live Sandbox</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Select Channel</label>
+              <select [(ngModel)]="testNotif.channel" class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-medium">
+                <option value="WHATSAPP">💬 WhatsApp Message</option>
+                <option value="SMS">📱 Telecom SMS</option>
+                <option value="EMAIL">📧 Transactional Email</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Target Persona</label>
+              <select [(ngModel)]="testNotif.target" class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-medium">
+                <option value="CUSTOMER">Buyer / Customer</option>
+                <option value="ADMIN_COMPANY">SoftCodeSolution Admin</option>
+                <option value="TENANT_CUSTOMER">Tenant Business Client</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Recipient Name</label>
+              <input [(ngModel)]="testNotif.recipientName" placeholder="e.g. Pervaiz Ahmed Abbasi" class="w-full px-3 py-2 rounded-xl border border-slate-200 font-medium" />
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Recipient Phone / Email *</label>
+              <input [(ngModel)]="testNotif.recipient" placeholder="0300 1234567 or email@domain.com" class="w-full px-3 py-2 rounded-xl border border-slate-200 font-medium" />
+            </div>
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 mb-1 text-xs">Message Content *</label>
+            <textarea [(ngModel)]="testNotif.message" rows="2" placeholder="Assalam-o-Alaikum! Your order #INV-2026-9041 is confirmed with SoftCodeSolution. Support: 0300-SOFTCODE." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium"></textarea>
+          </div>
+
+          <div class="flex items-center justify-end">
+            <button (click)="sendTestNotification()" [disabled]="isSendingNotif"
+                    class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white font-bold text-xs transition-all shadow-sm flex items-center gap-2">
+              <span *ngIf="isSendingNotif" class="animate-spin text-sm">↻</span>
+              <span>{{ isSendingNotif ? 'Dispatching Message...' : 'Send Live Test Alert' }}</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Live Dispatch Logs Table -->
+        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+          <div class="p-4 bg-slate-50/70 border-b border-slate-200 flex items-center justify-between text-xs">
+            <div class="flex items-center gap-2">
+              <lucide-icon [img]="myIcons.MessageSquare" [size]="15" class="text-indigo-600"></lucide-icon>
+              <span class="font-bold text-slate-900">Live Multi-Channel Delivery Logs</span>
+            </div>
+            <span class="text-slate-500 font-mono text-[11px]">{{ notificationLogs.length }} Messages Logged</span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-600">
+              <thead class="bg-slate-50 font-bold uppercase text-[10px] text-slate-400 border-b border-slate-200">
+                <tr>
+                  <th class="px-4 py-3">Channel</th>
+                  <th class="px-4 py-3">Scope / Target</th>
+                  <th class="px-4 py-3">Recipient</th>
+                  <th class="px-4 py-3">Subject & Content</th>
+                  <th class="px-4 py-3">Delivery Status</th>
+                  <th class="px-4 py-3">Timestamp</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                <tr *ngFor="let log of notificationLogs" class="hover:bg-slate-50/60 transition-colors">
+                  <td class="px-4 py-3 whitespace-nowrap">
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-bold"
+                          [class.bg-emerald-100]="log.channel === 'WHATSAPP'"
+                          [class.text-emerald-800]="log.channel === 'WHATSAPP'"
+                          [class.bg-blue-100]="log.channel === 'SMS'"
+                          [class.text-blue-800]="log.channel === 'SMS'"
+                          [class.bg-purple-100]="log.channel === 'EMAIL'"
+                          [class.text-purple-800]="log.channel === 'EMAIL'">
+                      <span>{{ log.channel === 'WHATSAPP' ? '💬 WhatsApp' : log.channel === 'SMS' ? '📱 SMS' : '📧 Email' }}</span>
+                    </span>
+                  </td>
+                  <td class="px-4 py-3 whitespace-nowrap">
+                    <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded"
+                          [class.bg-indigo-50]="log.target === 'ADMIN_COMPANY' || log.category === 'COMPANY_REVENUE_ALERT'"
+                          [class.text-indigo-700]="log.target === 'ADMIN_COMPANY' || log.category === 'COMPANY_REVENUE_ALERT'"
+                          [class.bg-slate-100]="log.target === 'CUSTOMER' || log.category === 'SOFTWARE_PURCHASE'"
+                          [class.text-slate-700]="log.target === 'CUSTOMER' || log.category === 'SOFTWARE_PURCHASE'"
+                          [class.bg-emerald-50]="log.target === 'TENANT_CUSTOMER' || log.category === 'TENANT_BUSINESS_OPERATION'"
+                          [class.text-emerald-800]="log.target === 'TENANT_CUSTOMER' || log.category === 'TENANT_BUSINESS_OPERATION'">
+                      {{ log.target }}
+                    </span>
+                  </td>
+                  <td class="px-4 py-3 font-medium text-slate-900 whitespace-nowrap">
+                    {{ log.recipientName }}
+                    <br><span class="text-[11px] font-mono text-slate-500 font-normal">{{ log.recipient }}</span>
+                  </td>
+                  <td class="px-4 py-3 max-w-sm">
+                    <p class="font-bold text-slate-900 truncate">{{ log.subject }}</p>
+                    <p class="text-[11px] text-slate-500 line-clamp-2 mt-0.5">{{ log.message }}</p>
+                  </td>
+                  <td class="px-4 py-3 whitespace-nowrap">
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                          [class.bg-emerald-100]="log.status === 'DELIVERED' || log.status === 'READ'"
+                          [class.text-emerald-800]="log.status === 'DELIVERED' || log.status === 'READ'"
+                          [class.bg-amber-100]="log.status === 'QUEUED'"
+                          [class.text-amber-800]="log.status === 'QUEUED'">
+                      ✓ {{ log.status }}
+                    </span>
+                  </td>
+                  <td class="px-4 py-3 text-slate-400 text-[11px] whitespace-nowrap">
+                    {{ log.timestamp | date:'short' }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+=======
+      <!-- INVOICES TAB -->
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
+      <div *ngIf="!isLoading && activeTab === 'invoices'" class="overflow-x-auto">
+        <div *ngIf="invoices.length === 0" class="p-12 text-center text-slate-400">
+          <p class="font-medium text-sm">No invoices found in database.</p>
+        </div>
+        <table *ngIf="invoices.length > 0" class="w-full text-left text-sm whitespace-nowrap">
+          <thead class="bg-slate-50/50 text-xs font-bold uppercase tracking-wider text-slate-400">
+            <tr>
+              <th class="px-6 py-4">Invoice No</th>
+              <th class="px-6 py-4">Tenant</th>
+              <th class="px-6 py-4">Status</th>
+              <th class="px-6 py-4">Amount</th>
+              <th class="px-6 py-4">Date</th>
+<<<<<<< HEAD
+              <th class="px-6 py-4 text-right">Actions</th>
+=======
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
+            <tr *ngFor="let inv of invoices" class="hover:bg-slate-50/50 transition-colors">
+              <td class="px-6 py-4 text-slate-900 font-bold">{{ inv.invoice_number }}</td>
+              <td class="px-6 py-4">{{ inv.tenant_id }}</td>
+              <td class="px-6 py-4">
+                <span class="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-600">{{ inv.status }}</span>
+              </td>
+              <td class="px-6 py-4 font-bold text-slate-900">{{ inv.currency }} {{ inv.total }}</td>
+              <td class="px-6 py-4 text-slate-500">{{ inv.created_at | date }}</td>
+<<<<<<< HEAD
+              <td class="px-6 py-4 text-right">
+                <button (click)="openInvoiceModal(inv)" class="px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold transition-all inline-flex items-center gap-1.5">
+                  <lucide-icon [img]="myIcons.Receipt" [size]="14"></lucide-icon> Tax Invoice
+                </button>
+              </td>
+=======
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- APPROVALS TAB -->
+      <div *ngIf="!isLoading && activeTab === 'approvals'" class="overflow-x-auto">
+        <div *ngIf="pendingApprovals.length === 0" class="p-12 text-center text-slate-400">
+          <div class="mx-auto w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
+            <lucide-icon [img]="myIcons.Shield" [size]="24"></lucide-icon>
+          </div>
+          <p class="font-bold text-slate-900 mb-1">No Pending Approvals</p>
+          <p class="text-sm">All manual payments have been processed.</p>
+        </div>
+        <table *ngIf="pendingApprovals.length > 0" class="w-full text-left text-sm whitespace-nowrap">
+          <thead class="bg-slate-50/50 text-xs font-bold uppercase tracking-wider text-slate-400">
+            <tr>
+              <th class="px-6 py-4">Tenant / Invoice</th>
+              <th class="px-6 py-4">Method</th>
+              <th class="px-6 py-4">Amount</th>
+              <th class="px-6 py-4">Agent Notes</th>
+              <th class="px-6 py-4 text-right">Action</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
+            <tr *ngFor="let txn of pendingApprovals" class="hover:bg-slate-50/50 transition-colors">
+              <td class="px-6 py-4">
+                <p class="font-bold text-slate-900">{{ txn.company_name || txn.tenant_id }}</p>
+                <p class="text-xs text-slate-500">{{ txn.invoice_id || 'Wallet Deposit' }}</p>
+              </td>
+              <td class="px-6 py-4">
+                <span class="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-600 uppercase">{{ txn.method }}</span>
+              </td>
+              <td class="px-6 py-4 font-bold text-slate-900">{{ txn.currency }} {{ txn.amount }}</td>
+              <td class="px-6 py-4 text-slate-500 truncate max-w-[200px]">{{ txn.proof_note }}</td>
+              <td class="px-6 py-4 text-right">
+                <button (click)="approvePayment(txn.id)" class="bg-emerald-50 text-emerald-600 hover:bg-emerald-100 px-4 py-2 rounded-lg font-bold text-xs mr-2 transition-colors">Approve</button>
+                <button class="bg-red-50 text-red-600 hover:bg-red-100 px-4 py-2 rounded-lg font-bold text-xs transition-colors">Reject</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- WALLET TAB -->
+      <div *ngIf="!isLoading && activeTab === 'wallet'" class="p-6">
+        <div *ngIf="!walletBalance" class="text-center text-slate-400 p-8">
+           <p>Enter a Tenant ID in search to view their wallet balance.</p>
+        </div>
+        <div *ngIf="walletBalance" class="rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center max-w-md mx-auto">
+          <lucide-icon [img]="myIcons.WalletCards" [size]="48" class="text-slate-300 mx-auto mb-4"></lucide-icon>
+          <p class="text-sm font-bold uppercase tracking-widest text-slate-400 mb-2">Current Balance</p>
+          <h2 class="text-4xl font-black text-slate-900">{{walletBalance?.currency || 'USD'}} {{walletBalance?.balance || 0}}</h2>
+          <div class="mt-8 flex gap-4 justify-center">
+            <button class="bg-slate-900 text-white px-6 py-3 rounded-xl font-bold hover:bg-slate-800 transition-colors">Deposit Funds</button>
+            <button class="bg-white text-slate-900 px-6 py-3 rounded-xl font-bold border border-slate-200 hover:bg-slate-50 transition-colors">Deduct</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- COUPONS TAB -->
+      <div *ngIf="!isLoading && activeTab === 'coupons'" class="overflow-x-auto">
+        <div class="p-4 border-b border-slate-100 bg-slate-50 flex justify-end">
+          <button class="bg-green-500 text-white px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 hover:bg-green-600 transition-colors">
+            <lucide-icon [img]="myIcons.Plus" [size]="16"></lucide-icon> Create Coupon
+          </button>
+        </div>
+        <div *ngIf="coupons.length === 0" class="p-12 text-center text-slate-400">
+          <p class="font-medium text-sm">No coupons found in database.</p>
+        </div>
+        <table *ngIf="coupons.length > 0" class="w-full text-left text-sm whitespace-nowrap">
+          <thead class="bg-slate-50/50 text-xs font-bold uppercase tracking-wider text-slate-400">
+            <tr>
+              <th class="px-6 py-4">Code</th>
+              <th class="px-6 py-4">Type</th>
+              <th class="px-6 py-4">Value</th>
+              <th class="px-6 py-4">Uses</th>
+              <th class="px-6 py-4">Status</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
+            <tr *ngFor="let coupon of coupons">
+              <td class="px-6 py-4 text-slate-900 font-bold tracking-widest">{{ coupon.code }}</td>
+              <td class="px-6 py-4 uppercase text-xs">{{ coupon.type }}</td>
+              <td class="px-6 py-4 font-bold text-green-600">{{ coupon.type === 'percentage' ? coupon.value + '%' : coupon.currency + ' ' + coupon.value }}</td>
+              <td class="px-6 py-4">{{ coupon.current_uses }} / {{ coupon.max_uses || '∞' }}</td>
+              <td class="px-6 py-4">
+                <span [class.bg-emerald-50]="coupon.status === 'active'" [class.text-emerald-600]="coupon.status === 'active'" class="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-600 uppercase">{{ coupon.status }}</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- TAX RULES TAB -->
+      <div *ngIf="!isLoading && activeTab === 'tax'" class="overflow-x-auto">
+        <div class="p-4 border-b border-slate-100 bg-slate-50 flex justify-end">
+          <button class="bg-slate-900 text-white px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 hover:bg-slate-800 transition-colors">
+            <lucide-icon [img]="myIcons.Plus" [size]="16"></lucide-icon> Add Tax Rule
+          </button>
+        </div>
+        <div *ngIf="taxRules.length === 0" class="p-12 text-center text-slate-400">
+          <p class="font-medium text-sm">No tax rules found in database.</p>
+        </div>
+        <table *ngIf="taxRules.length > 0" class="w-full text-left text-sm whitespace-nowrap">
+          <thead class="bg-slate-50/50 text-xs font-bold uppercase tracking-wider text-slate-400">
+            <tr>
+              <th class="px-6 py-4">Country / State</th>
+              <th class="px-6 py-4">Tax Name</th>
+              <th class="px-6 py-4">Rate (%)</th>
+              <th class="px-6 py-4">Status</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
+            <tr *ngFor="let tax of taxRules" class="hover:bg-slate-50/50 transition-colors">
+              <td class="px-6 py-4 text-slate-900 font-bold">{{ tax.country }} <span *ngIf="tax.state" class="text-slate-400 text-xs">({{tax.state}})</span></td>
+              <td class="px-6 py-4">{{ tax.tax_name }}</td>
+              <td class="px-6 py-4 font-black text-slate-900">{{ tax.tax_rate }}%</td>
+              <td class="px-6 py-4">
+                <span class="rounded-lg bg-emerald-50 text-emerald-600 px-2.5 py-1 text-xs font-bold uppercase">{{ tax.status }}</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+    </div>
+  </div>
+<<<<<<< HEAD
+
+  <!-- Printable Official Tax Invoice Modal -->
+  <div *ngIf="selectedInvoiceForModal" class="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-6 bg-slate-950/70 backdrop-blur-md animate-fade-in" (click)="closeInvoiceModal()">
+    <div class="relative flex flex-col w-full max-w-2xl max-h-[90vh] bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200 animate-scale-up" (click)="$event.stopPropagation()">
+      
+      <!-- Top Action Bar -->
+      <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-2">
+          <lucide-icon [img]="myIcons.Receipt" [size]="18" class="text-indigo-400"></lucide-icon>
+          <span class="text-xs font-bold uppercase tracking-wider">Official Tax Invoice & Receipt</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button (click)="printInvoice()" class="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs">
+            <lucide-icon [img]="myIcons.Printer" [size]="14"></lucide-icon> Print / PDF
+          </button>
+          <button (click)="closeInvoiceModal()" class="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors">
+            <lucide-icon [img]="myIcons.X" [size]="16"></lucide-icon>
+          </button>
+        </div>
+      </div>
+
+      <!-- Scrollable Printable Invoice Content -->
+      <div class="p-6 sm:p-8 overflow-y-auto space-y-6 text-slate-800" id="printable-invoice">
+        <!-- Brand & Meta -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-6">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="w-8 h-8 rounded-xl bg-indigo-600 text-white font-black text-sm flex items-center justify-center shadow-md">S</span>
+              <span class="text-lg font-black tracking-tight text-slate-950">SOFT CODE SOLUTION</span>
+            </div>
+            <p class="text-xs text-slate-500 mt-1 font-medium">Enterprise Cloud Operating System</p>
+            <p class="text-[11px] text-slate-400 font-mono mt-0.5">NTN/Tax ID: PK-89472910-4</p>
+          </div>
+          <div class="sm:text-right">
+            <span class="inline-flex px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-200">
+              {{ selectedInvoiceForModal.status || 'PAID' }}
+            </span>
+            <p class="text-lg font-black text-slate-900 mt-2 font-mono">{{ selectedInvoiceForModal.invoice_number || 'INV-2026-9041' }}</p>
+            <p class="text-xs text-slate-400 font-medium">Date: {{ selectedInvoiceForModal.created_at | date:'mediumDate' }}</p>
+          </div>
+        </div>
+
+        <!-- Billed To -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+          <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
+            <p class="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Billed To</p>
+            <p class="font-black text-slate-900 text-sm">Tenant Account</p>
+            <p class="font-mono text-slate-600 font-semibold">{{ selectedInvoiceForModal.tenant_id }}</p>
+            <p class="text-slate-500">Corporate Enterprise Subscription</p>
+          </div>
+          <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
+            <p class="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Payment Details</p>
+            <p class="text-slate-600 font-medium">Method: <strong class="text-slate-900 font-mono uppercase">Bank Wire / Instant Card</strong></p>
+            <p class="text-slate-600 font-medium">Currency: <strong class="text-slate-900 font-mono">{{ selectedInvoiceForModal.currency || 'PKR' }}</strong></p>
+            <p class="text-emerald-700 font-bold">✓ Transaction Settled & Verified</p>
+          </div>
+        </div>
+
+        <!-- Line Items -->
+        <div class="rounded-2xl border border-slate-200 overflow-hidden">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px]">
+              <tr>
+                <th class="py-3 px-4">Description</th>
+                <th class="py-3 px-4 text-center">Qty</th>
+                <th class="py-3 px-4 text-right">Price</th>
+                <th class="py-3 px-4 text-right">Total</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-slate-700">
+              <tr>
+                <td class="py-3 px-4">
+                  <p class="font-bold text-slate-900">Enterprise Cloud Core Subscription</p>
+                  <p class="text-[11px] text-slate-400">Multi-tenant runtime, RBAC, API Gateway, Real-time metrics</p>
+                </td>
+                <td class="py-3 px-4 text-center">1</td>
+                <td class="py-3 px-4 text-right font-mono">{{ selectedInvoiceForModal.currency }} {{ (selectedInvoiceForModal.total * 0.8) | number:'1.0-0' }}</td>
+                <td class="py-3 px-4 text-right font-mono font-bold text-slate-900">{{ selectedInvoiceForModal.currency }} {{ (selectedInvoiceForModal.total * 0.8) | number:'1.0-0' }}</td>
+              </tr>
+              <tr>
+                <td class="py-3 px-4">
+                  <p class="font-bold text-slate-900">Custom Domain & Wildcard TLS Gateway</p>
+                  <p class="text-[11px] text-slate-400">Dedicated edge SSL certificate routing</p>
+                </td>
+                <td class="py-3 px-4 text-center">1</td>
+                <td class="py-3 px-4 text-right font-mono">{{ selectedInvoiceForModal.currency }} {{ (selectedInvoiceForModal.total * 0.2) | number:'1.0-0' }}</td>
+                <td class="py-3 px-4 text-right font-mono font-bold text-slate-900">{{ selectedInvoiceForModal.currency }} {{ (selectedInvoiceForModal.total * 0.2) | number:'1.0-0' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Totals Breakdown -->
+        <div class="flex justify-end pt-2">
+          <div class="w-full sm:w-64 space-y-2 text-xs">
+            <div class="flex justify-between text-slate-500">
+              <span>Subtotal:</span>
+              <span class="font-mono font-bold">{{ selectedInvoiceForModal.currency }} {{ selectedInvoiceForModal.total | number:'1.0-0' }}</span>
+            </div>
+            <div class="flex justify-between text-slate-500">
+              <span>Sales Tax (0% B2B):</span>
+              <span class="font-mono font-bold">PKR 0</span>
+            </div>
+            <div class="border-t border-slate-200 pt-2 flex justify-between text-base font-black text-slate-900">
+              <span>Total Paid:</span>
+              <span class="font-mono text-indigo-600">{{ selectedInvoiceForModal.currency }} {{ selectedInvoiceForModal.total | number:'1.0-0' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer Notice -->
+        <div class="pt-4 border-t border-slate-100 text-center text-[10px] text-slate-400">
+          <p>Thank you for choosing Soft Code Solution Enterprise Platform. For billing inquiries, contact billing@softcodesolution.com</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Gateway Credentials Modal -->
+  <div *ngIf="editingGateway" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-xs p-4 animate-fade-in">
+    <div class="w-full max-w-lg bg-white rounded-3xl border border-slate-200 shadow-2xl p-6 sm:p-8 space-y-6">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+        <div>
+          <h3 class="text-base font-extrabold text-slate-900">Configure {{ editingGateway.name }}</h3>
+          <p class="text-xs text-slate-500 mt-0.5">Manage live API keys, merchant IDs and settlement accounts</p>
+        </div>
+        <button (click)="closeEditGateway()" class="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100">✕</button>
+      </div>
+
+      <div class="space-y-4 text-xs">
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Gateway Display Name</label>
+          <input [(ngModel)]="editingGateway.name" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 font-medium" />
+        </div>
+
+        <!-- Stripe Specific Inputs -->
+        <div *ngIf="editingGateway.id === 'stripe'" class="space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Publishable Key (pk_test... / pk_live...)</label>
+            <input [(ngModel)]="editingGateway.publishableKey" class="w-full px-3 py-2 rounded-xl border border-slate-200 font-mono text-[11px]" />
+          </div>
+          <div class="flex items-center gap-2 pt-1">
+            <input type="checkbox" id="testModeCheck" [(ngModel)]="editingGateway.testMode" class="rounded text-indigo-600 focus:ring-0" />
+            <label for="testModeCheck" class="font-semibold text-slate-700">Sandbox Test Mode (Safe Testing)</label>
+          </div>
+        </div>
+
+        <!-- JazzCash / EasyPaisa Specific Inputs -->
+        <div *ngIf="editingGateway.id === 'jazzcash' || editingGateway.id === 'easypaisa'" class="space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Merchant Store ID</label>
+            <input [(ngModel)]="editingGateway.merchantId" class="w-full px-3 py-2 rounded-xl border border-slate-200 font-mono text-[11px]" />
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Merchant Secure Hash / Password</label>
+            <input type="password" value="••••••••••••••••" class="w-full px-3 py-2 rounded-xl border border-slate-200 font-mono text-[11px]" />
+          </div>
+        </div>
+
+        <!-- Bank Transfer Specific Inputs -->
+        <div *ngIf="editingGateway.id === 'bank_transfer'" class="space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Bank Name</label>
+            <input [(ngModel)]="editingGateway.bankName" class="w-full px-3 py-2 rounded-xl border border-slate-200 font-medium" />
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Account Title</label>
+            <input [(ngModel)]="editingGateway.accountTitle" class="w-full px-3 py-2 rounded-xl border border-slate-200 font-medium" />
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">IBAN / Raast ID</label>
+            <input [(ngModel)]="editingGateway.iban" class="w-full px-3 py-2 rounded-xl border border-slate-200 font-mono text-[11px]" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Platform Fee (%)</label>
+            <input type="number" [(ngModel)]="editingGateway.feePercent" class="w-full px-3 py-2 rounded-xl border border-slate-200 font-medium" />
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Supported Currencies</label>
+            <input [(ngModel)]="editingGateway.currency" class="w-full px-3 py-2 rounded-xl border border-slate-200 font-medium" />
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+        <button (click)="closeEditGateway()" class="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition-colors">
+          Cancel
+        </button>
+        <button (click)="saveGateway()" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold transition-all shadow-sm">
+          Save Credentials
+        </button>
+      </div>
+    </div>
+  </div>
+=======
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
+</div>

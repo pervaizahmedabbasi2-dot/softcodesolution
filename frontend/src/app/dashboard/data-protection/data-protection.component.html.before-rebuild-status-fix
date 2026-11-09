@@ -1,0 +1,3486 @@
+<div class="min-h-full w-full bg-slate-50 p-4 sm:p-5 lg:p-6">
+  <!-- 757.7B PREMIUM ENTERPRISE HERO -->
+
+  <section
+    id="protection-overview"
+    class="relative overflow-hidden rounded-[28px] border border-slate-800 bg-slate-950 text-white shadow-[0_24px_70px_rgba(15,23,42,0.18)]"
+  >
+    <!-- subtle background glow -->
+    <div
+      class="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-blue-500/10 blur-3xl"
+    ></div>
+
+    <div
+      class="pointer-events-none absolute -bottom-32 left-1/3 h-72 w-72 rounded-full bg-emerald-500/5 blur-3xl"
+    ></div>
+
+    <div class="relative p-5 sm:p-7 lg:p-8">
+      <!-- TOP META -->
+
+      <div class="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+        <div class="min-w-0">
+          <div class="flex flex-wrap items-center gap-2">
+            <span
+              class="inline-flex items-center rounded-full border border-blue-400/20 bg-blue-400/10 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.2em] text-blue-300"
+            >
+              DATA PROTECTION / RECOVERY CENTER
+            </span>
+
+            <span
+              class="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.16em] text-emerald-300"
+            >
+              <span
+                class="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.8)]"
+              ></span>
+              LIVE
+            </span>
+          </div>
+
+          <h1
+            class="mt-4 max-w-3xl text-3xl font-black tracking-[-0.035em] text-white sm:text-4xl lg:text-5xl"
+          >
+            Protection &amp; Recovery
+          </h1>
+
+          <p class="mt-3 max-w-2xl text-sm font-medium leading-6 text-slate-400 sm:text-[15px]">
+            Autonomous protection control plane for continuous recovery, integrity verification and
+            resilient system operation.
+          </p>
+        </div>
+
+        <!-- REFRESH -->
+
+        <button
+          type="button"
+          (click)="refresh()"
+          [disabled]="loading"
+          class="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white px-4 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-slate-950 shadow-lg transition hover:-translate-y-0.5 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <svg
+            class="h-4 w-4"
+            [class.animate-spin]="loading"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M4 4v5h5M20 20v-5h-5M5.5 9A7 7 0 0 1 18 6.5L20 9M18.5 15A7 7 0 0 1 6 17.5L4 15"
+            />
+          </svg>
+
+          {{ loading ? 'Refreshing...' : 'Refresh State' }}
+        </button>
+      </div>
+
+      <!-- CONTROL SUMMARY -->
+
+      <div class="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <!-- PROTECTION SCORE -->
+
+        <div class="rounded-2xl border border-white/10 bg-white/[0.045] p-4 backdrop-blur-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-[9px] font-black uppercase tracking-[0.18em] text-slate-500">
+              Protection Score
+            </span>
+
+            <span
+              class="rounded-lg border border-emerald-400/10 bg-emerald-400/10 px-2 py-1 text-[8px] font-black uppercase tracking-wider text-emerald-300"
+            >
+              Verified State
+            </span>
+          </div>
+
+          <div class="mt-3 flex items-end gap-1">
+            <span class="text-3xl font-black tracking-tight text-white">
+              {{ protectionScore }}
+            </span>
+
+            <span class="mb-1 text-sm font-black text-slate-500"> % </span>
+          </div>
+
+          <div class="mt-3 h-1.5 overflow-hidden rounded-full bg-white/10">
+            <div
+              class="h-full rounded-full bg-emerald-400 transition-all duration-500"
+              [style.width.%]="protectionScore"
+            ></div>
+          </div>
+        </div>
+
+        <!-- PROTECTION MODEL -->
+
+        <div class="rounded-2xl border border-white/10 bg-white/[0.045] p-4 backdrop-blur-sm">
+          <span class="text-[9px] font-black uppercase tracking-[0.18em] text-slate-500">
+            Protection Model
+          </span>
+
+          <div class="mt-3 flex items-center gap-3">
+            <div
+              class="flex h-10 w-10 items-center justify-center rounded-xl border border-blue-400/20 bg-blue-400/10 text-blue-300"
+            >
+              <svg
+                class="h-5 w-5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M12 3l7 3v5c0 4.5-2.8 7.8-7 10-4.2-2.2-7-5.5-7-10V6l7-3z"
+                />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4" />
+              </svg>
+            </div>
+
+            <div>
+              <p class="text-sm font-black text-white">Autonomous</p>
+
+              <p class="mt-0.5 text-[10px] font-semibold text-slate-500">
+                Continuous protection control
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- RECOVERY MODEL -->
+
+        <div class="rounded-2xl border border-white/10 bg-white/[0.045] p-4 backdrop-blur-sm">
+          <span class="text-[9px] font-black uppercase tracking-[0.18em] text-slate-500">
+            Recovery Model
+          </span>
+
+          <div class="mt-3 flex items-center gap-3">
+            <div
+              class="flex h-10 w-10 items-center justify-center rounded-xl border border-violet-400/20 bg-violet-400/10 text-violet-300"
+            >
+              <svg
+                class="h-5 w-5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M4 12a8 8 0 0113.7-5.7L20 9"
+                />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M20 4v5h-5" />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M20 12a8 8 0 01-13.7 5.7L4 15"
+                />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 20v-5h5" />
+              </svg>
+            </div>
+
+            <div>
+              <p class="text-sm font-black text-white">Self-Healing</p>
+
+              <p class="mt-0.5 text-[10px] font-semibold text-slate-500">
+                Restore · Verify · Rebuild
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- SYSTEM STATE -->
+
+        <div class="rounded-2xl border border-white/10 bg-white/[0.045] p-4 backdrop-blur-sm">
+          <span class="text-[9px] font-black uppercase tracking-[0.18em] text-slate-500">
+            System State
+          </span>
+
+          <div class="mt-3 flex items-center gap-3">
+            <div
+              class="relative flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-400/20 bg-emerald-400/10"
+            >
+              <span class="absolute h-2.5 w-2.5 animate-ping rounded-full bg-emerald-400/50"></span>
+
+              <span class="relative h-2.5 w-2.5 rounded-full bg-emerald-400"></span>
+            </div>
+
+            <div>
+              <p class="text-sm font-black text-emerald-300">Live</p>
+
+              <p class="mt-0.5 text-[10px] font-semibold text-slate-500">
+                Protection control plane active
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONTROL MESSAGE -->
+
+      <div
+        class="mt-4 flex flex-col gap-3 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <div class="flex min-w-0 items-center gap-3">
+          <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/5">
+            <svg
+              class="h-4 w-4 text-slate-400"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+            >
+              <circle cx="12" cy="12" r="9"></circle>
+              <path stroke-linecap="round" d="M12 8v4l2.5 1.5"></path>
+            </svg>
+          </div>
+
+          <div class="min-w-0">
+            <p class="truncate text-[10px] font-black uppercase tracking-[0.14em] text-slate-300">
+              Protection Control Plane
+            </p>
+
+            <p class="mt-0.5 text-[10px] font-semibold text-slate-500">
+              Monitoring, protection and recovery management are centralized here.
+            </p>
+          </div>
+        </div>
+
+        <span class="shrink-0 text-[9px] font-black uppercase tracking-[0.16em] text-emerald-400">
+          Continuous Monitoring
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 757.7UX COMPACT MANAGEMENT COMMAND CENTER -->
+
+  <section id="protection-command-center" class="mt-5 scroll-mt-6">
+    <div class="overflow-hidden rounded-[26px] border border-slate-200 bg-white shadow-sm">
+      <!-- COMMAND HEADER -->
+
+      <div class="border-b border-slate-100 bg-slate-50/80 px-4 py-4 sm:px-5">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p class="text-[9px] font-black uppercase tracking-[0.18em] text-slate-400">
+              Protection Control Center
+            </p>
+
+            <h2 class="mt-1 text-base font-black tracking-tight text-slate-950 sm:text-lg">
+              Management Console
+            </h2>
+          </div>
+
+          <div
+            class="inline-flex w-fit items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5"
+          >
+            <span
+              class="h-1.5 w-1.5 rounded-full"
+              [ngClass]="{
+                'bg-emerald-500': liveState === 'LIVE',
+                'bg-amber-500': liveState === 'DEGRADED',
+                'bg-rose-500': liveState === 'ERROR',
+              }"
+            ></span>
+
+            <span class="text-[9px] font-black uppercase tracking-[0.14em] text-slate-600">
+              {{ liveStateLabel }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- MANAGEMENT NAV -->
+
+      <div class="border-b border-slate-100 p-2.5">
+        <nav aria-label="Protection management" class="overflow-x-auto">
+          <div class="grid min-w-[620px] grid-cols-5 gap-1">
+            <a
+              href="#protection-overview"
+              class="group rounded-[15px] bg-slate-950 px-3 py-2.5 text-center transition hover:-translate-y-0.5"
+            >
+              <span class="block text-[9px] font-black uppercase tracking-[0.12em] text-white">
+                Overview
+              </span>
+              <span class="mt-0.5 block text-[8px] font-semibold text-slate-400"> Control </span>
+            </a>
+
+            <a
+              href="#protection-layers"
+              class="group rounded-[15px] px-3 py-2.5 text-center transition hover:bg-slate-100"
+            >
+              <span class="block text-[9px] font-black uppercase tracking-[0.12em] text-slate-600">
+                Protection
+              </span>
+              <span class="mt-0.5 block text-[8px] font-semibold text-slate-400"> 5 Layers </span>
+            </a>
+
+            <a
+              href="#recovery-points"
+              class="group rounded-[15px] px-3 py-2.5 text-center transition hover:bg-slate-100"
+            >
+              <span class="block text-[9px] font-black uppercase tracking-[0.12em] text-slate-600">
+                Recovery
+              </span>
+              <span class="mt-0.5 block text-[8px] font-semibold text-slate-400"> Points </span>
+            </a>
+
+            <a
+              href="#recovery-timeline"
+              class="group rounded-[15px] px-3 py-2.5 text-center transition hover:bg-slate-100"
+            >
+              <span class="block text-[9px] font-black uppercase tracking-[0.12em] text-slate-600">
+                Timeline
+              </span>
+              <span class="mt-0.5 block text-[8px] font-semibold text-slate-400"> History </span>
+            </a>
+
+            <a
+              href="#audit-integrity"
+              class="group rounded-[15px] px-3 py-2.5 text-center transition hover:bg-slate-100"
+            >
+              <span class="block text-[9px] font-black uppercase tracking-[0.12em] text-slate-600">
+                Audit
+              </span>
+              <span class="mt-0.5 block text-[8px] font-semibold text-slate-400"> Integrity </span>
+            </a>
+          </div>
+        </nav>
+      </div>
+
+      <!-- EXECUTIVE METRICS -->
+
+      <div class="grid grid-cols-2 gap-2.5 p-3 sm:grid-cols-4">
+        <a
+          href="#protection-overview"
+          class="rounded-[18px] border border-slate-200 bg-white p-3 transition hover:-translate-y-0.5 hover:shadow-sm"
+        >
+          <p class="text-[8px] font-black uppercase tracking-[0.13em] text-slate-400">Protection</p>
+
+          <p class="mt-1 text-lg font-black text-slate-950">{{ protectionScore }}%</p>
+
+          <p class="mt-0.5 text-[8px] font-semibold text-slate-400">Verified coverage</p>
+        </a>
+
+        <a
+          href="#protection-layers"
+          class="rounded-[18px] border border-slate-200 bg-white p-3 transition hover:-translate-y-0.5 hover:shadow-sm"
+        >
+          <p class="text-[8px] font-black uppercase tracking-[0.13em] text-slate-400">
+            Architecture
+          </p>
+
+          <p class="mt-1 text-lg font-black text-slate-950">5</p>
+
+          <p class="mt-0.5 text-[8px] font-semibold text-slate-400">Protection layers</p>
+        </a>
+
+        <a
+          href="#recovery-points"
+          class="rounded-[18px] border border-slate-200 bg-white p-3 transition hover:-translate-y-0.5 hover:shadow-sm"
+        >
+          <p class="text-[8px] font-black uppercase tracking-[0.13em] text-slate-400">Recovery</p>
+
+          <p class="mt-1 text-lg font-black text-slate-950">
+            {{ recoveryPoints.length }}
+          </p>
+
+          <p class="mt-0.5 text-[8px] font-semibold text-slate-400">Available points</p>
+        </a>
+
+        <a
+          href="#guardian-monitoring"
+          class="rounded-[18px] border border-slate-200 bg-white p-3 transition hover:-translate-y-0.5 hover:shadow-sm"
+        >
+          <p class="text-[8px] font-black uppercase tracking-[0.13em] text-slate-400">Guardian</p>
+
+          <p class="mt-1 text-lg font-black text-slate-950">
+            {{ activeWarnings }}
+          </p>
+
+          <p class="mt-0.5 text-[8px] font-semibold text-slate-400">Active warnings</p>
+        </a>
+      </div>
+
+      <!-- MANAGEMENT DESTINATIONS -->
+
+      <div class="grid gap-2.5 border-t border-slate-100 p-3 sm:grid-cols-2 lg:grid-cols-4">
+        <a
+          href="#protection-layers"
+          class="group rounded-[20px] border border-slate-200 bg-slate-50/70 p-4 transition hover:-translate-y-0.5 hover:bg-white hover:shadow-sm"
+        >
+          <div class="flex items-center justify-between">
+            <span
+              class="flex h-8 w-8 items-center justify-center rounded-[12px] bg-emerald-100 text-emerald-700"
+            >
+              <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+            </span>
+
+            <span class="text-xs text-slate-300 transition group-hover:text-slate-600"> → </span>
+          </div>
+
+          <p class="mt-3 text-xs font-black text-slate-950">Protection</p>
+
+          <p class="mt-1 text-[9px] font-medium leading-4 text-slate-500">
+            Manage all five protection layers and their verified states.
+          </p>
+        </a>
+
+        <a
+          href="#recovery-points"
+          class="group rounded-[20px] border border-slate-200 bg-slate-50/70 p-4 transition hover:-translate-y-0.5 hover:bg-white hover:shadow-sm"
+        >
+          <div class="flex items-center justify-between">
+            <span
+              class="flex h-8 w-8 items-center justify-center rounded-[12px] bg-violet-100 text-violet-700"
+            >
+              <span class="h-2 w-2 rounded-full bg-violet-500"></span>
+            </span>
+
+            <span class="text-xs text-slate-300 transition group-hover:text-slate-600"> → </span>
+          </div>
+
+          <p class="mt-3 text-xs font-black text-slate-950">Recovery</p>
+
+          <p class="mt-1 text-[9px] font-medium leading-4 text-slate-500">
+            Manage available recovery points and verification state.
+          </p>
+        </a>
+
+        <a
+          href="#recovery-timeline"
+          class="group rounded-[20px] border border-slate-200 bg-slate-50/70 p-4 transition hover:-translate-y-0.5 hover:bg-white hover:shadow-sm"
+        >
+          <div class="flex items-center justify-between">
+            <span
+              class="flex h-8 w-8 items-center justify-center rounded-[12px] bg-amber-100 text-amber-700"
+            >
+              <span class="h-2 w-2 rounded-full bg-amber-500"></span>
+            </span>
+
+            <span class="text-xs text-slate-300 transition group-hover:text-slate-600"> → </span>
+          </div>
+
+          <p class="mt-3 text-xs font-black text-slate-950">Timeline</p>
+
+          <p class="mt-1 text-[9px] font-medium leading-4 text-slate-500">
+            Review authoritative recovery history and available activity.
+          </p>
+        </a>
+
+        <a
+          href="#audit-integrity"
+          class="group rounded-[20px] border border-slate-200 bg-slate-50/70 p-4 transition hover:-translate-y-0.5 hover:bg-white hover:shadow-sm"
+        >
+          <div class="flex items-center justify-between">
+            <span
+              class="flex h-8 w-8 items-center justify-center rounded-[12px] bg-rose-100 text-rose-700"
+            >
+              <span class="h-2 w-2 rounded-full bg-rose-500"></span>
+            </span>
+
+            <span class="text-xs text-slate-300 transition group-hover:text-slate-600"> → </span>
+          </div>
+
+          <p class="mt-3 text-xs font-black text-slate-950">Audit & Integrity</p>
+
+          <p class="mt-1 text-[9px] font-medium leading-4 text-slate-500">
+            Inspect hashes, verification and integrity evidence.
+          </p>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 757.7UX COMPACT MANAGEMENT COMMAND CENTER END -->
+
+  <!-- 757.7W PROTECTION MANAGEMENT VIEW -->
+
+  <section id="protection-layers" class="mt-5 scroll-mt-6">
+    <div class="overflow-hidden rounded-[26px] border border-slate-200 bg-white shadow-sm">
+      <div class="border-b border-slate-100 bg-slate-50/70 px-5 py-4 sm:px-6">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p class="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">
+              Protection Management
+            </p>
+
+            <h2 class="mt-1 text-base font-black tracking-tight text-slate-950">
+              5-Layer Protection Control
+            </h2>
+
+            <p class="mt-1 text-xs font-medium leading-5 text-slate-500">
+              Compact control surface for protection layers, integrity verification and detection
+              state.
+            </p>
+          </div>
+
+          <div
+            class="inline-flex w-fit items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5"
+          >
+            <span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
+
+            <span class="text-[9px] font-black uppercase tracking-[0.14em] text-slate-500">
+              Live protection state
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4">
+        <!-- LAYER 1 -->
+        <a
+          href="#layer-1"
+          class="group rounded-[20px] border border-slate-200 bg-white p-4 transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
+        >
+          <div class="flex items-start justify-between gap-3">
+            <span
+              class="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-950 text-[10px] font-black text-white"
+            >
+              01
+            </span>
+
+            <span
+              class="h-2 w-2 rounded-full"
+              [ngClass]="{
+                'bg-emerald-400': layers[0].status === 'Verified',
+                'bg-amber-400':
+                  layers[0].status === 'Waiting' ||
+                  layers[0].status === 'Not verified' ||
+                  layers[0].status === 'Degraded',
+                'bg-rose-400': layers[0].status === 'Failed' || layers[0].status === 'Error',
+                'bg-blue-400':
+                  layers[0].status !== 'Verified' &&
+                  layers[0].status !== 'Waiting' &&
+                  layers[0].status !== 'Not verified' &&
+                  layers[0].status !== 'Degraded' &&
+                  layers[0].status !== 'Failed' &&
+                  layers[0].status !== 'Error',
+              }"
+            ></span>
+          </div>
+
+          <p class="mt-4 text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">
+            Layer 1
+          </p>
+
+          <h3 class="mt-1 text-sm font-black text-slate-950">Core Recovery</h3>
+
+          <p class="mt-1 text-[10px] font-medium leading-4 text-slate-500">
+            PostgreSQL + SQLite recovery point
+          </p>
+
+          <div class="mt-3">
+            <span
+              class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.12em] text-slate-600"
+              [ngClass]="{
+                'border-emerald-200 bg-emerald-50 text-emerald-700':
+                  layers[0].status === 'Verified',
+                'border-amber-200 bg-amber-50 text-amber-700':
+                  layers[0].status === 'Waiting' ||
+                  layers[0].status === 'Not verified' ||
+                  layers[0].status === 'Degraded',
+                'border-rose-200 bg-rose-50 text-rose-700':
+                  layers[0].status === 'Failed' || layers[0].status === 'Error',
+                'border-blue-200 bg-blue-50 text-blue-700':
+                  layers[0].status !== 'Verified' &&
+                  layers[0].status !== 'Waiting' &&
+                  layers[0].status !== 'Not verified' &&
+                  layers[0].status !== 'Degraded' &&
+                  layers[0].status !== 'Failed' &&
+                  layers[0].status !== 'Error',
+              }"
+            >
+              {{ layers[0].status }}
+            </span>
+          </div>
+          <span
+            class="mt-3 inline-block text-[9px] font-black uppercase tracking-[0.12em] text-slate-400 transition group-hover:text-slate-950"
+          >
+            Open layer →
+          </span>
+        </a>
+
+        <!-- LAYER 2 -->
+        <a
+          href="#layer-2"
+          class="group rounded-[20px] border border-slate-200 bg-white p-4 transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
+        >
+          <div class="flex items-start justify-between gap-3">
+            <span
+              class="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 text-[10px] font-black text-slate-700"
+            >
+              02
+            </span>
+
+            <span
+              class="h-2 w-2 rounded-full"
+              [ngClass]="{
+                'bg-emerald-400': layers[1].status === 'Verified',
+                'bg-amber-400':
+                  layers[1].status === 'Waiting' ||
+                  layers[1].status === 'Not verified' ||
+                  layers[1].status === 'Degraded',
+                'bg-rose-400': layers[1].status === 'Failed' || layers[1].status === 'Error',
+                'bg-blue-400':
+                  layers[1].status !== 'Verified' &&
+                  layers[1].status !== 'Waiting' &&
+                  layers[1].status !== 'Not verified' &&
+                  layers[1].status !== 'Degraded' &&
+                  layers[1].status !== 'Failed' &&
+                  layers[1].status !== 'Error',
+              }"
+            ></span>
+          </div>
+
+          <p class="mt-4 text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">
+            Layer 2
+          </p>
+
+          <h3 class="mt-1 text-sm font-black text-slate-950">Office Mirror</h3>
+
+          <p class="mt-1 text-[10px] font-medium leading-4 text-slate-500">
+            Verified local mirror protection
+          </p>
+
+          <div class="mt-3">
+            <span
+              class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.12em] text-slate-600"
+              [ngClass]="{
+                'border-emerald-200 bg-emerald-50 text-emerald-700':
+                  layers[1].status === 'Verified',
+                'border-amber-200 bg-amber-50 text-amber-700':
+                  layers[1].status === 'Waiting' ||
+                  layers[1].status === 'Not verified' ||
+                  layers[1].status === 'Degraded',
+                'border-rose-200 bg-rose-50 text-rose-700':
+                  layers[1].status === 'Failed' || layers[1].status === 'Error',
+                'border-blue-200 bg-blue-50 text-blue-700':
+                  layers[1].status !== 'Verified' &&
+                  layers[1].status !== 'Waiting' &&
+                  layers[1].status !== 'Not verified' &&
+                  layers[1].status !== 'Degraded' &&
+                  layers[1].status !== 'Failed' &&
+                  layers[1].status !== 'Error',
+              }"
+            >
+              {{ layers[1].status }}
+            </span>
+          </div>
+          <span
+            class="mt-3 inline-block text-[9px] font-black uppercase tracking-[0.12em] text-slate-400 transition group-hover:text-slate-950"
+          >
+            Open layer →
+          </span>
+        </a>
+
+        <!-- LAYER 3 -->
+        <a
+          href="#layer-3"
+          class="group rounded-[20px] border border-slate-200 bg-white p-4 transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
+        >
+          <div class="flex items-start justify-between gap-3">
+            <span
+              class="flex h-8 w-8 items-center justify-center rounded-xl bg-violet-100 text-[10px] font-black text-violet-700"
+            >
+              03
+            </span>
+
+            <span
+              class="h-2 w-2 rounded-full"
+              [ngClass]="{
+                'bg-emerald-400': layers[2].status === 'Verified',
+                'bg-amber-400':
+                  layers[2].status === 'Waiting' ||
+                  layers[2].status === 'Not verified' ||
+                  layers[2].status === 'Degraded',
+                'bg-rose-400': layers[2].status === 'Failed' || layers[2].status === 'Error',
+                'bg-blue-400':
+                  layers[2].status !== 'Verified' &&
+                  layers[2].status !== 'Waiting' &&
+                  layers[2].status !== 'Not verified' &&
+                  layers[2].status !== 'Degraded' &&
+                  layers[2].status !== 'Failed' &&
+                  layers[2].status !== 'Error',
+              }"
+            ></span>
+          </div>
+
+          <p class="mt-4 text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">
+            Layer 3
+          </p>
+
+          <h3 class="mt-1 text-sm font-black text-slate-950">Offsite Copy</h3>
+
+          <p class="mt-1 text-[10px] font-medium leading-4 text-slate-500">
+            Independent offsite protection
+          </p>
+
+          <div class="mt-3">
+            <span
+              class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.12em] text-slate-600"
+              [ngClass]="{
+                'border-emerald-200 bg-emerald-50 text-emerald-700':
+                  layers[2].status === 'Verified',
+                'border-amber-200 bg-amber-50 text-amber-700':
+                  layers[2].status === 'Waiting' ||
+                  layers[2].status === 'Not verified' ||
+                  layers[2].status === 'Degraded',
+                'border-rose-200 bg-rose-50 text-rose-700':
+                  layers[2].status === 'Failed' || layers[2].status === 'Error',
+                'border-blue-200 bg-blue-50 text-blue-700':
+                  layers[2].status !== 'Verified' &&
+                  layers[2].status !== 'Waiting' &&
+                  layers[2].status !== 'Not verified' &&
+                  layers[2].status !== 'Degraded' &&
+                  layers[2].status !== 'Failed' &&
+                  layers[2].status !== 'Error',
+              }"
+            >
+              {{ layers[2].status }}
+            </span>
+          </div>
+          <span
+            class="mt-3 inline-block text-[9px] font-black uppercase tracking-[0.12em] text-slate-400 transition group-hover:text-slate-950"
+          >
+            Open layer →
+          </span>
+        </a>
+
+        <!-- LAYER 4 -->
+        <a
+          href="#layer-4"
+          class="group rounded-[20px] border border-slate-200 bg-white p-4 transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
+        >
+          <div class="flex items-start justify-between gap-3">
+            <span
+              class="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 text-[10px] font-black text-slate-700"
+            >
+              04
+            </span>
+
+            <span
+              class="h-2 w-2 rounded-full"
+              [ngClass]="{
+                'bg-emerald-400': layers[3].status === 'Verified',
+                'bg-amber-400':
+                  layers[3].status === 'Waiting' ||
+                  layers[3].status === 'Not verified' ||
+                  layers[3].status === 'Degraded',
+                'bg-rose-400': layers[3].status === 'Failed' || layers[3].status === 'Error',
+                'bg-blue-400':
+                  layers[3].status !== 'Verified' &&
+                  layers[3].status !== 'Waiting' &&
+                  layers[3].status !== 'Not verified' &&
+                  layers[3].status !== 'Degraded' &&
+                  layers[3].status !== 'Failed' &&
+                  layers[3].status !== 'Error',
+              }"
+            ></span>
+          </div>
+
+          <p class="mt-4 text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">
+            Layer 4
+          </p>
+
+          <h3 class="mt-1 text-sm font-black text-slate-950">Reconciliation</h3>
+
+          <p class="mt-1 text-[10px] font-medium leading-4 text-slate-500">
+            Latest trusted recovery selection
+          </p>
+
+          <div class="mt-3">
+            <span
+              class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.12em] text-slate-600"
+              [ngClass]="{
+                'border-emerald-200 bg-emerald-50 text-emerald-700':
+                  layers[3].status === 'Verified',
+                'border-amber-200 bg-amber-50 text-amber-700':
+                  layers[3].status === 'Waiting' ||
+                  layers[3].status === 'Not verified' ||
+                  layers[3].status === 'Degraded',
+                'border-rose-200 bg-rose-50 text-rose-700':
+                  layers[3].status === 'Failed' || layers[3].status === 'Error',
+                'border-blue-200 bg-blue-50 text-blue-700':
+                  layers[3].status !== 'Verified' &&
+                  layers[3].status !== 'Waiting' &&
+                  layers[3].status !== 'Not verified' &&
+                  layers[3].status !== 'Degraded' &&
+                  layers[3].status !== 'Failed' &&
+                  layers[3].status !== 'Error',
+              }"
+            >
+              {{ layers[3].status }}
+            </span>
+          </div>
+          <span
+            class="mt-3 inline-block text-[9px] font-black uppercase tracking-[0.12em] text-slate-400 transition group-hover:text-slate-950"
+          >
+            Open layer →
+          </span>
+        </a>
+
+        <!-- LAYER 5 -->
+        <a
+          href="#layer-5"
+          class="group rounded-[20px] border border-slate-200 bg-white p-4 transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
+        >
+          <div class="flex items-start justify-between gap-3">
+            <span
+              class="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 text-[10px] font-black text-slate-700"
+            >
+              05
+            </span>
+
+            <span
+              class="h-2 w-2 rounded-full"
+              [ngClass]="{
+                'bg-emerald-400': layers[4].status === 'Verified',
+                'bg-amber-400':
+                  layers[4].status === 'Waiting' ||
+                  layers[4].status === 'Not verified' ||
+                  layers[4].status === 'Degraded',
+                'bg-rose-400': layers[4].status === 'Failed' || layers[4].status === 'Error',
+                'bg-blue-400':
+                  layers[4].status !== 'Verified' &&
+                  layers[4].status !== 'Waiting' &&
+                  layers[4].status !== 'Not verified' &&
+                  layers[4].status !== 'Degraded' &&
+                  layers[4].status !== 'Failed' &&
+                  layers[4].status !== 'Error',
+              }"
+            ></span>
+          </div>
+
+          <p class="mt-4 text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">
+            Layer 5
+          </p>
+
+          <h3 class="mt-1 text-sm font-black text-slate-950">Crash Supervisor</h3>
+
+          <p class="mt-1 text-[10px] font-medium leading-4 text-slate-500">
+            Independent process health and restart
+          </p>
+
+          <div class="mt-3">
+            <span
+              class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.12em] text-slate-600"
+              [ngClass]="{
+                'border-emerald-200 bg-emerald-50 text-emerald-700':
+                  layers[4].status === 'Verified',
+                'border-amber-200 bg-amber-50 text-amber-700':
+                  layers[4].status === 'Waiting' ||
+                  layers[4].status === 'Not verified' ||
+                  layers[4].status === 'Degraded',
+                'border-rose-200 bg-rose-50 text-rose-700':
+                  layers[4].status === 'Failed' || layers[4].status === 'Error',
+                'border-blue-200 bg-blue-50 text-blue-700':
+                  layers[4].status !== 'Verified' &&
+                  layers[4].status !== 'Waiting' &&
+                  layers[4].status !== 'Not verified' &&
+                  layers[4].status !== 'Degraded' &&
+                  layers[4].status !== 'Failed' &&
+                  layers[4].status !== 'Error',
+              }"
+            >
+              {{ layers[4].status }}
+            </span>
+          </div>
+          <span
+            class="mt-3 inline-block text-[9px] font-black uppercase tracking-[0.12em] text-slate-400 transition group-hover:text-slate-950"
+          >
+            Open layer →
+          </span>
+        </a>
+
+        <!-- DETECTION -->
+        <a
+          href="#missing-corrupt-detection"
+          class="group rounded-[20px] border border-slate-200 bg-white p-4 transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
+        >
+          <div class="flex items-start justify-between gap-3">
+            <span
+              class="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-50 text-[10px] font-black text-amber-700"
+            >
+              DT
+            </span>
+
+            <span class="h-2 w-2 rounded-full bg-amber-400"></span>
+          </div>
+
+          <p class="mt-4 text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">
+            Detection
+          </p>
+
+          <h3 class="mt-1 text-sm font-black text-slate-950">Missing / Corrupt</h3>
+
+          <p class="mt-1 text-[10px] font-medium leading-4 text-slate-500">
+            Existing verification and warning state
+          </p>
+
+          <span
+            class="mt-3 inline-block text-[9px] font-black uppercase tracking-[0.12em] text-slate-400 transition group-hover:text-slate-950"
+          >
+            Open detection →
+          </span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 757.7E LAYER 1 MANAGEMENT -->
+
+  <section id="layer-1" class="mt-5 scroll-mt-6">
+    <div class="overflow-hidden rounded-[26px] border border-slate-200 bg-white shadow-sm">
+      <!-- HEADER -->
+
+      <div class="border-b border-slate-100 bg-slate-50/70 p-5 sm:p-6">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div class="flex items-start gap-4">
+            <div
+              class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-sm font-black text-blue-600"
+            >
+              01
+            </div>
+
+            <div>
+              <p class="text-[8px] font-black uppercase tracking-[0.2em] text-blue-600">
+                PROTECTION LAYER 1
+              </p>
+
+              <h2 class="mt-1 text-xl font-black tracking-tight text-slate-950">Core Recovery</h2>
+
+              <p class="mt-1 text-xs font-semibold text-slate-500">
+                PostgreSQL + SQLite recovery point
+              </p>
+            </div>
+          </div>
+
+          <!-- REAL LAYER STATE -->
+
+          <div
+            class="inline-flex w-fit items-center gap-2 rounded-full border px-3 py-2"
+            [class.border-emerald-200]="layers[0].status === 'Verified'"
+            [class.bg-emerald-50]="layers[0].status === 'Verified'"
+            [class.text-emerald-700]="layers[0].status === 'Verified'"
+            [class.border-amber-200]="layers[0].status !== 'Verified'"
+            [class.bg-amber-50]="layers[0].status !== 'Verified'"
+            [class.text-amber-700]="layers[0].status !== 'Verified'"
+          >
+            <span
+              class="h-2 w-2 rounded-full"
+              [class.bg-emerald-500]="layers[0].status === 'Verified'"
+              [class.bg-amber-500]="layers[0].status !== 'Verified'"
+            ></span>
+
+            <span class="text-[9px] font-black uppercase tracking-[0.14em]">
+              {{ layers[0].status }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CORE STATE -->
+
+      <div class="grid gap-4 p-5 sm:p-6 lg:grid-cols-3">
+        <!-- POSTGRESQL -->
+
+        <article class="rounded-2xl border border-slate-200 bg-white p-4">
+          <div class="flex items-center justify-between">
+            <p class="text-[8px] font-black uppercase tracking-[0.16em] text-slate-400">
+              PostgreSQL
+            </p>
+
+            <span
+              class="h-2 w-2 rounded-full"
+              [class.bg-emerald-500]="!!latestBackup?.postgres_sha256"
+              [class.bg-amber-500]="!latestBackup?.postgres_sha256"
+            ></span>
+          </div>
+
+          <p class="mt-3 text-sm font-black text-slate-950">
+            {{ latestBackup?.postgres_sha256 ? 'Verified' : 'Not verified' }}
+          </p>
+
+          <p class="mt-1 text-[9px] font-semibold leading-4 text-slate-500">
+            SHA-256 recovery evidence
+          </p>
+        </article>
+
+        <!-- SQLITE -->
+
+        <article class="rounded-2xl border border-slate-200 bg-white p-4">
+          <div class="flex items-center justify-between">
+            <p class="text-[8px] font-black uppercase tracking-[0.16em] text-slate-400">SQLite</p>
+
+            <span
+              class="h-2 w-2 rounded-full"
+              [class.bg-emerald-500]="!!latestBackup?.sqlite_sha256"
+              [class.bg-amber-500]="!latestBackup?.sqlite_sha256"
+            ></span>
+          </div>
+
+          <p class="mt-3 text-sm font-black text-slate-950">
+            {{ latestBackup?.sqlite_sha256 ? 'Verified' : 'Not verified' }}
+          </p>
+
+          <p class="mt-1 text-[9px] font-semibold leading-4 text-slate-500">
+            SHA-256 recovery evidence
+          </p>
+        </article>
+
+        <!-- RECOVERY POINT -->
+
+        <article class="rounded-2xl border border-slate-200 bg-slate-950 p-4 text-white">
+          <p class="text-[8px] font-black uppercase tracking-[0.16em] text-slate-500">
+            Recovery Point
+          </p>
+
+          <p class="mt-3 truncate text-sm font-black">
+            {{ latestBackup?.id || 'No recovery point' }}
+          </p>
+
+          <p class="mt-1 text-[9px] font-semibold leading-4 text-slate-500">
+            Latest authoritative recovery source
+          </p>
+        </article>
+      </div>
+
+      <!-- VERIFICATION EXPLANATION -->
+
+      <div class="border-t border-slate-100 px-5 py-4 sm:px-6">
+        <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p class="text-[9px] font-black uppercase tracking-[0.16em] text-slate-400">
+              Integrity Rule
+            </p>
+
+            <p class="mt-1 text-[10px] font-semibold leading-5 text-slate-600">
+              Layer 1 is verified only when both PostgreSQL and SQLite SHA-256 recovery evidence are
+              available.
+            </p>
+          </div>
+
+          <span
+            class="inline-flex w-fit items-center rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-[8px] font-black uppercase tracking-[0.12em] text-slate-500"
+          >
+            Real Layer State
+          </span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 757.7F LAYER 2 MANAGEMENT -->
+
+  <section id="layer-2" class="mt-5 scroll-mt-6">
+    <div class="overflow-hidden rounded-[26px] border border-slate-200 bg-white shadow-sm">
+      <!-- HEADER -->
+
+      <div class="border-b border-slate-100 bg-slate-50/70 p-5 sm:p-6">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div class="flex items-start gap-4">
+            <div
+              class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-sm font-black text-emerald-600"
+            >
+              02
+            </div>
+
+            <div>
+              <p class="text-[8px] font-black uppercase tracking-[0.2em] text-emerald-600">
+                PROTECTION LAYER 2
+              </p>
+
+              <h2 class="mt-1 text-xl font-black tracking-tight text-slate-950">Office Mirror</h2>
+
+              <p class="mt-1 text-xs font-semibold text-slate-500">
+                Verified local mirror protection
+              </p>
+            </div>
+          </div>
+
+          <!-- REAL LAYER STATE -->
+
+          <div
+            class="inline-flex w-fit items-center gap-2 rounded-full border px-3 py-2"
+            [class.border-emerald-200]="layers[1].status === 'Verified'"
+            [class.bg-emerald-50]="layers[1].status === 'Verified'"
+            [class.text-emerald-700]="layers[1].status === 'Verified'"
+            [class.border-amber-200]="layers[1].status !== 'Verified'"
+            [class.bg-amber-50]="layers[1].status !== 'Verified'"
+            [class.text-amber-700]="layers[1].status !== 'Verified'"
+          >
+            <span
+              class="h-2 w-2 rounded-full"
+              [class.bg-emerald-500]="layers[1].status === 'Verified'"
+              [class.bg-amber-500]="layers[1].status !== 'Verified'"
+            ></span>
+
+            <span class="text-[9px] font-black uppercase tracking-[0.14em]">
+              {{ layers[1].status }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- MIRROR STATE -->
+
+      <div class="grid gap-4 p-5 sm:p-6 lg:grid-cols-3">
+        <!-- VERIFICATION -->
+
+        <article class="rounded-2xl border border-slate-200 bg-white p-4">
+          <div class="flex items-center justify-between">
+            <p class="text-[8px] font-black uppercase tracking-[0.16em] text-slate-400">
+              Mirror Verification
+            </p>
+
+            <span
+              class="h-2 w-2 rounded-full"
+              [class.bg-emerald-500]="latestBackup?.office_mirror_verified === true"
+              [class.bg-amber-500]="latestBackup?.office_mirror_verified !== true"
+            ></span>
+          </div>
+
+          <p class="mt-3 text-sm font-black text-slate-950">
+            {{ latestBackup?.office_mirror_verified === true ? 'Verified' : 'Not verified' }}
+          </p>
+
+          <p class="mt-1 text-[9px] font-semibold leading-4 text-slate-500">
+            Latest recovery point verification
+          </p>
+        </article>
+
+        <!-- SHA-256 -->
+
+        <article class="rounded-2xl border border-slate-200 bg-white p-4">
+          <div class="flex items-center justify-between">
+            <p class="text-[8px] font-black uppercase tracking-[0.16em] text-slate-400">
+              Mirror Integrity
+            </p>
+
+            <span
+              class="h-2 w-2 rounded-full"
+              [class.bg-emerald-500]="!!latestBackup?.office_mirror_sha256"
+              [class.bg-amber-500]="!latestBackup?.office_mirror_sha256"
+            ></span>
+          </div>
+
+          <p class="mt-3 text-sm font-black text-slate-950">
+            {{ latestBackup?.office_mirror_sha256 ? 'SHA-256 available' : 'SHA-256 unavailable' }}
+          </p>
+
+          <p class="mt-1 truncate text-[9px] font-semibold leading-4 text-slate-500">
+            {{ latestBackup?.office_mirror_sha256 || 'No mirror hash reported' }}
+          </p>
+        </article>
+
+        <!-- PATH -->
+
+        <article class="rounded-2xl border border-slate-200 bg-slate-950 p-4 text-white">
+          <p class="text-[8px] font-black uppercase tracking-[0.16em] text-slate-500">
+            Mirror Location
+          </p>
+
+          <p class="mt-3 truncate text-sm font-black">
+            {{ latestBackup?.office_mirror_path || 'No mirror path reported' }}
+          </p>
+
+          <p class="mt-1 text-[9px] font-semibold leading-4 text-slate-500">
+            Authoritative path from latest recovery point
+          </p>
+        </article>
+      </div>
+
+      <!-- RECOVERY ROLE -->
+
+      <div class="border-t border-slate-100 px-5 py-4 sm:px-6">
+        <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p class="text-[9px] font-black uppercase tracking-[0.16em] text-slate-400">
+              Protection Role
+            </p>
+
+            <p class="mt-1 text-[10px] font-semibold leading-5 text-slate-600">
+              Office Mirror provides a verified local secondary protection source that can support
+              continuity and recovery when the primary recovery path is unavailable.
+            </p>
+          </div>
+
+          <span
+            class="inline-flex w-fit items-center rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-[8px] font-black uppercase tracking-[0.12em] text-emerald-700"
+          >
+            Real Layer State
+          </span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 757.7G LAYER 3 MANAGEMENT -->
+
+  <section id="layer-3" class="mt-5 scroll-mt-6">
+    <div class="overflow-hidden rounded-[26px] border border-slate-200 bg-white shadow-sm">
+      <!-- HEADER -->
+
+      <div class="border-b border-slate-100 bg-slate-50/70 p-5 sm:p-6">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div class="flex items-start gap-4">
+            <div
+              class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-violet-50 text-sm font-black text-violet-600"
+            >
+              03
+            </div>
+
+            <div>
+              <p class="text-[8px] font-black uppercase tracking-[0.2em] text-violet-600">
+                PROTECTION LAYER 3
+              </p>
+
+              <h2 class="mt-1 text-xl font-black tracking-tight text-slate-950">Offsite Copy</h2>
+
+              <p class="mt-1 text-xs font-semibold text-slate-500">
+                Independent offsite protection
+              </p>
+            </div>
+          </div>
+
+          <!-- REAL LAYER STATE -->
+
+          <div
+            class="inline-flex w-fit items-center gap-2 rounded-full border px-3 py-2"
+            [class.border-emerald-200]="layers[2].status === 'Verified'"
+            [class.bg-emerald-50]="layers[2].status === 'Verified'"
+            [class.text-emerald-700]="layers[2].status === 'Verified'"
+            [class.border-amber-200]="layers[2].status !== 'Verified'"
+            [class.bg-amber-50]="layers[2].status !== 'Verified'"
+            [class.text-amber-700]="layers[2].status !== 'Verified'"
+          >
+            <span
+              class="h-2 w-2 rounded-full"
+              [class.bg-emerald-500]="layers[2].status === 'Verified'"
+              [class.bg-amber-500]="layers[2].status !== 'Verified'"
+            ></span>
+
+            <span class="text-[9px] font-black uppercase tracking-[0.14em]">
+              {{ layers[2].status }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- OFFSITE STATE -->
+
+      <div class="grid gap-4 p-5 sm:p-6 lg:grid-cols-3">
+        <!-- VERIFICATION -->
+
+        <article class="rounded-2xl border border-slate-200 bg-white p-4">
+          <div class="flex items-center justify-between">
+            <p class="text-[8px] font-black uppercase tracking-[0.16em] text-slate-400">
+              Offsite Verification
+            </p>
+
+            <span
+              class="h-2 w-2 rounded-full"
+              [class.bg-emerald-500]="latestBackup?.offsite_verified === true"
+              [class.bg-amber-500]="latestBackup?.offsite_verified !== true"
+            ></span>
+          </div>
+
+          <p class="mt-3 text-sm font-black text-slate-950">
+            {{ latestBackup?.offsite_verified === true ? 'Verified' : 'Not verified' }}
+          </p>
+
+          <p class="mt-1 text-[9px] font-semibold leading-4 text-slate-500">
+            Latest recovery point verification
+          </p>
+        </article>
+
+        <!-- PROVIDER / STATUS -->
+
+        <article class="rounded-2xl border border-slate-200 bg-white p-4">
+          <p class="text-[8px] font-black uppercase tracking-[0.16em] text-slate-400">
+            Offsite Provider
+          </p>
+
+          <p class="mt-3 truncate text-sm font-black text-slate-950">
+            {{ latestBackup?.offsite_provider || 'Provider not reported' }}
+          </p>
+
+          <p class="mt-1 text-[9px] font-semibold leading-4 text-slate-500">
+            Authoritative provider information
+          </p>
+
+          <div
+            class="mt-3 inline-flex rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5"
+          >
+            <span class="text-[8px] font-black uppercase tracking-[0.12em] text-slate-600">
+              {{ latestBackup?.offsite_status || 'Status not reported' }}
+            </span>
+          </div>
+        </article>
+
+        <!-- INTEGRITY -->
+
+        <article class="rounded-2xl border border-slate-200 bg-slate-950 p-4 text-white">
+          <div class="flex items-center justify-between">
+            <p class="text-[8px] font-black uppercase tracking-[0.16em] text-slate-500">
+              Offsite Integrity
+            </p>
+
+            <span
+              class="h-2 w-2 rounded-full"
+              [class.bg-emerald-500]="!!latestBackup?.offsite_sha256"
+              [class.bg-amber-500]="!latestBackup?.offsite_sha256"
+            ></span>
+          </div>
+
+          <p class="mt-3 text-sm font-black">
+            {{ latestBackup?.offsite_sha256 ? 'SHA-256 available' : 'SHA-256 unavailable' }}
+          </p>
+
+          <p class="mt-1 truncate text-[9px] font-semibold leading-4 text-slate-500">
+            {{ latestBackup?.offsite_sha256 || 'No offsite hash reported' }}
+          </p>
+        </article>
+      </div>
+
+      <!-- LOCATION / RETENTION -->
+
+      <div class="grid gap-4 border-t border-slate-100 p-5 sm:p-6 lg:grid-cols-2">
+        <article class="rounded-2xl border border-slate-200 bg-white p-4">
+          <p class="text-[8px] font-black uppercase tracking-[0.16em] text-slate-400">
+            Offsite Location
+          </p>
+
+          <p class="mt-3 truncate text-sm font-black text-slate-950">
+            {{ latestBackup?.offsite_path || 'No offsite path reported' }}
+          </p>
+
+          <p class="mt-1 text-[9px] font-semibold leading-4 text-slate-500">
+            Authoritative path from latest recovery point
+          </p>
+        </article>
+
+        <article class="rounded-2xl border border-slate-200 bg-white p-4">
+          <p class="text-[8px] font-black uppercase tracking-[0.16em] text-slate-400">Retention</p>
+
+          <p class="mt-3 text-sm font-black text-slate-950">
+            {{ latestBackup?.offsite_retention_until || 'Retention not reported' }}
+          </p>
+
+          <p class="mt-1 text-[9px] font-semibold leading-4 text-slate-500">
+            Authoritative offsite retention boundary
+          </p>
+        </article>
+      </div>
+
+      <!-- PROTECTION ROLE -->
+
+      <div class="border-t border-slate-100 px-5 py-4 sm:px-6">
+        <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p class="text-[9px] font-black uppercase tracking-[0.16em] text-slate-400">
+              Protection Role
+            </p>
+
+            <p class="mt-1 text-[10px] font-semibold leading-5 text-slate-600">
+              Offsite Copy provides an independent recovery boundary for failures that affect the
+              local and office protection paths.
+            </p>
+          </div>
+
+          <span
+            class="inline-flex w-fit items-center rounded-xl border border-violet-200 bg-violet-50 px-3 py-2 text-[8px] font-black uppercase tracking-[0.12em] text-violet-700"
+          >
+            Real Layer State
+          </span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 757.7H LAYER 4 MANAGEMENT -->
+
+  <section id="layer-4" class="mt-5 scroll-mt-6">
+    <div class="overflow-hidden rounded-[26px] border border-slate-200 bg-white shadow-sm">
+      <div class="border-b border-slate-100 bg-slate-50/70 p-5 sm:p-6">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div class="flex items-start gap-4">
+            <div
+              class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-cyan-50 text-sm font-black text-cyan-600"
+            >
+              04
+            </div>
+
+            <div>
+              <p class="text-[8px] font-black uppercase tracking-[0.2em] text-cyan-600">
+                PROTECTION LAYER 4
+              </p>
+
+              <h2 class="mt-1 text-xl font-black tracking-tight text-slate-950">Reconciliation</h2>
+
+              <p class="mt-1 text-xs font-semibold text-slate-500">
+                Latest trusted recovery selection
+              </p>
+            </div>
+          </div>
+
+          <div
+            class="inline-flex w-fit items-center gap-2 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-2 text-cyan-700"
+          >
+            <span class="h-2 w-2 rounded-full bg-cyan-500"></span>
+
+            <span class="text-[9px] font-black uppercase tracking-[0.14em]">
+              {{ layers[3].status }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid gap-4 p-5 sm:p-6 lg:grid-cols-3">
+        <article class="rounded-2xl border border-slate-200 bg-white p-4">
+          <p class="text-[8px] font-black uppercase tracking-[0.16em] text-slate-400">
+            Trusted Selection
+          </p>
+
+          <p class="mt-3 truncate text-sm font-black text-slate-950">
+            {{ latestRecoveryId || 'No recovery point selected' }}
+          </p>
+
+          <p class="mt-1 text-[9px] font-semibold leading-4 text-slate-500">
+            Latest recovery point selected by the existing recovery state
+          </p>
+        </article>
+
+        <article class="rounded-2xl border border-slate-200 bg-white p-4">
+          <p class="text-[8px] font-black uppercase tracking-[0.16em] text-slate-400">
+            Recovery Time
+          </p>
+
+          <p class="mt-3 truncate text-sm font-black text-slate-950">
+            {{ latestRecoveryTime || 'No recovery time available' }}
+          </p>
+
+          <p class="mt-1 text-[9px] font-semibold leading-4 text-slate-500">
+            Timestamp from the latest authoritative recovery point
+          </p>
+        </article>
+
+        <article class="rounded-2xl border border-slate-200 bg-slate-950 p-4 text-white">
+          <p class="text-[8px] font-black uppercase tracking-[0.16em] text-slate-500">
+            Reconciliation Telemetry
+          </p>
+
+          <p class="mt-3 text-sm font-black">Monitored</p>
+
+          <p class="mt-1 text-[9px] font-semibold leading-4 text-slate-400">
+            Latest authoritative event:
+            {{ latestReconciliationEvent?.event_type || 'No reconciliation event reported' }}
+          </p>
+        </article>
+      </div>
+
+      <div class="border-t border-slate-100 px-5 py-4 sm:px-6">
+        <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p class="text-[9px] font-black uppercase tracking-[0.16em] text-slate-400">
+              Current Capability
+            </p>
+
+            <p class="mt-1 text-[10px] font-semibold leading-5 text-slate-600">
+              The frontend exposes the latest trusted recovery selection from the existing
+              authoritative recovery state. Latest reconciliation:
+              {{
+                latestReconciliationEvent?.message ||
+                  'No authoritative reconciliation event reported'
+              }}
+            </p>
+          </div>
+
+          <span
+            class="inline-flex w-fit items-center rounded-xl border border-cyan-200 bg-cyan-50 px-3 py-2 text-[8px] font-black uppercase tracking-[0.12em] text-cyan-700"
+          >
+            Backend Monitored
+          </span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 757.7I LAYER 5 MANAGEMENT -->
+
+  <section id="layer-5" class="mt-5 scroll-mt-6">
+    <div class="overflow-hidden rounded-[26px] border border-slate-200 bg-white shadow-sm">
+      <!-- HEADER -->
+
+      <div class="border-b border-slate-100 bg-slate-50/70 p-5 sm:p-6">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div class="flex items-start gap-4">
+            <div
+              class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-rose-50 text-sm font-black text-rose-600"
+            >
+              05
+            </div>
+
+            <div>
+              <p class="text-[8px] font-black uppercase tracking-[0.2em] text-rose-600">
+                PROTECTION LAYER 5
+              </p>
+
+              <h2 class="mt-1 text-xl font-black tracking-tight text-slate-950">
+                Crash Supervisor
+              </h2>
+
+              <p class="mt-1 text-xs font-semibold text-slate-500">
+                Independent process health and restart
+              </p>
+            </div>
+          </div>
+
+          <!-- REAL GUARDIAN STATE -->
+
+          <div
+            class="inline-flex w-fit items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3 py-2 text-amber-700"
+          >
+            <span class="h-2 w-2 rounded-full bg-amber-500"></span>
+
+            <span class="text-[9px] font-black uppercase tracking-[0.14em]">
+              {{ layers[4].status }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUPERVISOR STATE -->
+
+      <div class="grid gap-4 p-5 sm:p-6 lg:grid-cols-3">
+        <!-- GUARDIAN -->
+
+        <article class="rounded-2xl border border-slate-200 bg-white p-4">
+          <p class="text-[8px] font-black uppercase tracking-[0.16em] text-slate-400">Guardian</p>
+
+          <p class="mt-3 text-sm font-black text-slate-950">Monitored</p>
+
+          <p class="mt-1 text-[9px] font-semibold leading-4 text-slate-500">
+            The Guardian currently monitors the crash-supervision layer.
+          </p>
+        </article>
+
+        <!-- PROCESS HEALTH -->
+
+        <article class="rounded-2xl border border-slate-200 bg-white p-4">
+          <p class="text-[8px] font-black uppercase tracking-[0.16em] text-slate-400">
+            Process Health
+          </p>
+
+          <p class="mt-3 text-sm font-black text-slate-950">Supervisor active</p>
+
+          <p class="mt-1 text-[9px] font-semibold leading-4 text-slate-500">
+            Independent process health and restart capability is part of the Layer 5 protection
+            design.
+          </p>
+        </article>
+
+        <!-- SUPERVISOR TELEMETRY -->
+
+        <article class="rounded-2xl border border-slate-200 bg-slate-950 p-4 text-white">
+          <p class="text-[8px] font-black uppercase tracking-[0.16em] text-slate-500">
+            Supervisor Telemetry
+          </p>
+
+          <p class="mt-3 text-sm font-black">
+            {{ latestGuardianEvent?.status || 'No event' }}
+          </p>
+
+          <p class="mt-1 text-[9px] font-semibold leading-4 text-slate-400">
+            Guardian and supervisor health state is sourced from the authoritative recovery status.
+          </p>
+        </article>
+      </div>
+
+      <!-- FUTURE TELEMETRY -->
+
+      <div class="border-t border-slate-100 px-5 py-4 sm:px-6">
+        <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p class="text-[9px] font-black uppercase tracking-[0.16em] text-slate-400">
+              Supervisor Telemetry
+            </p>
+
+            <p class="mt-1 text-[10px] font-semibold leading-5 text-slate-600">
+              Guardian events loaded:
+              {{ guardianEvents.length }} · Latest:
+              {{ latestGuardianEvent?.message || 'No authoritative Guardian event reported' }}
+            </p>
+          </div>
+
+          <span
+            class="inline-flex w-fit items-center rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[8px] font-black uppercase tracking-[0.12em] text-amber-700"
+          >
+            Guardian Monitored
+          </span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 757.7J CROSS-LAYER INTEGRITY -->
+
+  <section id="cross-layer-integrity" class="mt-5 scroll-mt-6">
+    <div class="overflow-hidden rounded-[26px] border border-slate-200 bg-white shadow-sm">
+      <!-- HEADER -->
+
+      <div class="border-b border-slate-100 bg-slate-50/70 p-5 sm:p-6">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div class="flex items-start gap-4">
+            <div
+              class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 text-sm font-black text-indigo-600"
+            >
+              <span>∿</span>
+            </div>
+
+            <div>
+              <p class="text-[8px] font-black uppercase tracking-[0.2em] text-indigo-600">
+                CROSS-LAYER INTEGRITY
+              </p>
+
+              <h2 class="mt-1 text-xl font-black tracking-tight text-slate-950">
+                Integrity &amp; Verification
+              </h2>
+
+              <p class="mt-1 text-xs font-semibold text-slate-500">
+                Verified hashes and protection evidence from the latest authoritative recovery
+                point.
+              </p>
+            </div>
+          </div>
+
+          <div
+            class="inline-flex w-fit items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2"
+          >
+            <span class="h-2 w-2 rounded-full bg-slate-400"></span>
+
+            <span class="text-[9px] font-black uppercase tracking-[0.14em] text-slate-600">
+              Evidence Based
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- VERIFICATION MATRIX -->
+
+      <div class="grid gap-4 p-5 sm:p-6 lg:grid-cols-2">
+        <!-- POSTGRESQL -->
+
+        <article class="rounded-2xl border border-slate-200 bg-white p-4">
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <p class="text-[8px] font-black uppercase tracking-[0.16em] text-slate-400">
+                Layer 1 · Database
+              </p>
+
+              <h3 class="mt-1 text-sm font-black text-slate-950">PostgreSQL</h3>
+            </div>
+
+            <span
+              class="inline-flex rounded-full px-2.5 py-1 text-[8px] font-black uppercase tracking-wider"
+              [class.bg-emerald-50]="
+                !!latestBackup?.postgres_sha256 && !!latestBackup?.sqlite_sha256
+              "
+              [class.text-emerald-700]="
+                !!latestBackup?.postgres_sha256 && !!latestBackup?.sqlite_sha256
+              "
+              [class.bg-amber-50]="!latestBackup?.postgres_sha256 || !latestBackup?.sqlite_sha256"
+              [class.text-amber-700]="
+                !latestBackup?.postgres_sha256 || !latestBackup?.sqlite_sha256
+              "
+            >
+              {{ latestBackup?.postgres_sha256 ? 'Hash Present' : 'Hash Missing' }}
+            </span>
+          </div>
+
+          <div class="mt-4 rounded-xl bg-slate-50 p-3">
+            <p class="text-[8px] font-black uppercase tracking-[0.14em] text-slate-400">SHA-256</p>
+
+            <p class="mt-2 break-all font-mono text-[9px] font-semibold leading-4 text-slate-600">
+              {{ latestBackup?.postgres_sha256 || 'PostgreSQL verification hash is missing.' }}
+            </p>
+          </div>
+        </article>
+
+        <!-- SQLITE -->
+
+        <article class="rounded-2xl border border-slate-200 bg-white p-4">
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <p class="text-[8px] font-black uppercase tracking-[0.16em] text-slate-400">
+                Layer 1 · Local
+              </p>
+
+              <h3 class="mt-1 text-sm font-black text-slate-950">SQLite</h3>
+            </div>
+
+            <span
+              class="inline-flex rounded-full px-2.5 py-1 text-[8px] font-black uppercase tracking-wider"
+              [class.bg-emerald-50]="!!latestBackup?.sqlite_sha256"
+              [class.text-emerald-700]="!!latestBackup?.sqlite_sha256"
+              [class.bg-amber-50]="!latestBackup?.sqlite_sha256"
+              [class.text-amber-700]="!latestBackup?.sqlite_sha256"
+            >
+              {{ latestBackup?.sqlite_sha256 ? 'Hash Present' : 'Hash Missing' }}
+            </span>
+          </div>
+
+          <div class="mt-4 rounded-xl bg-slate-50 p-3">
+            <p class="text-[8px] font-black uppercase tracking-[0.14em] text-slate-400">SHA-256</p>
+
+            <p class="mt-2 break-all font-mono text-[9px] font-semibold leading-4 text-slate-600">
+              {{ latestBackup?.sqlite_sha256 || 'SQLite verification hash is missing.' }}
+            </p>
+          </div>
+        </article>
+
+        <!-- OFFICE MIRROR -->
+
+        <article class="rounded-2xl border border-slate-200 bg-white p-4">
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <p class="text-[8px] font-black uppercase tracking-[0.16em] text-slate-400">
+                Layer 2 · Mirror
+              </p>
+
+              <h3 class="mt-1 text-sm font-black text-slate-950">Office Mirror</h3>
+            </div>
+
+            <span
+              class="inline-flex rounded-full px-2.5 py-1 text-[8px] font-black uppercase tracking-wider"
+              [class.bg-emerald-50]="latestBackup?.office_mirror_verified === true"
+              [class.text-emerald-700]="latestBackup?.office_mirror_verified === true"
+              [class.bg-amber-50]="latestBackup?.office_mirror_verified !== true"
+              [class.text-amber-700]="latestBackup?.office_mirror_verified !== true"
+            >
+              {{ latestBackup?.office_mirror_verified === true ? 'Verified' : 'Not verified' }}
+            </span>
+          </div>
+
+          <div class="mt-4 rounded-xl bg-slate-50 p-3">
+            <p class="text-[8px] font-black uppercase tracking-[0.14em] text-slate-400">SHA-256</p>
+
+            <p class="mt-2 break-all font-mono text-[9px] font-semibold leading-4 text-slate-600">
+              {{ latestBackup?.office_mirror_sha256 || 'Office Mirror hash is not available.' }}
+            </p>
+          </div>
+        </article>
+
+        <!-- OFFSITE -->
+
+        <article class="rounded-2xl border border-slate-200 bg-white p-4">
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <p class="text-[8px] font-black uppercase tracking-[0.16em] text-slate-400">
+                Layer 3 · Offsite
+              </p>
+
+              <h3 class="mt-1 text-sm font-black text-slate-950">Offsite Copy</h3>
+            </div>
+
+            <span
+              class="inline-flex rounded-full px-2.5 py-1 text-[8px] font-black uppercase tracking-wider"
+              [class.bg-emerald-50]="latestBackup?.offsite_verified === true"
+              [class.text-emerald-700]="latestBackup?.offsite_verified === true"
+              [class.bg-amber-50]="latestBackup?.offsite_verified !== true"
+              [class.text-amber-700]="latestBackup?.offsite_verified !== true"
+            >
+              {{ latestBackup?.offsite_verified === true ? 'Verified' : 'Not verified' }}
+            </span>
+          </div>
+
+          <div class="mt-4 rounded-xl bg-slate-50 p-3">
+            <p class="text-[8px] font-black uppercase tracking-[0.14em] text-slate-400">SHA-256</p>
+
+            <p class="mt-2 break-all font-mono text-[9px] font-semibold leading-4 text-slate-600">
+              {{ latestBackup?.offsite_sha256 || 'Offsite hash is not available.' }}
+            </p>
+          </div>
+        </article>
+      </div>
+
+      <!-- INTEGRITY SUMMARY -->
+
+      <div class="border-t border-slate-100 p-5 sm:p-6">
+        <div class="rounded-2xl border border-slate-200 bg-slate-950 p-5 text-white">
+          <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p class="text-[8px] font-black uppercase tracking-[0.18em] text-slate-500">
+                Integrity Evidence
+              </p>
+
+              <p class="mt-2 text-sm font-black">
+                {{
+                  latestBackup?.postgres_sha256 && latestBackup?.sqlite_sha256
+                    ? 'PostgreSQL and SQLite hashes are present.'
+                    : 'PostgreSQL and/or SQLite verification data is missing.'
+                }}
+              </p>
+
+              <p class="mt-1 text-[9px] font-semibold leading-4 text-slate-400">
+                Verification state is derived from the authoritative recovery point. No synthetic
+                corruption or comparison result is generated by this frontend.
+              </p>
+            </div>
+
+            <div class="shrink-0 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+              <p class="text-[8px] font-black uppercase tracking-[0.14em] text-slate-500">
+                Recovery Evidence
+              </p>
+
+              <p class="mt-1 text-sm font-black">
+                {{ latestRecoveryId || 'No recovery point' }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 757.7K MISSING CORRUPT DETECTION -->
+
+  <section id="missing-corrupt-detection" class="mt-5 scroll-mt-6">
+    <div class="overflow-hidden rounded-[26px] border border-slate-200 bg-white shadow-sm">
+      <!-- HEADER -->
+
+      <div class="border-b border-slate-100 bg-slate-50/70 p-5 sm:p-6">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div class="flex items-start gap-4">
+            <div
+              class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-50 text-sm font-black text-amber-600"
+            >
+              !
+            </div>
+
+            <div>
+              <p class="text-[8px] font-black uppercase tracking-[0.2em] text-amber-600">
+                INTEGRITY WATCH
+              </p>
+
+              <h2 class="mt-1 text-xl font-black tracking-tight text-slate-950">
+                Missing &amp; Degraded Detection
+              </h2>
+
+              <p class="mt-1 text-xs font-semibold text-slate-500">
+                Current detection state derived from authoritative recovery telemetry.
+              </p>
+            </div>
+          </div>
+
+          <div
+            class="inline-flex w-fit items-center gap-2 rounded-full border px-3 py-2"
+            [class.border-emerald-200]="liveState === 'LIVE'"
+            [class.bg-emerald-50]="liveState === 'LIVE'"
+            [class.text-emerald-700]="liveState === 'LIVE'"
+            [class.border-amber-200]="liveState === 'DEGRADED'"
+            [class.bg-amber-50]="liveState === 'DEGRADED'"
+            [class.text-amber-700]="liveState === 'DEGRADED'"
+            [class.border-red-200]="liveState === 'ERROR'"
+            [class.bg-red-50]="liveState === 'ERROR'"
+            [class.text-red-700]="liveState === 'ERROR'"
+          >
+            <span
+              class="h-2 w-2 rounded-full"
+              [class.bg-emerald-500]="liveState === 'LIVE'"
+              [class.bg-amber-500]="liveState === 'DEGRADED'"
+              [class.bg-red-500]="liveState === 'ERROR'"
+            ></span>
+
+            <span class="text-[9px] font-black uppercase tracking-[0.14em]">
+              {{ liveState }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CURRENT STATE -->
+
+      <div class="grid gap-4 p-5 sm:p-6 lg:grid-cols-3">
+        <!-- STATE -->
+
+        <article class="rounded-2xl border border-slate-200 bg-white p-4">
+          <p class="text-[8px] font-black uppercase tracking-[0.16em] text-slate-400">
+            Detection State
+          </p>
+
+          <p class="mt-3 text-sm font-black text-slate-950">
+            {{ liveState }}
+          </p>
+
+          <p class="mt-1 text-[9px] font-semibold leading-4 text-slate-500">
+            {{ liveStateReason }}
+          </p>
+        </article>
+
+        <!-- WARNINGS -->
+
+        <article class="rounded-2xl border border-slate-200 bg-white p-4">
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <p class="text-[8px] font-black uppercase tracking-[0.16em] text-slate-400">
+                Active Warnings
+              </p>
+
+              <p class="mt-3 text-2xl font-black text-slate-950">
+                {{ activeWarnings }}
+              </p>
+            </div>
+
+            <span
+              class="rounded-xl px-3 py-2 text-[8px] font-black uppercase tracking-wider"
+              [class.bg-emerald-50]="activeWarnings === 0"
+              [class.text-emerald-700]="activeWarnings === 0"
+              [class.bg-amber-50]="activeWarnings > 0"
+              [class.text-amber-700]="activeWarnings > 0"
+            >
+              {{ activeWarnings === 0 ? 'Clear' : 'Attention' }}
+            </span>
+          </div>
+
+          <p class="mt-2 text-[9px] font-semibold leading-4 text-slate-500">
+            {{ warningSummary }}
+          </p>
+        </article>
+
+        <!-- CURRENT RECOVERY POINT -->
+
+        <article class="rounded-2xl border border-slate-200 bg-slate-950 p-4 text-white">
+          <p class="text-[8px] font-black uppercase tracking-[0.16em] text-slate-500">
+            Recovery Evidence
+          </p>
+
+          <p class="mt-3 truncate text-sm font-black">
+            {{ latestRecoveryId || 'No recovery point' }}
+          </p>
+
+          <p class="mt-1 text-[9px] font-semibold leading-4 text-slate-400">
+            Latest authoritative recovery point used for protection verification.
+          </p>
+        </article>
+      </div>
+
+      <!-- DETECTION REASONS -->
+
+      <div class="border-t border-slate-100 p-5 sm:p-6">
+        <div class="grid gap-4 lg:grid-cols-2">
+          <!-- LIVE STATE REASON -->
+
+          <article class="rounded-2xl border border-slate-200 bg-white p-4">
+            <p class="text-[8px] font-black uppercase tracking-[0.16em] text-slate-400">
+              Current State Reason
+            </p>
+
+            <p class="mt-3 text-[10px] font-semibold leading-5 text-slate-600">
+              {{ liveStateReason }}
+            </p>
+          </article>
+
+          <!-- LAYER REASONS -->
+
+          <article class="rounded-2xl border border-slate-200 bg-white p-4">
+            <p class="text-[8px] font-black uppercase tracking-[0.16em] text-slate-400">
+              Protection Layer Reasons
+            </p>
+
+            <div *ngIf="layerReasons.length > 0; else noLayerReasons" class="mt-3 space-y-2">
+              <div
+                *ngFor="let reason of layerReasons"
+                class="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2 text-[9px] font-semibold leading-4 text-slate-600"
+              >
+                {{ reason }}
+              </div>
+            </div>
+
+            <ng-template #noLayerReasons>
+              <div
+                class="mt-3 rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-2 text-[9px] font-black text-emerald-700"
+              >
+                No current layer warning.
+              </div>
+            </ng-template>
+          </article>
+        </div>
+      </div>
+
+      <!-- DETECTION RULES -->
+
+      <div class="border-t border-slate-100 px-5 py-4 sm:px-6">
+        <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p class="text-[9px] font-black uppercase tracking-[0.16em] text-slate-400">
+              Detection Boundary
+            </p>
+
+            <p class="mt-1 text-[10px] font-semibold leading-5 text-slate-600">
+              This frontend reports only states already derived by the authoritative recovery
+              service. Corruption is not inferred from appearance alone and no repair result is
+              fabricated.
+            </p>
+          </div>
+
+          <span
+            class="inline-flex w-fit items-center rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-[8px] font-black uppercase tracking-[0.12em] text-slate-600"
+          >
+            Authoritative State
+          </span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 757.7L RECOVERY OPERATIONS -->
+
+  <section id="recovery-operations" class="mt-5 scroll-mt-6">
+    <div class="overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-sm">
+      <!-- HEADER -->
+
+      <div class="border-b border-slate-100 bg-slate-50/70 p-5 sm:p-5">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div class="flex items-start gap-4">
+            <div
+              class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-sm font-black text-blue-600"
+            >
+              ↻
+            </div>
+
+            <div>
+              <p class="text-[8px] font-black uppercase tracking-[0.2em] text-blue-600">
+                RECOVERY OPERATIONS
+              </p>
+
+              <h2 class="mt-1 text-xl font-black tracking-tight text-slate-950">
+                Restore &amp; Recovery Management
+              </h2>
+
+              <p class="mt-1 text-xs font-semibold leading-5 text-slate-500">
+                Recovery evidence and operation readiness from the authoritative recovery service.
+              </p>
+            </div>
+          </div>
+
+          <span
+            class="inline-flex w-fit items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-[9px] font-black uppercase tracking-[0.14em] text-slate-500"
+          >
+            Evidence Ready
+          </span>
+        </div>
+      </div>
+
+      <!-- RECOVERY SUMMARY -->
+
+      <div class="grid gap-4 p-5 sm:p-5 lg:grid-cols-3">
+        <!-- AVAILABLE POINTS -->
+
+        <article class="rounded-2xl border border-slate-200 bg-white p-4">
+          <p class="text-[8px] font-black uppercase tracking-[0.16em] text-slate-400">
+            Recovery Points
+          </p>
+
+          <p class="mt-3 text-2xl font-black text-slate-950">
+            {{ recoveryPoints.length }}
+          </p>
+
+          <p class="mt-1 text-[9px] font-semibold leading-4 text-slate-500">
+            Authoritative recovery points currently available.
+          </p>
+        </article>
+
+        <!-- LATEST POINT -->
+
+        <article class="rounded-2xl border border-slate-200 bg-white p-4">
+          <p class="text-[8px] font-black uppercase tracking-[0.16em] text-slate-400">
+            Latest Recovery
+          </p>
+
+          <p class="mt-3 truncate text-sm font-black text-slate-950">
+            {{ latestRecoveryId || 'Unavailable' }}
+          </p>
+
+          <p class="mt-1 text-[9px] font-semibold leading-4 text-slate-500">
+            Latest trusted recovery point selected by the current service.
+          </p>
+        </article>
+
+        <!-- SERVICE STATE -->
+
+        <article class="rounded-2xl border border-slate-200 bg-slate-950 p-4 text-white">
+          <p class="text-[8px] font-black uppercase tracking-[0.16em] text-slate-500">
+            Recovery Service
+          </p>
+
+          <p class="mt-3 text-sm font-black">
+            {{ latestBackup ? 'Recovery Evidence Available' : 'Awaiting Recovery Point' }}
+          </p>
+
+          <p class="mt-1 text-[9px] font-semibold leading-4 text-slate-400">
+            Current state is derived from authoritative recovery data.
+          </p>
+        </article>
+      </div>
+
+      <!-- OPERATIONS -->
+
+      <div class="border-t border-slate-100 p-5 sm:p-5">
+        <div class="mb-4">
+          <p class="text-[8px] font-black uppercase tracking-[0.18em] text-blue-600">
+            Recovery Actions
+          </p>
+
+          <h3 class="mt-1 text-base font-black text-slate-950">Operation Control</h3>
+
+          <p class="mt-1 max-w-2xl text-[10px] font-semibold leading-5 text-slate-500">
+            Authoritative recovery operations connected to the existing recovery API. Restore
+            remains explicitly confirmed before execution.
+          </p>
+        </div>
+
+        <div class="mb-4 flex flex-wrap gap-2">
+          <button
+            type="button"
+            class="rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-[9px] font-black uppercase tracking-wider text-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+            [disabled]="operationBusy !== null"
+            (click)="createRecoveryPoint()"
+          >
+            {{ operationBusy === 'create' ? 'Creating…' : 'Create Recovery Point' }}
+          </button>
+
+          <button
+            type="button"
+            class="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-[9px] font-black uppercase tracking-wider text-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+            [disabled]="!latestBackup?.id || operationBusy !== null"
+            (click)="verifyRecoveryPoint()"
+          >
+            {{ operationBusy === 'verify' ? 'Verifying…' : 'Verify Latest' }}
+          </button>
+
+          <button
+            type="button"
+            class="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[9px] font-black uppercase tracking-wider text-amber-700 disabled:cursor-not-allowed disabled:opacity-50"
+            [disabled]="!latestBackup?.id || operationBusy !== null"
+            (click)="restoreRecoveryPoint()"
+          >
+            {{ operationBusy === 'restore' ? 'Restoring…' : 'Restore Latest' }}
+          </button>
+        </div>
+
+        <div
+          *ngIf="operationMessage || operationError"
+          class="mb-4 rounded-2xl border p-4"
+          [class.border-emerald-200]="operationMessage && !operationError"
+          [class.bg-emerald-50]="operationMessage && !operationError"
+          [class.border-red-200]="operationError"
+          [class.bg-red-50]="operationError"
+        >
+          <p
+            class="text-[9px] font-black uppercase tracking-wider"
+            [class.text-emerald-700]="operationMessage && !operationError"
+            [class.text-red-700]="operationError"
+          >
+            {{ operationError || operationMessage }}
+          </p>
+        </div>
+
+        <div class="grid gap-3 md:grid-cols-3">
+          <article class="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4">
+            <div class="flex items-center justify-between gap-3">
+              <div
+                class="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-sm font-black text-emerald-600 shadow-sm"
+              >
+                ✓
+              </div>
+
+              <span
+                class="rounded-full border border-emerald-200 bg-white px-2.5 py-1 text-[8px] font-black uppercase tracking-wider text-emerald-700"
+              >
+                Connected
+              </span>
+            </div>
+
+            <h4 class="mt-4 text-sm font-black text-slate-950">Restore</h4>
+
+            <p class="mt-1 text-[9px] font-semibold leading-4 text-slate-500">
+              Existing authoritative restore API is connected for PostgreSQL + SQLite recovery.
+            </p>
+          </article>
+
+          <article class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <div class="flex items-center justify-between gap-3">
+              <div
+                class="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-sm font-black text-slate-600 shadow-sm"
+              >
+                ⟳
+              </div>
+
+              <span
+                class="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[8px] font-black uppercase tracking-wider text-slate-600"
+              >
+                AUTONOMOUS
+              </span>
+            </div>
+
+            <h4 class="mt-4 text-sm font-black text-slate-950">Rebuild</h4>
+
+            <p class="mt-1 text-[9px] font-semibold leading-4 text-slate-500">
+              Automatic reconciliation and rebuild are handled by the existing Guardian recovery
+              flow. No manual rebuild command is required.
+            </p>
+          </article>
+
+          <article class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <div class="flex items-center justify-between gap-3">
+              <div
+                class="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-sm font-black text-slate-600 shadow-sm"
+              >
+                ⇄
+              </div>
+
+              <span
+                class="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[8px] font-black uppercase tracking-wider text-slate-600"
+              >
+                {{ failoverStatus?.state || 'UNKNOWN' }}
+              </span>
+            </div>
+
+            <h4 class="mt-4 text-sm font-black text-slate-950">Automatic Failover</h4>
+
+            <p class="mt-1 text-[9px] font-semibold leading-4 text-slate-500">
+              Authoritative failover control is connected. Promotion remains governed by the backend
+              Hot Standby prerequisites.
+            </p>
+
+            <div class="mt-3 rounded-xl border border-slate-200 bg-white p-3">
+              <p class="text-[9px] font-bold leading-4 text-slate-600">
+                {{ failoverStatus?.message || 'Checking failover readiness…' }}
+              </p>
+
+              <div class="mt-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  class="rounded-lg border border-slate-200 bg-slate-950 px-3 py-2 text-[8px] font-black uppercase tracking-wider text-white disabled:cursor-not-allowed disabled:opacity-50"
+                  [disabled]="failoverBusy"
+                  (click)="loadFailoverStatus()"
+                >
+                  Check Status
+                </button>
+
+                <button
+                  type="button"
+                  class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[8px] font-black uppercase tracking-wider text-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+                  [disabled]="failoverBusy"
+                  (click)="evaluateAutomaticFailover()"
+                >
+                  Evaluate
+                </button>
+
+                <button
+                  type="button"
+                  class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[8px] font-black uppercase tracking-wider text-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+                  [disabled]="failoverBusy"
+                  (click)="promoteAutomaticFailover()"
+                >
+                  Promote
+                </button>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+
+      <!-- OPERATION BOUNDARY -->
+
+      <div class="border-t border-slate-100 px-5 py-4 sm:px-6">
+        <div
+          class="flex flex-col gap-3 rounded-2xl border border-blue-100 bg-blue-50/60 p-4 lg:flex-row lg:items-center lg:justify-between"
+        >
+          <div>
+            <p class="text-[9px] font-black uppercase tracking-[0.15em] text-blue-700">
+              Control Boundary
+            </p>
+
+            <p class="mt-1 text-[10px] font-semibold leading-5 text-slate-600">
+              Recovery points are visible now. Execution commands will become active only after the
+              authoritative recovery API exposes the corresponding operation.
+            </p>
+          </div>
+
+          <span
+            class="inline-flex w-fit shrink-0 rounded-xl border border-blue-200 bg-white px-3 py-2 text-[8px] font-black uppercase tracking-wider text-blue-700"
+          >
+            Read Only
+          </span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 757.7M RECOVERY POINT MANAGEMENT -->
+
+  <section id="recovery-points" class="mt-5 scroll-mt-6">
+    <div class="overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-sm">
+      <!-- HEADER -->
+
+      <div class="border-b border-slate-100 bg-slate-50/70 p-4 sm:p-5">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p class="text-[8px] font-black uppercase tracking-[0.2em] text-blue-600">
+              RECOVERY POINT MANAGEMENT
+            </p>
+
+            <h2 class="mt-1 text-xl font-black tracking-tight text-slate-950">
+              Authoritative Recovery Points
+            </h2>
+
+            <p class="mt-1 max-w-2xl text-xs font-semibold leading-5 text-slate-500">
+              Recovery manifests reported by the existing authoritative recovery service, including
+              their available integrity evidence.
+            </p>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <span
+              class="rounded-full border border-slate-200 bg-white px-3 py-2 text-[9px] font-black uppercase tracking-[0.12em] text-slate-500"
+            >
+              {{ recoveryPoints.length }} Points
+            </span>
+
+            <span
+              class="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-2 text-[9px] font-black uppercase tracking-[0.12em] text-emerald-700"
+            >
+              Live Data
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- LATEST RECOVERY -->
+
+      <div class="p-4 sm:p-5">
+        <div class="rounded-2xl border border-slate-200 bg-slate-950 p-5 text-white">
+          <div class="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p class="text-[8px] font-black uppercase tracking-[0.18em] text-slate-500">
+                LATEST RECOVERY POINT
+              </p>
+
+              <p class="mt-2 break-all text-sm font-black">
+                {{ latestRecoveryId || 'Unavailable' }}
+              </p>
+
+              <p class="mt-2 text-[9px] font-semibold text-slate-400">
+                Created:
+                {{ latestRecoveryTime || 'Unavailable' }}
+              </p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <div class="rounded-xl border border-white/10 bg-white/5 px-3 py-3">
+                <p class="text-[7px] font-black uppercase tracking-wider text-slate-500">
+                  PostgreSQL
+                </p>
+
+                <p class="mt-1 text-[9px] font-black">
+                  {{ latestBackup?.postgres_sha256 ? 'Verified' : 'Missing' }}
+                </p>
+              </div>
+
+              <div class="rounded-xl border border-white/10 bg-white/5 px-3 py-3">
+                <p class="text-[7px] font-black uppercase tracking-wider text-slate-500">SQLite</p>
+
+                <p class="mt-1 text-[9px] font-black">
+                  {{ latestBackup?.sqlite_sha256 ? 'Verified' : 'Missing' }}
+                </p>
+              </div>
+
+              <div class="rounded-xl border border-white/10 bg-white/5 px-3 py-3">
+                <p class="text-[7px] font-black uppercase tracking-wider text-slate-500">Mirror</p>
+
+                <p class="mt-1 text-[9px] font-black">
+                  {{ latestBackup?.office_mirror_verified === true ? 'Verified' : 'Not verified' }}
+                </p>
+              </div>
+
+              <div class="rounded-xl border border-white/10 bg-white/5 px-3 py-3">
+                <p class="text-[7px] font-black uppercase tracking-wider text-slate-500">Offsite</p>
+
+                <p class="mt-1 text-[9px] font-black">
+                  {{ latestBackup?.offsite_verified === true ? 'Verified' : 'Not verified' }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- POINT LIST -->
+
+      <div class="border-t border-slate-100">
+        <div class="flex items-center justify-between gap-3 px-5 py-4 sm:px-6">
+          <div>
+            <p class="text-[8px] font-black uppercase tracking-[0.18em] text-slate-400">
+              Recovery Manifest Registry
+            </p>
+
+            <h3 class="mt-1 text-sm font-black text-slate-950">Available Recovery Points</h3>
+          </div>
+
+          <span class="text-[9px] font-bold text-slate-400">
+            {{ recoveryPoints.length }} authoritative
+          </span>
+        </div>
+
+        <div
+          *ngIf="recoveryPoints.length === 0"
+          class="mx-5 mb-5 rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center sm:mx-6"
+        >
+          <p class="text-xs font-black text-slate-700">No recovery points available</p>
+
+          <p class="mt-1 text-[9px] font-semibold text-slate-400">
+            The authoritative recovery service has not returned a recovery manifest.
+          </p>
+        </div>
+
+        <div
+          *ngIf="recoveryPoints.length > 0"
+          class="divide-y divide-slate-100 border-t border-slate-100"
+        >
+          <article
+            *ngFor="let point of recoveryPoints; let i = index"
+            class="p-4 transition-colors hover:bg-slate-50/70 sm:px-5"
+          >
+            <div class="grid gap-3 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)]">
+              <!-- ID / TIME -->
+
+              <div>
+                <div class="flex flex-wrap items-center gap-2">
+                  <span
+                    class="rounded-lg bg-slate-950 px-2.5 py-1 text-[8px] font-black uppercase tracking-wider text-white"
+                  >
+                    RP {{ i + 1 }}
+                  </span>
+
+                  <span
+                    *ngIf="point.id === latestRecoveryId"
+                    class="rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1 text-[8px] font-black uppercase tracking-wider text-blue-700"
+                  >
+                    Latest
+                  </span>
+                </div>
+
+                <p class="mt-3 break-all text-xs font-black text-slate-950">
+                  {{ point.id || 'Recovery ID unavailable' }}
+                </p>
+
+                <p class="mt-1 text-[9px] font-semibold text-slate-400">
+                  {{ point.created_at || 'Creation time unavailable' }}
+                </p>
+              </div>
+
+              <!-- VERIFICATION GRID -->
+
+              <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                  <p class="text-[7px] font-black uppercase tracking-wider text-slate-400">
+                    PostgreSQL
+                  </p>
+
+                  <p
+                    class="mt-1 text-[9px] font-black"
+                    [class.text-emerald-600]="!!point.postgres_sha256"
+                    [class.text-amber-600]="!point.postgres_sha256"
+                  >
+                    {{ point.postgres_sha256 ? 'Verified' : 'Missing' }}
+                  </p>
+                </div>
+
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                  <p class="text-[7px] font-black uppercase tracking-wider text-slate-400">
+                    SQLite
+                  </p>
+
+                  <p
+                    class="mt-1 text-[9px] font-black"
+                    [class.text-emerald-600]="!!point.sqlite_sha256"
+                    [class.text-amber-600]="!point.sqlite_sha256"
+                  >
+                    {{ point.sqlite_sha256 ? 'Verified' : 'Missing' }}
+                  </p>
+                </div>
+
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                  <p class="text-[7px] font-black uppercase tracking-wider text-slate-400">
+                    Office Mirror
+                  </p>
+
+                  <p
+                    class="mt-1 text-[9px] font-black"
+                    [class.text-emerald-600]="point.office_mirror_verified === true"
+                    [class.text-amber-600]="point.office_mirror_verified !== true"
+                  >
+                    {{ point.office_mirror_verified === true ? 'Verified' : 'Not verified' }}
+                  </p>
+                </div>
+
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                  <p class="text-[7px] font-black uppercase tracking-wider text-slate-400">
+                    Offsite
+                  </p>
+
+                  <p
+                    class="mt-1 text-[9px] font-black"
+                    [class.text-emerald-600]="point.offsite_verified === true"
+                    [class.text-amber-600]="point.offsite_verified !== true"
+                  >
+                    {{ point.offsite_verified === true ? 'Verified' : 'Not verified' }}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- HASH EVIDENCE -->
+
+            <div class="mt-3 grid gap-2 md:grid-cols-2">
+              <div class="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2">
+                <div class="flex items-center justify-between gap-3">
+                  <span class="text-[7px] font-black uppercase tracking-wider text-slate-400">
+                    PostgreSQL SHA-256
+                  </span>
+
+                  <span class="text-[8px] font-black text-slate-500">
+                    {{ point.postgres_sha256 ? 'Present' : 'Missing' }}
+                  </span>
+                </div>
+
+                <p
+                  *ngIf="point.postgres_sha256"
+                  class="mt-1 truncate font-mono text-[8px] text-slate-500"
+                  [title]="point.postgres_sha256"
+                >
+                  {{ point.postgres_sha256 }}
+                </p>
+              </div>
+
+              <div class="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2">
+                <div class="flex items-center justify-between gap-3">
+                  <span class="text-[7px] font-black uppercase tracking-wider text-slate-400">
+                    SQLite SHA-256
+                  </span>
+
+                  <span class="text-[8px] font-black text-slate-500">
+                    {{ point.sqlite_sha256 ? 'Present' : 'Missing' }}
+                  </span>
+                </div>
+
+                <p
+                  *ngIf="point.sqlite_sha256"
+                  class="mt-1 truncate font-mono text-[8px] text-slate-500"
+                  [title]="point.sqlite_sha256"
+                >
+                  {{ point.sqlite_sha256 }}
+                </p>
+              </div>
+
+              <div
+                *ngIf="point.office_mirror_sha256"
+                class="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2"
+              >
+                <div class="flex items-center justify-between gap-3">
+                  <span class="text-[7px] font-black uppercase tracking-wider text-slate-400">
+                    Office Mirror SHA-256
+                  </span>
+
+                  <span class="text-[8px] font-black text-emerald-600"> Present </span>
+                </div>
+
+                <p
+                  class="mt-1 truncate font-mono text-[8px] text-slate-500"
+                  [title]="point.office_mirror_sha256"
+                >
+                  {{ point.office_mirror_sha256 }}
+                </p>
+              </div>
+
+              <div
+                *ngIf="point.offsite_sha256"
+                class="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2"
+              >
+                <div class="flex items-center justify-between gap-3">
+                  <span class="text-[7px] font-black uppercase tracking-wider text-slate-400">
+                    Offsite SHA-256
+                  </span>
+
+                  <span class="text-[8px] font-black text-emerald-600"> Present </span>
+                </div>
+
+                <p
+                  class="mt-1 truncate font-mono text-[8px] text-slate-500"
+                  [title]="point.offsite_sha256"
+                >
+                  {{ point.offsite_sha256 }}
+                </p>
+              </div>
+            </div>
+
+            <!-- OFFSITE DETAILS -->
+
+            <div
+              *ngIf="
+                point.offsite_provider ||
+                point.offsite_status ||
+                point.offsite_path ||
+                point.offsite_retention_until
+              "
+              class="mt-2 flex flex-wrap gap-x-4 gap-y-2 rounded-xl border border-slate-100 bg-white px-3 py-2.5"
+            >
+              <div *ngIf="point.offsite_provider">
+                <span class="text-[7px] font-black uppercase tracking-wider text-slate-400">
+                  Provider
+                </span>
+
+                <span class="ml-2 text-[9px] font-black text-slate-700">
+                  {{ point.offsite_provider }}
+                </span>
+              </div>
+
+              <div *ngIf="point.offsite_status">
+                <span class="text-[7px] font-black uppercase tracking-wider text-slate-400">
+                  Status
+                </span>
+
+                <span class="ml-2 text-[9px] font-black text-slate-700">
+                  {{ point.offsite_status }}
+                </span>
+              </div>
+
+              <div *ngIf="point.offsite_retention_until">
+                <span class="text-[7px] font-black uppercase tracking-wider text-slate-400">
+                  Retention
+                </span>
+
+                <span class="ml-2 text-[9px] font-black text-slate-700">
+                  {{ point.offsite_retention_until }}
+                </span>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 757.7N RECOVERY TIMELINE -->
+
+  <section id="recovery-timeline" class="mt-3 scroll-mt-6">
+    <div class="overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-sm">
+      <!-- HEADER -->
+
+      <div class="border-b border-slate-100 bg-slate-50/70 p-4 sm:p-5">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p class="text-[8px] font-black uppercase tracking-[0.2em] text-blue-600">
+              RECOVERY TIMELINE
+            </p>
+
+            <h2 class="mt-1 text-xl font-black tracking-tight text-slate-950">Recovery History</h2>
+
+            <p class="mt-1 max-w-2xl text-xs font-semibold leading-5 text-slate-500">
+              Chronological recovery-point history derived only from authoritative recovery data.
+            </p>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <span
+              class="rounded-full border border-slate-200 bg-white px-3 py-2 text-[9px] font-black uppercase tracking-[0.12em] text-slate-500"
+            >
+              {{ recoveryPoints.length }} Events
+            </span>
+
+            <span
+              class="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-2 text-[9px] font-black uppercase tracking-[0.12em] text-emerald-700"
+            >
+              Live
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 757.7 ACTIVITY COLUMNS -->
+      <div class="border-b border-slate-100 bg-slate-50/60 px-4 py-3 sm:px-5">
+        <div class="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
+          <div
+            *ngFor="let column of activityColumns"
+            class="min-w-0 rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-[8px] font-black uppercase tracking-[0.12em] text-slate-500"
+          >
+            {{ column }}
+          </div>
+        </div>
+      </div>
+
+      <!-- TIMELINE -->
+
+      <div class="p-4 sm:p-5">
+        <div
+          *ngIf="recoveryPoints.length === 0"
+          class="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center"
+        >
+          <p class="text-xs font-black text-slate-700">No recovery history available</p>
+
+          <p class="mt-1 text-[9px] font-semibold leading-5 text-slate-400">
+            No authoritative recovery points have been returned by the recovery service.
+          </p>
+        </div>
+
+        <div *ngIf="recoveryPoints.length > 0" class="relative">
+          <!-- VERTICAL LINE -->
+
+          <div class="absolute bottom-5 left-[15px] top-5 hidden w-px bg-slate-200 sm:block"></div>
+
+          <div class="space-y-4">
+            <article *ngFor="let point of recoveryPoints; let i = index" class="relative">
+              <div class="flex gap-4">
+                <!-- NODE -->
+
+                <div
+                  class="relative z-10 hidden h-8 w-8 shrink-0 items-center justify-center rounded-full border-4 border-white bg-slate-950 text-[8px] font-black text-white shadow-sm sm:flex"
+                >
+                  {{ i + 1 }}
+                </div>
+
+                <!-- EVENT CARD -->
+
+                <div
+                  class="min-w-0 flex-1 rounded-2xl border border-slate-200 bg-white p-4 transition-colors hover:bg-slate-50"
+                >
+                  <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                    <div class="min-w-0">
+                      <div class="flex flex-wrap items-center gap-2">
+                        <span
+                          class="rounded-lg bg-slate-100 px-2.5 py-1 text-[8px] font-black uppercase tracking-wider text-slate-600"
+                        >
+                          Recovery Point
+                        </span>
+
+                        <span
+                          *ngIf="point.id === latestRecoveryId"
+                          class="rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1 text-[8px] font-black uppercase tracking-wider text-blue-700"
+                        >
+                          Latest
+                        </span>
+                      </div>
+
+                      <p class="mt-3 break-all text-xs font-black text-slate-950">
+                        {{ point.id || 'Recovery ID unavailable' }}
+                      </p>
+
+                      <p class="mt-1 text-[9px] font-semibold text-slate-400">
+                        {{ point.created_at || 'Timestamp unavailable' }}
+                      </p>
+                    </div>
+
+                    <!-- EVENT STATE -->
+
+                    <div class="shrink-0 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2">
+                      <p class="text-[7px] font-black uppercase tracking-wider text-slate-400">
+                        Evidence
+                      </p>
+
+                      <p
+                        class="mt-1 text-[9px] font-black"
+                        [class.text-emerald-600]="!!point.postgres_sha256 && !!point.sqlite_sha256"
+                        [class.text-amber-600]="!point.postgres_sha256 || !point.sqlite_sha256"
+                      >
+                        {{
+                          point.postgres_sha256 && point.sqlite_sha256 ? 'Verified' : 'Incomplete'
+                        }}
+                      </p>
+                    </div>
+                  </div>
+
+                  <!-- EVENT DETAILS -->
+
+                  <div class="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                    <div class="rounded-xl border border-slate-100 bg-slate-50 p-3">
+                      <p class="text-[7px] font-black uppercase tracking-wider text-slate-400">
+                        PostgreSQL
+                      </p>
+
+                      <p
+                        class="mt-1 text-[9px] font-black"
+                        [class.text-emerald-600]="!!point.postgres_sha256"
+                        [class.text-amber-600]="!point.postgres_sha256"
+                      >
+                        {{ point.postgres_sha256 ? 'Present' : 'Missing' }}
+                      </p>
+                    </div>
+
+                    <div class="rounded-xl border border-slate-100 bg-slate-50 p-3">
+                      <p class="text-[7px] font-black uppercase tracking-wider text-slate-400">
+                        SQLite
+                      </p>
+
+                      <p
+                        class="mt-1 text-[9px] font-black"
+                        [class.text-emerald-600]="!!point.sqlite_sha256"
+                        [class.text-amber-600]="!point.sqlite_sha256"
+                      >
+                        {{ point.sqlite_sha256 ? 'Present' : 'Missing' }}
+                      </p>
+                    </div>
+
+                    <div class="rounded-xl border border-slate-100 bg-slate-50 p-3">
+                      <p class="text-[7px] font-black uppercase tracking-wider text-slate-400">
+                        Office Mirror
+                      </p>
+
+                      <p
+                        class="mt-1 text-[9px] font-black"
+                        [class.text-emerald-600]="point.office_mirror_verified === true"
+                        [class.text-amber-600]="point.office_mirror_verified !== true"
+                      >
+                        {{ point.office_mirror_verified === true ? 'Verified' : 'Not verified' }}
+                      </p>
+                    </div>
+
+                    <div class="rounded-xl border border-slate-100 bg-slate-50 p-3">
+                      <p class="text-[7px] font-black uppercase tracking-wider text-slate-400">
+                        Offsite
+                      </p>
+
+                      <p
+                        class="mt-1 text-[9px] font-black"
+                        [class.text-emerald-600]="point.offsite_verified === true"
+                        [class.text-amber-600]="point.offsite_verified !== true"
+                      >
+                        {{ point.offsite_verified === true ? 'Verified' : 'Not verified' }}
+                      </p>
+                    </div>
+                  </div>
+
+                  <!-- OFFSITE STATE -->
+
+                  <div *ngIf="point.offsite_status" class="mt-3 flex flex-wrap items-center gap-2">
+                    <span class="text-[7px] font-black uppercase tracking-wider text-slate-400">
+                      Offsite status
+                    </span>
+
+                    <span
+                      class="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-[8px] font-black text-slate-600"
+                    >
+                      {{ point.offsite_status }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </div>
+
+      <!-- TELEMETRY BOUNDARY -->
+
+      <div class="border-t border-slate-100 px-4 py-4 sm:px-6">
+        <div class="rounded-2xl border border-blue-100 bg-blue-50/60 p-4">
+          <p class="text-[8px] font-black uppercase tracking-[0.16em] text-blue-700">
+            Timeline Boundary
+          </p>
+
+          <p class="mt-1 text-[10px] font-semibold leading-5 text-slate-600">
+            Recovery-point history and available authoritative recovery events are displayed from
+            the existing recovery service.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- 757.7O AUDIT / INTEGRITY -->
+
+<!-- SCS_REAL_RECOVERY_EVENT_FEED_SAFE -->
+<section id="recovery-events-live" class="mt-5 scroll-mt-6">
+  <div class="overflow-hidden rounded-[20px] border border-slate-200 bg-white shadow-sm">
+    <div class="border-b border-slate-100 bg-slate-50/70 p-4 sm:p-5">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p class="text-[9px] font-black uppercase tracking-[0.18em] text-slate-400">
+            RECOVERY EVENT TELEMETRY
+          </p>
+
+          <h3 class="mt-1 text-base font-black text-slate-950">Authoritative recovery events</h3>
+
+          <p class="mt-1 text-[10px] font-semibold leading-4 text-slate-500">
+            Live events returned by the existing recovery-event API.
+          </p>
+        </div>
+
+        <span
+          class="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-[8px] font-black uppercase tracking-[0.12em] text-emerald-700"
+        >
+          {{ recoveryEvents.length }} events
+        </span>
+      </div>
+    </div>
+
+    <div class="p-4 sm:p-5">
+      <div *ngIf="recoveryEvents.length > 0" class="space-y-2">
+        <article
+          *ngFor="let event of recoveryEvents | slice: 0 : 30"
+          class="rounded-xl border border-slate-100 bg-slate-50 px-3 py-3"
+        >
+          <div class="flex flex-wrap items-start justify-between gap-2">
+            <div class="min-w-0">
+              <p class="text-[10px] font-black uppercase tracking-[0.1em] text-slate-700">
+                {{ event.event_type || 'Recovery Event' }}
+              </p>
+
+              <p class="mt-1 text-xs font-semibold leading-5 text-slate-600">
+                {{ event.message || 'No event message reported.' }}
+              </p>
+            </div>
+
+            <span
+              class="shrink-0 rounded-full bg-white px-2 py-1 text-[8px] font-black uppercase text-slate-500"
+            >
+              {{ event.status || 'observed' }}
+            </span>
+          </div>
+
+          <div class="mt-2 flex flex-wrap gap-2">
+            <span class="rounded-md bg-white px-2 py-1 text-[8px] font-bold text-slate-500">
+              {{ event.component || 'unknown component' }}
+            </span>
+
+            <span class="rounded-md bg-white px-2 py-1 text-[8px] font-bold text-slate-500">
+              {{ event.created_at || '—' }}
+            </span>
+
+            <span
+              *ngIf="event.recovery_id"
+              class="rounded-md bg-white px-2 py-1 font-mono text-[8px] font-bold text-slate-500"
+            >
+              {{ event.recovery_id }}
+            </span>
+          </div>
+        </article>
+      </div>
+
+      <div
+        *ngIf="recoveryEvents.length === 0"
+        class="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-4 text-xs font-semibold text-slate-500"
+      >
+        No authoritative recovery events are currently returned by the backend.
+      </div>
+    </div>
+  </div>
+</section>
+<!-- /SCS_REAL_RECOVERY_EVENT_FEED_SAFE -->
+
+<section id="audit-integrity" class="mt-3 scroll-mt-6">
+  <div class="overflow-hidden rounded-[16px] border border-slate-200 bg-white shadow-sm">
+    <!-- HEADER -->
+
+    <div class="border-b border-slate-100 bg-slate-950 p-3.5 text-white sm:p-4">
+      <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <p class="text-[9px] font-black uppercase tracking-[0.18em] text-emerald-400">
+            AUDIT / INTEGRITY
+          </p>
+
+          <h2 class="mt-1.5 text-lg font-black tracking-tight sm:text-2xl">
+            Integrity evidence & verification
+          </h2>
+
+          <p class="mt-2 max-w-2xl text-xs font-medium leading-5 text-slate-400">
+            Current integrity evidence derived from the authoritative recovery state.
+          </p>
+        </div>
+
+        <div
+          class="inline-flex w-fit items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1.5"
+        >
+          <span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
+
+          <span class="text-[9px] font-black uppercase tracking-[0.14em] text-emerald-300">
+            Live evidence
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CURRENT POSTURE -->
+
+    <div class="grid gap-2.5 p-3.5 sm:p-4 lg:grid-cols-[1.05fr_0.95fr]">
+      <div class="rounded-[16px] border border-slate-200 bg-slate-50 p-3.5">
+        <p class="text-[9px] font-black uppercase tracking-[0.16em] text-slate-400">
+          Current Integrity Posture
+        </p>
+
+        <div class="mt-2.5 flex items-center gap-2.5">
+          <span
+            class="h-3 w-3 rounded-full"
+            [ngClass]="{
+              'bg-emerald-500': liveState === 'LIVE',
+              'bg-amber-500': liveState === 'DEGRADED',
+              'bg-rose-500': liveState === 'ERROR',
+            }"
+          ></span>
+
+          <span class="text-lg font-black text-slate-950">
+            {{ liveState }}
+          </span>
+        </div>
+
+        <p class="mt-2 text-xs font-medium leading-5 text-slate-500">
+          {{ liveStateReason }}
+        </p>
+      </div>
+
+      <div class="rounded-[16px] border border-slate-200 bg-white p-3.5">
+        <p class="text-[9px] font-black uppercase tracking-[0.16em] text-slate-400">
+          Verification Evidence
+        </p>
+
+        <div class="mt-2.5 space-y-2.5">
+          <div class="flex items-center justify-between gap-3.5">
+            <span class="text-xs font-semibold text-slate-500"> Latest Recovery </span>
+
+            <span class="max-w-[60%] truncate text-right text-xs font-black text-slate-950">
+              {{ latestRecoveryId }}
+            </span>
+          </div>
+
+          <div class="flex items-center justify-between gap-3.5">
+            <span class="text-xs font-semibold text-slate-500"> Recovery Time </span>
+
+            <span class="text-right text-xs font-black text-slate-950">
+              {{ latestRecoveryTime | date: 'medium' }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DATABASE INTEGRITY -->
+
+    <div class="border-t border-slate-100 p-3.5 sm:p-4">
+      <div class="mb-3">
+        <p class="text-[9px] font-black uppercase tracking-[0.16em] text-slate-400">
+          Database Integrity
+        </p>
+
+        <h3 class="mt-1 text-base font-black text-slate-950">Recovery hash evidence</h3>
+      </div>
+
+      <div class="grid gap-2.5 md:grid-cols-2">
+        <div class="rounded-[16px] border border-slate-200 bg-slate-50 p-3.5">
+          <div class="flex items-center justify-between gap-3">
+            <span class="text-xs font-black text-slate-950"> PostgreSQL </span>
+
+            <span
+              class="rounded-full px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.12em]"
+              [ngClass]="
+                latestBackup?.postgres_sha256
+                  ? 'bg-emerald-100 text-emerald-700'
+                  : 'bg-amber-100 text-amber-700'
+              "
+            >
+              {{ latestBackup?.postgres_sha256 ? 'Evidence present' : 'Missing' }}
+            </span>
+          </div>
+
+          <p class="mt-2 break-all font-mono text-[9px] leading-4 text-slate-500">
+            {{ latestBackup?.postgres_sha256 || 'No PostgreSQL SHA-256 exposed.' }}
+          </p>
+        </div>
+
+        <div class="rounded-[16px] border border-slate-200 bg-slate-50 p-3.5">
+          <div class="flex items-center justify-between gap-3">
+            <span class="text-xs font-black text-slate-950"> SQLite </span>
+
+            <span
+              class="rounded-full px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.12em]"
+              [ngClass]="
+                latestBackup?.sqlite_sha256
+                  ? 'bg-emerald-100 text-emerald-700'
+                  : 'bg-amber-100 text-amber-700'
+              "
+            >
+              {{ latestBackup?.sqlite_sha256 ? 'Evidence present' : 'Missing' }}
+            </span>
+          </div>
+
+          <p class="mt-2 break-all font-mono text-[9px] leading-4 text-slate-500">
+            {{ latestBackup?.sqlite_sha256 || 'No SQLite SHA-256 exposed.' }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- MIRROR / OFFSITE -->
+
+    <div class="grid gap-3.5 border-t border-slate-100 p-3.5 sm:p-4 lg:grid-cols-2">
+      <div class="rounded-[16px] border border-slate-200 bg-white p-3.5">
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <p class="text-xs font-black text-slate-950">Office Mirror</p>
+
+            <p class="mt-1 text-[10px] font-medium text-slate-500">
+              Mirror verification from latest recovery point
+            </p>
+          </div>
+
+          <span
+            class="rounded-full px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.12em]"
+            [ngClass]="
+              latestBackup?.office_mirror_verified === true
+                ? 'bg-emerald-100 text-emerald-700'
+                : 'bg-amber-100 text-amber-700'
+            "
+          >
+            {{ latestBackup?.office_mirror_verified === true ? 'Verified' : 'Not verified' }}
+          </span>
+        </div>
+
+        <p class="mt-2 break-all font-mono text-[9px] leading-4 text-slate-500">
+          {{ latestBackup?.office_mirror_sha256 || 'No Office Mirror SHA-256 exposed.' }}
+        </p>
+      </div>
+
+      <div class="rounded-[16px] border border-slate-200 bg-white p-3.5">
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <p class="text-xs font-black text-slate-950">Offsite Copy</p>
+
+            <p class="mt-1 text-[10px] font-medium text-slate-500">
+              Independent offsite verification
+            </p>
+          </div>
+
+          <span
+            class="rounded-full px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.12em]"
+            [ngClass]="
+              latestBackup?.offsite_verified === true
+                ? 'bg-emerald-100 text-emerald-700'
+                : 'bg-amber-100 text-amber-700'
+            "
+          >
+            {{ latestBackup?.offsite_verified === true ? 'Verified' : 'Not verified' }}
+          </span>
+        </div>
+
+        <p class="mt-2 break-all font-mono text-[9px] leading-4 text-slate-500">
+          {{ latestBackup?.offsite_sha256 || 'No Offsite SHA-256 exposed.' }}
+        </p>
+
+        <div class="mt-2 flex items-center justify-between gap-3 border-t border-slate-100 pt-3">
+          <span class="text-[10px] font-semibold text-slate-500"> Backend status </span>
+
+          <span class="text-[10px] font-black text-slate-950">
+            {{ latestBackup?.offsite_status || 'AUTONOMOUS' }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- WARNINGS -->
+
+    <div class="border-t border-slate-100 p-3.5 sm:p-4">
+      <div
+        class="rounded-[16px] border p-3.5"
+        [ngClass]="
+          activeWarnings > 0 ? 'border-amber-200 bg-amber-50' : 'border-emerald-200 bg-emerald-50'
+        "
+      >
+        <div class="flex items-start gap-3">
+          <span
+            class="mt-0.5 h-2 w-2 shrink-0 rounded-full"
+            [ngClass]="activeWarnings > 0 ? 'bg-amber-500' : 'bg-emerald-500'"
+          ></span>
+
+          <div class="min-w-0">
+            <p class="text-xs font-black text-slate-950">Integrity warnings</p>
+
+            <p class="mt-1 text-xs font-medium leading-5 text-slate-600">
+              {{ warningSummary }}
+            </p>
+
+            <p class="mt-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-slate-400">
+              Active warnings: {{ activeWarnings }}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AUDIT TELEMETRY BOUNDARY -->
+
+    <div class="border-t border-slate-100 bg-slate-50/70 p-3.5 sm:p-4">
+      <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p class="text-[9px] font-black uppercase tracking-[0.16em] text-slate-400">
+            Audit Telemetry
+          </p>
+
+          <p class="mt-1 text-xs font-semibold text-slate-600">
+            {{ recoveryEvents.length }} authoritative recovery event(s) are currently loaded from
+            the recovery-event feed.
+          </p>
+        </div>
+
+        <span
+          class="inline-flex w-fit items-center rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[8px] font-black uppercase tracking-[0.12em] text-slate-500"
+        >
+          Telemetry boundary
+        </span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 757.7O AUDIT / INTEGRITY END -->
+
+<!-- 757.7P CONTINUOUS GUARDIAN -->
+
+<section id="guardian-monitoring" class="mt-3 scroll-mt-6">
+  <div class="overflow-hidden rounded-[14px] border border-slate-200 bg-white shadow-sm">
+    <!-- HEADER -->
+
+    <div class="border-b border-slate-100 bg-slate-950 p-4 text-white sm:p-5">
+      <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <p class="text-[9px] font-black uppercase tracking-[0.18em] text-blue-400">
+            CONTINUOUS GUARDIAN
+          </p>
+
+          <h2 class="mt-1 text-lg font-black tracking-tight sm:text-xl">
+            Live protection monitoring
+          </h2>
+
+          <p class="mt-1.5 max-w-2xl text-[11px] font-medium leading-4 text-slate-400">
+            Continuous recovery telemetry is monitored from the existing authoritative recovery
+            service.
+          </p>
+        </div>
+
+        <div
+          class="inline-flex w-fit items-center gap-2 rounded-full border border-blue-400/20 bg-blue-400/10 px-3 py-1.5"
+        >
+          <span
+            class="h-1.5 w-1.5 rounded-full"
+            [ngClass]="{
+              'bg-emerald-400': liveState === 'LIVE',
+              'bg-amber-400': liveState === 'DEGRADED',
+              'bg-rose-400': liveState === 'ERROR',
+            }"
+          ></span>
+
+          <span class="text-[9px] font-black uppercase tracking-[0.14em] text-slate-200">
+            {{ liveStateLabel }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- LIVE POSTURE -->
+
+    <div class="grid gap-3 p-3 sm:p-4 lg:grid-cols-[1.15fr_0.85fr]">
+      <div class="rounded-[14px] border border-slate-200 bg-slate-50 p-4">
+        <div class="flex items-start justify-between gap-3.5">
+          <div>
+            <p class="text-[9px] font-black uppercase tracking-[0.16em] text-slate-400">
+              Live Protection State
+            </p>
+
+            <div class="mt-2.5 flex items-center gap-2.5">
+              <span
+                class="h-2.5 w-2.5 rounded-full"
+                [ngClass]="{
+                  'bg-emerald-500': liveState === 'LIVE',
+                  'bg-amber-500': liveState === 'DEGRADED',
+                  'bg-rose-500': liveState === 'ERROR',
+                }"
+              ></span>
+
+              <span class="text-lg font-black text-slate-950">
+                {{ liveStateLabel }}
+              </span>
+            </div>
+          </div>
+
+          <span
+            class="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.12em] text-slate-500"
+          >
+            Authoritative
+          </span>
+        </div>
+
+        <p class="mt-2 text-[11px] font-medium leading-4 text-slate-600">
+          {{ liveStateReason }}
+        </p>
+      </div>
+
+      <!-- REFRESH -->
+
+      <div class="rounded-[14px] border border-slate-200 bg-white p-4">
+        <p class="text-[9px] font-black uppercase tracking-[0.16em] text-slate-400">
+          Telemetry Refresh
+        </p>
+
+        <div class="mt-2.5 flex items-end justify-between gap-3">
+          <div>
+            <p class="text-xs font-semibold text-slate-500">Last refresh</p>
+
+            <p class="mt-1 text-xs font-black text-slate-950">
+              {{ lastRefreshAt ? (lastRefreshAt | date: 'medium') : 'Waiting' }}
+            </p>
+          </div>
+
+          <span
+            class="rounded-full bg-slate-100 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.12em] text-slate-500"
+          >
+            {{ liveRefreshIntervalMs / 1000 }}s cycle
+          </span>
+        </div>
+
+        <div class="mt-2 h-1 overflow-hidden rounded-full bg-slate-100">
+          <div class="h-full w-full rounded-full bg-blue-500/70"></div>
+        </div>
+
+        <p class="mt-1.5 text-[8px] font-semibold text-slate-400">
+          Automatic live refresh is active.
+        </p>
+      </div>
+    </div>
+
+    <!-- MONITORING SIGNALS -->
+
+    <div class="border-t border-slate-100 p-3 sm:p-4">
+      <div class="mb-2">
+        <p class="text-[9px] font-black uppercase tracking-[0.16em] text-slate-400">
+          Guardian Signals
+        </p>
+
+        <h3 class="mt-1 text-sm font-black text-slate-950">Current monitoring boundary</h3>
+      </div>
+
+      <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        <!-- Recovery telemetry -->
+
+        <div class="rounded-[12px] border border-emerald-200 bg-emerald-50 p-3">
+          <div class="flex items-center gap-2">
+            <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+
+            <span class="text-xs font-black text-slate-950"> Recovery Telemetry </span>
+          </div>
+
+          <p class="mt-2 text-[10px] font-medium leading-4 text-slate-600">
+            Existing recovery service is the authoritative source for current protection state.
+          </p>
+        </div>
+
+        <!-- Warnings -->
+
+        <div
+          class="rounded-[12px] border p-3"
+          [ngClass]="
+            activeWarnings > 0 ? 'border-amber-200 bg-amber-50' : 'border-slate-200 bg-slate-50'
+          "
+        >
+          <div class="flex items-center gap-2">
+            <span
+              class="h-2 w-2 rounded-full"
+              [ngClass]="activeWarnings > 0 ? 'bg-amber-500' : 'bg-slate-400'"
+            ></span>
+
+            <span class="text-xs font-black text-slate-950"> Active Warnings </span>
+          </div>
+
+          <p class="mt-2 text-[10px] font-medium leading-4 text-slate-600">
+            {{ activeWarnings }} active warning{{ activeWarnings === 1 ? '' : 's' }}.
+          </p>
+        </div>
+
+        <!-- Guardian -->
+
+        <div class="rounded-[12px] border border-slate-200 bg-slate-50 p-3">
+          <div class="flex items-center gap-2">
+            <span class="h-2 w-2 rounded-full bg-slate-400"></span>
+
+            <span class="text-xs font-black text-slate-950"> Guardian Supervisor </span>
+          </div>
+
+          <p class="mt-2 text-[10px] font-medium leading-4 text-slate-600">
+            Guardian monitored. Authoritative supervisor event telemetry is not exposed yet.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOADING / ERROR -->
+
+    <div *ngIf="loading || errorMessage" class="border-t border-slate-100 p-3 sm:p-4">
+      <!-- Loading -->
+
+      <div *ngIf="loading" class="rounded-[12px] border border-blue-200 bg-blue-50 p-3">
+        <div class="flex items-center gap-3">
+          <span class="h-2.5 w-2.5 animate-pulse rounded-full bg-blue-500"></span>
+
+          <div>
+            <p class="text-xs font-black text-slate-950">Refreshing protection telemetry</p>
+
+            <p class="mt-1 text-[10px] font-medium text-slate-500">
+              Waiting for the authoritative recovery response.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error -->
+
+      <div *ngIf="errorMessage" class="rounded-[12px] border border-rose-200 bg-rose-50 p-3">
+        <div class="flex items-start gap-3">
+          <span class="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-rose-500"></span>
+
+          <div>
+            <p class="text-xs font-black text-slate-950">Protection telemetry error</p>
+
+            <p class="mt-1 text-[10px] font-medium leading-5 text-slate-600">
+              {{ errorMessage }}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TELEMETRY BOUNDARY -->
+
+    <div class="border-t border-slate-100 bg-slate-50/70 p-3 sm:p-4">
+      <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p class="text-[9px] font-black uppercase tracking-[0.16em] text-slate-400">
+            Telemetry Boundary
+          </p>
+
+          <p class="mt-1 text-xs font-semibold text-slate-600">
+            Heartbeat, crash counters, incident history and current operation telemetry are not
+            exposed by this component yet.
+          </p>
+        </div>
+
+        <span
+          class="inline-flex w-fit items-center rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[8px] font-black uppercase tracking-[0.12em] text-slate-500"
+        >
+          No fabricated telemetry
+        </span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 757.7P CONTINUOUS GUARDIAN END -->

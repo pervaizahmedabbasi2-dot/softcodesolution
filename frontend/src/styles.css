@@ -1,0 +1,649 @@
+<<<<<<< HEAD
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+@import "tailwindcss";
+
+mat-icon, .mat-icon {
+  font-family: 'Material Icons' !important;
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: 'liga';
+  vertical-align: middle;
+  user-select: none;
+  overflow: visible;
+}
+
+/* ==========================================================================
+   HiOS & Apple Standard Design System
+   "Billion-Dollar Company" Enterprise Standard
+   Typography: Inter / SF Pro Display & Text
+   Palette: Apple Grays, Translucent Frosted Glass & Diffused Depth Shadows
+   ========================================================================== */
+
+:root {
+  /* Apple Standard Grays & Surfaces */
+  --apple-bg: #F5F5F7;
+  --apple-card: #FFFFFF;
+  --apple-gray-6: #F5F5F7;
+  --apple-gray-5: #E5E5EA;
+  --apple-gray-4: #D1D1D6;
+  --apple-gray-3: #C7C7CC;
+  --apple-gray-2: #AEAEB2;
+  --apple-gray-1: #8E8E93;
+  --apple-label: #1D1D1F;
+  --apple-secondary: #6E6E73;
+  --apple-tertiary: #86868B;
+  --apple-quaternary: #AEAEB2;
+
+  /* Accents */
+  --apple-blue: #0071E3;
+  --apple-blue-hover: #0077ED;
+  --apple-blue-subtle: rgba(0, 113, 227, 0.08);
+  --apple-indigo: #4F46E5;
+  --apple-emerald: #34C759;
+  --apple-amber: #FF9F0A;
+  --apple-rose: #FF3B30;
+
+  /* Hairline Borders */
+  --apple-border: rgba(0, 0, 0, 0.08);
+  --apple-border-subtle: rgba(0, 0, 0, 0.05);
+  --apple-border-strong: rgba(0, 0, 0, 0.12);
+
+  /* HiOS Layered Diffuse Depth Shadows */
+  --shadow-depth-xs: 0 1px 2px rgba(0, 0, 0, 0.03), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  --shadow-depth-sm: 0 2px 8px -2px rgba(0, 0, 0, 0.03), 0 6px 18px -4px rgba(0, 0, 0, 0.035), 0 0 0 1px rgba(0, 0, 0, 0.045);
+  --shadow-depth-card: 0 2px 10px -2px rgba(0, 0, 0, 0.03), 0 8px 26px -4px rgba(0, 0, 0, 0.045), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  --shadow-depth-card-hover: 0 6px 20px -2px rgba(0, 0, 0, 0.06), 0 16px 40px -6px rgba(0, 0, 0, 0.065), 0 0 0 1px rgba(0, 0, 0, 0.06);
+  --shadow-depth-dropdown: 0 12px 36px -6px rgba(0, 0, 0, 0.12), 0 4px 16px -2px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  --shadow-depth-modal: 0 24px 64px -12px rgba(0, 0, 0, 0.22), 0 12px 28px -6px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.85);
+}
+
+/* ==========================================================================
+   Global Typography & Layout Baseline
+   ========================================================================== */
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--apple-bg);
+  color: var(--apple-label);
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  letter-spacing: -0.014em;
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+button, a, [role="button"] {
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+button:focus, button:focus-visible, button:active,
+a:focus, a:focus-visible, a:active {
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+/* Universal scrollbar baseline */
+html, body {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* Sleek, Beautiful Standard Scrollbar for Sidebar & Custom Containers */
+.sidebar-scroll,
+.custom-scrollbar,
+.pretty-scrollbar,
+nav.sidebar-scroll,
+aside nav {
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(99, 102, 241, 0.6) rgba(241, 245, 249, 0.8) !important;
+  -ms-overflow-style: auto !important;
+}
+
+.sidebar-scroll::-webkit-scrollbar,
+.custom-scrollbar::-webkit-scrollbar,
+.pretty-scrollbar::-webkit-scrollbar,
+nav.sidebar-scroll::-webkit-scrollbar,
+aside nav::-webkit-scrollbar {
+  display: block !important;
+  width: 6px !important;
+  height: 6px !important;
+}
+
+.sidebar-scroll::-webkit-scrollbar-track,
+.custom-scrollbar::-webkit-scrollbar-track,
+.pretty-scrollbar::-webkit-scrollbar-track,
+nav.sidebar-scroll::-webkit-scrollbar-track,
+aside nav::-webkit-scrollbar-track {
+  background: rgba(241, 245, 249, 0.8) !important;
+  border-radius: 9999px !important;
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb,
+.custom-scrollbar::-webkit-scrollbar-thumb,
+.pretty-scrollbar::-webkit-scrollbar-thumb,
+nav.sidebar-scroll::-webkit-scrollbar-thumb,
+aside nav::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #6366f1, #4f46e5) !important;
+  border-radius: 9999px !important;
+  border: 1px solid rgba(255, 255, 255, 0.8) !important;
+  box-shadow: 0 1px 4px rgba(79, 70, 229, 0.3) !important;
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb:hover,
+.custom-scrollbar::-webkit-scrollbar-thumb:hover,
+.pretty-scrollbar::-webkit-scrollbar-thumb:hover,
+nav.sidebar-scroll::-webkit-scrollbar-thumb:hover,
+aside nav::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #4f46e5, #4338ca) !important;
+}
+
+/* Inter Editorial Headings */
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+  letter-spacing: -0.024em;
+  color: inherit;
+}
+
+h1 {
+  letter-spacing: -0.03em;
+}
+
+/* Tabular figures for numbers, metrics, currency, timestamps */
+.tabular-nums, table, [data-tabular="true"], .font-mono {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* ==========================================================================
+   HiOS Translucent Glassmorphism & Material Surfaces
+   ========================================================================== */
+
+/* Frosted glass header, topbar, side navigation */
+.hios-glass, .apple-glass {
+  background: rgba(255, 255, 255, 0.82) !important;
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-color: rgba(229, 229, 234, 0.85) !important;
+}
+
+/* Translucent Dark HUD / Dynamic Island */
+.hios-glass-dark, .apple-hud {
+  background: rgba(28, 28, 30, 0.90) !important;
+  backdrop-filter: blur(28px) saturate(190%);
+  -webkit-backdrop-filter: blur(28px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  box-shadow: 0 20px 48px -10px rgba(0, 0, 0, 0.42), inset 0 1px 1px rgba(255, 255, 255, 0.25);
+}
+
+/* ==========================================================================
+   Cards: Consistent Rounded Corners (18-20px) & Depth Shadows
+   ========================================================================== */
+
+.hios-card:not([class*="bg-"]), .apple-card:not([class*="bg-"]) {
+  background-color: #FFFFFF;
+}
+
+.hios-card, .apple-card {
+  border-radius: 20px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-depth-card);
+  transition: box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.22s ease;
+}
+
+.hios-card:hover, .apple-card:hover {
+  box-shadow: var(--shadow-depth-card-hover);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+/* Enhance all standard platform white cards with uniform HiOS depth */
+.bg-white.rounded-\[20px\],
+.bg-white.rounded-2xl,
+.bg-white.rounded-\[1\.75rem\] {
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-depth-card);
+  transition: box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.22s ease;
+}
+
+.bg-white.rounded-\[20px\]:hover,
+.bg-white.rounded-2xl:hover,
+.bg-white.rounded-\[1\.75rem\]:hover {
+  box-shadow: var(--shadow-depth-card-hover);
+}
+
+/* ==========================================================================
+   Popups & Modals: Consistent Depth Shadows & 24px Rounded Corners
+   ========================================================================== */
+
+/* Universal HiOS Modal Overlay / Backdrop */
+.hios-modal-overlay,
+.apple-overlay,
+.fixed.inset-0.bg-slate-950\/40,
+.fixed.inset-0.bg-slate-950\/50,
+.fixed.inset-0.bg-slate-950\/60,
+.fixed.inset-0.bg-slate-950\/65,
+.fixed.inset-0.bg-slate-950\/70,
+.fixed.inset-0.bg-slate-900\/60 {
+  background-color: rgba(15, 23, 42, 0.42) !important;
+  backdrop-filter: blur(16px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(160%) !important;
+}
+
+/* Universal HiOS Modal Card / Container */
+.hios-modal-card,
+.apple-modal {
+  background: rgba(255, 255, 255, 0.96) !important;
+  backdrop-filter: blur(32px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(32px) saturate(190%) !important;
+  border-radius: 24px !important;
+  border: 1px solid rgba(255, 255, 255, 0.85) !important;
+  box-shadow: var(--shadow-depth-modal) !important;
+}
+
+/* Match inner modal cards across dashboard hubs */
+.fixed.inset-0 > div.bg-white\/95,
+.fixed.inset-0 > div.bg-white {
+  border-radius: 24px !important;
+  border: 1px solid rgba(255, 255, 255, 0.85) !important;
+  box-shadow: var(--shadow-depth-modal) !important;
+}
+
+/* Dropdown Menus */
+.hios-dropdown,
+[role="menu"],
+.shadow-\[0_16px_40px_-8px_rgba\(0\,0\,0\,0\.12\)\] {
+  border-radius: 18px !important;
+  border: 1px solid rgba(229, 229, 234, 0.9) !important;
+  box-shadow: var(--shadow-depth-dropdown) !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+}
+
+/* ==========================================================================
+   Buttons: Tactile HiOS / Apple Micro-Interactions
+   ========================================================================== */
+
+.hios-btn-primary, .apple-btn-primary {
+  background-color: var(--apple-blue);
+  color: #FFFFFF;
+  font-weight: 600;
+  border-radius: 12px;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 8px -1px rgba(0, 113, 227, 0.32);
+}
+
+.hios-btn-primary:hover, .apple-btn-primary:hover {
+  background-color: var(--apple-blue-hover);
+  box-shadow: 0 4px 14px -1px rgba(0, 113, 227, 0.42);
+  transform: translateY(-0.5px);
+}
+
+.hios-btn-primary:active, .apple-btn-primary:active {
+  transform: scale(0.98);
+}
+
+.hios-btn-secondary, .apple-btn-secondary {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: var(--apple-label);
+  font-weight: 600;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  transition: all 0.18s ease;
+}
+
+.hios-btn-secondary:hover, .apple-btn-secondary:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+.hios-btn-secondary:active, .apple-btn-secondary:active {
+  transform: scale(0.98);
+}
+
+/* ==========================================================================
+   Inputs & Form Elements: Premium Inset & Apple Blue Focus Glow
+   ========================================================================== */
+
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="number"],
+input[type="date"],
+select,
+textarea {
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background-color: #FFFFFF;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+  font-family: inherit;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--apple-blue) !important;
+  box-shadow: 0 0 0 3.5px rgba(0, 113, 227, 0.16) !important;
+}
+
+/* ==========================================================================
+   Scrollbars: Ultra-Clean Apple Minimalist (Hidden by default, custom-scroll only)
+   ========================================================================== */
+
+.custom-scroll::-webkit-scrollbar,
+.sidebar-scroll::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.custom-scroll::-webkit-scrollbar-track,
+.sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scroll::-webkit-scrollbar-thumb,
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.15);
+  border-radius: 9999px;
+}
+
+/* ==========================================================================
+   Slow-Mo Smooth Mobile & Tablet Menu Drawer Transitions
+   ========================================================================== */
+
+.sidebar-slomo-transition {
+  transition: transform 1250ms cubic-bezier(0.22, 1, 0.36, 1), 
+              margin 1250ms cubic-bezier(0.22, 1, 0.36, 1),
+              opacity 1000ms cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+/* ==========================================================================
+   "iOS/HiOS Standard" Ultra-Slow Drop-Down Mobile Menu
+   1.4 second luxury animation: Drops smoothly from top to bottom
+   ========================================================================== */
+.bohat-slow-menu {
+  position: fixed !important;
+  left: 0 !important;
+  right: 0 !important;
+  top: 0 !important;
+  z-index: 950 !important;
+  background-color: #FFFFFF !important; /* Solid clean white without background blur */
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100vw !important;
+  height: auto !important; /* Content-aware height */
+  max-height: 100dvh !important;
+  overflow-y: auto !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  border-bottom-left-radius: 40px !important; /* More pronounced curve for premium feel */
+  border-bottom-right-radius: 40px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.4) !important;
+  box-shadow: 0 30px 60px -12px rgba(0,0,0,0.08), 0 18px 36px -18px rgba(0,0,0,0.05) !important;
+  
+  /* Initial Hidden State */
+  transform: translateY(-100%) !important;
+  opacity: 0 !important;
+  
+  /* Deluxe slow-motion closing retraction (1250ms = 1.25s): calm, buttery smooth glide back up */
+  transition: transform 1250ms cubic-bezier(0.32, 0.72, 0, 1),
+              opacity 1200ms cubic-bezier(0.32, 0.72, 0, 1),
+              visibility 1250ms step-end !important;
+  will-change: transform, opacity;
+}
+
+.bohat-slow-menu.menu-active {
+  transform: translateY(0) !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  
+  /* Deluxe slow-motion opening (1250ms = 1.25s): calm, relaxed, buttery smooth glide down */
+  transition: transform 1250ms cubic-bezier(0.22, 1, 0.36, 1),
+              opacity 1000ms cubic-bezier(0.22, 1, 0.36, 1),
+              visibility 0s step-start !important;
+}
+
+.bohat-slow-menu .slow-menu-content {
+  /* Smooth content drift on close (1200ms) */
+  transition: transform 1200ms cubic-bezier(0.32, 0.72, 0, 1),
+              opacity 1100ms cubic-bezier(0.32, 0.72, 0, 1);
+  transform: translateY(-14px);
+  opacity: 0.7;
+}
+
+.bohat-slow-menu.menu-active .slow-menu-content {
+  transform: translateY(0);
+  opacity: 1;
+  transition: transform 1200ms cubic-bezier(0.22, 1, 0.36, 1),
+              opacity 1000ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ==========================================================================
+   Premium Modal & Element Animations
+   ========================================================================== */
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Hide scrollbar for premium clean look */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+
+/* Universal Nishan-free Menu Items */
+.bohat-slow-menu a {
+  border: none !important;
+  box-shadow: none !important;
+  text-decoration: none !important;
+}
+
+.bohat-slow-item {
+  opacity: 1;
+  transform: none;
+}
+
+/* ==========================================================================
+   SCS Bot Animated Eye-Blink & Floating Keyframes
+   ========================================================================== */
+@keyframes botBlink {
+  0%, 88%, 92%, 100% {
+    transform: scaleY(1);
+  }
+  90% {
+    transform: scaleY(0.08);
+  }
+}
+
+@keyframes botFloat {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-12px) rotate(0.5deg);
+  }
+}
+
+@keyframes botPulseRing {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.12);
+    opacity: 0.25;
+  }
+}
+
+@keyframes soundWave {
+  0%, 100% {
+    height: 6px;
+  }
+  50% {
+    height: 18px;
+  }
+}
+
+.animate-bot-blink {
+  animation: botBlink 3.6s infinite ease-in-out;
+  transform-origin: center;
+}
+
+.animate-bot-float {
+  animation: botFloat 5s infinite ease-in-out;
+}
+
+.animate-bot-pulse {
+  animation: botPulseRing 2.8s infinite ease-in-out;
+}
+
+.animate-soundwave-1 {
+  animation: soundWave 1.2s infinite ease-in-out 0s;
+}
+
+.animate-soundwave-2 {
+  animation: soundWave 1.2s infinite ease-in-out 0.2s;
+}
+
+.animate-soundwave-3 {
+  animation: soundWave 1.2s infinite ease-in-out 0.4s;
+}
+
+.animate-soundwave-4 {
+  animation: soundWave 1.2s infinite ease-in-out 0.1s;
+}
+
+
+=======
+@import "tailwindcss";
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.sidebar-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+}
+.sidebar-scroll:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.animate-fade-in {
+    animation: fadeIn 1s ease-out forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Global Scroll Configuration */
+html {
+  /* instant positioning enabled so reload always lands at hero section */
+}
+
+body {
+  overscroll-behavior-y: auto;
+}
+
+/* Enforce touch momentum scrolling (spring effect) on all scrollable elements across iOS and modern mobile browsers */
+* {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: auto;
+}
+
+
+
+
+
+
+
+/* Ensure any internal scrolling container also gets the spring effect */
+.overflow-y-auto, .overflow-auto, .scrollable {
+  overscroll-behavior: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+/* Enable native rubber-band bounce on iOS/Safari for scrollable areas */
+html, body {
+  /* Allow natural bounce on landing, login, register */
+  overscroll-behavior-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* For inner scroll containers (like Dashboard), allow bounce but prevent it from chaining to body */
+.overflow-y-auto, .overflow-auto, .sidebar-scroll, .scrollable {
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior-y: contain !important; /* Bounce allowed, but don't pull the whole page */
+}
+
+/* Authentic iOS / Apple Spring Physics (Premium Smooth Bounce) */
+.sidebar-slomo-transition,
+.sidebar-spring-physics {
+  transition: transform 2500ms cubic-bezier(0.22, 1.25, 0.15, 1),
+              margin-left 2500ms cubic-bezier(0.22, 1.25, 0.15, 1),
+              box-shadow 2500ms cubic-bezier(0.22, 1.25, 0.15, 1);
+  will-change: transform, margin-left;
+}
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b

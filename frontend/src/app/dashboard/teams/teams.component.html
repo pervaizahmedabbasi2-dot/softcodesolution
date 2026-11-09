@@ -1,0 +1,271 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fade-in">
+  
+  <!-- Header Banner -->
+  <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-8 text-white shadow-xl border border-slate-800">
+    <div class="absolute -right-10 -bottom-10 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div>
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-xs font-semibold uppercase tracking-wider mb-3">
+          <lucide-icon [name]="icons.Shield" class="w-3.5 h-3.5"></lucide-icon>
+          Enterprise Organization Directory
+        </div>
+        <h1 class="text-3xl font-black tracking-tight text-white sm:text-4xl">Teams & Personnel Control</h1>
+        <p class="mt-2 text-slate-300 text-sm max-w-2xl">
+          Manage personnel credentials, privileged access levels, hardware-bound MFA enforcement, and tenant administration delegacy.
+        </p>
+      </div>
+
+      <div class="flex items-center gap-3 shrink-0">
+        <button (click)="loadMembers()" class="px-4 py-2.5 bg-slate-800/80 hover:bg-slate-700/80 text-slate-200 border border-slate-700 text-xs font-bold rounded-xl transition-all flex items-center gap-2 shadow-sm">
+          <lucide-icon [name]="icons.RefreshCcw" class="w-4 h-4" [class.animate-spin]="isLoading"></lucide-icon>
+          Sync Directory
+        </button>
+        <button (click)="openInviteModal()" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-indigo-600/30 hover:scale-[1.02] active:scale-[0.98]">
+          <lucide-icon [name]="icons.UserPlus" class="w-4 h-4"></lucide-icon>
+          Provision Team Member
+        </button>
+      </div>
+    </div>
+
+    <!-- Quick Telemetry Stats -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8 pt-6 border-t border-slate-800/80">
+      <div>
+        <p class="text-xs font-medium text-slate-400">Total Personnel</p>
+        <p class="text-2xl font-black text-white mt-1">{{ members.length }} <span class="text-xs text-indigo-400 font-normal">Active Seats</span></p>
+      </div>
+      <div>
+        <p class="text-xs font-medium text-slate-400">Hardware 2FA / MFA</p>
+        <p class="text-2xl font-black text-emerald-400 mt-1">100% <span class="text-xs text-slate-400 font-normal">Enforced</span></p>
+      </div>
+      <div>
+        <p class="text-xs font-medium text-slate-400">Active Security Sessions</p>
+        <p class="text-2xl font-black text-cyan-400 mt-1">18 <span class="text-xs text-slate-400 font-normal">Encrypted</span></p>
+      </div>
+      <div>
+        <p class="text-xs font-medium text-slate-400">Privileged Roles</p>
+        <p class="text-2xl font-black text-amber-400 mt-1">5 <span class="text-xs text-slate-400 font-normal">Tier-1 Profiles</span></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search & Filter Controls -->
+  <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+    <div class="relative w-full sm:w-80">
+      <lucide-icon [name]="icons.Search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></lucide-icon>
+      <input 
+        type="text" 
+        [(ngModel)]="searchQuery" 
+        (ngModelChange)="applyFilter()"
+        placeholder="Search by name, email, or role..." 
+        class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+      />
+    </div>
+
+    <div class="flex items-center gap-2 w-full sm:w-auto">
+      <span class="text-xs font-semibold text-slate-500 shrink-0">Department:</span>
+      <select 
+        [(ngModel)]="selectedDepartment" 
+        (ngModelChange)="applyFilter()" 
+        class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 focus:outline-none focus:border-indigo-500">
+        <option value="all">All Departments</option>
+        <option value="Executive">Executive</option>
+        <option value="InfraSec">InfraSec</option>
+        <option value="Infrastructure">Infrastructure</option>
+        <option value="Finance">Finance</option>
+        <option value="Product">Product</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Members Table -->
+  <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+    <!-- Mobile Personnel Cards (Mobile View) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 md:hidden">
+      <div *ngFor="let member of filteredMembers" class="apple-card rounded-2xl border border-slate-200/90 p-4 bg-white shadow-2xs space-y-3">
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="w-10 h-10 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-700 font-black flex items-center justify-center text-xs shrink-0 shadow-2xs">
+              {{ getInitials(member.name) }}
+            </div>
+            <div class="min-w-0">
+              <h3 class="font-black text-slate-900 text-sm truncate">{{ member.name }}</h3>
+              <p class="text-xs text-slate-400 font-mono truncate">{{ member.email }}</p>
+            </div>
+          </div>
+          <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border shrink-0"
+                [class.bg-emerald-50]="member.status === 'Active'" [class.text-emerald-700]="member.status === 'Active'" [class.border-emerald-200]="member.status === 'Active'"
+                [class.bg-amber-50]="member.status !== 'Active'" [class.text-amber-700]="member.status !== 'Active'" [class.border-amber-200]="member.status !== 'Active'">
+            {{ member.status }}
+          </span>
+        </div>
+
+        <div class="space-y-1 text-xs bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+          <div class="flex items-center justify-between">
+            <span class="text-slate-400 font-medium">Role:</span>
+            <span class="font-bold text-slate-800">{{ member.role }}</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-slate-400 font-medium">Department:</span>
+            <span class="font-bold text-indigo-600 text-[10px] uppercase">{{ member.department }}</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-slate-400 font-medium">MFA State:</span>
+            <span *ngIf="member.mfa" class="text-[10px] font-bold text-emerald-700">Hardware 2FA</span>
+            <span *ngIf="!member.mfa" class="text-[10px] font-bold text-amber-700">TOTP Pending</span>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between pt-1 border-t border-slate-100 text-xs">
+          <span class="text-[10px] text-slate-400 font-mono">Active {{ member.lastActive }}</span>
+          <button (click)="openInviteModal()" class="px-3 py-1 rounded-lg text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition-colors">
+            Invite / Roles
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Desktop Members Table (Desktop View) -->
+    <div class="hidden md:block overflow-x-auto">
+      <table class="w-full text-left text-xs text-slate-600">
+        <thead class="bg-slate-50 border-b border-slate-200 text-slate-700 font-bold uppercase tracking-wider text-[11px]">
+          <tr>
+            <th class="px-6 py-4">Personnel</th>
+            <th class="px-6 py-4">Department & Role</th>
+            <th class="px-6 py-4">MFA State</th>
+            <th class="px-6 py-4">Last Activity</th>
+            <th class="px-6 py-4">Access Status</th>
+            <th class="px-6 py-4 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          <tr *ngFor="let member of filteredMembers" class="hover:bg-slate-50/70 transition-colors">
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 font-black flex items-center justify-center text-xs shrink-0">
+                  {{ getInitials(member.name) }}
+                </div>
+                <div>
+                  <p class="font-bold text-slate-900 text-sm">{{ member.name }}</p>
+                  <p class="text-xs text-slate-400 font-mono">{{ member.email }}</p>
+                </div>
+              </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="font-semibold text-slate-800">{{ member.role }}</div>
+              <span class="inline-block mt-0.5 px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600">{{ member.department }}</span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span *ngIf="member.mfa" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <lucide-icon [name]="icons.CheckCircle2" class="w-3.5 h-3.5 text-emerald-600"></lucide-icon>
+                FIDO2 / Hardware
+              </span>
+              <span *ngIf="!member.mfa" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                <lucide-icon [name]="icons.AlertTriangle" class="w-3.5 h-3.5 text-amber-600"></lucide-icon>
+                TOTP Pending
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap font-medium text-slate-500">
+              {{ member.lastActive }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                {{ member.status }}
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-right">
+              <button 
+                (click)="removeMember(member.id)" 
+                title="Revoke Privileged Access" 
+                class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                <lucide-icon [name]="icons.Trash2" class="w-4 h-4"></lucide-icon>
+              </button>
+            </td>
+          </tr>
+
+          <tr *ngIf="filteredMembers.length === 0">
+            <td colspan="6" class="px-6 py-12 text-center text-slate-400">
+              <lucide-icon [name]="icons.Users" class="w-8 h-8 mx-auto text-slate-300 mb-2"></lucide-icon>
+              <p class="text-sm font-semibold">No team members match your filter</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Provision Modal -->
+  <div *ngIf="isInviteOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+    <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden transform transition-all">
+      <div class="px-6 py-5 bg-slate-900 text-white flex items-center justify-between">
+        <div>
+          <h3 class="text-base font-bold">Provision Enterprise Access</h3>
+          <p class="text-xs text-slate-400 mt-0.5">Send cryptographically signed onboarding invitation</p>
+        </div>
+        <button (click)="closeInviteModal()" class="text-slate-400 hover:text-white p-1 rounded-lg">
+          <lucide-icon [name]="icons.X" class="w-5 h-5"></lucide-icon>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Full Name</label>
+          <input 
+            type="text" 
+            [(ngModel)]="inviteName" 
+            placeholder="e.g. Liam Gallagher" 
+            class="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-xs font-medium focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+          />
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Corporate Email</label>
+          <input 
+            type="email" 
+            [(ngModel)]="inviteEmail" 
+            placeholder="liam.g@enterprise.softcode.com" 
+            class="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-xs font-medium focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+          />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Department</label>
+            <select [(ngModel)]="inviteDept" class="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-xs font-medium focus:outline-none focus:border-indigo-500">
+              <option value="Executive">Executive</option>
+              <option value="InfraSec">InfraSec</option>
+              <option value="Infrastructure">Infrastructure</option>
+              <option value="Finance">Finance</option>
+              <option value="Product">Product</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Security Role</label>
+            <select [(ngModel)]="inviteRole" class="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-xs font-medium focus:outline-none focus:border-indigo-500">
+              <option value="Lead Security Architect">Lead Architect</option>
+              <option value="DevOps Lead">DevOps Lead</option>
+              <option value="Security Analyst">Security Analyst</option>
+              <option value="Billing Controller">Billing Controller</option>
+              <option value="Tenant Member">Tenant Member</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="p-3 bg-amber-50 rounded-lg border border-amber-200/70 text-[11px] text-amber-800 leading-relaxed">
+          <strong>Security Notice:</strong> The user will be required to register a WebAuthn / FIDO2 physical key or hardware token upon initial login.
+        </div>
+      </div>
+
+      <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-3">
+        <button (click)="closeInviteModal()" class="px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-900">Cancel</button>
+        <button 
+          (click)="submitInvite()" 
+          [disabled]="!inviteEmail.trim() || isSubmitting" 
+          class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-bold rounded-xl shadow-md transition-all">
+          {{ isSubmitting ? 'Dispatching...' : 'Send Invitation' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>

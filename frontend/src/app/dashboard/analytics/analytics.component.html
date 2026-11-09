@@ -1,0 +1,269 @@
+<div class="flex-1 bg-white min-h-full pb-20 font-sans">
+  
+  <div class="border-b border-slate-200/80 bg-slate-50/50 relative overflow-hidden">
+    <div class="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+    
+    <div class="relative max-w-[98rem] mx-auto px-6 lg:px-12 py-10 lg:py-12">
+      <div class="flex flex-col md:flex-row items-start md:items-end justify-between gap-6 mb-8">
+        <div>
+          <div class="flex items-center gap-2 mb-3">
+            <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-[3px] text-indigo-700 bg-indigo-100 ring-1 ring-indigo-200">
+              Enterprise BI
+            </span>
+          </div>
+          <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
+            Revenue & <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-cyan-500">Growth</span>
+          </h1>
+          <p class="text-sm text-slate-500 font-medium mt-2 max-w-2xl leading-relaxed">
+            Real-time financial telemetry, MRR expansion, and tenant lifecycle analytics.
+          </p>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <div class="flex items-center p-1 rounded-xl bg-white border border-slate-200 shadow-sm">
+            <button
+              *ngFor="let period of periods"
+              type="button"
+              (click)="selectPeriod(period)"
+              class="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all"
+              [class.bg-slate-900]="selectedPeriod === period"
+              [class.text-white]="selectedPeriod === period"
+              [class.text-slate-500]="selectedPeriod !== period"
+              [class.hover:bg-slate-100]="selectedPeriod !== period">
+              {{ period }}
+            </button>
+          </div>
+          <button class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 text-[10px] font-black uppercase tracking-widest shadow-sm hover:bg-slate-50 transition-all">
+            <lucide-icon [name]="icons.Download" class="w-4 h-4"></lucide-icon>
+            Export CSV
+          </button>
+        </div>
+      </div>
+
+<<<<<<< HEAD
+      <!-- Core Financial KPIs (3D White Cards) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Card 1: ARR (Indigo 3D White Card) -->
+        <div class="rounded-2xl p-5 border border-slate-200/90 shadow-[0_4px_16px_-2px_rgba(79,70,229,0.12),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_14px_28px_-4px_rgba(79,70,229,0.25),0_4px_10px_-2px_rgba(79,70,229,0.12)] hover:-translate-y-1 hover:border-indigo-300/80 transition-all duration-300 ease-out bg-gradient-to-b from-white via-white to-slate-50/80 group flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-indigo-600 transition-colors">Annual Recurring Rev (ARR)</span>
+              <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-600 to-blue-600 text-white flex items-center justify-center shadow-md shadow-indigo-500/30 group-hover:scale-105 transition-transform border border-white/30 shrink-0">
+                <lucide-icon [name]="icons.TrendingUp" class="w-5 h-5 stroke-[2.2] drop-shadow-xs"></lucide-icon>
+              </div>
+            </div>
+            <h2 class="text-3xl font-black text-slate-900 tracking-tight tabular-nums block leading-none">$12.4M</h2>
+          </div>
+          <div class="flex items-center gap-1.5 mt-3 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 w-fit px-2.5 py-0.5 rounded-full shadow-2xs">
+=======
+      <!-- Core Financial KPIs -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white rounded-[1.5rem] p-6 border border-slate-200/80 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] relative overflow-hidden group">
+          <div class="absolute -right-4 -top-4 w-24 h-24 bg-indigo-50 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500"></div>
+          <p class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2 relative z-10">Annual Recurring Rev (ARR)</p>
+          <h2 class="text-3xl font-black text-slate-900 tracking-tight relative z-10">$12.4M</h2>
+          <div class="flex items-center gap-1.5 mt-3 relative z-10 text-[11px] font-bold text-emerald-600 bg-emerald-50 w-fit px-2 py-0.5 rounded-full">
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
+            <lucide-icon [name]="icons.ArrowUpRight" class="w-3.5 h-3.5"></lucide-icon> 24.5% YoY
+          </div>
+        </div>
+
+<<<<<<< HEAD
+        <!-- Card 2: NRR (Cyan 3D White Card) -->
+        <div class="rounded-2xl p-5 border border-slate-200/90 shadow-[0_4px_16px_-2px_rgba(6,182,212,0.12),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_14px_28px_-4px_rgba(6,182,212,0.25),0_4px_10px_-2px_rgba(6,182,212,0.12)] hover:-translate-y-1 hover:border-cyan-300/80 transition-all duration-300 ease-out bg-gradient-to-b from-white via-white to-slate-50/80 group flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-cyan-600 transition-colors">Net Revenue Retention (NRR)</span>
+              <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-cyan-500 via-cyan-600 to-blue-600 text-white flex items-center justify-center shadow-md shadow-cyan-500/30 group-hover:scale-105 transition-transform border border-white/30 shrink-0">
+                <lucide-icon [name]="icons.Activity" class="w-5 h-5 stroke-[2.2] drop-shadow-xs"></lucide-icon>
+              </div>
+            </div>
+            <h2 class="text-3xl font-black text-slate-900 tracking-tight tabular-nums block leading-none">132%</h2>
+          </div>
+          <div class="flex items-center gap-1.5 mt-3 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 w-fit px-2.5 py-0.5 rounded-full shadow-2xs">
+=======
+        <div class="bg-white rounded-[1.5rem] p-6 border border-slate-200/80 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] relative overflow-hidden group">
+          <div class="absolute -right-4 -top-4 w-24 h-24 bg-cyan-50 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500"></div>
+          <p class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2 relative z-10">Net Revenue Retention (NRR)</p>
+          <h2 class="text-3xl font-black text-slate-900 tracking-tight relative z-10">132%</h2>
+          <div class="flex items-center gap-1.5 mt-3 relative z-10 text-[11px] font-bold text-emerald-600 bg-emerald-50 w-fit px-2 py-0.5 rounded-full">
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
+            <lucide-icon [name]="icons.ArrowUpRight" class="w-3.5 h-3.5"></lucide-icon> Top Quartile
+          </div>
+        </div>
+
+<<<<<<< HEAD
+        <!-- Card 3: Churn Rate (Rose 3D White Card) -->
+        <div class="rounded-2xl p-5 border border-slate-200/90 shadow-[0_4px_16px_-2px_rgba(244,63,94,0.12),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_14px_28px_-4px_rgba(244,63,94,0.25),0_4px_10px_-2px_rgba(244,63,94,0.12)] hover:-translate-y-1 hover:border-rose-300/80 transition-all duration-300 ease-out bg-gradient-to-b from-white via-white to-slate-50/80 group flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-rose-600 transition-colors">Gross Churn Rate</span>
+              <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-rose-500 via-rose-600 to-pink-600 text-white flex items-center justify-center shadow-md shadow-rose-500/30 group-hover:scale-105 transition-transform border border-white/30 shrink-0">
+                <lucide-icon [name]="icons.ArrowDownRight" class="w-5 h-5 stroke-[2.2] drop-shadow-xs"></lucide-icon>
+              </div>
+            </div>
+            <h2 class="text-3xl font-black text-slate-900 tracking-tight tabular-nums block leading-none">1.2%</h2>
+          </div>
+          <div class="flex items-center gap-1.5 mt-3 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 w-fit px-2.5 py-0.5 rounded-full shadow-2xs">
+=======
+        <div class="bg-white rounded-[1.5rem] p-6 border border-slate-200/80 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] relative overflow-hidden group">
+          <div class="absolute -right-4 -top-4 w-24 h-24 bg-rose-50 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500"></div>
+          <p class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2 relative z-10">Gross Churn Rate</p>
+          <h2 class="text-3xl font-black text-slate-900 tracking-tight relative z-10">1.2%</h2>
+          <div class="flex items-center gap-1.5 mt-3 relative z-10 text-[11px] font-bold text-emerald-600 bg-emerald-50 w-fit px-2 py-0.5 rounded-full">
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
+            <lucide-icon [name]="icons.ArrowDownRight" class="w-3.5 h-3.5"></lucide-icon> -0.4% QoQ
+          </div>
+        </div>
+
+<<<<<<< HEAD
+        <!-- Card 4: ARPA (Emerald 3D White Card) -->
+        <div class="rounded-2xl p-5 border border-slate-200/90 shadow-[0_4px_16px_-2px_rgba(16,185,129,0.12),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_14px_28px_-4px_rgba(16,185,129,0.25),0_4px_10px_-2px_rgba(16,185,129,0.12)] hover:-translate-y-1 hover:border-emerald-300/80 transition-all duration-300 ease-out bg-gradient-to-b from-white via-white to-slate-50/80 group flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-emerald-600 transition-colors">Avg Revenue Per Acct (ARPA)</span>
+              <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 via-emerald-600 to-teal-600 text-white flex items-center justify-center shadow-md shadow-emerald-500/30 group-hover:scale-105 transition-transform border border-white/30 shrink-0">
+                <lucide-icon [name]="icons.CreditCard" class="w-5 h-5 stroke-[2.2] drop-shadow-xs"></lucide-icon>
+              </div>
+            </div>
+            <h2 class="text-3xl font-black text-slate-900 tracking-tight tabular-nums block leading-none">$8,450</h2>
+          </div>
+          <div class="flex items-center gap-1.5 mt-3 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 w-fit px-2.5 py-0.5 rounded-full shadow-2xs">
+=======
+        <div class="bg-white rounded-[1.5rem] p-6 border border-slate-200/80 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] relative overflow-hidden group">
+          <div class="absolute -right-4 -top-4 w-24 h-24 bg-emerald-50 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500"></div>
+          <p class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2 relative z-10">Avg Revenue Per Acct (ARPA)</p>
+          <h2 class="text-3xl font-black text-slate-900 tracking-tight relative z-10">$8,450</h2>
+          <div class="flex items-center gap-1.5 mt-3 relative z-10 text-[11px] font-bold text-emerald-600 bg-emerald-50 w-fit px-2 py-0.5 rounded-full">
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
+            <lucide-icon [name]="icons.ArrowUpRight" class="w-3.5 h-3.5"></lucide-icon> Expansion Tier
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-[98rem] mx-auto px-6 lg:px-12 py-8 space-y-6">
+    <!-- Charts Section -->
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+      
+<<<<<<< HEAD
+      <!-- MRR Growth Chart (3D White Card) -->
+      <div class="xl:col-span-2 bg-gradient-to-b from-white via-white to-slate-50/80 rounded-3xl border border-slate-200/90 shadow-[0_4px_16px_-2px_rgba(79,70,229,0.10),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_12px_24px_-4px_rgba(79,70,229,0.18)] transition-all duration-300 p-6">
+        <div class="flex justify-between items-center mb-6">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center shadow-2xs">
+              <lucide-icon [name]="icons.BarChart3" class="w-4 h-4"></lucide-icon>
+            </div>
+            <div>
+              <h3 class="text-lg font-black text-slate-900 tracking-tight">MRR Growth</h3>
+              <p class="text-xs text-slate-500 font-medium mt-0.5">Monthly Recurring Revenue projection & history</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest bg-white border border-slate-200/80 px-3 py-1.5 rounded-xl shadow-2xs">
+            <div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-indigo-500"></span> New Biz</div>
+            <div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-cyan-400"></span> Expansion</div>
+            <div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-rose-400"></span> Churn</div>
+=======
+      <!-- MRR Growth Chart (Mocked SVG) -->
+      <div class="xl:col-span-2 bg-white rounded-[1.5rem] border border-slate-200 shadow-sm p-6">
+        <div class="flex justify-between items-center mb-6">
+          <div>
+            <h3 class="text-lg font-black text-slate-900">MRR Growth</h3>
+            <p class="text-xs text-slate-500 font-medium mt-1">Monthly Recurring Revenue projection & history</p>
+          </div>
+          <div class="flex items-center gap-4 text-[10px] font-black uppercase tracking-widest">
+            <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-indigo-500"></span> New Biz</div>
+            <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-cyan-400"></span> Expansion</div>
+            <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-rose-400"></span> Churn</div>
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
+          </div>
+        </div>
+
+        <div class="h-64 relative w-full flex items-end">
+          <!-- Mock Chart SVG -->
+          <svg class="w-full h-full" viewBox="0 0 800 200" preserveAspectRatio="none">
+            <!-- Grid Lines -->
+            <path d="M0 50 h800 M0 100 h800 M0 150 h800" fill="none" stroke="#f1f5f9" stroke-width="1" />
+            
+            <!-- Churn Bars (Negative, bottom) -->
+            <path d="M40 190 v10 M120 190 v5 M200 190 v15 M280 190 v8 M360 190 v12 M440 190 v6 M520 190 v4 M600 190 v9 M680 190 v5 M760 190 v3" stroke="#fb7185" stroke-width="20" stroke-linecap="round" />
+
+            <!-- New Biz Bars (Indigo) -->
+            <path d="M40 185 v-40 M120 185 v-45 M200 185 v-50 M280 185 v-60 M360 185 v-65 M440 185 v-75 M520 185 v-80 M600 185 v-95 M680 185 v-110 M760 185 v-125" stroke="#6366f1" stroke-width="20" stroke-linecap="round" />
+
+            <!-- Expansion Bars (Cyan, stacked on top - mocked as just higher lines starting from where indigo left off, but we'll cheat visually) -->
+            <path d="M40 140 v-10 M120 135 v-15 M200 130 v-10 M280 120 v-20 M360 115 v-25 M440 105 v-20 M520 100 v-30 M600 85 v-25 M680 70 v-35 M760 55 v-40" stroke="#22d3ee" stroke-width="20" stroke-linecap="round" />
+            
+            <!-- Trend Line -->
+            <path d="M40 135 L 120 115 L 200 110 L 280 95 L 360 85 L 440 80 L 520 65 L 600 55 L 680 30 L 760 10" fill="none" stroke="#334155" stroke-width="3" />
+            <!-- Data Points -->
+            <circle cx="40" cy="135" r="4" fill="#334155" /><circle cx="120" cy="115" r="4" fill="#334155" /><circle cx="200" cy="110" r="4" fill="#334155" /><circle cx="280" cy="95" r="4" fill="#334155" /><circle cx="360" cy="85" r="4" fill="#334155" /><circle cx="440" cy="80" r="4" fill="#334155" /><circle cx="520" cy="65" r="4" fill="#334155" /><circle cx="600" cy="55" r="4" fill="#334155" /><circle cx="680" cy="30" r="4" fill="#334155" /><circle cx="760" cy="10" r="4" fill="#334155" />
+          </svg>
+        </div>
+        <div class="flex justify-between items-center mt-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+          <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span>
+        </div>
+      </div>
+
+      <!-- Cohort Analysis / Tenant Health -->
+<<<<<<< HEAD
+      <div class="bg-slate-900 rounded-3xl border border-slate-800 shadow-xl p-6 text-white flex flex-col relative overflow-hidden">
+        <div class="absolute -right-8 -top-8 w-36 h-36 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="flex justify-between items-center mb-6 relative z-10">
+          <div>
+            <h3 class="text-lg font-black text-white tracking-tight">Platform Health Index</h3>
+            <p class="text-xs text-slate-400 font-medium mt-0.5">Tenant Engagement Score (TES)</p>
+          </div>
+          <div class="w-8 h-8 rounded-xl bg-slate-800 border border-slate-700 text-indigo-400 flex items-center justify-center">
+            <lucide-icon [name]="icons.Activity" class="w-4 h-4"></lucide-icon>
+          </div>
+=======
+      <div class="bg-slate-900 rounded-[1.5rem] border border-slate-800 shadow-xl p-6 text-white flex flex-col">
+        <div class="flex justify-between items-center mb-6">
+          <div>
+            <h3 class="text-lg font-black text-white">Platform Health Index</h3>
+            <p class="text-xs text-slate-400 font-medium mt-1">Tenant Engagement Score (TES)</p>
+          </div>
+          <lucide-icon [name]="icons.Activity" class="w-5 h-5 text-indigo-400"></lucide-icon>
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
+        </div>
+
+        <div class="flex-1 flex flex-col justify-center items-center">
+          <!-- Circular Progress -->
+          <div class="relative w-40 h-40 flex items-center justify-center">
+            <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="45" fill="none" stroke="#1e293b" stroke-width="8" />
+              <circle cx="50" cy="50" r="45" fill="none" stroke="#6366f1" stroke-width="8" stroke-dasharray="283" stroke-dashoffset="34" class="transition-all duration-1000" />
+            </svg>
+            <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+              <span class="text-4xl font-black">88</span>
+              <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Excellent</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="mt-8 space-y-4">
+          <div>
+            <div class="flex justify-between text-[10px] font-bold uppercase tracking-widest mb-1.5">
+              <span class="text-slate-400">Power Users (>5h/day)</span>
+              <span class="text-white">45%</span>
+            </div>
+            <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+              <div class="h-full bg-emerald-400 rounded-full" style="width: 45%"></div>
+            </div>
+          </div>
+          <div>
+            <div class="flex justify-between text-[10px] font-bold uppercase tracking-widest mb-1.5">
+              <span class="text-slate-400">At-Risk Accounts</span>
+              <span class="text-white">3.2%</span>
+            </div>
+            <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+              <div class="h-full bg-amber-400 rounded-full" style="width: 15%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

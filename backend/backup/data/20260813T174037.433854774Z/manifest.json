@@ -1,0 +1,13 @@
+{
+  "id": "20260813T174037.433854774Z",
+  "created_at": "2026-08-13T17:40:38.227861044Z",
+  "postgres": "postgres.sql",
+  "sqlite": "local.sqlite",
+  "postgres_sha256": "2cf47d4e4ac4c46acb64add2faff2e94b364b79ec3d0f12f4f52ea05c74dbb31",
+  "sqlite_sha256": "3c8b7c1222d06a1a21eb53a47e2059ba9281e7199c52a9fc5cc50e66dedf4cbb",
+  "size_bytes": 742609,
+  "status": "verified",
+  "office_mirror_path": "backend/backup/data/office-mirror/20260813T174037.433854774Z",
+  "office_mirror_sha256": "127d12b34fcdad82f0ce42e2ab0b9826f874141a930d7b3f0962ae5b4c8a9cb1",
+  "office_mirror_verified": true
+}

@@ -1,0 +1,78 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fade-in">
+  
+  <!-- Banner -->
+  <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-8 text-white shadow-xl border border-slate-800">
+    <div class="absolute -right-10 -bottom-10 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div>
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-xs font-semibold uppercase tracking-wider mb-3">
+          <lucide-icon [name]="icons.BookOpen" class="w-3.5 h-3.5"></lucide-icon>
+          Enterprise Knowledge Base & Engineering Runbooks
+        </div>
+        <h1 class="text-3xl font-black tracking-tight text-white sm:text-4xl">Developer Hub & Architecture Docs</h1>
+        <p class="mt-2 text-slate-300 text-sm max-w-2xl">
+          Technical specifications, zero-trust cryptographic implementation guidelines, failover runbooks, and tenant integration standards.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search & Filter Controls -->
+  <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+    <div class="relative w-full sm:w-80">
+      <lucide-icon [name]="icons.Search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></lucide-icon>
+      <input 
+        type="text" 
+        [(ngModel)]="searchQuery" 
+        (ngModelChange)="applyFilter()"
+        placeholder="Search runbooks, guides, and docs..." 
+        class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+      />
+    </div>
+
+    <div class="flex items-center gap-2 w-full sm:w-auto">
+      <span class="text-xs font-semibold text-slate-500 shrink-0">Topic:</span>
+      <select 
+        [(ngModel)]="selectedCategory" 
+        (ngModelChange)="applyFilter()" 
+        class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 focus:outline-none focus:border-indigo-500">
+        <option value="all">All Topics</option>
+        <option value="API & Integration">API & Integration</option>
+        <option value="Multi-Tenant Architecture">Multi-Tenant</option>
+        <option value="Licensing & Compliance">Licensing</option>
+        <option value="Disaster Recovery">Disaster Recovery</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Articles Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div *ngFor="let doc of filteredArticles" class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all flex flex-col justify-between">
+      <div>
+        <div class="flex items-center justify-between gap-3 mb-3">
+          <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-100">
+            {{ doc.category }}
+          </span>
+          <span class="text-xs text-slate-400 font-medium">{{ doc.readTime }}</span>
+        </div>
+
+        <h3 class="text-base font-bold text-slate-900 mb-2">{{ doc.title }}</h3>
+        <p class="text-xs text-slate-600 leading-relaxed mb-4">
+          {{ doc.description }}
+        </p>
+
+        <div *ngIf="doc.codeSnippet" class="bg-slate-950 rounded-xl p-3.5 border border-slate-800 font-mono text-[11px] text-cyan-300 overflow-x-auto mb-4">
+          <pre><code>{{ doc.codeSnippet }}</code></pre>
+        </div>
+      </div>
+
+      <div class="pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-semibold">
+        <span class="text-slate-400">Updated: {{ doc.updatedAt }}</span>
+        <button class="text-indigo-600 hover:text-indigo-700 flex items-center gap-1 group">
+          Read Guide <lucide-icon [name]="icons.ChevronRight" class="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform"></lucide-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>

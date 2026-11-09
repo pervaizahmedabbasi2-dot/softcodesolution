@@ -1,0 +1,10 @@
+{
+  "id": "20260812T201613.625747712Z",
+  "created_at": "2026-08-12T20:16:13.75229815Z",
+  "postgres": "postgres.sql",
+  "sqlite": "local.sqlite",
+  "postgres_sha256": "b24715b77ebcc569e3fcc473c2ac22bc402fbe0d67747acb8670eb93fd5b6cb0",
+  "sqlite_sha256": "dc2da1ca71657c1caea831055000ff029bd9aebb958e91fea16babf026b5a629",
+  "size_bytes": 734048,
+  "status": "verified"
+}

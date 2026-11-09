@@ -1,0 +1,650 @@
+<div *ngIf="activeView === 'rbac'" class="min-h-full bg-slate-50">
+  <div class="mx-auto max-w-[98rem] space-y-6 px-5 py-5">
+    <div class="overflow-hidden rounded-[2rem] bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 shadow-2xl">
+      <div class="relative px-6 py-6 lg:px-8 lg:py-7">
+        <div class="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+          <div class="max-w-3xl">
+            <div class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-black uppercase tracking-[0.3em] text-white/70">
+              <lucide-icon [name]="icons.ShieldCheck" class="h-3.5 w-3.5"></lucide-icon>
+              RBAC Control Center
+            </div>
+            <h1 class="mt-3 text-3xl font-black tracking-tight text-white sm:text-4xl">
+              Roles & Permissions<span class="text-indigo-300">.</span>
+            </h1>
+            <p class="mt-2 max-w-3xl text-sm font-medium leading-relaxed text-white/55">
+              Enterprise access control for platform, tenant, billing and operations roles. Search roles, manage permissions, assign users and review audit changes from one place.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div class="rounded-[1.5rem] border border-white/10 bg-white/5 px-4 py-3 text-white">
+              <p class="text-[9px] font-black uppercase tracking-widest text-white/40">Roles</p>
+              <p class="mt-1 text-2xl font-black">{{ totalRoles }}</p>
+            </div>
+            <div class="rounded-[1.5rem] border border-white/10 bg-white/5 px-4 py-3 text-white">
+              <p class="text-[9px] font-black uppercase tracking-widest text-white/40">System</p>
+              <p class="mt-1 text-2xl font-black">{{ systemRolesCount }}</p>
+            </div>
+            <div class="rounded-[1.5rem] border border-white/10 bg-white/5 px-4 py-3 text-white">
+              <p class="text-[9px] font-black uppercase tracking-widest text-white/40">Custom</p>
+              <p class="mt-1 text-2xl font-black">{{ customRolesCount }}</p>
+            </div>
+            <div class="rounded-[1.5rem] border border-white/10 bg-white/5 px-4 py-3 text-white">
+              <p class="text-[9px] font-black uppercase tracking-widest text-white/40">Assigned</p>
+              <p class="mt-1 text-2xl font-black">{{ totalUsersAssigned }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid gap-3 rounded-[1.8rem] bg-white p-4 shadow-sm ring-1 ring-slate-200 xl:grid-cols-[1.6fr_180px_180px_180px_auto_auto]">
+      <div class="relative">
+        <lucide-icon [name]="icons.Search" class="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"></lucide-icon>
+        <input
+          class="w-full rounded-2xl border border-slate-200 bg-slate-50 py-3.5 pl-11 pr-4 text-sm font-medium outline-none transition focus:border-indigo-400 focus:bg-white"
+          placeholder="Search roles, scope or description"
+          [value]="searchQuery"
+          (input)="setSearch($any($event.target).value)">
+      </div>
+
+      <select
+        class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-semibold outline-none transition focus:border-indigo-400 focus:bg-white"
+        [value]="roleFilter"
+        (change)="setRoleFilter($any($event.target).value)">
+        <option value="all">All roles</option>
+        <option value="system">System roles</option>
+        <option value="custom">Custom roles</option>
+      </select>
+
+      <select
+        class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-semibold outline-none transition focus:border-indigo-400 focus:bg-white"
+        [value]="statusFilter"
+        (change)="setStatusFilter($any($event.target).value)">
+        <option value="all">All status</option>
+        <option value="active">Active</option>
+        <option value="disabled">Disabled</option>
+      </select>
+
+      <button
+        type="button"
+        (click)="resetFilters()"
+        class="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-xs font-black uppercase tracking-widest text-slate-700 transition hover:bg-slate-50">
+        <lucide-icon [name]="icons.RefreshCcw" class="h-4 w-4"></lucide-icon>
+        Reset
+      </button>
+
+      <button
+        type="button"
+        (click)="openCreateRole()"
+        class="inline-flex items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-5 py-3.5 text-xs font-black uppercase tracking-widest text-white transition hover:bg-indigo-700">
+        <lucide-icon [name]="icons.Plus" class="h-4 w-4"></lucide-icon>
+        New Role
+      </button>
+
+      <button
+        type="button"
+        (click)="setDetailTab('audit')"
+        class="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-5 py-3.5 text-xs font-black uppercase tracking-widest text-white transition hover:bg-slate-800">
+        <lucide-icon [name]="icons.Activity" class="h-4 w-4"></lucide-icon>
+        Audit
+      </button>
+    </div>
+
+    <div class="grid gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">
+      <div class="rounded-[2rem] bg-white p-4 shadow-sm ring-1 ring-slate-200">
+        <div class="flex items-center justify-between px-2 pt-1">
+          <div>
+            <h2 class="text-base font-black uppercase tracking-tight text-slate-900">Roles</h2>
+            <p class="mt-1 text-xs font-medium text-slate-400">{{ filteredRoles.length }} matched</p>
+          </div>
+          <span class="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-slate-500">
+            Enterprise
+          </span>
+        </div>
+
+        <div class="mt-4 space-y-3 max-h-[920px] overflow-auto pr-1">
+          <button
+            *ngFor="let role of filteredRoles; trackBy: trackByRole"
+            type="button"
+            (click)="selectRole(role.id)"
+            class="w-full rounded-[1.4rem] border p-4 text-left transition"
+            [class.border-indigo-500]="selectedRole?.id === role.id"
+            [class.bg-indigo-50]="selectedRole?.id === role.id"
+            [class.shadow-lg]="selectedRole?.id === role.id"
+            [class.border-slate-200]="selectedRole?.id !== role.id"
+            [class.bg-white]="selectedRole?.id !== role.id">
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <div class="flex flex-wrap items-center gap-2">
+                  <p class="truncate text-sm font-black text-slate-900">{{ role.name }}</p>
+                  <span
+                    *ngIf="role.isSystem"
+                    class="inline-flex items-center gap-1 rounded-full bg-slate-900 px-2 py-1 text-[9px] font-black uppercase tracking-widest text-white">
+                    <lucide-icon [name]="icons.Lock" class="h-3 w-3"></lucide-icon>
+                    System
+                  </span>
+                  <span
+                    *ngIf="!role.isSystem"
+                    class="inline-flex items-center rounded-full px-2 py-1 text-[9px] font-black uppercase tracking-widest"
+                    [class.bg-indigo-100]="role.status === 'active'"
+                    [class.text-indigo-700]="role.status === 'active'"
+                    [class.bg-rose-100]="role.status === 'disabled'"
+                    [class.text-rose-700]="role.status === 'disabled'">
+                    {{ statusLabel(role.status) }}
+                  </span>
+                </div>
+                <p class="mt-1 line-clamp-2 text-xs font-medium leading-relaxed text-slate-500">{{ role.description }}</p>
+                <div class="mt-3 flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-widest">
+                  <span class="rounded-full bg-slate-100 px-2.5 py-1 text-slate-500">{{ role.scope }}</span>
+                  <span class="rounded-full bg-slate-100 px-2.5 py-1 text-slate-500">{{ role.usersCount }} users</span>
+                  <span class="rounded-full bg-slate-100 px-2.5 py-1 text-slate-500">{{ grantedPermissionCount(role) }} perms</span>
+                </div>
+              </div>
+              <div class="flex shrink-0 flex-col items-end gap-2">
+                <button
+                  type="button"
+                  *ngIf="!role.isSystem"
+                  (click)="$event.stopPropagation(); openEditRole(role)"
+                  class="rounded-xl bg-indigo-600 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-white">
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  (click)="$event.stopPropagation(); duplicateRole(role)"
+                  class="rounded-xl bg-slate-900 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-white">
+                  Duplicate
+                </button>
+              </div>
+            </div>
+          </button>
+
+          <div
+            *ngIf="filteredRoles.length === 0"
+            class="rounded-[1.6rem] border border-dashed border-slate-200 bg-slate-50 px-6 py-12 text-center">
+            <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-slate-400 shadow-sm ring-1 ring-slate-200">
+              <lucide-icon [name]="icons.AlertTriangle" class="h-5 w-5"></lucide-icon>
+            </div>
+            <h3 class="mt-4 text-base font-black text-slate-900">No roles matched</h3>
+            <p class="mt-2 text-sm font-medium text-slate-500">Search or filter ko clear karke roles dobara dekho.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-6">
+        <div *ngIf="selectedRole as role" class="rounded-[2rem] bg-white p-5 shadow-sm ring-1 ring-slate-200">
+          <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <div class="flex flex-wrap items-center gap-2">
+                <h2 class="text-2xl font-black tracking-tight text-slate-950">{{ role.name }}</h2>
+                <span
+                  *ngIf="role.isSystem"
+                  class="inline-flex items-center gap-1 rounded-full bg-slate-900 px-2.5 py-1 text-[9px] font-black uppercase tracking-widest text-white">
+                  <lucide-icon [name]="icons.Lock" class="h-3 w-3"></lucide-icon>
+                  System Role
+                </span>
+                <span
+                  *ngIf="!role.isSystem"
+                  class="inline-flex items-center rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-widest"
+                  [class.bg-emerald-100]="role.status === 'active'"
+                  [class.text-emerald-700]="role.status === 'active'"
+                  [class.bg-rose-100]="role.status === 'disabled'"
+                  [class.text-rose-700]="role.status === 'disabled'">
+                  {{ statusLabel(role.status) }}
+                </span>
+              </div>
+              <p class="mt-2 max-w-3xl text-sm font-medium leading-relaxed text-slate-500">{{ role.description }}</p>
+              <div class="mt-4 flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-widest">
+                <span class="rounded-full bg-slate-100 px-3 py-1.5 text-slate-500">Scope: {{ scopeLabel(role.scope) }}</span>
+                <span class="rounded-full bg-slate-100 px-3 py-1.5 text-slate-500">Users: {{ role.usersCount }}</span>
+                <span class="rounded-full bg-slate-100 px-3 py-1.5 text-slate-500">Granted: {{ grantedPermissionCount(role) }}</span>
+                <span class="rounded-full bg-slate-100 px-3 py-1.5 text-slate-500">Modules: {{ totalGrantedModules(role) }}</span>
+                <span class="rounded-full bg-slate-100 px-3 py-1.5 text-slate-500">Updated: {{ role.updatedAt }}</span>
+              </div>
+            </div>
+
+            <div class="flex flex-wrap gap-2">
+              <button
+                type="button"
+                (click)="duplicateRole(role)"
+                class="rounded-2xl bg-slate-900 px-4 py-3 text-xs font-black uppercase tracking-widest text-white">
+                Duplicate
+              </button>
+              <button
+                type="button"
+                *ngIf="!role.isSystem"
+                (click)="openEditRole(role)"
+                class="rounded-2xl bg-indigo-600 px-4 py-3 text-xs font-black uppercase tracking-widest text-white">
+                Edit
+              </button>
+              <button
+                type="button"
+                *ngIf="!role.isSystem"
+                (click)="toggleRoleStatus(role)"
+                class="rounded-2xl px-4 py-3 text-xs font-black uppercase tracking-widest text-white"
+                [class.bg-emerald-600]="role.status === 'disabled'"
+                [class.bg-amber-600]="role.status === 'active'">
+                {{ role.status === 'active' ? 'Disable' : 'Enable' }}
+              </button>
+              <button
+                type="button"
+                *ngIf="!role.isSystem"
+                (click)="deleteRole(role)"
+                class="rounded-2xl bg-rose-600 px-4 py-3 text-xs font-black uppercase tracking-widest text-white">
+                Delete
+              </button>
+            </div>
+          </div>
+
+          <div class="mt-5 flex flex-wrap gap-2">
+            <button
+              type="button"
+              (click)="setDetailTab('overview')"
+              class="rounded-full px-4 py-2 text-xs font-black uppercase tracking-widest"
+              [class.bg-slate-900]="detailTab === 'overview'"
+              [class.text-white]="detailTab === 'overview'"
+              [class.bg-slate-100]="detailTab !== 'overview'"
+              [class.text-slate-500]="detailTab !== 'overview'">
+              Overview
+            </button>
+            <button
+              type="button"
+              (click)="setDetailTab('permissions')"
+              class="rounded-full px-4 py-2 text-xs font-black uppercase tracking-widest"
+              [class.bg-slate-900]="detailTab === 'permissions'"
+              [class.text-white]="detailTab === 'permissions'"
+              [class.bg-slate-100]="detailTab !== 'permissions'"
+              [class.text-slate-500]="detailTab !== 'permissions'">
+              Permissions
+            </button>
+            <button
+              type="button"
+              (click)="setDetailTab('users')"
+              class="rounded-full px-4 py-2 text-xs font-black uppercase tracking-widest"
+              [class.bg-slate-900]="detailTab === 'users'"
+              [class.text-white]="detailTab === 'users'"
+              [class.bg-slate-100]="detailTab !== 'users'"
+              [class.text-slate-500]="detailTab !== 'users'">
+              Users
+            </button>
+            <button
+              type="button"
+              (click)="setDetailTab('audit')"
+              class="rounded-full px-4 py-2 text-xs font-black uppercase tracking-widest"
+              [class.bg-slate-900]="detailTab === 'audit'"
+              [class.text-white]="detailTab === 'audit'"
+              [class.bg-slate-100]="detailTab !== 'audit'"
+              [class.text-slate-500]="detailTab !== 'audit'">
+              Audit
+            </button>
+          </div>
+
+          <div class="mt-6">
+            <ng-container [ngSwitch]="detailTab">
+              <div *ngSwitchCase="'overview'" class="grid gap-4 lg:grid-cols-3">
+                <div class="rounded-[1.5rem] bg-slate-50 p-5 ring-1 ring-slate-200">
+                  <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Role metadata</p>
+                  <div class="mt-3 space-y-3 text-sm">
+                    <div class="flex items-center justify-between gap-3">
+                      <span class="font-medium text-slate-500">Created by</span>
+                      <span class="font-black text-slate-900">{{ role.createdBy }}</span>
+                    </div>
+                    <div class="flex items-center justify-between gap-3">
+                      <span class="font-medium text-slate-500">Created</span>
+                      <span class="font-black text-slate-900">{{ role.createdAt }}</span>
+                    </div>
+                    <div class="flex items-center justify-between gap-3">
+                      <span class="font-medium text-slate-500">Updated</span>
+                      <span class="font-black text-slate-900">{{ role.updatedAt }}</span>
+                    </div>
+                    <div class="flex items-center justify-between gap-3">
+                      <span class="font-medium text-slate-500">Status</span>
+                      <span class="font-black text-slate-900">{{ statusLabel(role.status) }}</span>
+                    </div>
+                    <div class="flex items-center justify-between gap-3">
+                      <span class="font-medium text-slate-500">Scope</span>
+                      <span class="font-black text-slate-900">{{ scopeLabel(role.scope) }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="rounded-[1.5rem] bg-slate-50 p-5 ring-1 ring-slate-200">
+                  <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Inheritance</p>
+                  <div class="mt-3">
+                    <p class="text-lg font-black text-slate-900">
+                      {{ selectedRoleInheritedFrom?.name || 'No inheritance' }}
+                    </p>
+                    <p class="mt-2 text-sm font-medium leading-relaxed text-slate-500">
+                      Custom role ho to parent role se default permissions inherit kar sakta hai.
+                    </p>
+                  </div>
+                  <div class="mt-4 rounded-2xl bg-white p-4 ring-1 ring-slate-200">
+                    <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Effective access</p>
+                    <p class="mt-2 text-3xl font-black text-slate-950">{{ grantedPermissionCount(role) }}</p>
+                    <p class="mt-1 text-xs font-medium text-slate-500">combined permissions across modules</p>
+                  </div>
+                </div>
+
+                <div class="rounded-[1.5rem] bg-slate-50 p-5 ring-1 ring-slate-200">
+                  <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Action summary</p>
+                  <div class="mt-3 space-y-3 text-sm">
+                    <div class="flex items-center justify-between gap-3">
+                      <span class="font-medium text-slate-500">Modules touched</span>
+                      <span class="font-black text-slate-900">{{ totalGrantedModules(role) }}</span>
+                    </div>
+                    <div class="flex items-center justify-between gap-3">
+                      <span class="font-medium text-slate-500">System protected</span>
+                      <span class="font-black text-slate-900">{{ role.isSystem ? 'Yes' : 'No' }}</span>
+                    </div>
+                    <div class="flex items-center justify-between gap-3">
+                      <span class="font-medium text-slate-500">Permissions total</span>
+                      <span class="font-black text-slate-900">{{ grantedPermissionCount(role) }}</span>
+                    </div>
+                    <div class="flex items-center justify-between gap-3">
+                      <span class="font-medium text-slate-500">Assigned users</span>
+                      <span class="font-black text-slate-900">{{ role.usersCount }}</span>
+                    </div>
+                    <div class="flex items-center justify-between gap-3">
+                      <span class="font-medium text-slate-500">Audit events</span>
+                      <span class="font-black text-slate-900">{{ permissionChangesCount }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div *ngSwitchCase="'permissions'" class="space-y-4">
+                <div class="flex flex-col gap-3 rounded-[1.5rem] bg-slate-50 p-4 ring-1 ring-slate-200 lg:flex-row lg:items-center lg:justify-between">
+                  <div>
+                    <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Permission matrix</p>
+                    <p class="mt-1 text-sm font-medium text-slate-500">
+                      Toggle individual actions, grant whole modules, or apply bulk changes across the role.
+                    </p>
+                  </div>
+                  <div class="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      [disabled]="role.isSystem"
+                      (click)="setActionAcrossModules(role.id, 'view', true)"
+                      class="rounded-xl bg-indigo-600 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white disabled:cursor-not-allowed disabled:opacity-40">
+                      Grant View
+                    </button>
+                    <button
+                      type="button"
+                      [disabled]="role.isSystem"
+                      (click)="setActionAcrossModules(role.id, 'export', true)"
+                      class="rounded-xl bg-slate-900 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white disabled:cursor-not-allowed disabled:opacity-40">
+                      Grant Export
+                    </button>
+                    <button
+                      type="button"
+                      [disabled]="role.isSystem"
+                      (click)="setActionAcrossModules(role.id, 'manage', true)"
+                      class="rounded-xl bg-emerald-600 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white disabled:cursor-not-allowed disabled:opacity-40">
+                      Grant Manage
+                    </button>
+                    <button
+                      type="button"
+                      [disabled]="role.isSystem"
+                      (click)="saveCurrentPermissions()"
+                      class="rounded-xl bg-rose-600 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white disabled:cursor-not-allowed disabled:opacity-40">
+                      Save Changes
+                    </button>
+
+                    <button
+                      type="button"
+                      [disabled]="role.isSystem || !permissionDirty"
+                      (click)="resetPermissionDraft()"
+                      class="rounded-xl border border-slate-300 bg-white px-4 py-2 text-[10px] font-black uppercase tracking-widest text-slate-700 disabled:opacity-40">
+                      Cancel
+                    </button>
+
+                    <span
+                      *ngIf="permissionDirty"
+                      class="rounded-xl bg-amber-100 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-amber-700">
+                      Unsaved Changes
+                    </span>
+                  </div>
+                </div>
+
+                <div *ngFor="let group of moduleGroups; trackBy: trackByGroup" class="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white">
+                  <div class="flex flex-col gap-3 border-b border-slate-200 bg-slate-50 px-4 py-4 lg:flex-row lg:items-center lg:justify-between">
+                    <div>
+                      <p class="text-sm font-black uppercase tracking-widest text-slate-900">{{ group.group }}</p>
+                      <p class="mt-1 text-xs font-medium text-slate-500">{{ group.modules.length }} modules</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        [disabled]="role.isSystem"
+                        (click)="setGroupPermissions(role.id, group.modules, true)"
+                        class="rounded-xl bg-indigo-600 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-white disabled:cursor-not-allowed disabled:opacity-40">
+                        Grant Group
+                      </button>
+                      <button
+                        type="button"
+                        [disabled]="role.isSystem"
+                        (click)="setGroupPermissions(role.id, group.modules, false)"
+                        class="rounded-xl bg-slate-900 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-white disabled:cursor-not-allowed disabled:opacity-40">
+                        Clear Group
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="divide-y divide-slate-200">
+                    <div *ngFor="let module of group.modules; trackBy: trackByModule" class="grid gap-4 px-4 py-4 xl:grid-cols-[1.2fr_minmax(0,1fr)] xl:items-center">
+                      <div class="min-w-0">
+                        <div class="flex flex-wrap items-center gap-2">
+                          <p class="truncate text-sm font-black text-slate-900">{{ module.name }}</p>
+                          <span class="rounded-full bg-slate-100 px-2.5 py-1 text-[9px] font-black uppercase tracking-widest text-slate-500">
+                            {{ module.group }}
+                          </span>
+                        </div>
+                        <p class="mt-1 text-xs font-medium leading-relaxed text-slate-500">{{ module.description }}</p>
+                        <div class="mt-2 flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                          <span class="rounded-full bg-slate-100 px-2.5 py-1">
+                            {{ moduleGrantedPermissionCount(role, module.code) }} enabled
+                          </span>
+                        </div>
+                      </div>
+
+                      <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-7">
+                        <button
+                          *ngFor="let action of actionLabels"
+                          type="button"
+                          [disabled]="role.isSystem"
+                          (click)="togglePermission(role.id, module.code, action.key)"
+                          class="rounded-xl border px-3 py-2 text-[10px] font-black uppercase tracking-widest transition disabled:cursor-not-allowed disabled:opacity-50"
+                          [class.border-emerald-500]="effectivePermission(role, module.code, action.key)"
+                          [class.bg-emerald-500]="effectivePermission(role, module.code, action.key)"
+                          [class.text-white]="effectivePermission(role, module.code, action.key)"
+                          [class.border-slate-200]="!effectivePermission(role, module.code, action.key)"
+                          [class.bg-slate-50]="!effectivePermission(role, module.code, action.key)"
+                          [class.text-slate-500]="!effectivePermission(role, module.code, action.key)">
+                          {{ action.label }}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div *ngIf="role.isSystem" class="rounded-[1.5rem] border border-dashed border-slate-200 bg-slate-50 p-5">
+                  <div class="flex items-center gap-3">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 text-white">
+                      <lucide-icon [name]="icons.Lock" class="h-5 w-5"></lucide-icon>
+                    </div>
+                    <div>
+                      <p class="text-sm font-black text-slate-900">System role locked</p>
+                      <p class="mt-1 text-sm font-medium text-slate-500">Ye role read-only hai. Custom role duplicate karke change karo.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div *ngSwitchCase="'users'" class="space-y-4">
+                <div class="rounded-[1.5rem] bg-slate-50 p-4 ring-1 ring-slate-200">
+                  <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Assigned users</p>
+                  <p class="mt-1 text-sm font-medium text-slate-500">
+                    Users assigned to this role are fetched from the database. Use the controls below to manage assignments.
+                  </p>
+                </div>
+
+                <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                  <div *ngFor="let user of selectedUsers; trackBy: trackByUser" class="rounded-[1.4rem] border border-slate-200 bg-white p-4 shadow-sm">
+                    <div class="flex items-start justify-between gap-3">
+                      <div>
+                        <p class="text-sm font-black text-slate-900">{{ user.name }}</p>
+                        <p class="mt-1 text-xs font-medium text-slate-500">{{ user.email }}</p>
+                      </div>
+                      <span
+                        class="rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-widest"
+                        [class.bg-emerald-100]="user.status === 'active'"
+                        [class.text-emerald-700]="user.status === 'active'"
+                        [class.bg-slate-100]="user.status !== 'active'"
+                        [class.text-slate-500]="user.status !== 'active'">
+                        {{ user.status }}
+                      </span>
+                    </div>
+                    <div class="mt-3 flex flex-wrap gap-2">
+                      <span class="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-slate-500">{{ user.roleScope }}</span>
+                      <button
+                        type="button"
+                        (click)="removeUserFromRole(user.id)"
+                        class="rounded-full bg-rose-100 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-rose-600 transition hover:bg-rose-600 hover:text-white">
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div *ngIf="selectedUsers.length === 0" class="rounded-[1.5rem] border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
+                  <p class="text-sm font-black text-slate-900">No users assigned yet</p>
+                  <p class="mt-1 text-sm font-medium text-slate-500">No users are currently assigned to this role. Assign users from the user management panel.</p>
+                </div>
+              </div>
+
+              <div *ngSwitchCase="'audit'" class="space-y-3">
+                <div class="rounded-[1.5rem] bg-slate-50 p-4 ring-1 ring-slate-200">
+                  <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Security audit</p>
+                  <p class="mt-1 text-sm font-medium text-slate-500">
+                    Security audit trail showing all RBAC changes, role modifications and permission updates from the database.
+                  </p>
+                </div>
+
+                <div class="space-y-3">
+                  <div *ngFor="let item of auditEvents" class="flex gap-4 rounded-[1.4rem] border border-slate-200 bg-white p-4">
+                    <div
+                      class="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl"
+                      [class.bg-emerald-100]="item.level === 'success'"
+                      [class.text-emerald-700]="item.level === 'success'"
+                      [class.bg-amber-100]="item.level === 'warning'"
+                      [class.text-amber-700]="item.level === 'warning'"
+                      [class.bg-slate-100]="item.level === 'info'"
+                      [class.text-slate-600]="item.level === 'info'">
+                      <lucide-icon [name]="icons.Clock" class="h-4 w-4"></lucide-icon>
+                    </div>
+                    <div class="min-w-0">
+                      <p class="text-sm font-black text-slate-900">{{ item.title }}</p>
+                      <p class="mt-1 text-sm font-medium text-slate-500">{{ item.detail }}</p>
+                      <p class="mt-2 text-[10px] font-black uppercase tracking-widest text-slate-400">{{ item.time }}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </ng-container>
+          </div>
+        </div>
+
+        <div class="rounded-[2rem] border border-dashed border-slate-200 bg-slate-50 p-8 text-center text-sm font-medium text-slate-500" *ngIf="!selectedRole">
+          No role selected.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="editorOpen && editorDraft" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4">
+    <div class="w-full max-w-3xl rounded-[2rem] bg-white p-6 shadow-2xl">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <p class="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-600">Role editor</p>
+          <h2 class="mt-2 text-2xl font-black text-slate-950">
+            {{ editorMode === 'edit' ? 'Edit Role' : 'Create Custom Role' }}
+          </h2>
+          <p class="mt-2 text-sm font-medium text-slate-500">Role metadata, permissions and inheritance are managed through the backend.</p>
+        </div>
+        <button type="button" (click)="closeEditor()" class="rounded-2xl bg-slate-100 px-3 py-2 text-xs font-black uppercase tracking-widest text-slate-600">Close</button>
+      </div>
+
+      <div class="mt-6 grid gap-4 md:grid-cols-2">
+        <label class="space-y-2">
+          <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Role name</span>
+          <input
+            class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-medium outline-none focus:border-indigo-400"
+            [(ngModel)]="editorDraft.name"
+            placeholder="Role name">
+        </label>
+
+        <label class="space-y-2">
+          <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Scope</span>
+          <select
+            class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-medium outline-none focus:border-indigo-400"
+            [(ngModel)]="editorDraft.scope">
+            <option value="Platform">Platform</option>
+            <option value="Tenant">Tenant</option>
+            <option value="Branch">Branch</option>
+            <option value="Department">Department</option>
+          </select>
+        </label>
+
+        <label class="space-y-2 md:col-span-2">
+          <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Description</span>
+          <textarea
+            class="min-h-[110px] w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-medium outline-none focus:border-indigo-400"
+            [(ngModel)]="editorDraft.description"
+            placeholder="Role description"></textarea>
+        </label>
+
+        <label class="space-y-2">
+          <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Status</span>
+          <select
+            class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-medium outline-none focus:border-indigo-400"
+            [(ngModel)]="editorDraft.status">
+            <option value="active">Active</option>
+            <option value="disabled">Disabled</option>
+          </select>
+        </label>
+
+        <label class="space-y-2">
+          <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Inherits from</span>
+          <select
+            class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-medium outline-none focus:border-indigo-400"
+            [(ngModel)]="editorDraft.inheritsFrom">
+            <option value="">No inheritance</option>
+            <option *ngFor="let role of editorParentRoles" [value]="role.id">{{ role.name }}</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="mt-6 rounded-[1.5rem] bg-slate-50 p-4 ring-1 ring-slate-200">
+        <p class="text-sm font-black text-slate-900">Permission note</p>
+        <p class="mt-1 text-sm font-medium text-slate-500">
+          After saving, navigate to the Permissions tab to configure granular access controls for this role.
+        </p>
+      </div>
+
+      <div class="mt-6 flex flex-wrap justify-end gap-3">
+        <button
+          type="button"
+          (click)="closeEditor()"
+          class="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-xs font-black uppercase tracking-widest text-slate-700">
+          Cancel
+        </button>
+        <button
+          type="button"
+          (click)="saveRole()"
+          class="rounded-2xl bg-indigo-600 px-5 py-3 text-xs font-black uppercase tracking-widest text-white">
+          Save Role
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

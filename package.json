@@ -1,0 +1,13 @@
+{
+  "name": "softcodesolution",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "frontend"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace=frontend && rm -rf dist && mkdir -p dist/softcode-ui/browser dist/softcodesolution/browser dist/frontend/browser dist/browser dist/softcode-ui dist/softcodesolution dist/frontend && cp -r frontend/dist/softcode-ui/browser/* dist/ 2>/dev/null || cp -r frontend/dist/* dist/ 2>/dev/null || true && cp -r dist/* dist/softcode-ui/browser/ 2>/dev/null || true && cp -r dist/* dist/softcodesolution/browser/ 2>/dev/null || true && cp -r dist/* dist/browser/ 2>/dev/null || true && cp -r dist/* dist/softcode-ui/ 2>/dev/null || true",
+    "dev": "npm run dev --workspace=frontend"
+  }
+}

@@ -1,0 +1,624 @@
+<<<<<<< HEAD
+<header class="fixed top-0 left-0 right-0 z-[1000] bg-white/40 backdrop-blur-xl border-b border-slate-200/50 shadow-sm transition-all duration-500">
+  <nav class="container mx-auto px-4 sm:px-6 lg:px-10 h-16 sm:h-20 flex items-center justify-between">
+    <!-- Logo -->
+    <div class="flex items-center gap-2 sm:gap-3 min-w-0 z-[60]">
+      <a href="/"
+        class="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 bg-white rounded-full flex items-center justify-center shadow-xs overflow-hidden border border-slate-200/80 group block">
+        <img src="/logos/logo.png" alt="Logo"
+          class="w-full h-full object-center object-contain p-1 group-hover:scale-110 transition-transform">
+      </a>
+      <a href="/" class="text-lg sm:text-xl md:text-2xl font-extrabold text-slate-900 tracking-tight whitespace-nowrap hover:opacity-80 transition-opacity">SoftCode<span class="text-indigo-600">Solution</span></a>
+    </div>
+
+    <!-- Desktop Nav (Visible on xl: and above) -->
+    <div class="hidden xl:flex xl:gap-x-8 2xl:gap-x-12 items-center">
+      <a href="/" class="text-sm font-semibold text-slate-600 hover:text-indigo-600 transition-colors">Home</a>
+      <a routerLink="/" fragment="solutions" class="text-sm font-semibold text-slate-600 hover:text-indigo-600 transition-colors">Solutions</a>
+      <a routerLink="/" fragment="technology" class="text-sm font-semibold text-slate-600 hover:text-indigo-600 transition-colors">Technology</a>
+      <a routerLink="/" fragment="how-it-works" class="text-sm font-semibold text-slate-600 hover:text-indigo-600 transition-colors">How It Works</a>
+      <a routerLink="/" fragment="store" class="text-sm font-semibold text-slate-600 hover:text-indigo-600 transition-colors">Store</a>
+    </div>
+
+    <!-- Right Actions (Consistent layout on Mobile, Tablet & Desktop) -->
+    <div class="flex items-center gap-x-2 sm:gap-x-3 md:gap-x-4 flex-shrink-0 z-[60]">
+      <app-pwa-install></app-pwa-install>
+      
+      <!-- Global Country & Currency & Language Switcher (Flag Sticker & Dropdown Sign - Plain, No Box) -->
+      <app-currency-language-selector></app-currency-language-selector>
+
+      <!-- Large Desktop Auth Links Only (Never show with hamburger toggle) -->
+      <div class="hidden xl:flex items-center gap-x-3 2xl:gap-x-4">
+        <a routerLink="/login" class="text-sm font-semibold text-slate-700 hover:text-indigo-600 px-3 py-2 transition-colors">
+          Login
+        </a>
+        <a routerLink="/register" class="rounded-xl bg-indigo-600 hover:bg-indigo-700 px-4 xl:px-5 py-2 xl:py-2.5 text-sm font-bold text-white shadow-xs hover:-translate-y-0.5 transition-all cursor-pointer">
+=======
+<header class="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-100 transition-all duration-300">
+  <nav class="container mx-auto px-6 lg:px-10 h-20 flex items-center justify-between">
+    <!-- Logo -->
+    <div class="flex items-center gap-3 min-w-0 z-[60]">
+      <a href="/"
+        class="flex-shrink-0 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm overflow-hidden border border-slate-100 group block">
+        <img src="/logos/logo.png" alt="Logo"
+          class="w-full h-full object-center object-contain p-1 group-hover:scale-110 transition-transform">
+      </a>
+      <a href="/" class="text-xl md:text-2xl font-extrabold text-slate-900 tracking-tight truncate hover:opacity-80 transition-opacity">SoftCode<span class="text-indigo-600">Solution</span></a>
+    </div>
+
+    <!-- Desktop Nav -->
+    <div class="hidden lg:flex lg:gap-x-12">
+      <a href="/" class="text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors">Home</a>
+      <a href="/#solutions" class="text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors">Solutions</a>
+      <a href="/#technology" class="text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors">Technology</a>
+      <a href="/#how-it-works" class="text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors">How It Works</a>
+      <a href="/#store" class="text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors">Store</a>
+    </div>
+
+    <!-- Right Actions -->
+    <div class="flex items-center gap-x-4 md:gap-x-6 flex-shrink-0 z-[60]">
+      <app-pwa-install></app-pwa-install>
+      
+      <div class="hidden lg:flex items-center gap-x-6">
+        <a href="/login" class="text-sm font-bold text-slate-700 hover:text-indigo-600 transition-colors">
+          Login
+        </a>
+        <a href="/register" class="rounded-full bg-indigo-600 px-6 py-2.5 text-sm font-bold text-white shadow-[0_4px_14px_0_rgba(79,70,229,0.39)] hover:shadow-[0_6px_20px_rgba(79,70,229,0.23)] hover:-translate-y-0.5 transition-all">
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
+          Register
+        </a>
+      </div>
+
+<<<<<<< HEAD
+      <div class="flex xl:hidden">
+        <button
+          (click)="toggleMenu()"
+          aria-label="Toggle Navigation Menu"
+          class="p-1.5 sm:p-2 rounded-lg text-slate-700 transition-all relative z-[60] flex items-center justify-center cursor-pointer active:scale-90"
+        >
+          <div class="relative w-5 h-5 flex items-center justify-center">
+            <svg 
+              class="h-5 w-5 absolute inset-0 transition-all duration-300 transform"
+              [class.opacity-100]="!isMenuOpen"
+              [class.rotate-0]="!isMenuOpen"
+              [class.scale-100]="!isMenuOpen"
+              [class.opacity-0]="isMenuOpen"
+              [class.rotate-90]="isMenuOpen"
+              [class.scale-75]="isMenuOpen"
+              fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+            </svg>
+            <svg 
+              class="h-5 w-5 absolute inset-0 transition-all duration-300 transform"
+              [class.opacity-100]="isMenuOpen"
+              [class.rotate-0]="isMenuOpen"
+              [class.scale-100]="isMenuOpen"
+              [class.opacity-0]="!isMenuOpen"
+              [class.-rotate-90]="!isMenuOpen"
+              [class.scale-75]="!isMenuOpen"
+              fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </div>
+=======
+      <!-- Mobile Menu Toggle -->
+      <div class="flex lg:hidden">
+        <button (click)="toggleMenu()" class="p-2 -mr-2 rounded-full text-slate-700 bg-slate-50 hover:bg-slate-100 transition-colors relative z-[60]">
+          <svg *ngIf="!isMenuOpen" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+          </svg>
+          <svg *ngIf="isMenuOpen" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
+        </button>
+      </div>
+    </div>
+  </nav>
+
+<<<<<<< HEAD
+</header>
+
+<!-- Mobile & Tablet Full Screen Menu (Ultra-Smooth "Bohat Slow" Company Animation) -->
+<div
+  class="xl:hidden bohat-slow-menu pt-20 px-6 pb-10"
+  [class.menu-active]="isMenuOpen"
+>
+  <div class="flex flex-col space-y-1">
+    <a href="/" (click)="closeMenu()" class="py-3 text-[1.1rem] font-semibold text-slate-900 hover:text-indigo-600 transition-colors flex items-center">
+      <span>Home</span>
+    </a>
+    <a routerLink="/" fragment="solutions" (click)="closeMenu()" class="py-3 text-[1.1rem] font-semibold text-slate-900 hover:text-indigo-600 transition-colors flex items-center">
+      <span>Solutions</span>
+    </a>
+    <a routerLink="/" fragment="technology" (click)="closeMenu()" class="py-3 text-[1.1rem] font-semibold text-slate-900 hover:text-indigo-600 transition-colors flex items-center">
+      <span>Technology</span>
+    </a>
+    <a routerLink="/" fragment="store" (click)="closeMenu()" class="py-3 text-[1.1rem] font-semibold text-slate-900 hover:text-indigo-600 transition-colors flex items-center">
+      <span>Store</span>
+    </a>
+    <a href="#about" (click)="closeMenu()" class="py-3 text-[1.1rem] font-semibold text-slate-900 hover:text-indigo-600 transition-colors flex items-center">
+      <span>About</span>
+    </a>
+  </div>
+  <div class="mt-8 flex flex-col sm:flex-row gap-4">
+    <a routerLink="/login" (click)="closeMenu()" class="flex-1 py-4 text-center text-[1rem] font-bold text-slate-700 bg-white/50 border border-slate-200/80 rounded-2xl hover:bg-white transition-all active:scale-[0.98]">
+      Sign In
+    </a>
+    <a routerLink="/register" (click)="closeMenu()" class="flex-1 py-4 text-center text-[1rem] font-bold text-white bg-indigo-600 rounded-2xl shadow-md shadow-indigo-200/50 hover:bg-indigo-700 transition-all active:scale-[0.98]">
+      Create Account
+    </a>
+  </div>
+</div>
+
+=======
+  <!-- Mobile Full Screen Menu (App-like feel) -->
+  <div class="fixed inset-0 z-50 bg-white/95 backdrop-blur-3xl flex flex-col pt-20 px-6 pb-8 h-[100dvh] overflow-y-auto transition-all duration-[2500ms] ease-[cubic-bezier(0.22,1.25,0.15,1)]"
+       [class.opacity-100]="isMenuOpen" [class.pointer-events-auto]="isMenuOpen" [class.translate-y-0]="isMenuOpen"
+       [class.opacity-0]="!isMenuOpen" [class.pointer-events-none]="!isMenuOpen" [class.translate-y-8]="!isMenuOpen">
+    <div class="flex flex-col mt-2">
+      <a href="/" (click)="toggleMenu()" class="py-2.5 text-[1.05rem] font-semibold text-slate-800 border-b border-slate-100/80 hover:text-indigo-600 transition-colors flex justify-between items-center">
+        Home
+      </a>
+      <a href="/#solutions" (click)="toggleMenu()" class="py-2.5 text-[1.05rem] font-semibold text-slate-800 border-b border-slate-100/80 hover:text-indigo-600 transition-colors flex justify-between items-center">
+        Solutions
+      </a>
+      <a href="/#technology" (click)="toggleMenu()" class="py-2.5 text-[1.05rem] font-semibold text-slate-800 border-b border-slate-100/80 hover:text-indigo-600 transition-colors flex justify-between items-center">
+        Technology
+      </a>
+      <a href="/#store" (click)="toggleMenu()" class="py-2.5 text-[1.05rem] font-semibold text-slate-800 border-b border-slate-100/80 hover:text-indigo-600 transition-colors flex justify-between items-center">
+        Store
+      </a>
+      <a href="/#about" (click)="toggleMenu()" class="py-2.5 text-[1.05rem] font-semibold text-slate-800 hover:text-indigo-600 transition-colors flex justify-between items-center">
+        About
+      </a>
+    </div>
+    <div class="mt-6 flex flex-col gap-3">
+      <a href="/login" (click)="toggleMenu()" class="w-full py-3.5 text-center text-[1rem] font-bold text-slate-700 bg-slate-100 rounded-xl hover:bg-slate-200 transition-all">
+        Sign In
+      </a>
+      <a href="/register" (click)="toggleMenu()" class="w-full py-3.5 text-center text-[1rem] font-bold text-white bg-indigo-600 rounded-xl shadow-[0_8px_20px_rgb(79,70,229,0.3)] hover:bg-indigo-700 transition-all">
+        Create Account
+      </a>
+    </div>
+  </div>
+</header>
+
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
+<!-- Pure Centered Register Page -->
+<main class="pt-20 min-h-screen bg-slate-50 flex flex-col justify-between font-sans relative overflow-hidden">
+
+  <!-- Subtle AI Thinking & Ambient Background Animation (Behind Content) -->
+  <div class="absolute inset-0 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:28px_28px] opacity-60 pointer-events-none -z-10"></div>
+  <div class="absolute top-1/4 -left-32 w-96 h-96 bg-indigo-200/25 rounded-full blur-3xl pointer-events-none -z-10 animate-[pulse_10s_ease-in-out_infinite]"></div>
+  <div class="absolute bottom-1/4 -right-32 w-96 h-96 bg-blue-200/25 rounded-full blur-3xl pointer-events-none -z-10 animate-[pulse_12s_ease-in-out_infinite]"></div>
+
+  <div class="absolute inset-0 flex items-center justify-center pointer-events-none -z-10 overflow-hidden select-none opacity-40">
+    <!-- Gentle AI Thinking Ripple Waves -->
+    <div class="absolute w-[600px] h-[600px] rounded-full border border-indigo-200/50 animate-[ping_9s_cubic-bezier(0,0,0.2,1)_infinite]"></div>
+    <div class="absolute w-[860px] h-[860px] rounded-full border border-slate-200/60 animate-[ping_14s_cubic-bezier(0,0,0.2,1)_infinite]"></div>
+
+    <!-- Soft AI Neural Constellation Vectors -->
+    <svg class="w-full h-full max-w-5xl opacity-40" viewBox="0 0 1000 700" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <g stroke="#6366f1" stroke-width="1" stroke-dasharray="3 3" opacity="0.35">
+        <line x1="120" y1="180" x2="320" y2="280" />
+        <line x1="320" y1="280" x2="200" y2="480" />
+        <line x1="820" y1="200" x2="680" y2="340" />
+        <line x1="680" y1="340" x2="840" y2="520" />
+        <line x1="320" y1="280" x2="500" y2="220" />
+        <line x1="680" y1="340" x2="500" y2="460" />
+      </g>
+      <circle cx="120" cy="180" r="4" fill="#6366f1" class="animate-pulse" />
+      <circle cx="320" cy="280" r="5" fill="#4f46e5" class="animate-pulse" style="animation-duration: 3s;" />
+      <circle cx="200" cy="480" r="3.5" fill="#818cf8" class="animate-pulse" style="animation-duration: 4s;" />
+      <circle cx="820" cy="200" r="4" fill="#6366f1" class="animate-pulse" style="animation-duration: 3.5s;" />
+      <circle cx="680" cy="340" r="5" fill="#4f46e5" class="animate-pulse" style="animation-duration: 2.5s;" />
+      <circle cx="840" cy="520" r="3.5" fill="#818cf8" class="animate-pulse" style="animation-duration: 4.5s;" />
+      <circle cx="500" cy="220" r="3" fill="#a5b4fc" class="animate-pulse" style="animation-duration: 5s;" />
+      <circle cx="500" cy="460" r="3" fill="#a5b4fc" class="animate-pulse" style="animation-duration: 4s;" />
+    </svg>
+  </div>
+
+  <div class="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-10 sm:py-14 relative z-10">
+<<<<<<< HEAD
+    <div class="w-full max-w-3xl bg-white/95 backdrop-blur-xl p-7 sm:p-10 rounded-[24px] border border-slate-200/80 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.08)]">
+=======
+    <div class="w-full max-w-3xl bg-white p-7 sm:p-10 rounded-2xl border border-slate-200 shadow-sm">
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
+
+      <!-- Form Heading -->
+      <div class="text-center mb-8">
+        <div class="w-14 h-14 bg-indigo-600 text-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-md shadow-indigo-100">
+          <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <line x1="19" y1="8" x2="19" y2="14" />
+            <line x1="22" y1="11" x2="16" y2="11" />
+          </svg>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Create Business Account</h1>
+        <p class="text-sm text-slate-500 mt-1.5 font-normal">Register your organization to access cloud dashboard and POS features</p>
+      </div>
+
+      <!-- Registration Form -->
+      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="space-y-6">
+
+        <!-- STEP 01: PERSONAL INFORMATION -->
+        <div class="bg-slate-50/70 p-5 sm:p-6 rounded-xl border border-slate-200/80">
+          <div class="flex items-center gap-2.5 mb-4 pb-2.5 border-b border-slate-200/60">
+            <span class="w-6 h-6 rounded-lg bg-indigo-600 text-white text-xs font-bold flex items-center justify-center">01</span>
+            <h2 class="text-xs font-bold text-indigo-700 uppercase tracking-wider">Personal Information</h2>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Full Name -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1.5">Full Name</label>
+              <div class="relative">
+                <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                  </svg>
+                </span>
+                <input type="text" formControlName="fullName" placeholder="e.g. John Doe"
+                  class="w-full bg-white border border-slate-200 rounded-xl py-2.5 pl-10 pr-4 text-sm font-normal text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                  [class.border-red-400]="f['fullName'].invalid && f['fullName'].touched">
+              </div>
+              <p *ngIf="f['fullName'].invalid && f['fullName'].touched" class="text-red-500 text-xs mt-1 font-medium">Full name is required (min 3 characters).</p>
+            </div>
+
+            <!-- Work Email -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1.5">Work Email</label>
+              <div class="relative">
+                <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect width="20" height="16" x="2" y="4" rx="2"/>
+                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                  </svg>
+                </span>
+                <input type="email" formControlName="email" placeholder="ceo@company.com"
+                  class="w-full bg-white border border-slate-200 rounded-xl py-2.5 pl-10 pr-4 text-sm font-normal text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                  [class.border-red-400]="f['email'].invalid && f['email'].touched">
+              </div>
+              <p *ngIf="f['email'].invalid && f['email'].touched" class="text-red-500 text-xs mt-1 font-medium">Valid business email is required.</p>
+            </div>
+
+            <!-- Phone with Country Code -->
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-semibold text-slate-700 mb-1.5">Phone Number</label>
+              <div class="flex gap-2">
+                <select formControlName="countryCode" class="w-32 bg-white border border-slate-200 rounded-xl py-2.5 px-3 text-sm font-normal text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer">
+                  <option value="+92">🇵🇰 +92</option>
+                  <option value="+971">🇦🇪 +971</option>
+                  <option value="+966">🇸🇦 +966</option>
+                  <option value="+44">🇬🇧 +44</option>
+                  <option value="+1">🇺🇸 +1</option>
+                  <option value="+91">🇮🇳 +91</option>
+                  <option value="+974">🇶🇦 +974</option>
+                  <option value="+965">🇰🇼 +965</option>
+                  <option value="+968">🇴🇲 +968</option>
+                  <option value="+973">🇧🇭 +973</option>
+                </select>
+                <input type="tel" formControlName="phone" placeholder="3001234567"
+                  class="flex-1 bg-white border border-slate-200 rounded-xl py-2.5 px-4 text-sm font-normal text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                  [class.border-red-400]="f['phone'].invalid && f['phone'].touched">
+              </div>
+              <p *ngIf="f['phone'].invalid && f['phone'].touched" class="text-red-500 text-xs mt-1 font-medium">Valid phone number is required.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 02: BUSINESS INFORMATION -->
+        <div class="bg-slate-50/70 p-5 sm:p-6 rounded-xl border border-slate-200/80">
+          <div class="flex items-center gap-2.5 mb-4 pb-2.5 border-b border-slate-200/60">
+            <span class="w-6 h-6 rounded-lg bg-blue-600 text-white text-xs font-bold flex items-center justify-center">02</span>
+            <h2 class="text-xs font-bold text-blue-700 uppercase tracking-wider">Business Details</h2>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Company Name -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1.5">Company / Store Name</label>
+              <input type="text" formControlName="companyName" placeholder="e.g. Al-Madina Traders"
+                class="w-full bg-white border border-slate-200 rounded-xl py-2.5 px-4 text-sm font-normal text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                [class.border-red-400]="f['companyName'].invalid && f['companyName'].touched">
+              <p *ngIf="f['companyName'].invalid && f['companyName'].touched" class="text-red-500 text-xs mt-1 font-medium">Company name is required.</p>
+            </div>
+
+            <!-- Registration No -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1.5">Business Reg / NTN <span class="text-slate-400 font-normal">(Optional)</span></label>
+              <input type="text" formControlName="businessRegNo" placeholder="NTN / TAX ID"
+                class="w-full bg-white border border-slate-200 rounded-xl py-2.5 px-4 text-sm font-normal text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+            </div>
+
+            <!-- Business Type -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1.5">Business Type</label>
+              <select formControlName="businessType"
+                class="w-full bg-white border border-slate-200 rounded-xl py-2.5 px-4 text-sm font-normal text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer"
+                [class.border-red-400]="f['businessType'].invalid && f['businessType'].touched">
+                <option value="" disabled selected>Select Business Type</option>
+                <option *ngFor="let business of businessTypes" [value]="business.id">
+                  {{ business.name }}
+                </option>
+              </select>
+              <p *ngIf="f['businessType'].invalid && f['businessType'].touched" class="text-red-500 text-xs mt-1 font-medium">Please select your business type.</p>
+            </div>
+
+            <!-- Business Size -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1.5">Business Size</label>
+              <select formControlName="businessSize"
+                class="w-full bg-white border border-slate-200 rounded-xl py-2.5 px-4 text-sm font-normal text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer"
+                [class.border-red-400]="f['businessSize'].invalid && f['businessSize'].touched">
+                <option value="" disabled selected>Select Business Size</option>
+                <option value="solo">Solo / Freelancer (1 person)</option>
+                <option value="micro">Micro (2–10 employees)</option>
+                <option value="small">Small (11–50 employees)</option>
+                <option value="medium">Medium (51–200 employees)</option>
+                <option value="large">Large (201–500 employees)</option>
+                <option value="enterprise">Enterprise (500+ employees)</option>
+              </select>
+              <p *ngIf="f['businessSize'].invalid && f['businessSize'].touched" class="text-red-500 text-xs mt-1 font-medium">Please select your team size.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 03: LOCATION DETAILS -->
+        <div class="bg-slate-50/70 p-5 sm:p-6 rounded-xl border border-slate-200/80">
+          <div class="flex items-center gap-2.5 mb-4 pb-2.5 border-b border-slate-200/60">
+            <span class="w-6 h-6 rounded-lg bg-teal-600 text-white text-xs font-bold flex items-center justify-center">03</span>
+            <h2 class="text-xs font-bold text-teal-700 uppercase tracking-wider">Location Details</h2>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Country -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1.5">Country</label>
+              <select formControlName="country" (change)="onCountryChange()"
+                class="w-full bg-white border border-slate-200 rounded-xl py-2.5 px-4 text-sm font-normal text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer"
+                [class.border-red-400]="f['country'].invalid && f['country'].touched">
+                <option value="" disabled selected>Select Country</option>
+                <option value="PK">🇵🇰 Pakistan</option>
+                <option value="AE">🇦🇪 United Arab Emirates</option>
+                <option value="SA">🇸🇦 Saudi Arabia</option>
+                <option value="GB">🇬🇧 United Kingdom</option>
+                <option value="US">🇺🇸 United States</option>
+                <option value="CA">🇨🇦 Canada</option>
+                <option value="AU">🇦🇺 Australia</option>
+                <option value="QA">🇶🇦 Qatar</option>
+                <option value="KW">🇰🇼 Kuwait</option>
+                <option value="BH">🇧🇭 Bahrain</option>
+                <option value="OM">🇴🇲 Oman</option>
+              </select>
+              <p *ngIf="f['country'].invalid && f['country'].touched" class="text-red-500 text-xs mt-1 font-medium">Country is required.</p>
+            </div>
+
+            <!-- City -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1.5">City</label>
+              <input type="text" formControlName="city" placeholder="e.g. Karachi, Lahore, Islamabad"
+                class="w-full bg-white border border-slate-200 rounded-xl py-2.5 px-4 text-sm font-normal text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                [class.border-red-400]="f['city'].invalid && f['city'].touched">
+              <p *ngIf="f['city'].invalid && f['city'].touched" class="text-red-500 text-xs mt-1 font-medium">City is required.</p>
+            </div>
+
+            <!-- State / Province -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1.5">State / Province</label>
+              <input type="text" formControlName="state" placeholder="e.g. Sindh, Punjab, Dubai"
+                class="w-full bg-white border border-slate-200 rounded-xl py-2.5 px-4 text-sm font-normal text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                [class.border-red-400]="f['state'].invalid && f['state'].touched">
+              <p *ngIf="f['state'].invalid && f['state'].touched" class="text-red-500 text-xs mt-1 font-medium">State/Province is required.</p>
+            </div>
+
+            <!-- Postal Code -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1.5">Postal Code <span class="text-slate-400 font-normal">(Optional)</span></label>
+              <input type="text" formControlName="postalCode" placeholder="e.g. 75500"
+                class="w-full bg-white border border-slate-200 rounded-xl py-2.5 px-4 text-sm font-normal text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+            </div>
+
+            <!-- Address -->
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-semibold text-slate-700 mb-1.5">Street Address</label>
+              <textarea formControlName="address" rows="2" placeholder="Shop / Office / Building address"
+                class="w-full bg-white border border-slate-200 rounded-xl py-2.5 px-4 text-sm font-normal text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none transition-colors"
+                [class.border-red-400]="f['address'].invalid && f['address'].touched"></textarea>
+              <p *ngIf="f['address'].invalid && f['address'].touched" class="text-red-500 text-xs mt-1 font-medium">Street address is required.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 04: ACCOUNT SECURITY -->
+        <div class="bg-slate-50/70 p-5 sm:p-6 rounded-xl border border-slate-200/80">
+          <div class="flex items-center gap-2.5 mb-4 pb-2.5 border-b border-slate-200/60">
+            <span class="w-6 h-6 rounded-lg bg-amber-600 text-white text-xs font-bold flex items-center justify-center">04</span>
+            <h2 class="text-xs font-bold text-amber-700 uppercase tracking-wider">Account Security</h2>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Password -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1.5">Password</label>
+              <div class="relative">
+                <input [type]="isPasswordVisible ? 'text' : 'password'" formControlName="password" placeholder="••••••••"
+                  class="w-full bg-white border border-slate-200 rounded-xl py-2.5 pl-4 pr-11 text-sm font-normal text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                  [class.border-red-400]="f['password'].invalid && f['password'].touched">
+                <button type="button" (click)="togglePassword()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
+                  <svg *ngIf="!isPasswordVisible" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                  <svg *ngIf="isPasswordVisible" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+                    <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+                    <path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+                    <line x1="2" x2="22" y1="2" y2="22" />
+                  </svg>
+                </button>
+              </div>
+              <!-- Live Password Checklist -->
+              <div *ngIf="f['password'].value" class="mt-2 space-y-1.5">
+                <div class="flex gap-1">
+                  <div class="h-1 flex-1 rounded-full" [ngClass]="passwordStrength >= 1 ? 'bg-red-500' : 'bg-slate-200'"></div>
+                  <div class="h-1 flex-1 rounded-full" [ngClass]="passwordStrength >= 2 ? 'bg-amber-500' : 'bg-slate-200'"></div>
+                  <div class="h-1 flex-1 rounded-full" [ngClass]="passwordStrength >= 3 ? 'bg-yellow-500' : 'bg-slate-200'"></div>
+                  <div class="h-1 flex-1 rounded-full" [ngClass]="passwordStrength >= 4 ? 'bg-emerald-500' : 'bg-slate-200'"></div>
+                </div>
+                <div class="grid grid-cols-2 gap-1 text-[11px] text-slate-500">
+                  <span *ngFor="let check of pwCheckList" class="flex items-center gap-1.5" [ngClass]="check.valid ? 'text-emerald-600 font-medium' : 'text-slate-400'">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline *ngIf="check.valid" points="20 6 9 17 4 12" />
+                      <circle *ngIf="!check.valid" cx="12" cy="12" r="9" />
+                    </svg>
+                    {{ check.label }}
+                  </span>
+                </div>
+              </div>
+              <p *ngIf="f['password'].touched && f['password'].hasError('required')" class="text-red-500 text-xs mt-1 font-medium">Password is required.</p>
+              <p *ngIf="f['password'].touched && f['password'].hasError('passwordStrength')" class="text-red-500 text-xs mt-1 font-medium">Must contain 8+ chars, upper, lower, number, symbol.</p>
+            </div>
+
+            <!-- Confirm Password -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1.5">Confirm Password</label>
+              <div class="relative">
+                <input [type]="isConfirmPasswordVisible ? 'text' : 'password'" formControlName="confirmPassword" placeholder="••••••••"
+                  class="w-full bg-white border border-slate-200 rounded-xl py-2.5 pl-4 pr-11 text-sm font-normal text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                  [class.border-red-400]="(f['confirmPassword'].invalid && f['confirmPassword'].touched) || (registerForm.hasError('passwordMismatch') && f['confirmPassword'].touched)">
+                <button type="button" (click)="toggleConfirmPassword()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
+                  <svg *ngIf="!isConfirmPasswordVisible" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                  <svg *ngIf="isConfirmPasswordVisible" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+                    <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+                    <path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+                    <line x1="2" x2="22" y1="2" y2="22" />
+                  </svg>
+                </button>
+              </div>
+              <p *ngIf="f['confirmPassword'].touched && f['confirmPassword'].hasError('required')" class="text-red-500 text-xs mt-1 font-medium">Please confirm your password.</p>
+              <p *ngIf="f['confirmPassword'].touched && registerForm.hasError('passwordMismatch')" class="text-red-500 text-xs mt-1 font-medium">Passwords do not match.</p>
+            </div>
+
+            <!-- Custom Domain -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1.5">Custom Domain <span class="text-slate-400 font-normal">(Optional)</span></label>
+              <input type="text" formControlName="customDomain" placeholder="portal.yourcompany.com"
+                class="w-full bg-white border border-slate-200 rounded-xl py-2.5 px-4 text-sm font-normal text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+            </div>
+
+            <!-- Referral -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1.5">How Did You Hear About Us?</label>
+              <select formControlName="hearAboutUs" class="w-full bg-white border border-slate-200 rounded-xl py-2.5 px-4 text-sm font-normal text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer">
+                <option value="">Select Option</option>
+                <option value="google">Google Search</option>
+                <option value="social">Social Media</option>
+                <option value="referral">Friend / Referral</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            <!-- Biometric Passkey -->
+            <div class="sm:col-span-2 flex items-center justify-between p-3.5 bg-white rounded-xl border border-slate-200">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/>
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="text-xs font-semibold text-slate-800">Biometric / Passkey Login</h3>
+                  <p class="text-[11px] text-slate-500">Enable fingerprint or FaceID for future login</p>
+                </div>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" formControlName="enablePasskey" class="sr-only peer">
+                <div class="w-10 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- TERMS & CONDITIONS -->
+        <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
+          <div class="flex items-start gap-3">
+            <input type="checkbox" formControlName="termsAccepted" id="termsCheck"
+              class="mt-0.5 w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
+            <label for="termsCheck" class="text-xs text-slate-600 leading-relaxed cursor-pointer select-none">
+              I agree to the
+              <button type="button" (click)="openLegalModal('terms')" class="text-indigo-600 font-semibold hover:underline">Terms of Service</button>,
+              <button type="button" (click)="openLegalModal('privacy')" class="text-indigo-600 font-semibold hover:underline">Privacy Policy</button>, and
+              <button type="button" (click)="openLegalModal('safety')" class="text-indigo-600 font-semibold hover:underline">Security Protocols</button>
+              of SoftCode Solution SMC-Private Limited.
+            </label>
+          </div>
+          <p *ngIf="f['termsAccepted'].touched && f['termsAccepted'].invalid" class="text-red-500 text-xs mt-1.5 font-medium">You must accept the terms to continue.</p>
+        </div>
+
+        <!-- SUBMIT BUTTON -->
+        <div>
+          <button type="submit" [disabled]="isLoading"
+            class="w-full bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-semibold py-3.5 px-6 rounded-xl shadow-sm hover:shadow transition-colors flex items-center justify-center gap-2 text-sm disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer">
+            <span *ngIf="!isLoading">Create Business Account</span>
+            <div *ngIf="isLoading" class="flex items-center gap-2">
+              <svg class="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24" fill="none">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span>Creating Account...</span>
+            </div>
+          </button>
+        </div>
+
+        <!-- SIGN IN LINK -->
+        <div class="text-center pt-2">
+          <p class="text-xs text-slate-500">
+            Already registered with SoftCode Solution?
+            <button type="button" (click)="goToLogin()" class="ml-1 text-indigo-600 hover:text-indigo-700 font-semibold hover:underline">Sign In</button>
+          </p>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Minimal Footer -->
+  <footer class="py-6 border-t border-slate-200 bg-white relative z-10">
+    <div class="container mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
+      <p>© 2026 SoftCode Solution. All rights reserved.</p>
+      <div class="flex flex-wrap items-center justify-center gap-4">
+        <a routerLink="/" fragment="solutions" class="hover:text-slate-600 transition-colors">Solutions</a>
+        <button type="button" (click)="openLegalModal('privacy')" class="hover:text-slate-600 transition-colors cursor-pointer">Privacy Policy</button>
+        <button type="button" (click)="openLegalModal('terms')" class="hover:text-slate-600 transition-colors cursor-pointer">Terms of Service</button>
+        <button type="button" (click)="openLegalModal('safety')" class="hover:text-slate-600 transition-colors cursor-pointer">Data Safety</button>
+        <a routerLink="/" fragment="store" class="hover:text-slate-600 transition-colors">Support</a>
+      </div>
+    </div>
+  </footer>
+</main>
+
+<!-- ✅ Success Popup -->
+<div *ngIf="showSuccessAlert" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
+  <div class="relative bg-white w-full max-w-sm p-8 rounded-2xl shadow-xl text-center border border-slate-100">
+    <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-5">
+      <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12" />
+      </svg>
+    </div>
+    <h2 class="text-xl font-bold text-slate-900">Account Created!</h2>
+    <p class="text-slate-600 mt-2 text-sm">Your business account has been registered. A verification link has been sent to your business email.</p>
+    <button (click)="goToLogin()" class="mt-6 w-full bg-indigo-600 text-white font-semibold py-3 rounded-xl hover:bg-indigo-700 transition-colors shadow-sm text-sm cursor-pointer">
+      Proceed to Sign In
+    </button>
+  </div>
+</div>
+
+<!-- Legal Modal -->
+<app-legal [isOpen]="showLegalModal" [activeTab]="legalActiveTab" (closeEvent)="closeLegalModal()"></app-legal>

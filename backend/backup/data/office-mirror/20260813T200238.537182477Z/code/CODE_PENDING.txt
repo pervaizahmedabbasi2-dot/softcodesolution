@@ -1,0 +1,9 @@
+SoftCodeSolution Office Mirror
+
+CODE STATUS: PENDING
+
+Git working tree contains uncommitted changes.
+
+Database backup is still preserved.
+Commit approved code before treating
+this Office Mirror code layer as verified.

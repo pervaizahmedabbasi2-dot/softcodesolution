@@ -1,0 +1,1196 @@
+<<<<<<< HEAD
+<div *ngIf="activeView === 'home'" class="flex-1 bg-[#F5F5F7] min-h-full pb-20">
+  <ng-container *ngIf="userRole === 'SUPER_ADMIN'">
+    <!-- Ultra-Premium Executive 3D iOS / hi-OS Hero Card -->
+    <div class="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-12 pt-4 sm:pt-6">
+      <div class="rounded-[28px] p-5 sm:p-7 border border-white/80 shadow-[0_20px_50px_-12px_rgba(79,70,229,0.18),0_8px_20px_-6px_rgba(0,0,0,0.06),inset_0_1px_2px_rgba(255,255,255,0.95)] bg-gradient-to-br from-white/95 via-indigo-50/40 to-slate-50/90 backdrop-blur-2xl relative overflow-hidden transition-all duration-300 group">
+        <!-- 3D Architectural Soft Ambient Glow & Specular Lighting -->
+        <div class="absolute inset-0 bg-[radial-gradient(#8080800c_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none"></div>
+        <div class="absolute -right-16 -top-16 w-80 h-80 bg-gradient-to-br from-indigo-300/40 via-cyan-200/30 to-transparent rounded-full blur-3xl pointer-events-none group-hover:scale-110 transition-transform duration-700"></div>
+        <div class="absolute -left-16 -bottom-16 w-80 h-80 bg-gradient-to-tr from-amber-200/30 via-indigo-200/25 to-transparent rounded-full blur-3xl pointer-events-none"></div>
+        
+        <!-- Top Specular Glass Edge Highlight -->
+        <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent"></div>
+
+        <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          
+          <!-- Left: Identity & iOS Squircle Branding -->
+          <div class="flex items-start sm:items-center gap-4 sm:gap-5 min-w-0 flex-1 max-w-full">
+            <!-- iOS Style 3D Squircle Icon Badge with Multi-Stage Drop Shadow & Inset Gloss -->
+            <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-[22px] bg-gradient-to-br from-amber-500 via-orange-500 to-indigo-600 text-white flex items-center justify-center font-black shadow-[0_12px_28px_-6px_rgba(249,115,22,0.45),inset_0_2px_4px_rgba(255,255,255,0.4)] border border-white/30 shrink-0 transform group-hover:rotate-1 transition-transform duration-300">
+              <lucide-icon [name]="icons.ShieldCheck" class="w-7 h-7 sm:w-8 sm:h-8 drop-shadow-sm"></lucide-icon>
+            </div>
+
+            <div class="space-y-1.5 min-w-0 flex-1 max-w-full">
+              <div class="flex items-center gap-2 flex-wrap min-w-0 max-w-full">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-700 border border-emerald-300/60 shadow-[inset_0_1px_1px_rgba(255,255,255,0.8)] text-[10px] font-black uppercase tracking-wider backdrop-blur-md shrink-0">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  {{ loc.t('enterprise_platform_live') }}
+                </span>
+                <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-700 border border-indigo-300/60 shadow-[inset_0_1px_1px_rgba(255,255,255,0.8)] text-[10px] font-black uppercase tracking-wider backdrop-blur-md shrink-0">
+                  👑 {{ loc.t('super_admin_hub') }}
+                </span>
+                <span class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-200/60 text-slate-700 border border-slate-300/60 shadow-[inset_0_1px_1px_rgba(255,255,255,0.8)] text-[10px] font-bold backdrop-blur-md shrink-0">
+                  <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+                  Multi-Tenant Platform
+                </span>
+              </div>
+              
+              <h1 class="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 tracking-tight leading-tight break-words min-w-0 max-w-full">
+                {{ getGreeting() }}, <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-indigo-700 to-cyan-600">{{ userName }}</span>
+              </h1>
+              
+              <p class="text-slate-600 font-medium text-xs sm:text-sm leading-relaxed max-w-2xl break-words max-w-full">
+                {{ loc.t('super_admin_desc') }}
+              </p>
+            </div>
+          </div>
+          
+          <!-- Right: 3D iOS Glass Telemetry Chips & Action Controls -->
+          <div class="flex flex-col sm:flex-row lg:flex-col items-start lg:items-end gap-3.5 shrink-0">
+            <!-- Telemetry Status Glass Pills -->
+            <div class="flex items-center gap-2 flex-wrap">
+              <div class="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-white/90 backdrop-blur-md border border-white/80 shadow-[0_4px_12px_rgba(0,0,0,0.03),inset_0_1px_1px_rgba(255,255,255,0.9)] text-[11px] font-bold text-slate-700">
+                <lucide-icon [name]="icons.Users" class="w-3.5 h-3.5 text-indigo-600 shrink-0"></lucide-icon>
+                <span><strong class="text-slate-900 font-black">{{ clientTotals.all }}</strong> Tenants</span>
+              </div>
+              <div class="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-emerald-500/10 backdrop-blur-md border border-emerald-200/80 shadow-[0_4px_12px_rgba(16,185,129,0.06),inset_0_1px_1px_rgba(255,255,255,0.9)] text-[11px] font-bold text-emerald-800">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
+                <span><strong class="font-black">{{ clientTotals.approved }}</strong> Active</span>
+              </div>
+              <div class="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-white/90 backdrop-blur-md border border-white/80 shadow-[0_4px_12px_rgba(0,0,0,0.03),inset_0_1px_1px_rgba(255,255,255,0.9)] text-[11px] font-bold text-slate-700">
+                <span class="text-indigo-600 font-black">100%</span>
+                <span class="text-slate-500 font-medium">Synced</span>
+              </div>
+            </div>
+
+
+          </div>
+
+=======
+<div *ngIf="activeView === 'home'" class="flex-1 bg-slate-50 min-h-full pb-20">
+  <ng-container *ngIf="userRole === 'SUPER_ADMIN'">
+    <!-- Ultra-Premium Header/Hero -->
+    <div class="relative bg-white border-b border-slate-200/70 overflow-hidden">
+      <!-- Subtle Grid Background for that "Vercel/Stripe" developer vibe -->
+      <div class="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+      
+      <div class="relative max-w-7xl mx-auto px-6 lg:px-12 py-12 lg:py-16">
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div class="space-y-4">
+            <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-slate-100/80 border border-slate-200/80 backdrop-blur-sm shadow-sm">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span class="text-[10px] font-bold text-slate-900 uppercase tracking-widest">Enterprise Platform Live</span>
+            </div>
+            
+            <h1 class="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
+              Good {{ getGreeting().toLowerCase() }}, <br class="hidden md:block" />
+              <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-cyan-500">{{ userName }}</span>
+            </h1>
+            <p class="text-slate-500 font-medium max-w-xl text-base leading-relaxed">
+              Super Admin Control Center. Monitor multi-tenant infrastructure, revenue streams, and client health metrics in real-time.
+            </p>
+          </div>
+          
+          <div class="flex items-center gap-3">
+            <button (click)="navigateTo('client-previews')" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-[20px] bg-indigo-50 border border-indigo-100 text-indigo-700 text-sm font-semibold hover:bg-indigo-100 transition-all shadow-sm">
+              <lucide-icon [name]="icons.Eye" class="w-4 h-4"></lucide-icon> Portal Preview
+            </button>
+            <button (click)="navigateTo('all-tenants')" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-[20px] bg-white border border-slate-200 text-slate-900 text-sm font-semibold hover:bg-slate-50 transition-all shadow-sm">
+              <lucide-icon [name]="icons.Users" class="w-4 h-4"></lucide-icon> View Clients
+            </button>
+            <button (click)="openModuleManager()" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-[20px] bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 transition-all shadow-[0_4px_14px_0_rgba(0,0,0,0.1)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.15)] hover:-translate-y-0.5">
+              <lucide-icon [name]="icons.Settings" class="w-4 h-4"></lucide-icon> System Config
+            </button>
+          </div>
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
+        </div>
+      </div>
+    </div>
+
+    <!-- Core Metrics Dashboard -->
+<<<<<<< HEAD
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-4 sm:py-6">
+      
+      <!-- Top Level KPIs (School Quality Cards with Left Accents & Watermarks) -->
+      <div class="mb-6">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-indigo-600 animate-pulse"></span>
+            <h2 class="text-xs font-black text-slate-900 uppercase tracking-wider">{{ loc.t('business_kpis') }}</h2>
+          </div>
+          <div class="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-xl border border-slate-200/80 shadow-2xs">
+             <span class="text-[9px] uppercase font-bold tracking-widest text-slate-400">{{ loc.t('syncing_in') }}</span>
+             <span class="text-[10px] font-black text-indigo-600 tabular-nums">{{ autoRefreshCountdown }}s</span>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <!-- Card 1: TOTAL TENANTS (Indigo 3D White Card) -->
+          <div (click)="navigateTo('all-tenants')" class="rounded-2xl p-4 sm:p-5 flex items-center gap-4 border border-slate-200/90 shadow-[0_4px_16px_-2px_rgba(79,70,229,0.14),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_14px_28px_-4px_rgba(79,70,229,0.28),0_4px_10px_-2px_rgba(79,70,229,0.15)] hover:-translate-y-1 hover:border-indigo-300/80 transition-all duration-300 ease-out cursor-pointer bg-gradient-to-b from-white to-slate-50/70 group">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-600 to-blue-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-indigo-500/30 group-hover:scale-105 group-hover:shadow-indigo-500/40 transition-all duration-300 border border-white/30">
+              <lucide-icon [name]="icons.Users || 'users'" class="w-6 h-6 stroke-[2.2] drop-shadow-xs"></lucide-icon>
+            </div>
+            <div class="min-w-0 flex-1">
+              <span class="text-2xl sm:text-3xl font-black text-slate-900 tabular-nums block leading-none tracking-tight">{{ clientTotals.all }}</span>
+              <p class="text-xs font-bold text-slate-600 mt-1">{{ loc.t('total_tenants') }}</p>
+              <div class="mt-1 flex items-center gap-1 text-[11px] font-semibold text-indigo-600">
+                <lucide-icon [name]="'trending-up'" class="w-3.5 h-3.5"></lucide-icon>
+                <span>+12% Platform Growth</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Card 2: ACTIVE WORKSPACES (Emerald 3D White Card) -->
+          <div (click)="navigateTo('all-tenants')" class="rounded-2xl p-4 sm:p-5 flex items-center gap-4 border border-slate-200/90 shadow-[0_4px_16px_-2px_rgba(16,185,129,0.14),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_14px_28px_-4px_rgba(16,185,129,0.28),0_4px_10px_-2px_rgba(16,185,129,0.15)] hover:-translate-y-1 hover:border-emerald-300/80 transition-all duration-300 ease-out cursor-pointer bg-gradient-to-b from-white to-slate-50/70 group">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-500 via-emerald-600 to-teal-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/30 group-hover:scale-105 group-hover:shadow-emerald-500/40 transition-all duration-300 border border-white/30">
+              <lucide-icon [name]="icons.CheckCircle2 || 'check-circle-2'" class="w-6 h-6 stroke-[2.2] drop-shadow-xs"></lucide-icon>
+            </div>
+            <div class="min-w-0 flex-1">
+              <span class="text-2xl sm:text-3xl font-black text-slate-900 tabular-nums block leading-none tracking-tight">{{ clientTotals.approved }}</span>
+              <p class="text-xs font-bold text-slate-600 mt-1">{{ loc.t('active') }}</p>
+              <div class="mt-1 flex items-center gap-1 text-[11px] font-semibold text-emerald-600">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>Live verified workspaces</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 3: PENDING APPROVALS (Amber 3D White Card) -->
+          <div (click)="navigateTo('all-tenants')" class="rounded-2xl p-4 sm:p-5 flex items-center gap-4 border border-slate-200/90 shadow-[0_4px_16px_-2px_rgba(245,158,11,0.14),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_14px_28px_-4px_rgba(245,158,11,0.28),0_4px_10px_-2px_rgba(245,158,11,0.15)] hover:-translate-y-1 hover:border-amber-300/80 transition-all duration-300 ease-out cursor-pointer bg-gradient-to-b from-white to-slate-50/70 group">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 via-amber-600 to-orange-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-amber-500/30 group-hover:scale-105 group-hover:shadow-amber-500/40 transition-all duration-300 border border-white/30">
+              <lucide-icon [name]="icons.Clock || 'clock'" class="w-6 h-6 stroke-[2.2] drop-shadow-xs"></lucide-icon>
+            </div>
+            <div class="min-w-0 flex-1">
+              <span class="text-2xl sm:text-3xl font-black text-amber-600 tabular-nums block leading-none tracking-tight">{{ clientTotals.pending }}</span>
+              <p class="text-xs font-bold text-slate-600 mt-1">{{ loc.t('pending') }}</p>
+              <div class="mt-1 text-[11px] font-semibold text-amber-600">
+                <span>Awaiting Superadmin Review</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 4: RESTRICTED / DENIED (Rose 3D White Card) -->
+          <div (click)="navigateTo('all-tenants')" class="rounded-2xl p-4 sm:p-5 flex items-center gap-4 border border-slate-200/90 shadow-[0_4px_16px_-2px_rgba(244,63,94,0.14),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_14px_28px_-4px_rgba(244,63,94,0.28),0_4px_10px_-2px_rgba(244,63,94,0.15)] hover:-translate-y-1 hover:border-rose-300/80 transition-all duration-300 ease-out cursor-pointer bg-gradient-to-b from-white to-slate-50/70 group">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-rose-500 via-rose-600 to-pink-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-rose-500/30 group-hover:scale-105 group-hover:shadow-rose-500/40 transition-all duration-300 border border-white/30">
+              <lucide-icon [name]="icons.XCircle || 'x-circle'" class="w-6 h-6 stroke-[2.2] drop-shadow-xs"></lucide-icon>
+            </div>
+            <div class="min-w-0 flex-1">
+              <span class="text-2xl sm:text-3xl font-black text-rose-600 tabular-nums block leading-none tracking-tight">{{ clientTotals.rejected }}</span>
+              <p class="text-xs font-bold text-slate-600 mt-1">{{ loc.t('rejected') }}</p>
+              <div class="mt-1 text-[11px] font-semibold text-rose-500">
+                <span>Denied / Suspended Accounts</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Superadmin Fast Actions (White 3D Animated Cards with Matching Ambient Chromatic Glows) -->
+        <div class="mt-4 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <lucide-icon [name]="icons.Zap || 'zap'" class="w-4 h-4 text-amber-500 fill-amber-500"></lucide-icon>
+              <h3 class="font-bold text-slate-900 text-sm tracking-tight">Superadmin Fast Actions</h3>
+            </div>
+            <span class="text-xs text-slate-400 font-medium">1-Click Executive Operations</span>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-4 sm:gap-5">
+            <!-- Action 1: Add Tenant (Emerald 3D White Card) -->
+            <button (click)="navigateTo('all-tenants')" class="rounded-2xl p-5 sm:p-6 bg-gradient-to-b from-white via-white to-slate-50/80 border border-slate-200/90 hover:border-emerald-300 text-center transition-all duration-300 ease-out cursor-pointer shadow-[0_4px_16px_-2px_rgba(16,185,129,0.14),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_16px_32px_-4px_rgba(16,185,129,0.28),0_4px_10px_-2px_rgba(16,185,129,0.15)] hover:-translate-y-1.5 hover:scale-[1.02] active:translate-y-0 active:scale-[0.97] flex flex-col items-center justify-center space-y-3 min-h-[120px] group">
+              <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-500 via-emerald-600 to-teal-500 text-white shadow-md shadow-emerald-500/30 flex items-center justify-center group-hover:scale-110 group-hover:-translate-y-0.5 group-hover:shadow-lg group-hover:shadow-emerald-500/40 transition-all duration-300 border border-white/30">
+                <lucide-icon [name]="icons.Plus || 'plus'" class="w-7 h-7 stroke-[2.2] drop-shadow-xs"></lucide-icon>
+              </div>
+              <span class="text-xs sm:text-sm font-black text-slate-800 group-hover:text-emerald-950 leading-tight tracking-tight text-center">New Tenant</span>
+            </button>
+
+            <!-- Action 2: School LMS (Blue 3D White Card) -->
+            <button (click)="navigateTo('school-hub')" class="rounded-2xl p-5 sm:p-6 bg-gradient-to-b from-white via-white to-slate-50/80 border border-slate-200/90 hover:border-blue-300 text-center transition-all duration-300 ease-out cursor-pointer shadow-[0_4px_16px_-2px_rgba(37,99,235,0.14),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_16px_32px_-4px_rgba(37,99,235,0.28),0_4px_10px_-2px_rgba(37,99,235,0.15)] hover:-translate-y-1.5 hover:scale-[1.02] active:translate-y-0 active:scale-[0.97] flex flex-col items-center justify-center space-y-3 min-h-[120px] group">
+              <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 via-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/30 flex items-center justify-center group-hover:scale-110 group-hover:-translate-y-0.5 group-hover:shadow-lg group-hover:shadow-blue-500/40 transition-all duration-300 border border-white/30">
+                <lucide-icon [name]="icons.GraduationCap || 'graduation-cap'" class="w-7 h-7 stroke-[2.2] drop-shadow-xs"></lucide-icon>
+              </div>
+              <span class="text-xs sm:text-sm font-black text-slate-800 group-hover:text-blue-950 leading-tight tracking-tight text-center">School LMS</span>
+            </button>
+
+            <!-- Action 3: Business Suites (Indigo 3D White Card) -->
+            <button (click)="navigateTo('business-suites')" class="rounded-2xl p-5 sm:p-6 bg-gradient-to-b from-white via-white to-slate-50/80 border border-slate-200/90 hover:border-indigo-300 text-center transition-all duration-300 ease-out cursor-pointer shadow-[0_4px_16px_-2px_rgba(79,70,229,0.14),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_16px_32px_-4px_rgba(79,70,229,0.28),0_4px_10px_-2px_rgba(79,70,229,0.15)] hover:-translate-y-1.5 hover:scale-[1.02] active:translate-y-0 active:scale-[0.97] flex flex-col items-center justify-center space-y-3 min-h-[120px] group">
+              <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-600 to-purple-600 text-white shadow-md shadow-indigo-500/30 flex items-center justify-center group-hover:scale-110 group-hover:-translate-y-0.5 group-hover:shadow-lg group-hover:shadow-indigo-500/40 transition-all duration-300 border border-white/30">
+                <lucide-icon [name]="icons.Briefcase || 'briefcase'" class="w-7 h-7 stroke-[2.2] drop-shadow-xs"></lucide-icon>
+              </div>
+              <span class="text-xs sm:text-sm font-black text-slate-800 group-hover:text-indigo-950 leading-tight tracking-tight text-center">35 Suites</span>
+            </button>
+
+            <!-- Action 4: Security NOC (Amber 3D White Card) -->
+            <button (click)="navigateTo('security')" class="rounded-2xl p-5 sm:p-6 bg-gradient-to-b from-white via-white to-slate-50/80 border border-slate-200/90 hover:border-amber-300 text-center transition-all duration-300 ease-out cursor-pointer shadow-[0_4px_16px_-2px_rgba(245,158,11,0.14),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_16px_32px_-4px_rgba(245,158,11,0.28),0_4px_10px_-2px_rgba(245,158,11,0.15)] hover:-translate-y-1.5 hover:scale-[1.02] active:translate-y-0 active:scale-[0.97] flex flex-col items-center justify-center space-y-3 min-h-[120px] group">
+              <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500 via-amber-600 to-orange-500 text-white shadow-md shadow-amber-500/30 flex items-center justify-center group-hover:scale-110 group-hover:-translate-y-0.5 group-hover:shadow-lg group-hover:shadow-amber-500/40 transition-all duration-300 border border-white/30">
+                <lucide-icon [name]="icons.ShieldCheck || 'shield-check'" class="w-7 h-7 stroke-[2.2] drop-shadow-xs"></lucide-icon>
+              </div>
+              <span class="text-xs sm:text-sm font-black text-slate-800 group-hover:text-amber-950 leading-tight tracking-tight text-center">Security NOC</span>
+            </button>
+
+            <!-- Action 5: Payments (Orange 3D White Card) -->
+            <button (click)="navigateTo('payments-sys-list')" class="rounded-2xl p-5 sm:p-6 bg-gradient-to-b from-white via-white to-slate-50/80 border border-slate-200/90 hover:border-orange-300 text-center transition-all duration-300 ease-out cursor-pointer shadow-[0_4px_16px_-2px_rgba(249,115,22,0.14),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_16px_32px_-4px_rgba(249,115,22,0.28),0_4px_10px_-2px_rgba(249,115,22,0.15)] hover:-translate-y-1.5 hover:scale-[1.02] active:translate-y-0 active:scale-[0.97] flex flex-col items-center justify-center space-y-3 min-h-[120px] group">
+              <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-orange-500 via-orange-600 to-amber-500 text-white shadow-md shadow-orange-500/30 flex items-center justify-center group-hover:scale-110 group-hover:-translate-y-0.5 group-hover:shadow-lg group-hover:shadow-orange-500/40 transition-all duration-300 border border-white/30">
+                <lucide-icon [name]="icons.CreditCard || 'credit-card'" class="w-7 h-7 stroke-[2.2] drop-shadow-xs"></lucide-icon>
+              </div>
+              <span class="text-xs sm:text-sm font-black text-slate-800 group-hover:text-orange-950 leading-tight tracking-tight text-center">Payments</span>
+            </button>
+
+            <!-- Action 6: RBAC Access (Purple 3D White Card) -->
+            <button (click)="navigateTo('rbac')" class="rounded-2xl p-5 sm:p-6 bg-gradient-to-b from-white via-white to-slate-50/80 border border-slate-200/90 hover:border-purple-300 text-center transition-all duration-300 ease-out cursor-pointer shadow-[0_4px_16px_-2px_rgba(147,51,234,0.14),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_16px_32px_-4px_rgba(147,51,234,0.28),0_4px_10px_-2px_rgba(147,51,234,0.15)] hover:-translate-y-1.5 hover:scale-[1.02] active:translate-y-0 active:scale-[0.97] flex flex-col items-center justify-center space-y-3 min-h-[120px] group">
+              <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-600 via-purple-600 to-violet-600 text-white shadow-md shadow-purple-500/30 flex items-center justify-center group-hover:scale-110 group-hover:-translate-y-0.5 group-hover:shadow-lg group-hover:shadow-purple-500/40 transition-all duration-300 border border-white/30">
+                <lucide-icon [name]="icons.Lock || 'lock'" class="w-7 h-7 stroke-[2.2] drop-shadow-xs"></lucide-icon>
+              </div>
+              <span class="text-xs sm:text-sm font-black text-slate-800 group-hover:text-purple-950 leading-tight tracking-tight text-center">RBAC Access</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-8">
+          
+          <!-- Enterprise Business Suites & Industry Verticals Card (35 Verticals) -->
+          <div class="bg-white rounded-3xl border border-slate-200/90 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-5 sm:p-7 mb-6 relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-80 h-80 bg-gradient-to-bl from-indigo-100/50 via-indigo-50/20 to-transparent rounded-bl-full pointer-events-none"></div>
+
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 relative z-10">
+              <div>
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="w-2 h-2 rounded-full bg-indigo-600 animate-pulse"></span>
+                  <span class="text-[10px] font-extrabold text-indigo-600 uppercase tracking-widest">{{ loc.t('industry_matrix') }}</span>
+                  <span class="text-[9px] font-black px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200/90 shadow-2xs">32 Verticals</span>
+                </div>
+                <h2 class="text-sm sm:text-base font-black text-slate-900 uppercase tracking-tight">{{ loc.t('business_suites_title') }}</h2>
+                <p class="text-xs text-slate-500 font-medium mt-0.5">{{ loc.t('business_suites_desc') }}</p>
+              </div>
+              <div class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-slate-200/90 shadow-2xs">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span class="text-xs font-black text-slate-800">32 Consoles Active</span>
+              </div>
+            </div>
+
+            <!-- Stats Ribbon (4 3D White Cards) -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6 relative z-10">
+              <!-- Stat 1: Total Verticals (Indigo 3D White Card) -->
+              <div class="rounded-2xl p-3.5 flex items-center gap-3.5 border border-slate-200/90 bg-gradient-to-b from-white to-slate-50/70 shadow-[0_4px_14px_-2px_rgba(79,70,229,0.12),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_10px_22px_-4px_rgba(79,70,229,0.22)] hover:-translate-y-1 hover:border-indigo-300 transition-all duration-300 ease-out group">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-600 to-blue-600 text-white flex items-center justify-center font-black text-xs shadow-md shadow-indigo-500/30 group-hover:scale-105 transition-all duration-300 border border-white/30 shrink-0">
+                  32
+                </div>
+                <div class="min-w-0">
+                  <p class="text-[9px] uppercase font-extrabold tracking-wider text-slate-400 group-hover:text-indigo-600 transition-colors truncate">Total Verticals</p>
+                  <p class="text-xs sm:text-sm font-black text-slate-900 tracking-tight truncate">Official Types</p>
+                </div>
+              </div>
+
+              <!-- Stat 2: Live Consoles (Emerald 3D White Card) -->
+              <div class="rounded-2xl p-3.5 flex items-center gap-3.5 border border-slate-200/90 bg-gradient-to-b from-white to-slate-50/70 shadow-[0_4px_14px_-2px_rgba(16,185,129,0.12),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_10px_22px_-4px_rgba(16,185,129,0.22)] hover:-translate-y-1 hover:border-emerald-300 transition-all duration-300 ease-out group">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 via-emerald-600 to-teal-600 text-white flex items-center justify-center font-black text-xs shadow-md shadow-emerald-500/30 group-hover:scale-105 transition-all duration-300 border border-white/30 shrink-0">
+                  13
+                </div>
+                <div class="min-w-0">
+                  <p class="text-[9px] uppercase font-extrabold tracking-wider text-slate-400 group-hover:text-emerald-600 transition-colors truncate">Live Consoles</p>
+                  <p class="text-xs sm:text-sm font-black text-slate-900 tracking-tight truncate">Dedicated Hubs</p>
+                </div>
+              </div>
+
+              <!-- Stat 3: Modules Matrix (Cyan 3D White Card) -->
+              <div class="rounded-2xl p-3.5 flex items-center gap-3.5 border border-slate-200/90 bg-gradient-to-b from-white to-slate-50/70 shadow-[0_4px_14px_-2px_rgba(6,182,212,0.12),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_10px_22px_-4px_rgba(6,182,212,0.22)] hover:-translate-y-1 hover:border-cyan-300 transition-all duration-300 ease-out group">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 via-cyan-600 to-blue-600 text-white flex items-center justify-center font-black text-xs shadow-md shadow-cyan-500/30 group-hover:scale-105 transition-all duration-300 border border-white/30 shrink-0">
+                  299
+                </div>
+                <div class="min-w-0">
+                  <p class="text-[9px] uppercase font-extrabold tracking-wider text-slate-400 group-hover:text-cyan-600 transition-colors truncate">Modules Matrix</p>
+                  <p class="text-xs sm:text-sm font-black text-slate-900 tracking-tight truncate">Operational Tools</p>
+                </div>
+              </div>
+
+              <!-- Stat 4: Multi-Tenancy (Purple 3D White Card) -->
+              <div class="rounded-2xl p-3.5 flex items-center gap-3.5 border border-slate-200/90 bg-gradient-to-b from-white to-slate-50/70 shadow-[0_4px_14px_-2px_rgba(147,51,234,0.12),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_10px_22px_-4px_rgba(147,51,234,0.22)] hover:-translate-y-1 hover:border-purple-300 transition-all duration-300 ease-out group">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 via-purple-600 to-violet-600 text-white flex items-center justify-center font-black text-xs shadow-md shadow-purple-500/30 group-hover:scale-105 transition-all duration-300 border border-white/30 shrink-0">
+                  100%
+                </div>
+                <div class="min-w-0">
+                  <p class="text-[9px] uppercase font-extrabold tracking-wider text-slate-400 group-hover:text-purple-600 transition-colors truncate">Multi-Tenancy</p>
+                  <p class="text-xs sm:text-sm font-black text-slate-900 tracking-tight truncate">Ready & Synced</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Primary Industry Hubs Quick-Launch Grid (All 32 3D White Cards) -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4 sm:gap-5 relative z-10">
+              <button *ngFor="let b of allBusinessesList"
+                      (click)="onSelectBusiness(b)"
+                      class="rounded-2xl p-4 sm:p-5 bg-gradient-to-b from-white via-white to-slate-50/80 border border-slate-200/90 hover:border-indigo-300 text-center transition-all duration-300 ease-out cursor-pointer shadow-[0_4px_16px_-2px_rgba(79,70,229,0.12),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_16px_32px_-4px_rgba(79,70,229,0.25),0_4px_10px_-2px_rgba(79,70,229,0.12)] hover:-translate-y-1.5 hover:scale-[1.02] active:translate-y-0 active:scale-[0.97] flex flex-col items-center justify-between min-h-[145px] group relative overflow-hidden">
+                <div class="w-full flex flex-col items-center justify-center space-y-2.5">
+                  <div class="w-13 h-13 rounded-2xl flex items-center justify-center text-white shadow-md group-hover:scale-110 transition-all duration-300 border border-white/30"
+                       [class]="getBusinessGradient(b)">
+                    <lucide-icon [name]="getBusinessIcon(b.icon)" class="w-6 h-6 stroke-[2.2] drop-shadow-xs"></lucide-icon>
+                  </div>
+                  <div class="min-w-0 w-full text-center px-0.5">
+                    <span class="text-xs sm:text-sm font-black text-slate-800 group-hover:text-indigo-600 line-clamp-1 tracking-tight transition-colors">{{ b.name }}</span>
+                    <span class="text-[10px] font-bold text-slate-500 group-hover:text-slate-700 block truncate mt-0.5">{{ getBusinessSubtitle(b) }}</span>
+                  </div>
+                </div>
+                <div class="w-full pt-2 flex items-center justify-center gap-1 border-t border-slate-100 mt-2 text-[10px] font-extrabold text-indigo-600 group-hover:text-indigo-700">
+                  <span>Open Console</span>
+                  <lucide-icon [name]="icons.ArrowRight || icons.ChevronRight" class="w-3 h-3 group-hover:translate-x-0.5 transition-transform"></lucide-icon>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Enterprise Modules Summary (3D Animated White Cards Grid) -->
+          <div class="bg-white rounded-3xl border border-slate-200/80 shadow-2xs p-6 mb-8 relative overflow-hidden">
+             <!-- Background aesthetic -->
+             <div class="absolute top-0 right-0 w-64 h-64 bg-indigo-50/30 rounded-bl-full -mr-10 -mt-10 opacity-60 pointer-events-none"></div>
+             
+             <div class="flex items-center justify-between mb-6 relative z-10">
+               <div>
+                 <h2 class="text-sm font-black text-slate-900 uppercase tracking-wider">Platform Modules</h2>
+                 <p class="text-xs text-slate-500 font-medium mt-1">Core enterprise features & system operations</p>
+               </div>
+               <button (click)="navigateTo('module-catalog')" class="text-[10px] font-black text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 px-3.5 py-1.5 rounded-xl uppercase tracking-widest transition-all active:scale-95 shadow-2xs">
+=======
+    <div class="max-w-7xl mx-auto px-6 lg:px-12 py-10">
+      
+      <!-- Top Level KPIs -->
+      <div class="mb-10">
+        <div class="flex items-center justify-between mb-5">
+          <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider">Business KPIs</h2>
+          <div class="flex items-center gap-2">
+             <span class="text-[10px] uppercase font-bold tracking-widest text-slate-400">Syncing in</span>
+             <span class="text-[11px] font-bold text-slate-900 bg-slate-200/50 px-2 py-0.5 rounded-lg">{{ autoRefreshCountdown }}s</span>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6 lg:gap-6">
+          <div class="bg-white rounded-[20px] p-6 border border-slate-200/80 shadow-[0_2px_10px_rgb(0,0,0,0.02)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all duration-300 relative overflow-hidden group">
+            <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+              <lucide-icon [name]="icons.Users" class="w-16 h-16 text-indigo-600"></lucide-icon>
+            </div>
+            <p class="text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-2">Total Tenants</p>
+            <div class="flex items-end gap-3">
+              <span class="text-4xl font-black text-slate-900 tracking-tight">{{ clientTotals.all }}</span>
+              <span class="text-sm font-bold text-emerald-500 mb-1 flex items-center"><lucide-icon [name]="icons.TrendingUp" class="w-3 h-3 mr-0.5"></lucide-icon> 12%</span>
+            </div>
+          </div>
+          
+          <div class="bg-white rounded-[20px] p-6 border border-slate-200/80 shadow-[0_2px_10px_rgb(0,0,0,0.02)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all duration-300 relative overflow-hidden group">
+            <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+              <lucide-icon [name]="icons.CheckCircle2" class="w-16 h-16 text-emerald-600"></lucide-icon>
+            </div>
+            <p class="text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-2">Active</p>
+            <div class="flex items-end gap-3">
+              <span class="text-4xl font-black text-slate-900 tracking-tight">{{ clientTotals.approved }}</span>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-[20px] p-6 border border-slate-200/80 shadow-[0_2px_10px_rgb(0,0,0,0.02)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all duration-300 relative overflow-hidden group">
+            <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+              <lucide-icon [name]="icons.Clock" class="w-16 h-16 text-amber-600"></lucide-icon>
+            </div>
+            <p class="text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-2">Pending</p>
+            <div class="flex items-end gap-3">
+              <span class="text-4xl font-black text-slate-900 tracking-tight">{{ clientTotals.pending }}</span>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-[20px] p-6 border border-slate-200/80 shadow-[0_2px_10px_rgb(0,0,0,0.02)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all duration-300 relative overflow-hidden group">
+            <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+              <lucide-icon [name]="icons.XCircle" class="w-16 h-16 text-rose-600"></lucide-icon>
+            </div>
+            <p class="text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-2">Rejected</p>
+            <div class="flex items-end gap-3">
+              <span class="text-4xl font-black text-slate-900 tracking-tight">{{ clientTotals.rejected }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
+        
+        <!-- Left Column: Quick Actions & Modules -->
+        <div class="xl:col-span-2 space-y-8">
+          
+                    <!-- Enterprise Modules Summary -->
+          <div class="bg-white rounded-[20px] border border-slate-200/70 shadow-sm p-6 mb-8 relative overflow-hidden">
+             <!-- Background aesthetic -->
+             <div class="absolute top-0 right-0 w-64 h-64 bg-slate-50 rounded-bl-full -mr-10 -mt-10 opacity-50 pointer-events-none"></div>
+             
+             <div class="flex items-center justify-between mb-6 relative z-10">
+               <div>
+                 <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider">Platform Modules</h2>
+                 <p class="text-xs text-slate-500 font-medium mt-1">Core enterprise features & controls</p>
+               </div>
+               <button (click)="navigateTo('module-catalog')" class="text-[10px] font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg uppercase tracking-widest transition-colors">
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
+                 Module Catalog &rarr;
+               </button>
+             </div>
+             
+             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 relative z-10">
+                <!-- Clients -->
+<<<<<<< HEAD
+                <button (click)="navigateTo('all-tenants')" class="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-gradient-to-b from-white via-white to-slate-50/80 border border-slate-200/90 hover:border-indigo-300 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_24px_-3px_rgba(79,70,229,0.22)] hover:-translate-y-1 transition-all duration-300 group cursor-pointer active:scale-95 min-h-[105px]">
+                   <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-600 to-blue-600 text-white shadow-md shadow-indigo-500/30 flex items-center justify-center mb-2 group-hover:scale-110 transition-all border border-white/30">
+                      <lucide-icon [name]="icons.Users" class="w-5 h-5 stroke-[2.2]"></lucide-icon>
+                   </div>
+                   <span class="text-xs font-black text-slate-800 group-hover:text-indigo-600">Clients</span>
+                </button>
+                
+                <!-- Security & NOC -->
+                <button (click)="navigateTo('security')" class="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-gradient-to-b from-white via-white to-slate-50/80 border border-slate-200/90 hover:border-emerald-300 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_24px_-3px_rgba(16,185,129,0.22)] hover:-translate-y-1 transition-all duration-300 group cursor-pointer active:scale-95 min-h-[105px]">
+                   <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-emerald-500 via-emerald-600 to-teal-600 text-white shadow-md shadow-emerald-500/30 flex items-center justify-center mb-2 group-hover:scale-110 transition-all border border-white/30">
+                      <lucide-icon [name]="icons.ShieldCheck" class="w-5 h-5 stroke-[2.2]"></lucide-icon>
+                   </div>
+                   <span class="text-xs font-black text-slate-800 group-hover:text-emerald-600 text-center">Security & NOC</span>
+                </button>
+                
+                <!-- Access Control (RBAC) -->
+                <button (click)="navigateTo('rbac')" class="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-gradient-to-b from-white via-white to-slate-50/80 border border-slate-200/90 hover:border-blue-300 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_24px_-3px_rgba(37,99,235,0.22)] hover:-translate-y-1 transition-all duration-300 group cursor-pointer active:scale-95 min-h-[105px]">
+                   <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-blue-500 text-white shadow-md shadow-blue-500/30 flex items-center justify-center mb-2 group-hover:scale-110 transition-all border border-white/30">
+                      <lucide-icon [name]="icons.Shield" class="w-5 h-5 stroke-[2.2]"></lucide-icon>
+                   </div>
+                   <span class="text-xs font-black text-slate-800 group-hover:text-blue-600">Access Control</span>
+                </button>
+                
+                <!-- API Gateway -->
+                <button (click)="navigateTo('api-gate-list')" class="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-gradient-to-b from-white via-white to-slate-50/80 border border-slate-200/90 hover:border-cyan-300 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_24px_-3px_rgba(6,182,212,0.22)] hover:-translate-y-1 transition-all duration-300 group cursor-pointer active:scale-95 min-h-[105px]">
+                   <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-cyan-500 via-cyan-600 to-blue-600 text-white shadow-md shadow-cyan-500/30 flex items-center justify-center mb-2 group-hover:scale-110 transition-all border border-white/30">
+                      <lucide-icon [name]="icons.Network" class="w-5 h-5 stroke-[2.2]"></lucide-icon>
+                   </div>
+                   <span class="text-xs font-black text-slate-800 group-hover:text-cyan-600">API Gateway</span>
+                </button>
+
+                <!-- Feature Flags -->
+                <button (click)="navigateTo('feature-flags')" class="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-gradient-to-b from-white via-white to-slate-50/80 border border-slate-200/90 hover:border-rose-300 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_24px_-3px_rgba(244,63,94,0.22)] hover:-translate-y-1 transition-all duration-300 group cursor-pointer active:scale-95 min-h-[105px]">
+                   <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-rose-500 via-rose-600 to-pink-600 text-white shadow-md shadow-rose-500/30 flex items-center justify-center mb-2 group-hover:scale-110 transition-all border border-white/30">
+                      <lucide-icon [name]="icons.Activity" class="w-5 h-5 stroke-[2.2]"></lucide-icon>
+                   </div>
+                   <span class="text-xs font-black text-slate-800 group-hover:text-rose-600">Feature Flags</span>
+                </button>
+
+                <!-- Payments -->
+                <button (click)="navigateTo('payments-sys-list')" class="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-gradient-to-b from-white via-white to-slate-50/80 border border-slate-200/90 hover:border-purple-300 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_24px_-3px_rgba(168,85,247,0.22)] hover:-translate-y-1 transition-all duration-300 group cursor-pointer active:scale-95 min-h-[105px]">
+                   <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-purple-600 via-purple-600 to-violet-600 text-white shadow-md shadow-purple-500/30 flex items-center justify-center mb-2 group-hover:scale-110 transition-all border border-white/30">
+                      <lucide-icon [name]="icons.CreditCard" class="w-5 h-5 stroke-[2.2]"></lucide-icon>
+                   </div>
+                   <span class="text-xs font-black text-slate-800 group-hover:text-purple-600">Payments</span>
+                </button>
+
+                <!-- Analytics -->
+                <button (click)="navigateTo('analytics')" class="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-gradient-to-b from-white via-white to-slate-50/80 border border-slate-200/90 hover:border-orange-300 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_24px_-3px_rgba(249,115,22,0.22)] hover:-translate-y-1 transition-all duration-300 group cursor-pointer active:scale-95 min-h-[105px]">
+                   <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-orange-500 via-orange-600 to-amber-500 text-white shadow-md shadow-orange-500/30 flex items-center justify-center mb-2 group-hover:scale-110 transition-all border border-white/30">
+                      <lucide-icon [name]="icons.BarChart3" class="w-5 h-5 stroke-[2.2]"></lucide-icon>
+                   </div>
+                   <span class="text-xs font-black text-slate-800 group-hover:text-orange-600">Analytics</span>
+                </button>
+                
+                <!-- Compliance -->
+                <button (click)="navigateTo('compliance')" class="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-gradient-to-b from-white via-white to-slate-50/80 border border-slate-200/90 hover:border-teal-300 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_24px_-3px_rgba(13,148,136,0.22)] hover:-translate-y-1 transition-all duration-300 group cursor-pointer active:scale-95 min-h-[105px]">
+                   <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-teal-500 via-teal-600 to-emerald-500 text-white shadow-md shadow-teal-500/30 flex items-center justify-center mb-2 group-hover:scale-110 transition-all border border-white/30">
+                      <lucide-icon [name]="icons.Globe" class="w-5 h-5 stroke-[2.2]"></lucide-icon>
+                   </div>
+                   <span class="text-xs font-black text-slate-800 group-hover:text-teal-600">Compliance</span>
+                </button>
+                
+                <!-- Developer Hub -->
+                <button (click)="navigateTo('webhooks')" class="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-gradient-to-b from-white via-white to-slate-50/80 border border-slate-200/90 hover:border-slate-400 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_24px_-3px_rgba(15,23,42,0.22)] hover:-translate-y-1 transition-all duration-300 group cursor-pointer active:scale-95 min-h-[105px]">
+                   <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-slate-800 via-slate-900 to-black text-white shadow-md shadow-slate-900/30 flex items-center justify-center mb-2 group-hover:scale-110 transition-all border border-white/30">
+                      <lucide-icon [name]="icons.Package" class="w-5 h-5 stroke-[2.2]"></lucide-icon>
+                   </div>
+                   <span class="text-xs font-black text-slate-800 group-hover:text-slate-950">Developer Hub</span>
+                </button>
+                
+                <!-- Data Protection -->
+                <button (click)="navigateTo('data-protection')" class="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-gradient-to-b from-white via-white to-slate-50/80 border border-slate-200/90 hover:border-sky-300 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_24px_-3px_rgba(14,165,233,0.22)] hover:-translate-y-1 transition-all duration-300 group cursor-pointer active:scale-95 min-h-[105px]">
+                   <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-sky-500 via-sky-600 to-blue-600 text-white shadow-md shadow-sky-500/30 flex items-center justify-center mb-2 group-hover:scale-110 transition-all border border-white/30">
+                      <lucide-icon [name]="icons.Lock" class="w-5 h-5 stroke-[2.2]"></lucide-icon>
+                   </div>
+                   <span class="text-xs font-black text-slate-800 group-hover:text-sky-600 text-center">Data Protect</span>
+                </button>
+                
+                <!-- Backup Manager -->
+                <button (click)="navigateTo('backup-manager')" class="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-gradient-to-b from-white via-white to-slate-50/80 border border-slate-200/90 hover:border-amber-300 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_24px_-3px_rgba(245,158,11,0.22)] hover:-translate-y-1 transition-all duration-300 group cursor-pointer active:scale-95 min-h-[105px]">
+                   <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-500 via-amber-600 to-orange-500 text-white shadow-md shadow-amber-500/30 flex items-center justify-center mb-2 group-hover:scale-110 transition-all border border-white/30">
+                      <lucide-icon [name]="icons.Database" class="w-5 h-5 stroke-[2.2]"></lucide-icon>
+                   </div>
+                   <span class="text-xs font-black text-slate-800 group-hover:text-amber-600">Backups</span>
+                </button>
+                
+                <!-- Global Edge -->
+                <button (click)="navigateTo('global-edge')" class="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-gradient-to-b from-white via-white to-slate-50/80 border border-slate-200/90 hover:border-fuchsia-300 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_24px_-3px_rgba(217,70,239,0.22)] hover:-translate-y-1 transition-all duration-300 group cursor-pointer active:scale-95 min-h-[105px]">
+                   <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-fuchsia-600 via-fuchsia-600 to-purple-600 text-white shadow-md shadow-fuchsia-500/30 flex items-center justify-center mb-2 group-hover:scale-110 transition-all border border-white/30">
+                      <lucide-icon [name]="icons.Server" class="w-5 h-5 stroke-[2.2]"></lucide-icon>
+                   </div>
+                   <span class="text-xs font-black text-slate-800 group-hover:text-fuchsia-600">Global Edge</span>
+                </button>
+                
+                <!-- License -->
+                <button (click)="navigateTo('license-list')" class="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-gradient-to-b from-white via-white to-slate-50/80 border border-slate-200/90 hover:border-yellow-400 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_24px_-3px_rgba(234,179,8,0.22)] hover:-translate-y-1 transition-all duration-300 group cursor-pointer active:scale-95 min-h-[105px]">
+                   <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-yellow-500 via-amber-500 to-yellow-600 text-white shadow-md shadow-yellow-500/30 flex items-center justify-center mb-2 group-hover:scale-110 transition-all border border-white/30">
+                      <lucide-icon [name]="icons.Key" class="w-5 h-5 stroke-[2.2]"></lucide-icon>
+                   </div>
+                   <span class="text-xs font-black text-slate-800 group-hover:text-yellow-600">License</span>
+                </button>
+                
+                <!-- Settings -->
+                <button (click)="navigateTo('settings-list')" class="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-gradient-to-b from-white via-white to-slate-50/80 border border-slate-200/90 hover:border-slate-400 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_24px_-3px_rgba(71,85,105,0.22)] hover:-translate-y-1 transition-all duration-300 group cursor-pointer active:scale-95 min-h-[105px]">
+                   <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-slate-700 via-slate-800 to-slate-900 text-white shadow-md shadow-slate-700/30 flex items-center justify-center mb-2 group-hover:scale-110 transition-all border border-white/30">
+                      <lucide-icon [name]="icons.Settings" class="w-5 h-5 stroke-[2.2]"></lucide-icon>
+                   </div>
+                   <span class="text-xs font-black text-slate-800 group-hover:text-slate-950">Settings</span>
+                </button>
+                
+                <!-- School Campus LMS (24 Modules) -->
+                <button (click)="navigateTo('school-hub')" class="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-gradient-to-b from-white via-white to-slate-50/80 border border-slate-200/90 hover:border-blue-300 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_24px_-3px_rgba(37,99,235,0.22)] hover:-translate-y-1 transition-all duration-300 group cursor-pointer active:scale-95 min-h-[105px]">
+                   <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-600 via-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/30 flex items-center justify-center mb-2 group-hover:scale-110 transition-all border border-white/30">
+                      <lucide-icon [name]="icons.GraduationCap" class="w-5 h-5 stroke-[2.2]"></lucide-icon>
+                   </div>
+                   <span class="text-xs font-black text-slate-800 group-hover:text-blue-600 text-center">School LMS</span>
+=======
+                <button (click)="navigateTo('all-tenants')" class="flex flex-col items-center justify-center p-4 rounded-[16px] bg-slate-50 hover:bg-slate-100 border border-slate-100 hover:border-slate-200 transition-all group">
+                   <div class="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                      <lucide-icon [name]="icons.Users" class="w-4 h-4 text-indigo-600"></lucide-icon>
+                   </div>
+                   <span class="text-[11px] font-bold text-slate-700">Clients</span>
+                </button>
+                
+                <!-- Security & NOC -->
+                <button (click)="navigateTo('security')" class="flex flex-col items-center justify-center p-4 rounded-[16px] bg-slate-50 hover:bg-slate-100 border border-slate-100 hover:border-slate-200 transition-all group">
+                   <div class="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                      <lucide-icon [name]="icons.ShieldCheck" class="w-4 h-4 text-emerald-600"></lucide-icon>
+                   </div>
+                   <span class="text-[11px] font-bold text-slate-700 text-center">Security & NOC</span>
+                </button>
+                
+                <!-- Access Control (RBAC) -->
+                <button (click)="navigateTo('rbac')" class="flex flex-col items-center justify-center p-4 rounded-[16px] bg-slate-50 hover:bg-slate-100 border border-slate-100 hover:border-slate-200 transition-all group">
+                   <div class="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                      <lucide-icon [name]="icons.Shield" class="w-4 h-4 text-blue-600"></lucide-icon>
+                   </div>
+                   <span class="text-[11px] font-bold text-slate-700">Access Control</span>
+                </button>
+                
+                <!-- API Gateway -->
+                <button (click)="navigateTo('api-gate-list')" class="flex flex-col items-center justify-center p-4 rounded-[16px] bg-slate-50 hover:bg-slate-100 border border-slate-100 hover:border-slate-200 transition-all group">
+                   <div class="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                      <lucide-icon [name]="icons.Network" class="w-4 h-4 text-cyan-600"></lucide-icon>
+                   </div>
+                   <span class="text-[11px] font-bold text-slate-700">API Gateway</span>
+                </button>
+
+                <!-- Feature Flags -->
+                <button (click)="navigateTo('feature-flags')" class="flex flex-col items-center justify-center p-4 rounded-[16px] bg-slate-50 hover:bg-slate-100 border border-slate-100 hover:border-slate-200 transition-all group">
+                   <div class="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                      <lucide-icon [name]="icons.Activity" class="w-4 h-4 text-rose-600"></lucide-icon>
+                   </div>
+                   <span class="text-[11px] font-bold text-slate-700">Feature Flags</span>
+                </button>
+
+                <!-- Payments -->
+                <button (click)="navigateTo('payments-sys-list')" class="flex flex-col items-center justify-center p-4 rounded-[16px] bg-slate-50 hover:bg-slate-100 border border-slate-100 hover:border-slate-200 transition-all group">
+                   <div class="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                      <lucide-icon [name]="icons.CreditCard" class="w-4 h-4 text-purple-600"></lucide-icon>
+                   </div>
+                   <span class="text-[11px] font-bold text-slate-700">Payments</span>
+                </button>
+
+                <!-- Analytics -->
+                <button (click)="navigateTo('analytics')" class="flex flex-col items-center justify-center p-4 rounded-[16px] bg-slate-50 hover:bg-slate-100 border border-slate-100 hover:border-slate-200 transition-all group">
+                   <div class="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                      <lucide-icon [name]="icons.BarChart3" class="w-4 h-4 text-orange-500"></lucide-icon>
+                   </div>
+                   <span class="text-[11px] font-bold text-slate-700">Analytics</span>
+                </button>
+                
+                <!-- Compliance -->
+                <button (click)="navigateTo('compliance')" class="flex flex-col items-center justify-center p-4 rounded-[16px] bg-slate-50 hover:bg-slate-100 border border-slate-100 hover:border-slate-200 transition-all group">
+                   <div class="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                      <lucide-icon [name]="icons.Globe" class="w-4 h-4 text-teal-600"></lucide-icon>
+                   </div>
+                   <span class="text-[11px] font-bold text-slate-700">Compliance</span>
+                </button>
+                
+                <!-- Developer Hub -->
+                <button (click)="navigateTo('webhooks')" class="flex flex-col items-center justify-center p-4 rounded-[16px] bg-slate-50 hover:bg-slate-100 border border-slate-100 hover:border-slate-200 transition-all group">
+                   <div class="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                      <lucide-icon [name]="icons.Package" class="w-4 h-4 text-slate-800"></lucide-icon>
+                   </div>
+                   <span class="text-[11px] font-bold text-slate-700">Developer Hub</span>
+                </button>
+                
+                <!-- Data Protection -->
+                <button (click)="navigateTo('data-protection')" class="flex flex-col items-center justify-center p-4 rounded-[16px] bg-slate-50 hover:bg-slate-100 border border-slate-100 hover:border-slate-200 transition-all group">
+                   <div class="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                      <lucide-icon [name]="icons.Lock" class="w-4 h-4 text-sky-600"></lucide-icon>
+                   </div>
+                   <span class="text-[11px] font-bold text-slate-700 text-center">Data Protect</span>
+                </button>
+                
+                <!-- Backup Manager -->
+                <button (click)="navigateTo('backup-manager')" class="flex flex-col items-center justify-center p-4 rounded-[16px] bg-slate-50 hover:bg-slate-100 border border-slate-100 hover:border-slate-200 transition-all group">
+                   <div class="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                      <lucide-icon [name]="icons.Database" class="w-4 h-4 text-amber-600"></lucide-icon>
+                   </div>
+                   <span class="text-[11px] font-bold text-slate-700">Backups</span>
+                </button>
+                
+                <!-- Global Edge -->
+                <button (click)="navigateTo('global-edge')" class="flex flex-col items-center justify-center p-4 rounded-[16px] bg-slate-50 hover:bg-slate-100 border border-slate-100 hover:border-slate-200 transition-all group">
+                   <div class="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                      <lucide-icon [name]="icons.Server" class="w-4 h-4 text-fuchsia-600"></lucide-icon>
+                   </div>
+                   <span class="text-[11px] font-bold text-slate-700">Global Edge</span>
+                </button>
+                
+                <!-- License -->
+                <button (click)="navigateTo('license-list')" class="flex flex-col items-center justify-center p-4 rounded-[16px] bg-slate-50 hover:bg-slate-100 border border-slate-100 hover:border-slate-200 transition-all group">
+                   <div class="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                      <lucide-icon [name]="icons.Key" class="w-4 h-4 text-yellow-500"></lucide-icon>
+                   </div>
+                   <span class="text-[11px] font-bold text-slate-700">License</span>
+                </button>
+                
+                <!-- Settings -->
+                <button (click)="navigateTo('settings-list')" class="flex flex-col items-center justify-center p-4 rounded-[16px] bg-slate-50 hover:bg-slate-100 border border-slate-100 hover:border-slate-200 transition-all group">
+                   <div class="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                      <lucide-icon [name]="icons.Settings" class="w-4 h-4 text-slate-500"></lucide-icon>
+                   </div>
+                   <span class="text-[11px] font-bold text-slate-700">Settings</span>
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
+                </button>
+                
+             </div>
+          </div>
+<<<<<<< HEAD
+          <!-- 2-CHART EXECUTIVE ROW: MONTHLY MRR & INDUSTRY VERTICALS DISTRIBUTION -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <!-- Left Chart: Monthly MRR & Revenue Growth -->
+            <div class="rounded-3xl p-5 sm:p-6 border border-slate-200/90 shadow-[0_4px_16px_-2px_rgba(79,70,229,0.10),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_12px_24px_-4px_rgba(79,70,229,0.18)] hover:border-indigo-200/90 transition-all duration-300 bg-gradient-to-b from-white via-white to-slate-50/80 space-y-4">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <div class="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center shadow-2xs">
+                    <lucide-icon [name]="icons.TrendingUp || 'trending-up'" class="w-4 h-4"></lucide-icon>
+                  </div>
+                  <h3 class="font-black text-slate-900 text-sm tracking-tight">Monthly Platform MRR & Growth</h3>
+                </div>
+                <span class="text-[10px] font-black text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200/80 shadow-2xs">+14.2% YoY</span>
+              </div>
+
+              <!-- Bar Chart Visual -->
+              <div class="pt-6 pb-2 px-3 sm:px-4 flex items-end justify-around gap-2 sm:gap-4 h-52 bg-slate-50/70 rounded-2xl border border-slate-100">
+                <div *ngFor="let col of monthlyMrrChartData" class="flex flex-col items-center gap-2 flex-1 h-full justify-end">
+                  <span class="text-[10px] sm:text-[11px] font-black text-indigo-700 bg-indigo-100/80 px-1 py-0.5 rounded-md shadow-2xs whitespace-nowrap">{{ col.label }}</span>
+                  <div class="w-8 sm:w-12 bg-gradient-to-t from-indigo-600 via-indigo-500 to-sky-400 rounded-t-lg transition-all duration-500 hover:brightness-110 shadow-sm" [style.height.%]="col.heightPct"></div>
+                  <span class="text-[10px] sm:text-[11px] font-bold text-slate-500">{{ col.month }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Chart: Tenants by Industry Vertical -->
+            <div class="rounded-3xl p-5 sm:p-6 border border-slate-200/90 shadow-[0_4px_16px_-2px_rgba(16,185,129,0.10),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_12px_24px_-4px_rgba(16,185,129,0.18)] hover:border-emerald-200/90 transition-all duration-300 bg-gradient-to-b from-white via-white to-slate-50/80 space-y-4">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <div class="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center shadow-2xs">
+                    <lucide-icon [name]="icons.Layers || 'layers'" class="w-4 h-4"></lucide-icon>
+                  </div>
+                  <h3 class="font-black text-slate-900 text-sm tracking-tight">Active Tenants by Vertical</h3>
+                </div>
+                <span class="text-xs font-black text-indigo-700 bg-indigo-50 border border-indigo-100 px-2.5 py-1 rounded-full shadow-2xs">32 Verticals</span>
+              </div>
+
+              <!-- Horizontal Progress Bars -->
+              <div class="space-y-2.5 max-h-52 overflow-y-auto custom-scrollbar pr-1">
+                <div *ngFor="let v of tenantsByVerticalDistribution">
+                  <div class="flex items-center justify-between text-xs font-bold mb-1">
+                    <span class="text-slate-700 font-extrabold text-[11px]">{{ v.vertical }}</span>
+                    <span class="text-slate-500 text-[11px] font-black">{{ v.count }} Tenants</span>
+                  </div>
+                  <div class="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
+                    <div class="h-full rounded-full transition-all duration-500" [class]="v.color" [style.width.%]="v.pct"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Recent Activity Table / List -->
+          <div class="bg-gradient-to-b from-white via-white to-slate-50/80 rounded-3xl border border-slate-200/90 shadow-[0_4px_16px_-2px_rgba(0,0,0,0.05),0_1px_3px_0_rgba(0,0,0,0.02)] overflow-hidden">
+=======
+          <!-- Revenue & Growth (Replacing Modules Grid) -->
+          <div class="bg-white rounded-[20px] border border-slate-200/70 shadow-sm p-6">
+            <div class="flex items-center justify-between mb-6">
+              <div>
+                <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider">Revenue & Growth</h2>
+                <p class="text-xs text-slate-500 font-medium mt-1">Monthly recurring revenue (MRR)</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg">
+                  <lucide-icon [name]="icons.TrendingUp" class="w-3 h-3"></lucide-icon> +14.2%
+                </span>
+              </div>
+            </div>
+            <div class="h-48 flex items-end justify-between gap-2">
+              <!-- CSS Bar Chart Mockup -->
+              <div class="w-full bg-indigo-50 rounded-t-sm h-[30%] relative group hover:bg-indigo-100 transition-colors"><div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">$12k</div></div>
+              <div class="w-full bg-indigo-50 rounded-t-sm h-[45%] relative group hover:bg-indigo-100 transition-colors"><div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">$18k</div></div>
+              <div class="w-full bg-indigo-100 rounded-t-sm h-[40%] relative group hover:bg-indigo-200 transition-colors"><div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">$16k</div></div>
+              <div class="w-full bg-indigo-100 rounded-t-sm h-[60%] relative group hover:bg-indigo-200 transition-colors"><div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">$24k</div></div>
+              <div class="w-full bg-indigo-200 rounded-t-sm h-[55%] relative group hover:bg-indigo-300 transition-colors"><div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">$22k</div></div>
+              <div class="w-full bg-indigo-300 rounded-t-sm h-[75%] relative group hover:bg-indigo-400 transition-colors"><div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">$30k</div></div>
+              <div class="w-full bg-indigo-400 rounded-t-sm h-[85%] relative group hover:bg-indigo-500 transition-colors"><div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">$34k</div></div>
+              <div class="w-full bg-indigo-600 rounded-t-sm h-[100%] relative shadow-[0_0_15px_rgba(79,70,229,0.3)]"><div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-2 py-1 rounded opacity-100 transition-opacity">$42k</div></div>
+            </div>
+            <div class="flex justify-between mt-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+              <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span><span>Aug</span>
+            </div>
+          </div>
+          <!-- Recent Activity Table / List -->
+          <div class="bg-white rounded-[20px] border border-slate-200/70 shadow-sm overflow-hidden">
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
+            <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
+               <div>
+                 <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider">System Activity</h3>
+                 <p class="text-xs text-slate-500 font-medium mt-1">Latest events across the platform</p>
+               </div>
+            </div>
+            <div class="divide-y divide-slate-100">
+              <div *ngFor="let act of getActivityFeed()" class="px-6 py-4 flex items-start gap-6 hover:bg-slate-50 transition-colors">
+                <div class="mt-0.5">
+                  <div class="w-2 h-2 rounded-full" 
+                    [class.bg-emerald-500]="act.level === 'success'"
+                    [class.bg-blue-500]="act.level === 'info'"
+                    [class.bg-amber-500]="act.level === 'warning'">
+                  </div>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-bold text-slate-900">{{ act.title }}</p>
+                  <p class="text-xs font-medium text-slate-500 mt-0.5">{{ act.detail }}</p>
+                </div>
+                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap">
+                  {{ act.time }}
+                </div>
+              </div>
+            </div>
+<<<<<<< HEAD
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <ng-container *ngIf="userRole === 'CLIENT'">
+    <!-- Ultra-Premium Executive 3D iOS / hi-OS Hero Card (Client View) -->
+    <div class="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-12 pt-4 sm:pt-6">
+      <div class="rounded-[28px] p-5 sm:p-7 border border-white/80 shadow-[0_20px_50px_-12px_rgba(79,70,229,0.18),0_8px_20px_-6px_rgba(0,0,0,0.06),inset_0_1px_2px_rgba(255,255,255,0.95)] bg-gradient-to-br from-white/95 via-indigo-50/40 to-slate-50/90 backdrop-blur-2xl relative overflow-hidden transition-all duration-300 group">
+        <!-- 3D Architectural Soft Ambient Glow & Specular Lighting -->
+        <div class="absolute inset-0 bg-[radial-gradient(#8080800c_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none"></div>
+        <div class="absolute -right-16 -top-16 w-80 h-80 bg-gradient-to-br from-indigo-300/40 via-cyan-200/30 to-transparent rounded-full blur-3xl pointer-events-none group-hover:scale-110 transition-transform duration-700"></div>
+        <div class="absolute -left-16 -bottom-16 w-80 h-80 bg-gradient-to-tr from-amber-200/30 via-indigo-200/25 to-transparent rounded-full blur-3xl pointer-events-none"></div>
+        
+        <!-- Top Specular Glass Edge Highlight -->
+        <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent"></div>
+
+        <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div class="flex items-start sm:items-center gap-4 sm:gap-5 min-w-0 flex-1">
+            <!-- iOS Style 3D Squircle Icon Badge -->
+            <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-[22px] bg-gradient-to-br from-indigo-600 via-indigo-700 to-indigo-900 text-white flex items-center justify-center font-black shadow-[0_12px_28px_-6px_rgba(79,70,229,0.45),inset_0_2px_4px_rgba(255,255,255,0.4)] ring-4 ring-white/90 border border-white/50 shrink-0 transform group-hover:rotate-1 transition-transform duration-300">
+              <lucide-icon [name]="icons.Building2" class="w-7 h-7 sm:w-8 sm:h-8 drop-shadow-sm"></lucide-icon>
+            </div>
+            
+            <div class="space-y-1.5 min-w-0 flex-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-700 border border-emerald-300/60 shadow-[inset_0_1px_1px_rgba(255,255,255,0.8)] text-[10px] font-black uppercase tracking-wider backdrop-blur-md">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  Business Workspace Active
+                </span>
+                <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-700 border border-indigo-300/60 shadow-[inset_0_1px_1px_rgba(255,255,255,0.8)] text-[10px] font-black uppercase tracking-wider backdrop-blur-md">
+                  Verified Client
+                </span>
+              </div>
+              
+              <h1 class="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 tracking-tight leading-tight">
+                {{ getGreeting() }}, <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-indigo-700 to-cyan-600">{{ userName }}</span>
+              </h1>
+              <p class="text-slate-600 font-medium max-w-xl text-xs sm:text-sm leading-relaxed">
+                Business Operations Console. Access your assigned enterprise modules, review daily records, track operational performance, and manage your workflow.
+              </p>
+            </div>
+          </div>
+          
+          <div class="flex items-center gap-2.5 flex-wrap shrink-0">
+            <button (click)="quickAddPrimaryRecord()" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-b from-indigo-600 via-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white text-xs font-black transition-all duration-200 shadow-[0_10px_20px_-5px_rgba(79,70,229,0.4),inset_0_1px_1px_rgba(255,255,255,0.4)] border border-indigo-400/30 active:scale-95 cursor-pointer">
+              <lucide-icon [name]="icons.Plus" class="w-4 h-4"></lucide-icon> <span>New Entry</span>
+            </button>
+            <button (click)="viewPrimaryRecords()" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-white/80 hover:bg-white border border-slate-200/90 text-slate-800 text-xs font-black transition-all duration-200 shadow-[0_4px_12px_rgba(0,0,0,0.04),inset_0_1px_1px_rgba(255,255,255,0.9)] active:scale-95 cursor-pointer">
+              <lucide-icon [name]="icons.Files" class="w-4 h-4 text-indigo-600"></lucide-icon> <span>View Records</span>
+            </button>
+            <button (click)="navigateTo('reports')" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-white/80 hover:bg-white border border-slate-200/90 text-slate-800 text-xs font-black transition-all duration-200 shadow-[0_4px_12px_rgba(0,0,0,0.04),inset_0_1px_1px_rgba(255,255,255,0.9)] active:scale-95 cursor-pointer">
+              <lucide-icon [name]="icons.BarChart3" class="w-4 h-4 text-indigo-600"></lucide-icon> <span>Reports</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Core Metrics Dashboard -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-4 sm:py-6">
+      
+      <!-- Top Level KPIs (4 Polish Cards) -->
+      <div class="mb-6">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <h2 class="text-xs font-black text-slate-900 uppercase tracking-wider">Business KPIs & Operations</h2>
+          </div>
+          <div class="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-xl border border-slate-200/80 shadow-2xs">
+             <span class="text-[9px] uppercase font-bold tracking-widest text-slate-400">Syncing in</span>
+             <span class="text-[10px] font-black text-indigo-600 tabular-nums">{{ autoRefreshCountdown }}s</span>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+          <div *ngFor="let kpi of getClientKpis()" class="rounded-2xl p-4 sm:p-5 flex flex-col justify-between border border-slate-200/90 bg-gradient-to-b from-white via-white to-slate-50/80 shadow-[0_4px_16px_-2px_rgba(79,70,229,0.12),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_14px_28px_-4px_rgba(79,70,229,0.25),0_4px_10px_-2px_rgba(79,70,229,0.12)] hover:-translate-y-1 hover:border-indigo-300/80 transition-all duration-300 ease-out relative overflow-hidden group">
+            <div class="absolute -bottom-2 -right-2 p-3 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none">
+              <lucide-icon [name]="kpi.icon" class="w-16 h-16 text-indigo-600"></lucide-icon>
+            </div>
+            <div class="flex items-center justify-between mb-3 relative z-10">
+              <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-indigo-600 transition-colors">{{ kpi.label }}</span>
+              <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-50 to-indigo-100/80 border border-indigo-200/90 text-indigo-600 flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 group-hover:bg-gradient-to-tr group-hover:from-indigo-600 group-hover:to-indigo-700 group-hover:text-white transition-all duration-300">
+                <lucide-icon [name]="kpi.icon" class="w-5 h-5 stroke-[2.2]"></lucide-icon>
+              </div>
+            </div>
+            <div class="space-y-1 relative z-10">
+              <div class="flex items-baseline gap-2 flex-wrap">
+                <span class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight tabular-nums block leading-none">{{ kpi.value }}</span>
+                <span class="text-[11px] font-bold flex items-center px-2 py-0.5 rounded-full border border-slate-200/80 bg-white/90 shadow-2xs" [class]="kpi.badgeColor">
+                  <lucide-icon [name]="icons.TrendingUp" class="w-3 h-3 mr-0.5" *ngIf="kpi.badge.includes('%')"></lucide-icon>
+                  {{ kpi.badge }}
+                </span>
+              </div>
+              <p class="text-[11px] font-semibold text-slate-500 truncate mt-1">{{ kpi.subtext }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
+        
+        <!-- Left Column: Assigned Modules, Revenue Chart, Activity Log -->
+        <div class="xl:col-span-2 space-y-8">
+          
+          <!-- Assigned Client Modules (3D White Cards Grid) -->
+          <div class="bg-white rounded-3xl border border-slate-200/90 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 mb-8 relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-80 h-80 bg-gradient-to-bl from-indigo-100/40 via-indigo-50/20 to-transparent rounded-bl-full pointer-events-none"></div>
+
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 relative z-10">
+              <div>
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <span class="text-[10px] font-extrabold text-emerald-700 uppercase tracking-widest">Authorized Workspace</span>
+                </div>
+                <h2 class="text-sm font-black text-slate-900 uppercase tracking-wider">Your Assigned Business Modules</h2>
+                <p class="text-xs text-slate-500 font-medium mt-1">Direct operational access to all modules configured for your business account</p>
+              </div>
+              <div class="flex items-center gap-3">
+                <span class="text-xs font-black text-indigo-700 bg-indigo-50 border border-indigo-200/80 px-3.5 py-1.5 rounded-xl shadow-2xs">
+                  {{ categories.length }} Modules Active
+                </span>
+              </div>
+            </div>
+
+            <!-- Search Filter for Modules -->
+            <div class="mb-5 relative z-10" *ngIf="categories.length > 3">
+              <div class="relative">
+                <lucide-icon [name]="icons.Search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></lucide-icon>
+                <input type="text" [(ngModel)]="moduleSearch" placeholder="Search assigned modules..."
+                  class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200/80 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
+              </div>
+            </div>
+
+            <!-- Enhanced 3D White Card Module Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 relative z-10">
+              <div *ngFor="let cat of filteredCategories()"
+                class="rounded-2xl p-5 bg-gradient-to-b from-white via-white to-slate-50/80 border border-slate-200/90 shadow-[0_4px_14px_-2px_rgba(79,70,229,0.10),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_14px_28px_-4px_rgba(79,70,229,0.22),0_4px_10px_-2px_rgba(79,70,229,0.12)] hover:border-indigo-300 hover:-translate-y-1 transition-all duration-300 ease-out group flex flex-col justify-between">
+                <div>
+                  <div class="flex items-start justify-between mb-3">
+                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-50 to-indigo-100/80 border border-indigo-200/90 text-indigo-600 flex items-center justify-center group-hover:scale-105 group-hover:bg-gradient-to-tr group-hover:from-indigo-600 group-hover:to-indigo-700 group-hover:text-white transition-all shadow-2xs">
+                      <lucide-icon [name]="getCategoryLucideIcon(cat)" class="w-6 h-6 stroke-[2.2]"></lucide-icon>
+                    </div>
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200/80 shadow-2xs">
+                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                      Active
+                    </span>
+                  </div>
+
+                  <h3 class="text-base font-black text-slate-900 mb-1 group-hover:text-indigo-600 transition-colors tracking-tight">
+                    {{ cat.label }}
+                  </h3>
+                  <p class="text-xs font-medium text-slate-500 line-clamp-2 leading-relaxed mb-4">
+                    {{ cat.description }}
+                  </p>
+                </div>
+
+                <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-2 mt-auto">
+                  <button (click)="navigateTo(cat.id + '-list')" class="flex-1 text-center py-2 px-3 rounded-xl bg-white hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 text-xs font-bold transition-all border border-slate-200/80 hover:border-indigo-200 shadow-2xs cursor-pointer flex items-center justify-center gap-1.5 active:scale-95">
+                    <lucide-icon [name]="icons.Files" class="w-3.5 h-3.5"></lucide-icon>
+                    <span>Records</span>
+                  </button>
+                  <button (click)="navigateTo(cat.id + '-add')" class="py-2 px-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white text-xs font-bold transition-all shadow-md shadow-indigo-500/25 cursor-pointer flex items-center justify-center gap-1 active:scale-95">
+                    <lucide-icon [name]="icons.Plus" class="w-3.5 h-3.5"></lucide-icon>
+                    <span>Add</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Empty State if no categories match search -->
+            <div *ngIf="filteredCategories().length === 0" class="py-12 text-center relative z-10">
+              <lucide-icon [name]="icons.Search" class="w-8 h-8 text-slate-300 mx-auto mb-2"></lucide-icon>
+              <p class="text-sm font-bold text-slate-700">No modules match your query</p>
+              <p class="text-xs text-slate-400 mt-1">Try searching with a different term</p>
+            </div>
+          </div>
+
+          <!-- Business Performance & Activity Volume Chart (3D White Card) -->
+          <div class="bg-gradient-to-b from-white via-white to-slate-50/80 rounded-3xl border border-slate-200/90 shadow-[0_4px_16px_-2px_rgba(79,70,229,0.10),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_12px_24px_-4px_rgba(79,70,229,0.18)] transition-all duration-300 p-6">
+            <div class="flex items-center justify-between mb-6">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center shadow-2xs">
+                  <lucide-icon [name]="icons.BarChart3" class="w-4 h-4"></lucide-icon>
+                </div>
+                <div>
+                  <h2 class="text-sm font-black text-slate-900 uppercase tracking-wider">Business Revenue & Activity Volume</h2>
+                  <p class="text-xs text-slate-500 font-medium mt-0.5">Monthly operational transaction flow & billing volume</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="flex items-center gap-1 text-[10px] font-black text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200/80 shadow-2xs">
+                  <lucide-icon [name]="icons.TrendingUp" class="w-3 h-3"></lucide-icon> +14.2% Growth
+                </span>
+              </div>
+            </div>
+            <div class="h-48 flex items-end justify-between gap-2 bg-slate-50/70 p-4 rounded-2xl border border-slate-100">
+              <div class="w-full bg-indigo-100 rounded-t-lg h-[30%] relative group hover:bg-indigo-200 transition-colors"><div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">$12k</div></div>
+              <div class="w-full bg-indigo-100 rounded-t-lg h-[45%] relative group hover:bg-indigo-200 transition-colors"><div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">$18k</div></div>
+              <div class="w-full bg-indigo-200 rounded-t-lg h-[40%] relative group hover:bg-indigo-300 transition-colors"><div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">$16k</div></div>
+              <div class="w-full bg-indigo-200 rounded-t-lg h-[60%] relative group hover:bg-indigo-300 transition-colors"><div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">$24k</div></div>
+              <div class="w-full bg-indigo-300 rounded-t-lg h-[55%] relative group hover:bg-indigo-400 transition-colors"><div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">$22k</div></div>
+              <div class="w-full bg-indigo-400 rounded-t-lg h-[75%] relative group hover:bg-indigo-500 transition-colors"><div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">$30k</div></div>
+              <div class="w-full bg-indigo-500 rounded-t-lg h-[85%] relative group hover:bg-indigo-600 transition-colors"><div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">$34k</div></div>
+              <div class="w-full bg-gradient-to-t from-indigo-600 to-indigo-700 rounded-t-lg h-[100%] relative shadow-[0_0_15px_rgba(79,70,229,0.3)]"><div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-2 py-1 rounded opacity-100 transition-opacity">$42k</div></div>
+            </div>
+            <div class="flex justify-between mt-3 text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">
+              <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span><span>Aug</span>
+            </div>
+          </div>
+
+          <!-- Recent Workspace Activity Log (3D White Card) -->
+          <div class="bg-gradient-to-b from-white via-white to-slate-50/80 rounded-3xl border border-slate-200/90 shadow-[0_4px_16px_-2px_rgba(0,0,0,0.05),0_1px_3px_0_rgba(0,0,0,0.02)] overflow-hidden">
+            <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
+               <div class="flex items-center gap-2.5">
+                 <div class="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center shadow-2xs">
+                   <lucide-icon [name]="icons.Activity" class="w-4 h-4"></lucide-icon>
+                 </div>
+                 <div>
+                   <h3 class="text-sm font-black text-slate-900 uppercase tracking-wider">Recent Business Activity</h3>
+                   <p class="text-xs text-slate-500 font-medium mt-0.5">Audit trail of records and workspace transactions</p>
+                 </div>
+               </div>
+               <span class="text-[10px] font-black uppercase tracking-wider text-indigo-600 bg-indigo-50 border border-indigo-100 px-2.5 py-1 rounded-full shadow-2xs">Real-Time Feed</span>
+            </div>
+            <div class="divide-y divide-slate-100">
+              <div *ngFor="let act of getClientActivityFeed()" class="px-6 py-4 flex items-start gap-4 sm:gap-6 hover:bg-slate-50/80 transition-colors">
+                <div class="mt-1">
+                  <div class="w-2.5 h-2.5 rounded-full" 
+                    [class.bg-emerald-500]="act.level === 'success'"
+                    [class.bg-blue-500]="act.level === 'info'"
+                    [class.bg-amber-500]="act.level === 'warning'">
+                  </div>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-bold text-slate-900">{{ act.title }}</p>
+                  <p class="text-xs font-medium text-slate-500 mt-0.5">{{ act.detail }}</p>
+                </div>
+                <div class="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap">
+                  {{ act.time }}
+                </div>
+              </div>
+            </div>
+=======
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
+          </div>
+          
+        </div>
+        
+<<<<<<< HEAD
+        <!-- Right Column: Quick Business Actions, Workspace Status, Direct Support -->
+        <div class="space-y-6">
+
+          <!-- Quick Business Actions (3D White Card) -->
+          <div class="bg-gradient-to-b from-white via-white to-slate-50/80 rounded-3xl border border-slate-200/90 shadow-[0_4px_16px_-2px_rgba(245,158,11,0.10),0_1px_3px_0_rgba(0,0,0,0.03)] p-6">
+            <h3 class="text-sm font-black text-slate-900 uppercase tracking-wider mb-4 flex items-center gap-2">
+              <div class="w-7 h-7 rounded-lg bg-amber-50 border border-amber-200 text-amber-500 flex items-center justify-center shadow-2xs">
+                <lucide-icon [name]="icons.Zap" class="w-4 h-4"></lucide-icon>
+              </div>
+              <span>Quick Actions</span>
+            </h3>
+            <div class="space-y-2.5">
+              <button (click)="quickAddPrimaryRecord()" class="w-full flex items-center justify-between p-3.5 rounded-2xl border border-slate-200/90 bg-white hover:bg-indigo-50/60 hover:border-indigo-300 shadow-2xs hover:shadow-sm hover:-translate-y-0.5 text-slate-800 hover:text-indigo-900 transition-all cursor-pointer group active:scale-95">
+                <div class="flex items-center gap-3">
+                  <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-700 text-white flex items-center justify-center shadow-md shadow-indigo-500/25 group-hover:scale-105 transition-transform">
+                    <lucide-icon [name]="icons.Plus" class="w-4 h-4"></lucide-icon>
+                  </div>
+                  <span class="text-xs font-black tracking-tight">Create New Entry</span>
+                </div>
+                <lucide-icon [name]="icons.ChevronRight" class="w-4 h-4 text-slate-400 group-hover:text-indigo-600 transition-colors"></lucide-icon>
+              </button>
+
+              <button (click)="viewPrimaryRecords()" class="w-full flex items-center justify-between p-3.5 rounded-2xl border border-slate-200/90 bg-white hover:bg-emerald-50/60 hover:border-emerald-300 shadow-2xs hover:shadow-sm hover:-translate-y-0.5 text-slate-800 hover:text-emerald-900 transition-all cursor-pointer group active:scale-95">
+                <div class="flex items-center gap-3">
+                  <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-md shadow-emerald-500/25 group-hover:scale-105 transition-transform">
+                    <lucide-icon [name]="icons.Files" class="w-4 h-4"></lucide-icon>
+                  </div>
+                  <span class="text-xs font-black tracking-tight">View All Records</span>
+                </div>
+                <lucide-icon [name]="icons.ChevronRight" class="w-4 h-4 text-slate-400 group-hover:text-emerald-600 transition-colors"></lucide-icon>
+              </button>
+
+              <button (click)="navigateTo('reports')" class="w-full flex items-center justify-between p-3.5 rounded-2xl border border-slate-200/90 bg-white hover:bg-cyan-50/60 hover:border-cyan-300 shadow-2xs hover:shadow-sm hover:-translate-y-0.5 text-slate-800 hover:text-cyan-900 transition-all cursor-pointer group active:scale-95">
+                <div class="flex items-center gap-3">
+                  <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 text-white flex items-center justify-center shadow-md shadow-cyan-500/25 group-hover:scale-105 transition-transform">
+                    <lucide-icon [name]="icons.BarChart3" class="w-4 h-4"></lucide-icon>
+                  </div>
+                  <span class="text-xs font-black tracking-tight">Download Summary Report</span>
+                </div>
+                <lucide-icon [name]="icons.ChevronRight" class="w-4 h-4 text-slate-400 group-hover:text-cyan-600 transition-colors"></lucide-icon>
+              </button>
+            </div>
+          </div>
+
+          <!-- Business Workspace Security & SLA Status -->
+          <div class="bg-slate-900 rounded-[20px] p-6 shadow-xl relative overflow-hidden">
+             <div class="absolute -right-6 -top-6 w-32 h-32 bg-indigo-500/20 rounded-full blur-3xl"></div>
+             <div class="relative z-10">
+               <h3 class="text-sm font-bold text-white uppercase tracking-wider mb-5 flex items-center gap-2">
+                 <lucide-icon [name]="icons.ShieldCheck" class="w-4 h-4 text-emerald-400"></lucide-icon> Workspace Status
+               </h3>
+               
+               <div class="space-y-3.5">
+                 <div class="flex items-center justify-between pb-2.5 border-b border-slate-800">
+                   <span class="text-xs font-medium text-slate-400">Account Tier</span>
+                   <span class="text-xs font-bold text-indigo-300">Enterprise Client</span>
+                 </div>
+                 <div class="flex items-center justify-between pb-2.5 border-b border-slate-800">
+                   <span class="text-xs font-medium text-slate-400">Data Storage</span>
+                   <span class="text-xs font-bold text-emerald-400 flex items-center gap-1">
+                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                     TLS 1.3 Encrypted
+                   </span>
+                 </div>
+                 <div class="flex items-center justify-between pb-2.5 border-b border-slate-800">
+                   <span class="text-xs font-medium text-slate-400">Daily Backup</span>
+                   <span class="text-xs font-bold text-emerald-400">Automatic (02:00 UTC)</span>
+                 </div>
+                 <div class="flex items-center justify-between">
+                   <span class="text-xs font-medium text-slate-400">Uptime Guarantee</span>
+                   <span class="text-xs font-bold text-white">99.9% Cloud SLA</span>
+=======
+        <!-- Right Column: System Health -->
+        <div class="space-y-6">
+          <div class="bg-slate-900 rounded-[20px] p-6 shadow-xl relative overflow-hidden">
+             <div class="absolute -right-6 -top-6 w-32 h-32 bg-indigo-500/20 rounded-full blur-3xl"></div>
+             <div class="relative z-10">
+               <h3 class="text-sm font-bold text-white uppercase tracking-wider mb-6 flex items-center gap-2">
+                 <lucide-icon [name]="icons.Activity" class="w-4 h-4 text-emerald-400"></lucide-icon> System Health
+               </h3>
+               
+               <div class="space-y-5">
+                 <div *ngFor="let health of getSystemHealth()" class="flex flex-col gap-2">
+                   <div class="flex items-center justify-between">
+                     <span class="text-xs font-bold text-slate-300">{{ health.name }}</span>
+                     <span class="text-[10px] font-black uppercase tracking-widest"
+                       [class.text-emerald-400]="health.level === 'success'"
+                       [class.text-amber-400]="health.level === 'warning'"
+                       [class.text-rose-400]="health.level === 'error'">
+                       {{ health.status }}
+                     </span>
+                   </div>
+                   <div class="w-full bg-slate-800 rounded-full h-1.5">
+                     <div class="h-1.5 rounded-full" 
+                       [class.bg-emerald-500]="health.level === 'success'"
+                       [class.bg-amber-500]="health.level === 'warning'"
+                       [class.bg-rose-500]="health.level === 'error'"
+                       [style.width]="health.level === 'success' ? '100%' : health.level === 'warning' ? '60%' : '20%'">
+                     </div>
+                   </div>
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
+                 </div>
+               </div>
+             </div>
+          </div>
+
+<<<<<<< HEAD
+          <!-- Dedicated Client Support Card -->
+          <div class="bg-gradient-to-br from-indigo-900 via-indigo-950 to-slate-900 rounded-[20px] p-6 text-white shadow-lg border border-indigo-500/20">
+            <h3 class="text-sm font-bold uppercase tracking-wider mb-2 flex items-center gap-2 text-indigo-300">
+              <lucide-icon [name]="icons.HelpCircle || icons.Briefcase" class="w-4 h-4 text-indigo-400"></lucide-icon> Client Support & Help
+            </h3>
+            <p class="text-xs text-indigo-200/80 mb-4 leading-relaxed">
+              Need assistance configuring modules or managing records? Our dedicated support team is available 24/7.
+            </p>
+            <button (click)="navigateTo('settings')" class="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer">
+              <span>Workspace Settings & Support</span>
+              <lucide-icon [name]="icons.ArrowRight || icons.ChevronRight" class="w-3.5 h-3.5"></lucide-icon>
+            </button>
+=======
+          <div class="bg-white rounded-[20px] border border-slate-200/70 shadow-sm p-6">
+            <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-5 flex items-center gap-2">
+              <lucide-icon [name]="icons.Server" class="w-4 h-4 text-slate-500"></lucide-icon> Microservices
+            </h3>
+            <div class="space-y-3">
+               <div *ngFor="let monitor of getMonitoringStatus()" class="flex items-center justify-between p-3 rounded-[20px] border border-slate-100 bg-slate-50">
+                 <span class="text-xs font-bold text-slate-900">{{ monitor.name }}</span>
+                 <div class="flex items-center gap-1.5">
+                   <span class="w-1.5 h-1.5 rounded-full" [class.bg-emerald-500]="monitor.status === 'Live'" [class.bg-amber-500]="monitor.status !== 'Live'"></span>
+                   <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{{ monitor.status }}</span>
+                 </div>
+               </div>
+            </div>
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
+          </div>
+          
+        </div>
+        
+      </div>
+    </div>
+  </ng-container>
+<<<<<<< HEAD
+=======
+
+  <ng-container *ngIf="userRole === 'CLIENT'">
+    <!-- Modern Client Dashboard -->
+    <div class="max-w-7xl mx-auto px-6 lg:px-12 py-10">
+      <div class="bg-white rounded-[20px] p-8 border border-slate-200/70 shadow-sm mb-8 relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-indigo-50 to-transparent rounded-full -translate-y-1/2 translate-x-1/2"></div>
+        <div class="relative z-10">
+          <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">Welcome back, {{ userName }}</h1>
+          <p class="text-slate-500 font-medium">Access your assigned modules and monitor your business metrics.</p>
+        </div>
+      </div>
+      
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider">Your Modules</h2>
+        <span class="text-xs text-slate-500 font-bold bg-slate-100 px-2.5 py-1 rounded-lg">{{ categories.length }} active</span>
+      </div>
+      
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div *ngFor="let cat of categories" (click)="navigateTo(cat.id + '-list')"
+          class="bg-white rounded-[20px] p-6 border border-slate-200/70 shadow-sm cursor-pointer hover:shadow-md hover:border-indigo-200 hover:-translate-y-0.5 transition-all group">
+          <div class="w-10 h-10 rounded-[20px] bg-slate-50 group-hover:bg-indigo-50 flex items-center justify-center mb-3 transition-colors">
+            <lucide-icon [name]="cat.icon" class="w-5 h-5 text-slate-500 group-hover:text-indigo-600 transition-colors"></lucide-icon>
+          </div>
+          <h3 class="text-sm font-bold text-slate-900 mb-1 group-hover:text-indigo-600 transition-colors">{{ cat.label }}</h3>
+          <p class="text-[11px] font-medium text-slate-500 line-clamp-2">{{ cat.description }}</p>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
+</div>

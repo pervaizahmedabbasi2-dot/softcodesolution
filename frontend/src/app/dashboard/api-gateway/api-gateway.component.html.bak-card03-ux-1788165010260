@@ -1,0 +1,80 @@
+<div *ngIf="activeView === 'api-gate-list'" class="min-h-full bg-slate-50">
+  <div class="mx-auto max-w-[98rem] space-y-6 px-5 py-5">
+    <div class="overflow-hidden rounded-[2rem] bg-gradient-to-br from-cyan-950 via-slate-900 to-slate-950 shadow-2xl">
+      <div class="relative px-6 py-6 lg:px-8 lg:py-7">
+        <div class="absolute inset-0 opacity-10" style="background-image:radial-gradient(circle,#fff 1px,transparent 1px);background-size:28px 28px"></div>
+        <div class="absolute -top-16 -right-16 w-36 h-36 rounded-full opacity-15" style="background:radial-gradient(circle,#22d3ee,transparent)"></div>
+        <div class="relative flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+          <div class="max-w-3xl">
+            <div class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-black uppercase tracking-[0.3em] text-white/70">
+              <lucide-icon [name]="icons.Network" class="h-3.5 w-3.5"></lucide-icon> API Gateway
+            </div>
+            <h1 class="mt-3 text-3xl font-black tracking-tight text-white sm:text-4xl">Endpoint Security<span class="text-cyan-300">.</span></h1>
+            <p class="mt-2 max-w-3xl text-sm font-medium leading-relaxed text-white/55">Enterprise API management — monitor endpoints, manage keys, configure rate limits, enforce security policies and audit all traffic from one console.</p>
+          </div>
+          <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div class="rounded-[1.5rem] border border-white/10 bg-white/5 px-4 py-3 text-white"><p class="text-[9px] font-black uppercase tracking-widest text-white/40">Endpoints</p><p class="mt-1 text-2xl font-black">{{ totalEndpoints }}</p></div>
+            <div class="rounded-[1.5rem] border border-white/10 bg-white/5 px-4 py-3 text-white"><p class="text-[9px] font-black uppercase tracking-widest text-white/40">Live</p><p class="mt-1 text-2xl font-black">{{ liveEndpoints }}</p></div>
+            <div class="rounded-[1.5rem] border border-white/10 bg-white/5 px-4 py-3 text-white"><p class="text-[9px] font-black uppercase tracking-widest text-white/40">API Keys</p><p class="mt-1 text-2xl font-black">{{ activeKeys }}</p></div>
+            <div class="rounded-[1.5rem] border border-white/10 bg-white/5 px-4 py-3 text-white"><p class="text-[9px] font-black uppercase tracking-widest text-white/40">Avg Latency</p><p class="mt-1 text-2xl font-black">{{ avgLatency }}<span class="text-sm text-white/40">ms</span></p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <button *ngFor="let tab of [{key:'endpoints',label:'Endpoints'},{key:'keys',label:'API Keys'},{key:'rate-limits',label:'Rate Limits'},{key:'security',label:'Security'},{key:'logs',label:'Live Logs'}]" type="button" (click)="setTab(tab.key)" class="rounded-full px-4 py-2 text-xs font-black uppercase tracking-widest" [class.bg-slate-900]="activeTab === tab.key" [class.text-white]="activeTab === tab.key" [class.bg-white]="activeTab !== tab.key" [class.text-slate-500]="activeTab !== tab.key" [class.border]="activeTab !== tab.key" [class.border-slate-200]="activeTab !== tab.key">{{ tab.label }}</button>
+    </div>
+    <div *ngIf="activeTab === 'endpoints'" class="space-y-4">
+      <div class="rounded-[1.8rem] bg-white p-4 shadow-sm ring-1 ring-slate-200">
+        <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div class="relative flex-1">
+            <lucide-icon [name]="icons.Search" class="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"></lucide-icon>
+            <input
+              class="w-full rounded-2xl border border-slate-200 bg-slate-50 py-3.5 pl-11 pr-24 text-sm font-medium outline-none transition focus:border-cyan-400 focus:bg-white"
+              placeholder="Search endpoints by path, method or auth level"
+              [value]="searchQuery"
+              aria-label="Search API endpoints"
+              (input)="setSearch($any($event.target).value)"
+            />
+            <button
+              *ngIf="searchQuery"
+              type="button"
+              (click)="clearSearch()"
+              class="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg px-2 py-1.5 text-[10px] font-black uppercase tracking-widest text-slate-400 transition hover:bg-slate-200 hover:text-slate-700"
+              aria-label="Clear endpoint search">
+              Clear
+            </button>
+          </div>
+
+          <div class="rounded-xl bg-slate-50 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
+            {{ filteredEndpoints.length }} result{{ filteredEndpoints.length === 1 ? '' : 's' }}
+          </div>
+        </div>
+      </div>
+      <div class="overflow-hidden rounded-[2rem] bg-white shadow-sm ring-1 ring-slate-200"><div class="overflow-x-auto"><table class="w-full text-left"><thead><tr class="border-b border-slate-200 bg-slate-50"><th class="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Method</th><th class="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Endpoint</th><th class="hidden px-5 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 lg:table-cell">Auth</th><th class="hidden px-5 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 md:table-cell">Rate</th><th class="hidden px-5 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 xl:table-cell">Latency</th><th class="hidden px-5 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 xl:table-cell">Calls</th><th class="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Status</th></tr></thead><tbody class="divide-y divide-slate-100">
+        <tr
+          *ngFor="let ep of filteredEndpoints"
+          class="cursor-pointer transition hover:bg-slate-50 focus-within:bg-slate-50"
+          tabindex="0"
+          role="button"
+          (click)="selectEndpoint(ep)"
+          (keydown.enter)="selectEndpoint(ep)"
+          (keydown.space)="selectEndpoint(ep)"
+          [attr.aria-label]="'View details for ' + ep.method + ' ' + ep.path"><td class="px-5 py-4"><span class="inline-block rounded-lg px-2.5 py-1 text-[10px] font-black uppercase tracking-widest" [ngClass]="methodColor(ep.method)">{{ ep.method }}</span></td><td class="px-5 py-4"><p class="text-sm font-black text-slate-900 font-mono">{{ ep.path }}</p><p class="mt-1 text-xs font-medium text-slate-400">{{ ep.description }}</p></td><td class="hidden px-5 py-4 lg:table-cell"><span class="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-slate-500">{{ ep.auth }}</span></td><td class="hidden px-5 py-4 text-sm font-black text-slate-700 md:table-cell">{{ ep.rateLimit }}/min</td><td class="hidden px-5 py-4 text-sm font-black text-slate-700 xl:table-cell">{{ ep.avgLatency }}ms</td><td class="hidden px-5 py-4 text-sm font-black text-slate-700 xl:table-cell">{{ ep.callsToday }}</td><td class="px-5 py-4"><span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest" [class.bg-emerald-100]="ep.status === 'live'" [class.text-emerald-700]="ep.status === 'live'" [class.bg-amber-100]="ep.status === 'deprecated'" [class.text-amber-700]="ep.status === 'deprecated'" [class.bg-slate-100]="ep.status === 'disabled'" [class.text-slate-500]="ep.status === 'disabled'"><span class="h-1.5 w-1.5 rounded-full" [class.bg-emerald-500]="ep.status === 'live'" [class.animate-pulse]="ep.status === 'live'" [class.bg-amber-500]="ep.status === 'deprecated'" [class.bg-slate-400]="ep.status === 'disabled'"></span>{{ ep.status }}</span></td></tr>
+      </tbody></table></div></div>
+      <div class="rounded-[1.5rem] bg-slate-50 p-4 text-center ring-1 ring-slate-200"><p class="text-xs font-black uppercase tracking-widest text-slate-400">Total Calls Today: {{ totalCallsToday | number }}</p></div>
+    </div>
+    <div *ngIf="activeTab === 'keys'" class="space-y-4"><div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div *ngFor="let key of apiKeys" class="rounded-[1.8rem] bg-white p-5 shadow-sm ring-1 ring-slate-200"><div class="flex items-start justify-between gap-3"><div><p class="text-sm font-black text-slate-900">{{ key.name }}</p><p class="mt-1 text-xs font-medium text-slate-400">{{ key.clientName }}</p></div><span class="rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-widest" [class.bg-emerald-100]="key.status === 'active'" [class.text-emerald-700]="key.status === 'active'" [class.bg-rose-100]="key.status === 'revoked'" [class.text-rose-700]="key.status === 'revoked'" [class.bg-slate-100]="key.status === 'expired'" [class.text-slate-500]="key.status === 'expired'">{{ key.status }}</span></div><div class="mt-4 rounded-xl bg-slate-50 px-3 py-2"><p class="font-mono text-xs font-bold text-slate-600">{{ key.keyMasked }}</p></div><div class="mt-3 flex flex-wrap gap-1"><span *ngFor="let scope of key.scopes" class="rounded-full bg-cyan-50 px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-cyan-700">{{ scope }}</span></div><div class="mt-4 flex items-center justify-between text-[10px] font-bold text-slate-400"><span>Created: {{ key.created }}</span><span>{{ key.lastUsed }}</span></div><button *ngIf="key.status === 'active'" type="button" (click)="revokeKey(key.id)" class="mt-4 w-full rounded-xl bg-rose-50 px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-rose-600 transition hover:bg-rose-600 hover:text-white">Revoke Key</button></div>
+    </div></div>
+    <div *ngIf="activeTab === 'rate-limits'" class="space-y-4"><div class="overflow-hidden rounded-[2rem] bg-white shadow-sm ring-1 ring-slate-200"><div class="border-b border-slate-200 bg-slate-50 px-5 py-4"><p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Rate Limit Configuration</p><p class="mt-1 text-sm font-medium text-slate-500">Per-endpoint request limits (requests per minute)</p></div><div class="divide-y divide-slate-100">
+      <div *ngFor="let ep of endpoints" class="flex flex-col gap-3 px-5 py-4 md:flex-row md:items-center md:justify-between"><div class="flex items-center gap-3"><span class="inline-block rounded-lg px-2 py-1 text-[9px] font-black uppercase" [ngClass]="methodColor(ep.method)">{{ ep.method }}</span><span class="font-mono text-sm font-bold text-slate-700">{{ ep.path }}</span></div><div class="flex items-center gap-3"><div class="h-2 w-32 rounded-full bg-slate-100 overflow-hidden"><div class="h-full rounded-full transition-all" [style.width.%]="(ep.rateLimit / 120) * 100" [class.bg-emerald-500]="ep.rateLimit <= 30" [class.bg-cyan-500]="ep.rateLimit > 30 && ep.rateLimit <= 60" [class.bg-amber-500]="ep.rateLimit > 60"></div></div><span class="text-sm font-black text-slate-700 min-w-[70px] text-right">{{ ep.rateLimit }}/min</span></div></div>
+    </div></div></div>
+    <div *ngIf="activeTab === 'security'" class="space-y-4"><div class="grid gap-4 md:grid-cols-2">
+      <div *ngFor="let rule of securityRules" class="rounded-[1.8rem] bg-white p-5 shadow-sm ring-1 ring-slate-200"><div class="flex items-start justify-between gap-3"><div><span class="rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-widest" [class.bg-cyan-100]="rule.type === 'cors'" [class.text-cyan-700]="rule.type === 'cors'" [class.bg-emerald-100]="rule.type === 'ip_whitelist'" [class.text-emerald-700]="rule.type === 'ip_whitelist'" [class.bg-rose-100]="rule.type === 'ip_blacklist'" [class.text-rose-700]="rule.type === 'ip_blacklist'" [class.bg-indigo-100]="rule.type === 'header_policy'" [class.text-indigo-700]="rule.type === 'header_policy'">{{ rule.type }}</span><p class="mt-3 text-sm font-black text-slate-900">{{ rule.description }}</p><p class="mt-1 font-mono text-xs font-medium text-slate-400">{{ rule.value }}</p></div><button type="button" (click)="toggleRule(rule.id)" class="rounded-full px-3 py-1.5 text-[10px] font-black uppercase tracking-widest transition" [class.bg-emerald-100]="rule.enabled" [class.text-emerald-700]="rule.enabled" [class.bg-slate-100]="!rule.enabled" [class.text-slate-400]="!rule.enabled">{{ rule.enabled ? 'Enabled' : 'Disabled' }}</button></div></div>
+    </div></div>
+    <div *ngIf="activeTab === 'logs'" class="space-y-4"><div class="overflow-hidden rounded-[2rem] bg-white shadow-sm ring-1 ring-slate-200"><div class="border-b border-slate-200 bg-slate-50 px-5 py-4 flex items-center justify-between"><div><p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Request Log</p><p class="mt-1 text-sm font-medium text-slate-500">Recent API requests across all endpoints</p></div><div class="flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-emerald-700"><span class="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Live</div></div><div class="divide-y divide-slate-100">
+      <div *ngFor="let log of recentLogs" class="flex flex-col gap-2 px-5 py-3.5 md:flex-row md:items-center md:justify-between hover:bg-slate-50 transition"><div class="flex items-center gap-3"><span class="text-xs font-mono font-bold text-slate-400 min-w-[65px]">{{ log.time }}</span><span class="inline-block rounded-lg px-2 py-1 text-[9px] font-black uppercase" [ngClass]="methodColor(log.method)">{{ log.method }}</span><span class="font-mono text-sm font-bold text-slate-700">{{ log.path }}</span></div><div class="flex items-center gap-4 text-xs"><span class="font-black" [ngClass]="statusColor(log.status)">{{ log.status }}</span><span class="font-bold text-slate-400">{{ log.latency }}ms</span><span class="font-medium text-slate-400">{{ log.clientName }}</span><span class="hidden font-mono font-medium text-slate-300 xl:inline">{{ log.ip }}</span></div></div>
+    </div></div></div>
+  </div>
+</div>

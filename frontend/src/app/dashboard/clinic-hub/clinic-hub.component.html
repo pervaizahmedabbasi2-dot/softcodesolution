@@ -1,0 +1,463 @@
+<div class="px-6 sm:px-8 py-8 max-w-7xl mx-auto space-y-8 animate-fade-in">
+
+  <!-- Header -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-200">
+    <div>
+      <div class="flex items-center gap-2 text-xs text-slate-500 mb-1">
+        <span>Healthcare & Clinical Operations</span>
+        <span aria-hidden="true">·</span>
+        <span>Doctor Queue & Token Desk</span>
+        <span aria-hidden="true">·</span>
+        <span>EHR Records & Digital Prescriptions</span>
+      </div>
+      <h1 class="text-2xl font-bold tracking-tight text-slate-900">Clinic & Healthcare System</h1>
+      <p class="text-sm text-slate-500 mt-1">Live patient queueing, EHR electronic health records, OPD consultation triage, and digital Rx printing.</p>
+    </div>
+
+    <!-- Quick Action Buttons -->
+    <div class="flex items-center gap-3">
+      <button (click)="showNewPatientModal = true"
+        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700 transition-all shadow-sm">
+        <lucide-icon [name]="icons.Plus" class="w-4 h-4"></lucide-icon>
+        <span>Register Patient (EHR)</span>
+      </button>
+
+      <button (click)="showNewAptModal = true"
+        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition-all shadow-sm">
+        <lucide-icon [name]="icons.Calendar" class="w-4 h-4"></lucide-icon>
+        <span>Issue Queue Token</span>
+      </button>
+
+      <button (click)="showNewRxModal = true"
+        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 transition-all shadow-sm">
+        <lucide-icon [name]="icons.FileText" class="w-4 h-4"></lucide-icon>
+        <span>Write Prescription (Rx)</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Notification Banner -->
+  <div *ngIf="actionMessage" class="p-4 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-800 text-xs font-medium flex items-center justify-between animate-fade-in">
+    <div class="flex items-center gap-2">
+      <lucide-icon [name]="icons.CheckCircle2" class="w-4 h-4 text-emerald-600"></lucide-icon>
+      <span>{{ actionMessage }}</span>
+    </div>
+    <button (click)="actionMessage = ''" class="text-emerald-600 hover:text-emerald-900 text-xs">Dismiss</button>
+  </div>
+
+  <!-- Key Metrics -->
+  <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+    <div class="bg-white p-5 rounded-2xl border border-slate-200/70 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.03),0_8px_20px_-4px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_16px_-2px_rgba(0,0,0,0.05),0_12px_28px_-4px_rgba(0,0,0,0.06)] transition-all">
+      <p class="text-xs text-slate-500 font-medium">Registered Patients (EHR)</p>
+      <p class="text-2xl font-bold text-slate-900 mt-1">{{ stats.totalPatients }} Patients</p>
+      <p class="text-xs text-slate-400 mt-1">Permanent medical records</p>
+    </div>
+    <div class="bg-white p-5 rounded-2xl border border-slate-200/70 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.03),0_8px_20px_-4px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_16px_-2px_rgba(0,0,0,0.05),0_12px_28px_-4px_rgba(0,0,0,0.06)] transition-all">
+      <p class="text-xs text-slate-500 font-medium">Patients in Queue</p>
+      <p class="text-2xl font-bold text-amber-600 mt-1">{{ stats.waiting }} Waiting</p>
+      <p class="text-xs text-slate-400 mt-1">Waiting in OPD lobby</p>
+    </div>
+    <div class="bg-white p-5 rounded-2xl border border-slate-200/70 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.03),0_8px_20px_-4px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_16px_-2px_rgba(0,0,0,0.05),0_12px_28px_-4px_rgba(0,0,0,0.06)] transition-all">
+      <p class="text-xs text-slate-500 font-medium">In Doctor Cabin</p>
+      <p class="text-2xl font-bold text-indigo-600 mt-1">{{ stats.inConsultation }} Active</p>
+      <p class="text-xs text-slate-400 mt-1">Currently being examined</p>
+    </div>
+    <div class="bg-white p-5 rounded-2xl border border-slate-200/70 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.03),0_8px_20px_-4px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_16px_-2px_rgba(0,0,0,0.05),0_12px_28px_-4px_rgba(0,0,0,0.06)] transition-all">
+      <p class="text-xs text-slate-500 font-medium">OPD Consultation Collection</p>
+      <p class="text-2xl font-bold text-emerald-600 mt-1">${{ stats.totalOpdFee | number:'1.2-2' }}</p>
+      <p class="text-xs text-slate-400 mt-1">Today's clinic triage revenue</p>
+    </div>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <div class="flex items-center gap-2 p-1.5 bg-slate-100/80 rounded-xl w-fit border border-slate-200">
+    <button (click)="activeTab = 'queue'"
+      class="px-4 py-2 text-xs font-semibold rounded-lg transition-all flex items-center gap-2"
+      [class.bg-white]="activeTab === 'queue'"
+      [class.text-slate-900]="activeTab === 'queue'"
+      [class.shadow-sm]="activeTab === 'queue'"
+      [class.text-slate-600]="activeTab !== 'queue'">
+      <lucide-icon [name]="icons.Clock" class="w-4 h-4"></lucide-icon>
+      <span>Live Token Queue</span>
+      <span *ngIf="stats.waiting > 0" class="px-1.5 py-0.2 text-[10px] bg-amber-500 text-white rounded-full font-bold">{{ stats.waiting }}</span>
+    </button>
+
+    <button (click)="activeTab = 'patients'"
+      class="px-4 py-2 text-xs font-semibold rounded-lg transition-all flex items-center gap-2"
+      [class.bg-white]="activeTab === 'patients'"
+      [class.text-slate-900]="activeTab === 'patients'"
+      [class.shadow-sm]="activeTab === 'patients'"
+      [class.text-slate-600]="activeTab !== 'patients'">
+      <lucide-icon [name]="icons.User" class="w-4 h-4"></lucide-icon>
+      <span>EHR Patient Directory</span>
+    </button>
+
+    <button (click)="activeTab = 'prescriptions'"
+      class="px-4 py-2 text-xs font-semibold rounded-lg transition-all flex items-center gap-2"
+      [class.bg-white]="activeTab === 'prescriptions'"
+      [class.text-slate-900]="activeTab === 'prescriptions'"
+      [class.shadow-sm]="activeTab === 'prescriptions'"
+      [class.text-slate-600]="activeTab !== 'prescriptions'">
+      <lucide-icon [name]="icons.FileText" class="w-4 h-4"></lucide-icon>
+      <span>Digital Prescriptions (Rx)</span>
+    </button>
+  </div>
+
+  <!-- TAB 1: LIVE TOKEN QUEUE -->
+  <div *ngIf="activeTab === 'queue'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 animate-fade-in">
+    <div *ngFor="let apt of appointments" class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm flex flex-col justify-between"
+      [class.border-l-4]="true"
+      [class.border-l-amber-500]="apt.status === 'WAITING'"
+      [class.border-l-indigo-600]="apt.status === 'IN_CONSULTATION'"
+      [class.border-l-emerald-500]="apt.status === 'COMPLETED'">
+      
+      <div>
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <span class="text-xs font-mono font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">{{ apt.tokenNo }}</span>
+          <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded"
+            [class.bg-amber-50]="apt.status === 'WAITING'" [class.text-amber-700]="apt.status === 'WAITING'"
+            [class.bg-indigo-50]="apt.status === 'IN_CONSULTATION'" [class.text-indigo-700]="apt.status === 'IN_CONSULTATION'"
+            [class.bg-emerald-50]="apt.status === 'COMPLETED'" [class.text-emerald-700]="apt.status === 'COMPLETED'">
+            {{ apt.status.replace('_', ' ') }}
+          </span>
+        </div>
+
+        <div class="py-3">
+          <h3 class="text-base font-bold text-slate-900">{{ apt.patientName }}</h3>
+          <p class="text-xs text-indigo-700 font-semibold mt-0.5">{{ apt.doctor }}</p>
+          <div class="flex items-center gap-2 text-xs text-slate-500 mt-2">
+            <lucide-icon [name]="icons.Clock" class="w-3.5 h-3.5 text-slate-400"></lucide-icon>
+            <span>Scheduled: {{ apt.time }} · Fee: ${{ apt.fee }}</span>
+          </div>
+          <div class="mt-2 text-[11px] bg-slate-50 p-2 rounded text-slate-600 font-mono">
+            Vitals: {{ apt.vitals }}
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-slate-100 flex gap-2">
+        <button *ngIf="apt.status === 'WAITING'" (click)="setAptStatus(apt, 'IN_CONSULTATION')"
+          class="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-colors">
+          Call to Cabin
+        </button>
+        <button *ngIf="apt.status === 'IN_CONSULTATION'" (click)="setAptStatus(apt, 'COMPLETED')"
+          class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-colors">
+          Mark Completed
+        </button>
+        <button *ngIf="apt.status === 'COMPLETED'" (click)="setAptStatus(apt, 'WAITING')"
+          class="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition-colors">
+          Reset Token
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2: PATIENTS DIRECTORY (EHR) -->
+  <div *ngIf="activeTab === 'patients'" class="bg-white rounded-2xl border border-slate-200/70 overflow-hidden shadow-[0_2px_8px_-2px_rgba(0,0,0,0.03),0_8px_20px_-4px_rgba(0,0,0,0.04)] animate-fade-in">
+    <div class="p-5 border-b border-slate-200 flex items-center justify-between">
+      <div>
+        <h3 class="text-sm font-bold text-slate-900">Electronic Health Records (EHR) Directory</h3>
+        <p class="text-xs text-slate-500 mt-0.5">Medical history, blood types, chronic diseases, and contact details.</p>
+      </div>
+      <button (click)="showNewPatientModal = true" class="px-3 py-1.5 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-lg text-xs font-semibold transition-colors">
+        + Register Patient
+      </button>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse text-xs">
+        <thead>
+          <tr class="bg-slate-50/75 border-b border-slate-200 text-slate-500 font-semibold">
+            <th class="py-3 px-5">Medical Record No</th>
+            <th class="py-3 px-5">Patient Name</th>
+            <th class="py-3 px-5">Age / Gender</th>
+            <th class="py-3 px-5">Blood Group</th>
+            <th class="py-3 px-5">Contact Phone</th>
+            <th class="py-3 px-5">Chronic Conditions</th>
+            <th class="py-3 px-5">Last Visit</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 text-slate-700">
+          <tr *ngFor="let p of patients" class="hover:bg-slate-50/50 transition-colors">
+            <td class="py-3.5 px-5 font-mono font-bold text-indigo-600">{{ p.mrNo }}</td>
+            <td class="py-3.5 px-5 font-bold text-slate-900">{{ p.fullName }}</td>
+            <td class="py-3.5 px-5 text-slate-700">{{ p.age }} yrs / {{ p.gender }}</td>
+            <td class="py-3.5 px-5 font-bold text-rose-600">{{ p.bloodGroup }}</td>
+            <td class="py-3.5 px-5 text-slate-500 font-mono text-[11px]">{{ p.phone }}</td>
+            <td class="py-3.5 px-5">
+              <span class="text-[10px] font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-700">
+                {{ p.chronic }}
+              </span>
+            </td>
+            <td class="py-3.5 px-5 text-slate-400 font-mono">{{ p.lastVisit }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TAB 3: DIGITAL PRESCRIPTIONS -->
+  <div *ngIf="activeTab === 'prescriptions'" class="bg-white rounded-2xl border border-slate-200/70 overflow-hidden shadow-[0_2px_8px_-2px_rgba(0,0,0,0.03),0_8px_20px_-4px_rgba(0,0,0,0.04)] animate-fade-in">
+    <div class="p-5 border-b border-slate-200 flex items-center justify-between">
+      <div>
+        <h3 class="text-sm font-bold text-slate-900">Issued Electronic Prescriptions (Rx)</h3>
+        <p class="text-xs text-slate-500 mt-0.5">Formal clinical diagnostic records, pharmacology doses, and instructions.</p>
+      </div>
+      <button (click)="showNewRxModal = true" class="px-3 py-1.5 bg-slate-900 text-white hover:bg-slate-800 rounded-lg text-xs font-semibold transition-colors">
+        + Write Prescription
+      </button>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse text-xs">
+        <thead>
+          <tr class="bg-slate-50/75 border-b border-slate-200 text-slate-500 font-semibold">
+            <th class="py-3 px-5">Rx Serial</th>
+            <th class="py-3 px-5">Patient Name</th>
+            <th class="py-3 px-5">Consulting Doctor</th>
+            <th class="py-3 px-5">Primary Diagnosis</th>
+            <th class="py-3 px-5">Medicines Prescribed</th>
+            <th class="py-3 px-5">Date</th>
+            <th class="py-3 px-5">Action</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 text-slate-700">
+          <tr *ngFor="let rx of prescriptions" class="hover:bg-slate-50/50 transition-colors">
+            <td class="py-3.5 px-5 font-mono font-bold text-slate-900">{{ rx.rxNo }}</td>
+            <td class="py-3.5 px-5 font-bold text-slate-900">{{ rx.patientName }}</td>
+            <td class="py-3.5 px-5 text-slate-700">{{ rx.doctor }}</td>
+            <td class="py-3.5 px-5 text-indigo-700 font-medium">{{ rx.diagnosis }}</td>
+            <td class="py-3.5 px-5 text-slate-600">
+              <span *ngFor="let med of rx.medicines; let last = last">
+                {{ med.name }} ({{ med.dosage }}){{ !last ? ', ' : '' }}
+              </span>
+            </td>
+            <td class="py-3.5 px-5 text-slate-400 font-mono">{{ rx.date }}</td>
+            <td class="py-3.5 px-5">
+              <button (click)="viewPrescription(rx)" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 rounded text-slate-700 font-semibold text-[11px]">
+                Print Slip
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- MODAL: REGISTER PATIENT -->
+  <div *ngIf="showNewPatientModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-md animate-fade-in">
+    <div class="bg-white/95 backdrop-blur-2xl rounded-2xl border border-white/80 max-w-md w-full p-6 sm:p-7 shadow-[0_24px_64px_-12px_rgba(0,0,0,0.22),0_12px_28px_-6px_rgba(0,0,0,0.12)] animate-scale-up space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <h3 class="text-base font-bold text-slate-900">Register Patient Medical Record</h3>
+        <button (click)="showNewPatientModal = false" class="text-slate-400 hover:text-slate-600">
+          <lucide-icon [name]="icons.X" class="w-5 h-5"></lucide-icon>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Full Patient Name</label>
+          <input type="text" [(ngModel)]="newPatient.fullName" placeholder="e.g. Asad Tariq" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs" />
+        </div>
+
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Age</label>
+            <input type="number" [(ngModel)]="newPatient.age" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs" />
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Gender</label>
+            <select [(ngModel)]="newPatient.gender" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs">
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Blood Group</label>
+            <select [(ngModel)]="newPatient.bloodGroup" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs">
+              <option value="A+">A+</option>
+              <option value="A-">A-</option>
+              <option value="B+">B+</option>
+              <option value="B-">B-</option>
+              <option value="O+">O+</option>
+              <option value="O-">O-</option>
+              <option value="AB+">AB+</option>
+              <option value="AB-">AB-</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Contact Phone</label>
+          <input type="text" [(ngModel)]="newPatient.phone" placeholder="+92 300 1234567" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs" />
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Chronic Medical History</label>
+          <input type="text" [(ngModel)]="newPatient.chronic" placeholder="e.g. Hypertension, Diabetes, Asthma, None" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs" />
+        </div>
+      </div>
+
+      <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+        <button (click)="showNewPatientModal = false" class="px-4 py-2 border border-slate-200 rounded-lg text-xs font-semibold text-slate-600">Cancel</button>
+        <button (click)="registerPatient()" [disabled]="!newPatient.fullName || isLoading"
+          class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold disabled:opacity-50">
+          Save Patient Record
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ISSUE TOKEN -->
+  <div *ngIf="showNewAptModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-md animate-fade-in">
+    <div class="bg-white/95 backdrop-blur-2xl rounded-2xl border border-white/80 max-w-md w-full p-6 sm:p-7 shadow-[0_24px_64px_-12px_rgba(0,0,0,0.22),0_12px_28px_-6px_rgba(0,0,0,0.12)] animate-scale-up space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <h3 class="text-base font-bold text-slate-900">Issue Doctor Queue Token</h3>
+        <button (click)="showNewAptModal = false" class="text-slate-400 hover:text-slate-600">
+          <lucide-icon [name]="icons.X" class="w-5 h-5"></lucide-icon>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Patient Name</label>
+          <input type="text" [(ngModel)]="newApt.patientName" placeholder="Enter patient name" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs" />
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Consulting Doctor</label>
+          <select [(ngModel)]="newApt.doctor" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs">
+            <option value="Dr. Tariq Al-Mansoor (Cardiology)">Dr. Tariq Al-Mansoor (Cardiology)</option>
+            <option value="Dr. Zainab Tariq (Gynecology)">Dr. Zainab Tariq (Gynecology)</option>
+            <option value="Dr. Haris Vance (Endocrinology)">Dr. Haris Vance (Endocrinology)</option>
+            <option value="Dr. Sarah Jenkins (General Medicine)">Dr. Sarah Jenkins (General Medicine)</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Time Slot</label>
+            <input type="text" [(ngModel)]="newApt.time" placeholder="11:00 AM" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs" />
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Consultation Fee ($)</label>
+            <input type="number" [(ngModel)]="newApt.fee" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Triage Vitals (Optional)</label>
+          <input type="text" [(ngModel)]="newApt.vitals" placeholder="e.g. BP 120/80, Pulse 76, Temp 98.6" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs" />
+        </div>
+      </div>
+
+      <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+        <button (click)="showNewAptModal = false" class="px-4 py-2 border border-slate-200 rounded-lg text-xs font-semibold text-slate-600">Cancel</button>
+        <button (click)="bookAppointment()" [disabled]="!newApt.patientName || isLoading"
+          class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold disabled:opacity-50">
+          Print Token & Queue
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: WRITE RX -->
+  <div *ngIf="showNewRxModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-md animate-fade-in">
+    <div class="bg-white/95 backdrop-blur-2xl rounded-2xl border border-white/80 max-w-md w-full p-6 sm:p-7 shadow-[0_24px_64px_-12px_rgba(0,0,0,0.22),0_12px_28px_-6px_rgba(0,0,0,0.12)] animate-scale-up space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <h3 class="text-base font-bold text-slate-900">Write Digital Prescription (Rx)</h3>
+        <button (click)="showNewRxModal = false" class="text-slate-400 hover:text-slate-600">
+          <lucide-icon [name]="icons.X" class="w-5 h-5"></lucide-icon>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Patient Name</label>
+          <input type="text" [(ngModel)]="newRx.patientName" placeholder="Patient full name" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs" />
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Diagnosis</label>
+          <input type="text" [(ngModel)]="newRx.diagnosis" placeholder="e.g. Acute Bronchitis / Viral Infection" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs" />
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Medicine Name & Formulation</label>
+          <input type="text" [(ngModel)]="newRx.medicineName" placeholder="e.g. Augmentin 625mg Tab" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Dosage Frequency</label>
+            <input type="text" [(ngModel)]="newRx.dosage" placeholder="1 tab twice daily after meals" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs" />
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Duration (Days)</label>
+            <input type="number" [(ngModel)]="newRx.days" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs" />
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+        <button (click)="showNewRxModal = false" class="px-4 py-2 border border-slate-200 rounded-lg text-xs font-semibold text-slate-600">Cancel</button>
+        <button (click)="issuePrescription()" [disabled]="!newRx.patientName || !newRx.diagnosis || isLoading"
+          class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold disabled:opacity-50">
+          Generate Rx
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: PRINTABLE RX SLIP -->
+  <div *ngIf="showRxViewModal && selectedRx" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-md animate-fade-in">
+    <div class="bg-white/95 backdrop-blur-2xl rounded-2xl border border-white/80 max-w-sm w-full p-6 sm:p-7 shadow-[0_24px_64px_-12px_rgba(0,0,0,0.22),0_12px_28px_-6px_rgba(0,0,0,0.12)] animate-scale-up space-y-4">
+      <div class="border border-slate-200 p-5 rounded-lg bg-slate-50/50 font-mono text-xs space-y-3">
+        <div class="text-center pb-3 border-b border-dashed border-slate-300">
+          <h2 class="font-extrabold text-sm text-slate-900">SOFTCODE MEDICAL CLINIC</h2>
+          <p class="text-[10px] text-slate-500">PRESCRIPTION & TREATMENT DIRECTIVE</p>
+          <p class="text-[10px] text-slate-400 mt-1">Rx: {{ selectedRx.rxNo }} · {{ selectedRx.date }}</p>
+        </div>
+
+        <div class="space-y-1.5 text-[11px]">
+          <div class="flex justify-between">
+            <span class="text-slate-500">Patient:</span>
+            <span class="font-bold text-slate-900">{{ selectedRx.patientName }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-500">Doctor:</span>
+            <span>{{ selectedRx.doctor }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-500">Diagnosis:</span>
+            <span class="font-semibold text-indigo-700">{{ selectedRx.diagnosis }}</span>
+          </div>
+        </div>
+
+        <div class="pt-2 border-t border-dashed border-slate-300 space-y-1.5">
+          <p class="font-bold text-xs text-slate-800">Rx Medicines:</p>
+          <div *ngFor="let med of selectedRx.medicines" class="p-2 bg-white rounded border border-slate-200 text-[11px]">
+            <p class="font-bold text-slate-900">{{ med.name }}</p>
+            <p class="text-slate-500">Dosage: {{ med.dosage }} ({{ med.days }} days)</p>
+          </div>
+        </div>
+
+        <div class="text-center pt-3 text-[10px] text-slate-400 border-t border-dashed border-slate-300">
+          *** PHARMACY DISPENSE VERIFIED ***
+        </div>
+      </div>
+
+      <div class="flex gap-2">
+        <button (click)="printSlip()" class="flex-1 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-1.5">
+          <lucide-icon [name]="icons.Printer" class="w-4 h-4"></lucide-icon>
+          <span>Print Rx Slip</span>
+        </button>
+        <button (click)="showRxViewModal = false" class="px-4 py-2.5 border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-50">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>

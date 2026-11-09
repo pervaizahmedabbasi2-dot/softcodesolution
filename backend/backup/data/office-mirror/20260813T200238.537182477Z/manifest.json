@@ -1,0 +1,19 @@
+{
+  "snapshot_id": "20260813T200238.537182477Z",
+  "created_at": "2026-08-13T20:02:38.800044877Z",
+  "git_commit": "45e6b0f64f094c7c3c1fba73a015151b60fed638",
+  "git_branch": "main",
+  "git_remote": "https://github.com/pervaizahmedabbasi2-dot/softcodesolution.git",
+  "git_clean": false,
+  "code_status": "pending",
+  "postgresql": "data/postgres.sql",
+  "sqlite": "data/local.sqlite",
+  "recovery_guide": "RECOVERY.md",
+  "checksums": {
+    "RECOVERY.md": "8cf3972deca424d94d653e22c6fea4beef22ef37846a58e7b7df16c60673ddee",
+    "code/CODE_PENDING.txt": "10e259197842203e211f9aaa73382c31ce3180cbf640fe825e77b27fe44d60fa",
+    "data/local.sqlite": "3c8b7c1222d06a1a21eb53a47e2059ba9281e7199c52a9fc5cc50e66dedf4cbb",
+    "data/postgres.sql": "69de78e76dc124c36d9c28387595774b88b57d64755e26f1f7087e950baccb1c"
+  },
+  "status": "pending"
+}

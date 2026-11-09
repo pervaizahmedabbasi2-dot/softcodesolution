@@ -1,0 +1,8 @@
+{
+  "name": "SoftCodeSolution",
+  "description": "Enterprise digital storefront solution and multi-tenant SaaS management platform",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
