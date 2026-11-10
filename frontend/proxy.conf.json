@@ -1,6 +1,10 @@
 {
   "/api": {
+<<<<<<< HEAD
     "target": "http://127.0.0.1:3001",
+=======
+    "target": "http://127.0.0.1:8080",
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
     "secure": false,
     "changeOrigin": true,
     "cookieDomainRewrite": "",
@@ -8,7 +12,11 @@
     "logLevel": "debug"
   },
   "/healthz": {
+<<<<<<< HEAD
     "target": "http://127.0.0.1:3001",
+=======
+    "target": "http://127.0.0.1:8080",
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
     "secure": false,
     "changeOrigin": true,
     "cookieDomainRewrite": "",
@@ -16,7 +24,11 @@
     "logLevel": "debug"
   },
   "/readyz": {
+<<<<<<< HEAD
     "target": "http://127.0.0.1:3001",
+=======
+    "target": "http://127.0.0.1:8080",
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
     "secure": false,
     "changeOrigin": true,
     "cookieDomainRewrite": "",

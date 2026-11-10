@@ -2,8 +2,12 @@ import {
   Component,
   EventEmitter,
   Input,
+<<<<<<< HEAD
   Output,
   ChangeDetectionStrategy
+=======
+  Output
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -24,8 +28,12 @@ type ClientStatusTab =
     LucideAngularModule
   ],
   templateUrl: './all-clients.component.html',
+<<<<<<< HEAD
   styles: [':host{display:block;width:100%;}'],
   changeDetection: ChangeDetectionStrategy.OnPush
+=======
+  styles: [':host{display:block;width:100%;}']
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
 })
 export class DashboardAllClientsComponent {
   // SCS_DASHBOARD_ALL_CLIENTS_COMPONENT_V1
@@ -83,12 +91,15 @@ export class DashboardAllClientsComponent {
   @Output() rejectClient =
     new EventEmitter<any>();
 
+<<<<<<< HEAD
   @Output() bulkApprove =
     new EventEmitter<string[]>();
 
   @Output() bulkSuspend =
     new EventEmitter<string[]>();
 
+=======
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
   @Output() previousPage =
     new EventEmitter<void>();
 
@@ -98,6 +109,7 @@ export class DashboardAllClientsComponent {
   @Output() pageSelect =
     new EventEmitter<number>();
 
+<<<<<<< HEAD
   selectedClientIds = new Set<string>();
 
   isAllSelected(): boolean {
@@ -197,6 +209,8 @@ export class DashboardAllClientsComponent {
     URL.revokeObjectURL(url);
   }
 
+=======
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
   changeClientStatusTab(
     tab: string
   ): void {

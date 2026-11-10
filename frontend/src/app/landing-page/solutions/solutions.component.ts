@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
@@ -100,3 +101,16 @@ export class SolutionsComponent {
     }
   }
 }
+=======
+import { Component } from '@angular/core'; // <--- CORE hona chahiye
+import { CommonModule } from '@angular/common';
+
+@Component({
+    selector: 'app-solutions',
+    standalone: true,
+    imports: [CommonModule],
+    templateUrl: './solutions.component.html',
+    styleUrls: []
+})
+export class SolutionsComponent { }
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b

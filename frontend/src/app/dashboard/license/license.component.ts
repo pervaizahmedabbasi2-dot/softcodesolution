@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { Component, EventEmitter, Input, Output, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LucideAngularModule, Copy, MoreVertical, Key, CheckCircle2, Clock, XCircle, Search, Plus, Download, Check, X, Shield } from 'lucide-angular';
@@ -37,6 +38,21 @@ export class DashboardLicenseComponent implements OnInit {
   newType: 'saas' | 'on-premise' | 'trial' = 'saas';
   generatedKey = '';
   generatedNotice = '';
+=======
+import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { LucideAngularModule } from 'lucide-angular';
+
+interface License { id: string; keyMasked: string; client: string; product: string; type: 'saas' | 'on-premise' | 'trial'; status: 'active' | 'expired' | 'revoked' | 'suspended'; domains: string[]; issuedAt: string; expiresAt: string; }
+
+@Component({ selector: 'app-dashboard-license', standalone: true, imports: [CommonModule, LucideAngularModule], templateUrl: './license.component.html', styles: [':host { display: block; width: 100%; }'] })
+export class DashboardLicenseComponent {
+  @Input() activeView = '';
+  @Input() icons: any = {};
+  @Output() navigate = new EventEmitter<string>();
+  searchQuery = '';
+  filterStatus = 'all';
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
 
   licenses: License[] = [
     { id: 'LIC-901', keyMasked: 'XXXX-XXXX-XXXX-1234', client: 'Islamabad Tech Corp', product: 'Enterprise Suite', type: 'saas', status: 'active', domains: ['islamabadtech.com'], issuedAt: '2026-01-01', expiresAt: '2027-01-01' },
@@ -46,6 +62,7 @@ export class DashboardLicenseComponent implements OnInit {
     { id: 'LIC-905', keyMasked: 'XXXX-XXXX-XXXX-7890', client: 'Multan Enterprises', product: 'Pro Edition', type: 'saas', status: 'revoked', domains: ['multanent.com'], issuedAt: '2026-03-10', expiresAt: '2027-03-10' },
   ];
 
+<<<<<<< HEAD
   filteredLicenses: License[] = [];
 
   constructor(private cdr: ChangeDetectorRef) {}
@@ -134,12 +151,23 @@ Do not distribute this private license key file.`;
     }
     this.filteredLicenses = filtered;
     this.cdr.markForCheck();
+=======
+  get filteredLicenses(): License[] {
+    let filtered = this.licenses;
+    if (this.filterStatus !== 'all') { filtered = filtered.filter(l => l.status === this.filterStatus); }
+    if (this.searchQuery.trim()) {
+      const q = this.searchQuery.trim().toLowerCase();
+      filtered = filtered.filter(l => l.client.toLowerCase().includes(q) || l.id.toLowerCase().includes(q) || l.product.toLowerCase().includes(q));
+    }
+    return filtered;
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
   }
 
   get activeCount(): number { return this.licenses.filter(l => l.status === 'active').length; }
   get expiredCount(): number { return this.licenses.filter(l => l.status === 'expired').length; }
   get revokedCount(): number { return this.licenses.filter(l => l.status === 'revoked' || l.status === 'suspended').length; }
 
+<<<<<<< HEAD
   setSearch(v: string): void {
     this.searchQuery = v;
     this.updateFilteredLicenses();
@@ -169,4 +197,9 @@ Do not distribute this private license key file.`;
   navigateTo(view: string): void {
     this.navigate.emit(view);
   }
+=======
+  setSearch(v: string): void { this.searchQuery = v; }
+  setFilter(v: string): void { this.filterStatus = v; }
+  navigateTo(view: string): void { this.navigate.emit(view); }
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
 }

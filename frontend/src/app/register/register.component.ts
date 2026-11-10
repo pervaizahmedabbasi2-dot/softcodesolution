@@ -5,7 +5,10 @@ import { Router, RouterModule } from '@angular/router';
 import { LegalComponent } from '../landing-page/legal/legal.component';
 import { NotificationService } from '../services/notification.service';
 import { PwaInstallComponent } from '../pwa-install.component';
+<<<<<<< HEAD
 import { CurrencyLanguageSelectorComponent } from '../components/currency-language-selector/currency-language-selector.component';
+=======
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
 
 // ============ SECURITY UTILS (Minimal & Safe) ============
 
@@ -78,7 +81,11 @@ interface BusinessTypeOption {
 @Component({
   selector: 'app-register',
   standalone: true,
+<<<<<<< HEAD
   imports: [CommonModule, ReactiveFormsModule, LegalComponent, RouterModule, PwaInstallComponent, CurrencyLanguageSelectorComponent],
+=======
+  imports: [CommonModule, ReactiveFormsModule, LegalComponent, RouterModule, PwaInstallComponent],
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
   templateUrl: './register.component.html'
 })
 export class RegisterComponent implements OnInit {
@@ -86,6 +93,7 @@ export class RegisterComponent implements OnInit {
 
   toggleMenu() {
     this.isMenuOpen = !this.isMenuOpen;
+<<<<<<< HEAD
     if (typeof document !== 'undefined') {
       if (this.isMenuOpen) {
         document.body.style.overflow = 'hidden';
@@ -106,6 +114,11 @@ export class RegisterComponent implements OnInit {
     }
   }
 
+=======
+    this.cdr.detectChanges();
+  }
+
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
   registerForm!: FormGroup;
   isLoading = false;
   showSuccessAlert = false;
@@ -240,6 +253,7 @@ export class RegisterComponent implements OnInit {
           pricing_weight: Number(item?.pricing_weight || 1),
           sort_order: Number(item?.sort_order || 0)
         }))
+<<<<<<< HEAD
         .filter((item: BusinessTypeOption) => {
           if (!item.id || !item.name) return false;
           const lowerId = item.id.toLowerCase();
@@ -252,6 +266,9 @@ export class RegisterComponent implements OnInit {
           if (lowerId.includes('security_services') || lowerName.includes('security services') || lowerName.includes('security guard')) return false;
           return true;
         })
+=======
+        .filter((item: BusinessTypeOption) => item.id && item.name)
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
         .sort((a: BusinessTypeOption, b: BusinessTypeOption) =>
           Number(a.sort_order || 0) - Number(b.sort_order || 0)
         );
@@ -263,6 +280,7 @@ export class RegisterComponent implements OnInit {
     } catch (error: any) {
       // Fallback for AI Studio preview without backend
       this.businessTypes = [
+<<<<<<< HEAD
         { id: 'retail_store', name: 'Retail / General Store', module_category: 'COMMERCE', pricing_weight: 1, sort_order: 1 },
         { id: 'restaurant_cafe', name: 'Restaurant & Fine Dine', module_category: 'HOSPITALITY', pricing_weight: 1.2, sort_order: 2 },
         { id: 'pizza_fastfood', name: 'Pizza & Fast Food POS', module_category: 'HOSPITALITY', pricing_weight: 1.2, sort_order: 3 },
@@ -271,6 +289,16 @@ export class RegisterComponent implements OnInit {
         { id: 'hotel_hospitality', name: 'Hotel & Hospitality Management', module_category: 'HOSPITALITY', pricing_weight: 1.5, sort_order: 6 },
         { id: 'school_college', name: 'School & College Management', module_category: 'EDUCATION', pricing_weight: 1.5, sort_order: 7 },
         { id: 'pharmacy_medical', name: 'Pharmacy & Medical Store', module_category: 'HEALTHCARE', pricing_weight: 1.3, sort_order: 8 }
+=======
+        { id: '1', name: 'Retail / E-commerce', module_category: 'RETAIL', pricing_weight: 1, sort_order: 1 },
+        { id: '2', name: 'Restaurant / Cafe', module_category: 'FNB', pricing_weight: 1, sort_order: 2 },
+        { id: '3', name: 'Healthcare / Clinic', module_category: 'HEALTH', pricing_weight: 2, sort_order: 3 },
+        { id: '4', name: 'Education / School', module_category: 'EDU', pricing_weight: 1.5, sort_order: 4 },
+        { id: '5', name: 'Real Estate', module_category: 'REALESTATE', pricing_weight: 2, sort_order: 5 },
+        { id: '6', name: 'IT Services / Agency', module_category: 'AGENCY', pricing_weight: 1, sort_order: 6 },
+        { id: '7', name: 'Manufacturing', module_category: 'MFG', pricing_weight: 2.5, sort_order: 7 },
+        { id: '8', name: 'Other', module_category: 'OTHER', pricing_weight: 1, sort_order: 8 }
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
       ];
       this.businessTypesError = '';
     } finally {
@@ -420,6 +448,7 @@ export class RegisterComponent implements OnInit {
       }
 
       // 4. IDX / Browser / Firebase Studio HTTP API.
+<<<<<<< HEAD
       try {
         const response = await fetch('/api/register', {
           method: 'POST',
@@ -460,6 +489,27 @@ export class RegisterComponent implements OnInit {
     } catch (error) {
       console.error('Registration error:', error);
       this.handleSuccess();
+=======
+      // Mocking for AI Studio Preview since there is no backend running
+      console.warn("Mocking successful registration for preview");
+      const result = {
+        ok: true,
+        data: {
+          user: {
+            id: 'mock-user-' + Date.now(),
+            email: sanitizedPayload.email,
+            role: 'CLIENT',
+            full_name: sanitizedPayload.full_name
+          },
+          token: 'mock-token'
+        }
+      };
+      
+      this.handleSuccess(result);
+    } catch (error) {
+      console.error('Registration failed:', error);
+      this.handleError('Network error occurred. Please try again.');
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
     } finally {
       this.isLoading = false;
 
@@ -474,7 +524,11 @@ export class RegisterComponent implements OnInit {
   private handleSuccess(result?: any): void {
     this.showSuccessAlert = true;
     localStorage.setItem('scs_auth_mock', 'true');
+<<<<<<< HEAD
     if (result?.data?.user?.tenant_id) localStorage.setItem('scs_tenant_id', result.data.user.tenant_id);
+=======
+    localStorage.setItem('scs_tenant_id', this.tenantId);
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
     if (result?.data?.user) {
       localStorage.setItem('user_data', JSON.stringify(result.data.user));
     }

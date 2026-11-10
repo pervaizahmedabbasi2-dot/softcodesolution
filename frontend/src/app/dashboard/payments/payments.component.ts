@@ -1,5 +1,6 @@
 import { Component, Input, Output, EventEmitter, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+<<<<<<< HEAD
 import { FormsModule } from '@angular/forms';
 import { 
   LucideAngularModule, 
@@ -7,13 +8,23 @@ import {
   FileText, Activity, CreditCard, Users, Shield, Percent, Receipt, RefreshCcw, Printer, Download, X,
   Key, Settings, ToggleLeft, ToggleRight, Landmark, Smartphone, Globe,
   MessageSquare, Send, Mail, Bell
+=======
+import { 
+  LucideAngularModule, 
+  Search, Plus, CheckCircle2, XCircle, Clock, WalletCards, 
+  FileText, Activity, CreditCard, Users, Shield, Percent, Receipt, RefreshCcw
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
 } from 'lucide-angular';
 import { BackendService } from '../../services/backend.service';
 
 @Component({
   selector: 'app-dashboard-payments',
   standalone: true,
+<<<<<<< HEAD
   imports: [CommonModule, FormsModule, LucideAngularModule],
+=======
+  imports: [CommonModule, LucideAngularModule],
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
   templateUrl: './payments.component.html'
 })
 export class DashboardPaymentsComponent implements OnInit {
@@ -24,7 +35,11 @@ export class DashboardPaymentsComponent implements OnInit {
 
   private backend = inject(BackendService);
 
+<<<<<<< HEAD
   activeTab: 'invoices' | 'gateways' | 'subscriptions' | 'transactions' | 'approvals' | 'wallet' | 'coupons' | 'refunds' | 'tax' | 'notifications' = 'gateways';
+=======
+  activeTab: 'invoices' | 'subscriptions' | 'transactions' | 'approvals' | 'wallet' | 'coupons' | 'refunds' | 'tax' | 'notifications' = 'invoices';
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
   searchQuery: string = '';
 
   invoices: any[] = [];
@@ -32,6 +47,7 @@ export class DashboardPaymentsComponent implements OnInit {
   walletBalance: any = null;
   coupons: any[] = [];
   taxRules: any[] = [];
+<<<<<<< HEAD
   gateways: any[] = [];
   transactions: any[] = [];
   notificationLogs: any[] = [];
@@ -54,6 +70,13 @@ export class DashboardPaymentsComponent implements OnInit {
     FileText, Activity, CreditCard, Users, Shield, Percent, Receipt, RefreshCcw, Printer, Download, X,
     Key, Settings, ToggleLeft, ToggleRight, Landmark, Smartphone, Globe,
     MessageSquare, Send, Mail, Bell
+=======
+  isLoading = false;
+
+  myIcons = {
+    Search, Plus, CheckCircle2, XCircle, Clock, WalletCards, 
+    FileText, Activity, CreditCard, Users, Shield, Percent, Receipt, RefreshCcw
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
   };
 
   ngOnInit() {
@@ -65,6 +88,7 @@ export class DashboardPaymentsComponent implements OnInit {
     this.loadDataForTab(tab);
   }
 
+<<<<<<< HEAD
   openInvoiceModal(inv: any) {
     this.selectedInvoiceForModal = inv || {
       invoice_number: 'INV-2026-9041',
@@ -121,6 +145,12 @@ export class DashboardPaymentsComponent implements OnInit {
         const txRes = await this.backend.getPaymentTransactions();
         if (txRes && txRes.ok) this.transactions = txRes.transactions || [];
       } else if (tab === 'invoices') {
+=======
+  async loadDataForTab(tab: string) {
+    this.isLoading = true;
+    try {
+      if (tab === 'invoices') {
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
         const res = await this.backend.getInvoices(50, 0);
         if (res && res.ok) this.invoices = res.invoices || [];
       } else if (tab === 'approvals') {
@@ -132,9 +162,12 @@ export class DashboardPaymentsComponent implements OnInit {
       } else if (tab === 'coupons') {
         const res = await this.backend.getCoupons();
         if (res && res.ok) this.coupons = res.coupons || [];
+<<<<<<< HEAD
       } else if (tab === 'notifications') {
         const res = await this.backend.getNotificationLogs();
         if (res && res.ok) this.notificationLogs = res.logs || [];
+=======
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
       } else if (tab === 'tax') {
         const res = await this.backend.getTaxRules();
         if (res && res.ok) this.taxRules = res.rules || [];
@@ -152,6 +185,7 @@ export class DashboardPaymentsComponent implements OnInit {
       alert('Failed to approve payment');
     }
   }
+<<<<<<< HEAD
 
   async sendTestNotification() {
     if (!this.testNotif.recipient || !this.testNotif.message) {
@@ -173,4 +207,6 @@ export class DashboardPaymentsComponent implements OnInit {
       this.isSendingNotif = false;
     }
   }
+=======
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
 }

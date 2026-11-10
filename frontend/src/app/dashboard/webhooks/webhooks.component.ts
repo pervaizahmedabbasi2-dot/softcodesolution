@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+<<<<<<< HEAD
 import { LucideAngularModule, Plus, Network, Send, CheckCircle2, XCircle, RefreshCcw, Copy, ExternalLink, X, Clock, ShieldCheck, AlertTriangle } from 'lucide-angular';
 
 export interface WebhookEndpoint {
@@ -26,6 +27,9 @@ export interface WebhookDeliveryLog {
   payload: string;
   response: string;
 }
+=======
+import { LucideAngularModule } from 'lucide-angular';
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
 
 @Component({
   selector: 'app-dashboard-webhooks',
@@ -34,6 +38,7 @@ export interface WebhookDeliveryLog {
   templateUrl: './webhooks.component.html'
 })
 export class WebhooksComponent {
+<<<<<<< HEAD
   // Icons reference
   icons = {
     Plus,
@@ -276,4 +281,6 @@ export class WebhooksComponent {
       this.copiedSecretId = null;
     }, 2000);
   }
+=======
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
 }

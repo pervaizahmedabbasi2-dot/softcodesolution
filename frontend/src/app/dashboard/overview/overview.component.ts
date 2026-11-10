@@ -2,15 +2,23 @@ import {
   Component,
   EventEmitter,
   Input,
+<<<<<<< HEAD
   Output,
   inject
+=======
+  Output
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
   LucideAngularModule
 } from 'lucide-angular';
+<<<<<<< HEAD
 import { LocalizationService } from '../../services/localization.service';
+import { ALL_ENTERPRISE_BUSINESSES, EnterpriseBusinessItem } from '../services/business-rbac.data';
+=======
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
 
 type OverviewStatusTab =
   | 'pending'
@@ -39,7 +47,10 @@ interface DashboardActivity{
 })
 export class DashboardOverviewComponent {
   // SCS_DASHBOARD_OVERVIEW_COMPONENT_V1
+<<<<<<< HEAD
   readonly loc = inject(LocalizationService);
+=======
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
 
   @Input() activeView = 'home';
   @Input() userRole = '';
@@ -57,6 +68,11 @@ export class DashboardOverviewComponent {
   @Input() icons: any = {};
   @Input() isClientsLoading = false;
   @Input() allSuperadminClients: any[] = [];
+<<<<<<< HEAD
+  @Input() allBusinesses: EnterpriseBusinessItem[] = [];
+  @Output() businessLaunch = new EventEmitter<EnterpriseBusinessItem>();
+=======
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
   @Input() lastRefreshedAt: any = null;
 
   // SCS_PHASE6796_TRIPLE_BACKUP_INPUT
@@ -96,6 +112,7 @@ export class DashboardOverviewComponent {
 
   moduleSearch = '';
 
+<<<<<<< HEAD
   // Executive Charts Data (Matching User Dashboard Quality)
   monthlyMrrChartData = [
     { month: 'May', amount: 24000, heightPct: 52, label: '$24k' },
@@ -115,6 +132,8 @@ export class DashboardOverviewComponent {
     { vertical: 'Travel & Tourism Hub', count: 5, color: 'bg-purple-500', pct: 35 }
   ];
 
+=======
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
   // SCS_PHASE655_SINGLE_MANAGER
   // Dashboard owns the single Module Manager instance.
   openModuleManager(): void {
@@ -186,6 +205,172 @@ export class DashboardOverviewComponent {
 
 
 
+<<<<<<< HEAD
+  get allBusinessesList(): EnterpriseBusinessItem[] {
+    if (this.allBusinesses && this.allBusinesses.length > 0) {
+      return this.allBusinesses;
+    }
+    return ALL_ENTERPRISE_BUSINESSES;
+  }
+
+  onSelectBusiness(b: EnterpriseBusinessItem): void {
+    if (this.businessLaunch && this.businessLaunch.observed) {
+      this.businessLaunch.emit(b);
+    } else if (b.dedicatedHubView) {
+      this.navigateTo(b.dedicatedHubView);
+    } else {
+      this.navigateTo('business-suites');
+    }
+  }
+
+  getBusinessIcon(iconName?: string): any {
+    return (this.icons as any)[iconName || 'Briefcase'] || this.icons.Briefcase;
+  }
+
+  getBusinessSubtitle(b: any): string {
+    if (!b) return '';
+    const tag = b.tagline || '';
+    if (tag.includes(',')) {
+      return tag.split(',')[0].trim();
+    }
+    return tag || b.sector || 'Enterprise Suite';
+  }
+
+  getBusinessGradient(b: any): string {
+    const key = String(b?.id || b?.sector || '').toLowerCase();
+    // School & College
+    if (key.includes('school')) {
+      return 'bg-gradient-to-tr from-blue-600 via-indigo-600 to-indigo-700 text-white shadow-indigo-500/30';
+    }
+    // Retail Shop
+    if (key.includes('retail')) {
+      return 'bg-gradient-to-tr from-emerald-500 via-emerald-600 to-teal-600 text-white shadow-emerald-500/30';
+    }
+    // Restaurant & Cafe
+    if (key.includes('restaurant')) {
+      return 'bg-gradient-to-tr from-orange-500 via-amber-600 to-orange-600 text-white shadow-orange-500/30';
+    }
+    // Clinic & Healthcare
+    if (key === 'clinic') {
+      return 'bg-gradient-to-tr from-rose-500 via-pink-600 to-rose-600 text-white shadow-rose-500/30';
+    }
+    // Real Estate / Property
+    if (key.includes('real_estate') || key.includes('property')) {
+      return 'bg-gradient-to-tr from-sky-500 via-blue-600 to-indigo-600 text-white shadow-sky-500/30';
+    }
+    // Hotel & Hospitality
+    if (key.includes('hotel')) {
+      return 'bg-gradient-to-tr from-cyan-500 via-teal-600 to-blue-600 text-white shadow-cyan-500/30';
+    }
+    // Pharmacy
+    if (key.includes('pharmacy')) {
+      return 'bg-gradient-to-tr from-purple-500 via-purple-600 to-indigo-600 text-white shadow-purple-500/30';
+    }
+    // Gym & Fitness
+    if (key.includes('gym')) {
+      return 'bg-gradient-to-tr from-amber-500 via-orange-600 to-red-500 text-white shadow-amber-500/30';
+    }
+    // Beauty Salon & Spa
+    if (key.includes('salon')) {
+      return 'bg-gradient-to-tr from-pink-500 via-rose-500 to-fuchsia-600 text-white shadow-pink-500/30';
+    }
+    // Auto Workshop
+    if (key.includes('auto')) {
+      return 'bg-gradient-to-tr from-blue-600 via-cyan-600 to-indigo-600 text-white shadow-blue-500/30';
+    }
+    // Law Firm / Legal
+    if (key.includes('law') || key.includes('legal')) {
+      return 'bg-gradient-to-tr from-amber-600 via-yellow-600 to-amber-700 text-white shadow-amber-500/30';
+    }
+    // Travel & Tourism
+    if (key.includes('travel')) {
+      return 'bg-gradient-to-tr from-indigo-500 via-indigo-600 to-blue-600 text-white shadow-indigo-500/30';
+    }
+    // NGO & Non-Profit
+    if (key.includes('ngo')) {
+      return 'bg-gradient-to-tr from-rose-600 via-red-600 to-pink-600 text-white shadow-rose-500/30';
+    }
+    // Accounting & Tax
+    if (key.includes('accounting') || key.includes('tax')) {
+      return 'bg-gradient-to-tr from-violet-600 via-indigo-600 to-purple-700 text-white shadow-violet-500/30';
+    }
+    // Pizza & Fast Food
+    if (key.includes('pizza') || key.includes('fastfood')) {
+      return 'bg-gradient-to-tr from-red-500 via-orange-600 to-amber-500 text-white shadow-red-500/30';
+    }
+    // Super Mart & Grocery
+    if (key.includes('super_mart') || key.includes('grocery')) {
+      return 'bg-gradient-to-tr from-emerald-600 via-teal-600 to-green-600 text-white shadow-emerald-500/30';
+    }
+    // Wholesale & FMCG
+    if (key.includes('wholesale')) {
+      return 'bg-gradient-to-tr from-sky-600 via-blue-700 to-indigo-800 text-white shadow-sky-600/30';
+    }
+    // Construction & Contracting
+    if (key.includes('construction')) {
+      return 'bg-gradient-to-tr from-amber-500 via-orange-600 to-yellow-600 text-white shadow-amber-500/30';
+    }
+    // Manufacturing & Factory
+    if (key.includes('manufacturing')) {
+      return 'bg-gradient-to-tr from-slate-700 via-zinc-800 to-slate-900 text-white shadow-slate-700/30';
+    }
+    // Logistics & Transport
+    if (key.includes('logistics')) {
+      return 'bg-gradient-to-tr from-cyan-600 via-blue-600 to-teal-600 text-white shadow-cyan-600/30';
+    }
+    // Event Management
+    if (key.includes('event')) {
+      return 'bg-gradient-to-tr from-fuchsia-500 via-pink-600 to-purple-600 text-white shadow-fuchsia-500/30';
+    }
+    // HR & Payroll
+    if (key.includes('hr_') || key.includes('payroll')) {
+      return 'bg-gradient-to-tr from-indigo-600 via-violet-600 to-purple-600 text-white shadow-indigo-600/30';
+    }
+    // Cleaning Services
+    if (key.includes('cleaning')) {
+      return 'bg-gradient-to-tr from-teal-500 via-emerald-600 to-cyan-600 text-white shadow-teal-500/30';
+    }
+    // Media & Digital Marketing
+    if (key.includes('media') || key.includes('marketing')) {
+      return 'bg-gradient-to-tr from-rose-500 via-orange-500 to-pink-600 text-white shadow-rose-500/30';
+    }
+    // eCommerce Store
+    if (key.includes('ecommerce')) {
+      return 'bg-gradient-to-tr from-purple-600 via-indigo-600 to-violet-700 text-white shadow-purple-600/30';
+    }
+    // Agriculture & Farm
+    if (key.includes('agriculture')) {
+      return 'bg-gradient-to-tr from-green-600 via-emerald-600 to-lime-600 text-white shadow-green-600/30';
+    }
+    // Hospital IPD
+    if (key.includes('hospital')) {
+      return 'bg-gradient-to-tr from-red-500 via-rose-600 to-pink-600 text-white shadow-red-500/30';
+    }
+    // Dental Clinic
+    if (key.includes('dental')) {
+      return 'bg-gradient-to-tr from-cyan-500 via-teal-500 to-blue-500 text-white shadow-cyan-500/30';
+    }
+    // Coaching Center
+    if (key.includes('coaching')) {
+      return 'bg-gradient-to-tr from-blue-700 via-indigo-700 to-blue-800 text-white shadow-blue-700/30';
+    }
+    // Home Services
+    if (key.includes('home_services')) {
+      return 'bg-gradient-to-tr from-amber-600 via-orange-500 to-yellow-600 text-white shadow-amber-600/30';
+    }
+    // Cargo & Freight
+    if (key.includes('cargo')) {
+      return 'bg-gradient-to-tr from-blue-600 via-cyan-600 to-teal-500 text-white shadow-blue-600/30';
+    }
+    // Solar & Renewable Energy
+    if (key.includes('solar')) {
+      return 'bg-gradient-to-tr from-amber-400 via-yellow-500 to-orange-500 text-white shadow-amber-400/30';
+    }
+    return 'bg-gradient-to-tr from-indigo-600 via-indigo-600 to-blue-600 text-white shadow-indigo-500/30';
+  }
+
+=======
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
   getFavoriteModules(){
 
     if(this.favoriteModules.length){
@@ -342,6 +527,7 @@ export class DashboardOverviewComponent {
     );
 
   }
+<<<<<<< HEAD
 
   getCategoryLucideIcon(cat: any): any {
     if (!cat) return this.icons?.Layers || 'Layers';
@@ -435,4 +621,6 @@ export class DashboardOverviewComponent {
       this.navigateTo('home');
     }
   }
+=======
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
 }

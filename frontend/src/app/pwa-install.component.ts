@@ -12,16 +12,27 @@ interface BeforeInstallPromptEvent extends Event {
   imports: [CommonModule],
   template: `
     <button *ngIf="isInstallable && !isInstalled" (click)="install()"
+<<<<<<< HEAD
       class="hidden sm:flex items-center gap-1.5 rounded-full bg-indigo-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-indigo-700 transition-all animate-fade-in mx-1 sm:mx-2">
       <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+=======
+      class="flex items-center gap-2 rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-md hover:bg-blue-700 transition-all animate-fade-in mx-4">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
       </svg>
       Install App
     </button>
 
+<<<<<<< HEAD
     <div *ngIf="isIOS && !isInstalled" class="relative group mx-1 sm:mx-2">
       <button (click)="showIOSGuide = true"
         class="hidden sm:flex items-center gap-1.5 rounded-full border border-gray-300 bg-white px-3.5 py-1.5 text-xs font-semibold text-gray-700 shadow-sm hover:bg-gray-50 transition-all animate-fade-in">
+=======
+    <div *ngIf="isIOS && !isInstalled" class="relative group mx-4">
+      <button (click)="showIOSGuide = true"
+        class="flex items-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 transition-all animate-fade-in">
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
         Install App
       </button>
 

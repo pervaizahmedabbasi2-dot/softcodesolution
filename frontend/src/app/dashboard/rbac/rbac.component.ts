@@ -99,11 +99,15 @@ export class DashboardRbacComponent {
     { code: 'blogs', name: 'Blogs', group: 'Content', description: 'Content publishing and editorial control' },
     { code: 'settings', name: 'Settings', group: 'Security', description: 'Global and tenant configuration' },
     { code: 'api_gateway', name: 'API Gateway', group: 'Security', description: 'Endpoint security and API controls' },
+<<<<<<< HEAD
     { code: 'updater', name: 'Updater', group: 'Operations', description: 'Versioning, rollouts and update controls' },
     { code: 'student_portal', name: 'Student Portal', group: 'Education & Portals', description: 'Student self-service, homework submissions & report cards' },
     { code: 'teacher_portal', name: 'Teacher Portal', group: 'Education & Portals', description: 'Teacher grading desk, class attendance & assignments' },
     { code: 'parent_portal', name: 'Parent Portal', group: 'Education & Portals', description: 'Parent fee payments, child tracking & PTM communications' },
     { code: 'school_gateways', name: 'School Payment Gateways', group: 'Education & Portals', description: 'Configure online fee channels (Stripe, JazzCash, EasyPaisa, PayPal, Raast) & collect fees' }
+=======
+    { code: 'updater', name: 'Updater', group: 'Operations', description: 'Versioning, rollouts and update controls' }
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
   ];
 
   private readonly userDirectory: Record<string, RbacUserItem[]> = {

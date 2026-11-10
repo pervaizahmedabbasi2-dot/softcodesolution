@@ -1357,6 +1357,81 @@ export class DashboardBusinessSuitesComponent implements OnInit {
         { id: 'rec-4', code: 'MED-104', title: 'Meta Ad Spend Budget Allocation Statement ($15,000)', client: 'E-Commerce Brand Campaign', amount: 15000, date: 'Today 09:30 AM', status: 'BUDGET_ACTIVE', meta: 'Direct Meta API Link', tab: 'Ad Spend Budgets' },
         { id: 'rec-5', code: 'MED-105', title: 'Monthly Digital Agency Retainer Invoicing # 5', client: 'Master Group of Industries', amount: 5000, date: 'Yesterday', status: 'PAID', meta: 'Retainer Retained', tab: 'Retainer Invoicing' }
       ]
+    },
+    {
+      id: 'cargo_freight',
+      name: 'Cargo & Freight Logistics',
+      category: 'cargo',
+      sector: 'INDUSTRIAL',
+      pricingWeight: 1.45,
+      dedicatedHubView: 'cargo-hub',
+      tagline: 'Freight Consignments, Fleet Tracking, Electronic Waybills & Delivery Proof',
+      description: 'Complete cargo shipping and multi-city freight operations suite with GPS fleet dispatch, electronic consignment waybills, container customs, and driver allowances.',
+      modules: [
+        'Cargo Consignment Booking',
+        'Electronic Waybill (Bilty)',
+        'GPS Fleet Tracking & Alerts',
+        'Driver Trip Sheets & Diesel',
+        'Proof of Delivery (POD) Slips',
+        'Freight Invoice & Ledgers',
+        'Customs Clearing Vault',
+        'Truck Maintenance Schedule',
+        'Weighbridge Tonnage Logs',
+        'Customer Consignment Portal'
+      ],
+      kpis: [
+        { label: 'Active Shipments', value: '64 Dispatches', subtext: 'Inter-City & Port Freight', tone: 'blue' },
+        { label: 'Trucks En Route', value: '28 Prime Movers', subtext: 'GPS Telemetry Active', tone: 'emerald' },
+        { label: 'Pending PODs', value: '9 Waybills', subtext: 'Awaiting Client Signoff', tone: 'amber' },
+        { label: 'Fleet Mileage', value: '94,200 km', subtext: 'This Month Logged', tone: 'default' },
+        { label: 'Freight Revenue', value: '$52,800', subtext: 'Monthly Invoiced', tone: 'emerald' }
+      ],
+      activeTab: 'Consignments',
+      tabs: ['Consignments', 'Fleet Tracking', 'Trip Sheets', 'Proof of Delivery', 'Freight Invoicing'],
+      records: [
+        { id: 'rec-1', code: 'CRG-101', title: 'Container 40ft (Textile Export to Karachi Port)', client: 'Al-Karam Textile Mills', amount: 3200, date: '2026-05-18', status: 'IN_TRANSIT', meta: 'Truck # TLA-992 (GPS Online)', tab: 'Consignments' },
+        { id: 'rec-2', code: 'CRG-102', title: 'Electronic Waybill # BY-8842 Issued & Barcoded', client: 'Master Chemical Industries', amount: 1850, date: 'Today 09:15 AM', status: 'BILTY_ISSUED', meta: 'Driver: Aslam Khan', tab: 'Consignments' },
+        { id: 'rec-3', code: 'CRG-103', title: 'Trip Advance & Fuel Card Top-up Authorized (200L)', client: 'Islamabad-Lahore Motorway Convoy', amount: 620, date: 'Today 10:30 AM', status: 'DISBURSED', meta: 'Fleet Card # 4491', tab: 'Trip Sheets' },
+        { id: 'rec-4', code: 'CRG-104', title: 'Proof of Delivery (POD) Signed by Warehouse Lead', client: 'Unilever Logistics Hub Lahore', amount: 4100, date: 'Yesterday', status: 'DELIVERED', meta: 'Biometric Signoff', tab: 'Proof of Delivery' },
+        { id: 'rec-5', code: 'CRG-105', title: 'Monthly Corporate Freight Invoice Generated', client: 'National Foods Distribution', amount: 8900, date: 'Yesterday', status: 'INVOICED', meta: 'Invoice # CRG-5002', tab: 'Freight Invoicing' }
+      ]
+    },
+    {
+      id: 'solar_energy',
+      name: 'Solar & Renewable Energy Solutions',
+      category: 'solar_energy',
+      sector: 'INDUSTRIAL',
+      pricingWeight: 1.50,
+      tagline: 'PV Plant EPC, Net Metering Approvals, Inverter Telemetry & Maintenance',
+      description: 'Complete renewable energy EPC management system tracking solar panel kilowatt projects, DISCO net metering permits, string inverter yield, and maintenance visits.',
+      modules: [
+        'Solar EPC Project Quotes',
+        'Kilowatt Capacity Sizing',
+        'DISCO Net Metering Permits',
+        'Inverter Generation Logs',
+        'BOM Hardware Inventory',
+        'Solar Panel Maintenance AMC',
+        'Client Payback ROI Ledger',
+        'String Voltage Testing Vault',
+        'Solar Structure Civil Works',
+        'Customer Green Energy App'
+      ],
+      kpis: [
+        { label: 'Installed Capacity', value: '1.45 MW', subtext: 'Commercial & Residential', tone: 'emerald' },
+        { label: 'Active Sites', value: '38 Installations', subtext: 'Under Construction & EPC', tone: 'blue' },
+        { label: 'Net Metering Queue', value: '14 Applications', subtext: 'WAPDA/K-Electric Linked', tone: 'amber' },
+        { label: 'Generation Yield', value: '5,820 kWh/day', subtext: 'CO2 Offset 3.8 Tons', tone: 'emerald' },
+        { label: 'Project Pipeline', value: '$184,000', subtext: 'Active Commercial EPCs', tone: 'default' }
+      ],
+      activeTab: 'Projects',
+      tabs: ['Projects', 'Net Metering', 'Generation Logs', 'BOM Hardware', 'Project Invoicing'],
+      records: [
+        { id: 'rec-1', code: 'SLR-101', title: '50 kW Commercial Rooftop Solar EPC Complete', client: 'Packages Mall Industrial Unit', amount: 32000, date: '2026-05-18', status: 'COMMISSIONED', meta: 'Huawei 50KTL Inverter', tab: 'Projects' },
+        { id: 'rec-2', code: 'SLR-102', title: 'LESCO / IESCO Net Metering Bi-Directional Inspection', client: 'Dr. Tariq Villa (15 kW)', amount: 1200, date: 'Today 11:00 AM', status: 'DISCO_APPROVED', meta: 'Green Meter Installed', tab: 'Net Metering' },
+        { id: 'rec-3', code: 'SLR-103', title: 'Inverter Daily Yield Log: 214 kWh Generated Today', client: 'Sapphire Mill Rooftop', amount: 0, date: 'Today 01:00 PM', status: 'ONLINE', meta: 'Efficiency 98.4%', tab: 'Generation Logs' },
+        { id: 'rec-4', code: 'SLR-104', title: 'Tier-1 Longi 585W N-Type Solar Panels (120 Units)', client: 'EPC Central Warehouse', amount: 16500, date: 'Yesterday', status: 'DELIVERED', meta: 'Flash Test Certified', tab: 'BOM Hardware' },
+        { id: 'rec-5', code: 'SLR-105', title: 'Milestone 2 Project Invoicing: 40% On Panel Mounting', client: 'Askari Commercial Tower', amount: 18000, date: 'Yesterday', status: 'PAID', meta: 'Invoice # SLR-9941', tab: 'Project Invoicing' }
+      ]
     }
   ];
 

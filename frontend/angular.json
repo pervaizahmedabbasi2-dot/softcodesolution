@@ -4,7 +4,11 @@
   "cli": {
     "packageManager": "npm",
     "cache": {
+<<<<<<< HEAD
       "enabled": true
+=======
+      "enabled": false
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
     },
     "analytics": false
   },
@@ -37,13 +41,18 @@
             "styles": [
               "src/styles.css"
             ],
+<<<<<<< HEAD
             "deleteOutputPath": true
+=======
+            "deleteOutputPath": false
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
           },
           "configurations": {
             "production": {
               "budgets": [
                 {
                   "type": "initial",
+<<<<<<< HEAD
                   "maximumWarning": "12MB",
                   "maximumError": "16MB"
                 },
@@ -51,6 +60,15 @@
                   "type": "anyComponentStyle",
                   "maximumWarning": "50kB",
                   "maximumError": "100kB"
+=======
+                  "maximumWarning": "500kB",
+                  "maximumError": "2MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "4kB",
+                  "maximumError": "8kB"
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
                 }
               ],
               "outputHashing": "all"
@@ -58,7 +76,11 @@
             "development": {
               "optimization": false,
               "extractLicenses": false,
+<<<<<<< HEAD
               "sourceMap": false
+=======
+              "sourceMap": true
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
             },
             "idx": {
               "optimization": false,
@@ -71,7 +93,10 @@
         "serve": {
           "builder": "@angular/build:dev-server",
           "options": {
+<<<<<<< HEAD
             "proxyConfig": "proxy.conf.json",
+=======
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
             "host": "0.0.0.0",
             "port": 4200,
             "allowedHosts": [

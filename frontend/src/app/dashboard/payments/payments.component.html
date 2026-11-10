@@ -56,6 +56,7 @@
     <div class="rounded-[1.5rem] bg-white shadow-sm ring-1 ring-slate-100 overflow-hidden">
       <div class="flex flex-col gap-4 border-b border-slate-100 p-5 lg:flex-row lg:items-center lg:justify-between"> 
         <div class="flex flex-wrap gap-2 p-1 rounded-xl bg-slate-50 w-full lg:w-auto">
+<<<<<<< HEAD
           <button (click)="setTab('gateways')" [class.bg-white]="activeTab === 'gateways'" [class.shadow-sm]="activeTab === 'gateways'" [class.text-indigo-600]="activeTab === 'gateways'" [class.text-slate-500]="activeTab !== 'gateways'" class="rounded-lg px-4 py-2 text-sm font-bold transition-all flex items-center gap-1.5">
             <lucide-icon [img]="myIcons.Settings" [size]="14"></lucide-icon>
             <span>Payment Gateways</span>
@@ -66,6 +67,8 @@
             <span>Alerts & Notifications</span>
             <span class="bg-emerald-100 text-emerald-800 text-[10px] px-1.5 py-0.5 rounded-full font-bold">WhatsApp / SMS / Email</span>
           </button>
+=======
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
           <button (click)="setTab('invoices')" [class.bg-white]="activeTab === 'invoices'" [class.shadow-sm]="activeTab === 'invoices'" [class.text-slate-900]="activeTab === 'invoices'" [class.text-slate-500]="activeTab !== 'invoices'" class="rounded-lg px-4 py-2 text-sm font-bold transition-all">Invoices</button>
           <button (click)="setTab('approvals')" [class.bg-white]="activeTab === 'approvals'" [class.shadow-sm]="activeTab === 'approvals'" [class.text-slate-900]="activeTab === 'approvals'" [class.text-slate-500]="activeTab !== 'approvals'" class="rounded-lg px-4 py-2 text-sm font-bold transition-all flex items-center gap-2">Approvals <span class="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full" *ngIf="pendingApprovals.length">{{ pendingApprovals.length }}</span></button>
           <button (click)="setTab('wallet')" [class.bg-white]="activeTab === 'wallet'" [class.shadow-sm]="activeTab === 'wallet'" [class.text-slate-900]="activeTab === 'wallet'" [class.text-slate-500]="activeTab !== 'wallet'" class="rounded-lg px-4 py-2 text-sm font-bold transition-all">Wallet</button>
@@ -81,6 +84,7 @@
         </div>
       </div>
 
+<<<<<<< HEAD
       <!-- Action Message Banner -->
       <div *ngIf="gatewayActionMsg" class="p-3 mx-5 mt-4 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs font-bold flex items-center justify-between animate-fade-in">
         <div class="flex items-center gap-2">
@@ -90,11 +94,14 @@
         <button (click)="gatewayActionMsg = ''" class="text-emerald-600 hover:text-emerald-900">✕</button>
       </div>
 
+=======
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
       <div *ngIf="isLoading" class="p-12 flex flex-col items-center justify-center text-slate-400">
         <lucide-icon [img]="myIcons.RefreshCcw" [size]="32" class="animate-spin mb-4"></lucide-icon>
         <p class="text-sm font-bold tracking-wider uppercase">Loading {{activeTab}}...</p>
       </div>
 
+<<<<<<< HEAD
       <!-- GATEWAYS TAB (SUPERADMIN INTEGRATIONS) -->
       <div *ngIf="!isLoading && activeTab === 'gateways'" class="p-6 space-y-8 animate-fade-in">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-indigo-50/70 border border-indigo-100 rounded-2xl p-5">
@@ -493,6 +500,9 @@
           </div>
         </div>
       </div>
+=======
+      <!-- INVOICES TAB -->
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
       <div *ngIf="!isLoading && activeTab === 'invoices'" class="overflow-x-auto">
         <div *ngIf="invoices.length === 0" class="p-12 text-center text-slate-400">
           <p class="font-medium text-sm">No invoices found in database.</p>
@@ -505,7 +515,10 @@
               <th class="px-6 py-4">Status</th>
               <th class="px-6 py-4">Amount</th>
               <th class="px-6 py-4">Date</th>
+<<<<<<< HEAD
               <th class="px-6 py-4 text-right">Actions</th>
+=======
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
@@ -517,11 +530,14 @@
               </td>
               <td class="px-6 py-4 font-bold text-slate-900">{{ inv.currency }} {{ inv.total }}</td>
               <td class="px-6 py-4 text-slate-500">{{ inv.created_at | date }}</td>
+<<<<<<< HEAD
               <td class="px-6 py-4 text-right">
                 <button (click)="openInvoiceModal(inv)" class="px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold transition-all inline-flex items-center gap-1.5">
                   <lucide-icon [img]="myIcons.Receipt" [size]="14"></lucide-icon> Tax Invoice
                 </button>
               </td>
+=======
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
             </tr>
           </tbody>
         </table>
@@ -650,6 +666,7 @@
       
     </div>
   </div>
+<<<<<<< HEAD
 
   <!-- Printable Official Tax Invoice Modal -->
   <div *ngIf="selectedInvoiceForModal" class="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-6 bg-slate-950/70 backdrop-blur-md animate-fade-in" (click)="closeInvoiceModal()">
@@ -847,4 +864,6 @@
       </div>
     </div>
   </div>
+=======
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
 </div>

@@ -259,6 +259,7 @@ this.moduleChanged.emit(module);
 
   }
 
+<<<<<<< HEAD
   releaseAll(): void {
     this.registry.releaseAllModules();
     this.modules = [...this.registry.getAllModules()];
@@ -268,4 +269,12 @@ this.moduleChanged.emit(module);
   onClose(){
     this.close.emit();
   }
+=======
+  onClose(){
+
+    this.close.emit();
+
+  }
+
+>>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
 }
