@@ -4,19 +4,11 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-<<<<<<< HEAD
     "dev": "ng serve --host 0.0.0.0 --port 3000 --hmr=false --live-reload=false --proxy-config proxy.conf.json",
     "idx": "ng serve --host 0.0.0.0 --port ${PORT:-4200}",
     "online": "ng serve --host 0.0.0.0 --port 4200",
     "preview": "npm run idx",
     "build": "NODE_OPTIONS=\"--max-old-space-size=2048\" NG_BUILD_MAX_WORKERS=1 npx ng build",
-=======
-    "dev": "ng serve --host 0.0.0.0 --port 3000 --hmr=false --live-reload=false",
-    "idx": "ng serve --host 0.0.0.0 --port ${PORT:-4200}",
-    "online": "ng serve --host 0.0.0.0 --port 4200",
-    "preview": "npm run idx",
-    "build": "NG_BUILD_MAX_WORKERS=1 ng build",
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
     "build:idx": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
