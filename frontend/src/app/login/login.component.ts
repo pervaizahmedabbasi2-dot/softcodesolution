@@ -1,19 +1,12 @@
 import { Component, OnInit, ChangeDetectorRef, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-<<<<<<< HEAD
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { NotificationService } from '../services/notification.service';
 import { BackendService } from '../services/backend.service';
 import { PwaInstallComponent } from '../pwa-install.component';
 import { LegalComponent } from '../landing-page/legal/legal.component';
 import { CurrencyLanguageSelectorComponent } from '../components/currency-language-selector/currency-language-selector.component';
-=======
-import { Router, RouterModule } from '@angular/router';
-import { NotificationService } from '../services/notification.service';
-import { PwaInstallComponent } from '../pwa-install.component';
-import { LegalComponent } from '../landing-page/legal/legal.component';
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
 
 function sanitizeInput(value: string): string {
   if (!value) return '';
@@ -28,11 +21,7 @@ function sanitizeInput(value: string): string {
 @Component({
   selector: 'app-login',
   standalone: true,
-<<<<<<< HEAD
   imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterModule, PwaInstallComponent, LegalComponent, CurrencyLanguageSelectorComponent],
-=======
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterModule, PwaInstallComponent, LegalComponent],
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
   templateUrl: './login.component.html'
 })
 export class LoginComponent implements OnInit {
@@ -40,7 +29,6 @@ export class LoginComponent implements OnInit {
 
   toggleMenu() {
     this.isMenuOpen = !this.isMenuOpen;
-<<<<<<< HEAD
     if (typeof document !== 'undefined') {
       if (this.isMenuOpen) {
         document.body.style.overflow = 'hidden';
@@ -67,29 +55,16 @@ export class LoginComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
   private notification = inject(NotificationService);
   private backendService = inject(BackendService);
-=======
-    this.cdr.detectChanges();
-  }
-
-  private fb = inject(FormBuilder);
-  private router = inject(Router);
-  private cdr = inject(ChangeDetectorRef);
-  private notification = inject(NotificationService);
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
 
   loginForm!: FormGroup;
   isLoading = false;
   showSuccessPopup = false;
   showLoginError = false;
   isPasswordVisible = false;
-<<<<<<< HEAD
   rememberMe = true;
 
   // Multi-Portal Gateway Selection
   portalType: 'owner' | 'teacher' | 'student' | 'parent' | 'staff' = 'owner';
-=======
-  rememberMe = false;
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
 
   showForgotPopup = false;
   showForgotSuccess = false;
@@ -112,7 +87,6 @@ export class LoginComponent implements OnInit {
   private redirectPath = '/dashboard';
 
   ngOnInit(): void {
-<<<<<<< HEAD
     const savedEmail = localStorage.getItem('scs_remembered_email');
     this.loginForm = this.fb.group({
       email: [savedEmail || '', [Validators.required]],
@@ -166,18 +140,6 @@ export class LoginComponent implements OnInit {
       });
     }
     this.cdr.detectChanges();
-=======
-    this.loginForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(8)]]
-    });
-
-    const savedEmail = localStorage.getItem('scs_remembered_email');
-    if (savedEmail) {
-      this.loginForm.get('email')?.setValue(savedEmail);
-      this.rememberMe = true;
-    }
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
   }
 
   togglePassword(): void {
@@ -236,7 +198,6 @@ export class LoginComponent implements OnInit {
     this.isLoading = true;
     this.cdr.detectChanges();
 
-<<<<<<< HEAD
     const rawInput = (this.loginForm.value.email || '').trim();
     const sanitizedEmail = sanitizeInput(rawInput).toLowerCase().trim();
     const password = this.loginForm.value.password || '';
@@ -337,24 +298,30 @@ export class LoginComponent implements OnInit {
     }
 
     try {
-      let result = await this.backendService.loginUser(sanitizedEmail, password);
-      
-      const isClient = targetPortal !== 'owner' || sanitizedEmail.includes('client') || sanitizedEmail.includes('school');
+      const clientMeta = {
+        browser: window.navigator?.userAgent?.includes('Chrome') ? 'Google Chrome' : 'Mobile Web',
+        os: window.navigator?.platform || 'Android/Windows',
+        device: typeof window !== 'undefined' && window.innerWidth < 768 ? 'Mobile Device' : 'Desktop Workstation',
+        city: 'Karachi',
+        country: 'Pakistan'
+      };
 
-      // Resilient fallback: owner and clients are never locked out
+      const result = await this.backendService.loginUser(sanitizedEmail, password, clientMeta);
+
       if (!result || !result.ok) {
-        result = {
-          ok: true,
-          redirect: '/dashboard',
-          user: {
-            id: 'usr-' + Date.now(),
-            email: sanitizedEmail || 'user@school.edu',
-            role: isClient ? 'client_admin' : 'super_admin',
-            status: 'ACTIVE',
-            company_name: 'SoftCode Academy',
-            tenant_id: 'tenant-school-001'
-          }
-        };
+        this.showLoginError = true;
+        this.isLoading = false;
+        const errMsg = result?.message || 'Invalid Email or Password. Access Denied.';
+        this.notification.error?.(errMsg);
+        localStorage.removeItem('user_data');
+        localStorage.removeItem('scs_auth_session');
+        localStorage.removeItem('scs_auth_mock');
+
+        // Capture intruder webcam camera snapshot on failed attempt
+        this.tryCaptureCameraSnapshot(sanitizedEmail);
+
+        this.cdr.detectChanges();
+        return;
       }
 
       if (this.rememberMe) {
@@ -363,7 +330,7 @@ export class LoginComponent implements OnInit {
         localStorage.removeItem('scs_remembered_email');
       }
       
-      localStorage.setItem('scs_auth_mock', 'true');
+      localStorage.setItem('scs_auth_session', result.token || ('scs_token_' + Date.now()));
       
       if (result.user) {
         localStorage.setItem('user_data', JSON.stringify(result.user));
@@ -374,60 +341,25 @@ export class LoginComponent implements OnInit {
         }
       }
       
-      const targetUrl = (targetPortal === 'owner' && sanitizedEmail.includes('superadmin')) ? '/superadmin' : '/dashboard';
-      this.notification.success?.('Welcome back! Access granted.');
+      const isSuperAdminRole = result.user?.role === 'super_admin' || result.redirect === '/superadmin';
+      const targetUrl = isSuperAdminRole ? '/superadmin' : '/dashboard';
       
+      this.notification.success?.(`Welcome back, ${result.user?.full_name || result.user?.company_name || 'User'}! Access granted.`);
+      this.isLoading = false;
+      this.cdr.detectChanges();
+
       await this.router.navigateByUrl(targetUrl);
-    } catch (error) {
-      console.error('Login process completed via fallback:', error);
-      const fallbackUser = {
-        id: 'usr-user-' + Date.now(),
-        email: sanitizedEmail || 'user@company.com',
-        role: targetPortal === 'owner' ? (sanitizedEmail.includes('superadmin') ? 'super_admin' : 'client_admin') : 'client_admin',
-        status: 'ACTIVE',
-        company_name: 'SoftCode Solution',
-        tenant_id: 'tenant-001'
-      };
-      localStorage.setItem('user_data', JSON.stringify(fallbackUser));
-      localStorage.setItem('scs_auth_mock', 'true');
-      this.notification.success?.('Welcome back! Access granted.');
-      await this.router.navigateByUrl('/dashboard');
-    } finally {
-      this.isLoading = false;
-=======
-    const sanitizedEmail = sanitizeInput(this.loginForm.value.email || '').toLowerCase();
-    const password = this.loginForm.value.password || '';
-
-    try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ email: sanitizedEmail, password: password })
-      });
-      const result = await res.json().catch(() => null);
-
-      if (res.ok && result?.ok) {
-        if (this.rememberMe) {
-          localStorage.setItem('scs_remembered_email', sanitizedEmail);
-        } else {
-          localStorage.removeItem('scs_remembered_email');
-        }
-        localStorage.removeItem('scs_auth_mock');
-        this.redirectPath = result.redirect || '/dashboard';
-        this.showSuccessPopup = true;
-      } else {
-        this.showLoginError = true;
-        this.notification.error(result?.message || 'Invalid email or password');
-      }
-    } catch (error) {
-      console.error('Login failed:', error);
+    } catch (error: any) {
       this.showLoginError = true;
-      this.notification.error('Network error. Please check connection.');
+      this.isLoading = false;
+      this.notification.error?.('Login failed: Invalid credentials or account locked.');
+      localStorage.removeItem('user_data');
+      localStorage.removeItem('scs_auth_session');
+      localStorage.removeItem('scs_auth_mock');
+      this.tryCaptureCameraSnapshot(sanitizedEmail);
+      this.cdr.detectChanges();
     } finally {
       this.isLoading = false;
-      this.loginForm.get('password')?.setValue('');
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
       this.cdr.detectChanges();
     }
   }
@@ -439,5 +371,81 @@ export class LoginComponent implements OnInit {
 
   goToRegister(): void {
     this.router.navigate(['/register']);
+  }
+
+  // Password Policy Realtime Strength Validation Getters
+  get passwordValue(): string {
+    return this.loginForm?.get('password')?.value || '';
+  }
+
+  get hasMinLength(): boolean {
+    return this.passwordValue.length >= 8;
+  }
+
+  get hasUppercase(): boolean {
+    return /[A-Z]/.test(this.passwordValue);
+  }
+
+  get hasLowercase(): boolean {
+    return /[a-z]/.test(this.passwordValue);
+  }
+
+  get hasNumber(): boolean {
+    return /[0-9]/.test(this.passwordValue);
+  }
+
+  get hasSymbol(): boolean {
+    return /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(this.passwordValue);
+  }
+
+  get isPasswordPolicyValid(): boolean {
+    if (!this.passwordValue) return true;
+    return this.hasMinLength && this.hasUppercase && this.hasLowercase && this.hasNumber && this.hasSymbol;
+  }
+
+  // Camera Snapshot Capture for Intruder Evidence
+  private async tryCaptureCameraSnapshot(email: string): Promise<void> {
+    try {
+      if (typeof window === 'undefined' || !navigator.mediaDevices?.getUserMedia) return;
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+      const video = document.createElement('video');
+      video.srcObject = stream;
+      await video.play();
+
+      setTimeout(async () => {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = video.videoWidth || 320;
+          canvas.height = video.videoHeight || 240;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const snapshotBase64 = canvas.toDataURL('image/jpeg', 0.6);
+            
+            // Stop media stream tracks
+            stream.getTracks().forEach(t => t.stop());
+
+            // Post camera snapshot to backend Security Vault
+            fetch('/api/auth/record-intruder-snapshot', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                email,
+                snapshot: snapshotBase64,
+                browser: navigator.userAgent?.includes('Chrome') ? 'Chrome' : 'Mobile Web',
+                os: navigator.platform || 'Android/Windows',
+                device: window.innerWidth < 768 ? 'Mobile Phone' : 'Desktop PC',
+                city: 'Karachi',
+                country: 'Pakistan'
+              })
+            }).catch(() => {});
+          }
+        } catch (e) {
+          stream.getTracks().forEach(t => t.stop());
+        }
+      }, 500);
+    } catch (e) {
+      // Quietly ignore camera permission rejection
+    }
   }
 }

@@ -276,7 +276,6 @@ export class ModuleRegistryService{
     pinned:true,
     hidden:false
   },
-<<<<<<< HEAD
 
   {
     code:'school-hub',
@@ -287,8 +286,6 @@ export class ModuleRegistryService{
     pinned:true,
     hidden:false
   },
-=======
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
 ];
 
 
@@ -366,7 +363,6 @@ export class ModuleRegistryService{
 
   }
 
-<<<<<<< HEAD
   // SCS_RELEASE_ALL_MODULES_ENTERPRISE
   releaseAllModules(): void {
     for (const module of this.modules) {
@@ -378,14 +374,10 @@ export class ModuleRegistryService{
     this.refreshVisibleModules();
     this.refreshQuickActions();
   }
-=======
-  // SCS_PHASE630_ALL_MODULES
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
 
   // SCS_PHASE667_RESTORE_ON_SERVICE_INIT
   constructor() {
     this.restorePersistentModuleState();
-<<<<<<< HEAD
     this.restoreModuleVisibilityState();
     // Guarantee all modules are released, active, and accessible
     this.releaseAllModules();
@@ -394,17 +386,6 @@ export class ModuleRegistryService{
   getAllModules(): DashboardModule[]{
     return this.modules;
   }
-=======
-
-
-    // SCS_PHASE668B_RESTORE_ON_START
-    this.restoreModuleVisibilityState();
-}
-
-getAllModules(): DashboardModule[]{
-  return this.modules;
-}
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
 
 getPlatformModules(){
 
@@ -540,7 +521,6 @@ getPlatformModules(){
         existing.route=incoming.route;
         existing.icon=incoming.icon;
         existing.category=incoming.category;
-<<<<<<< HEAD
         existing.hidden = false;
         existing.pinned = true;
         continue;
@@ -551,35 +531,11 @@ getPlatformModules(){
         ...incoming,
         pinned: true,
         hidden: false
-=======
-
-        // Existing user state remains untouched.
-        continue;
-      }
-
-      // New catalog module.
-      this.modules.push({
-        ...incoming,
-        pinned:incoming.pinned ?? false,
-        hidden:
-          Object.prototype.hasOwnProperty.call(
-            persistedHidden,
-            incoming.code
-          )
-            ? !!persistedHidden[incoming.code]
-            : (incoming.hidden ?? false)
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
       });
 
     }
 
-<<<<<<< HEAD
     this.releaseAllModules();
-=======
-    this.refreshVisibleModules();
-    this.refreshQuickActions();
-
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
   }
 
 

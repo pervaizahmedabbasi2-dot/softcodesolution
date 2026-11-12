@@ -2,23 +2,16 @@ import {
   Component,
   EventEmitter,
   Input,
-<<<<<<< HEAD
   Output,
   inject
-=======
-  Output
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
   LucideAngularModule
 } from 'lucide-angular';
-<<<<<<< HEAD
 import { LocalizationService } from '../../services/localization.service';
 import { ALL_ENTERPRISE_BUSINESSES, EnterpriseBusinessItem } from '../services/business-rbac.data';
-=======
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
 
 type OverviewStatusTab =
   | 'pending'
@@ -47,10 +40,7 @@ interface DashboardActivity{
 })
 export class DashboardOverviewComponent {
   // SCS_DASHBOARD_OVERVIEW_COMPONENT_V1
-<<<<<<< HEAD
   readonly loc = inject(LocalizationService);
-=======
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
 
   @Input() activeView = 'home';
   @Input() userRole = '';
@@ -68,11 +58,8 @@ export class DashboardOverviewComponent {
   @Input() icons: any = {};
   @Input() isClientsLoading = false;
   @Input() allSuperadminClients: any[] = [];
-<<<<<<< HEAD
   @Input() allBusinesses: EnterpriseBusinessItem[] = [];
   @Output() businessLaunch = new EventEmitter<EnterpriseBusinessItem>();
-=======
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
   @Input() lastRefreshedAt: any = null;
 
   // SCS_PHASE6796_TRIPLE_BACKUP_INPUT
@@ -112,7 +99,6 @@ export class DashboardOverviewComponent {
 
   moduleSearch = '';
 
-<<<<<<< HEAD
   // Executive Charts Data (Matching User Dashboard Quality)
   monthlyMrrChartData = [
     { month: 'May', amount: 24000, heightPct: 52, label: '$24k' },
@@ -132,8 +118,6 @@ export class DashboardOverviewComponent {
     { vertical: 'Travel & Tourism Hub', count: 5, color: 'bg-purple-500', pct: 35 }
   ];
 
-=======
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
   // SCS_PHASE655_SINGLE_MANAGER
   // Dashboard owns the single Module Manager instance.
   openModuleManager(): void {
@@ -205,7 +189,6 @@ export class DashboardOverviewComponent {
 
 
 
-<<<<<<< HEAD
   get allBusinessesList(): EnterpriseBusinessItem[] {
     if (this.allBusinesses && this.allBusinesses.length > 0) {
       return this.allBusinesses;
@@ -369,8 +352,6 @@ export class DashboardOverviewComponent {
     return 'bg-gradient-to-tr from-indigo-600 via-indigo-600 to-blue-600 text-white shadow-indigo-500/30';
   }
 
-=======
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
   getFavoriteModules(){
 
     if(this.favoriteModules.length){
@@ -527,7 +508,6 @@ export class DashboardOverviewComponent {
     );
 
   }
-<<<<<<< HEAD
 
   getCategoryLucideIcon(cat: any): any {
     if (!cat) return this.icons?.Layers || 'Layers';
@@ -621,6 +601,4 @@ export class DashboardOverviewComponent {
       this.navigateTo('home');
     }
   }
-=======
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
 }

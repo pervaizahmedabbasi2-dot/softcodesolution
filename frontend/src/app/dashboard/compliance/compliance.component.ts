@@ -1,6 +1,5 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-<<<<<<< HEAD
 import { LucideAngularModule, Globe, CheckCircle2, ShieldCheck, Download, X, FileCheck, AlertTriangle } from 'lucide-angular';
 
 export interface ResidencyRegion {
@@ -12,9 +11,6 @@ export interface ResidencyRegion {
   status: 'Active' | 'Nominal';
   latencyMs: number;
 }
-=======
-import { LucideAngularModule } from 'lucide-angular';
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
 
 @Component({
   selector: 'app-dashboard-compliance',
@@ -23,7 +19,6 @@ import { LucideAngularModule } from 'lucide-angular';
   templateUrl: './compliance.component.html'
 })
 export class ComplianceComponent {
-<<<<<<< HEAD
   icons = {
     Globe,
     CheckCircle2,
@@ -106,6 +101,4 @@ export class ComplianceComponent {
     a.click();
     URL.revokeObjectURL(url);
   }
-=======
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
 }

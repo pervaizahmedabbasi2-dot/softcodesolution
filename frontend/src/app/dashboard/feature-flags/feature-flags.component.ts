@@ -1,6 +1,5 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-<<<<<<< HEAD
 import { LucideAngularModule, Search, Plus, Sparkles, CreditCard, ShieldCheck, Zap, X, Sliders, CheckCircle2, Clock } from 'lucide-angular';
 
 export interface FeatureFlag {
@@ -14,9 +13,6 @@ export interface FeatureFlag {
   icon: any;
   updatedAt: string;
 }
-=======
-import { LucideAngularModule } from 'lucide-angular';
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
 
 @Component({
   selector: 'app-dashboard-feature-flags',
@@ -25,7 +21,6 @@ import { LucideAngularModule } from 'lucide-angular';
   templateUrl: './feature-flags.component.html'
 })
 export class FeatureFlagsComponent {
-<<<<<<< HEAD
   icons = {
     Search,
     Plus,
@@ -168,6 +163,4 @@ export class FeatureFlagsComponent {
     this.flags.unshift(created);
     this.closeCreateModal();
   }
-=======
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
 }

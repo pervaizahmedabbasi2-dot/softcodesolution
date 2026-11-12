@@ -6,11 +6,7 @@
       <p class="text-gray-500 ">Issue, track, and manage software licenses.</p>
     </div>
     <div class="flex gap-2 w-full sm:w-auto">
-<<<<<<< HEAD
       <button (click)="openGenerateModal()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2 font-medium w-full sm:w-auto shadow-sm">
-=======
-      <button class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2 font-medium w-full sm:w-auto shadow-sm">
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
         <lucide-icon [name]="icons.Key || 'key'" class="w-4 h-4"></lucide-icon>
         Generate License
       </button>
@@ -21,11 +17,7 @@
   <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
     <div class="bg-white  p-4 rounded-xl border border-gray-200  shadow-sm flex items-center gap-4">
       <div class="w-12 h-12 rounded-lg bg-green-100  flex items-center justify-center text-green-600 ">
-<<<<<<< HEAD
         <lucide-icon [name]="icons.CheckCircle2 || 'check-circle-2'" class="w-6 h-6"></lucide-icon>
-=======
-        <lucide-icon [name]="icons.CheckCircle2 || 'check-circle'" class="w-6 h-6"></lucide-icon>
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
       </div>
       <div>
         <p class="text-sm text-gray-500  font-medium">Active Licenses</p>
@@ -85,7 +77,6 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-200 ">
-<<<<<<< HEAD
           <tr *ngFor="let lic of filteredLicenses; trackBy: trackByLicId" class="hover:bg-gray-50  transition-colors">
             <td class="px-6 py-4">
               <div class="flex items-center gap-2">
@@ -94,15 +85,6 @@
                   <lucide-icon [name]="icons.Copy || 'copy'" class="w-4 h-4"></lucide-icon>
                 </button>
                 <span *ngIf="copiedId === lic.id" class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">Copied!</span>
-=======
-          <tr *ngFor="let lic of filteredLicenses" class="hover:bg-gray-50  transition-colors">
-            <td class="px-6 py-4">
-              <div class="flex items-center gap-2">
-                <div class="font-mono text-gray-900  bg-gray-100  px-2 py-1 rounded">{{ lic.keyMasked }}</div>
-                <button class="text-gray-400 hover:text-indigo-600 " title="Copy Key">
-                  <lucide-icon [name]="icons.Copy || 'copy'" class="w-4 h-4"></lucide-icon>
-                </button>
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
               </div>
               <div class="text-xs text-gray-500 mt-1">{{ lic.id }}</div>
             </td>
@@ -147,7 +129,6 @@
       </table>
     </div>
   </div>
-<<<<<<< HEAD
 
   <!-- Cryptographic License Key Generator Modal -->
   <div *ngIf="isGenerateModalOpen" class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-fade-in" (click)="closeGenerateModal()">
@@ -237,6 +218,4 @@
 
     </div>
   </div>
-=======
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
 </div>

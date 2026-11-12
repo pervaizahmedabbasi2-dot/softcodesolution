@@ -1,24 +1,22 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
-import { BackendService } from '../services/backend.service';
 
-export const authGuard: CanActivateFn = async () => {
-<<<<<<< HEAD
-  return true;
-=======
-  const router=inject(Router);
-  const backend=inject(BackendService);
-
-  try{
-    const me=await backend.authMe();
-
-    if(me?.ok===true){
-      return true;
+export const authGuard: CanActivateFn = () => {
+  const router = inject(Router);
+  if (typeof localStorage === 'undefined') return true;
+  try {
+    const sessionToken = localStorage.getItem('scs_auth_session');
+    const rawUserData = localStorage.getItem('user_data');
+    if (sessionToken && rawUserData) {
+      const user = JSON.parse(rawUserData);
+      if (user && user.email && user.role) {
+        return true;
+      }
     }
+  } catch (err) {}
 
-  }catch{}
-
-  router.navigate(['/login']);
+  localStorage.removeItem('user_data');
+  localStorage.removeItem('scs_auth_session');
+  router.navigateByUrl('/login');
   return false;
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
 };

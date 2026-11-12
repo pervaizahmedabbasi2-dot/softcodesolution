@@ -1,61 +1,32 @@
-# Binaries & Build
-scs-backend
+frontend/node_modules/
 build/
-frontend/dist/
-frontend/.angular/
 
-# Database & Local Storage
+.postgres/
+.angular/
+*.bak
+*.bak.*
+*.backup
 *.db
 *.db-journal
 *.sqlite
 *.sqlite3
-local_edge.db
-backend/auth/database/*.db
-
-# Node Modules
-node_modules/
-frontend/node_modules/
-
-# Logs
+coverage/
+logs/*.log
+# SoftCodeSolution local/generated files
 logs/
 *.log
 *.trace
-
-# Temp & Backup Files
-*.bak
-*.bak.*
-*.backup
 *.backup.*
 *.old
 *.orig
 *.tmp
 *.temp
-*.tar.gz
+local_edge.db
+backend/auth/database/*.db
+scs-backend
+softcodesolution
 .scs-cleanup-manifest.json
+node_modules
+node_modules
 
-# Fix scripts (junk)
-fix_all.cjs
-fix_all_4.cjs
-fix_build.cjs
-fix_flicker_final.cjs
-fix_keys.cjs
-fix_live.cjs
-fix_remaining.cjs
-
-# AI Studio cache
-.aistudio/
-.idx/
-
-# Postgres
-.postgres/
-
-# Zip files
-*.zip
-
-# tmp folder
-tmp/
-test_log
-
-# Package lock (optional)
-package-lock.json
-bun.lock
+*.tar.gz

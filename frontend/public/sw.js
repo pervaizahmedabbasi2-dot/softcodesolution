@@ -1,15 +1,11 @@
-<<<<<<< HEAD
 // SoftCode Enterprise Service Worker - Network First with Auto-Refresh
 const CACHE_NAME = 'scs-multi-tenant-cloud-v4';
 
-=======
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
 self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-<<<<<<< HEAD
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
@@ -53,13 +49,4 @@ self.addEventListener('fetch', (event) => {
         });
       })
   );
-=======
-  event.waitUntil(self.clients.claim());
-});
-
-self.addEventListener('fetch', (event) => {
-  // Pass through all requests without caching to avoid conflicts with development/HMR
-  // This satisfies the PWA builder checks while keeping the development experience smooth.
-  return;
->>>>>>> 9c235392d5f1bb1fddf7df4c8ac032dca552b27b
 });
