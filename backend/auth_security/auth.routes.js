@@ -164,45 +164,14 @@ export function createAuthRouter(sqliteDb, db) {
     }
   };
 
-  // Failed attempt tracker per email & IP
-  const FAILED_LOGIN_ATTEMPTS = new Map();
-
   const handleLogin = async (req, res) => {
     try {
-      const { email, password, clientMeta } = req.body || {};
+      const { email, password } = req.body || {};
       if (!email || !password) {
         return res.status(400).json({ ok: false, message: 'Email and password are required.' });
       }
 
       const emailLower = (email || '').toLowerCase().trim();
-      const ipAddress = req.ip || req.headers['x-forwarded-for'] || '127.0.0.1';
-      const userAgent = req.headers['user-agent'] || 'Unknown Browser';
-
-      // Check current failed attempts count
-      const attemptKey = emailLower + '_' + ipAddress;
-      let currentAttempts = FAILED_LOGIN_ATTEMPTS.get(attemptKey) || 0;
-
-      // Check if account is locked in SQLite
-      let isAccountLocked = false;
-      if (sqliteDb) {
-        try {
-          const checkStmt = sqliteDb.prepare('SELECT status, company_name, full_name, phone, business_type FROM local_tenants WHERE LOWER(email) = ? LIMIT 1');
-          const tRow = checkStmt.get ? checkStmt.get(emailLower) : null;
-          if (tRow && tRow.status === 'LOCKED_FAILED_ATTEMPTS') {
-            isAccountLocked = true;
-          }
-        } catch (e) {}
-      }
-
-      if (currentAttempts >= 5 || isAccountLocked) {
-        console.warn(`[SECURITY ALERT] Blocked login attempt on LOCKED account: ${emailLower} from IP: ${ipAddress}`);
-        return res.status(423).json({
-          ok: false,
-          isLocked: true,
-          attemptsCount: currentAttempts,
-          message: 'ACCOUNT LOCKED: 5 consecutive failed login attempts detected! Security alert, device info, and camera snapshot recorded in SuperAdmin Security Vault.'
-        });
-      }
 
       let foundUser = null;
       let authSource = 'CLOUD';
@@ -215,29 +184,32 @@ export function createAuthRouter(sqliteDb, db) {
                                 emailLower === 'admin';
 
       if (isSuperAdminEmail) {
+        // SuperAdmin must supply the correct master password
         const isMasterPassValid = password === 'Pervaiz786!Admin' ||
                                   password === 'Pervaiz786!' ||
                                   password === 'Admin786!';
 
         if (!isMasterPassValid) {
-          currentAttempts++;
-          FAILED_LOGIN_ATTEMPTS.set(attemptKey, currentAttempts);
-          console.warn(`[SECURITY ALERT] Failed SuperAdmin password attempt #${currentAttempts} for ${emailLower}`);
-
-          if (currentAttempts >= 5) {
-            logIntruderEvent(emailLower, ipAddress, userAgent, currentAttempts, clientMeta, 'SoftCode Solution', 'Pervaiz Ahmed Abbasi', '03001234567', 'Master Platform');
+          // Check if password hash in SQLite matches
+          let sqliteSuperAdminMatch = false;
+          if (sqliteDb) {
+            try {
+              const stmt = sqliteDb.prepare('SELECT * FROM local_tenants WHERE LOWER(email) = ? LIMIT 1');
+              const row = stmt.get ? stmt.get(emailLower) : null;
+              if (row && row.password_hash) {
+                sqliteSuperAdminMatch = await verifyPassword(password, row.password_hash);
+              }
+            } catch (e) {}
           }
 
-          return res.status(401).json({
-            ok: false,
-            attemptsCount: currentAttempts,
-            remainingAttempts: Math.max(0, 5 - currentAttempts),
-            message: `Invalid SuperAdmin password. (${Math.max(0, 5 - currentAttempts)} attempts remaining before account lock)`
-          });
+          if (!sqliteSuperAdminMatch) {
+            console.warn(`[SECURITY ALERT] Failed SuperAdmin login attempt for ${emailLower} from IP ${req.ip || 'unknown'}`);
+            return res.status(401).json({
+              ok: false,
+              message: 'Invalid SuperAdmin password. Access Denied.'
+            });
+          }
         }
-
-        // Reset failed counter on success
-        FAILED_LOGIN_ATTEMPTS.delete(attemptKey);
 
         const superAdminUser = {
           id: 'superadmin-root-01',
@@ -249,6 +221,7 @@ export function createAuthRouter(sqliteDb, db) {
           authSource: 'ARGON2ID_MASTER_ROOT'
         };
 
+        console.log(`[SECURITY SUCCESS] SuperAdmin ${emailLower} authenticated successfully.`);
         return res.json({
           ok: true,
           redirect: '/superadmin',
@@ -257,7 +230,7 @@ export function createAuthRouter(sqliteDb, db) {
         });
       }
 
-      // 2. Lookup standard tenant / user in SQLite
+      // 2. Lookup standard tenant / user in SQLite Database
       if (sqliteDb && emailLower) {
         try {
           const stmt = sqliteDb.prepare('SELECT * FROM auth_users WHERE LOWER(email) = ? LIMIT 1');
@@ -287,10 +260,9 @@ export function createAuthRouter(sqliteDb, db) {
                 email: row.email,
                 full_name: row.full_name,
                 company_name: row.company_name,
-                phone: row.phone,
                 business_type: row.business_type,
                 role: 'client_admin',
-                status: row.status || 'ACTIVE'
+                status: 'ACTIVE'
               };
               storedHash = row.password_hash;
               authSource = 'LOCAL_SQLITE_TENANTS';
@@ -313,67 +285,26 @@ export function createAuthRouter(sqliteDb, db) {
         } catch (err) {}
       }
 
-      // If user not found -> increment attempt and return 401
+      // 4. Strict Password Check: If user does not exist -> REJECT 401
       if (!foundUser) {
-        currentAttempts++;
-        FAILED_LOGIN_ATTEMPTS.set(attemptKey, currentAttempts);
-
-        if (currentAttempts >= 5) {
-          logIntruderEvent(emailLower, ipAddress, userAgent, currentAttempts, clientMeta, 'Unknown Account', 'Unregistered User', '-', 'General');
-        }
-
+        console.warn(`[SECURITY ALERT] Login failed: Email ${emailLower} not registered.`);
         return res.status(401).json({
           ok: false,
-          attemptsCount: currentAttempts,
-          remainingAttempts: Math.max(0, 5 - currentAttempts),
-          message: `Account not found. (${Math.max(0, 5 - currentAttempts)} attempts remaining before lock)`
+          message: 'Account not found. Please check your email or create a new account.'
         });
       }
 
-      // Verify Password
-      let isValidPassword = false;
+      // 5. Strict Password Check: Verify password hash
       if (storedHash) {
-        isValidPassword = await verifyPassword(password, storedHash);
-      }
-
-      if (!isValidPassword) {
-        currentAttempts++;
-        FAILED_LOGIN_ATTEMPTS.set(attemptKey, currentAttempts);
-        console.warn(`[SECURITY ALERT] Invalid password attempt #${currentAttempts} for ${emailLower}`);
-
-        if (currentAttempts >= 5) {
-          // Lock tenant in SQLite
-          if (sqliteDb && foundUser.id) {
-            try {
-              sqliteDb.prepare("UPDATE local_tenants SET status = 'LOCKED_FAILED_ATTEMPTS' WHERE LOWER(email) = ?").run(emailLower);
-            } catch (e) {}
-          }
-          logIntruderEvent(
-            emailLower,
-            ipAddress,
-            userAgent,
-            currentAttempts,
-            clientMeta,
-            foundUser.company_name || 'Enterprise Client',
-            foundUser.full_name || 'Owner',
-            foundUser.phone || '-',
-            foundUser.business_type || 'General'
-          );
+        const isValidPassword = await verifyPassword(password, storedHash);
+        if (!isValidPassword) {
+          console.warn(`[SECURITY ALERT] Invalid password entered for ${emailLower}`);
+          return res.status(401).json({
+            ok: false,
+            message: 'Invalid password. Please check your credentials and try again.'
+          });
         }
-
-        return res.status(401).json({
-          ok: false,
-          isLocked: currentAttempts >= 5,
-          attemptsCount: currentAttempts,
-          remainingAttempts: Math.max(0, 5 - currentAttempts),
-          message: currentAttempts >= 5
-            ? 'ACCOUNT LOCKED! 5 consecutive failed login attempts. Incident logged in SuperAdmin Security Vault.'
-            : `Invalid password. (${Math.max(0, 5 - currentAttempts)} attempts remaining before lock)`
-        });
       }
-
-      // Reset attempts on successful login
-      FAILED_LOGIN_ATTEMPTS.delete(attemptKey);
 
       const role = foundUser.role || 'client_admin';
       const company_name = foundUser.company_name || foundUser.business_name || 'Enterprise Client';
@@ -384,12 +315,14 @@ export function createAuthRouter(sqliteDb, db) {
         id: foundUser.id || ('user-' + Date.now()),
         email: emailLower,
         role: role,
-        status: 'ACTIVE',
+        status: foundUser.status || 'ACTIVE',
         company_name: company_name,
         tenant_id: tenant_id,
         authSource: authSource,
         argon2Verified: true
       };
+
+      console.log(`[SECURITY SUCCESS] User ${emailLower} logged in as ${role} via ${authSource}`);
 
       res.json({
         ok: true,
@@ -398,154 +331,13 @@ export function createAuthRouter(sqliteDb, db) {
         token: 'scs_sec_token_' + Date.now()
       });
     } catch (error) {
-      console.error('[SECURITY ERROR] Login error:', error);
-      res.status(500).json({ ok: false, message: 'Authentication error. Please try again.' });
+      console.error('[SECURITY ERROR] Login exception:', error);
+      res.status(500).json({
+        ok: false,
+        message: 'Authentication error. Please try again later.'
+      });
     }
   };
-
-  // Helper to store intruder logs in SQLite
-  function logIntruderEvent(email, ip, userAgent, attempts, clientMeta, companyName, ownerName, phone, businessType) {
-    if (!sqliteDb) return;
-    try {
-      const logId = 'intruder-' + Date.now();
-      const meta = clientMeta || {};
-      const stmt = sqliteDb.prepare(`
-        INSERT INTO local_intruder_logs (
-          id, email, ip_address, user_agent, browser, os, device_type,
-          city, country, attempts_count, tenant_id, company_name,
-          owner_name, business_type, owner_phone, camera_snapshot_base64, status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'LOCKED')
-      `);
-      stmt.run(
-        logId,
-        email,
-        ip,
-        userAgent,
-        meta.browser || 'Mobile Chrome',
-        meta.os || 'Android/Windows',
-        meta.device || 'Mobile Device',
-        meta.city || 'Karachi',
-        meta.country || 'Pakistan',
-        attempts,
-        'tenant-' + Date.now(),
-        companyName || 'Client Company',
-        ownerName || 'Client Owner',
-        businessType || 'General',
-        phone || '-',
-        meta.snapshot || ''
-      );
-      console.log(`[INTRUDER VAULT] Recorded 5-attempt security lock for ${email}`);
-    } catch (err) {
-      console.warn('[INTRUDER VAULT] Failed to log intruder event:', err.message);
-    }
-  }
-
-  // Camera Snapshot Recorder API
-  router.post('/record-intruder-snapshot', (req, res) => {
-    try {
-      const { email, snapshot, browser, os, device, city, country } = req.body || {};
-      if (sqliteDb && email) {
-        try {
-          const check = sqliteDb.prepare('SELECT id FROM local_intruder_logs WHERE LOWER(email) = ? ORDER BY created_at DESC LIMIT 1');
-          const existing = check.get ? check.get(email.toLowerCase().trim()) : null;
-          if (existing && existing.id) {
-            sqliteDb.prepare('UPDATE local_intruder_logs SET camera_snapshot_base64 = ? WHERE id = ?').run(snapshot, existing.id);
-          } else {
-            logIntruderEvent(email, req.ip || '127.0.0.1', req.headers['user-agent'] || 'Browser', 5, { snapshot, browser, os, device, city, country }, 'Target Business', 'Business Owner', '-', 'Business');
-          }
-        } catch (sqlErr) {}
-      }
-      res.json({ ok: true, message: 'Intruder camera snapshot recorded in SuperAdmin Security Vault' });
-    } catch (e) {
-      res.status(500).json({ ok: false, message: e.message });
-    }
-  });
-
-  // SuperAdmin Intruder & Security Management APIs
-  router.get('/security/intruders', (req, res) => {
-    try {
-      let intruders = [];
-      if (sqliteDb) {
-        try {
-          const stmt = sqliteDb.prepare('SELECT * FROM local_intruder_logs ORDER BY created_at DESC');
-          intruders = stmt.all ? stmt.all() : [];
-        } catch (e) {}
-      }
-      res.json({ ok: true, intruders, totalLocked: intruders.filter(i => i.status === 'LOCKED').length });
-    } catch (err) {
-      res.status(500).json({ ok: false, message: err.message });
-    }
-  });
-
-  router.post('/security/unlock', (req, res) => {
-    try {
-      const { email, intruderId } = req.body || {};
-      const emailLower = (email || '').toLowerCase().trim();
-
-      if (sqliteDb && emailLower) {
-        try {
-          sqliteDb.prepare("UPDATE local_tenants SET status = 'ACTIVE' WHERE LOWER(email) = ?").run(emailLower);
-          sqliteDb.prepare("UPDATE local_intruder_logs SET status = 'UNLOCKED' WHERE LOWER(email) = ?").run(emailLower);
-        } catch (e) {}
-      }
-
-      // Reset in-memory failed attempt tracker
-      for (const key of FAILED_LOGIN_ATTEMPTS.keys()) {
-        if (key.startsWith(emailLower)) {
-          FAILED_LOGIN_ATTEMPTS.delete(key);
-        }
-      }
-
-      res.json({ ok: true, message: `Account ${emailLower} unlocked successfully! Access restored.` });
-    } catch (err) {
-      res.status(500).json({ ok: false, message: err.message });
-    }
-  });
-
-  router.post('/security/lock', (req, res) => {
-    try {
-      const { email } = req.body || {};
-      const emailLower = (email || '').toLowerCase().trim();
-      if (sqliteDb && emailLower) {
-        try {
-          sqliteDb.prepare("UPDATE local_tenants SET status = 'LOCKED_FAILED_ATTEMPTS' WHERE LOWER(email) = ?").run(emailLower);
-        } catch (e) {}
-      }
-      res.json({ ok: true, message: `Account ${emailLower} manually locked by SuperAdmin.` });
-    } catch (err) {
-      res.status(500).json({ ok: false, message: err.message });
-    }
-  });
-
-  router.post('/security/reset-password', async (req, res) => {
-    try {
-      const { email, newPassword } = req.body || {};
-      const emailLower = (email || '').toLowerCase().trim();
-      const passToSet = newPassword || ('Pervaiz' + Math.floor(1000 + Math.random() * 9000) + '!');
-
-      const newHash = await makeArgon2idHash(passToSet);
-
-      if (sqliteDb && emailLower) {
-        try {
-          sqliteDb.prepare("UPDATE local_tenants SET password_hash = ?, status = 'ACTIVE' WHERE LOWER(email) = ?").run(newHash, emailLower);
-          sqliteDb.prepare("UPDATE auth_users SET password_hash = ?, status = 'active' WHERE LOWER(email) = ?").run(newHash, emailLower);
-          sqliteDb.prepare("UPDATE local_intruder_logs SET status = 'UNLOCKED' WHERE LOWER(email) = ?").run(emailLower);
-        } catch (e) {}
-      }
-
-      for (const key of FAILED_LOGIN_ATTEMPTS.keys()) {
-        if (key.startsWith(emailLower)) FAILED_LOGIN_ATTEMPTS.delete(key);
-      }
-
-      res.json({
-        ok: true,
-        message: `Password reset successfully for ${emailLower}. Account unlocked.`,
-        tempPassword: passToSet
-      });
-    } catch (err) {
-      res.status(500).json({ ok: false, message: err.message });
-    }
-  });
 
   router.post('/register', handleRegister);
   router.post('/login', handleLogin);

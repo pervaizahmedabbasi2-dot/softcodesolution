@@ -180,31 +180,6 @@
             </button>
           </div>
           <p *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.hasError('required')" class="text-red-500 text-xs mt-1 font-medium">Please enter your password.</p>
-
-          <!-- Password Policy Realtime Checklist -->
-          <div *ngIf="passwordValue.length > 0" class="mt-2.5 p-2.5 bg-slate-50 border border-slate-200/80 rounded-xl space-y-1 text-[11px] font-medium text-slate-600">
-            <div class="font-bold text-[10px] uppercase tracking-wider text-slate-400 mb-1">Security Password Standard:</div>
-            <div class="flex items-center gap-1.5" [class.text-emerald-600]="hasMinLength" [class.text-slate-400]="!hasMinLength">
-              <span>{{ hasMinLength ? '✓' : '○' }}</span>
-              <span>At least 8 characters long</span>
-            </div>
-            <div class="flex items-center gap-1.5" [class.text-emerald-600]="hasUppercase" [class.text-slate-400]="!hasUppercase">
-              <span>{{ hasUppercase ? '✓' : '○' }}</span>
-              <span>Contains UPPERCASE letter (A-Z)</span>
-            </div>
-            <div class="flex items-center gap-1.5" [class.text-emerald-600]="hasLowercase" [class.text-slate-400]="!hasLowercase">
-              <span>{{ hasLowercase ? '✓' : '○' }}</span>
-              <span>Contains lowercase letter (a-z)</span>
-            </div>
-            <div class="flex items-center gap-1.5" [class.text-emerald-600]="hasNumber" [class.text-slate-400]="!hasNumber">
-              <span>{{ hasNumber ? '✓' : '○' }}</span>
-              <span>Contains Number (0-9)</span>
-            </div>
-            <div class="flex items-center gap-1.5" [class.text-emerald-600]="hasSymbol" [class.text-slate-400]="!hasSymbol">
-              <span>{{ hasSymbol ? '✓' : '○' }}</span>
-              <span>Contains Special Symbol (!@#$%^&*)</span>
-            </div>
-          </div>
         </div>
 
         <!-- Keep me signed in -->
