@@ -90,12 +90,12 @@ export class BackendService {
     return true;
   }
 
-  async loginUser(email: string, password: string, clientMeta?: any): Promise<any> {
+  async loginUser(email: string, password: string, clientMeta?: any, botDefense?: any): Promise<any> {
     try {
       const response = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, clientMeta })
+        body: JSON.stringify({ email, password, clientMeta, botDefense })
       });
       const data = await response.json().catch(() => null);
       if (data && data.ok) {
@@ -106,7 +106,7 @@ export class BackendService {
       }
     } catch(e) {}
 
-    return { ok: false, message: 'Invalid credentials or Network error' };
+    return { ok: false, message: 'Invalid credentials. Please verify your details.' };
   }
 
   // --- CLIENTS & TENANTS ---

@@ -1,0 +1,561 @@
+<header class="fixed top-0 left-0 right-0 z-[1000] bg-white/40 backdrop-blur-xl border-b border-slate-200/50 shadow-sm transition-all duration-500">
+  <nav class="container mx-auto px-4 sm:px-6 lg:px-10 h-16 sm:h-20 flex items-center justify-between">
+    <!-- Logo -->
+    <div class="flex items-center gap-2 sm:gap-3 min-w-0 z-[60]">
+      <a href="/"
+        class="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 bg-white rounded-full flex items-center justify-center shadow-xs overflow-hidden border border-slate-200/80 group block">
+        <img src="/logos/logo.png" alt="Logo"
+          class="w-full h-full object-center object-contain p-1 group-hover:scale-110 transition-transform">
+      </a>
+      <a href="/" class="text-lg sm:text-xl md:text-2xl font-extrabold text-slate-900 tracking-tight whitespace-nowrap hover:opacity-80 transition-opacity">SoftCode<span class="text-indigo-600">Solution</span></a>
+    </div>
+
+    <!-- Desktop Nav (Visible on xl: and above) -->
+    <div class="hidden xl:flex xl:gap-x-8 2xl:gap-x-12 items-center">
+      <a href="/" class="text-sm font-semibold text-slate-600 hover:text-indigo-600 transition-colors">Home</a>
+      <a routerLink="/" fragment="solutions" class="text-sm font-semibold text-slate-600 hover:text-indigo-600 transition-colors">Solutions</a>
+      <a routerLink="/" fragment="technology" class="text-sm font-semibold text-slate-600 hover:text-indigo-600 transition-colors">Technology</a>
+      <a routerLink="/" fragment="how-it-works" class="text-sm font-semibold text-slate-600 hover:text-indigo-600 transition-colors">How It Works</a>
+      <a routerLink="/" fragment="store" class="text-sm font-semibold text-slate-600 hover:text-indigo-600 transition-colors">Store</a>
+    </div>
+
+    <!-- Right Actions (Consistent layout on Mobile, Tablet & Desktop) -->
+    <div class="flex items-center gap-x-2 sm:gap-x-3 md:gap-x-4 flex-shrink-0 z-[60]">
+      <app-pwa-install></app-pwa-install>
+      
+      <!-- Global Country & Currency & Language Switcher (Flag Sticker & Dropdown Sign - Plain, No Box) -->
+      <app-currency-language-selector></app-currency-language-selector>
+
+      <!-- Large Desktop Auth Links Only (Never show with hamburger toggle) -->
+      <div class="hidden xl:flex items-center gap-x-3 2xl:gap-x-4">
+        <a routerLink="/login" class="text-sm font-semibold text-indigo-600 px-3 py-2 transition-colors">
+          Login
+        </a>
+        <a routerLink="/register" class="rounded-xl bg-indigo-600 hover:bg-indigo-700 px-4 xl:px-5 py-2 xl:py-2.5 text-sm font-bold text-white shadow-xs hover:-translate-y-0.5 transition-all cursor-pointer">
+          Register
+        </a>
+      </div>
+
+      <div class="flex xl:hidden">
+        <button
+          (click)="toggleMenu()"
+          aria-label="Toggle Navigation Menu"
+          class="p-1.5 sm:p-2 rounded-lg text-slate-700 transition-all relative z-[60] flex items-center justify-center cursor-pointer active:scale-90"
+        >
+          <div class="relative w-5 h-5 flex items-center justify-center">
+            <svg 
+              class="h-5 w-5 absolute inset-0 transition-all duration-300 transform"
+              [class.opacity-100]="!isMenuOpen"
+              [class.rotate-0]="!isMenuOpen"
+              [class.scale-100]="!isMenuOpen"
+              [class.opacity-0]="isMenuOpen"
+              [class.rotate-90]="isMenuOpen"
+              [class.scale-75]="isMenuOpen"
+              fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+            </svg>
+            <svg 
+              class="h-5 w-5 absolute inset-0 transition-all duration-300 transform"
+              [class.opacity-100]="isMenuOpen"
+              [class.rotate-0]="isMenuOpen"
+              [class.scale-100]="isMenuOpen"
+              [class.opacity-0]="!isMenuOpen"
+              [class.-rotate-90]="!isMenuOpen"
+              [class.scale-75]="!isMenuOpen"
+              fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </div>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+</header>
+
+<!-- Mobile & Tablet Full Screen Menu (Ultra-Smooth "Bohat Slow" Company Animation) -->
+<div
+  class="xl:hidden bohat-slow-menu pt-20 px-6 pb-10"
+  [class.menu-active]="isMenuOpen"
+>
+  <div class="flex flex-col space-y-1">
+    <a href="/" (click)="closeMenu()" class="py-3 text-[1.1rem] font-semibold text-slate-900 hover:text-indigo-600 transition-colors flex items-center">
+      <span>Home</span>
+    </a>
+    <a routerLink="/" fragment="solutions" (click)="closeMenu()" class="py-3 text-[1.1rem] font-semibold text-slate-900 hover:text-indigo-600 transition-colors flex items-center">
+      <span>Solutions</span>
+    </a>
+    <a routerLink="/" fragment="technology" (click)="closeMenu()" class="py-3 text-[1.1rem] font-semibold text-slate-900 hover:text-indigo-600 transition-colors flex items-center">
+      <span>Technology</span>
+    </a>
+    <a routerLink="/" fragment="store" (click)="closeMenu()" class="py-3 text-[1.1rem] font-semibold text-slate-900 hover:text-indigo-600 transition-colors flex items-center">
+      <span>Store</span>
+    </a>
+    <a href="#about" (click)="closeMenu()" class="py-3 text-[1.1rem] font-semibold text-slate-900 hover:text-indigo-600 transition-colors flex items-center">
+      <span>About</span>
+    </a>
+  </div>
+  <div class="mt-8 flex flex-col sm:flex-row gap-4">
+    <a routerLink="/login" (click)="closeMenu()" class="flex-1 py-4 text-center text-[1rem] font-bold text-indigo-600 bg-white/50 border border-slate-200/80 rounded-2xl hover:bg-white transition-all active:scale-[0.98]">
+      Sign In
+    </a>
+    <a routerLink="/register" (click)="closeMenu()" class="flex-1 py-4 text-center text-[1rem] font-bold text-white bg-indigo-600 rounded-2xl shadow-md shadow-indigo-200/50 hover:bg-indigo-700 transition-all active:scale-[0.98]">
+      Create Account
+    </a>
+  </div>
+</div>
+
+<!-- Pure Centered Login Page -->
+<main class="pt-20 min-h-screen bg-slate-50 flex flex-col justify-between font-sans relative overflow-hidden">
+
+  <!-- Subtle Ambient Background -->
+  <div class="absolute inset-0 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:28px_28px] opacity-60 pointer-events-none -z-10"></div>
+  <div class="absolute top-1/4 -left-32 w-96 h-96 bg-indigo-100/40 rounded-full blur-3xl pointer-events-none -z-10"></div>
+  <div class="absolute bottom-1/4 -right-32 w-96 h-96 bg-blue-100/40 rounded-full blur-3xl pointer-events-none -z-10"></div>
+
+  <div class="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12 sm:py-16 relative z-10">
+    <div class="w-full max-w-md bg-white p-7 sm:p-9 rounded-[26px] border border-slate-200/90 shadow-[0_12px_0_rgba(226,232,240,0.75),0_28px_60px_-14px_rgba(15,23,42,0.14)] space-y-6">
+      
+      <!-- Top Title & 3D Security Badge -->
+      <div class="text-center">
+        <div class="w-14 h-14 bg-gradient-to-b from-indigo-500 to-indigo-700 text-white rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-[0_6px_0_#3730a3,0_14px_24px_-6px_rgba(79,70,229,0.45)] border border-indigo-400/60">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+          </svg>
+        </div>
+        <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Sign In to Your Account</h1>
+        <p class="text-xs text-slate-500 mt-1">Argon2id Encrypted • Intruder Vault &amp; Real-Time 3D Validation</p>
+      </div>
+
+      <!-- Login Form -->
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-4">
+
+        <!-- Email or Username Field -->
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="block text-xs font-bold text-slate-700">Email or Username</label>
+            <div class="flex items-center gap-1.5">
+              @if (emailAutoCorrected) {
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-gradient-to-b from-cyan-400 to-teal-600 text-white shadow-[0_2px_0_#0f766e,0_4px_10px_-2px_rgba(20,184,166,0.45)] border border-cyan-300/60 transition-all duration-300">
+                  ✓ {{ emailAutoCorrectNote || 'Auto-Corrected' }}
+                </span>
+              } @else if (isEmailFormatValid) {
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-gradient-to-b from-emerald-400 to-emerald-600 text-white shadow-[0_2px_0_#047857,0_4px_10px_-2px_rgba(16,185,129,0.45)] border border-emerald-300/60 transition-all duration-300">
+                  ✓ Verified
+                </span>
+              }
+            </div>
+          </div>
+          <div class="relative">
+            <span class="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors"
+              [class.text-emerald-600]="isEmailFormatValid"
+              [class.text-slate-400]="!isEmailFormatValid">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="20" height="16" x="2" y="4" rx="2" />
+                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+              </svg>
+            </span>
+            <input type="text" formControlName="email" (input)="onEmailInput()" (blur)="onEmailBlur()"
+              placeholder="name@company.com or username"
+              class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-11 pr-10 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all duration-300"
+              [class.border-emerald-500]="isEmailFormatValid"
+              [class.bg-emerald-50/30]="isEmailFormatValid"
+              [class.shadow-[0_4px_0_rgba(16,185,129,0.25),0_10px_20px_-6px_rgba(16,185,129,0.22)]]="isEmailFormatValid"
+              [class.-translate-y-0.5]="isEmailFormatValid"
+              [class.border-red-400]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
+            @if (isEmailFormatValid) {
+              <span class="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-gradient-to-b from-emerald-400 to-emerald-600 text-white flex items-center justify-center text-[11px] font-bold shadow-[0_2px_0_#047857]">✓</span>
+            }
+          </div>
+          <p *ngIf="loginForm.get('email')?.touched && loginForm.get('email')?.hasError('required')" class="text-red-500 text-xs mt-1 font-medium">Please enter your email or username.</p>
+        </div>
+
+        <!-- Password Field -->
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <div class="flex items-center gap-2">
+              <label class="block text-xs font-bold text-slate-700">Password</label>
+              @if (passwordAutoCorrected) {
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-gradient-to-b from-cyan-400 to-teal-600 text-white shadow-[0_2px_0_#0f766e] border border-cyan-300/60">
+                  ✓ Trimmed
+                </span>
+              } @else if (allSecurityRulesMet) {
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-gradient-to-b from-emerald-400 to-emerald-600 text-white shadow-[0_2px_0_#047857,0_4px_10px_-2px_rgba(16,185,129,0.45)] border border-emerald-300/60">
+                  ✓ Strong 5/5
+                </span>
+              }
+            </div>
+            <button type="button" (click)="onForgotPassword()" class="text-xs font-semibold text-indigo-600 hover:text-indigo-700 transition-colors cursor-pointer">Forgot Password?</button>
+          </div>
+          <div class="relative">
+            <span class="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors"
+              [class.text-emerald-600]="allSecurityRulesMet"
+              [class.text-slate-400]="!allSecurityRulesMet">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+            </span>
+            <input [type]="isPasswordVisible ? 'text' : 'password'" formControlName="password" (input)="onPasswordInput()" (blur)="onPasswordBlur()"
+              placeholder="••••••••"
+              class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-11 pr-11 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all duration-300"
+              [class.border-emerald-500]="allSecurityRulesMet"
+              [class.bg-emerald-50/30]="allSecurityRulesMet"
+              [class.shadow-[0_4px_0_rgba(16,185,129,0.25),0_10px_20px_-6px_rgba(16,185,129,0.22)]]="allSecurityRulesMet"
+              [class.-translate-y-0.5]="allSecurityRulesMet"
+              [class.border-red-400]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
+            <button type="button" (click)="togglePassword()" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none cursor-pointer" aria-label="Toggle password visibility">
+              <svg *ngIf="!isPasswordVisible" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+              <svg *ngIf="isPasswordVisible" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+                <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+                <path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+                <line x1="2" x2="22" y1="2" y2="22" />
+              </svg>
+            </button>
+          </div>
+          <p *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.hasError('required')" class="text-red-500 text-xs mt-1 font-medium">Please enter your password.</p>
+
+          <!-- 3D Security Password Validation Matrix (Always visible for real-time 3D feedback) -->
+          <div class="mt-3 p-3.5 bg-gradient-to-b from-slate-50 to-slate-100/90 border border-slate-200/90 rounded-2xl shadow-[0_4px_0_rgba(203,213,225,0.6),inset_0_1px_0_#ffffff] space-y-2.5">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Security Password Check</span>
+              <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-md transition-all"
+                [class.bg-emerald-600]="allSecurityRulesMet"
+                [class.text-white]="allSecurityRulesMet"
+                [class.shadow-[0_2px_0_#047857]]="allSecurityRulesMet"
+                [class.bg-slate-200]="!allSecurityRulesMet"
+                [class.text-slate-600]="!allSecurityRulesMet">
+                {{ passwordStrengthLabel }}
+              </span>
+            </div>
+
+            <!-- 3D Segmented Strength Meter -->
+            <div class="grid grid-cols-5 gap-1.5">
+              <div class="h-2 rounded-full transition-all duration-300"
+                [class.bg-gradient-to-b]="passwordScore >= 1"
+                [class.from-red-400]="passwordScore === 1"
+                [class.to-red-600]="passwordScore === 1"
+                [class.from-amber-400]="passwordScore === 2 || passwordScore === 3"
+                [class.to-amber-600]="passwordScore === 2 || passwordScore === 3"
+                [class.from-emerald-400]="passwordScore >= 4"
+                [class.to-emerald-600]="passwordScore >= 4"
+                [class.shadow-[0_2px_0_rgba(0,0,0,0.18)]]="passwordScore >= 1"
+                [class.bg-slate-200]="passwordScore < 1"></div>
+              <div class="h-2 rounded-full transition-all duration-300"
+                [class.bg-gradient-to-b]="passwordScore >= 2"
+                [class.from-amber-400]="passwordScore === 2 || passwordScore === 3"
+                [class.to-amber-600]="passwordScore === 2 || passwordScore === 3"
+                [class.from-emerald-400]="passwordScore >= 4"
+                [class.to-emerald-600]="passwordScore >= 4"
+                [class.shadow-[0_2px_0_rgba(0,0,0,0.18)]]="passwordScore >= 2"
+                [class.bg-slate-200]="passwordScore < 2"></div>
+              <div class="h-2 rounded-full transition-all duration-300"
+                [class.bg-gradient-to-b]="passwordScore >= 3"
+                [class.from-amber-400]="passwordScore === 3"
+                [class.to-amber-600]="passwordScore === 3"
+                [class.from-emerald-400]="passwordScore >= 4"
+                [class.to-emerald-600]="passwordScore >= 4"
+                [class.shadow-[0_2px_0_rgba(0,0,0,0.18)]]="passwordScore >= 3"
+                [class.bg-slate-200]="passwordScore < 3"></div>
+              <div class="h-2 rounded-full transition-all duration-300"
+                [class.bg-gradient-to-b]="passwordScore >= 4"
+                [class.from-emerald-400]="passwordScore >= 4"
+                [class.to-emerald-600]="passwordScore >= 4"
+                [class.shadow-[0_2px_0_rgba(4,120,87,0.5)]]="passwordScore >= 4"
+                [class.bg-slate-200]="passwordScore < 4"></div>
+              <div class="h-2 rounded-full transition-all duration-300"
+                [class.bg-gradient-to-b]="passwordScore >= 5"
+                [class.from-emerald-400]="passwordScore >= 5"
+                [class.to-emerald-600]="passwordScore >= 5"
+                [class.shadow-[0_2px_0_rgba(4,120,87,0.5)]]="passwordScore >= 5"
+                [class.bg-slate-200]="passwordScore < 5"></div>
+            </div>
+
+            <!-- 5 Tactile 3D Keycap Validation Tiles -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-[11px] font-bold">
+              <div class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border transition-all duration-300"
+                [class.bg-gradient-to-b]="hasMinLength"
+                [class.from-emerald-400]="hasMinLength"
+                [class.to-emerald-600]="hasMinLength"
+                [class.text-white]="hasMinLength"
+                [class.border-emerald-300]="hasMinLength"
+                [class.shadow-[0_4px_0_#047857,0_8px_14px_-4px_rgba(16,185,129,0.45)]]="hasMinLength"
+                [class.-translate-y-0.5]="hasMinLength"
+                [class.bg-white]="!hasMinLength"
+                [class.text-slate-500]="!hasMinLength"
+                [class.border-slate-300/80]="!hasMinLength"
+                [class.shadow-[inset_0_2px_4px_rgba(15,23,42,0.06)]]="!hasMinLength">
+                <span>{{ hasMinLength ? '✓' : '○' }}</span>
+                <span>8+ Chars</span>
+              </div>
+
+              <div class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border transition-all duration-300"
+                [class.bg-gradient-to-b]="hasUppercase"
+                [class.from-emerald-400]="hasUppercase"
+                [class.to-emerald-600]="hasUppercase"
+                [class.text-white]="hasUppercase"
+                [class.border-emerald-300]="hasUppercase"
+                [class.shadow-[0_4px_0_#047857,0_8px_14px_-4px_rgba(16,185,129,0.45)]]="hasUppercase"
+                [class.-translate-y-0.5]="hasUppercase"
+                [class.bg-white]="!hasUppercase"
+                [class.text-slate-500]="!hasUppercase"
+                [class.border-slate-300/80]="!hasUppercase"
+                [class.shadow-[inset_0_2px_4px_rgba(15,23,42,0.06)]]="!hasUppercase">
+                <span>{{ hasUppercase ? '✓' : '○' }}</span>
+                <span>Bara (A-Z)</span>
+              </div>
+
+              <div class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border transition-all duration-300"
+                [class.bg-gradient-to-b]="hasLowercase"
+                [class.from-emerald-400]="hasLowercase"
+                [class.to-emerald-600]="hasLowercase"
+                [class.text-white]="hasLowercase"
+                [class.border-emerald-300]="hasLowercase"
+                [class.shadow-[0_4px_0_#047857,0_8px_14px_-4px_rgba(16,185,129,0.45)]]="hasLowercase"
+                [class.-translate-y-0.5]="hasLowercase"
+                [class.bg-white]="!hasLowercase"
+                [class.text-slate-500]="!hasLowercase"
+                [class.border-slate-300/80]="!hasLowercase"
+                [class.shadow-[inset_0_2px_4px_rgba(15,23,42,0.06)]]="!hasLowercase">
+                <span>{{ hasLowercase ? '✓' : '○' }}</span>
+                <span>Choti (a-z)</span>
+              </div>
+
+              <div class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border transition-all duration-300"
+                [class.bg-gradient-to-b]="hasNumber"
+                [class.from-emerald-400]="hasNumber"
+                [class.to-emerald-600]="hasNumber"
+                [class.text-white]="hasNumber"
+                [class.border-emerald-300]="hasNumber"
+                [class.shadow-[0_4px_0_#047857,0_8px_14px_-4px_rgba(16,185,129,0.45)]]="hasNumber"
+                [class.-translate-y-0.5]="hasNumber"
+                [class.bg-white]="!hasNumber"
+                [class.text-slate-500]="!hasNumber"
+                [class.border-slate-300/80]="!hasNumber"
+                [class.shadow-[inset_0_2px_4px_rgba(15,23,42,0.06)]]="!hasNumber">
+                <span>{{ hasNumber ? '✓' : '○' }}</span>
+                <span>Number (0-9)</span>
+              </div>
+
+              <div class="col-span-2 sm:col-span-2 flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border transition-all duration-300"
+                [class.bg-gradient-to-b]="hasSymbol"
+                [class.from-emerald-400]="hasSymbol"
+                [class.to-emerald-600]="hasSymbol"
+                [class.text-white]="hasSymbol"
+                [class.border-emerald-300]="hasSymbol"
+                [class.shadow-[0_4px_0_#047857,0_8px_14px_-4px_rgba(16,185,129,0.45)]]="hasSymbol"
+                [class.-translate-y-0.5]="hasSymbol"
+                [class.bg-white]="!hasSymbol"
+                [class.text-slate-500]="!hasSymbol"
+                [class.border-slate-300/80]="!hasSymbol"
+                [class.shadow-[inset_0_2px_4px_rgba(15,23,42,0.06)]]="!hasSymbol">
+                <span>{{ hasSymbol ? '✓' : '○' }}</span>
+                <span>Symbol (!&#64;#$%^&amp;*)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Invisible Anti-Bot Honeypot Trap (Never seen or filled by real humans) -->
+        <div class="absolute -left-[9999px] w-px h-px overflow-hidden opacity-0 pointer-events-none" aria-hidden="true">
+          <label for="login_hp_website">Website</label>
+          <input id="login_hp_website" type="text" formControlName="hpWebsite" tabindex="-1" autocomplete="off">
+        </div>
+
+        <!-- 3D Anti-Bot Human Verification Shield -->
+        <button type="button" (click)="verifyHumanShield()" [disabled]="humanVerifying"
+          class="w-full p-3.5 rounded-2xl border flex items-center justify-between gap-3 transition-all duration-300 text-left cursor-pointer"
+          [class.bg-gradient-to-b]="humanVerified"
+          [class.from-emerald-400]="humanVerified"
+          [class.to-emerald-600]="humanVerified"
+          [class.text-white]="humanVerified"
+          [class.border-emerald-300]="humanVerified"
+          [class.shadow-[0_4px_0_#047857,0_10px_20px_-6px_rgba(16,185,129,0.45)]]="humanVerified"
+          [class.-translate-y-0.5]="humanVerified"
+          [class.bg-white]="!humanVerified && !humanShieldError"
+          [class.border-slate-300]="!humanVerified && !humanShieldError"
+          [class.shadow-[0_4px_0_rgba(203,213,225,0.8)]]="!humanVerified && !humanShieldError"
+          [class.bg-red-50]="!humanVerified && humanShieldError"
+          [class.border-red-400]="!humanVerified && humanShieldError"
+          [class.shadow-[0_4px_0_rgba(248,113,113,0.4)]]="!humanVerified && humanShieldError">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 font-extrabold text-sm transition-all"
+              [class.bg-white/20]="humanVerified"
+              [class.text-white]="humanVerified"
+              [class.bg-indigo-50]="!humanVerified"
+              [class.text-indigo-600]="!humanVerified"
+              [class.border]="!humanVerified"
+              [class.border-indigo-200]="!humanVerified">
+              @if (humanVerifying) {
+                <span class="animate-spin inline-block">◌</span>
+              } @else if (humanVerified) {
+                <span>✓</span>
+              } @else {
+                <span>🛡</span>
+              }
+            </div>
+            <div>
+              <p class="text-xs font-extrabold tracking-tight"
+                [class.text-white]="humanVerified"
+                [class.text-slate-800]="!humanVerified">
+                @if (humanVerified) {
+                  Human Verified • Bot Shield Active
+                } @else if (humanVerifying) {
+                  Verifying Cryptographic Proof...
+                } @else {
+                  Verify I'm Human (Anti-Bot Shield)
+                }
+              </p>
+              <p class="text-[10px] font-medium"
+                [class.text-emerald-50]="humanVerified"
+                [class.text-slate-500]="!humanVerified">
+                HMAC-SHA256 + Proof-of-Work &amp; Honeypot Defense
+              </p>
+            </div>
+          </div>
+          <span class="px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider flex-shrink-0"
+            [class.bg-white/25]="humanVerified"
+            [class.text-white]="humanVerified"
+            [class.bg-indigo-600]="!humanVerified"
+            [class.text-white]="!humanVerified">
+            {{ humanVerified ? 'Protected' : 'Verify' }}
+          </span>
+        </button>
+
+        <!-- Keep me signed in -->
+        <div class="flex items-center justify-between pt-0.5">
+          <label class="flex items-center gap-2.5 cursor-pointer select-none">
+            <input type="checkbox" [checked]="rememberMe" (change)="toggleRememberMe()" class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
+            <span class="text-xs font-medium text-slate-600">Remember credentials on this browser</span>
+          </label>
+        </div>
+
+        <!-- Error / Intruder Shield Alert -->
+        <div *ngIf="showLoginError" class="p-3.5 rounded-2xl border flex items-start gap-3 transition-all"
+          [class.bg-red-50]="!isAccountLocked"
+          [class.border-red-300]="!isAccountLocked"
+          [class.bg-rose-950]="isAccountLocked"
+          [class.border-rose-700]="isAccountLocked"
+          [class.shadow-[0_4px_0_rgba(239,68,68,0.25)]]="true">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            class="flex-shrink-0 mt-0.5" [class.text-red-600]="!isAccountLocked" [class.text-rose-300]="isAccountLocked">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+          <div class="text-xs font-medium" [class.text-red-700]="!isAccountLocked" [class.text-rose-100]="isAccountLocked">
+            <p>{{ loginErrorMessage }}</p>
+            @if (remainingAttempts !== null && !isAccountLocked) {
+              <p class="mt-1 font-bold text-[11px] text-amber-700">Security Shield: {{ remainingAttempts }} attempt(s) remaining before Intruder Vault lock.</p>
+            }
+          </div>
+        </div>
+
+        <!-- 3D Submit Button -->
+        <div class="pt-2">
+          <button type="submit" [disabled]="isLoading"
+            class="w-full bg-gradient-to-b from-indigo-500 to-indigo-700 hover:from-indigo-600 hover:to-indigo-800 active:translate-y-0.5 text-white font-bold py-3.5 px-6 rounded-xl shadow-[0_5px_0_#3730a3,0_12px_24px_-6px_rgba(79,70,229,0.45)] active:shadow-[0_2px_0_#3730a3] transition-all flex items-center justify-center gap-2 text-sm disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer">
+            <span *ngIf="!isLoading">Sign In Securely</span>
+            <div *ngIf="isLoading" class="flex items-center gap-2">
+              <svg class="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24" fill="none">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span>Signing in...</span>
+            </div>
+          </button>
+        </div>
+
+        <!-- Register Link -->
+        <div class="text-center pt-2">
+          <p class="text-xs text-slate-500">
+            Don't have an account?
+            <button type="button" (click)="goToRegister()" class="ml-1 text-indigo-600 hover:text-indigo-700 font-bold hover:underline cursor-pointer">Create Account</button>
+          </p>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- Minimal Footer -->
+  <footer class="py-6 border-t border-slate-200 bg-white relative z-10">
+    <div class="container mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
+      <p>© 2026 SoftCode Solution. All rights reserved.</p>
+      <div class="flex flex-wrap items-center justify-center gap-4">
+        <a routerLink="/" fragment="solutions" class="hover:text-slate-600 transition-colors">Solutions</a>
+        <button type="button" (click)="openLegalModal('privacy')" class="hover:text-slate-600 transition-colors cursor-pointer">Privacy Policy</button>
+        <button type="button" (click)="openLegalModal('terms')" class="hover:text-slate-600 transition-colors cursor-pointer">Terms of Service</button>
+        <button type="button" (click)="openLegalModal('safety')" class="hover:text-slate-600 transition-colors cursor-pointer">Data Safety</button>
+        <a routerLink="/" fragment="store" class="hover:text-slate-600 transition-colors">Support</a>
+      </div>
+    </div>
+  </footer>
+</main>
+
+<!-- Legal Modal (Full Privacy & Terms) -->
+<app-legal [isOpen]="showLegalModal" [activeTab]="legalActiveTab" (closeEvent)="closeLegalModal()"></app-legal>
+
+<!-- ✅ Success Popup -->
+<div *ngIf="showSuccessPopup" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
+  <div class="relative bg-white w-full max-w-sm p-8 rounded-2xl shadow-xl text-center border border-slate-100">
+    <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-5">
+      <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12" />
+      </svg>
+    </div>
+    <h2 class="text-xl font-bold text-slate-900">Access Granted</h2>
+    <p class="text-slate-600 mt-2 text-sm">Welcome back! Entering your enterprise dashboard securely.</p>
+    <button (click)="finishLogin()" class="mt-6 w-full bg-indigo-600 text-white font-semibold py-3 rounded-xl hover:bg-indigo-700 transition-colors shadow-sm text-sm cursor-pointer">
+      Enter Dashboard
+    </button>
+  </div>
+</div>
+
+<!-- ✅ Forgot Password Popup -->
+<div *ngIf="showForgotPopup" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
+  <div class="relative bg-white w-full max-w-sm p-8 rounded-2xl shadow-xl text-center border border-slate-100">
+    <div class="w-14 h-14 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-5">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect width="20" height="16" x="2" y="4" rx="2" />
+        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+      </svg>
+    </div>
+    <h2 class="text-xl font-bold text-slate-900">Reset Password</h2>
+    <p class="text-slate-600 mt-2 text-sm">Enter your business email. We'll send you a link to reset your password.</p>
+    <div class="mt-5 text-left">
+      <label class="block text-xs font-semibold text-slate-700 mb-1.5">Business Email</label>
+      <input type="email" [value]="forgotEmail" (input)="forgotEmail = $any($event.target).value" placeholder="ceo@company.com"
+        class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3.5 text-sm font-normal text-slate-900 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+      <p *ngIf="forgotEmailError" class="text-red-500 text-xs font-medium mt-1">Please enter a valid email address.</p>
+    </div>
+    <button (click)="submitForgotPassword()" [disabled]="forgotLoading"
+      class="mt-5 w-full bg-indigo-600 text-white font-semibold py-3 rounded-xl hover:bg-indigo-700 transition-colors shadow-sm text-sm disabled:opacity-70 cursor-pointer">
+      {{ forgotLoading ? 'Sending...' : 'Send Reset Link' }}
+    </button>
+    <button type="button" (click)="closeForgotPopup()" class="mt-3 w-full py-2 text-xs font-semibold text-slate-500 hover:text-slate-700 transition-colors cursor-pointer">
+      Cancel
+    </button>
+  </div>
+</div>
+
+<!-- ✅ Forgot Password Confirmation Popup -->
+<div *ngIf="showForgotSuccess" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
+  <div class="relative bg-white w-full max-w-sm p-8 rounded-2xl shadow-xl text-center border border-slate-100">
+    <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-5">
+      <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12" />
+      </svg>
+    </div>
+    <h2 class="text-xl font-bold text-slate-900">Reset Link Sent</h2>
+    <p class="text-slate-600 mt-2 text-sm">We have sent a secure password reset link to your email. Please check your inbox.</p>
+    <button (click)="finishForgot()" class="mt-6 w-full bg-indigo-600 text-white font-semibold py-3 rounded-xl hover:bg-indigo-700 transition-colors shadow-sm text-sm cursor-pointer">
+      Back to Sign In
+    </button>
+  </div>
+</div>

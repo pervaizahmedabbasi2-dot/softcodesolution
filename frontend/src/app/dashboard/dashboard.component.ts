@@ -2,45 +2,45 @@ import { Component, OnInit, OnDestroy, ChangeDetectorRef, ViewChild, ViewContain
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LocalizationService, CountryInfo, LanguageInfo } from '../services/localization.service';
-import { DashboardAnalyticsComponent } from './analytics/analytics.component';
-import { SecurityComponent } from './security/security.component';
-import { FeatureFlagsComponent } from './feature-flags/feature-flags.component';
-import { ComplianceComponent } from './compliance/compliance.component';
-import { WebhooksComponent } from './webhooks/webhooks.component';
-import { GlobalEdgeComponent } from './global-edge/global-edge.component';
-import { DashboardDataProtectionComponent } from './data-protection/data-protection.component';
-import { BackupManagerComponent } from './backup-manager/backup-manager.component';
-import { DashboardOverviewComponent } from './overview/overview.component';
-import { DashboardAllClientsComponent } from './all-clients/all-clients.component';
-import { DashboardPlansPricingComponent } from './plans-pricing/plans-pricing.component';
-import { DashboardModuleCatalogComponent } from './module-catalog/module-catalog.component';
-import { DashboardSystemHealthComponent } from './system-health/system-health.component';
-import { DashboardSaasControlComponent } from './saas-control/saas-control.component';
-import { DashboardRbacComponent } from './rbac/rbac.component';
-import { DashboardApiGatewayComponent } from './api-gateway/api-gateway.component';
-import { DashboardPaymentsComponent } from './payments/payments.component';
-import { DashboardLicenseComponent } from './license/license.component';
-import { ModuleManagerComponent } from './components/module-manager/module-manager.component';
-import { DashboardTeamsComponent } from './teams/teams.component';
-import { DashboardServicesCatalogComponent } from './services-catalog/services-catalog.component';
-import { DashboardAdminsComponent } from './admins/admins.component';
-import { DashboardUpdaterComponent } from './updater/updater.component';
-import { DashboardKnowledgeBaseComponent } from './knowledge-base/knowledge-base.component';
-import { DashboardPropertyHubComponent } from './property-hub/property-hub.component';
-import { DashboardRetailPosComponent } from './retail-pos/retail-pos.component';
-import { DashboardRestaurantHubComponent } from './restaurant-hub/restaurant-hub.component';
-import { DashboardInstitutionalHubComponent } from './institutional-hub/institutional-hub.component';
-import { DashboardClinicHubComponent } from './clinic-hub/clinic-hub.component';
-import { DashboardNgoHubComponent } from './ngo-hub/ngo-hub.component';
-import { DashboardTravelHubComponent } from './travel-hub/travel-hub.component';
-import { DashboardHotelHubComponent } from './hotel-hub/hotel-hub.component';
-import { DashboardPharmacyHubComponent } from './pharmacy-hub/pharmacy-hub.component';
-import { DashboardGymHubComponent } from './gym-hub/gym-hub.component';
-import { DashboardAutoHubComponent } from './auto-hub/auto-hub.component';
-import { DashboardSalonHubComponent } from './salon-hub/salon-hub.component';
-import { DashboardLegalHubComponent } from './legal-hub/legal-hub.component';
-import { DashboardBusinessSuitesComponent } from './business-suites/business-suites.component';
-import { SchoolDashboardComponent } from './school-dashboard/school-dashboard.component';
+import { DashboardAnalyticsComponent } from '../softcodesolution_platform/analytics/analytics.component';
+import { SecurityComponent } from '../auth_security/security/security.component';
+import { FeatureFlagsComponent } from '../softcodesolution_platform/feature-flags/feature-flags.component';
+import { ComplianceComponent } from '../softcodesolution_platform/compliance/compliance.component';
+import { WebhooksComponent } from '../softcodesolution_platform/webhooks/webhooks.component';
+import { GlobalEdgeComponent } from '../softcodesolution_platform/global-edge/global-edge.component';
+import { DashboardDataProtectionComponent } from '../softcodesolution_platform/data-protection/data-protection.component';
+import { BackupManagerComponent } from '../softcodesolution_platform/backup-manager/backup-manager.component';
+import { DashboardOverviewComponent } from '../softcodesolution_platform/overview/overview.component';
+import { DashboardAllClientsComponent } from '../superadmin_core/all-clients/all-clients.component';
+import { DashboardPlansPricingComponent } from '../softcodesolution_platform/plans-pricing/plans-pricing.component';
+import { DashboardModuleCatalogComponent } from '../softcodesolution_platform/module-catalog/module-catalog.component';
+import { DashboardSystemHealthComponent } from '../softcodesolution_platform/system-health/system-health.component';
+import { DashboardSaasControlComponent } from '../softcodesolution_platform/saas-control/saas-control.component';
+import { DashboardRbacComponent } from '../softcodesolution_platform/rbac/rbac.component';
+import { DashboardApiGatewayComponent } from '../softcodesolution_platform/api-gateway/api-gateway.component';
+import { DashboardPaymentsComponent } from '../softcodesolution_platform/payments/payments.component';
+import { DashboardLicenseComponent } from '../softcodesolution_platform/license/license.component';
+import { ModuleManagerComponent } from '../softcodesolution_platform/module-manager/module-manager.component';
+import { DashboardTeamsComponent } from '../softcodesolution_platform/teams/teams.component';
+import { DashboardServicesCatalogComponent } from '../softcodesolution_platform/services-catalog/services-catalog.component';
+import { DashboardAdminsComponent } from '../superadmin_core/admins/admins.component';
+import { DashboardUpdaterComponent } from '../softcodesolution_platform/updater/updater.component';
+import { DashboardKnowledgeBaseComponent } from '../softcodesolution_platform/knowledge-base/knowledge-base.component';
+import { DashboardPropertyHubComponent } from '../businesses/real_estate/property-hub/property-hub.component';
+import { DashboardRetailPosComponent } from '../businesses/retail_pos/retail-pos/retail-pos.component';
+import { DashboardRestaurantHubComponent } from '../businesses/restaurant_cafe/restaurant-hub/restaurant-hub.component';
+import { DashboardInstitutionalHubComponent } from '../businesses/institutional_campus/institutional-hub/institutional-hub.component';
+import { DashboardClinicHubComponent } from '../businesses/hospital_clinic/clinic-hub/clinic-hub.component';
+import { DashboardNgoHubComponent } from '../businesses/ngo_charity/ngo-hub/ngo-hub.component';
+import { DashboardTravelHubComponent } from '../businesses/travel_agency/travel-hub/travel-hub.component';
+import { DashboardHotelHubComponent } from '../businesses/hotel_hospitality/hotel-hub/hotel-hub.component';
+import { DashboardPharmacyHubComponent } from '../businesses/pharmacy_store/pharmacy-hub/pharmacy-hub.component';
+import { DashboardGymHubComponent } from '../businesses/gym_fitness/gym-hub/gym-hub.component';
+import { DashboardAutoHubComponent } from '../businesses/auto_workshop/auto-hub/auto-hub.component';
+import { DashboardSalonHubComponent } from '../businesses/beauty_salon/salon-hub/salon-hub.component';
+import { DashboardLegalHubComponent } from '../businesses/law_firm/legal-hub/legal-hub.component';
+import { DashboardBusinessSuitesComponent } from '../businesses/business-suites/business-suites.component';
+import { SchoolDashboardComponent } from '../businesses/school_business/school-dashboard/school-dashboard.component';
 import { CurrencyLanguageSelectorComponent } from '../components/currency-language-selector/currency-language-selector.component';
 import {
   ALL_ENTERPRISE_BUSINESSES,
@@ -5298,7 +5298,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     const module =
       /* SCS_PHASE753C2_DATA_PROTECTION_WIRING */
-      await import('./backup-manager/backup-manager.component');
+      await import('../softcodesolution_platform/backup-manager/backup-manager.component');
 
     this.backupManagerHost.clear();
 
@@ -5366,7 +5366,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     const module =
       await import(
-        './data-protection/data-protection.component'
+        '../softcodesolution_platform/data-protection/data-protection.component'
       );
 
     this.dataProtectionHost.clear();

@@ -1,0 +1,119 @@
+<div class="p-6 md:p-8 space-y-8 animate-fade-in pb-24">
+  <!-- Top Bar -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+      <div class="flex items-center gap-2">
+        <h2 class="text-xl font-bold tracking-tight text-slate-900">Compliance & Sovereign Data Residency</h2>
+        <span class="text-xs text-slate-500 font-mono">SOC2 / GDPR</span>
+      </div>
+      <p class="text-sm text-slate-500 mt-1">Enforce regional boundary isolation, data sovereignty laws, and enterprise audit attestations.</p>
+    </div>
+    <button (click)="openReportModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs rounded-lg text-xs font-semibold transition-all flex items-center gap-2">
+      <lucide-icon [name]="icons.FileCheck" class="w-3.5 h-3.5"></lucide-icon>
+      Generate Attestation Report
+    </button>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <!-- Data Residency Regions -->
+    <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-xs space-y-5">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div class="flex items-center gap-3">
+          <div class="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
+            <lucide-icon [name]="icons.Globe" class="w-5 h-5"></lucide-icon>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-900 text-sm">Designated Sovereign Storage Regions</h3>
+            <p class="text-xs text-slate-500">Tenant databases strictly pinned to regional clusters.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-3">
+        <div *ngFor="let reg of regions" class="flex items-center justify-between p-3.5 rounded-xl border border-slate-100 bg-slate-50/60 hover:bg-white hover:border-slate-300 transition-all">
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">{{ reg.flag }}</span>
+            <div>
+              <p class="text-xs font-bold text-slate-900">{{ reg.name }}</p>
+              <p class="text-[11px] text-slate-500">{{ reg.framework }} · <strong class="font-mono text-slate-700">{{ reg.tenantsCount }} tenants</strong></p>
+            </div>
+          </div>
+          <div class="text-right">
+            <span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 text-[10px] font-mono font-bold rounded">
+              {{ reg.status }}
+            </span>
+            <p class="text-[10px] text-slate-400 font-mono mt-0.5">{{ reg.latencyMs }}ms ping</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Compliance Frameworks -->
+    <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-xs space-y-5">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div class="flex items-center gap-3">
+          <div class="p-2 bg-emerald-50 text-emerald-600 rounded-lg">
+            <lucide-icon [name]="icons.ShieldCheck" class="w-5 h-5"></lucide-icon>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-900 text-sm">Regulatory Framework Audits</h3>
+            <p class="text-xs text-slate-500">Continuous automated controls verified by independent auditors.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-3">
+        <div *ngFor="let item of frameworks" class="flex items-center justify-between p-3.5 rounded-xl border border-slate-100 bg-slate-50/60">
+          <div class="flex items-center gap-3">
+            <lucide-icon [name]="icons.CheckCircle2" class="w-4 h-4 text-emerald-600 shrink-0"></lucide-icon>
+            <div>
+              <p class="text-xs font-bold text-slate-900">{{ item.name }}</p>
+              <p class="text-[11px] text-slate-400">Auditor: {{ item.auditor }}</p>
+            </div>
+          </div>
+          <div class="text-right">
+            <span class="text-xs font-mono font-bold text-emerald-600">{{ item.status }}</span>
+            <p class="text-[10px] text-slate-400 font-mono mt-0.5">{{ item.validity }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Report Modal -->
+  <div *ngIf="isReportModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-xs">
+    <div class="bg-white rounded-2xl border border-slate-200 max-w-lg w-full p-6 shadow-xl space-y-5 animate-scale-up">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div>
+          <h3 class="text-base font-bold text-slate-900">Enterprise Compliance Attestation</h3>
+          <p class="text-xs text-slate-500">Generated for enterprise procurement & ISO certification.</p>
+        </div>
+        <button (click)="closeReportModal()" class="p-1 text-slate-400 hover:text-slate-700 rounded-lg">
+          <lucide-icon [name]="icons.X" class="w-5 h-5"></lucide-icon>
+        </button>
+      </div>
+
+      <div *ngIf="isGeneratingReport" class="py-8 text-center space-y-2">
+        <div class="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+        <p class="text-xs font-semibold text-slate-700">Compiling cryptographic control evidence...</p>
+      </div>
+
+      <div *ngIf="reportReady" class="space-y-3">
+        <div class="p-4 bg-slate-900 text-slate-200 rounded-xl font-mono text-[11px] space-y-1">
+          <p class="text-emerald-400 font-bold">✓ Attestation Verdict: Fully Compliant</p>
+          <p class="text-slate-400">SOC 2 Type II: Unqualified Opinion (Zero Exceptions)</p>
+          <p class="text-slate-400">GDPR Cross-Border PII Transfer: Standard Contractual Clauses (SCC) Enforced</p>
+          <p class="text-slate-400">Tenant Cryptographic Key Segregation: HSM Hardware Isolated</p>
+        </div>
+      </div>
+
+      <div *ngIf="reportReady" class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+        <button (click)="closeReportModal()" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800">Close</button>
+        <button (click)="downloadComplianceCertificate()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg shadow-xs flex items-center gap-2">
+          <lucide-icon [name]="icons.Download" class="w-3.5 h-3.5"></lucide-icon>
+          Download Signed Package
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

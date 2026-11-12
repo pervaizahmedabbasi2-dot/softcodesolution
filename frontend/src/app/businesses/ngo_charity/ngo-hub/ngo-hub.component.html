@@ -1,0 +1,385 @@
+<div class="px-6 sm:px-8 py-8 max-w-7xl mx-auto space-y-8 animate-fade-in">
+
+  <!-- Header -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-200">
+    <div>
+      <div class="flex items-center gap-2 text-xs text-slate-500 mb-1">
+        <span>Non-Profit & Philanthropy Suite</span>
+        <span aria-hidden="true">·</span>
+        <span>Relief Campaigns & Donors</span>
+        <span aria-hidden="true">·</span>
+        <span>Beneficiary Aid Tracking</span>
+      </div>
+      <h1 class="text-2xl font-bold tracking-tight text-slate-900">NGO & Charity Foundation Hub</h1>
+      <p class="text-sm text-slate-500 mt-1">Zakat and Sadaqah fund allocations, emergency relief projects, beneficiary registry, and donor tax receipts.</p>
+    </div>
+
+    <!-- Quick Action Buttons -->
+    <div class="flex items-center gap-3">
+      <button (click)="showNewCampaignModal = true"
+        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700 transition-all shadow-sm">
+        <lucide-icon [name]="icons.Plus" class="w-4 h-4"></lucide-icon>
+        <span>Launch Relief Project</span>
+      </button>
+
+      <button (click)="showNewDonationModal = true"
+        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition-all shadow-sm">
+        <lucide-icon [name]="icons.HandHeart" class="w-4 h-4"></lucide-icon>
+        <span>Record Donation</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Notification Banner -->
+  <div *ngIf="actionMessage" class="p-4 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-800 text-xs font-medium flex items-center justify-between animate-fade-in">
+    <div class="flex items-center gap-2">
+      <lucide-icon [name]="icons.CheckCircle2" class="w-4 h-4 text-emerald-600"></lucide-icon>
+      <span>{{ actionMessage }}</span>
+    </div>
+    <button (click)="actionMessage = ''" class="text-emerald-600 hover:text-emerald-900 text-xs">Dismiss</button>
+  </div>
+
+  <!-- Key Metrics -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div class="bg-white p-5 rounded-2xl border border-slate-200/70 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.03),0_8px_20px_-4px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_16px_-2px_rgba(0,0,0,0.05),0_12px_28px_-4px_rgba(0,0,0,0.06)] transition-all">
+      <p class="text-xs text-slate-500 font-medium">Total Aid Raised</p>
+      <p class="text-2xl font-bold text-emerald-600 mt-1">${{ stats.totalDonations | number:'1.2-2' }}</p>
+      <p class="text-xs text-slate-400 mt-1">Zakat, Sadaqah & Philanthropic grants</p>
+    </div>
+    <div class="bg-white p-5 rounded-2xl border border-slate-200/70 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.03),0_8px_20px_-4px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_16px_-2px_rgba(0,0,0,0.05),0_12px_28px_-4px_rgba(0,0,0,0.06)] transition-all">
+      <p class="text-xs text-slate-500 font-medium">Active Relief Campaigns</p>
+      <p class="text-2xl font-bold text-indigo-600 mt-1">{{ stats.activeProjects }} Missions</p>
+      <p class="text-xs text-slate-400 mt-1">Water, Ration, and Education drives</p>
+    </div>
+    <div class="bg-white p-5 rounded-2xl border border-slate-200/70 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.03),0_8px_20px_-4px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_16px_-2px_rgba(0,0,0,0.05),0_12px_28px_-4px_rgba(0,0,0,0.06)] transition-all">
+      <p class="text-xs text-slate-500 font-medium">Documented Beneficiaries</p>
+      <p class="text-2xl font-bold text-slate-900 mt-1">{{ stats.totalBeneficiaries }} Families</p>
+      <p class="text-xs text-slate-400 mt-1">CNIC & Biometric verified recipients</p>
+    </div>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <div class="flex items-center gap-2 p-1.5 bg-slate-100/80 rounded-xl w-fit border border-slate-200">
+    <button (click)="activeTab = 'campaigns'"
+      class="px-4 py-2 text-xs font-semibold rounded-lg transition-all flex items-center gap-2"
+      [class.bg-white]="activeTab === 'campaigns'"
+      [class.text-slate-900]="activeTab === 'campaigns'"
+      [class.shadow-sm]="activeTab === 'campaigns'"
+      [class.text-slate-600]="activeTab !== 'campaigns'">
+      <lucide-icon [name]="icons.Heart" class="w-4 h-4"></lucide-icon>
+      <span>Relief Campaigns</span>
+    </button>
+
+    <button (click)="activeTab = 'donations'"
+      class="px-4 py-2 text-xs font-semibold rounded-lg transition-all flex items-center gap-2"
+      [class.bg-white]="activeTab === 'donations'"
+      [class.text-slate-900]="activeTab === 'donations'"
+      [class.shadow-sm]="activeTab === 'donations'"
+      [class.text-slate-600]="activeTab !== 'donations'">
+      <lucide-icon [name]="icons.HandHeart" class="w-4 h-4"></lucide-icon>
+      <span>Donations Ledger</span>
+    </button>
+
+    <button (click)="activeTab = 'beneficiaries'"
+      class="px-4 py-2 text-xs font-semibold rounded-lg transition-all flex items-center gap-2"
+      [class.bg-white]="activeTab === 'beneficiaries'"
+      [class.text-slate-900]="activeTab === 'beneficiaries'"
+      [class.shadow-sm]="activeTab === 'beneficiaries'"
+      [class.text-slate-600]="activeTab !== 'beneficiaries'">
+      <lucide-icon [name]="icons.Users" class="w-4 h-4"></lucide-icon>
+      <span>Beneficiaries</span>
+    </button>
+  </div>
+
+  <!-- TAB 1: CAMPAIGNS -->
+  <div *ngIf="activeTab === 'campaigns'" class="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fade-in">
+    <div *ngFor="let cmp of campaigns" class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col justify-between">
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-mono font-bold text-slate-400">{{ cmp.code }}</span>
+          <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded"
+            [class.bg-emerald-50]="cmp.status === 'ACTIVE'" [class.text-emerald-700]="cmp.status === 'ACTIVE'"
+            [class.bg-slate-100]="cmp.status === 'COMPLETED'" [class.text-slate-700]="cmp.status === 'COMPLETED'">
+            {{ cmp.status }}
+          </span>
+        </div>
+
+        <h3 class="text-base font-bold text-slate-900">{{ cmp.title }}</h3>
+        <div class="flex items-center gap-2 text-xs text-slate-500 mt-1 mb-4">
+          <lucide-icon [name]="icons.MapPin" class="w-3.5 h-3.5 text-slate-400"></lucide-icon>
+          <span>{{ cmp.location }} · {{ cmp.category }}</span>
+        </div>
+
+        <!-- Funding Progress Bar -->
+        <div class="space-y-1.5 my-4">
+          <div class="flex justify-between text-xs font-semibold">
+            <span class="text-slate-700">Raised: ${{ cmp.raisedAmount | number:'1.0-0' }}</span>
+            <span class="text-slate-400">Target: ${{ cmp.targetAmount | number:'1.0-0' }}</span>
+          </div>
+          <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+            <div class="bg-emerald-500 h-2.5 rounded-full"
+              [style.width.%]="((cmp.raisedAmount / (cmp.targetAmount || 1)) * 100)"></div>
+          </div>
+          <p class="text-[11px] text-slate-400 text-right">{{ ((cmp.raisedAmount / (cmp.targetAmount || 1)) * 100) | number:'1.0-0' }}% Funded</p>
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600">
+        <span>Beneficiaries: <strong class="text-slate-900">{{ cmp.beneficiariesCount }} families</strong></span>
+        <button (click)="newDonation.campaign = cmp.title; showNewDonationModal = true" class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-lg transition-colors">
+          Contribute
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2: DONATIONS LEDGER -->
+  <div *ngIf="activeTab === 'donations'" class="bg-white rounded-2xl border border-slate-200/70 overflow-hidden shadow-[0_2px_8px_-2px_rgba(0,0,0,0.03),0_8px_20px_-4px_rgba(0,0,0,0.04)] animate-fade-in">
+    <div class="p-5 border-b border-slate-200 flex items-center justify-between">
+      <div>
+        <h3 class="text-sm font-bold text-slate-900">Donation Receipts & Tax Certificates</h3>
+        <p class="text-xs text-slate-500 mt-0.5">Audited contributions ledger with Zakat and Sadaqah classification.</p>
+      </div>
+      <button (click)="showNewDonationModal = true" class="px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg text-xs font-semibold transition-colors">
+        + Post Donation
+      </button>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse text-xs">
+        <thead>
+          <tr class="bg-slate-50/75 border-b border-slate-200 text-slate-500 font-semibold">
+            <th class="py-3 px-5">Receipt No</th>
+            <th class="py-3 px-5">Donor Name</th>
+            <th class="py-3 px-5">Allocated Project</th>
+            <th class="py-3 px-5">Donation Type</th>
+            <th class="py-3 px-5">Payment Method</th>
+            <th class="py-3 px-5">Amount</th>
+            <th class="py-3 px-5">Date</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 text-slate-700">
+          <tr *ngFor="let d of donations" class="hover:bg-slate-50/50 transition-colors">
+            <td class="py-3.5 px-5 font-mono font-bold text-indigo-600">{{ d.receiptNo }}</td>
+            <td class="py-3.5 px-5 font-bold text-slate-900">{{ d.donorName }}</td>
+            <td class="py-3.5 px-5 text-slate-700">{{ d.campaign }}</td>
+            <td class="py-3.5 px-5 font-medium text-emerald-700">{{ d.type }}</td>
+            <td class="py-3.5 px-5 text-slate-500">{{ d.paymentMethod }}</td>
+            <td class="py-3.5 px-5 font-extrabold text-slate-900">${{ d.amount | number:'1.2-2' }}</td>
+            <td class="py-3.5 px-5 text-slate-400 font-mono">{{ d.date }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TAB 3: BENEFICIARIES -->
+  <div *ngIf="activeTab === 'beneficiaries'" class="bg-white rounded-2xl border border-slate-200/70 overflow-hidden shadow-[0_2px_8px_-2px_rgba(0,0,0,0.03),0_8px_20px_-4px_rgba(0,0,0,0.04)] animate-fade-in">
+    <div class="p-5 border-b border-slate-200">
+      <h3 class="text-sm font-bold text-slate-900">Registered Beneficiaries & Dispatched Aid</h3>
+      <p class="text-xs text-slate-500 mt-0.5">Government ID verified recipients receiving emergency provisions.</p>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse text-xs">
+        <thead>
+          <tr class="bg-slate-50/75 border-b border-slate-200 text-slate-500 font-semibold">
+            <th class="py-3 px-5">Family Reg #</th>
+            <th class="py-3 px-5">Family Head Name</th>
+            <th class="py-3 px-5">National ID (CNIC)</th>
+            <th class="py-3 px-5">Dependents</th>
+            <th class="py-3 px-5">Aid Provision Received</th>
+            <th class="py-3 px-5">District Location</th>
+            <th class="py-3 px-5">Verification</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 text-slate-700">
+          <tr *ngFor="let b of beneficiaries" class="hover:bg-slate-50/50 transition-colors">
+            <td class="py-3.5 px-5 font-mono font-bold text-slate-800">{{ b.regNo }}</td>
+            <td class="py-3.5 px-5 font-bold text-slate-900">{{ b.familyHead }}</td>
+            <td class="py-3.5 px-5 font-mono text-slate-500">{{ b.cnic }}</td>
+            <td class="py-3.5 px-5 text-slate-700">{{ b.dependents }} members</td>
+            <td class="py-3.5 px-5 font-medium text-indigo-700">{{ b.aidReceived }}</td>
+            <td class="py-3.5 px-5 text-slate-500">{{ b.location }}</td>
+            <td class="py-3.5 px-5">
+              <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded"
+                [class.bg-emerald-50]="b.status === 'DISTRIBUTED'" [class.text-emerald-700]="b.status === 'DISTRIBUTED'"
+                [class.bg-amber-50]="b.status !== 'DISTRIBUTED'" [class.text-amber-700]="b.status !== 'DISTRIBUTED'">
+                {{ b.status.replace('_', ' ') }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- MODAL: LAUNCH CAMPAIGN -->
+  <div *ngIf="showNewCampaignModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-md animate-fade-in">
+    <div class="bg-white/95 backdrop-blur-2xl rounded-2xl border border-white/80 max-w-md w-full p-6 sm:p-7 shadow-[0_24px_64px_-12px_rgba(0,0,0,0.22),0_12px_28px_-6px_rgba(0,0,0,0.12)] animate-scale-up space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <h3 class="text-base font-bold text-slate-900">Launch New Relief Campaign</h3>
+        <button (click)="showNewCampaignModal = false" class="text-slate-400 hover:text-slate-600">
+          <lucide-icon [name]="icons.X" class="w-5 h-5"></lucide-icon>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Campaign Title</label>
+          <input type="text" [(ngModel)]="newCampaign.title" placeholder="e.g. Winter Warmth & Blanket Drive" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Target Budget ($)</label>
+            <input type="number" [(ngModel)]="newCampaign.targetAmount" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs" />
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Target Beneficiaries</label>
+            <input type="number" [(ngModel)]="newCampaign.beneficiariesCount" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Category</label>
+            <select [(ngModel)]="newCampaign.category" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs">
+              <option value="Food Relief">Food Relief</option>
+              <option value="Water Sanitation">Water Sanitation</option>
+              <option value="Education">Education</option>
+              <option value="Healthcare">Healthcare</option>
+              <option value="Emergency Disaster">Emergency Disaster</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Geographic Zone</label>
+            <input type="text" [(ngModel)]="newCampaign.location" placeholder="e.g. Balochistan Flood Zone" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs" />
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+        <button (click)="showNewCampaignModal = false" class="px-4 py-2 border border-slate-200 rounded-lg text-xs font-semibold text-slate-600">Cancel</button>
+        <button (click)="launchCampaign()" [disabled]="!newCampaign.title || isLoading"
+          class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold disabled:opacity-50">
+          Launch Project
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: RECORD DONATION -->
+  <div *ngIf="showNewDonationModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-md animate-fade-in">
+    <div class="bg-white/95 backdrop-blur-2xl rounded-2xl border border-white/80 max-w-md w-full p-6 sm:p-7 shadow-[0_24px_64px_-12px_rgba(0,0,0,0.22),0_12px_28px_-6px_rgba(0,0,0,0.12)] animate-scale-up space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <h3 class="text-base font-bold text-slate-900">Record Philanthropic Donation</h3>
+        <button (click)="showNewDonationModal = false" class="text-slate-400 hover:text-slate-600">
+          <lucide-icon [name]="icons.X" class="w-5 h-5"></lucide-icon>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Donor Name / Trust Title</label>
+          <input type="text" [(ngModel)]="newDonation.donorName" placeholder="e.g. Haji Abdul Rasheed" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Amount ($)</label>
+            <input type="number" [(ngModel)]="newDonation.amount" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs" />
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Donation Type</label>
+            <select [(ngModel)]="newDonation.type" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs">
+              <option value="Zakat">Zakat</option>
+              <option value="Sadaqah Jariyah">Sadaqah Jariyah</option>
+              <option value="General Grant">General Grant</option>
+              <option value="Fitrana">Fitrana</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Allocate to Campaign</label>
+          <select [(ngModel)]="newDonation.campaign" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs">
+            <option *ngFor="let c of campaigns" [value]="c.title">{{ c.title }}</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Payment Method</label>
+          <select [(ngModel)]="newDonation.paymentMethod" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs">
+            <option value="Bank Wire">Bank Wire</option>
+            <option value="Card Online">Card Online</option>
+            <option value="Cash Counter">Cash Counter</option>
+            <option value="Cheque Deposit">Cheque Deposit</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+        <button (click)="showNewDonationModal = false" class="px-4 py-2 border border-slate-200 rounded-lg text-xs font-semibold text-slate-600">Cancel</button>
+        <button (click)="recordDonation()" [disabled]="!newDonation.donorName || !newDonation.amount || isLoading"
+          class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold disabled:opacity-50">
+          Confirm & Issue Certificate
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: DONATION TAX RECEIPT -->
+  <div *ngIf="showDonationReceiptModal && lastDonation" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-md animate-fade-in">
+    <div class="bg-white/95 backdrop-blur-2xl rounded-2xl border border-white/80 max-w-sm w-full p-6 sm:p-7 shadow-[0_24px_64px_-12px_rgba(0,0,0,0.22),0_12px_28px_-6px_rgba(0,0,0,0.12)] animate-scale-up space-y-4">
+      <div class="border border-slate-200 p-5 rounded-lg bg-slate-50/50 font-mono text-xs space-y-3">
+        <div class="text-center pb-3 border-b border-dashed border-slate-300">
+          <h2 class="font-extrabold text-sm text-slate-900">SOFTCODE WELFARE TRUST</h2>
+          <p class="text-[10px] text-slate-500">OFFICIAL DONATION ACKNOWLEDGEMENT</p>
+          <p class="text-[10px] text-slate-400 mt-1">Receipt: {{ lastDonation.receiptNo }}</p>
+        </div>
+
+        <div class="space-y-1.5 text-[11px]">
+          <div class="flex justify-between">
+            <span class="text-slate-500">Donor:</span>
+            <span class="font-bold text-slate-900">{{ lastDonation.donorName }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-500">Campaign:</span>
+            <span class="font-medium text-slate-800 truncate max-w-[170px]">{{ lastDonation.campaign }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-500">Fund Type:</span>
+            <span class="font-bold text-emerald-700">{{ lastDonation.type }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-500">Channel:</span>
+            <span>{{ lastDonation.paymentMethod }}</span>
+          </div>
+        </div>
+
+        <div class="pt-2 border-t border-dashed border-slate-300">
+          <div class="flex justify-between font-bold text-xs pt-1 border-t border-slate-200">
+            <span>DONATED SUM</span>
+            <span>${{ lastDonation.amount | number:'1.2-2' }}</span>
+          </div>
+        </div>
+
+        <div class="text-center pt-3 text-[10px] text-slate-400 border-t border-dashed border-slate-300">
+          *** TAX EXEMPTED CHARITY RECEIPT ***
+        </div>
+      </div>
+
+      <div class="flex gap-2">
+        <button (click)="printReceipt()" class="flex-1 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-1.5">
+          <lucide-icon [name]="icons.Printer" class="w-4 h-4"></lucide-icon>
+          <span>Print Voucher</span>
+        </button>
+        <button (click)="showDonationReceiptModal = false" class="px-4 py-2.5 border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-50">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>

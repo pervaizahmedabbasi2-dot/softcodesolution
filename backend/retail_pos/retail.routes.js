@@ -1,81 +1,117 @@
 import express from 'express';
 import { collection, addDoc } from 'firebase/firestore';
 
-export function createRetailRouter(sqliteDb, db, RETAIL_PRODUCTS) {
+export const DEFAULT_RETAIL_PRODUCTS = [
+  { id: 'prd-101', name: 'Ultra Wireless Noise-Cancelling Headphones', category: 'Electronics', sku: 'ELEC-9021', barcode: '890123456789', costPrice: 45.00, sellingPrice: 89.99, stock: 42, alertThreshold: 10, status: 'In Stock' },
+  { id: 'prd-102', name: 'Organic Arabica Espresso Roast 500g', category: 'Groceries', sku: 'GROC-4412', barcode: '890987654321', costPrice: 6.50, sellingPrice: 14.50, stock: 110, alertThreshold: 20, status: 'In Stock' },
+  { id: 'prd-103', name: 'Mechanical RGB Gaming Keyboard (Blue Switch)', category: 'Electronics', sku: 'ELEC-3382', barcode: '890334455667', costPrice: 32.00, sellingPrice: 64.99, stock: 18, alertThreshold: 5, status: 'In Stock' },
+  { id: 'prd-104', name: 'Stainless Steel Insulated Thermal Flask 1L', category: 'Home & Living', sku: 'HOME-1109', barcode: '890778899001', costPrice: 8.00, sellingPrice: 19.99, stock: 65, alertThreshold: 15, status: 'In Stock' },
+  { id: 'prd-105', name: 'Cotton Crew Neck Minimalist Tee (Navy/L)', category: 'Fashion', sku: 'FASH-8820', barcode: '890556677889', costPrice: 7.20, sellingPrice: 22.00, stock: 4, alertThreshold: 10, status: 'Low Stock' },
+  { id: 'prd-106', name: 'Ergonomic Memory Foam Lumbar Cushion', category: 'Office', sku: 'OFF-6651', barcode: '890223344556', costPrice: 11.50, sellingPrice: 28.50, stock: 0, alertThreshold: 8, status: 'Out of Stock' }
+];
+
+export const DEFAULT_RETAIL_ORDERS = [
+  { id: 'ORD-9021', receiptNo: 'RCP-2026-9021', customerName: 'Walk-in Customer', itemsCount: 3, total: 118.98, paymentMethod: 'Card', cashier: 'Sara Jenkins', date: new Date(Date.now() - 3600000).toISOString() },
+  { id: 'ORD-9020', receiptNo: 'RCP-2026-9020', customerName: 'Zainab Qasim', itemsCount: 1, total: 14.50, paymentMethod: 'Cash', cashier: 'Bilal Ahmed', date: new Date(Date.now() - 7200000).toISOString() },
+  { id: 'ORD-9019', receiptNo: 'RCP-2026-9019', customerName: 'David Sterling', itemsCount: 4, total: 247.97, paymentMethod: 'Digital Transfer', cashier: 'Sara Jenkins', date: new Date(Date.now() - 14400000).toISOString() }
+];
+
+export function createRetailRouter(sqliteDb, db, customProducts) {
   const router = express.Router();
+  const RETAIL_PRODUCTS = Array.isArray(customProducts) && customProducts.length > 0 ? customProducts : DEFAULT_RETAIL_PRODUCTS;
+  const RETAIL_ORDERS = DEFAULT_RETAIL_ORDERS;
 
   router.get('/products', (req, res) => {
     res.json({ ok: true, products: RETAIL_PRODUCTS });
   });
 
-  router.post('/checkout', async (req, res) => {
-    const { items, paymentMethod, customerName, total } = req.body || {};
-    const receiptNo = 'RCPT-2026-' + Math.floor(10000 + Math.random() * 90000);
-    const orderId = 'POS-ORD-' + Date.now();
-    const nowIso = new Date().toISOString();
+  router.post('/products', (req, res) => {
+    const p = req.body || {};
+    const newProduct = {
+      id: 'prd-' + Date.now(),
+      name: p.name || 'New Product',
+      category: p.category || 'General',
+      sku: p.sku || 'SKU-' + Math.floor(1000 + Math.random() * 9000),
+      barcode: p.barcode || String(Math.floor(100000000000 + Math.random() * 900000000000)),
+      costPrice: Number(p.costPrice || 0),
+      sellingPrice: Number(p.sellingPrice || 0),
+      stock: Number(p.stock || 0),
+      alertThreshold: Number(p.alertThreshold || 5),
+      status: Number(p.stock) <= 0 ? 'Out of Stock' : (Number(p.stock) <= 10 ? 'Low Stock' : 'In Stock')
+    };
+    RETAIL_PRODUCTS.unshift(newProduct);
+    res.json({ ok: true, message: 'Product added successfully', product: newProduct });
+  });
 
-    let sqliteSaved = false;
-    let cloudSynced = false;
+  router.post('/checkout', (req, res) => {
+    const { items = [], total = 0, paymentMethod = 'Cash', customerName = 'Walk-in Customer', cashier = 'POS Cashier' } = req.body || {};
 
-    // Save to SQLite POS table
+    items.forEach(item => {
+      const prd = RETAIL_PRODUCTS.find(p => p.id === item.id);
+      if (prd) {
+        prd.stock = Math.max(0, prd.stock - (item.qty || 1));
+        prd.status = prd.stock <= 0 ? 'Out of Stock' : (prd.stock <= 10 ? 'Low Stock' : 'In Stock');
+      }
+    });
+
+    const receiptNo = 'RCP-2026-' + Math.floor(1000 + Math.random() * 9000);
+    const orderId = 'ORD-' + Date.now();
+    const newOrder = {
+      id: orderId,
+      receiptNo,
+      customerName,
+      itemsCount: items.reduce((acc, i) => acc + (i.qty || 1), 0) || items.length || 1,
+      total: Number(total),
+      paymentMethod,
+      cashier,
+      items,
+      date: new Date().toISOString()
+    };
+    RETAIL_ORDERS.unshift(newOrder);
+
     if (sqliteDb) {
       try {
         const stmt = sqliteDb.prepare(`
           INSERT INTO local_pos_orders (
-            id, receipt_no, customer_name, items_count, total_amount, payment_method, cashier, items_json, is_synced, created_at
+            id, receipt_no, customer_name, items_count, total_amount,
+            payment_method, cashier, items_json, is_synced, created_at
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
         `);
-
         stmt.run(
           orderId,
           receiptNo,
-          customerName || 'Walk-in Customer',
-          items ? items.length : 1,
-          total || 0,
-          paymentMethod || 'CASH',
-          'Pos Cashier Counter 01',
-          JSON.stringify(items || []),
-          nowIso
+          customerName,
+          newOrder.itemsCount,
+          newOrder.total,
+          paymentMethod,
+          cashier,
+          JSON.stringify(items),
+          newOrder.date
         );
-        sqliteSaved = true;
-      } catch (sqlErr) {
-        console.warn('POS Order SQLite Save Error:', sqlErr.message);
+      } catch (e) {
+        console.warn('[POS Dual-DB Engine] SQLite save warning:', e.message);
       }
     }
 
-    // Sync to Cloud
     if (db) {
-      try {
-        await addDoc(collection(db, 'retail_orders'), {
-          id: orderId,
-          receiptNo,
-          customerName: customerName || 'Walk-in Customer',
-          items: items || [],
-          total: total || 0,
-          paymentMethod: paymentMethod || 'CASH',
-          is_synced: 1,
-          created_at: nowIso
-        });
-        cloudSynced = true;
-
+      addDoc(collection(db, 'retail_orders'), {
+        ...newOrder,
+        is_synced: 1,
+        synced_at: new Date().toISOString()
+      }).then(() => {
         if (sqliteDb) {
-          try { sqliteDb.prepare('UPDATE local_pos_orders SET is_synced = 1 WHERE id = ?').run(orderId); } catch (e) {}
+          try {
+            sqliteDb.prepare('UPDATE local_pos_orders SET is_synced = 1 WHERE id = ?').run(orderId);
+          } catch (e) {}
         }
-      } catch (dbErr) {
-        console.warn('POS Order Cloud Sync Deferred:', dbErr.message);
-      }
+      }).catch(() => {});
     }
 
-    res.json({
-      ok: true,
-      message: `Checkout successful! Receipt #${receiptNo}`,
-      receiptNo,
-      orderId,
-      syncStatus: {
-        offlineStorage: sqliteSaved ? 'SAVED_SQLITE' : 'IN_MEMORY',
-        cloudSync: cloudSynced ? 'SYNCED_POSTGRES_CLOUD' : 'QUEUED_FOR_RECONNECT'
-      }
-    });
+    res.json({ ok: true, message: 'Checkout recorded locally in SQLite & queued for sync', receiptNo, orderId, order: newOrder });
+  });
+
+  router.get('/orders', (req, res) => {
+    res.json({ ok: true, orders: RETAIL_ORDERS });
   });
 
   return router;

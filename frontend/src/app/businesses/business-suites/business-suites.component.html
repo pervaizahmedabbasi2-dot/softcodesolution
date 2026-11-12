@@ -1,0 +1,520 @@
+<div class="px-2.5 sm:px-6 lg:px-8 py-3 sm:py-8 max-w-7xl mx-auto space-y-4 sm:space-y-8 animate-fade-in font-sans w-full max-w-full min-w-0 overflow-x-hidden">
+  
+  <!-- ========================================== -->
+  <!-- 1. EXECUTIVE HERO STRIP (APPLE macOS VIBE) -->
+  <!-- ========================================== -->
+  <div *ngIf="activeBusiness" class="rounded-[28px] p-5 sm:p-7 text-slate-900 border border-white/80 shadow-[0_20px_50px_-12px_rgba(79,70,229,0.18),0_8px_20px_-6px_rgba(0,0,0,0.06),inset_0_1px_2px_rgba(255,255,255,0.95)] bg-gradient-to-br from-white/95 via-indigo-50/40 to-slate-50/90 backdrop-blur-2xl relative overflow-hidden transition-all duration-300 group w-full max-w-full min-w-0">
+    <!-- Subtle Architectural 3D Grid & Specular Ambient Glow -->
+    <div class="absolute inset-0 bg-[radial-gradient(#8080800c_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none"></div>
+    <div class="absolute -right-16 -top-16 w-80 h-80 bg-gradient-to-br from-indigo-300/40 via-cyan-200/30 to-transparent rounded-full blur-3xl pointer-events-none group-hover:scale-110 transition-transform duration-700"></div>
+    <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent"></div>
+
+    <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6 min-w-0 max-w-full">
+      <div class="space-y-3 max-w-3xl min-w-0 flex-1 max-w-full">
+        <!-- Metadata Row -->
+        <div class="flex flex-wrap items-center gap-2 text-xs min-w-0 max-w-full">
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-700 border border-indigo-300/60 shadow-[inset_0_1px_1px_rgba(255,255,255,0.8)] text-[10px] font-black uppercase tracking-wider backdrop-blur-md shrink-0">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            {{ activeBusiness.sector }} SECTOR
+          </span>
+          <span class="px-3 py-1 rounded-full bg-slate-200/60 border border-slate-300/60 text-slate-700 text-[10px] font-mono uppercase font-bold tracking-wider backdrop-blur-md shrink-0">
+            ID: {{ activeBusiness.id }}
+          </span>
+          <span class="px-3 py-1 rounded-full bg-amber-500/10 border border-amber-300/60 text-amber-800 text-[10px] font-black uppercase tracking-wider backdrop-blur-md shrink-0">
+            {{ getRoleLabel() }}
+          </span>
+          <span *ngIf="activeBusiness.id === 'travel_tourism'" class="px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-300/60 text-cyan-800 font-bold text-[10px] backdrop-blur-md shrink-0">
+            ★ #16 Core Suite
+          </span>
+        </div>
+
+        <!-- Title & Description -->
+        <h1 class="text-3xl sm:text-4xl font-black tracking-tight text-slate-900 leading-tight break-words min-w-0 max-w-full">
+          {{ activeBusiness.name }}<span class="text-indigo-600">.</span>
+        </h1>
+        <p class="text-indigo-600 text-sm sm:text-base font-bold break-words max-w-full">{{ activeBusiness.tagline }}</p>
+        <p class="text-slate-600 text-xs sm:text-sm font-medium leading-relaxed max-w-2xl break-words max-w-full">{{ activeBusiness.description }}</p>
+      </div>
+
+      <!-- Quick Action Controls -->
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+        <button *ngIf="activeBusiness.dedicatedHubView"
+                (click)="openDedicatedHub(activeBusiness.dedicatedHubView!)"
+                class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl bg-white/80 hover:bg-white text-slate-900 text-xs font-black transition-all duration-200 border border-slate-200/90 shadow-[0_4px_12px_rgba(0,0,0,0.04),inset_0_1px_1px_rgba(255,255,255,0.9)] active:scale-95 cursor-pointer">
+          <lucide-icon [name]="icons.ExternalLink" class="w-4 h-4 text-indigo-600"></lucide-icon>
+          <span>Dedicated Live Console</span>
+        </button>
+
+        <button (click)="showAddRecordModal = true"
+                class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-b from-indigo-600 via-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white text-xs font-black transition-all duration-200 shadow-[0_10px_20px_-5px_rgba(79,70,229,0.4),inset_0_1px_1px_rgba(255,255,255,0.4)] border border-indigo-400/30 active:scale-95 cursor-pointer">
+          <lucide-icon [name]="icons.Plus" class="w-4 h-4"></lucide-icon>
+          <span>+ New Operation</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Live Executive Metrics (Bento KPI Grid) -->
+    <div class="mt-8 pt-6 border-t border-slate-100 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
+      <div *ngFor="let kpi of activeBusiness.kpis"
+           class="p-4 rounded-2xl bg-gradient-to-b from-white via-white to-slate-50/80 border border-slate-200/90 shadow-[0_4px_14px_-2px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_24px_-4px_rgba(79,70,229,0.18)] hover:border-indigo-300 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group">
+        <p class="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 group-hover:text-indigo-600 transition-colors truncate">{{ kpi.label }}</p>
+        <p class="text-2xl font-black tracking-tight text-slate-900 mt-1 tabular-nums">{{ kpi.value }}</p>
+        <p class="text-[11px] font-semibold text-slate-500 mt-1 truncate">{{ kpi.subtext }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================================================= -->
+  <!-- 2. BUSINESS CATALOG & SECTOR NAVIGATOR (iOS TABS) -->
+  <!-- ================================================= -->
+  <div class="bg-white rounded-3xl border border-slate-200/80 p-5 sm:p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] space-y-5">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+      <div>
+        <div class="flex items-center gap-2 text-xs font-extrabold text-indigo-600 tracking-wider uppercase mb-0.5">
+          <lucide-icon [name]="icons.Sparkles" class="w-3.5 h-3.5"></lucide-icon>
+          <span>SoftCode Platform Verticals</span>
+        </div>
+        <h2 class="text-xl font-extrabold tracking-tight text-slate-900">Official 30 Business Consoles Directory</h2>
+        <p class="text-xs text-slate-500">Select any industry suite to activate clean role-based dashboards, records ledger, and operational actions.</p>
+      </div>
+
+      <!-- Search Filter Bar -->
+      <div class="relative w-full sm:w-72">
+        <lucide-icon [name]="icons.Search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></lucide-icon>
+        <input [(ngModel)]="searchQuery"
+               placeholder="Search businesses, modules (POS, Tax, EMR)..."
+               class="w-full pl-10 pr-4 py-2.5 text-xs rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium" />
+      </div>
+    </div>
+
+    <!-- Sector Filter Segmented Buttons -->
+    <div class="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+      <button *ngFor="let s of sectors"
+              (click)="selectedSector = s.id"
+              class="px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer"
+              [class.bg-slate-900]="selectedSector === s.id"
+              [class.text-white]="selectedSector === s.id"
+              [class.shadow-sm]="selectedSector === s.id"
+              [class.bg-slate-100]="selectedSector !== s.id"
+              [class.text-slate-600]="selectedSector !== s.id"
+              [class.hover:bg-slate-200]="selectedSector !== s.id">
+        {{ s.label }}
+      </button>
+    </div>
+
+    <!-- Business Bento Grid Tiles (3D White Cards) -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5 max-h-60 overflow-y-auto pr-1 sidebar-scroll">
+      <button *ngFor="let b of filteredBusinesses; let i = index"
+              (click)="selectBusiness(b.id)"
+              class="p-3 rounded-2xl text-left border text-xs transition-all duration-200 flex flex-col justify-between group cursor-pointer relative overflow-hidden shadow-2xs hover:-translate-y-0.5 active:translate-y-0"
+              [class.border-indigo-600]="activeBusiness.id === b.id"
+              [class.bg-indigo-50/90]="activeBusiness.id === b.id"
+              [class.ring-2]="activeBusiness.id === b.id"
+              [class.ring-indigo-500/20]="activeBusiness.id === b.id"
+              [class.shadow-md]="activeBusiness.id === b.id"
+              [class.shadow-indigo-500/10]="activeBusiness.id === b.id"
+              [class.border-slate-200/90]="activeBusiness.id !== b.id"
+              [class.bg-gradient-to-b]="activeBusiness.id !== b.id"
+              [class.from-white]="activeBusiness.id !== b.id"
+              [class.via-white]="activeBusiness.id !== b.id"
+              [class.to-slate-50/80]="activeBusiness.id !== b.id"
+              [class.hover:border-indigo-300]="activeBusiness.id !== b.id"
+              [class.hover:shadow-md]="activeBusiness.id !== b.id">
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-[10px] font-mono font-bold text-slate-400 group-hover:text-indigo-600 transition-colors">
+              #{{ b.id === 'travel_tourism' ? '16 ★' : (i + 1) }}
+            </span>
+            <span *ngIf="b.dedicatedHubView" class="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-emerald-200 shadow-2xs" title="Dedicated Hub Live"></span>
+          </div>
+          <p class="font-extrabold text-slate-900 leading-tight line-clamp-1 group-hover:text-indigo-600 transition-colors">
+            {{ b.name }}
+          </p>
+        </div>
+        <p class="text-[10px] text-slate-500 line-clamp-1 mt-1 font-mono uppercase font-semibold">
+          {{ b.category }}
+        </p>
+      </button>
+    </div>
+  </div>
+
+  <!-- Notification Banner -->
+  <div *ngIf="actionMessage" class="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-800 text-xs font-bold flex items-center justify-between animate-fade-in shadow-sm">
+    <div class="flex items-center gap-2">
+      <lucide-icon [name]="icons.CheckCircle2" class="w-4 h-4 text-emerald-600"></lucide-icon>
+      <span>{{ actionMessage }}</span>
+    </div>
+    <button (click)="actionMessage = ''" class="text-emerald-700 hover:text-emerald-950 text-xs font-extrabold">Dismiss</button>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- 3. WORKSPACE MODULES & OPERATIONS WORKBENCH    -->
+  <!-- ============================================== -->
+  <div *ngIf="activeBusiness" class="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] space-y-6">
+    
+    <!-- Integrated Enterprise Modules Badges -->
+    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-3">
+      <div class="flex items-center justify-between text-xs font-bold text-slate-700">
+        <div class="flex items-center gap-2">
+          <lucide-icon [name]="icons.Boxes" class="w-4 h-4 text-indigo-600"></lucide-icon>
+          <span>Integrated Enterprise Modules ({{ activeBusiness.modules.length }} Enabled)</span>
+        </div>
+        <span class="text-[11px] text-indigo-600 font-semibold hidden sm:inline">Click any module to filter workbench &rarr;</span>
+      </div>
+      
+      <div class="flex flex-wrap gap-2">
+        <span *ngFor="let mod of activeBusiness.modules"
+              (click)="selectModule(mod)"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold shadow-2xs transition-all cursor-pointer"
+              [class.bg-rose-50]="isModuleRestrictedForRole(mod)"
+              [class.text-rose-700]="isModuleRestrictedForRole(mod)"
+              [class.border-rose-200]="isModuleRestrictedForRole(mod)"
+              [class.opacity-60]="isModuleRestrictedForRole(mod)"
+              [class.bg-white]="!isModuleRestrictedForRole(mod)"
+              [class.text-slate-800]="!isModuleRestrictedForRole(mod)"
+              [class.border-slate-200]="!isModuleRestrictedForRole(mod)"
+              [class.hover:border-indigo-400]="!isModuleRestrictedForRole(mod)"
+              [class.hover:bg-indigo-50/70]="!isModuleRestrictedForRole(mod)">
+          <lucide-icon [name]="isModuleRestrictedForRole(mod) ? icons.Lock : icons.Check" class="w-3 h-3"
+                       [class.text-rose-500]="isModuleRestrictedForRole(mod)"
+                       [class.text-emerald-600]="!isModuleRestrictedForRole(mod)"></lucide-icon>
+          <span>{{ mod }}</span>
+          <span *ngIf="isModuleRestrictedForRole(mod)" class="text-[9px] font-bold bg-rose-100 px-1 rounded text-rose-800">Locked</span>
+        </span>
+      </div>
+    </div>
+
+    <!-- Sub-Module Tabs (iOS Segmented Navigation) -->
+    <div class="space-y-4 pt-2">
+      <div class="border-b border-slate-200">
+        <nav class="flex space-x-4 sm:space-x-6 overflow-x-auto pb-px no-scrollbar" aria-label="Business Module Tabs">
+          <button *ngFor="let tab of activeBusiness.tabs"
+                  (click)="selectTab(tab)"
+                  class="whitespace-nowrap py-3 px-2 border-b-2 font-bold text-xs transition-all flex items-center gap-2 cursor-pointer"
+                  [class.border-indigo-600]="activeBusiness.activeTab === tab"
+                  [class.text-indigo-600]="activeBusiness.activeTab === tab"
+                  [class.border-transparent]="activeBusiness.activeTab !== tab"
+                  [class.text-slate-500]="activeBusiness.activeTab !== tab"
+                  [class.hover:text-slate-800]="activeBusiness.activeTab !== tab">
+            <lucide-icon [name]="icons.Layers" class="w-3.5 h-3.5"></lucide-icon>
+            <span>{{ tab }}</span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold"
+                  [class.bg-indigo-100]="activeBusiness.activeTab === tab"
+                  [class.text-indigo-700]="activeBusiness.activeTab === tab"
+                  [class.bg-slate-100]="activeBusiness.activeTab !== tab"
+                  [class.text-slate-600]="activeBusiness.activeTab !== tab">
+              {{ getTabRecordCount(tab) }}
+            </span>
+          </button>
+        </nav>
+      </div>
+
+      <!-- Operational Records Table (High-Fidelity macOS Data View) -->
+      <div class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-xs">
+        <div class="p-4 bg-slate-50/70 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+          <div class="font-extrabold text-slate-800 flex items-center gap-2">
+            <lucide-icon [name]="icons.FileText" class="w-4 h-4 text-indigo-600"></lucide-icon>
+            <span>Operational Ledger: <strong class="text-indigo-900 font-black">{{ activeBusiness.activeTab }}</strong> ({{ displayedRecords.length }} Records)</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button (click)="quickAddOperation()" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition-all shadow-xs active:scale-95 cursor-pointer">
+              <lucide-icon [name]="icons.Plus" class="w-3.5 h-3.5"></lucide-icon>
+              <span>+ Quick Operation</span>
+            </button>
+            <span class="text-slate-400 text-[11px] font-medium hidden md:inline">Synchronized 299 DB Matrix</span>
+          </div>
+        </div>
+
+        <!-- Mobile Cards Grid (Mobile View) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 md:hidden">
+          <div *ngFor="let rec of displayedRecords" class="rounded-2xl border border-slate-200/90 p-4 bg-gradient-to-b from-white via-white to-slate-50/80 shadow-[0_4px_14px_-2px_rgba(0,0,0,0.04)] hover:shadow-[0_10px_20px_-3px_rgba(79,70,229,0.15)] hover:border-indigo-300 hover:-translate-y-0.5 transition-all duration-300 space-y-3">
+            <div class="flex items-center justify-between gap-2">
+              <span class="font-mono text-xs font-bold text-indigo-900 bg-indigo-50 px-2.5 py-0.5 rounded-lg border border-indigo-100">{{ rec.code }}</span>
+              <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider"
+                    [class.bg-emerald-50]="rec.status === 'COMPLETED' || rec.status === 'ACTIVE' || rec.status === 'PAID' || rec.status === 'DISBURSED' || rec.status === 'PROJECT_LIVE' || rec.status === 'CLEARED'"
+                    [class.text-emerald-700]="rec.status === 'COMPLETED' || rec.status === 'ACTIVE' || rec.status === 'PAID' || rec.status === 'DISBURSED' || rec.status === 'PROJECT_LIVE' || rec.status === 'CLEARED'"
+                    [class.bg-amber-50]="rec.status === 'IN_PROGRESS' || rec.status === 'PENDING' || rec.status === 'SCHEDULED'"
+                    [class.text-amber-700]="rec.status === 'IN_PROGRESS' || rec.status === 'PENDING' || rec.status === 'SCHEDULED'">
+                <span class="w-1.5 h-1.5 rounded-full" [class.bg-emerald-500]="rec.status === 'COMPLETED' || rec.status === 'ACTIVE' || rec.status === 'PAID'" [class.bg-amber-500]="rec.status === 'PENDING' || rec.status === 'IN_PROGRESS'"></span>
+                {{ rec.status }}
+              </span>
+            </div>
+
+            <div>
+              <h4 class="font-black text-slate-900 text-sm leading-tight">{{ rec.title }}</h4>
+              <p class="text-xs text-slate-500 font-medium mt-1 flex items-center gap-1.5">
+                <span class="w-5 h-5 rounded-md bg-slate-100 text-slate-700 text-[9px] font-black flex items-center justify-center shrink-0">
+                  {{ (rec.client || 'CL').substring(0, 2).toUpperCase() }}
+                </span>
+                <span>{{ rec.client }}</span>
+              </p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 text-xs bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+              <div>
+                <span class="text-[10px] text-slate-400 font-bold uppercase block">Value</span>
+                <span class="font-mono font-black text-slate-900">${{ rec.amount | number:'1.0-0' }}</span>
+              </div>
+              <div>
+                <span class="text-[10px] text-slate-400 font-bold uppercase block">Category</span>
+                <span class="font-bold text-slate-700 text-[10px]">{{ rec.meta || activeBusiness.activeTab }}</span>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between text-xs text-slate-400 pt-1 border-t border-slate-100">
+              <span class="text-[10px] font-mono">{{ rec.date }}</span>
+              <button (click)="openPrintModal(rec)" class="px-3 py-1 rounded-lg text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition-colors">
+                Print Ledger &rarr;
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Desktop Table (Desktop View) -->
+        <div class="hidden md:block overflow-x-auto">
+          <table class="w-full text-left text-xs text-slate-700">
+            <thead class="bg-slate-50 text-slate-500 font-extrabold uppercase text-[10px] tracking-wider border-b border-slate-200">
+              <tr>
+                <th class="px-4 py-3.5">Code / Ref</th>
+                <th class="px-4 py-3.5">Title / Subject</th>
+                <th class="px-4 py-3.5">Client / Department</th>
+                <th class="px-4 py-3.5">Classification</th>
+                <th class="px-4 py-3.5 text-right">Value / Amount</th>
+                <th class="px-4 py-3.5">Date</th>
+                <th class="px-4 py-3.5">Status</th>
+                <th class="px-4 py-3.5 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 font-medium">
+              <tr *ngFor="let rec of displayedRecords" class="hover:bg-indigo-50/30 transition-colors">
+                <td class="px-4 py-3.5 font-mono font-bold text-indigo-900 whitespace-nowrap">
+                  {{ rec.code }}
+                </td>
+                <td class="px-4 py-3.5 font-bold text-slate-900 max-w-xs truncate">
+                  {{ rec.title }}
+                </td>
+                <td class="px-4 py-3.5 text-slate-700 whitespace-nowrap">
+                  <div class="flex items-center gap-2">
+                    <span class="w-6 h-6 rounded-lg bg-slate-100 text-slate-700 text-[10px] font-black flex items-center justify-center">
+                      {{ (rec.client || 'CL').substring(0, 2).toUpperCase() }}
+                    </span>
+                    <span>{{ rec.client }}</span>
+                  </div>
+                </td>
+                <td class="px-4 py-3.5 text-slate-500 whitespace-nowrap">
+                  <span class="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-[10px] font-bold">
+                    {{ rec.meta || activeBusiness.activeTab }}
+                  </span>
+                </td>
+                <td class="px-4 py-3.5 text-right font-mono font-extrabold text-slate-900 whitespace-nowrap">
+                  ${{ rec.amount | number:'1.0-0' }}
+                </td>
+                <td class="px-4 py-3.5 text-slate-500 whitespace-nowrap text-[11px]">
+                  {{ rec.date }}
+                </td>
+                <td class="px-4 py-3.5 whitespace-nowrap">
+                  <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider"
+                        [class.bg-emerald-50]="rec.status === 'COMPLETED' || rec.status === 'ACTIVE' || rec.status === 'PAID' || rec.status === 'DISBURSED' || rec.status === 'PROJECT_LIVE' || rec.status === 'CLEARED' || rec.status === 'COMMISSION_PAID' || rec.status === 'REMITTED'"
+                        [class.text-emerald-700]="rec.status === 'COMPLETED' || rec.status === 'ACTIVE' || rec.status === 'PAID' || rec.status === 'DISBURSED' || rec.status === 'PROJECT_LIVE' || rec.status === 'CLEARED' || rec.status === 'COMMISSION_PAID' || rec.status === 'REMITTED'"
+                        [class.border]="rec.status === 'COMPLETED' || rec.status === 'ACTIVE' || rec.status === 'PAID' || rec.status === 'DISBURSED' || rec.status === 'PROJECT_LIVE' || rec.status === 'CLEARED' || rec.status === 'COMMISSION_PAID' || rec.status === 'REMITTED'"
+                        [class.border-emerald-200]="rec.status === 'COMPLETED' || rec.status === 'ACTIVE' || rec.status === 'PAID' || rec.status === 'DISBURSED' || rec.status === 'PROJECT_LIVE' || rec.status === 'CLEARED' || rec.status === 'COMMISSION_PAID' || rec.status === 'REMITTED'"
+                        [class.bg-amber-50]="rec.status === 'IN_PROGRESS' || rec.status === 'PENDING' || rec.status === 'IN_SPRINT' || rec.status === 'SHORTLISTED' || rec.status === 'SCHEDULED' || rec.status === 'POST_ACTIVE'"
+                        [class.text-amber-700]="rec.status === 'IN_PROGRESS' || rec.status === 'PENDING' || rec.status === 'IN_SPRINT' || rec.status === 'SHORTLISTED' || rec.status === 'SCHEDULED' || rec.status === 'POST_ACTIVE'"
+                        [class.border-amber-200]="rec.status === 'IN_PROGRESS' || rec.status === 'PENDING' || rec.status === 'IN_SPRINT' || rec.status === 'SHORTLISTED' || rec.status === 'SCHEDULED' || rec.status === 'POST_ACTIVE'"
+                        [class.bg-blue-50]="rec.status === 'DEPLOYED' || rec.status === 'OFFER_EXTENDED' || rec.status === 'TECHNICIAN_DISPATCHED' || rec.status === 'CAMPAIGN_LIVE' || rec.status === 'LINK_ACTIVE'"
+                        [class.text-blue-700]="rec.status === 'DEPLOYED' || rec.status === 'OFFER_EXTENDED' || rec.status === 'TECHNICIAN_DISPATCHED' || rec.status === 'CAMPAIGN_LIVE' || rec.status === 'LINK_ACTIVE'"
+                        [class.border-blue-200]="rec.status === 'DEPLOYED' || rec.status === 'OFFER_EXTENDED' || rec.status === 'TECHNICIAN_DISPATCHED' || rec.status === 'CAMPAIGN_LIVE' || rec.status === 'LINK_ACTIVE'">
+                    <span class="w-1.5 h-1.5 rounded-full"
+                          [class.bg-emerald-500]="rec.status === 'COMPLETED' || rec.status === 'ACTIVE' || rec.status === 'PAID' || rec.status === 'DISBURSED' || rec.status === 'PROJECT_LIVE' || rec.status === 'CLEARED' || rec.status === 'COMMISSION_PAID' || rec.status === 'REMITTED'"
+                          [class.bg-amber-500]="rec.status === 'IN_PROGRESS' || rec.status === 'PENDING' || rec.status === 'IN_SPRINT' || rec.status === 'SHORTLISTED' || rec.status === 'SCHEDULED' || rec.status === 'POST_ACTIVE'"
+                          [class.bg-blue-500]="rec.status === 'DEPLOYED' || rec.status === 'OFFER_EXTENDED' || rec.status === 'TECHNICIAN_DISPATCHED' || rec.status === 'CAMPAIGN_LIVE' || rec.status === 'LINK_ACTIVE'"></span>
+                    {{ rec.status }}
+                  </span>
+                </td>
+                <td class="px-4 py-3.5 text-right whitespace-nowrap space-x-2">
+                  <button (click)="openPrintModal(rec)"
+                          class="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all cursor-pointer"
+                          title="Print Official Dossier / Receipt">
+                    <lucide-icon [name]="icons.Printer" class="w-4 h-4"></lucide-icon>
+                  </button>
+                  <button *ngIf="rec.status !== 'COMPLETED' && rec.status !== 'CLEARED'"
+                          (click)="updateRecordStatus(rec, 'COMPLETED')"
+                          class="px-3 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-[10px] font-black transition-all cursor-pointer active:scale-95">
+                    Mark Done
+                  </button>
+                </td>
+              </tr>
+              <tr *ngIf="displayedRecords.length === 0">
+                <td colspan="8" class="text-center py-16 text-slate-400">
+                  <div class="flex flex-col items-center justify-center space-y-2">
+                    <div class="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 mb-2">
+                      <lucide-icon [name]="icons.Layers" class="w-6 h-6"></lucide-icon>
+                    </div>
+                    <p class="font-bold text-sm text-slate-700">No active operations for {{ activeBusiness.activeTab }} yet</p>
+                    <p class="text-xs text-slate-500 max-w-sm">Dispatch or record a transaction below to populate this module live.</p>
+                    <button (click)="quickAddOperation()" class="mt-3 inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer">
+                      <lucide-icon [name]="icons.Plus" class="w-3.5 h-3.5"></lucide-icon>
+                      <span>+ Process {{ activeBusiness.activeTab }} Record</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- 4. ADD RECORD MODAL (macOS SHEET STYLE)    -->
+  <!-- ========================================== -->
+  <div *ngIf="showAddRecordModal" class="fixed inset-0 z-[120000] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md animate-fade-in" (click)="showAddRecordModal = false">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-200/80 animate-scale-up" (click)="$event.stopPropagation()">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+        <div>
+          <h3 class="text-lg font-black text-slate-900 tracking-tight">Add Operational Entry</h3>
+          <p class="text-xs text-slate-500 font-medium">{{ activeBusiness.name }} &bull; {{ activeBusiness.activeTab }}</p>
+        </div>
+        <button (click)="showAddRecordModal = false" class="p-2 text-slate-400 hover:text-slate-700 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer">
+          <lucide-icon [name]="icons.X" class="w-5 h-5"></lucide-icon>
+        </button>
+      </div>
+
+      <div class="space-y-4 text-xs">
+        <div>
+          <label class="block font-bold text-slate-700 mb-1.5">Subject / Item Title *</label>
+          <input [(ngModel)]="newRecord.title"
+                 placeholder="e.g. High-Volume Billing Shift / Client SOW Execution"
+                 class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" />
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1.5">Client / Organization / Counterparty</label>
+          <input [(ngModel)]="newRecord.client"
+                 placeholder="e.g. Apex Global Enterprise Corp"
+                 class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1.5">Amount ($ / Units)</label>
+            <input type="number" [(ngModel)]="newRecord.amount"
+                   class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-slate-900 font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" />
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1.5">Initial Status</label>
+            <select [(ngModel)]="newRecord.status"
+                    class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-slate-900 font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all bg-white">
+              <option value="ACTIVE">ACTIVE</option>
+              <option value="IN_PROGRESS">IN_PROGRESS</option>
+              <option value="PENDING">PENDING</option>
+              <option value="COMPLETED">COMPLETED</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1.5">Internal Notes & Reference</label>
+          <textarea [(ngModel)]="newRecord.notes" rows="2"
+                    placeholder="Provide any specific requirements or dispatch details..."
+                    class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"></textarea>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+        <button (click)="showAddRecordModal = false"
+                class="px-5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer">
+          Cancel
+        </button>
+        <button (click)="submitNewRecord()"
+                [disabled]="!newRecord.title"
+                class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold disabled:opacity-50 transition-colors shadow-sm cursor-pointer">
+          Save Record
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- 5. PRINT OFFICIAL DOSSIER MODAL            -->
+  <!-- ========================================== -->
+  <div *ngIf="showPrintModal && selectedRecordForPrint" class="fixed inset-0 z-[120000] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md animate-fade-in" (click)="showPrintModal = false">
+    <div class="bg-white rounded-3xl max-w-xl w-full p-8 space-y-6 shadow-2xl border border-slate-200 animate-scale-up" (click)="$event.stopPropagation()">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-200">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-black text-sm shadow-sm">
+            SC
+          </div>
+          <div>
+            <h3 class="text-sm font-extrabold text-slate-900">SoftCode Solution Enterprise</h3>
+            <p class="text-xs text-slate-500">{{ activeBusiness.name }} Official Dossier</p>
+          </div>
+        </div>
+        <button (click)="showPrintModal = false" class="p-2 text-slate-400 hover:text-slate-700 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer">
+          <lucide-icon [name]="icons.X" class="w-5 h-5"></lucide-icon>
+        </button>
+      </div>
+
+      <!-- Printable Document Content -->
+      <div class="p-6 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-4 text-xs font-mono">
+        <div class="flex justify-between items-start">
+          <div>
+            <p class="text-slate-400 uppercase text-[10px] font-bold">Document Reference</p>
+            <p class="font-bold text-sm text-slate-900">{{ selectedRecordForPrint.code }}</p>
+          </div>
+          <div class="text-right">
+            <p class="text-slate-400 uppercase text-[10px] font-bold">Execution Date</p>
+            <p class="font-bold text-slate-800">{{ selectedRecordForPrint.date }}</p>
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-200">
+          <p class="text-slate-400 uppercase text-[10px] font-bold">Title & Description</p>
+          <p class="font-bold text-slate-900 font-sans text-sm mt-0.5">{{ selectedRecordForPrint.title }}</p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 pt-2">
+          <div>
+            <p class="text-slate-400 uppercase text-[10px] font-bold">Client / Organization</p>
+            <p class="font-bold text-slate-800 font-sans">{{ selectedRecordForPrint.client }}</p>
+          </div>
+          <div>
+            <p class="text-slate-400 uppercase text-[10px] font-bold">Classification / Module</p>
+            <p class="font-bold text-slate-800">{{ selectedRecordForPrint.meta }}</p>
+          </div>
+        </div>
+
+        <div class="flex justify-between items-center pt-3 border-t border-slate-200">
+          <div>
+            <p class="text-slate-400 uppercase text-[10px] font-bold">Current Status</p>
+            <span class="inline-block px-3 py-1 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-800">
+              {{ selectedRecordForPrint.status }}
+            </span>
+          </div>
+          <div class="text-right">
+            <p class="text-slate-400 uppercase text-[10px] font-bold">Settlement Amount</p>
+            <p class="font-black text-lg text-slate-900">${{ selectedRecordForPrint.amount | number:'1.0-0' }}</p>
+          </div>
+        </div>
+
+        <div class="pt-4 border-t border-dashed border-slate-300 text-[10px] text-slate-400 flex items-center justify-between">
+          <span>Digital Seal: SOFTCODE-VERIFIED-AUTH-{{ selectedRecordForPrint.code }}</span>
+          <span>Security Level: Tier 4</span>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-3 pt-2">
+        <button (click)="showPrintModal = false"
+                class="px-5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer">
+          Close Preview
+        </button>
+        <button (click)="printRecord()"
+                class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-colors shadow-sm cursor-pointer">
+          <lucide-icon [name]="icons.Printer" class="w-4 h-4"></lucide-icon>
+          <span>Print / Export PDF</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

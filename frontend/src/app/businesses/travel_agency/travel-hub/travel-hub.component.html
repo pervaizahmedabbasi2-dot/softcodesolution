@@ -1,0 +1,825 @@
+<div class="px-6 sm:px-8 py-8 max-w-7xl mx-auto space-y-8 animate-fade-in">
+  <!-- Header -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-200">
+    <div>
+      <div class="flex items-center gap-2 text-xs text-slate-500 mb-1">
+        <span>Travel, Tourism & Immigration</span>
+        <span aria-hidden="true">·</span>
+        <span>Embassy Visa Pipeline</span>
+        <span aria-hidden="true">·</span>
+        <span class="text-indigo-600 font-semibold">Tourist Hotel Management & Vouchers</span>
+      </div>
+      <h1 class="text-2xl font-bold tracking-tight text-slate-900">Travel & Tourist Visa Agency Console</h1>
+      <p class="text-sm text-slate-500 mt-1">Complete visa tracking, embassy hotel reservation vouchers, partner hotel room allotments (Makkah, Madinah, Dubai, Istanbul, London), and holiday packages.</p>
+    </div>
+
+    <!-- Quick Action Buttons -->
+    <div class="flex flex-wrap items-center gap-3">
+      <button (click)="showNewHotelBookingModal = true"
+        class="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition-all shadow-sm">
+        <lucide-icon [name]="icons.BedDouble" class="w-4 h-4"></lucide-icon>
+        <span>Book Hotel & Issue Voucher</span>
+      </button>
+
+      <button (click)="showNewVisaModal = true"
+        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700 transition-all shadow-sm">
+        <lucide-icon [name]="icons.Plus" class="w-4 h-4"></lucide-icon>
+        <span>Lodge Visa Application</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Notification Banner -->
+  <div *ngIf="actionMessage" class="p-4 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-800 text-xs font-medium flex items-center justify-between animate-fade-in">
+    <div class="flex items-center gap-2">
+      <lucide-icon [name]="icons.CheckCircle2" class="w-4 h-4 text-emerald-600"></lucide-icon>
+      <span>{{ actionMessage }}</span>
+    </div>
+    <button (click)="actionMessage = ''" class="text-emerald-600 hover:text-emerald-900 text-xs font-bold">Dismiss</button>
+  </div>
+
+  <!-- Metrics -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+    <div class="bg-white p-5 rounded-2xl border border-slate-200/70 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.03),0_8px_20px_-4px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_16px_-2px_rgba(0,0,0,0.05),0_12px_28px_-4px_rgba(0,0,0,0.06)] transition-all">
+      <p class="text-xs text-slate-500 font-medium">Visa Files Lodged</p>
+      <p class="text-2xl font-bold text-slate-900 mt-1">{{ stats.totalVisas }} Files</p>
+      <p class="text-xs text-slate-400 mt-1">UK, US, Schengen, KSA, UAE</p>
+    </div>
+
+    <div class="bg-white p-5 rounded-2xl border border-slate-200/70 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.03),0_8px_20px_-4px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_16px_-2px_rgba(0,0,0,0.05),0_12px_28px_-4px_rgba(0,0,0,0.06)] transition-all">
+      <p class="text-xs text-slate-500 font-medium">Visas Approved</p>
+      <p class="text-2xl font-bold text-emerald-600 mt-1">{{ stats.approvedVisas }} Issued</p>
+      <p class="text-xs text-slate-400 mt-1">Ready for passport dispatch</p>
+    </div>
+
+    <div class="bg-white p-5 rounded-2xl border border-slate-200/70 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.03),0_8px_20px_-4px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_16px_-2px_rgba(0,0,0,0.05),0_12px_28px_-4px_rgba(0,0,0,0.06)] transition-all">
+      <p class="text-xs text-slate-500 font-medium">Hotel Bookings & Vouchers</p>
+      <p class="text-2xl font-bold text-indigo-600 mt-1">{{ stats.hotelVouchersCount }} Vouchers</p>
+      <p class="text-xs text-indigo-500 font-medium mt-1">{{ stats.totalNightsManaged }} Total Room Nights</p>
+    </div>
+
+    <div class="bg-white p-5 rounded-2xl border border-slate-200/70 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.03),0_8px_20px_-4px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_16px_-2px_rgba(0,0,0,0.05),0_12px_28px_-4px_rgba(0,0,0,0.06)] transition-all">
+      <p class="text-xs text-slate-500 font-medium">Partner Hotels Inventory</p>
+      <p class="text-2xl font-bold text-slate-900 mt-1">{{ stats.partnerHotelsCount }} Properties</p>
+      <p class="text-xs text-slate-400 mt-1">Direct contracted allotments</p>
+    </div>
+
+    <div class="bg-white p-5 rounded-2xl border border-slate-200/70 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.03),0_8px_20px_-4px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_16px_-2px_rgba(0,0,0,0.05),0_12px_28px_-4px_rgba(0,0,0,0.06)] transition-all">
+      <p class="text-xs text-slate-500 font-medium">Agency Revenue</p>
+      <p class="text-2xl font-bold text-slate-900 mt-1">${{ stats.totalRevenue | number:'1.0-0' }}</p>
+      <p class="text-xs text-slate-400 mt-1">Visas, hotels & tour dossiers</p>
+    </div>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <div class="border-b border-slate-200">
+    <nav class="flex space-x-8">
+      <button (click)="activeTab = 'visas'"
+        class="py-3 px-1 border-b-2 font-medium text-xs transition-colors flex items-center gap-2"
+        [class.border-indigo-600]="activeTab === 'visas'" [class.text-indigo-600]="activeTab === 'visas'"
+        [class.border-transparent]="activeTab !== 'visas'" [class.text-slate-500]="activeTab !== 'visas'">
+        <lucide-icon [name]="icons.Globe" class="w-4 h-4"></lucide-icon>
+        <span>Visa Applications & Embassy Pipeline ({{ visas.length }})</span>
+      </button>
+
+      <button (click)="activeTab = 'hotel-vouchers'"
+        class="py-3 px-1 border-b-2 font-medium text-xs transition-colors flex items-center gap-2"
+        [class.border-indigo-600]="activeTab === 'hotel-vouchers'" [class.text-indigo-600]="activeTab === 'hotel-vouchers'"
+        [class.border-transparent]="activeTab !== 'hotel-vouchers'" [class.text-slate-500]="activeTab !== 'hotel-vouchers'">
+        <lucide-icon [name]="icons.BedDouble" class="w-4 h-4"></lucide-icon>
+        <span>Hotel Management & Vouchers ({{ hotelBookings.length }})</span>
+        <span class="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-indigo-100 text-indigo-700 rounded-full">Part of Agency</span>
+      </button>
+
+      <button (click)="activeTab = 'partner-hotels'"
+        class="py-3 px-1 border-b-2 font-medium text-xs transition-colors flex items-center gap-2"
+        [class.border-indigo-600]="activeTab === 'partner-hotels'" [class.text-indigo-600]="activeTab === 'partner-hotels'"
+        [class.border-transparent]="activeTab !== 'partner-hotels'" [class.text-slate-500]="activeTab !== 'partner-hotels'">
+        <lucide-icon [name]="icons.Building2" class="w-4 h-4"></lucide-icon>
+        <span>Partner Hotels & Allotments ({{ hotels.length }})</span>
+      </button>
+
+      <button (click)="activeTab = 'packages'"
+        class="py-3 px-1 border-b-2 font-medium text-xs transition-colors flex items-center gap-2"
+        [class.border-indigo-600]="activeTab === 'packages'" [class.text-indigo-600]="activeTab === 'packages'"
+        [class.border-transparent]="activeTab !== 'packages'" [class.text-slate-500]="activeTab !== 'packages'">
+        <lucide-icon [name]="icons.Map" class="w-4 h-4"></lucide-icon>
+        <span>Tour & Umrah Packages ({{ packages.length }})</span>
+      </button>
+
+      <button (click)="activeTab = 'bookings'"
+        class="py-3 px-1 border-b-2 font-medium text-xs transition-colors flex items-center gap-2"
+        [class.border-indigo-600]="activeTab === 'bookings'" [class.text-indigo-600]="activeTab === 'bookings'"
+        [class.border-transparent]="activeTab !== 'bookings'" [class.text-slate-500]="activeTab !== 'bookings'">
+        <lucide-icon [name]="icons.Ticket" class="w-4 h-4"></lucide-icon>
+        <span>Passenger Ledgers ({{ bookings.length }})</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- TAB 1: VISA APPLICATIONS                   -->
+  <!-- ========================================== -->
+  <div *ngIf="activeTab === 'visas'" class="space-y-4 animate-fade-in">
+    <!-- Filter Bar -->
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="relative w-full sm:w-80">
+        <lucide-icon [name]="icons.Search" class="w-4 h-4 absolute left-3 top-2.5 text-slate-400"></lucide-icon>
+        <input type="text" [(ngModel)]="searchQuery" placeholder="Search applicant, passport, country or hotel..."
+          class="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+      </div>
+      <div class="text-xs text-slate-500">
+        Showing {{ filteredVisas.length }} of {{ visas.length }} visa files
+      </div>
+    </div>
+
+    <!-- Visas Table -->
+    <div class="bg-white rounded-2xl border border-slate-200/70 overflow-hidden shadow-[0_2px_8px_-2px_rgba(0,0,0,0.03),0_8px_20px_-4px_rgba(0,0,0,0.04)]">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead>
+            <tr class="bg-slate-50/75 border-b border-slate-200 text-slate-500 font-semibold">
+              <th class="py-3 px-5">App No / Ref</th>
+              <th class="py-3 px-5">Applicant & Passport</th>
+              <th class="py-3 px-5">Country & Visa Type</th>
+              <th class="py-3 px-5">Linked Hotel Voucher</th>
+              <th class="py-3 px-5">Embassy / Fee</th>
+              <th class="py-3 px-5">Status</th>
+              <th class="py-3 px-5">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 text-slate-700">
+            <tr *ngFor="let v of filteredVisas" class="hover:bg-slate-50/50 transition-colors">
+              <td class="py-3.5 px-5">
+                <span class="font-mono font-bold text-slate-900 block">{{ v.appNo }}</span>
+                <span class="text-[10px] text-slate-400 font-mono">{{ v.trackingRef }}</span>
+              </td>
+              <td class="py-3.5 px-5">
+                <p class="font-bold text-slate-900">{{ v.clientName }}</p>
+                <p class="text-[11px] text-slate-500 font-mono">{{ v.passportNo }}</p>
+              </td>
+              <td class="py-3.5 px-5">
+                <span class="font-semibold text-slate-900 block">{{ v.country }}</span>
+                <span class="text-[11px] text-slate-500">{{ v.visaType }}</span>
+              </td>
+              <td class="py-3.5 px-5">
+                <div *ngIf="v.hotelVoucherRef">
+                  <button (click)="findAndOpenVoucherForVisa(v)"
+                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold text-[11px] border border-indigo-200 transition-colors">
+                    <lucide-icon [name]="icons.BedDouble" class="w-3.5 h-3.5 text-indigo-600"></lucide-icon>
+                    <span>{{ v.hotelVoucherRef }}</span>
+                  </button>
+                  <p class="text-[10px] text-slate-500 mt-0.5 truncate max-w-[150px]">{{ v.hotelName }}</p>
+                </div>
+                <div *ngIf="!v.hotelVoucherRef">
+                  <span class="text-[11px] text-slate-400 italic">No hotel attached</span>
+                </div>
+              </td>
+              <td class="py-3.5 px-5">
+                <p class="font-semibold text-slate-900">${{ v.embassyFee + v.serviceFee | number:'1.2-2' }}</p>
+                <p class="text-[10px] text-slate-400">Emb: ${{ v.embassyFee }} · Svc: ${{ v.serviceFee }}</p>
+              </td>
+              <td class="py-3.5 px-5">
+                <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded"
+                  [class.bg-emerald-50]="v.status === 'APPROVED'" [class.text-emerald-700]="v.status === 'APPROVED'"
+                  [class.bg-amber-50]="v.status === 'PROCESSING' || v.status === 'SUBMITTED'" [class.text-amber-700]="v.status === 'PROCESSING' || v.status === 'SUBMITTED'"
+                  [class.bg-rose-50]="v.status === 'REJECTED'" [class.text-rose-700]="v.status === 'REJECTED'">
+                  {{ v.status }}
+                </span>
+              </td>
+              <td class="py-3.5 px-5">
+                <div class="flex items-center gap-1.5">
+                  <button (click)="updateVisaStatus(v, 'APPROVED')" class="px-2 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded font-bold text-[10px] transition-colors">
+                    Approve
+                  </button>
+                  <button (click)="updateVisaStatus(v, 'PROCESSING')" class="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded font-bold text-[10px] transition-colors">
+                    In Process
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- TAB 2: HOTEL MANAGEMENT & BOOKING VOUCHERS               -->
+  <!-- ======================================================== -->
+  <div *ngIf="activeTab === 'hotel-vouchers'" class="space-y-4 animate-fade-in">
+    <!-- Subheader & Quick Filter -->
+    <div class="bg-indigo-50/60 border border-indigo-100 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div>
+        <h3 class="text-sm font-bold text-indigo-950 flex items-center gap-2">
+          <lucide-icon [name]="icons.BedDouble" class="w-4 h-4 text-indigo-600"></lucide-icon>
+          <span>Tourist Hotel Management & Embassy Proof of Accommodation</span>
+        </h3>
+        <p class="text-xs text-indigo-700 mt-0.5">Generate verified hotel reservation vouchers required for visa approval and airport border immigration clearance.</p>
+      </div>
+      <button (click)="showNewHotelBookingModal = true"
+        class="inline-flex items-center gap-2 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold shadow-sm transition-all shrink-0">
+        <lucide-icon [name]="icons.Plus" class="w-4 h-4"></lucide-icon>
+        <span>New Hotel Reservation</span>
+      </button>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="relative w-full sm:w-80">
+        <lucide-icon [name]="icons.Search" class="w-4 h-4 absolute left-3 top-2.5 text-slate-400"></lucide-icon>
+        <input type="text" [(ngModel)]="hotelSearchQuery" placeholder="Search voucher #, guest, hotel, city..."
+          class="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+      </div>
+      <div class="text-xs text-slate-500">
+        Showing {{ filteredHotelBookings.length }} hotel vouchers
+      </div>
+    </div>
+
+    <!-- Hotel Bookings & Vouchers Table -->
+    <div class="bg-white rounded-2xl border border-slate-200/70 overflow-hidden shadow-[0_2px_8px_-2px_rgba(0,0,0,0.03),0_8px_20px_-4px_rgba(0,0,0,0.04)]">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead>
+            <tr class="bg-slate-50/75 border-b border-slate-200 text-slate-500 font-semibold">
+              <th class="py-3 px-5">Voucher Ref & Code</th>
+              <th class="py-3 px-5">Guest / Passenger</th>
+              <th class="py-3 px-5">Hotel Property & City</th>
+              <th class="py-3 px-5">Room Category & Meal</th>
+              <th class="py-3 px-5">Check-In / Out</th>
+              <th class="py-3 px-5">Total Billed</th>
+              <th class="py-3 px-5">Voucher Status</th>
+              <th class="py-3 px-5">Official Voucher</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 text-slate-700">
+            <tr *ngFor="let b of filteredHotelBookings" class="hover:bg-slate-50/50 transition-colors">
+              <td class="py-3.5 px-5">
+                <span class="font-mono font-bold text-indigo-700 block">{{ b.voucherNo }}</span>
+                <span class="text-[10px] text-slate-400 font-mono">{{ b.confirmationCode }}</span>
+                <span *ngIf="b.linkedVisaApp && b.linkedVisaApp !== 'None'" class="inline-block mt-0.5 text-[9px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-mono">
+                  Linked: {{ b.linkedVisaApp }}
+                </span>
+              </td>
+              <td class="py-3.5 px-5">
+                <p class="font-bold text-slate-900">{{ b.guestName }}</p>
+                <p class="text-[11px] text-slate-500 font-mono">{{ b.passportNo }} · {{ b.paxCount }} Pax</p>
+              </td>
+              <td class="py-3.5 px-5">
+                <p class="font-semibold text-slate-900">{{ b.hotelName }}</p>
+                <p class="text-[11px] text-slate-500">{{ b.city }}</p>
+              </td>
+              <td class="py-3.5 px-5">
+                <span class="font-medium text-slate-900 block">{{ b.roomType }}</span>
+                <span class="text-[10px] text-emerald-600 font-semibold">{{ b.mealPlan }}</span>
+              </td>
+              <td class="py-3.5 px-5">
+                <p class="font-mono text-slate-900">{{ b.checkIn }} → {{ b.checkOut }}</p>
+                <p class="text-[10px] text-slate-500 font-medium">{{ b.nights }} Nights · {{ b.roomsCount }} Room</p>
+              </td>
+              <td class="py-3.5 px-5">
+                <p class="font-bold text-slate-900">${{ b.totalAmount | number:'1.2-2' }}</p>
+                <span class="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded"
+                  [class.bg-emerald-50]="b.paymentStatus === 'PAID'" [class.text-emerald-700]="b.paymentStatus === 'PAID'"
+                  [class.bg-amber-50]="b.paymentStatus === 'PARTIAL'" [class.text-amber-700]="b.paymentStatus === 'PARTIAL'">
+                  {{ b.paymentStatus }}
+                </span>
+              </td>
+              <td class="py-3.5 px-5">
+                <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded"
+                  [class.bg-emerald-50]="b.voucherStatus === 'ISSUED_EMBASSY_CONFIRMED'" [class.text-emerald-700]="b.voucherStatus === 'ISSUED_EMBASSY_CONFIRMED'"
+                  [class.bg-amber-50]="b.voucherStatus !== 'ISSUED_EMBASSY_CONFIRMED'" [class.text-amber-700]="b.voucherStatus !== 'ISSUED_EMBASSY_CONFIRMED'">
+                  {{ b.voucherStatus === 'ISSUED_EMBASSY_CONFIRMED' ? 'Embassy Confirmed' : b.voucherStatus }}
+                </span>
+              </td>
+              <td class="py-3.5 px-5">
+                <button (click)="openVoucherModal(b)"
+                  class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-[11px] border border-indigo-200 transition-colors shadow-2xs">
+                  <lucide-icon [name]="icons.Printer" class="w-3.5 h-3.5 text-indigo-600"></lucide-icon>
+                  <span>View Voucher</span>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- TAB 3: PARTNER HOTELS & ALLOTMENTS                       -->
+  <!-- ======================================================== -->
+  <div *ngIf="activeTab === 'partner-hotels'" class="space-y-6 animate-fade-in">
+    <div class="flex items-center justify-between pb-2 border-b border-slate-200">
+      <div>
+        <h3 class="text-base font-bold text-slate-900">Direct Contracted Partner Hotels</h3>
+        <p class="text-xs text-slate-500 mt-0.5">Pre-allocated room allotments in major tourist destinations and Holy Cities.</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div *ngFor="let h of hotels" class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm flex flex-col justify-between hover:border-indigo-300 transition-all">
+        <div>
+          <!-- Star and City Header -->
+          <div class="flex items-center justify-between text-xs text-slate-500 mb-2">
+            <span class="font-bold text-indigo-600">{{ h.city }}, {{ h.country }}</span>
+            <div class="flex items-center text-amber-500 font-bold">
+              <span>★ {{ h.starRating }}-Star</span>
+            </div>
+          </div>
+
+          <h4 class="text-base font-bold text-slate-900 mb-1">{{ h.hotelName }}</h4>
+          <p class="text-xs text-slate-500 mb-3 flex items-center gap-1">
+            <lucide-icon [name]="icons.Map" class="w-3.5 h-3.5 text-slate-400"></lucide-icon>
+            <span>{{ h.distanceToHaram }}</span>
+          </p>
+
+          <!-- Allotment Bar -->
+          <div class="p-3 bg-slate-50 rounded-lg border border-slate-100 mb-4 space-y-1.5">
+            <div class="flex items-center justify-between text-xs font-semibold">
+              <span class="text-slate-600">Room Allotment Usage:</span>
+              <span class="text-indigo-700">{{ h.bookedRooms }} / {{ h.allottedRooms }} Booked</span>
+            </div>
+            <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+              <div class="bg-indigo-600 h-full rounded-full transition-all" [style.width.%]="(h.bookedRooms / h.allottedRooms) * 100"></div>
+            </div>
+            <div class="flex items-center justify-between text-[11px] text-slate-500">
+              <span>Available Rooms: <strong class="text-emerald-600">{{ h.availableRooms }} Units</strong></span>
+              <span>Rate: <strong class="text-slate-900">${{ h.contractedRate }}/night</strong></span>
+            </div>
+          </div>
+
+          <!-- Room Types -->
+          <div class="space-y-1.5 mb-4 text-xs">
+            <p class="font-semibold text-slate-700 text-[11px]">Contracted Room Categories:</p>
+            <div class="flex flex-wrap gap-1.5">
+              <span *ngFor="let rt of h.roomTypes" class="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-[10px] font-medium">
+                {{ rt }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Amenities -->
+          <div class="space-y-1 text-[11px] text-slate-600 border-t border-slate-100 pt-3">
+            <div *ngFor="let am of h.amenities" class="flex items-center gap-1.5">
+              <span class="text-emerald-500 font-bold">✓</span>
+              <span>{{ am }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between">
+          <span class="text-[10px] text-slate-400 font-mono">{{ h.contactDesk }}</span>
+          <button (click)="newHotelBooking.hotelId = h.id; onBookingHotelChange(); showNewHotelBookingModal = true"
+            class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs rounded-lg transition-colors">
+            Reserve from Allotment
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- TAB 4: TOUR & UMRAH PACKAGES                             -->
+  <!-- ======================================================== -->
+  <div *ngIf="activeTab === 'packages'" class="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in">
+    <div *ngFor="let pkg of packages" class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col justify-between hover:border-indigo-300 transition-all">
+      <div>
+        <span class="text-xs font-mono font-bold text-indigo-600">{{ pkg.code }}</span>
+        <h3 class="text-base font-bold text-slate-900 mt-1 mb-2">{{ pkg.title }}</h3>
+        <p class="text-xs text-slate-500 mb-4">{{ pkg.duration }} · Departure: {{ pkg.departure }}</p>
+
+        <div class="space-y-1.5 py-3 border-y border-slate-100 text-xs">
+          <p class="font-bold text-slate-700 mb-1">Package Inclusions (Flights, Visa & Hotels):</p>
+          <div *ngFor="let inc of pkg.inclusions" class="flex items-center gap-2 text-slate-600 text-[11px]">
+            <span class="text-emerald-500 font-bold">✓</span>
+            <span>{{ inc }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between">
+        <div>
+          <span class="text-[10px] text-slate-400 block">Package Price</span>
+          <span class="text-lg font-extrabold text-slate-900">${{ pkg.pricePerPerson | number:'1.0-0' }}<span class="text-xs text-slate-500 font-normal">/pax</span></span>
+        </div>
+        <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-md font-bold text-xs">Active</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- TAB 5: PASSENGER BOOKINGS & LEDGERS                      -->
+  <!-- ======================================================== -->
+  <div *ngIf="activeTab === 'bookings'" class="bg-white rounded-2xl border border-slate-200/70 overflow-hidden shadow-[0_2px_8px_-2px_rgba(0,0,0,0.03),0_8px_20px_-4px_rgba(0,0,0,0.04)] animate-fade-in">
+    <div class="p-5 border-b border-slate-200">
+      <h3 class="text-sm font-bold text-slate-900">Passenger Tour & Ticket Bookings</h3>
+      <p class="text-xs text-slate-500 mt-0.5">Air ticket confirmations, vouchers, and payment balances.</p>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse text-xs">
+        <thead>
+          <tr class="bg-slate-50/75 border-b border-slate-200 text-slate-500 font-semibold">
+            <th class="py-3 px-5">Booking Ref</th>
+            <th class="py-3 px-5">Passenger Name</th>
+            <th class="py-3 px-5">Package Reserved</th>
+            <th class="py-3 px-5">Pax Count</th>
+            <th class="py-3 px-5">Total Billed</th>
+            <th class="py-3 px-5">Paid Amount</th>
+            <th class="py-3 px-5">Travel Date</th>
+            <th class="py-3 px-5">Status</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 text-slate-700">
+          <tr *ngFor="let b of bookings" class="hover:bg-slate-50/50 transition-colors">
+            <td class="py-3.5 px-5 font-mono font-bold text-slate-900">{{ b.refNo }}</td>
+            <td class="py-3.5 px-5 font-bold text-slate-900">{{ b.client }}</td>
+            <td class="py-3.5 px-5 text-indigo-700 font-medium">{{ b.package }}</td>
+            <td class="py-3.5 px-5 text-slate-700">{{ b.pax }} Persons</td>
+            <td class="py-3.5 px-5 font-extrabold text-slate-900">${{ b.totalAmount | number:'1.2-2' }}</td>
+            <td class="py-3.5 px-5 font-bold text-emerald-600">${{ b.paidAmount | number:'1.2-2' }}</td>
+            <td class="py-3.5 px-5 text-slate-400 font-mono">{{ b.travelDate }}</td>
+            <td class="py-3.5 px-5">
+              <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded"
+                [class.bg-emerald-50]="b.status === 'CONFIRMED'" [class.text-emerald-700]="b.status === 'CONFIRMED'"
+                [class.bg-amber-50]="b.status !== 'CONFIRMED'" [class.text-amber-700]="b.status !== 'CONFIRMED'">
+                {{ b.status.replace('_', ' ') }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL 1: LODGE VISA FILE (WITH HOTEL VOUCHER OPTION)     -->
+  <!-- ======================================================== -->
+  <div *ngIf="showNewVisaModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-md animate-fade-in overflow-y-auto">
+    <div class="bg-white/95 backdrop-blur-2xl rounded-2xl border border-white/80 max-w-lg w-full p-6 sm:p-7 shadow-[0_24px_64px_-12px_rgba(0,0,0,0.22),0_12px_28px_-6px_rgba(0,0,0,0.12)] animate-scale-up space-y-4 my-8">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div>
+          <h3 class="text-base font-bold text-slate-900">Lodge New Embassy Visa File</h3>
+          <p class="text-xs text-slate-500">Applicant passport details and embassy submission</p>
+        </div>
+        <button (click)="showNewVisaModal = false" class="text-slate-400 hover:text-slate-600">
+          <lucide-icon [name]="icons.X" class="w-5 h-5"></lucide-icon>
+        </button>
+      </div>
+
+      <div class="space-y-3.5 text-xs max-h-[70vh] overflow-y-auto pr-1">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Applicant Full Name (As per Passport)</label>
+          <input type="text" [(ngModel)]="newVisa.clientName" placeholder="e.g. Asim Raza" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Passport Number</label>
+            <input type="text" [(ngModel)]="newVisa.passportNo" placeholder="PK1234567" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs font-mono" />
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Country</label>
+            <select [(ngModel)]="newVisa.country" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs">
+              <option value="Saudi Arabia">Saudi Arabia (Umrah / Tourist)</option>
+              <option value="United Kingdom">United Kingdom (Standard Visitor)</option>
+              <option value="Schengen (Europe)">Schengen (Europe)</option>
+              <option value="United Arab Emirates">United Arab Emirates (Dubai)</option>
+              <option value="Turkey">Turkey (E-Visa / Sticker)</option>
+              <option value="United States">United States (B1/B2)</option>
+              <option value="Canada">Canada (Visitor Visa)</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Visa Type & Category</label>
+          <input type="text" [(ngModel)]="newVisa.visaType" placeholder="e.g. Umrah Tourist E-Visa" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Embassy Fee ($)</label>
+            <input type="number" [(ngModel)]="newVisa.embassyFee" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs" />
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Agency Service Fee ($)</label>
+            <input type="number" [(ngModel)]="newVisa.serviceFee" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs" />
+          </div>
+        </div>
+
+        <!-- HOTEL MANAGEMENT SECTION INSIDE VISA LODGING -->
+        <div class="pt-3 border-t border-slate-200 space-y-3">
+          <div class="flex items-center justify-between bg-indigo-50/70 p-3 rounded-lg border border-indigo-100">
+            <div>
+              <span class="font-bold text-indigo-900 block text-xs">Hotel Accommodation Voucher</span>
+              <span class="text-[11px] text-indigo-700">Attach guaranteed partner hotel voucher for embassy proof of stay</span>
+            </div>
+            <input type="checkbox" [(ngModel)]="newVisa.includeHotelBooking" class="w-4 h-4 text-indigo-600 rounded" />
+          </div>
+
+          <div *ngIf="newVisa.includeHotelBooking" class="space-y-3 p-3 bg-slate-50 rounded-lg border border-slate-200 animate-fade-in">
+            <div>
+              <label class="block font-semibold text-slate-700 mb-1">Select Partner Hotel Property</label>
+              <select [(ngModel)]="newVisa.hotelId" (change)="onVisaHotelChange()" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs">
+                <option *ngFor="let h of hotels" [value]="h.id">{{ h.hotelName }} ({{ h.city }}) - ${{ h.contractedRate }}/night</option>
+              </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Room Category</label>
+                <input type="text" [(ngModel)]="newVisa.hotelRoomType" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs" />
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Meal Plan</label>
+                <select [(ngModel)]="newVisa.hotelMealPlan" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs">
+                  <option value="Room Only">Room Only (RO)</option>
+                  <option value="Bed & Breakfast (Buffet)">Bed & Breakfast (BB)</option>
+                  <option value="Half Board (Breakfast & Dinner)">Half Board (HB)</option>
+                  <option value="Full Board (All Meals)">Full Board (FB)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2">
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Check-In</label>
+                <input type="date" [(ngModel)]="newVisa.hotelCheckIn" class="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs" />
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Check-Out</label>
+                <input type="date" [(ngModel)]="newVisa.hotelCheckOut" class="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs" />
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Nights</label>
+                <input type="number" [(ngModel)]="newVisa.hotelNights" class="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+        <button (click)="showNewVisaModal = false" class="px-4 py-2 border border-slate-200 rounded-lg text-xs font-semibold text-slate-600">Cancel</button>
+        <button (click)="submitVisa()" [disabled]="!newVisa.clientName || !newVisa.passportNo || isLoading"
+          class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold disabled:opacity-50 transition-colors">
+          {{ isLoading ? 'Processing...' : 'Submit Visa File' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL 2: NEW HOTEL BOOKING & ISSUE VOUCHER               -->
+  <!-- ======================================================== -->
+  <div *ngIf="showNewHotelBookingModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-md animate-fade-in overflow-y-auto">
+    <div class="bg-white/95 backdrop-blur-2xl rounded-2xl border border-white/80 max-w-lg w-full p-6 sm:p-7 shadow-[0_24px_64px_-12px_rgba(0,0,0,0.22),0_12px_28px_-6px_rgba(0,0,0,0.12)] animate-scale-up space-y-4 my-8">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div>
+          <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+            <lucide-icon [name]="icons.BedDouble" class="w-4 h-4 text-indigo-600"></lucide-icon>
+            <span>Book Hotel & Issue Embassy Voucher</span>
+          </h3>
+          <p class="text-xs text-slate-500">Tourist & Pilgrim Accommodation Reservation</p>
+        </div>
+        <button (click)="showNewHotelBookingModal = false" class="text-slate-400 hover:text-slate-600">
+          <lucide-icon [name]="icons.X" class="w-5 h-5"></lucide-icon>
+        </button>
+      </div>
+
+      <div class="space-y-3.5 text-xs max-h-[70vh] overflow-y-auto pr-1">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Guest / Passenger Full Name</label>
+          <input type="text" [(ngModel)]="newHotelBooking.guestName" placeholder="e.g. Tariq Mehmood" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Passport Number</label>
+            <input type="text" [(ngModel)]="newHotelBooking.passportNo" placeholder="PK9876543" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs font-mono" />
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Link to Visa App (Optional)</label>
+            <select [(ngModel)]="newHotelBooking.linkedVisaApp" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs">
+              <option value="">None / Standalone Hotel</option>
+              <option *ngFor="let v of visas" [value]="v.appNo">{{ v.appNo }} - {{ v.clientName }} ({{ v.country }})</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Select Destination Partner Hotel</label>
+          <select [(ngModel)]="newHotelBooking.hotelId" (change)="onBookingHotelChange()" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs">
+            <option *ngFor="let h of hotels" [value]="h.id">{{ h.hotelName }} ({{ h.city }}) · ${{ h.contractedRate }}/night · {{ h.availableRooms }} rooms free</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Room Category</label>
+            <input type="text" [(ngModel)]="newHotelBooking.roomType" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs" />
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Meal Plan</label>
+            <select [(ngModel)]="newHotelBooking.mealPlan" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs">
+              <option value="Room Only">Room Only (RO)</option>
+              <option value="Bed & Breakfast (Buffet)">Bed & Breakfast (BB)</option>
+              <option value="Half Board (Breakfast & Dinner)">Half Board (HB)</option>
+              <option value="Full Board (All Meals)">Full Board (FB)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Check-In</label>
+            <input type="date" [(ngModel)]="newHotelBooking.checkIn" class="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs" />
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Check-Out</label>
+            <input type="date" [(ngModel)]="newHotelBooking.checkOut" class="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs" />
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Nights</label>
+            <input type="number" [(ngModel)]="newHotelBooking.nights" (input)="calculateBookingTotal()" class="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Rooms Count</label>
+            <input type="number" [(ngModel)]="newHotelBooking.roomsCount" (input)="calculateBookingTotal()" class="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs" />
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Total Guests (Pax)</label>
+            <input type="number" [(ngModel)]="newHotelBooking.paxCount" class="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs" />
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Rate / Night ($)</label>
+            <input type="number" [(ngModel)]="newHotelBooking.ratePerNight" (input)="calculateBookingTotal()" class="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs" />
+          </div>
+        </div>
+
+        <div class="p-3 bg-indigo-50/70 rounded-lg border border-indigo-100 flex items-center justify-between">
+          <div>
+            <span class="text-xs text-indigo-900 font-bold block">Total Accommodation Cost:</span>
+            <span class="text-[11px] text-indigo-700">{{ newHotelBooking.nights }} nights × ${{ newHotelBooking.ratePerNight }}/night</span>
+          </div>
+          <span class="text-lg font-extrabold text-indigo-950">${{ (newHotelBooking.nights || 1) * (newHotelBooking.ratePerNight || 0) * (newHotelBooking.roomsCount || 1) | number:'1.2-2' }}</span>
+        </div>
+      </div>
+
+      <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+        <button (click)="showNewHotelBookingModal = false" class="px-4 py-2 border border-slate-200 rounded-lg text-xs font-semibold text-slate-600">Cancel</button>
+        <button (click)="submitHotelBooking()" [disabled]="!newHotelBooking.guestName || !newHotelBooking.passportNo || isLoading"
+          class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold disabled:opacity-50 transition-colors">
+          {{ isLoading ? 'Issuing Voucher...' : 'Confirm & Issue Hotel Voucher' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL 3: OFFICIAL HOTEL RESERVATION VOUCHER (PRINTABLE) -->
+  <!-- ======================================================== -->
+  <div *ngIf="showVoucherModal && selectedVoucher" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-md animate-fade-in overflow-y-auto">
+    <div class="bg-white/95 backdrop-blur-2xl rounded-2xl border border-white/80 max-w-2xl w-full p-6 sm:p-8 shadow-[0_32px_72px_-16px_rgba(0,0,0,0.25),0_16px_32px_-8px_rgba(0,0,0,0.12)] animate-scale-up space-y-6 my-8">
+      <!-- Actions Bar -->
+      <div class="flex items-center justify-between pb-4 border-b border-slate-200">
+        <div class="flex items-center gap-2">
+          <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-md font-bold text-xs uppercase tracking-wide">
+            ✓ Guaranteed Embassy-Accepted Voucher
+          </span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button (click)="printVoucher()" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold shadow-sm transition-all">
+            <lucide-icon [name]="icons.Printer" class="w-3.5 h-3.5"></lucide-icon>
+            <span>Print Official Voucher</span>
+          </button>
+          <button (click)="showVoucherModal = false" class="text-slate-400 hover:text-slate-600 p-1">
+            <lucide-icon [name]="icons.X" class="w-5 h-5"></lucide-icon>
+          </button>
+        </div>
+      </div>
+
+      <!-- Printable Voucher Certificate Body -->
+      <div class="border-2 border-indigo-600/30 rounded-xl p-6 sm:p-7 bg-white space-y-6 relative overflow-hidden">
+        <!-- Watermark / Stamp Decor -->
+        <div class="absolute -right-8 -bottom-8 opacity-5 pointer-events-none select-none">
+          <lucide-icon [name]="icons.Building2" class="w-72 h-72 text-indigo-900"></lucide-icon>
+        </div>
+
+        <!-- Voucher Header -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b-2 border-slate-100">
+          <div>
+            <div class="flex items-center gap-2 text-indigo-600 font-extrabold text-sm tracking-wide uppercase">
+              <lucide-icon [name]="icons.Plane" class="w-4 h-4"></lucide-icon>
+              <span>Global Travel & Tourist Visa Agency</span>
+            </div>
+            <h2 class="text-xl font-black text-slate-900 mt-1">OFFICIAL HOTEL RESERVATION VOUCHER</h2>
+            <p class="text-[11px] text-slate-500">Proof of Pre-Paid Accommodation for Tourist Visa & Border Immigration</p>
+          </div>
+          <div class="text-left sm:text-right">
+            <span class="text-[10px] text-slate-400 block font-mono">VOUCHER NO</span>
+            <span class="font-mono font-extrabold text-base text-indigo-700">{{ selectedVoucher.voucherNo }}</span>
+            <span class="text-[10px] text-slate-500 block font-mono mt-0.5">CONF: {{ selectedVoucher.confirmationCode }}</span>
+          </div>
+        </div>
+
+        <!-- Guest & Visa Info -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-lg border border-slate-200 text-xs">
+          <div>
+            <span class="text-[10px] text-slate-400 block font-semibold">GUEST NAME</span>
+            <span class="font-bold text-slate-900">{{ selectedVoucher.guestName }}</span>
+          </div>
+          <div>
+            <span class="text-[10px] text-slate-400 block font-semibold">PASSPORT NO</span>
+            <span class="font-mono font-bold text-slate-900">{{ selectedVoucher.passportNo }}</span>
+          </div>
+          <div>
+            <span class="text-[10px] text-slate-400 block font-semibold">PAX / GUESTS</span>
+            <span class="font-bold text-slate-900">{{ selectedVoucher.paxCount }} Persons</span>
+          </div>
+          <div>
+            <span class="text-[10px] text-slate-400 block font-semibold">LINKED VISA APP</span>
+            <span class="font-mono font-bold text-indigo-600">{{ selectedVoucher.linkedVisaApp || 'Direct Issue' }}</span>
+          </div>
+        </div>
+
+        <!-- Hotel & Stay Specs -->
+        <div class="space-y-3">
+          <div class="flex items-start justify-between">
+            <div>
+              <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Reserved Property</span>
+              <h3 class="text-base font-extrabold text-slate-900 mt-0.5">{{ selectedVoucher.hotelName }}</h3>
+              <p class="text-xs text-slate-500 font-medium">{{ selectedVoucher.city }}</p>
+            </div>
+            <div class="text-right">
+              <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Payment Status</span>
+              <span class="block px-2 py-0.5 mt-0.5 bg-emerald-100 text-emerald-800 rounded font-bold text-xs uppercase">
+                {{ selectedVoucher.paymentStatus }} · GUARANTEED
+              </span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 bg-indigo-50/50 rounded-lg border border-indigo-100 text-xs">
+            <div>
+              <span class="text-[10px] text-indigo-600 block font-semibold">CHECK-IN</span>
+              <span class="font-mono font-bold text-slate-900">{{ selectedVoucher.checkIn }}</span>
+              <span class="text-[10px] text-slate-400 block">From 14:00 hrs</span>
+            </div>
+            <div>
+              <span class="text-[10px] text-indigo-600 block font-semibold">CHECK-OUT</span>
+              <span class="font-mono font-bold text-slate-900">{{ selectedVoucher.checkOut }}</span>
+              <span class="text-[10px] text-slate-400 block">Until 12:00 hrs</span>
+            </div>
+            <div>
+              <span class="text-[10px] text-indigo-600 block font-semibold">DURATION</span>
+              <span class="font-bold text-slate-900">{{ selectedVoucher.nights }} Nights</span>
+              <span class="text-[10px] text-slate-400 block">{{ selectedVoucher.roomsCount || 1 }} Room Unit</span>
+            </div>
+            <div>
+              <span class="text-[10px] text-indigo-600 block font-semibold">MEAL PLAN</span>
+              <span class="font-bold text-slate-900">{{ selectedVoucher.mealPlan }}</span>
+              <span class="text-[10px] text-slate-400 block">Included</span>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between text-xs py-2 px-1">
+            <span class="text-slate-600 font-medium">Room Category: <strong class="text-slate-900">{{ selectedVoucher.roomType }}</strong></span>
+            <span class="text-slate-600 font-medium">Total Pre-Paid Value: <strong class="text-slate-900">${{ selectedVoucher.totalAmount | number:'1.2-2' }} USD</strong></span>
+          </div>
+        </div>
+
+        <!-- Official Seal & Embassy Compliance Notice -->
+        <div class="p-3.5 bg-slate-50 rounded-lg border border-slate-200 text-[11px] text-slate-600 space-y-1">
+          <p class="font-bold text-slate-800">EMBASSY & IMMIGRATION DIRECTIVE COMPLIANCE:</p>
+          <p>This document constitutes an irrevocable, pre-paid accommodation reservation voucher issued under direct partner hotel allotment contract. Valid for visa applications, consular interviews, and port-of-entry presentation.</p>
+        </div>
+
+        <!-- Footer Signatures -->
+        <div class="pt-4 border-t border-slate-200 flex items-center justify-between text-[10px] text-slate-400 font-mono">
+          <span>ISSUED DATE: {{ selectedVoucher.createdDate }}</span>
+          <span>AUTH AGENCY SEAL: SCS-TRV-AGENCY-VERIFIED</span>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between pt-2">
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-slate-500">Update Status:</span>
+          <button (click)="updateHotelBookingStatus(selectedVoucher, 'ISSUED_EMBASSY_CONFIRMED')" class="px-2 py-1 bg-emerald-50 text-emerald-700 font-bold text-[10px] rounded hover:bg-emerald-100">
+            Confirm Voucher
+          </button>
+          <button (click)="updateHotelBookingStatus(selectedVoucher, 'CHECKED_IN')" class="px-2 py-1 bg-indigo-50 text-indigo-700 font-bold text-[10px] rounded hover:bg-indigo-100">
+            Mark Checked-In
+          </button>
+        </div>
+        <button (click)="showVoucherModal = false" class="px-4 py-2 border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-50">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

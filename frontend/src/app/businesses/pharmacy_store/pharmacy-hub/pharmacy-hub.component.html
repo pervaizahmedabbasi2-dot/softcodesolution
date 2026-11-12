@@ -1,0 +1,455 @@
+<div class="px-6 sm:px-8 py-8 max-w-7xl mx-auto space-y-8 animate-fade-in">
+  <!-- Header -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-200">
+    <div>
+      <div class="flex items-center gap-2 text-xs text-slate-500 mb-1">
+        <span>Pharmaceutical Care & Retailing</span>
+        <span aria-hidden="true">·</span>
+        <span>Batch & Expiry Control</span>
+        <span aria-hidden="true">·</span>
+        <span class="text-emerald-600 font-semibold">Prescription Counter Dispensing</span>
+      </div>
+      <h1 class="text-2xl font-bold tracking-tight text-slate-900">Pharmacy & Medical Store Console</h1>
+      <p class="text-sm text-slate-500 mt-1">Drug formulation catalog, batch expiry tracking, supplier replenishment, and counter prescription POS billing.</p>
+    </div>
+
+    <!-- Quick Action Buttons -->
+    <div class="flex flex-wrap items-center gap-3">
+      <button (click)="showDispenseModal = true"
+        class="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition-all shadow-sm active:scale-[0.98]">
+        <lucide-icon [name]="icons.Pill" class="w-4 h-4"></lucide-icon>
+        <span>Dispense Prescription</span>
+      </button>
+
+      <button (click)="showNewMedModal = true"
+        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700 transition-all shadow-sm active:scale-[0.98]">
+        <lucide-icon [name]="icons.Plus" class="w-4 h-4"></lucide-icon>
+        <span>Add Medicine to Stock</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Notification Banner -->
+  <div *ngIf="actionMessage" class="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-800 text-xs font-medium flex items-center justify-between animate-fade-in">
+    <div class="flex items-center gap-2">
+      <lucide-icon [name]="icons.CheckCircle2" class="w-4 h-4 text-emerald-600"></lucide-icon>
+      <span>{{ actionMessage }}</span>
+    </div>
+    <button (click)="actionMessage = ''" class="text-emerald-600 hover:text-emerald-900 text-xs font-bold">Dismiss</button>
+  </div>
+
+  <!-- Metrics -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+    <div class="bg-white p-5 rounded-2xl border border-slate-200/70 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.03),0_8px_20px_-4px_rgba(0,0,0,0.04)]">
+      <p class="text-xs text-slate-500 font-medium">Formulations Listed</p>
+      <p class="text-2xl font-bold text-slate-900 mt-1 tabular-nums">{{ stats.totalFormulations }} Items</p>
+      <p class="text-xs text-slate-400 mt-1">Generic & branded salts</p>
+    </div>
+
+    <div class="bg-white p-5 rounded-2xl border border-slate-200/70 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.03),0_8px_20px_-4px_rgba(0,0,0,0.04)]">
+      <p class="text-xs text-slate-500 font-medium">Units in Stock</p>
+      <p class="text-2xl font-bold text-emerald-600 mt-1 tabular-nums">{{ stats.totalStock }} Packs</p>
+      <p class="text-xs text-slate-400 mt-1">Warehouse & counter shelves</p>
+    </div>
+
+    <div class="bg-white p-5 rounded-2xl border border-slate-200/70 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.03),0_8px_20px_-4px_rgba(0,0,0,0.04)]">
+      <p class="text-xs text-slate-500 font-medium">Low Stock Alerts</p>
+      <p class="text-2xl font-bold text-amber-600 mt-1 tabular-nums">{{ stats.lowStock }} Items</p>
+      <p class="text-xs text-slate-400 mt-1">Below minimum threshold</p>
+    </div>
+
+    <div class="bg-white p-5 rounded-2xl border border-slate-200/70 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.03),0_8px_20px_-4px_rgba(0,0,0,0.04)]">
+      <p class="text-xs text-slate-500 font-medium">Near Expiry Warning</p>
+      <p class="text-2xl font-bold text-red-600 mt-1 tabular-nums">{{ stats.nearExpiry }} Batches</p>
+      <p class="text-xs text-red-500 font-medium mt-1">Expiring within 90 days</p>
+    </div>
+
+    <div class="bg-white p-5 rounded-2xl border border-slate-200/70 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.03),0_8px_20px_-4px_rgba(0,0,0,0.04)]">
+      <p class="text-xs text-slate-500 font-medium">Dispensed Volume</p>
+      <p class="text-2xl font-bold text-slate-900 mt-1 tabular-nums">${{ stats.salesVolume | number:'1.2-2' }}</p>
+      <p class="text-xs text-slate-400 mt-1">Prescription cash receipts</p>
+    </div>
+  </div>
+
+  <!-- Tabs Navigation -->
+  <div class="border-b border-slate-200">
+    <nav class="flex space-x-8">
+      <button (click)="activeTab = 'inventory'"
+        class="py-3 px-1 border-b-2 font-medium text-xs transition-colors flex items-center gap-2"
+        [class.border-indigo-600]="activeTab === 'inventory'" [class.text-indigo-600]="activeTab === 'inventory'"
+        [class.border-transparent]="activeTab !== 'inventory'" [class.text-slate-500]="activeTab !== 'inventory'">
+        <lucide-icon [name]="icons.Pill" class="w-4 h-4"></lucide-icon>
+        <span>Medicine Inventory ({{ medicines.length }})</span>
+      </button>
+
+      <button (click)="activeTab = 'sales'"
+        class="py-3 px-1 border-b-2 font-medium text-xs transition-colors flex items-center gap-2"
+        [class.border-indigo-600]="activeTab === 'sales'" [class.text-indigo-600]="activeTab === 'sales'"
+        [class.border-transparent]="activeTab !== 'sales'" [class.text-slate-500]="activeTab !== 'sales'">
+        <lucide-icon [name]="icons.DollarSign" class="w-4 h-4"></lucide-icon>
+        <span>Prescription POS Sales ({{ sales.length }})</span>
+      </button>
+
+      <button (click)="activeTab = 'expiry'"
+        class="py-3 px-1 border-b-2 font-medium text-xs transition-colors flex items-center gap-2"
+        [class.border-indigo-600]="activeTab === 'expiry'" [class.text-indigo-600]="activeTab === 'expiry'"
+        [class.border-transparent]="activeTab !== 'expiry'" [class.text-slate-500]="activeTab !== 'expiry'">
+        <lucide-icon [name]="icons.Clock" class="w-4 h-4"></lucide-icon>
+        <span>Batch & Expiry Tracker</span>
+      </button>
+
+      <button (click)="activeTab = 'suppliers'"
+        class="py-3 px-1 border-b-2 font-medium text-xs transition-colors flex items-center gap-2"
+        [class.border-indigo-600]="activeTab === 'suppliers'" [class.text-indigo-600]="activeTab === 'suppliers'"
+        [class.border-transparent]="activeTab !== 'suppliers'" [class.text-slate-500]="activeTab !== 'suppliers'">
+        <lucide-icon [name]="icons.Truck" class="w-4 h-4"></lucide-icon>
+        <span>Supplier Orders ({{ suppliers.length }})</span>
+      </button>
+
+      <button (click)="activeTab = 'compliance'"
+        class="py-3 px-1 border-b-2 font-medium text-xs transition-colors flex items-center gap-2"
+        [class.border-indigo-600]="activeTab === 'compliance'" [class.text-indigo-600]="activeTab === 'compliance'"
+        [class.border-transparent]="activeTab !== 'compliance'" [class.text-slate-500]="activeTab !== 'compliance'">
+        <lucide-icon [name]="icons.ShieldCheck" class="w-4 h-4"></lucide-icon>
+        <span>Regulatory & DRAP Log</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- Search & Filter Bar -->
+  <div class="flex items-center justify-between gap-4">
+    <div class="relative flex-1 max-w-md">
+      <lucide-icon [name]="icons.Search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></lucide-icon>
+      <input type="text" [(ngModel)]="searchQuery" placeholder="Search by brand name, generic formula, or batch #..."
+        class="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm" />
+    </div>
+    <div class="text-xs text-slate-500 font-medium">
+      Formulary DB: <span class="text-emerald-600 font-bold">Cold Chain Verified</span>
+    </div>
+  </div>
+
+  <!-- TAB 1: MEDICINE INVENTORY -->
+  <div *ngIf="activeTab === 'inventory'" class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+    <table class="w-full text-left border-collapse text-xs">
+      <thead>
+        <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 font-medium">
+          <th class="py-3.5 px-4">Brand Formulation</th>
+          <th class="py-3.5 px-4">Generic Salt</th>
+          <th class="py-3.5 px-4">Therapeutic Class</th>
+          <th class="py-3.5 px-4">Batch #</th>
+          <th class="py-3.5 px-4">Expiry Date</th>
+          <th class="py-3.5 px-4">Stock on Hand</th>
+          <th class="py-3.5 px-4">Unit Retail</th>
+          <th class="py-3.5 px-4 text-right">Quick Restock</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100 text-slate-700">
+        <tr *ngFor="let m of filteredMedicines" class="hover:bg-slate-50/70 transition-colors">
+          <td class="py-3.5 px-4 font-bold text-slate-900">{{ m.name }}</td>
+          <td class="py-3.5 px-4 text-slate-500 italic">{{ m.generic }}</td>
+          <td class="py-3.5 px-4 font-medium">{{ m.category }}</td>
+          <td class="py-3.5 px-4 font-mono font-bold text-indigo-600">{{ m.batchNo }}</td>
+          <td class="py-3.5 px-4 font-mono">{{ m.expiryDate }}</td>
+          <td class="py-3.5 px-4 font-bold tabular-nums" [class.text-red-600]="m.stock <= m.minStock">{{ m.stock }} Packs</td>
+          <td class="py-3.5 px-4 font-bold text-slate-900 tabular-nums">${{ m.unitPrice | number:'1.2-2' }}</td>
+          <td class="py-3.5 px-4 text-right">
+            <button (click)="m.stock = m.stock + 20; actionMessage = 'Restocked +20 ' + m.name"
+              class="px-2.5 py-1 rounded bg-slate-900 text-white font-semibold text-[11px] hover:bg-slate-800">
+              + Restock 20
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- TAB 2: PRESCRIPTION SALES -->
+  <div *ngIf="activeTab === 'sales'" class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+    <table class="w-full text-left border-collapse text-xs">
+      <thead>
+        <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 font-medium">
+          <th class="py-3.5 px-4">Rx Invoice #</th>
+          <th class="py-3.5 px-4">Patient Name</th>
+          <th class="py-3.5 px-4">Prescribing Doctor</th>
+          <th class="py-3.5 px-4">Dispensed Medicine</th>
+          <th class="py-3.5 px-4">Packs</th>
+          <th class="py-3.5 px-4">Gross Total</th>
+          <th class="py-3.5 px-4">Time</th>
+          <th class="py-3.5 px-4 text-right">Receipt</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100 text-slate-700">
+        <tr *ngFor="let s of sales" class="hover:bg-slate-50/70 transition-colors">
+          <td class="py-3.5 px-4 font-mono font-bold text-indigo-600">{{ s.invoiceNo }}</td>
+          <td class="py-3.5 px-4 font-bold text-slate-900">{{ s.patientName }}</td>
+          <td class="py-3.5 px-4 text-slate-600">{{ s.doctorName }}</td>
+          <td class="py-3.5 px-4 font-medium text-slate-900">{{ s.medicineName }}</td>
+          <td class="py-3.5 px-4 font-mono">{{ s.quantity }}</td>
+          <td class="py-3.5 px-4 font-bold text-slate-900 tabular-nums">${{ s.totalAmount | number:'1.2-2' }}</td>
+          <td class="py-3.5 px-4 font-mono text-slate-400">{{ s.timestamp }}</td>
+          <td class="py-3.5 px-4 text-right">
+            <button (click)="openReceipt(s)" class="px-2.5 py-1 rounded bg-indigo-50 text-indigo-700 font-semibold text-[11px] hover:bg-indigo-100">
+              Print Rx Receipt
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- TAB 3: BATCH & EXPIRY -->
+  <div *ngIf="activeTab === 'expiry'" class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+    <table class="w-full text-left border-collapse text-xs">
+      <thead>
+        <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 font-medium">
+          <th class="py-3.5 px-4">Batch Number</th>
+          <th class="py-3.5 px-4">Medicine Item</th>
+          <th class="py-3.5 px-4">Expiry Date</th>
+          <th class="py-3.5 px-4">Days Remaining</th>
+          <th class="py-3.5 px-4">Shelf Stock</th>
+          <th class="py-3.5 px-4 text-right">Safety Action</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100 text-slate-700">
+        <tr *ngFor="let m of medicines" class="hover:bg-slate-50/70 transition-colors">
+          <td class="py-3.5 px-4 font-mono font-bold text-indigo-600">{{ m.batchNo }}</td>
+          <td class="py-3.5 px-4 font-bold text-slate-900">{{ m.name }}</td>
+          <td class="py-3.5 px-4 font-mono">{{ m.expiryDate }}</td>
+          <td class="py-3.5 px-4">
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold"
+              [class.bg-emerald-100]="m.daysRemaining > 180" [class.text-emerald-700]="m.daysRemaining > 180"
+              [class.bg-amber-100]="m.daysRemaining <= 180 && m.daysRemaining > 60" [class.text-amber-700]="m.daysRemaining <= 180 && m.daysRemaining > 60"
+              [class.bg-red-100]="m.daysRemaining <= 60" [class.text-red-700]="m.daysRemaining <= 60">
+              {{ m.daysRemaining }} Days Remaining
+            </span>
+          </td>
+          <td class="py-3.5 px-4 font-mono">{{ m.stock }} Packs</td>
+          <td class="py-3.5 px-4 text-right">
+            <button *ngIf="m.daysRemaining <= 90" (click)="actionMessage = 'Quarantine notice logged for batch ' + m.batchNo"
+              class="px-2.5 py-1 rounded bg-red-50 text-red-700 font-semibold text-[11px] hover:bg-red-100">
+              Flag for Return
+            </button>
+            <span *ngIf="m.daysRemaining > 90" class="text-slate-400 font-medium text-[11px]">Safe on Shelf</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- TAB 4: SUPPLIERS -->
+  <div *ngIf="activeTab === 'suppliers'" class="grid grid-cols-1 md:grid-cols-3 gap-5">
+    <div *ngFor="let sup of suppliers" class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+      <div>
+        <div class="flex items-center justify-between mb-3">
+          <span class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm">
+            <lucide-icon [name]="icons.Truck" class="w-5 h-5"></lucide-icon>
+          </span>
+          <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">
+            {{ sup.status }}
+          </span>
+        </div>
+        <h3 class="font-bold text-base text-slate-900">{{ sup.name }}</h3>
+        <p class="text-xs text-slate-500 mt-1">Phone: {{ sup.contact }}</p>
+        <p class="text-xs text-slate-400 mt-2">Last Delivery: {{ sup.lastDelivery }}</p>
+      </div>
+      <div class="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold">
+        <span class="text-slate-500">Pending Orders: <strong class="text-indigo-600">{{ sup.pendingOrders }}</strong></span>
+        <button class="px-2.5 py-1 rounded bg-slate-100 text-slate-800 text-[11px] hover:bg-slate-200">
+          Place PO
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 5: REGULATORY COMPLIANCE -->
+  <div *ngIf="activeTab === 'compliance'" class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+    <table class="w-full text-left border-collapse text-xs">
+      <thead>
+        <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 font-medium">
+          <th class="py-3.5 px-4">Inspection Audit #</th>
+          <th class="py-3.5 px-4">Regulatory Authority</th>
+          <th class="py-3.5 px-4">Compliance Check Type</th>
+          <th class="py-3.5 px-4">Date</th>
+          <th class="py-3.5 px-4">Auditor / Sensor</th>
+          <th class="py-3.5 px-4 text-right">Audit Status</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100 text-slate-700">
+        <tr *ngFor="let cmp of complianceLogs" class="hover:bg-slate-50/70 transition-colors">
+          <td class="py-3.5 px-4 font-mono font-bold text-indigo-600">{{ cmp.logNo }}</td>
+          <td class="py-3.5 px-4 font-bold text-slate-900">{{ cmp.authority }}</td>
+          <td class="py-3.5 px-4 font-medium">{{ cmp.type }}</td>
+          <td class="py-3.5 px-4 font-mono text-slate-500">{{ cmp.date }}</td>
+          <td class="py-3.5 px-4 text-slate-600">{{ cmp.inspector }}</td>
+          <td class="py-3.5 px-4 text-right">
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700">
+              {{ cmp.status }}
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- MODAL: ADD MEDICINE -->
+  <div *ngIf="showNewMedModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-fade-in">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 space-y-5">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div>
+          <h2 class="text-base font-bold text-slate-900">Add Medicine Formulation</h2>
+          <p class="text-xs text-slate-500">Record pharmaceutical brand, salt and batch expiry</p>
+        </div>
+        <button (click)="showNewMedModal = false" class="p-1 rounded-full text-slate-400 hover:text-slate-600">
+          <lucide-icon [name]="icons.X" class="w-5 h-5"></lucide-icon>
+        </button>
+      </div>
+
+      <div class="space-y-4 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Brand Name *</label>
+          <input type="text" [(ngModel)]="newMed.name" placeholder="e.g. Augmentin 1g Tablet" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl" />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Generic Salt</label>
+            <input type="text" [(ngModel)]="newMed.generic" placeholder="Amoxicillin + Clavulanate" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl" />
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Batch Number</label>
+            <input type="text" [(ngModel)]="newMed.batchNo" placeholder="BTH-9912" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl" />
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Stock Quantity (Packs)</label>
+            <input type="number" [(ngModel)]="newMed.stock" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl" />
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Unit Retail Price ($)</label>
+            <input type="number" [(ngModel)]="newMed.unitPrice" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl" />
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+        <button (click)="showNewMedModal = false" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800">Cancel</button>
+        <button (click)="submitNewMedicine()" class="px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700 shadow-sm">
+          Save Formulation
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: DISPENSE PRESCRIPTION -->
+  <div *ngIf="showDispenseModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-fade-in">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 space-y-5">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div>
+          <h2 class="text-base font-bold text-slate-900">Dispense Prescription</h2>
+          <p class="text-xs text-slate-500">Record customer prescription dispensing & POS counter billing</p>
+        </div>
+        <button (click)="showDispenseModal = false" class="p-1 rounded-full text-slate-400 hover:text-slate-600">
+          <lucide-icon [name]="icons.X" class="w-5 h-5"></lucide-icon>
+        </button>
+      </div>
+
+      <div class="space-y-4 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Patient Name *</label>
+          <input type="text" [(ngModel)]="newDispense.patient" placeholder="e.g. Tariq Mehmood" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl" />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Prescribing Doctor</label>
+            <input type="text" [(ngModel)]="newDispense.doctor" placeholder="Dr. S. K. Lodhi" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl" />
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Medicine Formulation</label>
+            <select [(ngModel)]="newDispense.selectedMedicineId" (ngModelChange)="onMedicineSelect($event)" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl">
+              <option *ngFor="let m of medicines" [value]="m.id">{{ m.name }} (${{ m.unitPrice }})</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Quantity (Packs)</label>
+            <input type="number" [(ngModel)]="newDispense.quantity" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl" />
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Total Bill ($)</label>
+            <div class="p-2.5 bg-slate-100 border border-slate-200 rounded-xl font-bold font-mono text-slate-900">
+              ${{ (newDispense.unitPrice * (newDispense.quantity || 1)) | number:'1.2-2' }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+        <button (click)="showDispenseModal = false" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800">Cancel</button>
+        <button (click)="submitDispense()" class="px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 shadow-sm">
+          Dispense & Print Receipt
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: PRINT RECEIPT -->
+  <div *ngIf="showReceiptModal && selectedSaleForReceipt" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-8 shadow-2xl border border-slate-100 space-y-6">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-200">
+        <div>
+          <span class="text-[10px] font-black uppercase tracking-[2px] text-emerald-600">SoftCode Pharmacy & Care</span>
+          <h2 class="text-xl font-extrabold text-slate-900">Prescription POS Cash Receipt</h2>
+        </div>
+        <button (click)="showReceiptModal = false" class="p-1 rounded-full text-slate-400 hover:text-slate-600">
+          <lucide-icon [name]="icons.X" class="w-5 h-5"></lucide-icon>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4 text-xs bg-slate-50 p-4 rounded-2xl border border-slate-200/60 font-mono">
+        <div>
+          <p class="text-slate-400">Rx Invoice #:</p>
+          <p class="font-bold text-slate-900 text-sm">{{ selectedSaleForReceipt.invoiceNo }}</p>
+        </div>
+        <div>
+          <p class="text-slate-400">Date/Time:</p>
+          <p class="font-bold text-slate-700">{{ selectedSaleForReceipt.timestamp }}</p>
+        </div>
+        <div>
+          <p class="text-slate-400">Patient:</p>
+          <p class="font-bold text-slate-900">{{ selectedSaleForReceipt.patientName }}</p>
+        </div>
+        <div>
+          <p class="text-slate-400">Prescribed By:</p>
+          <p class="font-bold text-slate-900">{{ selectedSaleForReceipt.doctorName }}</p>
+        </div>
+      </div>
+
+      <div class="p-3 bg-white border border-slate-200 rounded-xl text-xs space-y-2">
+        <div class="flex justify-between font-semibold">
+          <span>{{ selectedSaleForReceipt.medicineName }} x {{ selectedSaleForReceipt.quantity }}</span>
+          <span class="font-mono">${{ selectedSaleForReceipt.totalAmount | number:'1.2-2' }}</span>
+        </div>
+        <div class="flex justify-between text-slate-500">
+          <span>GST / Sales Tax (Inclusive)</span>
+          <span class="font-mono">$0.00</span>
+        </div>
+        <div class="flex justify-between font-black text-slate-900 pt-2 border-t border-slate-100 text-sm">
+          <span>Total Net Paid</span>
+          <span class="font-mono text-emerald-600">${{ selectedSaleForReceipt.totalAmount | number:'1.2-2' }}</span>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between pt-4 border-t border-slate-200">
+        <span class="text-[10px] text-slate-400 font-mono">DRAP Reg # 001928-PHARM</span>
+        <div class="flex items-center gap-3">
+          <button (click)="showReceiptModal = false" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800">Close</button>
+          <button (click)="printReceipt()" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 shadow-sm">
+            <lucide-icon [name]="icons.Printer" class="w-4 h-4"></lucide-icon>
+            <span>Print Rx Receipt</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

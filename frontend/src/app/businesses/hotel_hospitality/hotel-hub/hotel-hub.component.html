@@ -1,0 +1,364 @@
+<div class="px-6 sm:px-8 py-8 max-w-7xl mx-auto space-y-8 animate-fade-in">
+
+  <!-- Header -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-200">
+    <div>
+      <div class="flex items-center gap-2 text-xs text-slate-500 mb-1">
+        <span>Hospitality & Resort Management</span>
+        <span aria-hidden="true">·</span>
+        <span>Room Inventory & Front Desk</span>
+        <span aria-hidden="true">·</span>
+        <span>Guest Folios & Housekeeping</span>
+      </div>
+      <h1 class="text-2xl font-bold tracking-tight text-slate-900">Hotel & Hospitality Suite</h1>
+      <p class="text-sm text-slate-500 mt-1">Live room availability matrix, guest arrival check-in, folio accounting, and housekeeping sanitization board.</p>
+    </div>
+
+    <!-- Quick Action Buttons -->
+    <div class="flex items-center gap-3">
+      <button (click)="showCheckinModal = true"
+        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700 transition-all shadow-sm">
+        <lucide-icon [name]="icons.KeyRound" class="w-4 h-4"></lucide-icon>
+        <span>Front Desk Check-in</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Notification Banner -->
+  <div *ngIf="actionMessage" class="p-4 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-800 text-xs font-medium flex items-center justify-between animate-fade-in">
+    <div class="flex items-center gap-2">
+      <lucide-icon [name]="icons.CheckCircle2" class="w-4 h-4 text-emerald-600"></lucide-icon>
+      <span>{{ actionMessage }}</span>
+    </div>
+    <button (click)="actionMessage = ''" class="text-emerald-600 hover:text-emerald-900 text-xs">Dismiss</button>
+  </div>
+
+  <!-- Metrics -->
+  <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+    <div class="bg-white p-5 rounded-2xl border border-slate-200/70 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.03),0_8px_20px_-4px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_16px_-2px_rgba(0,0,0,0.05),0_12px_28px_-4px_rgba(0,0,0,0.06)] transition-all">
+      <p class="text-xs text-slate-500 font-medium">Hotel Occupancy</p>
+      <p class="text-2xl font-bold text-slate-900 mt-1">{{ stats.occupancyRate }}%</p>
+      <p class="text-xs text-slate-400 mt-1">{{ stats.occupied }} of {{ stats.totalRooms }} rooms occupied</p>
+    </div>
+    <div class="bg-white p-5 rounded-2xl border border-slate-200/70 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.03),0_8px_20px_-4px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_16px_-2px_rgba(0,0,0,0.05),0_12px_28px_-4px_rgba(0,0,0,0.06)] transition-all">
+      <p class="text-xs text-slate-500 font-medium">Clean & Ready Rooms</p>
+      <p class="text-2xl font-bold text-emerald-600 mt-1">{{ stats.available }} Ready</p>
+      <p class="text-xs text-slate-400 mt-1">Ready for check-in guests</p>
+    </div>
+    <div class="bg-white p-5 rounded-2xl border border-slate-200/70 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.03),0_8px_20px_-4px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_16px_-2px_rgba(0,0,0,0.05),0_12px_28px_-4px_rgba(0,0,0,0.06)] transition-all">
+      <p class="text-xs text-slate-500 font-medium">Housekeeping Queue</p>
+      <p class="text-2xl font-bold text-amber-600 mt-1">{{ stats.dirty }} Pending</p>
+      <p class="text-xs text-slate-400 mt-1">Awaiting linen & sanitize</p>
+    </div>
+    <div class="bg-white p-5 rounded-2xl border border-slate-200/70 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.03),0_8px_20px_-4px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_16px_-2px_rgba(0,0,0,0.05),0_12px_28px_-4px_rgba(0,0,0,0.06)] transition-all">
+      <p class="text-xs text-slate-500 font-medium">Total Room Keys</p>
+      <p class="text-2xl font-bold text-indigo-600 mt-1">{{ stats.totalRooms }} Keys</p>
+      <p class="text-xs text-slate-400 mt-1">Across 3 physical floors</p>
+    </div>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <div class="flex items-center gap-2 p-1.5 bg-slate-100/80 rounded-xl w-fit border border-slate-200">
+    <button (click)="activeTab = 'rooms'"
+      class="px-4 py-2 text-xs font-semibold rounded-lg transition-all flex items-center gap-2"
+      [class.bg-white]="activeTab === 'rooms'"
+      [class.text-slate-900]="activeTab === 'rooms'"
+      [class.shadow-sm]="activeTab === 'rooms'"
+      [class.text-slate-600]="activeTab !== 'rooms'">
+      <lucide-icon [name]="icons.BedDouble" class="w-4 h-4"></lucide-icon>
+      <span>Room Inventory Matrix</span>
+    </button>
+
+    <button (click)="activeTab = 'frontdesk'"
+      class="px-4 py-2 text-xs font-semibold rounded-lg transition-all flex items-center gap-2"
+      [class.bg-white]="activeTab === 'frontdesk'"
+      [class.text-slate-900]="activeTab === 'frontdesk'"
+      [class.shadow-sm]="activeTab === 'frontdesk'"
+      [class.text-slate-600]="activeTab !== 'frontdesk'">
+      <lucide-icon [name]="icons.KeyRound" class="w-4 h-4"></lucide-icon>
+      <span>Front Desk Guest Folios</span>
+    </button>
+
+    <button (click)="activeTab = 'housekeeping'"
+      class="px-4 py-2 text-xs font-semibold rounded-lg transition-all flex items-center gap-2"
+      [class.bg-white]="activeTab === 'housekeeping'"
+      [class.text-slate-900]="activeTab === 'housekeeping'"
+      [class.shadow-sm]="activeTab === 'housekeeping'"
+      [class.text-slate-600]="activeTab !== 'housekeeping'">
+      <lucide-icon [name]="icons.Sparkles" class="w-4 h-4"></lucide-icon>
+      <span>Housekeeping & Sanitation</span>
+      <span *ngIf="stats.dirty > 0" class="px-1.5 py-0.2 text-[10px] bg-amber-500 text-white rounded-full font-bold">{{ stats.dirty }}</span>
+    </button>
+  </div>
+
+  <!-- TAB 1: ROOM MATRIX -->
+  <div *ngIf="activeTab === 'rooms'" class="space-y-6 animate-fade-in">
+    <!-- Floor Selector -->
+    <div class="flex items-center gap-2">
+      <span class="text-xs text-slate-500 mr-2 font-medium">Filter Floor:</span>
+      <button *ngFor="let f of floors" (click)="selectedFloor = f"
+        class="px-3 py-1.5 text-xs font-medium rounded-lg transition-colors"
+        [class.bg-slate-900]="selectedFloor === f"
+        [class.text-white]="selectedFloor === f"
+        [class.bg-slate-100]="selectedFloor !== f"
+        [class.text-slate-600]="selectedFloor !== f">
+        {{ f }}
+      </button>
+    </div>
+
+    <!-- Rooms Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div *ngFor="let rm of filteredRooms"
+        class="bg-white rounded-xl border p-5 shadow-sm flex flex-col justify-between"
+        [class.border-emerald-300]="rm.status === 'CLEAN_READY'"
+        [class.border-indigo-300]="rm.status === 'OCCUPIED'"
+        [class.border-amber-300]="rm.status === 'DIRTY_HOUSEKEEPING'"
+        [class.border-purple-300]="rm.status === 'RESERVED'">
+        
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-mono font-bold text-slate-400">{{ rm.floor }}</span>
+            <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded"
+              [class.bg-emerald-50]="rm.status === 'CLEAN_READY'" [class.text-emerald-700]="rm.status === 'CLEAN_READY'"
+              [class.bg-indigo-50]="rm.status === 'OCCUPIED'" [class.text-indigo-700]="rm.status === 'OCCUPIED'"
+              [class.bg-amber-50]="rm.status === 'DIRTY_HOUSEKEEPING'" [class.text-amber-700]="rm.status === 'DIRTY_HOUSEKEEPING'"
+              [class.bg-purple-50]="rm.status === 'RESERVED'" [class.text-purple-700]="rm.status === 'RESERVED'">
+              {{ rm.status.replace('_', ' ') }}
+            </span>
+          </div>
+
+          <div class="flex items-baseline justify-between">
+            <h3 class="text-xl font-extrabold text-slate-900">Room #{{ rm.roomNo }}</h3>
+            <span class="text-sm font-bold text-slate-900">${{ rm.ratePerNight }}/night</span>
+          </div>
+          <p class="text-xs text-indigo-700 font-semibold mt-0.5">{{ rm.type }}</p>
+
+          <div class="mt-3 p-2.5 bg-slate-50 rounded-lg text-xs space-y-1">
+            <div class="flex justify-between text-slate-600">
+              <span>Guest:</span>
+              <span class="font-bold text-slate-900">{{ rm.currentGuest }}</span>
+            </div>
+            <div class="flex justify-between text-slate-400 text-[11px]">
+              <span>Check-in / Out:</span>
+              <span>{{ rm.checkIn }} - {{ rm.checkOut }}</span>
+            </div>
+          </div>
+
+          <!-- Room Amenities -->
+          <div class="flex flex-wrap gap-1 mt-3">
+            <span *ngFor="let feat of rm.features" class="text-[10px] bg-white border border-slate-200 px-1.5 py-0.5 rounded text-slate-600">
+              {{ feat }}
+            </span>
+          </div>
+        </div>
+
+        <div class="pt-4 mt-4 border-t border-slate-100 grid grid-cols-2 gap-2 text-xs">
+          <button (click)="setRoomStatus(rm, 'CLEAN_READY')" class="py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold rounded">
+            Mark Clean
+          </button>
+          <button (click)="setRoomStatus(rm, 'DIRTY_HOUSEKEEPING')" class="py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 font-bold rounded">
+            Flag Dirty
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2: FRONT DESK -->
+  <div *ngIf="activeTab === 'frontdesk'" class="bg-white rounded-2xl border border-slate-200/70 overflow-hidden shadow-[0_2px_8px_-2px_rgba(0,0,0,0.03),0_8px_20px_-4px_rgba(0,0,0,0.04)] animate-fade-in">
+    <div class="p-5 border-b border-slate-200 flex items-center justify-between">
+      <div>
+        <h3 class="text-sm font-bold text-slate-900">Front Desk Guest Folios & Check-in Desk</h3>
+        <p class="text-xs text-slate-500 mt-0.5">Active room folios, nightly rates, incidentals, and express checkout.</p>
+      </div>
+      <button (click)="showCheckinModal = true" class="px-3 py-1.5 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-lg text-xs font-semibold transition-colors">
+        + Check-in Guest
+      </button>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse text-xs">
+        <thead>
+          <tr class="bg-slate-50/75 border-b border-slate-200 text-slate-500 font-semibold">
+            <th class="py-3 px-5">Folio #</th>
+            <th class="py-3 px-5">Guest Name</th>
+            <th class="py-3 px-5">Assigned Room</th>
+            <th class="py-3 px-5">Duration</th>
+            <th class="py-3 px-5">Nightly Rate</th>
+            <th class="py-3 px-5">Total Charges</th>
+            <th class="py-3 px-5">Status</th>
+            <th class="py-3 px-5">Action</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 text-slate-700">
+          <tr *ngFor="let res of reservations" class="hover:bg-slate-50/50 transition-colors">
+            <td class="py-3.5 px-5 font-mono font-bold text-indigo-600">{{ res.folioNo }}</td>
+            <td class="py-3.5 px-5 font-bold text-slate-900">{{ res.guestName }}</td>
+            <td class="py-3.5 px-5 font-semibold text-slate-800">Room {{ res.roomNo }}</td>
+            <td class="py-3.5 px-5 text-slate-600">{{ res.nights }} nights ({{ res.checkIn }} to {{ res.checkOut }})</td>
+            <td class="py-3.5 px-5 text-slate-600">${{ res.ratePerNight | number:'1.2-2' }}</td>
+            <td class="py-3.5 px-5 font-extrabold text-slate-900">${{ res.total | number:'1.2-2' }}</td>
+            <td class="py-3.5 px-5">
+              <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded"
+                [class.bg-emerald-50]="res.status === 'CHECKED_IN'" [class.text-emerald-700]="res.status === 'CHECKED_IN'"
+                [class.bg-slate-100]="res.status === 'CHECKED_OUT'" [class.text-slate-700]="res.status === 'CHECKED_OUT'">
+                {{ res.status.replace('_', ' ') }}
+              </span>
+            </td>
+            <td class="py-3.5 px-5">
+              <button *ngIf="res.status === 'CHECKED_IN'" (click)="checkoutGuest(res)"
+                class="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded font-bold text-[11px] transition-colors">
+                Checkout
+              </button>
+              <span *ngIf="res.status === 'CHECKED_OUT'" class="text-slate-400 text-[11px]">Settled</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TAB 3: HOUSEKEEPING -->
+  <div *ngIf="activeTab === 'housekeeping'" class="space-y-4 animate-fade-in">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div *ngFor="let hk of housekeepingTasks" class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <h4 class="text-base font-extrabold text-slate-900">Room #{{ hk.roomNo }}</h4>
+            <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded"
+              [class.bg-amber-50]="hk.status === 'IN_PROGRESS'" [class.text-amber-700]="hk.status === 'IN_PROGRESS'"
+              [class.bg-indigo-50]="hk.status === 'SCHEDULED'" [class.text-indigo-700]="hk.status === 'SCHEDULED'">
+              {{ hk.status }}
+            </span>
+          </div>
+
+          <div class="py-3 text-xs space-y-1">
+            <p class="font-bold text-slate-800">{{ hk.task }}</p>
+            <p class="text-slate-500">Attendant Assigned: <strong class="text-slate-700">{{ hk.attendant }}</strong></p>
+            <p class="text-slate-400">Priority: <strong class="text-rose-600">{{ hk.priority }}</strong></p>
+          </div>
+        </div>
+
+        <button (click)="hk.status = 'COMPLETED'; actionMessage = 'Room #' + hk.roomNo + ' sanitized & marked ready!'"
+          class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-colors">
+          Complete Housekeeping
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CHECK-IN GUEST -->
+  <div *ngIf="showCheckinModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-md animate-fade-in">
+    <div class="bg-white/95 backdrop-blur-2xl rounded-2xl border border-white/80 max-w-md w-full p-6 sm:p-7 shadow-[0_24px_64px_-12px_rgba(0,0,0,0.22),0_12px_28px_-6px_rgba(0,0,0,0.12)] animate-scale-up space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <h3 class="text-base font-bold text-slate-900">Guest Arrival Check-in</h3>
+        <button (click)="showCheckinModal = false" class="text-slate-400 hover:text-slate-600">
+          <lucide-icon [name]="icons.X" class="w-5 h-5"></lucide-icon>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Primary Guest Full Name</label>
+          <input type="text" [(ngModel)]="newCheckin.guestName" placeholder="e.g. Robert King" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Select Ready Room</label>
+            <select [(ngModel)]="newCheckin.roomNo" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs">
+              <option *ngFor="let r of rooms" [value]="r.roomNo">
+                Room {{ r.roomNo }} - {{ r.type }} (${{ r.ratePerNight }})
+              </option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Number of Nights</label>
+            <input type="number" [(ngModel)]="newCheckin.nights" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Expected Check-out Date</label>
+            <input type="date" [(ngModel)]="newCheckin.checkOut" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs" />
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Guarantee Method</label>
+            <select [(ngModel)]="newCheckin.paymentMethod" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs">
+              <option value="Credit Card">Credit Card</option>
+              <option value="Cash Advance">Cash Advance</option>
+              <option value="Corporate Ledger">Corporate Ledger</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+        <button (click)="showCheckinModal = false" class="px-4 py-2 border border-slate-200 rounded-lg text-xs font-semibold text-slate-600">Cancel</button>
+        <button (click)="submitCheckin()" [disabled]="!newCheckin.guestName || isLoading"
+          class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold disabled:opacity-50">
+          Assign Room & Check-in
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CHECKOUT FOLIO RECEIPT -->
+  <div *ngIf="showCheckoutReceiptModal && lastCheckedOutFolio" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-md animate-fade-in">
+    <div class="bg-white/95 backdrop-blur-2xl rounded-2xl border border-white/80 max-w-sm w-full p-6 sm:p-7 shadow-[0_24px_64px_-12px_rgba(0,0,0,0.22),0_12px_28px_-6px_rgba(0,0,0,0.12)] animate-scale-up space-y-4">
+      <div class="border border-slate-200 p-5 rounded-lg bg-slate-50/50 font-mono text-xs space-y-3">
+        <div class="text-center pb-3 border-b border-dashed border-slate-300">
+          <h2 class="font-extrabold text-sm text-slate-900">GRAND SOFTCODE HOTEL & RESORT</h2>
+          <p class="text-[10px] text-slate-500">GUEST CHECKOUT FOLIO STATEMENT</p>
+          <p class="text-[10px] text-slate-400 mt-1">Folio: {{ lastCheckedOutFolio.folioNo }}</p>
+        </div>
+
+        <div class="space-y-1.5 text-[11px]">
+          <div class="flex justify-between">
+            <span class="text-slate-500">Guest:</span>
+            <span class="font-bold text-slate-900">{{ lastCheckedOutFolio.guestName }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-500">Room:</span>
+            <span>#{{ lastCheckedOutFolio.roomNo }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-500">Stay Period:</span>
+            <span>{{ lastCheckedOutFolio.checkIn }} - {{ lastCheckedOutFolio.checkOut }}</span>
+          </div>
+        </div>
+
+        <div class="pt-2 border-t border-dashed border-slate-300 space-y-1">
+          <div class="flex justify-between">
+            <span>Room Charges ({{ lastCheckedOutFolio.nights }} nights)</span>
+            <span>${{ (lastCheckedOutFolio.nights * lastCheckedOutFolio.ratePerNight) | number:'1.2-2' }}</span>
+          </div>
+          <div class="flex justify-between font-bold text-xs pt-1 border-t border-slate-200">
+            <span>TOTAL FOLIO CHARGE</span>
+            <span>${{ lastCheckedOutFolio.total | number:'1.2-2' }}</span>
+          </div>
+          <div class="flex justify-between text-[10px] text-slate-400">
+            <span>Tender</span>
+            <span>{{ lastCheckedOutFolio.paymentMethod }}</span>
+          </div>
+        </div>
+
+        <div class="text-center pt-3 text-[10px] text-slate-400 border-t border-dashed border-slate-300">
+          *** THANK YOU FOR STAYING WITH US ***
+        </div>
+      </div>
+
+      <div class="flex gap-2">
+        <button (click)="printFolio()" class="flex-1 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-1.5">
+          <lucide-icon [name]="icons.Printer" class="w-4 h-4"></lucide-icon>
+          <span>Print Folio</span>
+        </button>
+        <button (click)="showCheckoutReceiptModal = false" class="px-4 py-2.5 border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-50">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>

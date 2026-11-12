@@ -23,6 +23,7 @@ logs/
 *.temp
 local_edge.db
 backend/auth/database/*.db
+backend/auth_security/.vault_master.key
 scs-backend
 softcodesolution
 .scs-cleanup-manifest.json

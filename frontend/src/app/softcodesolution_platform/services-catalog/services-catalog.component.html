@@ -1,0 +1,111 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fade-in">
+  
+  <!-- Banner -->
+  <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 p-8 text-white shadow-xl border border-slate-800">
+    <div class="absolute -right-10 -bottom-10 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div>
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/20 border border-cyan-400/30 text-cyan-300 text-xs font-semibold uppercase tracking-wider mb-3">
+          <lucide-icon [name]="icons.Zap" class="w-3.5 h-3.5"></lucide-icon>
+          Distributed Microservices Architecture
+        </div>
+        <h1 class="text-3xl font-black tracking-tight text-white sm:text-4xl">Platform Services & API Fabric</h1>
+        <p class="mt-2 text-slate-300 text-sm max-w-2xl">
+          Real-time service mesh telemetry, health probes, latency thresholds, and granular traffic gate controls across all global microservices.
+        </p>
+      </div>
+
+      <button (click)="loadCatalog()" class="px-4 py-2.5 bg-slate-800/80 hover:bg-slate-700/80 text-slate-200 border border-slate-700 text-xs font-bold rounded-xl transition-all flex items-center gap-2 shadow-sm shrink-0">
+        <lucide-icon [name]="icons.RefreshCcw" class="w-4 h-4" [class.animate-spin]="isLoading"></lucide-icon>
+        Poll Service Mesh
+      </button>
+    </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8 pt-6 border-t border-slate-800">
+      <div>
+        <p class="text-xs font-medium text-slate-400">Mesh Health Index</p>
+        <p class="text-2xl font-black text-emerald-400 mt-1">99.992% <span class="text-xs text-slate-400 font-normal">SLA</span></p>
+      </div>
+      <div>
+        <p class="text-xs font-medium text-slate-400">Average P99 Latency</p>
+        <p class="text-2xl font-black text-cyan-400 mt-1">16.4 ms <span class="text-xs text-slate-400 font-normal">Global</span></p>
+      </div>
+      <div>
+        <p class="text-xs font-medium text-slate-400">Total Throughput</p>
+        <p class="text-2xl font-black text-indigo-400 mt-1">182k <span class="text-xs text-slate-400 font-normal">req/min</span></p>
+      </div>
+      <div>
+        <p class="text-xs font-medium text-slate-400">Circuit Breakers</p>
+        <p class="text-2xl font-black text-emerald-400 mt-1">0 Tripped <span class="text-xs text-slate-400 font-normal">Nominal</span></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Services Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div *ngFor="let srv of services" class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all flex flex-col justify-between group">
+      <div>
+        <div class="flex items-center justify-between gap-3 mb-4">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-indigo-600 group-hover:scale-105 transition-transform">
+              <lucide-icon [name]="icons.Layers" class="w-5 h-5"></lucide-icon>
+            </div>
+            <div>
+              <h3 class="text-sm font-bold text-slate-900">{{ srv.name }}</h3>
+              <span class="text-[10px] font-mono text-slate-400">{{ srv.version }}</span>
+            </div>
+          </div>
+          
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider"
+                [class.bg-emerald-50]="srv.status === 'HEALTHY'" [class.text-emerald-700]="srv.status === 'HEALTHY'" [class.border]="srv.status === 'HEALTHY'" [class.border-emerald-200]="srv.status === 'HEALTHY'"
+                [class.bg-amber-50]="srv.status === 'MAINTENANCE'" [class.text-amber-700]="srv.status === 'MAINTENANCE'" [class.border-amber-200]="srv.status === 'MAINTENANCE'">
+            <span class="w-1.5 h-1.5 rounded-full" [class.bg-emerald-500]="srv.status === 'HEALTHY'" [class.animate-pulse]="srv.status === 'HEALTHY'" [class.bg-amber-500]="srv.status === 'MAINTENANCE'"></span>
+            {{ srv.status }}
+          </span>
+        </div>
+
+        <p class="text-xs text-slate-600 leading-relaxed mb-4 min-h-[36px]">
+          {{ srv.description }}
+        </p>
+
+        <!-- Technical Telemetry -->
+        <div class="bg-slate-50 rounded-xl p-3.5 border border-slate-100 space-y-2 mb-4">
+          <div class="flex items-center justify-between text-[11px]">
+            <span class="text-slate-500 font-medium">Inbound Gateway:</span>
+            <div class="flex items-center gap-1">
+              <span class="font-mono text-slate-800 text-[10px]">{{ srv.endpoint }}</span>
+              <button (click)="copyEndpoint(srv)" class="p-1 hover:bg-slate-200/60 rounded text-slate-400 hover:text-slate-700">
+                <lucide-icon [name]="copiedId === srv.id ? icons.Check : icons.Copy" class="w-3 h-3 text-indigo-600"></lucide-icon>
+              </button>
+            </div>
+          </div>
+          <div class="flex items-center justify-between text-[11px]">
+            <span class="text-slate-500 font-medium">Internal Latency:</span>
+            <span class="font-bold text-slate-800">{{ srv.latencyMs }} ms</span>
+          </div>
+          <div class="flex items-center justify-between text-[11px]">
+            <span class="text-slate-500 font-medium">SLA Uptime:</span>
+            <span class="font-bold text-emerald-600">{{ srv.uptime }}</span>
+          </div>
+          <div class="flex items-center justify-between text-[11px]">
+            <span class="text-slate-500 font-medium">Throttling Ceiling:</span>
+            <span class="font-mono text-slate-600 text-[10px]">{{ srv.rateLimit }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Footer -->
+      <div class="pt-4 border-t border-slate-100 flex items-center justify-between">
+        <span class="text-[11px] font-semibold text-slate-500">Service Gateway</span>
+        <button 
+          (click)="toggleStatus(srv)"
+          class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all"
+          [class.bg-slate-100]="srv.status === 'HEALTHY'" [class.text-slate-700]="srv.status === 'HEALTHY'" [class.hover:bg-amber-100]="srv.status === 'HEALTHY'" [class.hover:text-amber-800]="srv.status === 'HEALTHY'"
+          [class.bg-emerald-600]="srv.status === 'MAINTENANCE'" [class.text-white]="srv.status === 'MAINTENANCE'">
+          {{ srv.status === 'HEALTHY' ? 'Enter Maintenance' : 'Resume Service' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
