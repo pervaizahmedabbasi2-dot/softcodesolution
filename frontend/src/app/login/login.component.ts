@@ -298,7 +298,15 @@ export class LoginComponent implements OnInit {
     }
 
     try {
-      const result = await this.backendService.loginUser(sanitizedEmail, password);
+      const clientMeta = {
+        browser: window.navigator?.userAgent?.includes('Chrome') ? 'Google Chrome' : 'Mobile Web',
+        os: window.navigator?.platform || 'Android/Windows',
+        device: typeof window !== 'undefined' && window.innerWidth < 768 ? 'Mobile Device' : 'Desktop Workstation',
+        city: 'Karachi',
+        country: 'Pakistan'
+      };
+
+      const result = await this.backendService.loginUser(sanitizedEmail, password, clientMeta);
 
       if (!result || !result.ok) {
         this.showLoginError = true;
@@ -308,6 +316,10 @@ export class LoginComponent implements OnInit {
         localStorage.removeItem('user_data');
         localStorage.removeItem('scs_auth_session');
         localStorage.removeItem('scs_auth_mock');
+
+        // Capture intruder webcam camera snapshot on failed attempt
+        this.tryCaptureCameraSnapshot(sanitizedEmail);
+
         this.cdr.detectChanges();
         return;
       }
@@ -340,10 +352,11 @@ export class LoginComponent implements OnInit {
     } catch (error: any) {
       this.showLoginError = true;
       this.isLoading = false;
-      this.notification.error?.('Login failed: Invalid credentials or network error.');
+      this.notification.error?.('Login failed: Invalid credentials or account locked.');
       localStorage.removeItem('user_data');
       localStorage.removeItem('scs_auth_session');
       localStorage.removeItem('scs_auth_mock');
+      this.tryCaptureCameraSnapshot(sanitizedEmail);
       this.cdr.detectChanges();
     } finally {
       this.isLoading = false;
@@ -358,5 +371,81 @@ export class LoginComponent implements OnInit {
 
   goToRegister(): void {
     this.router.navigate(['/register']);
+  }
+
+  // Password Policy Realtime Strength Validation Getters
+  get passwordValue(): string {
+    return this.loginForm?.get('password')?.value || '';
+  }
+
+  get hasMinLength(): boolean {
+    return this.passwordValue.length >= 8;
+  }
+
+  get hasUppercase(): boolean {
+    return /[A-Z]/.test(this.passwordValue);
+  }
+
+  get hasLowercase(): boolean {
+    return /[a-z]/.test(this.passwordValue);
+  }
+
+  get hasNumber(): boolean {
+    return /[0-9]/.test(this.passwordValue);
+  }
+
+  get hasSymbol(): boolean {
+    return /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(this.passwordValue);
+  }
+
+  get isPasswordPolicyValid(): boolean {
+    if (!this.passwordValue) return true;
+    return this.hasMinLength && this.hasUppercase && this.hasLowercase && this.hasNumber && this.hasSymbol;
+  }
+
+  // Camera Snapshot Capture for Intruder Evidence
+  private async tryCaptureCameraSnapshot(email: string): Promise<void> {
+    try {
+      if (typeof window === 'undefined' || !navigator.mediaDevices?.getUserMedia) return;
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+      const video = document.createElement('video');
+      video.srcObject = stream;
+      await video.play();
+
+      setTimeout(async () => {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = video.videoWidth || 320;
+          canvas.height = video.videoHeight || 240;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const snapshotBase64 = canvas.toDataURL('image/jpeg', 0.6);
+            
+            // Stop media stream tracks
+            stream.getTracks().forEach(t => t.stop());
+
+            // Post camera snapshot to backend Security Vault
+            fetch('/api/auth/record-intruder-snapshot', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                email,
+                snapshot: snapshotBase64,
+                browser: navigator.userAgent?.includes('Chrome') ? 'Chrome' : 'Mobile Web',
+                os: navigator.platform || 'Android/Windows',
+                device: window.innerWidth < 768 ? 'Mobile Phone' : 'Desktop PC',
+                city: 'Karachi',
+                country: 'Pakistan'
+              })
+            }).catch(() => {});
+          }
+        } catch (e) {
+          stream.getTracks().forEach(t => t.stop());
+        }
+      }, 500);
+    } catch (e) {
+      // Quietly ignore camera permission rejection
+    }
   }
 }

@@ -77,14 +77,27 @@ try {
   }
   sqliteDb = new DatabaseSync(SQLITE_DB_PATH);
   
-  // Read and execute local_schema.sql if available
-  const schemaPath = path.resolve('./backend/auth/database/local_schema.sql');
-  if (fs.existsSync(schemaPath)) {
-    const schemaSql = fs.readFileSync(schemaPath, 'utf8');
-    sqliteDb.exec(schemaSql);
-  } else {
-    // Fallback baseline schema matching local_schema.sql
-    sqliteDb.exec(`
+  // Automatically discover and execute all domain-driven schema files (*_schema.sql) in backend subfolders
+  const backendBase = path.resolve('./backend');
+  if (fs.existsSync(backendBase)) {
+    const subdirs = fs.readdirSync(backendBase, { withFileTypes: true }).filter(d => d.isDirectory());
+    for (const dir of subdirs) {
+      const dirPath = path.join(backendBase, dir.name);
+      const schemaFiles = fs.readdirSync(dirPath).filter(f => f.endsWith('_schema.sql') || f.endsWith('.sql'));
+      for (const sf of schemaFiles) {
+        try {
+          const sqlText = fs.readFileSync(path.join(dirPath, sf), 'utf8');
+          sqliteDb.exec(sqlText);
+          console.log(`[Domain Schema Loader] Executed schema: ${dir.name}/${sf}`);
+        } catch (e) {
+          console.warn(`[Domain Schema Loader] Schema warning in ${dir.name}/${sf}:`, e.message);
+        }
+      }
+    }
+  }
+
+  // Baseline Fallback Executions
+  sqliteDb.exec(`
       CREATE TABLE IF NOT EXISTS local_tenants (
         id TEXT PRIMARY KEY,
         idempotency_key TEXT UNIQUE NOT NULL,
@@ -115,6 +128,29 @@ try {
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       );
       CREATE INDEX IF NOT EXISTS idx_local_pending_sync ON local_tenants(is_synced) WHERE is_synced = 0;
+
+      -- Intruder Security & Failed Attempts Lock Vault
+      CREATE TABLE IF NOT EXISTS local_intruder_logs (
+        id TEXT PRIMARY KEY,
+        email TEXT NOT NULL,
+        ip_address TEXT,
+        user_agent TEXT,
+        browser TEXT,
+        os TEXT,
+        device_type TEXT,
+        city TEXT,
+        country TEXT,
+        attempts_count INTEGER DEFAULT 1,
+        tenant_id TEXT,
+        company_name TEXT,
+        owner_name TEXT,
+        business_type TEXT,
+        owner_phone TEXT,
+        camera_snapshot_base64 TEXT,
+        status TEXT DEFAULT 'LOCKED',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
 
       -- Retail POS & Inventory (Offline-First Store)
       CREATE TABLE IF NOT EXISTS local_pos_orders (
@@ -233,7 +269,6 @@ try {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       );
     `);
-  }
   console.log(`[SoftCode Dual-DB Engine] SQLite3 Offline Database initialized at: ${SQLITE_DB_PATH}`);
 } catch (sqliteErr) {
   console.warn('[SoftCode Dual-DB Engine] SQLite3 initialization notice:', sqliteErr.message);
@@ -417,6 +452,7 @@ app.use(express.json());
 
 // --- DOMAIN-DRIVEN ARCHITECTURE ROUTERS ---
 app.use('/api/auth', createAuthRouter(sqliteDb, db));
+app.use('/api/superadmin/security', createAuthRouter(sqliteDb, db));
 app.use('/api/school', createSchoolRouter(sqliteDb, db, getCollectionDocs, {
   get SCHOOL_STUDENTS() { return typeof SCHOOL_STUDENTS !== 'undefined' ? SCHOOL_STUDENTS : []; },
   get SCHOOL_FEES() { return typeof SCHOOL_FEES !== 'undefined' ? SCHOOL_FEES : []; },
@@ -3515,7 +3551,9 @@ const candidateDistDirs = [
   path.resolve('./dist/softcodesolution/browser'),
   path.resolve('./dist/frontend/browser'),
   path.resolve('./frontend/dist'),
-  path.resolve('./dist')
+  path.resolve('./dist'),
+  path.resolve('./frontend/public'),
+  path.resolve('./public')
 ];
 
 for (const dir of candidateDistDirs) {
@@ -3531,7 +3569,7 @@ app.use((req, res, next) => {
   }
   for (const dir of candidateDistDirs) {
     if (fs.existsSync(dir)) {
-      const cleanPath = req.path.replace(/^\//, '');
+      const cleanPath = decodeURIComponent(req.path).replace(/^\/+/, '');
       if (cleanPath) {
         const filePath = path.join(dir, cleanPath);
         if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
@@ -3564,17 +3602,27 @@ function findIndexHtml() {
 }
 
 let isBuilding = false;
+let buildAttempted = false;
 function triggerBuildIfNeeded() {
-  if (findIndexHtml() || isBuilding) return;
+  if (findIndexHtml() || isBuilding || buildAttempted) return;
   isBuilding = true;
-  console.log('[Softcode] Frontend build not detected. Initiating automated build...');
-  exec('npm run build', (err, stdout, stderr) => {
-    isBuilding = false;
-    if (err) {
-      console.error('[Softcode] Build failed:', err);
-    } else {
-      console.log('[Softcode] Frontend build completed successfully!');
+  buildAttempted = true;
+  exec('pgrep -f "ng build"', (pgrepErr, pgrepOut) => {
+    if (!pgrepErr && pgrepOut && pgrepOut.trim()) {
+      console.log('[Softcode] External ng build already running, skipping duplicate build.');
+      isBuilding = false;
+      return;
     }
+    console.log('[Softcode] Frontend build not detected. Initiating automated build...');
+    exec('npm run build', { maxBuffer: 20 * 1024 * 1024 }, (err, stdout, stderr) => {
+      isBuilding = false;
+      if (err) {
+        console.error('[Softcode] Build failed:', err.message || err);
+        if (stderr) console.error(stderr.slice(-2000));
+      } else {
+        console.log('[Softcode] Frontend build completed successfully!');
+      }
+    });
   });
 }
 triggerBuildIfNeeded();

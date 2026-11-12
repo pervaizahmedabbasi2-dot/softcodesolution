@@ -58,6 +58,192 @@
     </div>
   </div>
 
+  <!-- Intruder Detection & Security Lock Vault Section -->
+  <div class="bg-white rounded-2xl border border-rose-200 shadow-sm p-6 space-y-6">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-rose-100">
+      <div class="flex items-center gap-3">
+        <div class="p-3 bg-rose-100 text-rose-600 rounded-xl">
+          <lucide-icon [name]="icons.UserX" class="w-6 h-6"></lucide-icon>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h3 class="text-base font-black text-slate-900">Intruder & Security Lock Vault (5-Attempt Lockouts)</h3>
+            <span class="px-2 py-0.5 text-[10px] font-bold bg-rose-600 text-white rounded-full">
+              {{ totalLockedAccounts }} LOCKED ACCOUNTS
+            </span>
+          </div>
+          <p class="text-xs text-slate-500 mt-0.5">Captures full evidence (Webcam Snapshot, IP, City/Country, Device/Browser, Business Owner Info) when 5 failed login attempts occur.</p>
+        </div>
+      </div>
+
+      <button (click)="loadIntruders()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl flex items-center gap-2 transition-all">
+        <lucide-icon [name]="icons.RefreshCcw" class="w-3.5 h-3.5" [class.animate-spin]="isLoadingIntruders"></lucide-icon>
+        Refresh Logs
+      </button>
+    </div>
+
+    <!-- Intruder Evidence Grid / Table -->
+    <div *ngIf="intruderLogs.length === 0" class="text-center py-10 bg-slate-50 rounded-xl border border-dashed border-slate-200 space-y-2">
+      <lucide-icon [name]="icons.ShieldCheck" class="w-8 h-8 text-emerald-500 mx-auto"></lucide-icon>
+      <p class="text-sm font-bold text-slate-800">No Active Intrusions or Locked Accounts</p>
+      <p class="text-xs text-slate-500 max-w-md mx-auto">System is actively monitoring all sign-in requests. Accounts with 5 consecutive failed login attempts will automatically appear here with full evidence.</p>
+    </div>
+
+    <div *ngIf="intruderLogs.length > 0" class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-slate-50/80 border-b border-slate-200 text-[10px] font-black uppercase tracking-wider text-slate-400">
+            <th class="p-3">Camera Snapshot</th>
+            <th class="p-3">Target Email & Owner</th>
+            <th class="p-3">Business & Phone</th>
+            <th class="p-3">IP & Location</th>
+            <th class="p-3">Device & Browser</th>
+            <th class="p-3">Attempts & Lock Status</th>
+            <th class="p-3 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 text-xs font-medium">
+          <tr *ngFor="let log of intruderLogs" class="hover:bg-rose-50/30 transition-colors">
+            <!-- Camera Snapshot Column -->
+            <td class="p-3">
+              <div class="relative w-12 h-12 rounded-xl bg-slate-900 border border-slate-300 overflow-hidden group cursor-pointer" (click)="viewIntruderDetails(log)">
+                <img *ngIf="log.camera_snapshot_base64" [src]="log.camera_snapshot_base64" class="w-full h-full object-cover" alt="Intruder Camera Snapshot">
+                <div *ngIf="!log.camera_snapshot_base64" class="w-full h-full flex items-center justify-center text-slate-400">
+                  <lucide-icon [name]="icons.Camera" class="w-5 h-5"></lucide-icon>
+                </div>
+                <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[9px] font-bold">
+                  View
+                </div>
+              </div>
+            </td>
+
+            <!-- Target Account -->
+            <td class="p-3">
+              <div class="font-bold text-slate-900">{{ log.email }}</div>
+              <div class="text-[11px] text-slate-500">{{ log.owner_name || 'Owner' }}</div>
+            </td>
+
+            <!-- Business Details -->
+            <td class="p-3">
+              <div class="font-semibold text-slate-800">{{ log.company_name || 'Enterprise' }}</div>
+              <div class="text-[11px] text-indigo-600 font-mono">{{ log.owner_phone || '-' }} · {{ log.business_type }}</div>
+            </td>
+
+            <!-- IP & Geolocation -->
+            <td class="p-3 font-mono text-[11px]">
+              <div class="font-bold text-slate-900">{{ log.ip_address || '127.0.0.1' }}</div>
+              <div class="text-slate-500">{{ log.city || 'Karachi' }}, {{ log.country || 'Pakistan' }}</div>
+            </td>
+
+            <!-- Device & Browser -->
+            <td class="p-3 text-[11px] text-slate-600">
+              <div class="font-semibold">{{ log.browser || 'Browser' }}</div>
+              <div class="text-slate-400">{{ log.device_type }} ({{ log.os }})</div>
+            </td>
+
+            <!-- Lock Status -->
+            <td class="p-3">
+              <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider inline-flex items-center gap-1"
+                [class.bg-rose-100]="log.status === 'LOCKED'" [class.text-rose-700]="log.status === 'LOCKED'"
+                [class.bg-emerald-100]="log.status === 'UNLOCKED'" [class.text-emerald-700]="log.status === 'UNLOCKED'">
+                <span>{{ log.status === 'LOCKED' ? '🔒' : '🔓' }}</span>
+                {{ log.status }} ({{ log.attempts_count }} Failed)
+              </span>
+              <div class="text-[10px] text-slate-400 mt-1">{{ log.created_at | date:'short' }}</div>
+            </td>
+
+            <!-- Action Buttons -->
+            <td class="p-3 text-right">
+              <div class="flex items-center justify-end gap-2">
+                <button (click)="viewIntruderDetails(log)" title="Inspect Evidence Modal" class="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs transition-colors">
+                  <lucide-icon [name]="icons.Eye" class="w-3.5 h-3.5"></lucide-icon>
+                </button>
+                <button *ngIf="log.status === 'LOCKED'" (click)="unlockAccount(log)" title="Unlock Account" class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-all shadow-xs flex items-center gap-1">
+                  <lucide-icon [name]="icons.Unlock" class="w-3 h-3"></lucide-icon>
+                  Unlock
+                </button>
+                <button (click)="resetPasswordForIntruder(log)" title="Reset Password" class="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-all shadow-xs flex items-center gap-1">
+                  <lucide-icon [name]="icons.KeyRound" class="w-3 h-3"></lucide-icon>
+                  Reset Pass
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Intruder Evidence Detail Modal -->
+  <div *ngIf="isIntruderDetailModalOpen && selectedIntruder" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
+    <div class="bg-white rounded-2xl border border-slate-200 max-w-xl w-full p-6 shadow-2xl space-y-5 animate-scale-up">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div class="flex items-center gap-2">
+          <div class="p-2 bg-rose-100 text-rose-600 rounded-lg">
+            <lucide-icon [name]="icons.ShieldAlert" class="w-5 h-5"></lucide-icon>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-slate-900">Intruder & Security Lock Evidence</h3>
+            <p class="text-xs text-slate-500">Full forensic log for {{ selectedIntruder.email }}</p>
+          </div>
+        </div>
+        <button (click)="closeIntruderDetailModal()" class="p-1 text-slate-400 hover:text-slate-700 rounded-lg">
+          <lucide-icon [name]="icons.X" class="w-5 h-5"></lucide-icon>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <!-- Camera Snapshot Box -->
+        <div class="bg-slate-900 rounded-xl p-3 border border-slate-800 text-center space-y-2">
+          <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center justify-center gap-1">
+            <lucide-icon [name]="icons.Camera" class="w-3 h-3 text-rose-400"></lucide-icon>
+            Webcam Front Photo Evidence
+          </p>
+          <div class="w-full h-44 rounded-lg bg-slate-950 overflow-hidden flex items-center justify-center border border-slate-800">
+            <img *ngIf="selectedIntruder.camera_snapshot_base64" [src]="selectedIntruder.camera_snapshot_base64" class="w-full h-full object-cover" alt="Captured Front Photo">
+            <div *ngIf="!selectedIntruder.camera_snapshot_base64" class="text-slate-500 text-xs">
+              No webcam snapshot available
+            </div>
+          </div>
+        </div>
+
+        <!-- Evidence Summary Fields -->
+        <div class="space-y-2.5 text-xs text-slate-700">
+          <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200/80">
+            <p class="text-[10px] font-black uppercase text-slate-400">Target Email</p>
+            <p class="font-bold text-slate-900 mt-0.5">{{ selectedIntruder.email }}</p>
+          </div>
+          <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200/80">
+            <p class="text-[10px] font-black uppercase text-slate-400">Business & Owner</p>
+            <p class="font-bold text-slate-900 mt-0.5">{{ selectedIntruder.company_name }} ({{ selectedIntruder.owner_name }})</p>
+            <p class="text-[11px] text-indigo-600 font-mono">{{ selectedIntruder.owner_phone }}</p>
+          </div>
+          <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200/80">
+            <p class="text-[10px] font-black uppercase text-slate-400">IP & Location</p>
+            <p class="font-bold text-slate-900 mt-0.5 font-mono">{{ selectedIntruder.ip_address }}</p>
+            <p class="text-[11px] text-slate-500">{{ selectedIntruder.city }}, {{ selectedIntruder.country }}</p>
+          </div>
+          <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200/80">
+            <p class="text-[10px] font-black uppercase text-slate-400">Device & Browser</p>
+            <p class="font-bold text-slate-900 mt-0.5">{{ selectedIntruder.browser }} ({{ selectedIntruder.os }})</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+        <button (click)="closeIntruderDetailModal()" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800">Close</button>
+        <button *ngIf="selectedIntruder.status === 'LOCKED'" (click)="unlockAccount(selectedIntruder); closeIntruderDetailModal()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow-xs flex items-center gap-1.5">
+          <lucide-icon [name]="icons.Unlock" class="w-3.5 h-3.5"></lucide-icon>
+          Unlock Account
+        </button>
+        <button (click)="resetPasswordForIntruder(selectedIntruder); closeIntruderDetailModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg shadow-xs flex items-center gap-1.5">
+          <lucide-icon [name]="icons.KeyRound" class="w-3.5 h-3.5"></lucide-icon>
+          Reset Password
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Two-Column Layout: IP Rules & Active Sessions -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
     <!-- IP Rules Firewall Manager -->

@@ -90,15 +90,18 @@ export class BackendService {
     return true;
   }
 
-  async loginUser(email: string, password: string): Promise<any> {
+  async loginUser(email: string, password: string, clientMeta?: any): Promise<any> {
     try {
       const response = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password, clientMeta })
       });
       const data = await response.json().catch(() => null);
       if (data && data.ok) {
+        return data;
+      }
+      if (data && data.message) {
         return data;
       }
     } catch(e) {}
