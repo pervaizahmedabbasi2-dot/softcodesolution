@@ -73,27 +73,6 @@ interface DataPacket {
 
       </div>
 
-      <!-- Clean SCS Core Metallic Nameplate with Inverted Specular Mirror Reflection -->
-      <div class="relative flex flex-col items-center mt-2 z-10">
-        <h3
-          class="text-3xl sm:text-4xl lg:text-[42px] font-black tracking-tight bg-gradient-to-b from-slate-950 via-slate-800 to-slate-600 bg-clip-text text-transparent uppercase font-mono drop-shadow-xs whitespace-nowrap"
-        >
-          SCS Core
-        </h3>
-
-        <!-- Specular Inverted Mirror Reflection on White Studio Floor -->
-        <div
-          aria-hidden="true"
-          class="text-3xl sm:text-4xl lg:text-[42px] font-black tracking-tight bg-gradient-to-t from-transparent via-blue-600/20 to-slate-800/35 bg-clip-text text-transparent select-none pointer-events-none transform scale-y-[-1] origin-top opacity-40 -mt-2.5 sm:-mt-3 blur-[0.6px] font-mono whitespace-nowrap [mask-image:linear-gradient(to_bottom,rgba(0,0,0,0.85)_0%,rgba(0,0,0,0)_75%)]"
-        >
-          SCS Core
-        </div>
-
-        <p class="text-xs text-slate-500 font-medium tracking-wide mt-2 whitespace-nowrap">
-          Autonomous Commerce Architecture · Multi-Tenant Mesh
-        </p>
-      </div>
-
     </div>
   `
 })
@@ -1150,9 +1129,9 @@ export class ScsBot3dComponent implements OnInit, OnDestroy {
     canvas.height = 128;
     const ctx = canvas.getContext('2d');
     if (ctx) {
-      const grad = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
-      grad.addColorStop(0, 'rgba(15, 23, 42, 0.14)');
-      grad.addColorStop(0.45, 'rgba(30, 41, 59, 0.06)');
+      const grad = ctx.createRadialGradient(64, 64, 0, 64, 64, 58);
+      grad.addColorStop(0, 'rgba(15, 23, 42, 0.08)');
+      grad.addColorStop(0.5, 'rgba(30, 41, 59, 0.03)');
       grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, 128, 128);
@@ -1161,11 +1140,11 @@ export class ScsBot3dComponent implements OnInit, OnDestroy {
     const shadowTex = new THREE.CanvasTexture(canvas);
     shadowTex.colorSpace = THREE.SRGBColorSpace;
     const shadowMesh = new THREE.Mesh(
-      new THREE.PlaneGeometry(2.8, 2.8),
+      new THREE.PlaneGeometry(2.1, 2.1),
       new THREE.MeshBasicMaterial({ map: shadowTex, transparent: true, depthWrite: false })
     );
     shadowMesh.rotation.x = -Math.PI / 2;
-    shadowMesh.position.y = -1.58;
+    shadowMesh.position.y = -1.36;
     this.scene.add(shadowMesh);
   }
 
