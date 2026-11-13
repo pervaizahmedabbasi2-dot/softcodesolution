@@ -27,6 +27,7 @@
     "@angular/router": "^21.2.0",
     "@tailwindcss/postcss": "^4.1.12",
     "@types/bcryptjs": "^2.4.6",
+    "@types/three": "^0.187.0",
     "argon2": "^0.45.2",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
@@ -39,10 +40,8 @@
     "postcss": "^8.5.3",
     "rxjs": "~7.8.0",
     "tailwindcss": "^4.1.12",
+    "three": "^0.187.0",
     "tslib": "^2.3.0",
     "typescript": "~5.9.2"
-  },
-  "devDependencies": {
-    "concurrently": "^10.0.5"
   }
 }

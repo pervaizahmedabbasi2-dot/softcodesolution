@@ -14,7 +14,6 @@
     "test": "ng test"
   },
   "private": true,
-  "packageManager": "npm@11.11.0",
   "dependencies": {
     "@angular/common": "^21.2.0",
     "@angular/compiler": "^21.2.0",
@@ -24,6 +23,7 @@
     "@angular/router": "^21.2.0",
     "lucide-angular": "^1.0.0",
     "rxjs": "~7.8.0",
+    "three": "^0.180.0",
     "tslib": "^2.3.0",
     "@angular/build": "^21.2.7",
     "@angular/cli": "^21.2.7",
