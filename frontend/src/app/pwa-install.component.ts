@@ -99,9 +99,10 @@ export class PwaInstallComponent implements OnInit {
   }
 
   private checkIfInstalled() {
-    // Check if the app is already running in standalone mode (installed)
-    if (window.matchMedia('(display-mode: standalone)').matches || 
-       (window.navigator as any).standalone === true) {
+    if (typeof window === 'undefined') return;
+    const isStandaloneMedia =
+      typeof window.matchMedia === 'function' && window.matchMedia('(display-mode: standalone)').matches;
+    if (isStandaloneMedia || (window.navigator as any).standalone === true) {
       this.isInstalled = true;
     }
   }

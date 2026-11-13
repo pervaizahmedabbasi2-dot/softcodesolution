@@ -4,6 +4,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
 import { exec } from 'child_process';
+import { fileURLToPath } from 'url';
 import { DatabaseSync } from 'node:sqlite';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, getDocs, addDoc, setDoc, doc } from 'firebase/firestore';
@@ -14,6 +15,7 @@ import { mountSoftCodePlatform } from './backend/softcodesolution_platform/index
 import { createAuthRouter } from './backend/auth_security/auth.routes.js';
 import { createSuperAdminRouter } from './backend/superadmin_core/superadmin.routes.js';
 import { getCryptoVault } from './backend/auth_security/crypto_vault.js';
+import { ObservabilityEngine, authorizeMetricsRequest } from './backend/ops/observability.js';
 
 // 33 Business Domain Modules
 import { createAccountingRouter } from './backend/accounting_tax/accounting.routes.js';
@@ -55,11 +57,15 @@ import { createWholesaleRouter } from './backend/wholesale_distribution/wholesal
 
 dotenv.config();
 
+export function createApp(options = {}) {
+  const observability = options.observability || new ObservabilityEngine();
+  const quiet = Boolean(options.quiet);
+
 // ===========================================================================
 // 1. DUAL-DATABASE ENGINE (SQLite3 Offline-First + Domain Schema Auto-Loader)
 // ===========================================================================
 let sqliteDb = null;
-const SQLITE_DB_PATH = process.env.SOFTCODE_SQLITE_DB || path.resolve('./backend/auth/database/local_softcodesolution.db');
+const SQLITE_DB_PATH = options.sqliteDbPath || process.env.SOFTCODE_SQLITE_DB || path.resolve('./backend/auth/database/local_softcodesolution.db');
 
 try {
   const dbDir = path.dirname(SQLITE_DB_PATH);
@@ -67,12 +73,23 @@ try {
     fs.mkdirSync(dbDir, { recursive: true });
   }
   sqliteDb = new DatabaseSync(SQLITE_DB_PATH);
+  try {
+    sqliteDb.exec(`
+      PRAGMA journal_mode = WAL;
+      PRAGMA synchronous = NORMAL;
+      PRAGMA busy_timeout = 5000;
+      PRAGMA temp_store = MEMORY;
+      PRAGMA foreign_keys = ON;
+    `);
+  } catch (pragmaErr) {
+    if (!quiet) console.warn('[SoftCode Dual-DB Engine] PRAGMA notice:', pragmaErr.message);
+  }
 
   // Execute SoftCodeSolution platform core schema first, then all 33 business domain schemas
   const platformSchemaPath = path.resolve('./backend/softcodesolution_platform/platform_schema.sql');
   if (fs.existsSync(platformSchemaPath)) {
     sqliteDb.exec(fs.readFileSync(platformSchemaPath, 'utf8'));
-    console.log('[Domain Schema Loader] Executed core schema: softcodesolution_platform/platform_schema.sql');
+    if (!quiet) console.log('[Domain Schema Loader] Executed core schema: softcodesolution_platform/platform_schema.sql');
   }
 
   const backendBase = path.resolve('./backend');
@@ -89,16 +106,16 @@ try {
         try {
           const sqlText = fs.readFileSync(path.join(dirPath, sf), 'utf8');
           sqliteDb.exec(sqlText);
-          console.log(`[Domain Schema Loader] Executed schema: ${dir.name}/${sf}`);
+          if (!quiet) console.log(`[Domain Schema Loader] Executed schema: ${dir.name}/${sf}`);
         } catch (e) {
-          console.warn(`[Domain Schema Loader] Schema warning in ${dir.name}/${sf}:`, e.message);
+          if (!quiet) console.warn(`[Domain Schema Loader] Schema warning in ${dir.name}/${sf}:`, e.message);
         }
       }
     }
   }
 
   getCryptoVault(sqliteDb);
-  console.log(`[SoftCode Dual-DB Engine] SQLite3 Offline Database & Crypto Vault initialized at: ${SQLITE_DB_PATH}`);
+  if (!quiet) console.log(`[SoftCode Dual-DB Engine] SQLite3 Offline Database & Crypto Vault initialized at: ${SQLITE_DB_PATH}`);
 } catch (sqliteErr) {
   console.warn('[SoftCode Dual-DB Engine] SQLite3 initialization notice:', sqliteErr.message);
 }
@@ -108,21 +125,23 @@ try {
 // ===========================================================================
 let db = null;
 let auth = null;
-try {
-  const configPath = path.resolve('./firebase-applet-config.json');
-  if (fs.existsSync(configPath)) {
-    const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-    const firebaseApp = initializeApp(config);
-    db = config.firestoreDatabaseId
-      ? getFirestore(firebaseApp, config.firestoreDatabaseId)
-      : getFirestore(firebaseApp);
-    if (config.apiKey) {
-      auth = getAuth(firebaseApp);
+if (!options.disableFirebase) {
+  try {
+    const configPath = path.resolve('./firebase-applet-config.json');
+    if (fs.existsSync(configPath)) {
+      const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+      const firebaseApp = initializeApp(config);
+      db = config.firestoreDatabaseId
+        ? getFirestore(firebaseApp, config.firestoreDatabaseId)
+        : getFirestore(firebaseApp);
+      if (config.apiKey) {
+        auth = getAuth(firebaseApp);
+      }
+      if (!quiet) console.log('Firebase Client Initialized Successfully with db:', config.firestoreDatabaseId || 'default');
     }
-    console.log('Firebase Client Initialized Successfully with db:', config.firestoreDatabaseId || 'default');
+  } catch (error) {
+    console.error('Failed to initialize Firebase:', error?.message || error);
   }
-} catch (error) {
-  console.error('Failed to initialize Firebase:', error?.message || error);
 }
 
 // Safe Firestore collection reader with local fallback
@@ -145,6 +164,7 @@ let syncWorkerRunning = false;
 async function runBackgroundAutoSync() {
   if (syncWorkerRunning || !sqliteDb || !db) return;
   syncWorkerRunning = true;
+  let syncedThisRun = 0;
   try {
     const pendingTenants = sqliteDb.prepare('SELECT * FROM local_tenants WHERE is_synced = 0 LIMIT 25').all();
     for (const t of pendingTenants) {
@@ -169,6 +189,7 @@ async function runBackgroundAutoSync() {
           synced_at: new Date().toISOString()
         });
         sqliteDb.prepare('UPDATE local_tenants SET is_synced = 1 WHERE id = ?').run(t.id);
+        syncedThisRun += 1;
       } catch {
         break;
       }
@@ -250,19 +271,27 @@ async function runBackgroundAutoSync() {
           synced_at: new Date().toISOString()
         });
         sqliteDb.prepare('UPDATE local_school_attendance SET is_synced = 1 WHERE id = ?').run(att.id);
+        syncedThisRun += 1;
       } catch {
         break;
       }
     }
-  } catch {
-    // Silent background safeguard
+    observability.recordSyncRun({ ok: true, syncedCount: syncedThisRun });
+  } catch (syncErr) {
+    observability.recordSyncRun({ ok: false, error: syncErr });
   } finally {
     syncWorkerRunning = false;
   }
 }
 
-setInterval(runBackgroundAutoSync, 30000);
-setTimeout(runBackgroundAutoSync, 3000);
+let syncIntervalId = null;
+let syncTimeoutId = null;
+if (!options.disableBackgroundSync) {
+  syncIntervalId = setInterval(runBackgroundAutoSync, 30000);
+  syncIntervalId.unref();
+  syncTimeoutId = setTimeout(runBackgroundAutoSync, 3000);
+  syncTimeoutId.unref();
+}
 
 // ===========================================================================
 // 4. EXPRESS API GATEWAY & MODULAR DOMAIN ROUTER MOUNTING
@@ -270,6 +299,7 @@ setTimeout(runBackgroundAutoSync, 3000);
 const app = express();
 app.disable('x-powered-by');
 app.set('trust proxy', 1);
+app.use(observability.requestMiddleware());
 
 // Enterprise Security Headers (Anti-XSS, Anti-Clickjacking, Anti-MIME Sniffing)
 app.use((req, res, next) => {
@@ -311,21 +341,23 @@ app.use('/api', (req, res, next) => {
 
 // Global API Bot / Flood Rate Limiter (Sliding Window per IP)
 const apiRateMap = new Map();
-setInterval(() => {
+const ratePruneIntervalId = setInterval(() => {
   const cutoff = Date.now() - 60000;
   for (const [ip, hits] of apiRateMap.entries()) {
     const recent = hits.filter((ts) => ts > cutoff);
     if (recent.length === 0) apiRateMap.delete(ip);
     else apiRateMap.set(ip, recent);
   }
-}, 60000).unref();
+}, 60000);
+ratePruneIntervalId.unref();
 
+const rateLimitMaxPerMin = Number(options.rateLimitMaxPerMin ?? process.env.SCS_API_RATE_LIMIT ?? 240);
 app.use('/api', (req, res, next) => {
-  if (req.path === '/health') return next();
+  if (options.disableRateLimit || req.path === '/health' || req.path.startsWith('/metrics')) return next();
   const ip = req.ip || req.headers['x-forwarded-for'] || '127.0.0.1';
   const now = Date.now();
   const recent = (apiRateMap.get(ip) || []).filter((ts) => ts > now - 60000);
-  if (recent.length >= 240) {
+  if (recent.length >= rateLimitMaxPerMin) {
     return res.status(429).json({
       ok: false,
       code: 'GLOBAL_RATE_LIMIT',
@@ -337,9 +369,39 @@ app.use('/api', (req, res, next) => {
   next();
 });
 
-// Health check probes
-app.get(['/healthz', '/_healthz', '/health', '/_health', '/readyz', '/_readyz', '/api/health'], (req, res) => {
+// Health, Readiness & Live Observability Probes
+app.get(['/healthz', '/_healthz', '/health', '/_health', '/api/health'], (req, res) => {
   res.status(200).json({ status: 'HEALTHY', service: 'SoftCode Enterprise', timestamp: new Date().toISOString() });
+});
+
+app.get(['/readyz', '/_readyz'], (req, res) => {
+  let sqliteReady = false;
+  if (sqliteDb) {
+    try {
+      sqliteDb.prepare('SELECT 1 AS ok').get();
+      sqliteReady = true;
+    } catch {}
+  }
+  const status = sqliteReady ? 200 : 503;
+  res.status(status).json({
+    status: sqliteReady ? 'READY' : 'DEGRADED',
+    sqlite: sqliteReady ? 'UP' : 'DOWN',
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.get('/api/metrics', (req, res) => {
+  if (!authorizeMetricsRequest(req)) {
+    return res.status(401).json({ ok: false, code: 'METRICS_UNAUTHORIZED', message: 'Valid metrics token required.' });
+  }
+  res.json(observability.getMetricsSnapshot(sqliteDb));
+});
+
+app.get('/api/metrics/prometheus', (req, res) => {
+  if (!authorizeMetricsRequest(req)) {
+    return res.status(401).type('text/plain').send('# unauthorized\n');
+  }
+  res.type('text/plain; version=0.0.4').send(observability.toPrometheusText(sqliteDb));
 });
 
 // A. SoftCodeSolution Company Platform, Auth Security & SuperAdmin Governance
@@ -483,7 +545,7 @@ function findIndexHtml() {
 let isBuilding = false;
 let lastBuildAttemptAt = 0;
 function triggerBuildIfNeeded() {
-  if (findIndexHtml() || isBuilding) return;
+  if (options.disableFrontendBuild || findIndexHtml() || isBuilding) return;
   const now = Date.now();
   if (now - lastBuildAttemptAt < 15000) return;
   isBuilding = true;
@@ -545,32 +607,61 @@ app.use((req, res, next) => {
 </html>`);
 });
 
+// Global Express Error Tracking & Alerting Boundary
+app.use(observability.errorMiddleware());
+
+  return {
+    app,
+    sqliteDb,
+    db,
+    observability,
+    close: () => {
+      if (syncIntervalId) clearInterval(syncIntervalId);
+      if (syncTimeoutId) clearTimeout(syncTimeoutId);
+      if (ratePruneIntervalId) clearInterval(ratePruneIntervalId);
+      if (sqliteDb && typeof sqliteDb.close === 'function') {
+        try { sqliteDb.close(); } catch {}
+      }
+    }
+  };
+}
+
 // ===========================================================================
 // 6. PROCESS LIFECYCLE & PORT BINDING
 // ===========================================================================
-process.on('uncaughtException', (err) => {
-  console.error('Process uncaughtException:', err?.message || err);
-});
-process.on('unhandledRejection', (reason) => {
-  console.error('Process unhandledRejection:', reason);
-});
+const isMainModule = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 
-const portArgIndex = process.argv.indexOf('--port');
-const portFromArg = portArgIndex !== -1 && process.argv[portArgIndex + 1] ? process.argv[portArgIndex + 1] : null;
-const PORT = parseInt(portFromArg || process.env.PORT || '3000', 10);
+if (isMainModule) {
+  const { app, observability, close } = createApp();
 
-const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Enterprise Platform Backend running on 0.0.0.0:${PORT}`);
-});
-
-const shutdown = (signal) => {
-  console.log(`${signal} signal received: closing HTTP server`);
-  server.close(() => {
-    console.log('HTTP server closed');
-    process.exit(0);
+  process.on('uncaughtException', (err) => {
+    observability.captureError(err);
   });
-  setTimeout(() => process.exit(0), 4000).unref();
-};
+  process.on('unhandledRejection', (reason) => {
+    observability.captureError(reason instanceof Error ? reason : new Error(String(reason)));
+  });
 
-process.on('SIGTERM', () => shutdown('SIGTERM'));
-process.on('SIGINT', () => shutdown('SIGINT'));
+  const portArgIndex = process.argv.indexOf('--port');
+  const portFromArg = portArgIndex !== -1 && process.argv[portArgIndex + 1] ? process.argv[portArgIndex + 1] : null;
+  const PORT = parseInt(portFromArg || process.env.PORT || '3000', 10);
+
+  const server = app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Enterprise Platform Backend running on 0.0.0.0:${PORT}`);
+  });
+
+  const shutdown = (signal) => {
+    console.log(`${signal} signal received: closing HTTP server`);
+    server.close(() => {
+      close();
+      console.log('HTTP server closed');
+      process.exit(0);
+    });
+    setTimeout(() => {
+      close();
+      process.exit(0);
+    }, 4000).unref();
+  };
+
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
+}

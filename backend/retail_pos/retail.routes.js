@@ -1,4 +1,5 @@
 import express from 'express';
+import crypto from 'crypto';
 import { collection, addDoc } from 'firebase/firestore';
 import { getCryptoVault } from '../auth_security/crypto_vault.js';
 
@@ -23,6 +24,7 @@ export function createRetailRouter(sqliteDb, db, customProducts) {
   const resolveTid = (req) => String(req?.headers?.['x-tenant-id'] || req?.query?.tenantId || req?.body?.tenantId || 'tenant-root-platform').trim();
   const RETAIL_PRODUCTS = Array.isArray(customProducts) && customProducts.length > 0 ? customProducts : DEFAULT_RETAIL_PRODUCTS;
   const RETAIL_ORDERS = DEFAULT_RETAIL_ORDERS;
+  const TENANT_ORDERS = new Map();
 
   router.get('/products', (req, res) => {
     res.json({ ok: true, products: RETAIL_PRODUCTS });
@@ -58,8 +60,9 @@ export function createRetailRouter(sqliteDb, db, customProducts) {
       }
     });
 
-    const receiptNo = 'RCP-2026-' + Math.floor(1000 + Math.random() * 9000);
-    const orderId = 'ORD-' + Date.now();
+    const uniqueSuffix = crypto.randomBytes(3).toString('hex').toUpperCase();
+    const receiptNo = `RCP-2026-${Date.now().toString(36).toUpperCase().slice(-4)}${uniqueSuffix}`;
+    const orderId = `ORD-${Date.now()}-${uniqueSuffix}`;
     const newOrder = {
       id: orderId,
       tenant_id: tid,
@@ -72,7 +75,14 @@ export function createRetailRouter(sqliteDb, db, customProducts) {
       items,
       date: new Date().toISOString()
     };
-    RETAIL_ORDERS.unshift(newOrder);
+
+    if (tid === 'tenant-root-platform') {
+      RETAIL_ORDERS.unshift(newOrder);
+    } else {
+      const bucket = TENANT_ORDERS.get(tid) || [];
+      bucket.unshift(newOrder);
+      TENANT_ORDERS.set(tid, bucket.slice(0, 100));
+    }
 
     const encCustomer = vault.encryptField(tid, customerName);
     const encCashier = vault.encryptField(tid, cashier);
@@ -125,10 +135,13 @@ export function createRetailRouter(sqliteDb, db, customProducts) {
 
   router.get('/orders', (req, res) => {
     const tid = resolveTid(req);
-    let orders = [...RETAIL_ORDERS];
+    const isRoot = tid === 'tenant-root-platform';
+    let orders = isRoot ? [...RETAIL_ORDERS] : [...(TENANT_ORDERS.get(tid) || [])];
     if (sqliteDb) {
       try {
-        const rows = sqliteDb.prepare('SELECT * FROM local_pos_orders ORDER BY created_at DESC LIMIT 100').all();
+        const rows = isRoot
+          ? sqliteDb.prepare('SELECT * FROM local_pos_orders ORDER BY created_at DESC LIMIT 100').all()
+          : sqliteDb.prepare('SELECT * FROM local_pos_orders WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 100').all(tid);
         if (rows.length > 0) {
           const seen = new Set(orders.map(o => o.id));
           for (const r of rows) {
@@ -139,6 +152,7 @@ export function createRetailRouter(sqliteDb, db, customProducts) {
               try { parsedItems = JSON.parse(decItems); } catch {}
               orders.unshift({
                 id: r.id,
+                tenant_id: rowTid,
                 receiptNo: r.receipt_no,
                 customerName: vault.decryptField(rowTid, r.customer_name),
                 itemsCount: r.items_count,

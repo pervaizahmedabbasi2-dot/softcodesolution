@@ -66,9 +66,7 @@ export class LegalComponent implements OnInit {
 
   selectTab(key: string): void {
     this.currentTab.set(key);
-    if (this.scrollArea?.nativeElement) {
-      this.scrollArea.nativeElement.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    this.scrollArea?.nativeElement?.scrollTo?.({ top: 0, behavior: 'smooth' });
   }
 
   closeModal(): void {
