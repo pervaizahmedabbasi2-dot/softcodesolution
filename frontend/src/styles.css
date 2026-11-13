@@ -571,3 +571,27 @@ input[type="password"]::-webkit-contacts-auto-fill-button {
 .animate-soundwave-4 {
   animation: soundWave 1.2s infinite ease-in-out 0.1s;
 }
+
+/* ==========================================================================
+   Legal & Compliance Print Isolation
+   ========================================================================== */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  #legal-print-area,
+  #legal-print-area * {
+    visibility: visible;
+  }
+
+  #legal-print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    overflow: visible !important;
+    background: #ffffff !important;
+  }
+}
+

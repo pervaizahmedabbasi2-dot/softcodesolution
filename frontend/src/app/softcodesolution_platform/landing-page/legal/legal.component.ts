@@ -1,30 +1,78 @@
-import { Component, Input, Output, EventEmitter, OnInit, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  EventEmitter,
+  Input,
+  OnInit,
+  Output,
+  ViewChild,
+  inject,
+  signal
+} from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import { Router } from '@angular/router';
+import { MatIconModule } from '@angular/material/icon';
+
+interface LegalNavItem {
+  key: 'privacy' | 'sla' | 'safety' | 'terms' | 'refund';
+  label: string;
+  sub: string;
+  icon: string;
+}
 
 @Component({
   selector: 'app-legal',
   standalone: true,
-  imports: [CommonModule],
-  templateUrl: './legal.component.html'
+  imports: [CommonModule, MatIconModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  templateUrl: './legal.component.html',
+  host: {
+    '(document:keydown.escape)': 'onEscapeKey()'
+  }
 })
 export class LegalComponent implements OnInit {
-  @Input() isOpen: boolean = false;
-  @Input() activeTab: string = 'terms';
-  @Output() closeEvent = new EventEmitter<void>();
+  @ViewChild('scrollArea') scrollArea?: ElementRef<HTMLDivElement>;
 
   private router = inject(Router, { optional: true });
   private location = inject(Location, { optional: true });
-  isRouted: boolean = false;
 
-  ngOnInit() {
+  isModalOpen = signal(false);
+  currentTab = signal<string>('terms');
+  isRouted = false;
+
+  @Input() set isOpen(value: boolean) {
+    this.isModalOpen.set(Boolean(value));
+  }
+
+  @Input() set activeTab(value: string) {
+    this.currentTab.set(value || 'terms');
+  }
+
+  @Output() closeEvent = new EventEmitter<void>();
+
+  ngOnInit(): void {
     if (this.router && this.router.url.includes('legal')) {
       this.isRouted = true;
-      this.isOpen = true;
+      this.isModalOpen.set(true);
     }
   }
 
-  closeModal() {
+  onEscapeKey(): void {
+    if (this.isModalOpen()) {
+      this.closeModal();
+    }
+  }
+
+  selectTab(key: string): void {
+    this.currentTab.set(key);
+    if (this.scrollArea?.nativeElement) {
+      this.scrollArea.nativeElement.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
+  closeModal(): void {
+    this.isModalOpen.set(false);
     this.closeEvent.emit();
     if (this.isRouted) {
       if (this.location) {
@@ -35,40 +83,40 @@ export class LegalComponent implements OnInit {
     }
   }
 
-  printSection() {
+  printSection(): void {
     window.print();
   }
 
-  sidebarItems = [
+  sidebarItems: LegalNavItem[] = [
     {
       key: 'privacy',
       label: 'Privacy Policy',
       sub: 'Data & confidentiality',
-      icon: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg>`
+      icon: 'shield'
     },
     {
       key: 'sla',
       label: 'SLA Agreement',
       sub: 'Uptime & support',
-      icon: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`
+      icon: 'verified'
     },
     {
       key: 'safety',
       label: 'Data Safety',
       sub: 'Encryption & security',
-      icon: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`
+      icon: 'lock'
     },
     {
       key: 'terms',
       label: 'Terms of Use',
       sub: 'Rules & conditions',
-      icon: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`
+      icon: 'description'
     },
     {
       key: 'refund',
       label: 'Refund Policy',
       sub: 'Cancellation & billing',
-      icon: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`
+      icon: 'receipt_long'
     }
   ];
 
@@ -79,10 +127,10 @@ export class LegalComponent implements OnInit {
   ];
 
   supportTiers = [
-    { level: 'Critical — System Down', time: 'Within 1 hour', color: 'bg-red-500' },
-    { level: 'High — Major Feature Broken', time: 'Within 4 hours', color: 'bg-orange-500' },
-    { level: 'Medium — Minor Issue', time: 'Within 24 hours', color: 'bg-yellow-500' },
-    { level: 'Low — General Query', time: 'Within 48 hours', color: 'bg-green-500' }
+    { level: 'Critical — System Down', priority: 'P1 Urgent', time: 'Within 1 hour', badgeClass: 'bg-rose-100 text-rose-700' },
+    { level: 'High — Major Feature Broken', priority: 'P2 High', time: 'Within 4 hours', badgeClass: 'bg-amber-100 text-amber-800' },
+    { level: 'Medium — Minor Issue', priority: 'P3 Standard', time: 'Within 24 hours', badgeClass: 'bg-sky-100 text-sky-700' },
+    { level: 'Low — General Query', priority: 'P4 General', time: 'Within 48 hours', badgeClass: 'bg-emerald-100 text-emerald-700' }
   ];
 
   privacyCollectItems = [
@@ -110,18 +158,22 @@ export class LegalComponent implements OnInit {
 
   milestoneItems = [
     {
+      step: '01',
       phase: 'Booking Fee (30–40%)',
       desc: 'Non-refundable advance payment required to initiate the project. This reserves SoftCode Solution\'s development resources exclusively for your project.'
     },
     {
+      step: '02',
       phase: 'Milestone 1',
       desc: 'Payment due upon completion and client approval of design, wireframes, and project architecture.'
     },
     {
+      step: '03',
       phase: 'Milestone 2',
       desc: 'Payment due upon completion of core development phase and feature demonstration.'
     },
     {
+      step: '04',
       phase: 'Final Payment',
       desc: 'Payment due upon final delivery, testing completion, and deployment. Full payment must be cleared before source code or system access is handed over.'
     }
