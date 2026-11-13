@@ -1,5 +1,5 @@
 // SoftCode Enterprise Service Worker - Network First with Auto-Refresh
-const CACHE_NAME = 'scs-multi-tenant-cloud-v4';
+const CACHE_NAME = 'scs-multi-tenant-cloud-v7';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();

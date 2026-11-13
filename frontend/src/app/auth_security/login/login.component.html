@@ -52,7 +52,7 @@
               [class.rotate-90]="isMenuOpen"
               [class.scale-75]="isMenuOpen"
               fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" d="M4 6h16M4 12h16m-7 6h7" />
             </svg>
             <svg 
               class="h-5 w-5 absolute inset-0 transition-all duration-300 transform"
@@ -63,7 +63,7 @@
               [class.-rotate-90]="!isMenuOpen"
               [class.scale-75]="!isMenuOpen"
               fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </div>
         </button>
@@ -106,26 +106,21 @@
 </div>
 
 <!-- Pure Centered Login Page -->
-<main class="pt-20 min-h-screen bg-slate-50 flex flex-col justify-between font-sans relative overflow-hidden">
-
-  <!-- Subtle Ambient Background -->
-  <div class="absolute inset-0 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:28px_28px] opacity-60 pointer-events-none -z-10"></div>
-  <div class="absolute top-1/4 -left-32 w-96 h-96 bg-indigo-100/40 rounded-full blur-3xl pointer-events-none -z-10"></div>
-  <div class="absolute bottom-1/4 -right-32 w-96 h-96 bg-blue-100/40 rounded-full blur-3xl pointer-events-none -z-10"></div>
+<main class="pt-20 min-h-screen bg-white flex flex-col justify-between font-sans relative overflow-hidden">
 
   <div class="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12 sm:py-16 relative z-10">
-    <div class="w-full max-w-md bg-white p-7 sm:p-9 rounded-[26px] border border-slate-200/90 shadow-[0_12px_0_rgba(226,232,240,0.75),0_28px_60px_-14px_rgba(15,23,42,0.14)] space-y-6">
+    <div class="w-full max-w-md bg-white p-7 sm:p-9 rounded-2xl border border-slate-200 shadow-sm space-y-6">
       
-      <!-- Top Title & 3D Security Badge -->
+      <!-- Top Title & Clean Security Badge -->
       <div class="text-center">
-        <div class="w-14 h-14 bg-gradient-to-b from-indigo-500 to-indigo-700 text-white rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-[0_6px_0_#3730a3,0_14px_24px_-6px_rgba(79,70,229,0.45)] border border-indigo-400/60">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+        <div class="w-14 h-14 bg-gradient-to-br from-indigo-500 to-violet-600 text-white rounded-2xl ring-1 ring-white/30 shadow-[0_12px_26px_-6px_rgba(79,70,229,0.48),inset_0_1.5px_1px_rgba(255,255,255,0.48)] flex items-center justify-center mx-auto mb-3.5">
+          <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" class="drop-shadow-[0_2px_4px_rgba(15,23,42,0.28)]">
+            <rect width="18" height="11" x="3" y="11" rx="2.5" ry="2.5" fill="currentColor" fill-opacity="0.22" />
             <path d="M7 11V7a5 5 0 0 1 10 0v4" />
           </svg>
         </div>
         <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Sign In to Your Account</h1>
-        <p class="text-xs text-slate-500 mt-1">Argon2id Encrypted • Intruder Vault &amp; Real-Time 3D Validation</p>
+        <p class="text-xs text-slate-500 mt-1">Argon2id Encrypted • Intruder Vault &amp; Anti-Bot Shield</p>
       </div>
 
       <!-- Login Form -->
@@ -135,38 +130,23 @@
         <div>
           <div class="flex items-center justify-between mb-1.5">
             <label class="block text-xs font-bold text-slate-700">Email or Username</label>
-            <div class="flex items-center gap-1.5">
-              @if (emailAutoCorrected) {
-                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-gradient-to-b from-cyan-400 to-teal-600 text-white shadow-[0_2px_0_#0f766e,0_4px_10px_-2px_rgba(20,184,166,0.45)] border border-cyan-300/60 transition-all duration-300">
-                  ✓ {{ emailAutoCorrectNote || 'Auto-Corrected' }}
-                </span>
-              } @else if (isEmailFormatValid) {
-                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-gradient-to-b from-emerald-400 to-emerald-600 text-white shadow-[0_2px_0_#047857,0_4px_10px_-2px_rgba(16,185,129,0.45)] border border-emerald-300/60 transition-all duration-300">
-                  ✓ Verified
-                </span>
-              }
-            </div>
+            @if (emailAutoCorrected) {
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-cyan-50 text-cyan-700 border border-cyan-200">
+                ✓ {{ emailAutoCorrectNote || 'Auto-Corrected' }}
+              </span>
+            }
           </div>
-          <div class="relative">
-            <span class="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors"
-              [class.text-emerald-600]="isEmailFormatValid"
-              [class.text-slate-400]="!isEmailFormatValid">
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect width="20" height="16" x="2" y="4" rx="2" />
-                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+          <div class="relative group">
+            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-600 transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="20" height="16" x="2" y="4" rx="2"/>
+                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
               </svg>
-            </span>
+            </div>
             <input type="text" formControlName="email" (input)="onEmailInput()" (blur)="onEmailBlur()"
               placeholder="name@company.com or username"
-              class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-11 pr-10 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all duration-300"
-              [class.border-emerald-500]="isEmailFormatValid"
-              [class.bg-emerald-50/30]="isEmailFormatValid"
-              [class.shadow-[0_4px_0_rgba(16,185,129,0.25),0_10px_20px_-6px_rgba(16,185,129,0.22)]]="isEmailFormatValid"
-              [class.-translate-y-0.5]="isEmailFormatValid"
+              class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-11 pr-4 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all duration-300"
               [class.border-red-400]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
-            @if (isEmailFormatValid) {
-              <span class="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-gradient-to-b from-emerald-400 to-emerald-600 text-white flex items-center justify-center text-[11px] font-bold shadow-[0_2px_0_#047857]">✓</span>
-            }
           </div>
           <p *ngIf="loginForm.get('email')?.touched && loginForm.get('email')?.hasError('required')" class="text-red-500 text-xs mt-1 font-medium">Please enter your email or username.</p>
         </div>
@@ -177,188 +157,115 @@
             <div class="flex items-center gap-2">
               <label class="block text-xs font-bold text-slate-700">Password</label>
               @if (passwordAutoCorrected) {
-                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-gradient-to-b from-cyan-400 to-teal-600 text-white shadow-[0_2px_0_#0f766e] border border-cyan-300/60">
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-cyan-50 text-cyan-700 border border-cyan-200">
                   ✓ Trimmed
-                </span>
-              } @else if (allSecurityRulesMet) {
-                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-gradient-to-b from-emerald-400 to-emerald-600 text-white shadow-[0_2px_0_#047857,0_4px_10px_-2px_rgba(16,185,129,0.45)] border border-emerald-300/60">
-                  ✓ Strong 5/5
                 </span>
               }
             </div>
             <button type="button" (click)="onForgotPassword()" class="text-xs font-semibold text-indigo-600 hover:text-indigo-700 transition-colors cursor-pointer">Forgot Password?</button>
           </div>
-          <div class="relative">
-            <span class="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors"
-              [class.text-emerald-600]="allSecurityRulesMet"
-              [class.text-slate-400]="!allSecurityRulesMet">
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
-                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+          <div class="relative group">
+            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-600 transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
               </svg>
-            </span>
-            <input [type]="isPasswordVisible ? 'text' : 'password'" formControlName="password" (input)="onPasswordInput()" (blur)="onPasswordBlur()"
+            </div>
+            <input type="password" formControlName="password" (input)="onPasswordInput()" (blur)="onPasswordBlur()"
               placeholder="••••••••"
-              class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-11 pr-11 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all duration-300"
-              [class.border-emerald-500]="allSecurityRulesMet"
-              [class.bg-emerald-50/30]="allSecurityRulesMet"
-              [class.shadow-[0_4px_0_rgba(16,185,129,0.25),0_10px_20px_-6px_rgba(16,185,129,0.22)]]="allSecurityRulesMet"
-              [class.-translate-y-0.5]="allSecurityRulesMet"
+              class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-11 pr-4 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-colors"
               [class.border-red-400]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
-            <button type="button" (click)="togglePassword()" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none cursor-pointer" aria-label="Toggle password visibility">
-              <svg *ngIf="!isPasswordVisible" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
-                <circle cx="12" cy="12" r="3" />
-              </svg>
-              <svg *ngIf="isPasswordVisible" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
-                <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
-                <path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
-                <line x1="2" x2="22" y1="2" y2="22" />
-              </svg>
-            </button>
           </div>
           <p *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.hasError('required')" class="text-red-500 text-xs mt-1 font-medium">Please enter your password.</p>
 
-          <!-- 3D Security Password Validation Matrix (Always visible for real-time 3D feedback) -->
-          <div class="mt-3 p-3.5 bg-gradient-to-b from-slate-50 to-slate-100/90 border border-slate-200/90 rounded-2xl shadow-[0_4px_0_rgba(203,213,225,0.6),inset_0_1px_0_#ffffff] space-y-2.5">
+          <!-- Security Password Check (Shows only once user starts typing password) -->
+          @if (passwordValue.length > 0) {
+            <div class="mt-3 p-3.5 bg-white border border-slate-200 rounded-xl space-y-2.5">
             <div class="flex items-center justify-between">
-              <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Security Password Check</span>
-              <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-md transition-all"
-                [class.bg-emerald-600]="allSecurityRulesMet"
-                [class.text-white]="allSecurityRulesMet"
-                [class.shadow-[0_2px_0_#047857]]="allSecurityRulesMet"
-                [class.bg-slate-200]="!allSecurityRulesMet"
-                [class.text-slate-600]="!allSecurityRulesMet">
+              <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Security Password Check</span>
+              <span class="text-[11px] font-semibold px-2 py-0.5 rounded-md border transition-colors"
+                [class.bg-emerald-50]="allSecurityRulesMet"
+                [class.text-emerald-700]="allSecurityRulesMet"
+                [class.border-emerald-200]="allSecurityRulesMet"
+                [class.bg-slate-50]="!allSecurityRulesMet"
+                [class.text-slate-600]="!allSecurityRulesMet"
+                [class.border-slate-200]="!allSecurityRulesMet">
                 {{ passwordStrengthLabel }}
               </span>
             </div>
 
-            <!-- 3D Segmented Strength Meter -->
+            <!-- Clean Segmented Strength Meter -->
             <div class="grid grid-cols-5 gap-1.5">
-              <div class="h-2 rounded-full transition-all duration-300"
-                [class.bg-gradient-to-b]="passwordScore >= 1"
-                [class.from-red-400]="passwordScore === 1"
-                [class.to-red-600]="passwordScore === 1"
-                [class.from-amber-400]="passwordScore === 2 || passwordScore === 3"
-                [class.to-amber-600]="passwordScore === 2 || passwordScore === 3"
-                [class.from-emerald-400]="passwordScore >= 4"
-                [class.to-emerald-600]="passwordScore >= 4"
-                [class.shadow-[0_2px_0_rgba(0,0,0,0.18)]]="passwordScore >= 1"
+              <div class="h-1.5 rounded-full transition-colors duration-300"
+                [class.bg-red-500]="passwordScore === 1"
+                [class.bg-amber-500]="passwordScore === 2 || passwordScore === 3"
+                [class.bg-emerald-500]="passwordScore >= 4"
                 [class.bg-slate-200]="passwordScore < 1"></div>
-              <div class="h-2 rounded-full transition-all duration-300"
-                [class.bg-gradient-to-b]="passwordScore >= 2"
-                [class.from-amber-400]="passwordScore === 2 || passwordScore === 3"
-                [class.to-amber-600]="passwordScore === 2 || passwordScore === 3"
-                [class.from-emerald-400]="passwordScore >= 4"
-                [class.to-emerald-600]="passwordScore >= 4"
-                [class.shadow-[0_2px_0_rgba(0,0,0,0.18)]]="passwordScore >= 2"
+              <div class="h-1.5 rounded-full transition-colors duration-300"
+                [class.bg-amber-500]="passwordScore === 2 || passwordScore === 3"
+                [class.bg-emerald-500]="passwordScore >= 4"
                 [class.bg-slate-200]="passwordScore < 2"></div>
-              <div class="h-2 rounded-full transition-all duration-300"
-                [class.bg-gradient-to-b]="passwordScore >= 3"
-                [class.from-amber-400]="passwordScore === 3"
-                [class.to-amber-600]="passwordScore === 3"
-                [class.from-emerald-400]="passwordScore >= 4"
-                [class.to-emerald-600]="passwordScore >= 4"
-                [class.shadow-[0_2px_0_rgba(0,0,0,0.18)]]="passwordScore >= 3"
+              <div class="h-1.5 rounded-full transition-colors duration-300"
+                [class.bg-amber-500]="passwordScore === 3"
+                [class.bg-emerald-500]="passwordScore >= 4"
                 [class.bg-slate-200]="passwordScore < 3"></div>
-              <div class="h-2 rounded-full transition-all duration-300"
-                [class.bg-gradient-to-b]="passwordScore >= 4"
-                [class.from-emerald-400]="passwordScore >= 4"
-                [class.to-emerald-600]="passwordScore >= 4"
-                [class.shadow-[0_2px_0_rgba(4,120,87,0.5)]]="passwordScore >= 4"
+              <div class="h-1.5 rounded-full transition-colors duration-300"
+                [class.bg-emerald-500]="passwordScore >= 4"
                 [class.bg-slate-200]="passwordScore < 4"></div>
-              <div class="h-2 rounded-full transition-all duration-300"
-                [class.bg-gradient-to-b]="passwordScore >= 5"
-                [class.from-emerald-400]="passwordScore >= 5"
-                [class.to-emerald-600]="passwordScore >= 5"
-                [class.shadow-[0_2px_0_rgba(4,120,87,0.5)]]="passwordScore >= 5"
+              <div class="h-1.5 rounded-full transition-colors duration-300"
+                [class.bg-emerald-500]="passwordScore >= 5"
                 [class.bg-slate-200]="passwordScore < 5"></div>
             </div>
 
-            <!-- 5 Tactile 3D Keycap Validation Tiles -->
-            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-[11px] font-bold">
-              <div class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border transition-all duration-300"
-                [class.bg-gradient-to-b]="hasMinLength"
-                [class.from-emerald-400]="hasMinLength"
-                [class.to-emerald-600]="hasMinLength"
-                [class.text-white]="hasMinLength"
-                [class.border-emerald-300]="hasMinLength"
-                [class.shadow-[0_4px_0_#047857,0_8px_14px_-4px_rgba(16,185,129,0.45)]]="hasMinLength"
-                [class.-translate-y-0.5]="hasMinLength"
-                [class.bg-white]="!hasMinLength"
+            <!-- 5 Normal Validation Checklist Items (No Button Styling) -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-x-3 gap-y-1.5 pt-0.5 text-xs">
+              <div class="flex items-center gap-1.5 py-0.5 bg-white transition-colors"
+                [class.text-emerald-700]="hasMinLength"
+                [class.font-semibold]="hasMinLength"
                 [class.text-slate-500]="!hasMinLength"
-                [class.border-slate-300/80]="!hasMinLength"
-                [class.shadow-[inset_0_2px_4px_rgba(15,23,42,0.06)]]="!hasMinLength">
-                <span>{{ hasMinLength ? '✓' : '○' }}</span>
+                [class.font-medium]="!hasMinLength">
+                <span class="text-xs leading-none" [class.text-emerald-600]="hasMinLength" [class.text-slate-400]="!hasMinLength">{{ hasMinLength ? '✓' : '○' }}</span>
                 <span>8+ Chars</span>
               </div>
 
-              <div class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border transition-all duration-300"
-                [class.bg-gradient-to-b]="hasUppercase"
-                [class.from-emerald-400]="hasUppercase"
-                [class.to-emerald-600]="hasUppercase"
-                [class.text-white]="hasUppercase"
-                [class.border-emerald-300]="hasUppercase"
-                [class.shadow-[0_4px_0_#047857,0_8px_14px_-4px_rgba(16,185,129,0.45)]]="hasUppercase"
-                [class.-translate-y-0.5]="hasUppercase"
-                [class.bg-white]="!hasUppercase"
+              <div class="flex items-center gap-1.5 py-0.5 bg-white transition-colors"
+                [class.text-emerald-700]="hasUppercase"
+                [class.font-semibold]="hasUppercase"
                 [class.text-slate-500]="!hasUppercase"
-                [class.border-slate-300/80]="!hasUppercase"
-                [class.shadow-[inset_0_2px_4px_rgba(15,23,42,0.06)]]="!hasUppercase">
-                <span>{{ hasUppercase ? '✓' : '○' }}</span>
+                [class.font-medium]="!hasUppercase">
+                <span class="text-xs leading-none" [class.text-emerald-600]="hasUppercase" [class.text-slate-400]="!hasUppercase">{{ hasUppercase ? '✓' : '○' }}</span>
                 <span>Bara (A-Z)</span>
               </div>
 
-              <div class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border transition-all duration-300"
-                [class.bg-gradient-to-b]="hasLowercase"
-                [class.from-emerald-400]="hasLowercase"
-                [class.to-emerald-600]="hasLowercase"
-                [class.text-white]="hasLowercase"
-                [class.border-emerald-300]="hasLowercase"
-                [class.shadow-[0_4px_0_#047857,0_8px_14px_-4px_rgba(16,185,129,0.45)]]="hasLowercase"
-                [class.-translate-y-0.5]="hasLowercase"
-                [class.bg-white]="!hasLowercase"
+              <div class="flex items-center gap-1.5 py-0.5 bg-white transition-colors"
+                [class.text-emerald-700]="hasLowercase"
+                [class.font-semibold]="hasLowercase"
                 [class.text-slate-500]="!hasLowercase"
-                [class.border-slate-300/80]="!hasLowercase"
-                [class.shadow-[inset_0_2px_4px_rgba(15,23,42,0.06)]]="!hasLowercase">
-                <span>{{ hasLowercase ? '✓' : '○' }}</span>
+                [class.font-medium]="!hasLowercase">
+                <span class="text-xs leading-none" [class.text-emerald-600]="hasLowercase" [class.text-slate-400]="!hasLowercase">{{ hasLowercase ? '✓' : '○' }}</span>
                 <span>Choti (a-z)</span>
               </div>
 
-              <div class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border transition-all duration-300"
-                [class.bg-gradient-to-b]="hasNumber"
-                [class.from-emerald-400]="hasNumber"
-                [class.to-emerald-600]="hasNumber"
-                [class.text-white]="hasNumber"
-                [class.border-emerald-300]="hasNumber"
-                [class.shadow-[0_4px_0_#047857,0_8px_14px_-4px_rgba(16,185,129,0.45)]]="hasNumber"
-                [class.-translate-y-0.5]="hasNumber"
-                [class.bg-white]="!hasNumber"
+              <div class="flex items-center gap-1.5 py-0.5 bg-white transition-colors"
+                [class.text-emerald-700]="hasNumber"
+                [class.font-semibold]="hasNumber"
                 [class.text-slate-500]="!hasNumber"
-                [class.border-slate-300/80]="!hasNumber"
-                [class.shadow-[inset_0_2px_4px_rgba(15,23,42,0.06)]]="!hasNumber">
-                <span>{{ hasNumber ? '✓' : '○' }}</span>
+                [class.font-medium]="!hasNumber">
+                <span class="text-xs leading-none" [class.text-emerald-600]="hasNumber" [class.text-slate-400]="!hasNumber">{{ hasNumber ? '✓' : '○' }}</span>
                 <span>Number (0-9)</span>
               </div>
 
-              <div class="col-span-2 sm:col-span-2 flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border transition-all duration-300"
-                [class.bg-gradient-to-b]="hasSymbol"
-                [class.from-emerald-400]="hasSymbol"
-                [class.to-emerald-600]="hasSymbol"
-                [class.text-white]="hasSymbol"
-                [class.border-emerald-300]="hasSymbol"
-                [class.shadow-[0_4px_0_#047857,0_8px_14px_-4px_rgba(16,185,129,0.45)]]="hasSymbol"
-                [class.-translate-y-0.5]="hasSymbol"
-                [class.bg-white]="!hasSymbol"
+              <div class="col-span-2 sm:col-span-2 flex items-center gap-1.5 py-0.5 bg-white transition-colors"
+                [class.text-emerald-700]="hasSymbol"
+                [class.font-semibold]="hasSymbol"
                 [class.text-slate-500]="!hasSymbol"
-                [class.border-slate-300/80]="!hasSymbol"
-                [class.shadow-[inset_0_2px_4px_rgba(15,23,42,0.06)]]="!hasSymbol">
-                <span>{{ hasSymbol ? '✓' : '○' }}</span>
+                [class.font-medium]="!hasSymbol">
+                <span class="text-xs leading-none" [class.text-emerald-600]="hasSymbol" [class.text-slate-400]="!hasSymbol">{{ hasSymbol ? '✓' : '○' }}</span>
                 <span>Symbol (!&#64;#$%^&amp;*)</span>
               </div>
             </div>
-          </div>
+            </div>
+          }
         </div>
 
         <!-- Invisible Anti-Bot Honeypot Trap (Never seen or filled by real humans) -->
@@ -367,65 +274,57 @@
           <input id="login_hp_website" type="text" formControlName="hpWebsite" tabindex="-1" autocomplete="off">
         </div>
 
-        <!-- 3D Anti-Bot Human Verification Shield -->
-        <button type="button" (click)="verifyHumanShield()" [disabled]="humanVerifying"
-          class="w-full p-3.5 rounded-2xl border flex items-center justify-between gap-3 transition-all duration-300 text-left cursor-pointer"
-          [class.bg-gradient-to-b]="humanVerified"
-          [class.from-emerald-400]="humanVerified"
-          [class.to-emerald-600]="humanVerified"
-          [class.text-white]="humanVerified"
-          [class.border-emerald-300]="humanVerified"
-          [class.shadow-[0_4px_0_#047857,0_10px_20px_-6px_rgba(16,185,129,0.45)]]="humanVerified"
-          [class.-translate-y-0.5]="humanVerified"
-          [class.bg-white]="!humanVerified && !humanShieldError"
-          [class.border-slate-300]="!humanVerified && !humanShieldError"
-          [class.shadow-[0_4px_0_rgba(203,213,225,0.8)]]="!humanVerified && !humanShieldError"
-          [class.bg-red-50]="!humanVerified && humanShieldError"
-          [class.border-red-400]="!humanVerified && humanShieldError"
-          [class.shadow-[0_4px_0_rgba(248,113,113,0.4)]]="!humanVerified && humanShieldError">
+        <!-- Anti-Bot Verification Row (Matching Biometric / Passkey Panel Design) -->
+        <div (click)="verifyHumanShield()" role="button" tabindex="0" (keydown.enter)="verifyHumanShield()" (keydown.space)="verifyHumanShield()"
+          class="flex items-center justify-between p-3.5 bg-white rounded-xl border transition-colors text-left cursor-pointer select-none"
+          [class.border-indigo-300]="humanVerified"
+          [class.border-slate-200]="!humanVerified && !humanShieldError"
+          [class.hover:border-slate-300]="!humanVerified && !humanShieldError"
+          [class.border-red-300]="!humanVerified && humanShieldError"
+          [class.bg-red-50/40]="!humanVerified && humanShieldError">
           <div class="flex items-center gap-3">
-            <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 font-extrabold text-sm transition-all"
-              [class.bg-white/20]="humanVerified"
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors"
+              [class.bg-indigo-600]="humanVerified"
               [class.text-white]="humanVerified"
-              [class.bg-indigo-50]="!humanVerified"
-              [class.text-indigo-600]="!humanVerified"
-              [class.border]="!humanVerified"
-              [class.border-indigo-200]="!humanVerified">
+              [class.bg-indigo-100]="!humanVerified"
+              [class.text-indigo-600]="!humanVerified">
               @if (humanVerifying) {
-                <span class="animate-spin inline-block">◌</span>
+                <span class="animate-spin inline-block text-xs font-bold">◌</span>
               } @else if (humanVerified) {
-                <span>✓</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
               } @else {
-                <span>🛡</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/>
+                </svg>
               }
             </div>
             <div>
-              <p class="text-xs font-extrabold tracking-tight"
-                [class.text-white]="humanVerified"
-                [class.text-slate-800]="!humanVerified">
+              <h3 class="text-xs font-semibold text-slate-800">
                 @if (humanVerified) {
                   Human Verified • Bot Shield Active
                 } @else if (humanVerifying) {
                   Verifying Cryptographic Proof...
                 } @else {
-                  Verify I'm Human (Anti-Bot Shield)
+                  Anti-Bot Verification
                 }
-              </p>
-              <p class="text-[10px] font-medium"
-                [class.text-emerald-50]="humanVerified"
-                [class.text-slate-500]="!humanVerified">
+              </h3>
+              <p class="text-[11px] text-slate-500">
                 HMAC-SHA256 + Proof-of-Work &amp; Honeypot Defense
               </p>
             </div>
           </div>
-          <span class="px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider flex-shrink-0"
-            [class.bg-white/25]="humanVerified"
-            [class.text-white]="humanVerified"
-            [class.bg-indigo-600]="!humanVerified"
-            [class.text-white]="!humanVerified">
-            {{ humanVerified ? 'Protected' : 'Verify' }}
-          </span>
-        </button>
+          <div class="relative inline-flex items-center flex-shrink-0" aria-hidden="true">
+            <div class="w-10 h-5 rounded-full transition-colors relative"
+              [class.bg-indigo-600]="humanVerified"
+              [class.bg-slate-300]="!humanVerified">
+              <div class="absolute top-[2px] left-[2px] bg-white border border-slate-300 rounded-full h-4 w-4 transition-transform"
+                [class.translate-x-5]="humanVerified"
+                [class.border-white]="humanVerified"></div>
+            </div>
+          </div>
+        </div>
 
         <!-- Keep me signed in -->
         <div class="flex items-center justify-between pt-0.5">
@@ -436,13 +335,12 @@
         </div>
 
         <!-- Error / Intruder Shield Alert -->
-        <div *ngIf="showLoginError" class="p-3.5 rounded-2xl border flex items-start gap-3 transition-all"
+        <div *ngIf="showLoginError" class="p-3.5 rounded-xl border flex items-start gap-3 transition-all"
           [class.bg-red-50]="!isAccountLocked"
-          [class.border-red-300]="!isAccountLocked"
+          [class.border-red-200]="!isAccountLocked"
           [class.bg-rose-950]="isAccountLocked"
-          [class.border-rose-700]="isAccountLocked"
-          [class.shadow-[0_4px_0_rgba(239,68,68,0.25)]]="true">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+          [class.border-rose-700]="isAccountLocked">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"
             class="flex-shrink-0 mt-0.5" [class.text-red-600]="!isAccountLocked" [class.text-rose-300]="isAccountLocked">
             <circle cx="12" cy="12" r="10" />
             <line x1="12" y1="8" x2="12" y2="12" />
@@ -456,14 +354,14 @@
           </div>
         </div>
 
-        <!-- 3D Submit Button -->
+        <!-- Normal Clean Submit Button -->
         <div class="pt-2">
           <button type="submit" [disabled]="isLoading"
-            class="w-full bg-gradient-to-b from-indigo-500 to-indigo-700 hover:from-indigo-600 hover:to-indigo-800 active:translate-y-0.5 text-white font-bold py-3.5 px-6 rounded-xl shadow-[0_5px_0_#3730a3,0_12px_24px_-6px_rgba(79,70,229,0.45)] active:shadow-[0_2px_0_#3730a3] transition-all flex items-center justify-center gap-2 text-sm disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer">
+            class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3.5 px-6 rounded-xl shadow-sm transition-colors flex items-center justify-center gap-2 text-sm disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer">
             <span *ngIf="!isLoading">Sign In Securely</span>
             <div *ngIf="isLoading" class="flex items-center gap-2">
               <svg class="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24" fill="none">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.9"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
               <span>Signing in...</span>
@@ -505,7 +403,7 @@
 <div *ngIf="showSuccessPopup" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
   <div class="relative bg-white w-full max-w-sm p-8 rounded-2xl shadow-xl text-center border border-slate-100">
     <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-5">
-      <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
         <polyline points="20 6 9 17 4 12" />
       </svg>
     </div>
@@ -521,7 +419,7 @@
 <div *ngIf="showForgotPopup" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
   <div class="relative bg-white w-full max-w-sm p-8 rounded-2xl shadow-xl text-center border border-slate-100">
     <div class="w-14 h-14 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-5">
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
         <rect width="20" height="16" x="2" y="4" rx="2" />
         <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
       </svg>
@@ -530,8 +428,16 @@
     <p class="text-slate-600 mt-2 text-sm">Enter your business email. We'll send you a link to reset your password.</p>
     <div class="mt-5 text-left">
       <label class="block text-xs font-semibold text-slate-700 mb-1.5">Business Email</label>
-      <input type="email" [value]="forgotEmail" (input)="forgotEmail = $any($event.target).value" placeholder="ceo@company.com"
-        class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3.5 text-sm font-normal text-slate-900 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+      <div class="relative group">
+        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-600 transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="20" height="16" x="2" y="4" rx="2"/>
+            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+          </svg>
+        </div>
+        <input type="email" [value]="forgotEmail" (input)="forgotEmail = $any($event.target).value" placeholder="ceo@company.com"
+          class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 pl-11 pr-3.5 text-sm font-normal text-slate-900 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+      </div>
       <p *ngIf="forgotEmailError" class="text-red-500 text-xs font-medium mt-1">Please enter a valid email address.</p>
     </div>
     <button (click)="submitForgotPassword()" [disabled]="forgotLoading"
@@ -548,7 +454,7 @@
 <div *ngIf="showForgotSuccess" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
   <div class="relative bg-white w-full max-w-sm p-8 rounded-2xl shadow-xl text-center border border-slate-100">
     <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-5">
-      <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
         <polyline points="20 6 9 17 4 12" />
       </svg>
     </div>

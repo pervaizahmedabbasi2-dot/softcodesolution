@@ -329,6 +329,7 @@ h1 {
 input[type="text"],
 input[type="password"],
 input[type="email"],
+input[type="tel"],
 input[type="number"],
 input[type="date"],
 select,
@@ -344,6 +345,21 @@ input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: var(--apple-blue) !important;
   box-shadow: 0 0 0 3.5px rgba(0, 113, 227, 0.16) !important;
+}
+
+/* Disable browser native password reveal / autofill eye icons */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none !important;
+}
+
+input[type="password"]::-webkit-credentials-auto-fill-button,
+input[type="password"]::-webkit-contacts-auto-fill-button {
+  visibility: hidden !important;
+  display: none !important;
+  pointer-events: none !important;
+  position: absolute !important;
+  right: 0 !important;
 }
 
 /* ==========================================================================
@@ -555,5 +571,3 @@ input:focus, select:focus, textarea:focus {
 .animate-soundwave-4 {
   animation: soundWave 1.2s infinite ease-in-out 0.1s;
 }
-
-

@@ -1,5 +1,6 @@
 import express from 'express';
 import { collection, addDoc } from 'firebase/firestore';
+import { getCryptoVault } from '../auth_security/crypto_vault.js';
 
 export const DEFAULT_RETAIL_PRODUCTS = [
   { id: 'prd-101', name: 'Ultra Wireless Noise-Cancelling Headphones', category: 'Electronics', sku: 'ELEC-9021', barcode: '890123456789', costPrice: 45.00, sellingPrice: 89.99, stock: 42, alertThreshold: 10, status: 'In Stock' },
@@ -18,6 +19,8 @@ export const DEFAULT_RETAIL_ORDERS = [
 
 export function createRetailRouter(sqliteDb, db, customProducts) {
   const router = express.Router();
+  const vault = getCryptoVault(sqliteDb);
+  const resolveTid = (req) => String(req?.headers?.['x-tenant-id'] || req?.query?.tenantId || req?.body?.tenantId || 'tenant-root-platform').trim();
   const RETAIL_PRODUCTS = Array.isArray(customProducts) && customProducts.length > 0 ? customProducts : DEFAULT_RETAIL_PRODUCTS;
   const RETAIL_ORDERS = DEFAULT_RETAIL_ORDERS;
 
@@ -44,6 +47,7 @@ export function createRetailRouter(sqliteDb, db, customProducts) {
   });
 
   router.post('/checkout', (req, res) => {
+    const tid = resolveTid(req);
     const { items = [], total = 0, paymentMethod = 'Cash', customerName = 'Walk-in Customer', cashier = 'POS Cashier' } = req.body || {};
 
     items.forEach(item => {
@@ -58,6 +62,7 @@ export function createRetailRouter(sqliteDb, db, customProducts) {
     const orderId = 'ORD-' + Date.now();
     const newOrder = {
       id: orderId,
+      tenant_id: tid,
       receiptNo,
       customerName,
       itemsCount: items.reduce((acc, i) => acc + (i.qty || 1), 0) || items.length || 1,
@@ -69,23 +74,28 @@ export function createRetailRouter(sqliteDb, db, customProducts) {
     };
     RETAIL_ORDERS.unshift(newOrder);
 
+    const encCustomer = vault.encryptField(tid, customerName);
+    const encCashier = vault.encryptField(tid, cashier);
+    const encItemsJson = vault.encryptField(tid, JSON.stringify(items));
+
     if (sqliteDb) {
       try {
         const stmt = sqliteDb.prepare(`
           INSERT INTO local_pos_orders (
-            id, receipt_no, customer_name, items_count, total_amount,
+            id, tenant_id, receipt_no, customer_name, items_count, total_amount,
             payment_method, cashier, items_json, is_synced, created_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
         `);
         stmt.run(
           orderId,
+          tid,
           receiptNo,
-          customerName,
+          encCustomer,
           newOrder.itemsCount,
           newOrder.total,
           paymentMethod,
-          cashier,
-          JSON.stringify(items),
+          encCashier,
+          encItemsJson,
           newOrder.date
         );
       } catch (e) {
@@ -96,6 +106,9 @@ export function createRetailRouter(sqliteDb, db, customProducts) {
     if (db) {
       addDoc(collection(db, 'retail_orders'), {
         ...newOrder,
+        customerName: encCustomer,
+        cashier: encCashier,
+        itemsJson: encItemsJson,
         is_synced: 1,
         synced_at: new Date().toISOString()
       }).then(() => {
@@ -107,11 +120,40 @@ export function createRetailRouter(sqliteDb, db, customProducts) {
       }).catch(() => {});
     }
 
-    res.json({ ok: true, message: 'Checkout recorded locally in SQLite & queued for sync', receiptNo, orderId, order: newOrder });
+    res.json({ ok: true, message: 'Checkout recorded & encrypted (AES-256-GCM) in SQLite', receiptNo, orderId, order: newOrder });
   });
 
   router.get('/orders', (req, res) => {
-    res.json({ ok: true, orders: RETAIL_ORDERS });
+    const tid = resolveTid(req);
+    let orders = [...RETAIL_ORDERS];
+    if (sqliteDb) {
+      try {
+        const rows = sqliteDb.prepare('SELECT * FROM local_pos_orders ORDER BY created_at DESC LIMIT 100').all();
+        if (rows.length > 0) {
+          const seen = new Set(orders.map(o => o.id));
+          for (const r of rows) {
+            if (!seen.has(r.id)) {
+              const rowTid = r.tenant_id || tid;
+              const decItems = vault.decryptField(rowTid, r.items_json);
+              let parsedItems = [];
+              try { parsedItems = JSON.parse(decItems); } catch {}
+              orders.unshift({
+                id: r.id,
+                receiptNo: r.receipt_no,
+                customerName: vault.decryptField(rowTid, r.customer_name),
+                itemsCount: r.items_count,
+                total: r.total_amount,
+                paymentMethod: r.payment_method,
+                cashier: vault.decryptField(rowTid, r.cashier),
+                items: parsedItems,
+                date: r.created_at
+              });
+            }
+          }
+        }
+      } catch (e) {}
+    }
+    res.json({ ok: true, orders });
   });
 
   return router;

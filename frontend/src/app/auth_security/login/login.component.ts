@@ -1,5 +1,5 @@
 import { Component, OnInit, ChangeDetectorRef, inject } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { NotificationService } from '../../services/notification.service';
@@ -21,7 +21,7 @@ function sanitizeInput(value: string): string {
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterModule, PwaInstallComponent, LegalComponent, CurrencyLanguageSelectorComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, PwaInstallComponent, LegalComponent, CurrencyLanguageSelectorComponent],
   templateUrl: './login.component.html'
 })
 export class LoginComponent implements OnInit {
@@ -63,7 +63,7 @@ export class LoginComponent implements OnInit {
   loginErrorMessage = 'Invalid credentials. Please verify your details.';
   remainingAttempts: number | null = null;
   isAccountLocked = false;
-  isPasswordVisible = false;
+  
   rememberMe = true;
   emailAutoCorrected = false;
   emailAutoCorrectNote = '';
@@ -156,10 +156,6 @@ export class LoginComponent implements OnInit {
       });
     }
     this.cdr.detectChanges();
-  }
-
-  togglePassword(): void {
-    this.isPasswordVisible = !this.isPasswordVisible;
   }
 
   toggleRememberMe(): void {
@@ -296,7 +292,7 @@ export class LoginComponent implements OnInit {
     if (!this.humanVerified || !this.botChallengeToken) {
       this.humanShieldError = true;
       this.showLoginError = true;
-      this.loginErrorMessage = 'Please click the 3D Anti-Bot Human Shield below before signing in.';
+      this.loginErrorMessage = 'Please complete the Anti-Bot Human Verification check below before signing in.';
       this.cdr.detectChanges();
       return;
     }

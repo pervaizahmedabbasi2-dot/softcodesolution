@@ -57,17 +57,21 @@ export function createAuthRouter(sqliteDb, db) {
     try {
       const logId = 'intruder-' + Date.now();
       const meta = clientMeta || {};
+      const cleanEmail = String(email || '').toLowerCase().trim();
+      const emailBlindIdx = vault.blindIndex(cleanEmail, 'email');
+      const rootTid = 'tenant-root-platform';
       const stmt = sqliteDb.prepare(`
         INSERT INTO local_intruder_logs (
-          id, email, ip_address, user_agent, browser, os, device_type,
+          id, email, email_blind_idx, ip_address, user_agent, browser, os, device_type,
           city, country, attempts_count, tenant_id, company_name,
           owner_name, business_type, owner_phone, camera_snapshot_base64, status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'LOCKED')
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'LOCKED')
       `);
       stmt.run(
         logId,
-        email,
-        ip,
+        vault.encryptField(rootTid, cleanEmail),
+        emailBlindIdx,
+        vault.encryptField(rootTid, ip || '127.0.0.1'),
         userAgent,
         meta.browser || 'Mobile Chrome',
         meta.os || 'Android/Windows',
@@ -77,12 +81,12 @@ export function createAuthRouter(sqliteDb, db) {
         attempts,
         'tenant-' + Date.now(),
         companyName || 'Client Company',
-        ownerName || 'Client Owner',
+        vault.encryptField(rootTid, ownerName || 'Client Owner'),
         businessType || 'General',
-        phone || '-',
-        meta.snapshot || ''
+        vault.encryptField(rootTid, phone || '-'),
+        meta.snapshot ? vault.encryptField(rootTid, meta.snapshot) : ''
       );
-      console.log(`[INTRUDER VAULT] Recorded 5-attempt security lock for ${email}`);
+      console.log(`[INTRUDER VAULT] Recorded AES-256-GCM encrypted security lock for ${cleanEmail}`);
     } catch (err) {
       console.warn('[INTRUDER VAULT] Failed to log intruder event:', err.message);
     }
@@ -125,9 +129,25 @@ export function createAuthRouter(sqliteDb, db) {
     return crypto.createHmac('sha256', BOT_HMAC_SECRET).update(payloadStr).digest('hex');
   }
 
-  function issueBotChallenge() {
+  function issueBotChallenge(mode) {
     const nonce = crypto.randomBytes(16).toString('hex');
     const ts = Date.now();
+    if (mode === 'register_puzzle') {
+      const targetPos = crypto.randomInt(18, 83);
+      const payload = `${nonce}.${ts}.${POW_DIFFICULTY}.rp.${targetPos}`;
+      const sig = signChallenge(payload);
+      return {
+        challengeToken: `${payload}.${sig}`,
+        challengeSeed: payload,
+        difficulty: POW_DIFFICULTY,
+        puzzle: {
+          type: 'slider_align',
+          targetPos,
+          tolerance: 5
+        },
+        expiresInMs: CHALLENGE_TTL_MS
+      };
+    }
     const payload = `${nonce}.${ts}.${POW_DIFFICULTY}`;
     const sig = signChallenge(payload);
     return {
@@ -179,18 +199,26 @@ export function createAuthRouter(sqliteDb, db) {
         return { ok: false, status: 403, code: 'BOT_TOO_FAST', message: 'Submission too fast. Please verify human check and retry.' };
       }
 
-      // 5. Cryptographic HMAC + Proof-of-Work Token Validation (Single-Use Anti-Replay)
+      // 5. Cryptographic HMAC + Proof-of-Work + Optional Puzzle Validation (Single-Use Anti-Replay)
       if (!defense.challengeToken || defense.powNonce === undefined) {
-        return { ok: false, status: 403, code: 'BOT_CHALLENGE_REQUIRED', message: 'Please complete the 3D Anti-Bot Human Verification before submitting.' };
+        return { ok: false, status: 403, code: 'BOT_CHALLENGE_REQUIRED', message: 'Please complete the Anti-Bot Human Verification before submitting.' };
       }
 
       const parts = String(defense.challengeToken).split('.');
-      if (parts.length !== 4) {
-        return { ok: false, status: 403, code: 'BOT_TOKEN_INVALID', message: 'Security challenge invalid. Please re-verify human shield.' };
+      let nonce, tsStr, diffStr, sig, payload, puzzleTarget = null;
+
+      if (parts.length === 4) {
+        [nonce, tsStr, diffStr, sig] = parts;
+        payload = `${nonce}.${tsStr}.${diffStr}`;
+      } else if (parts.length === 6 && parts[3] === 'rp') {
+        let targetStr;
+        [nonce, tsStr, diffStr, , targetStr, sig] = parts;
+        payload = `${nonce}.${tsStr}.${diffStr}.rp.${targetStr}`;
+        puzzleTarget = Number(targetStr);
+      } else {
+        return { ok: false, status: 403, code: 'BOT_TOKEN_INVALID', message: 'Security challenge invalid. Please complete human verification.' };
       }
 
-      const [nonce, tsStr, diffStr, sig] = parts;
-      const payload = `${nonce}.${tsStr}.${diffStr}`;
       const expectedSig = signChallenge(payload);
       if (sig.length !== expectedSig.length || !crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expectedSig))) {
         return { ok: false, status: 403, code: 'BOT_TOKEN_TAMPERED', message: 'Security challenge signature tampered.' };
@@ -199,11 +227,19 @@ export function createAuthRouter(sqliteDb, db) {
       const ts = Number(tsStr);
       const diff = Number(diffStr);
       if (!Number.isFinite(ts) || Date.now() - ts > CHALLENGE_TTL_MS || Date.now() - ts < 0) {
-        return { ok: false, status: 403, code: 'BOT_TOKEN_EXPIRED', message: 'Security verification expired. Please click Human Shield again.' };
+        return { ok: false, status: 403, code: 'BOT_TOKEN_EXPIRED', message: 'Security verification expired. Please solve the puzzle again.' };
       }
 
       if (USED_CHALLENGE_NONCES.has(nonce)) {
-        return { ok: false, status: 403, code: 'BOT_REPLAY_DETECTED', message: 'Replay attack blocked. Please verify human shield again.' };
+        return { ok: false, status: 403, code: 'BOT_REPLAY_DETECTED', message: 'Replay attack blocked. Please verify human check again.' };
+      }
+
+      if (puzzleTarget !== null) {
+        const answer = Number(defense.puzzleAnswer);
+        const moves = Number(defense.puzzleMoves || 0);
+        if (!Number.isFinite(puzzleTarget) || !Number.isFinite(answer) || Math.abs(answer - puzzleTarget) > 6 || moves < 2) {
+          return { ok: false, status: 403, code: 'BOT_PUZZLE_FAILED', message: 'Anti-bot puzzle alignment failed. Please align the slider carefully.' };
+        }
       }
 
       const powHash = crypto.createHash('sha256').update(`${payload}:${String(defense.powNonce)}`).digest('hex');
@@ -215,7 +251,7 @@ export function createAuthRouter(sqliteDb, db) {
       USED_CHALLENGE_NONCES.set(nonce, Date.now() + CHALLENGE_TTL_MS);
     } else if (rate.count > 4) {
       // Unverified scripted requests hitting >4 times/min are forced to solve PoW Human Shield
-      return { ok: false, status: 403, code: 'BOT_CHALLENGE_REQUIRED', message: 'Bot protection triggered. Please verify using the 3D Human Shield.' };
+      return { ok: false, status: 403, code: 'BOT_CHALLENGE_REQUIRED', message: 'Bot protection triggered. Please complete human verification.' };
     }
 
     return { ok: true, ip, ua };
@@ -227,7 +263,8 @@ export function createAuthRouter(sqliteDb, db) {
     if (!rate.allowed) {
       return res.status(429).json({ ok: false, code: 'RATE_LIMIT', message: 'Too many challenge requests.' });
     }
-    res.json({ ok: true, ...issueBotChallenge() });
+    const mode = typeof req.query?.mode === 'string' ? req.query.mode.trim() : '';
+    res.json({ ok: true, ...issueBotChallenge(mode) });
   });
 
   const handleRegister = async (req, res) => {
@@ -729,16 +766,19 @@ export function createAuthRouter(sqliteDb, db) {
       const { email, snapshot, browser, os, device, city, country } = req.body || {};
       if (sqliteDb && email) {
         try {
-          const check = sqliteDb.prepare('SELECT id FROM local_intruder_logs WHERE LOWER(email) = ? ORDER BY created_at DESC LIMIT 1');
-          const existing = check.get ? check.get(email.toLowerCase().trim()) : null;
+          const emailLower = email.toLowerCase().trim();
+          const emailBlindIdx = vault.blindIndex(emailLower, 'email');
+          const check = sqliteDb.prepare('SELECT id FROM local_intruder_logs WHERE email_blind_idx = ? OR LOWER(email) = ? ORDER BY created_at DESC LIMIT 1');
+          const existing = check.get ? check.get(emailBlindIdx, emailLower) : null;
           if (existing && existing.id) {
-            sqliteDb.prepare('UPDATE local_intruder_logs SET camera_snapshot_base64 = ? WHERE id = ?').run(snapshot, existing.id);
+            const encSnapshot = snapshot ? vault.encryptField('tenant-root-platform', snapshot) : '';
+            sqliteDb.prepare('UPDATE local_intruder_logs SET camera_snapshot_base64 = ? WHERE id = ?').run(encSnapshot, existing.id);
           } else {
             logIntruderEvent(email, req.ip || '127.0.0.1', req.headers['user-agent'] || 'Browser', 5, { snapshot, browser, os, device, city, country }, 'Target Business', 'Business Owner', '-', 'Business');
           }
         } catch (sqlErr) {}
       }
-      res.json({ ok: true, message: 'Intruder camera snapshot recorded in SuperAdmin Security Vault' });
+      res.json({ ok: true, message: 'Intruder camera snapshot encrypted & recorded in SuperAdmin Security Vault' });
     } catch (e) {
       res.status(500).json({ ok: false, message: e.message });
     }
@@ -750,7 +790,8 @@ export function createAuthRouter(sqliteDb, db) {
       if (sqliteDb) {
         try {
           const stmt = sqliteDb.prepare('SELECT * FROM local_intruder_logs ORDER BY created_at DESC');
-          intruders = stmt.all ? stmt.all() : [];
+          const rows = stmt.all ? stmt.all() : [];
+          intruders = rows.map(r => vault.decryptFields('tenant-root-platform', r, ['email', 'ip_address', 'owner_name', 'owner_phone', 'camera_snapshot_base64']));
         } catch (e) {}
       }
       res.json({ ok: true, intruders, totalLocked: intruders.filter(i => i.status === 'LOCKED').length });
@@ -768,7 +809,7 @@ export function createAuthRouter(sqliteDb, db) {
       if (sqliteDb && emailLower) {
         try {
           sqliteDb.prepare("UPDATE local_tenants SET status = 'ACTIVE' WHERE email_blind_idx = ? OR LOWER(email) = ?").run(emailBlindIdx, emailLower);
-          sqliteDb.prepare("UPDATE local_intruder_logs SET status = 'UNLOCKED' WHERE LOWER(email) = ?").run(emailLower);
+          sqliteDb.prepare("UPDATE local_intruder_logs SET status = 'UNLOCKED' WHERE email_blind_idx = ? OR LOWER(email) = ?").run(emailBlindIdx, emailLower);
         } catch (e) {}
       }
 
@@ -813,7 +854,7 @@ export function createAuthRouter(sqliteDb, db) {
         try {
           sqliteDb.prepare("UPDATE local_tenants SET password_hash = ?, status = 'ACTIVE' WHERE email_blind_idx = ? OR LOWER(email) = ?").run(newHash, emailBlindIdx, emailLower);
           sqliteDb.prepare("UPDATE auth_users SET password_hash = ?, status = 'active' WHERE email_blind_idx = ? OR LOWER(email) = ?").run(newHash, emailBlindIdx, emailLower);
-          sqliteDb.prepare("UPDATE local_intruder_logs SET status = 'UNLOCKED' WHERE LOWER(email) = ?").run(emailLower);
+          sqliteDb.prepare("UPDATE local_intruder_logs SET status = 'UNLOCKED' WHERE email_blind_idx = ? OR LOWER(email) = ?").run(emailBlindIdx, emailLower);
         } catch (e) {}
       }
 

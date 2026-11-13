@@ -343,6 +343,9 @@ app.get(['/healthz', '/_healthz', '/health', '/_health', '/readyz', '/_readyz', 
 });
 
 // A. SoftCodeSolution Company Platform, Auth Security & SuperAdmin Governance
+const cryptoVault = getCryptoVault(sqliteDb);
+const vaultFor = (domainKey) => cryptoVault.createDomainVaultMiddleware(domainKey, db);
+
 mountSoftCodePlatform(app, { sqliteDb, db, sqliteDbPath: SQLITE_DB_PATH, getCollectionDocs });
 
 const authRouter = createAuthRouter(sqliteDb, db);
@@ -351,63 +354,63 @@ app.use('/api/superadmin/security', authRouter);
 app.use('/api', authRouter);
 
 const superAdminRouter = createSuperAdminRouter(sqliteDb, db);
-app.use('/api/superadmin', superAdminRouter);
+app.use('/api/superadmin', vaultFor('superadmin_core'), superAdminRouter);
 app.use('/api', superAdminRouter);
 
-// B. All 33 Business Domain Routers (Mounted cleanly on /api/<domain>)
-app.use('/api/accounting', createAccountingRouter(sqliteDb, db));
-app.use('/api/auto', createAutoRouter(sqliteDb, db));
-app.use('/api/bakery', createBakeryRouter(sqliteDb, db));
-app.use('/api/salon', createSalonRouter(sqliteDb, db));
-app.use('/api/car-rental', createCarRentalRouter(sqliteDb, db));
-app.use('/api/catering', createCateringRouter(sqliteDb, db));
-app.use('/api/cleaning', createCleaningRouter(sqliteDb, db));
-app.use('/api/coaching', createCoachingRouter(sqliteDb, db));
-app.use('/api/construction', createConstructionRouter(sqliteDb, db));
-app.use('/api/dental', createDentalRouter(sqliteDb, db));
-app.use('/api/diagnostic-lab', createLabRouter(sqliteDb, db));
-app.use('/api/marketing', createMarketingRouter(sqliteDb, db));
+// B. All 33 Business Domain Routers (Mounted cleanly on /api/<domain> with Per-Tenant CryptoVault Encryption)
+app.use('/api/accounting', vaultFor('accounting_tax'), createAccountingRouter(sqliteDb, db));
+app.use('/api/auto', vaultFor('auto_workshop'), createAutoRouter(sqliteDb, db));
+app.use('/api/bakery', vaultFor('bakery_confectionery'), createBakeryRouter(sqliteDb, db));
+app.use('/api/salon', vaultFor('beauty_salon'), createSalonRouter(sqliteDb, db));
+app.use('/api/car-rental', vaultFor('car_rental'), createCarRentalRouter(sqliteDb, db));
+app.use('/api/catering', vaultFor('catering_services'), createCateringRouter(sqliteDb, db));
+app.use('/api/cleaning', vaultFor('cleaning_janitorial'), createCleaningRouter(sqliteDb, db));
+app.use('/api/coaching', vaultFor('coaching_academy'), createCoachingRouter(sqliteDb, db));
+app.use('/api/construction', vaultFor('construction_contractor'), createConstructionRouter(sqliteDb, db));
+app.use('/api/dental', vaultFor('dental_clinic'), createDentalRouter(sqliteDb, db));
+app.use('/api/diagnostic-lab', vaultFor('diagnostic_lab'), createLabRouter(sqliteDb, db));
+app.use('/api/marketing', vaultFor('digital_marketing_agency'), createMarketingRouter(sqliteDb, db));
 
 const ecommerceRouter = createEcommerceRouter(sqliteDb, db);
 const fulfillmentRouter = createFulfillmentRouter(sqliteDb, db);
-app.use('/api/ecommerce', ecommerceRouter);
-app.use('/api/ecommerce', fulfillmentRouter);
-app.use('/api/fulfillment', fulfillmentRouter);
+app.use('/api/ecommerce', vaultFor('ecommerce_fulfillment'), ecommerceRouter);
+app.use('/api/ecommerce', vaultFor('ecommerce_fulfillment'), fulfillmentRouter);
+app.use('/api/fulfillment', vaultFor('ecommerce_fulfillment'), fulfillmentRouter);
 
-app.use('/api/events', createEventsRouter(sqliteDb, db));
-app.use('/api/gym', createGymRouter(sqliteDb, db));
-app.use('/api/clinic', createClinicRouter(sqliteDb, db));
-app.use('/api/hospital', createHospitalRouter(sqliteDb, db));
-app.use('/api/hotel', createHotelRouter(sqliteDb, db));
+app.use('/api/events', vaultFor('event_management'), createEventsRouter(sqliteDb, db));
+app.use('/api/gym', vaultFor('gym_fitness'), createGymRouter(sqliteDb, db));
+app.use('/api/clinic', vaultFor('hospital_clinic'), createClinicRouter(sqliteDb, db));
+app.use('/api/hospital', vaultFor('hospital_clinic'), createHospitalRouter(sqliteDb, db));
+app.use('/api/hotel', vaultFor('hotel_hospitality'), createHotelRouter(sqliteDb, db));
 
 const legalRouter = createLegalRouter(sqliteDb, db);
-app.use('/api/law-firm', legalRouter);
-app.use('/api/legal', legalRouter);
+app.use('/api/law-firm', vaultFor('law_firm'), legalRouter);
+app.use('/api/legal', vaultFor('law_firm'), legalRouter);
 
 const logisticsRouter = createLogisticsRouter(sqliteDb, db);
-app.use('/api/logistics', logisticsRouter);
-app.use('/api/cargo', logisticsRouter);
+app.use('/api/logistics', vaultFor('logistics_courier'), logisticsRouter);
+app.use('/api/cargo', vaultFor('logistics_courier'), logisticsRouter);
 
-app.use('/api/manufacturing', createManufacturingRouter(sqliteDb, db));
-app.use('/api/ngo', createNgoRouter(sqliteDb, db));
-app.use('/api/pharmacy', createPharmacyRouter(sqliteDb, db));
-app.use('/api/media-studio', createMediaRouter(sqliteDb, db));
+app.use('/api/manufacturing', vaultFor('manufacturing_plant'), createManufacturingRouter(sqliteDb, db));
+app.use('/api/ngo', vaultFor('ngo_charity'), createNgoRouter(sqliteDb, db));
+app.use('/api/pharmacy', vaultFor('pharmacy_store'), createPharmacyRouter(sqliteDb, db));
+app.use('/api/media-studio', vaultFor('photography_studio'), createMediaRouter(sqliteDb, db));
 
 const propertyRouter = createPropertyRouter(sqliteDb, db);
 const realEstateRouter = createRealEstateRouter(sqliteDb, db);
-app.use('/api/properties', propertyRouter);
-app.use('/api/realty', realEstateRouter);
-app.use('/api/real-estate', realEstateRouter);
+app.use('/api/properties', vaultFor('real_estate'), propertyRouter);
+app.use('/api/realty', vaultFor('real_estate'), realEstateRouter);
+app.use('/api/real-estate', vaultFor('real_estate'), realEstateRouter);
 
-app.use('/api/restaurant', createRestaurantRouter(sqliteDb, db));
-app.use('/api/retail', createRetailRouter(sqliteDb, db));
-app.use('/api/school', createSchoolRouter(sqliteDb, db, getCollectionDocs));
-app.use('/api/solar', createSolarRouter(sqliteDb, db));
-app.use('/api/supermarket', createSupermarketRouter(sqliteDb, db));
-app.use('/api/travel', createTravelRouter(sqliteDb, db));
-app.use('/api/veterinary', createVeterinaryRouter(sqliteDb, db));
-app.use('/api/vocational', createVocationalRouter(sqliteDb, db));
-app.use('/api/wholesale', createWholesaleRouter(sqliteDb, db));
+app.use('/api/restaurant', vaultFor('restaurant_cafe'), createRestaurantRouter(sqliteDb, db));
+app.use('/api/retail', vaultFor('retail_pos'), createRetailRouter(sqliteDb, db));
+app.use('/api/school', vaultFor('school_business'), createSchoolRouter(sqliteDb, db, getCollectionDocs));
+app.use('/api/solar', vaultFor('solar_energy'), createSolarRouter(sqliteDb, db));
+app.use('/api/supermarket', vaultFor('supermarket_grocery'), createSupermarketRouter(sqliteDb, db));
+app.use('/api/travel', vaultFor('travel_agency'), createTravelRouter(sqliteDb, db));
+app.use('/api/veterinary', vaultFor('veterinary_clinic'), createVeterinaryRouter(sqliteDb, db));
+app.use('/api/vocational', vaultFor('vocational_training'), createVocationalRouter(sqliteDb, db));
+app.use('/api/wholesale', vaultFor('wholesale_distribution'), createWholesaleRouter(sqliteDb, db));
 
 // ===========================================================================
 // 5. STATIC FRONTEND HOSTING, AUTOMATED BUILD GUARD & SPA FALLBACK
@@ -429,7 +432,15 @@ const candidateDistDirs = [
 
 for (const dir of candidateDistDirs) {
   if (fs.existsSync(dir)) {
-    app.use(express.static(dir, { maxAge: '1h', index: false }));
+    app.use(express.static(dir, {
+      maxAge: '1h',
+      index: false,
+      setHeaders: (res, filePath) => {
+        if (filePath.endsWith('sw.js') || filePath.endsWith('.html')) {
+          res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        }
+      }
+    }));
   }
 }
 
@@ -470,14 +481,16 @@ function findIndexHtml() {
 }
 
 let isBuilding = false;
-let buildAttempted = false;
+let lastBuildAttemptAt = 0;
 function triggerBuildIfNeeded() {
-  if (findIndexHtml() || isBuilding || buildAttempted) return;
+  if (findIndexHtml() || isBuilding) return;
+  const now = Date.now();
+  if (now - lastBuildAttemptAt < 15000) return;
   isBuilding = true;
-  buildAttempted = true;
-  exec('pgrep -f "ng build"', (pgrepErr, pgrepOut) => {
+  lastBuildAttemptAt = now;
+  exec('pgrep -f "[n]g build"', (pgrepErr, pgrepOut) => {
     if (!pgrepErr && pgrepOut && pgrepOut.trim()) {
-      console.log('[Softcode] External ng build already running, skipping duplicate build.');
+      console.log('[Softcode] External ng build already running, waiting before retry...');
       isBuilding = false;
       return;
     }

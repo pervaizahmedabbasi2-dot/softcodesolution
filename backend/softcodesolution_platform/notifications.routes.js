@@ -1,5 +1,6 @@
 import express from 'express';
 import { collection, addDoc } from 'firebase/firestore';
+import { getCryptoVault } from '../auth_security/crypto_vault.js';
 
 export const NOTIFICATION_LOGS = [
   {
@@ -66,9 +67,37 @@ export const NOTIFICATION_LOGS = [
 
 export function createNotificationsRouter(sqliteDb, db) {
   const router = express.Router();
+  const vault = getCryptoVault(sqliteDb);
+  const resolveTid = (req) => String(req?.headers?.['x-tenant-id'] || req?.query?.tenantId || req?.body?.tenantId || 'tenant-root-platform').trim();
 
   router.get('/notifications/logs', (req, res) => {
-    res.json({ ok: true, logs: NOTIFICATION_LOGS });
+    const tid = resolveTid(req);
+    let logs = [...NOTIFICATION_LOGS];
+    if (sqliteDb) {
+      try {
+        const rows = sqliteDb.prepare('SELECT * FROM platform_notification_logs ORDER BY created_at DESC LIMIT 100').all();
+        if (rows.length > 0) {
+          const seen = new Set(logs.map(l => l.id));
+          for (const r of rows) {
+            if (!seen.has(r.id)) {
+              logs.unshift({
+                id: r.id,
+                channel: r.channel,
+                target: r.target,
+                recipient: vault.decryptField('tenant-root-platform', r.recipient),
+                recipientName: vault.decryptField('tenant-root-platform', r.recipient_name),
+                subject: r.subject,
+                message: vault.decryptField('tenant-root-platform', r.message),
+                status: r.status,
+                category: r.category,
+                timestamp: r.created_at
+              });
+            }
+          }
+        }
+      } catch (e) {}
+    }
+    res.json({ ok: true, logs, tenantId: tid });
   });
 
   router.post('/notifications/send-test', (req, res) => {
@@ -98,7 +127,18 @@ export function createNotificationsRouter(sqliteDb, db) {
           INSERT OR REPLACE INTO platform_notification_logs
           (id, channel, target, recipient, recipient_name, subject, message, status, category, created_at)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `).run(logEntry.id, logEntry.channel, logEntry.target, logEntry.recipient, logEntry.recipientName, logEntry.subject, logEntry.message, logEntry.status, logEntry.category, logEntry.timestamp);
+        `).run(
+          logEntry.id,
+          logEntry.channel,
+          logEntry.target,
+          vault.encryptField('tenant-root-platform', logEntry.recipient),
+          vault.encryptField('tenant-root-platform', logEntry.recipientName),
+          logEntry.subject,
+          vault.encryptField('tenant-root-platform', logEntry.message),
+          logEntry.status,
+          logEntry.category,
+          logEntry.timestamp
+        );
       } catch (e) {}
     }
 
@@ -134,7 +174,18 @@ export function createNotificationsRouter(sqliteDb, db) {
           INSERT OR REPLACE INTO platform_notification_logs
           (id, channel, target, recipient, recipient_name, subject, message, status, category, created_at)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `).run(notif.id, notif.channel, notif.target, notif.recipient, notif.recipientName, notif.subject, notif.message, notif.status, notif.category, notif.timestamp);
+        `).run(
+          notif.id,
+          notif.channel,
+          notif.target,
+          vault.encryptField('tenant-root-platform', notif.recipient),
+          vault.encryptField('tenant-root-platform', notif.recipientName),
+          notif.subject,
+          vault.encryptField('tenant-root-platform', notif.message),
+          notif.status,
+          notif.category,
+          notif.timestamp
+        );
       } catch (e) {}
     }
 

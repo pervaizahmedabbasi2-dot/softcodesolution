@@ -43,6 +43,7 @@ CREATE INDEX IF NOT EXISTS idx_local_email ON local_tenants(email);
 CREATE TABLE IF NOT EXISTS local_intruder_logs (
   id TEXT PRIMARY KEY,
   email TEXT NOT NULL,
+  email_blind_idx TEXT,
   ip_address TEXT,
   user_agent TEXT,
   browser TEXT,
@@ -85,6 +86,19 @@ CREATE TABLE IF NOT EXISTS tenant_crypto_keys (
   argon2_params TEXT,
   encryption_mode TEXT DEFAULT 'SERVER_MANAGED_ENVELOPE',
   key_version INTEGER DEFAULT 1,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 3C. Universal Multi-Tenant Encrypted Records Store (SuperAdmin + All 33 Businesses)
+CREATE TABLE IF NOT EXISTS encrypted_domain_records (
+  id TEXT PRIMARY KEY,
+  tenant_id TEXT NOT NULL DEFAULT 'tenant-root-platform',
+  domain_key TEXT NOT NULL,
+  entity_type TEXT NOT NULL,
+  encrypted_payload TEXT NOT NULL,
+  payload_hmac TEXT,
+  is_synced INTEGER DEFAULT 0,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );

@@ -7,23 +7,28 @@ import { createLicensesRouter } from './licenses.routes.js';
 import { createTeamsRouter } from './teams.routes.js';
 import { createServicesRouter } from './services.routes.js';
 
+import { getCryptoVault } from '../auth_security/crypto_vault.js';
+
 export function mountSoftCodePlatform(app, { sqliteDb, db, sqliteDbPath, getCollectionDocs }) {
+  const vault = getCryptoVault(sqliteDb);
+  const platformVault = vault.createDomainVaultMiddleware('softcodesolution_platform', db);
+
   // 1. Platform Core Health, Modules & Dual-DB Status
   const platformRouter = createPlatformRouter(sqliteDb, db, () => ALL_ENTERPRISE_MODULES, sqliteDbPath);
-  app.use('/api/platform', platformRouter);
+  app.use('/api/platform', platformVault, platformRouter);
   app.use('/api', platformRouter); // Exposes /api/database/status without moving endpoints
 
   // 2. SuperAdmin RBAC (Roles, Permissions, Users, Audit)
-  app.use('/api/superadmin/rbac', createRbacRouter(sqliteDb, db, getCollectionDocs));
+  app.use('/api/superadmin/rbac', platformVault, createRbacRouter(sqliteDb, db, getCollectionDocs));
 
   // 3. Enterprise License Key Management
   app.use('/api', createLicensesRouter(sqliteDb, db, getCollectionDocs));
 
   // 4. Company Team & Members Management
-  app.use('/api/team', createTeamsRouter(sqliteDb, db, getCollectionDocs));
+  app.use('/api/team', platformVault, createTeamsRouter(sqliteDb, db, getCollectionDocs));
 
   // 5. Microservices Orchestration Catalog
-  app.use('/api/services', createServicesRouter(sqliteDb, db, getCollectionDocs));
+  app.use('/api/services', platformVault, createServicesRouter(sqliteDb, db, getCollectionDocs));
 
   // 6. Billing, Invoices, Wallet, Coupons, Tax, Payment Gateways & Public Checkout
   app.use('/api', createBillingRouter(sqliteDb, db, getCollectionDocs));

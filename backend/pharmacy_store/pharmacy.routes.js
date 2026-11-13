@@ -1,5 +1,6 @@
 import express from 'express';
 import { collection, addDoc } from 'firebase/firestore';
+import { getCryptoVault } from '../auth_security/crypto_vault.js';
 
 export const PHARMACY_MEDICINES = [
   { id: 'med-1', name: 'Augmentin 625mg', generic: 'Co-Amoxiclav', category: 'Antibiotic', batchNo: 'AUG-9921', expiryDate: '2027-02-15', stock: 140, minStock: 25, unitPrice: 4.80, status: 'IN_STOCK' },
@@ -16,6 +17,8 @@ export const PHARMACY_SALES = [
 
 export function createPharmacyRouter(sqliteDb, db, getMedicinesData, getSalesData) {
   const router = express.Router();
+  const vault = getCryptoVault(sqliteDb);
+  const resolveTid = (req) => String(req?.headers?.['x-tenant-id'] || req?.query?.tenantId || req?.body?.tenantId || 'tenant-root-platform').trim();
   const medicines = () => (getMedicinesData ? getMedicinesData() : PHARMACY_MEDICINES);
   const sales = () => (getSalesData ? getSalesData() : PHARMACY_SALES);
 
@@ -42,13 +45,40 @@ export function createPharmacyRouter(sqliteDb, db, getMedicinesData, getSalesDat
   });
 
   router.get('/sales', (req, res) => {
-    res.json({ ok: true, sales: sales() });
+    const tid = resolveTid(req);
+    let list = [...sales()];
+    if (sqliteDb) {
+      try {
+        const rows = sqliteDb.prepare('SELECT * FROM local_pharmacy_sales ORDER BY created_at DESC LIMIT 100').all();
+        if (rows.length > 0) {
+          const seen = new Set(list.map(s => s.id));
+          for (const r of rows) {
+            if (!seen.has(r.id)) {
+              const rowTid = r.tenant_id || tid;
+              list.unshift({
+                id: r.id,
+                billNo: r.bill_no,
+                patient: vault.decryptField(rowTid, r.patient_name),
+                doctor: vault.decryptField(rowTid, r.doctor_name),
+                totalAmount: r.total_amount,
+                itemsCount: r.items_count,
+                date: r.created_at,
+                status: 'DISPENSED'
+              });
+            }
+          }
+        }
+      } catch (e) {}
+    }
+    res.json({ ok: true, sales: list });
   });
 
   router.post('/dispense', (req, res) => {
+    const tid = resolveTid(req);
     const s = req.body || {};
     const newSale = {
       id: 'psale-' + Date.now(),
+      tenant_id: tid,
       billNo: 'RXB-2026-' + Math.floor(1000 + Math.random() * 9000),
       patient: s.patient || 'Counter Walk-in',
       doctor: s.doctor || 'General Practitioner',
@@ -59,14 +89,17 @@ export function createPharmacyRouter(sqliteDb, db, getMedicinesData, getSalesDat
     };
     sales().unshift(newSale);
 
+    const encPatient = vault.encryptField(tid, newSale.patient);
+    const encDoctor = vault.encryptField(tid, newSale.doctor);
+
     if (sqliteDb) {
       try {
         const stmt = sqliteDb.prepare(`
           INSERT INTO local_pharmacy_sales (
-            id, bill_no, patient_name, doctor_name, total_amount, items_count, is_synced, created_at
-          ) VALUES (?, ?, ?, ?, ?, ?, 0, ?)
+            id, tenant_id, bill_no, patient_name, doctor_name, total_amount, items_count, is_synced, created_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?)
         `);
-        stmt.run(newSale.id, newSale.billNo, newSale.patient, newSale.doctor, newSale.totalAmount, newSale.itemsCount, newSale.date);
+        stmt.run(newSale.id, tid, newSale.billNo, encPatient, encDoctor, newSale.totalAmount, newSale.itemsCount, newSale.date);
       } catch (e) {
         console.warn('[Pharmacy Dual-DB Engine] SQLite save warning:', e.message);
       }
@@ -75,6 +108,8 @@ export function createPharmacyRouter(sqliteDb, db, getMedicinesData, getSalesDat
     if (db) {
       addDoc(collection(db, 'pharmacy_sales'), {
         ...newSale,
+        patient: encPatient,
+        doctor: encDoctor,
         is_synced: 1,
         synced_at: new Date().toISOString()
       }).then(() => {
@@ -84,7 +119,7 @@ export function createPharmacyRouter(sqliteDb, db, getMedicinesData, getSalesDat
       }).catch(() => {});
     }
 
-    res.json({ ok: true, message: 'Prescription dispensed & saved in SQLite offline', sale: newSale });
+    res.json({ ok: true, message: 'Prescription dispensed & encrypted (AES-256-GCM) in SQLite', sale: newSale });
   });
 
   return router;

@@ -246,10 +246,12 @@ export function createSuperAdminRouter(sqliteDb, db) {
 
   router.post('/clients/unlock', (req, res) => {
     const { id, email } = req.body || {};
+    const emailLower = String(email || '').toLowerCase().trim();
+    const emailBlindIdx = emailLower ? vault.blindIndex(emailLower, 'email') : '';
     if (sqliteDb) {
       try {
         if (id) sqliteDb.prepare("UPDATE local_tenants SET status = 'ACTIVE' WHERE id = ?").run(id);
-        if (email) sqliteDb.prepare("UPDATE local_intruder_logs SET status = 'UNLOCKED' WHERE LOWER(email) = ?").run(String(email).toLowerCase().trim());
+        if (emailLower) sqliteDb.prepare("UPDATE local_intruder_logs SET status = 'UNLOCKED' WHERE email_blind_idx = ? OR LOWER(email) = ?").run(emailBlindIdx, emailLower);
       } catch (e) {}
     }
     res.json({ ok: true, message: `Client account ${email || id} unlocked.` });
@@ -280,13 +282,24 @@ export function createSuperAdminRouter(sqliteDb, db) {
     const { id, email } = req.body || {};
     const tempPassword = 'SCS-' + Math.floor(100000 + Math.random() * 900000) + '!';
     const hash = await makeHash(tempPassword);
+    const emailLower = String(email || '').toLowerCase().trim();
+    const emailBlindIdx = emailLower ? vault.blindIndex(emailLower, 'email') : '';
     if (sqliteDb) {
       try {
-        if (id) sqliteDb.prepare("UPDATE local_tenants SET password_hash = ?, status = 'ACTIVE' WHERE id = ?").run(hash, id);
-        if (email) sqliteDb.prepare('UPDATE auth_users SET password_hash = ? WHERE LOWER(email) = ?').run(hash, String(email).toLowerCase().trim());
+        if (id) {
+          sqliteDb.prepare("UPDATE local_tenants SET password_hash = ?, status = 'ACTIVE' WHERE id = ?").run(hash, id);
+          sqliteDb.prepare('UPDATE auth_users SET password_hash = ? WHERE id = ?').run(hash, id);
+        }
+        if (emailLower) {
+          sqliteDb.prepare('UPDATE auth_users SET password_hash = ? WHERE email_blind_idx = ? OR LOWER(email) = ?').run(hash, emailBlindIdx, emailLower);
+        }
       } catch (e) {}
     }
     res.json({ ok: true, message: 'One-time temporary password generated.', temp_password: tempPassword });
+  });
+
+  router.get('/vault/overview', (req, res) => {
+    res.json(vault.getVaultSummary());
   });
 
   return router;

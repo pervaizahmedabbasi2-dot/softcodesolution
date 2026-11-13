@@ -109,8 +109,8 @@ export class RegisterComponent implements OnInit {
   registerForm!: FormGroup;
   isLoading = false;
   showSuccessAlert = false;
-  isPasswordVisible = false;
-  isConfirmPasswordVisible = false;
+  
+  
   showLegalModal = false;
   legalActiveTab = 'terms';
   
@@ -126,20 +126,30 @@ export class RegisterComponent implements OnInit {
   passwordStrengthLabel = 'Enter Password';
   autoCorrectedFields: Record<string, string> = {};
 
-  // Anti-Bot & Anti-Hacker Shield State
+  // Anti-Bot & Anti-Hacker Shield State (Interactive Puzzle)
   private formLoadedAt = Date.now();
   humanVerified = false;
   humanVerifying = false;
   humanShieldError = false;
+  puzzleLoading = false;
+  puzzleTargetPos = 68;
+  puzzleSliderPos = 12;
+  puzzleMoveCount = 0;
+  puzzleHint = '';
+  private puzzleChallengeToken = '';
+  private puzzleChallengeSeed = '';
+  private puzzleDifficulty = 3;
   private botChallengeToken = '';
   private botPowNonce = 0;
+  private botPuzzleAnswer = 0;
+  private botPuzzleMoves = 0;
 
   pwCheckList = [
     { label: '8+ Chars', valid: false },
     { label: 'Bara (A-Z)', valid: false },
     { label: 'Choti (a-z)', valid: false },
     { label: 'Number (0-9)', valid: false },
-    { label: 'Symbol (!@#)', valid: false }
+    { label: 'Symbol (!@#$%^&*)', valid: false }
   ];
 
   selectedCurrency: Currency | null = null;
@@ -222,6 +232,7 @@ export class RegisterComponent implements OnInit {
     });
 
     void this.loadBusinessTypes();
+    void this.loadRegisterPuzzle();
   }
 
   // SCS_OFFICIAL_BUSINESS_TYPES_REGISTER_LOAD_V1
@@ -384,14 +395,6 @@ export class RegisterComponent implements OnInit {
     this.selectedCurrency = this.currencyMap[code] || { code: 'USD', symbol: '$', label: 'US Dollar' };
   }
 
-  togglePassword(): void {
-    this.isPasswordVisible = !this.isPasswordVisible;
-  }
-
-  toggleConfirmPassword(): void {
-    this.isConfirmPasswordVisible = !this.isConfirmPasswordVisible;
-  }
-
   toggleTermsCheckbox(): void {
     const current = this.registerForm.get('termsAccepted')?.value;
     this.registerForm.get('termsAccepted')?.setValue(!current);
@@ -406,30 +409,94 @@ export class RegisterComponent implements OnInit {
     this.showLegalModal = false;
   }
 
-  async verifyHumanShield(): Promise<void> {
-    if (this.humanVerifying || this.humanVerified) return;
+  async loadRegisterPuzzle(): Promise<void> {
+    this.puzzleLoading = true;
+    this.humanVerified = false;
+    this.humanShieldError = false;
+    this.puzzleHint = '';
+    this.puzzleMoveCount = 0;
+    this.botChallengeToken = '';
+    this.botPowNonce = 0;
+    this.botPuzzleAnswer = 0;
+    this.botPuzzleMoves = 0;
+    try { this.cdr.detectChanges(); } catch {}
+
+    try {
+      const resp = await fetch('/api/auth/challenge?mode=register_puzzle', { cache: 'no-store' });
+      const data = await resp.json().catch(() => null);
+      if (!resp.ok || !data?.challengeToken || !data?.challengeSeed) {
+        throw new Error('Puzzle challenge unavailable');
+      }
+      this.puzzleChallengeToken = data.challengeToken;
+      this.puzzleChallengeSeed = data.challengeSeed;
+      this.puzzleDifficulty = Number(data.difficulty) || 3;
+      this.puzzleTargetPos = Number(data?.puzzle?.targetPos) || 65;
+      this.puzzleSliderPos = this.puzzleTargetPos > 50 ? 12 : 88;
+    } catch {
+      this.puzzleChallengeToken = '';
+      this.puzzleChallengeSeed = '';
+      this.puzzleHint = 'Unable to load security puzzle. Click refresh to retry.';
+    } finally {
+      this.puzzleLoading = false;
+      try { this.cdr.detectChanges(); } catch {}
+    }
+  }
+
+  onPuzzleSliderInput(valStr: string): void {
+    if (this.humanVerified || this.humanVerifying || this.puzzleLoading) return;
+    const nextVal = Math.max(8, Math.min(92, Number(valStr) || 8));
+    this.puzzleSliderPos = nextVal;
+    this.puzzleMoveCount += 1;
+    this.humanShieldError = false;
+    if (Math.abs(nextVal - this.puzzleTargetPos) <= 5) {
+      this.puzzleHint = 'Slot matched — release slider to verify!';
+    } else {
+      this.puzzleHint = '';
+    }
+    this.cdr.detectChanges();
+  }
+
+  async onPuzzleSliderRelease(): Promise<void> {
+    if (this.humanVerified || this.humanVerifying || this.puzzleLoading) return;
+
+    if (!this.puzzleChallengeToken || !this.puzzleChallengeSeed) {
+      await this.loadRegisterPuzzle();
+      return;
+    }
+
+    const diff = Math.abs(this.puzzleSliderPos - this.puzzleTargetPos);
+    if (diff > 5) {
+      this.puzzleHint = 'Align the slider handle directly inside the highlighted slot.';
+      this.cdr.detectChanges();
+      return;
+    }
+
+    if (this.puzzleMoveCount < 2) {
+      this.puzzleSliderPos = this.puzzleTargetPos > 50 ? 12 : 88;
+      this.puzzleMoveCount = 0;
+      this.puzzleHint = 'Please drag the slider smoothly into the target slot.';
+      this.cdr.detectChanges();
+      return;
+    }
+
     this.humanVerifying = true;
     this.humanShieldError = false;
+    this.puzzleHint = '';
     this.cdr.detectChanges();
 
     try {
-      const resp = await fetch('/api/auth/challenge', { cache: 'no-store' });
-      const data = await resp.json().catch(() => null);
-      if (!resp.ok || !data?.challengeToken || !data?.challengeSeed) {
-        throw new Error('Challenge unavailable');
-      }
-
-      const difficulty = Number(data.difficulty) || 3;
-      const prefix = '0'.repeat(Math.max(1, Math.min(difficulty, 5)));
+      const prefix = '0'.repeat(Math.max(1, Math.min(this.puzzleDifficulty, 5)));
       const encoder = new TextEncoder();
       let nonce = 0;
 
       while (nonce < 250000) {
-        const buf = await crypto.subtle.digest('SHA-256', encoder.encode(`${data.challengeSeed}:${nonce}`));
+        const buf = await crypto.subtle.digest('SHA-256', encoder.encode(`${this.puzzleChallengeSeed}:${nonce}`));
         const hex = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
         if (hex.startsWith(prefix)) {
-          this.botChallengeToken = data.challengeToken;
+          this.botChallengeToken = this.puzzleChallengeToken;
           this.botPowNonce = nonce;
+          this.botPuzzleAnswer = this.puzzleSliderPos;
+          this.botPuzzleMoves = this.puzzleMoveCount;
           this.humanVerified = true;
           break;
         }
@@ -437,10 +504,15 @@ export class RegisterComponent implements OnInit {
       }
     } catch {
       this.humanShieldError = true;
+      this.puzzleHint = 'Verification failed. Please click New Puzzle.';
     } finally {
       this.humanVerifying = false;
       this.cdr.detectChanges();
     }
+  }
+
+  get isPuzzleInSlot(): boolean {
+    return Math.abs(this.puzzleSliderPos - this.puzzleTargetPos) <= 5;
   }
 
   // ✅ SECURE SUBMIT (V16.0 Enhanced: Wails Desktop + IDX/Web API)
@@ -454,7 +526,7 @@ export class RegisterComponent implements OnInit {
 
     if (!this.humanVerified || !this.botChallengeToken) {
       this.humanShieldError = true;
-      this.notification.error('Please complete the 3D Anti-Bot Human Shield verification before registering.');
+      this.notification.error('Please complete the Anti-Bot Slider Puzzle verification before registering.');
       this.cdr.detectChanges();
       return;
     }
@@ -525,6 +597,8 @@ export class RegisterComponent implements OnInit {
           honeypot: formValue.hpWebsite || '',
           challengeToken: this.botChallengeToken,
           powNonce: this.botPowNonce,
+          puzzleAnswer: this.botPuzzleAnswer,
+          puzzleMoves: this.botPuzzleMoves,
           formTimingMs: Date.now() - this.formLoadedAt
         },
 
@@ -563,7 +637,7 @@ export class RegisterComponent implements OnInit {
 
       const result = await response.json().catch(() => null);
 
-      // Single-use nonce consumed: reset shield so replay is impossible
+      // Single-use nonce consumed: reset puzzle so replay is impossible
       this.humanVerified = false;
       this.botChallengeToken = '';
       this.botPowNonce = 0;
@@ -573,11 +647,13 @@ export class RegisterComponent implements OnInit {
         return;
       }
 
+      void this.loadRegisterPuzzle();
       this.handleError(result?.code || result?.message || 'REGISTRATION_ERROR');
     } catch (error) {
       this.humanVerified = false;
       this.botChallengeToken = '';
       this.botPowNonce = 0;
+      void this.loadRegisterPuzzle();
       console.error('Registration error:', error);
       this.handleError('NETWORK_ERROR');
     } finally {
@@ -605,6 +681,7 @@ export class RegisterComponent implements OnInit {
     this.botChallengeToken = '';
     this.botPowNonce = 0;
     this.evaluatePassword('');
+    void this.loadRegisterPuzzle();
     this.cdr.detectChanges();
   }
 
@@ -619,10 +696,11 @@ export class RegisterComponent implements OnInit {
       'INVALID_INPUT': 'Please check your input and try again.',
       'validation_failed': 'Please check your input and try again.',
       'BOT_DETECTED': 'Bot activity blocked by SoftCode Security Shield.',
-      'BOT_CHALLENGE_REQUIRED': 'Please click the 3D Anti-Bot Human Shield first.',
-      'BOT_REPLAY_DETECTED': 'Security challenge expired or replayed. Please re-verify Human Shield.',
-      'BOT_TOKEN_EXPIRED': 'Security verification expired. Please re-verify Human Shield.',
-      'BOT_TOO_FAST': 'Submission too fast. Please verify Human Shield and retry.',
+      'BOT_CHALLENGE_REQUIRED': 'Please solve the Anti-Bot Slider Puzzle first.',
+      'BOT_PUZZLE_FAILED': 'Puzzle alignment failed. Please drag the slider smoothly into the target slot.',
+      'BOT_REPLAY_DETECTED': 'Security challenge expired or replayed. Please solve the new puzzle.',
+      'BOT_TOKEN_EXPIRED': 'Security verification expired. Please solve the new puzzle.',
+      'BOT_TOO_FAST': 'Submission too fast. Please solve the puzzle and retry.',
       'RATE_LIMIT': 'Too many attempts detected. Please wait 60 seconds.',
       'NETWORK_ERROR': 'Connection issue. Check internet and retry.'
     };

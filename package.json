@@ -7,8 +7,8 @@
     "node": ">=20.19.0"
   },
   "scripts": {
-    "build": "cd frontend && NODE_OPTIONS=\"--max-old-space-size=2048\" NG_BUILD_MAX_WORKERS=1 npx ng build && cd .. && mkdir -p dist && cp -rf frontend/dist/softcode-ui/browser/* dist/ 2>/dev/null || true && mkdir -p dist/softcode-ui/browser && cp -rf frontend/dist/softcode-ui/browser/* dist/softcode-ui/browser/ 2>/dev/null || true",
-    "build:full": "cd frontend && NODE_OPTIONS=\"--max-old-space-size=2048\" NG_BUILD_MAX_WORKERS=1 npx ng build && cd .. && mkdir -p dist && cp -rf frontend/dist/softcode-ui/browser/* dist/ 2>/dev/null || true && mkdir -p dist/softcode-ui/browser && cp -rf frontend/dist/softcode-ui/browser/* dist/softcode-ui/browser/ 2>/dev/null || true",
+    "build": "cd frontend && NODE_OPTIONS=\"--max-old-space-size=2048\" NG_BUILD_MAX_WORKERS=1 npx ng build && cd .. && rm -rf dist && mkdir -p dist/softcode-ui/browser && cp -rf frontend/dist/softcode-ui/browser/* dist/ && cp -rf frontend/dist/softcode-ui/browser/* dist/softcode-ui/browser/",
+    "build:full": "cd frontend && NODE_OPTIONS=\"--max-old-space-size=2048\" NG_BUILD_MAX_WORKERS=1 npx ng build && cd .. && rm -rf dist && mkdir -p dist/softcode-ui/browser && cp -rf frontend/dist/softcode-ui/browser/* dist/ && cp -rf frontend/dist/softcode-ui/browser/* dist/softcode-ui/browser/",
     "lint": "node -e \"console.log('Lint passed');\"",
     "dev": "node server.js",
     "start": "node server.js"

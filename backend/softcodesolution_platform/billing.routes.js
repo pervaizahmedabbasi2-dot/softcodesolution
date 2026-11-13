@@ -1,5 +1,6 @@
 import express from 'express';
 import { NOTIFICATION_LOGS } from './notifications.routes.js';
+import { getCryptoVault } from '../auth_security/crypto_vault.js';
 
 export const DEFAULT_INVOICES = [
   { id: 'INV-2026-0091', invoiceNo: 'INV-2026-0091', client: 'Apex Financial Holdings', amount: '$12,450.00', currency: 'USD', status: 'PAID', plan: 'Enterprise Unlimited (Annual)', date: '2026-03-01', dueDate: '2026-03-15', pdfUrl: '#' },
@@ -101,6 +102,8 @@ export const PAYMENT_TRANSACTIONS = [
 
 export function createBillingRouter(sqliteDb, db, getCollectionDocs) {
   const router = express.Router();
+  const vault = getCryptoVault(sqliteDb);
+  const rootTid = 'tenant-root-platform';
 
   router.get(['/invoices', '/billing/invoices'], async (req, res) => {
     const invoices = getCollectionDocs ? await getCollectionDocs('invoices', DEFAULT_INVOICES) : DEFAULT_INVOICES;
@@ -164,7 +167,35 @@ export function createBillingRouter(sqliteDb, db, getCollectionDocs) {
   });
 
   router.get('/public/checkout/transactions', (req, res) => {
-    res.json({ ok: true, transactions: PAYMENT_TRANSACTIONS });
+    let list = [...PAYMENT_TRANSACTIONS];
+    if (sqliteDb) {
+      try {
+        const rows = sqliteDb.prepare('SELECT * FROM platform_transactions ORDER BY created_at DESC LIMIT 100').all();
+        if (rows.length > 0) {
+          const seen = new Set(list.map(t => t.id));
+          for (const r of rows) {
+            if (!seen.has(r.id)) {
+              list.unshift({
+                id: r.id,
+                invoiceNumber: r.invoice_number,
+                customerName: vault.decryptField(rootTid, r.customer_name),
+                customerEmail: vault.decryptField(rootTid, r.customer_email),
+                customerPhone: vault.decryptField(rootTid, r.customer_phone),
+                softwareTitle: r.software_title,
+                billingCycle: r.billing_cycle,
+                amount: r.amount,
+                gatewayId: r.gateway_id,
+                paymentMethod: r.payment_method,
+                status: r.status,
+                slipReference: vault.decryptField(rootTid, r.slip_reference),
+                createdAt: r.created_at
+              });
+            }
+          }
+        }
+      } catch (e) {}
+    }
+    res.json({ ok: true, transactions: list });
   });
 
   router.post('/public/checkout', (req, res) => {
@@ -196,7 +227,21 @@ export function createBillingRouter(sqliteDb, db, getCollectionDocs) {
           INSERT OR REPLACE INTO platform_transactions
           (id, invoice_number, customer_name, customer_email, customer_phone, software_title, billing_cycle, amount, gateway_id, payment_method, status, slip_reference, created_at)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `).run(transaction.id, transaction.invoiceNumber, transaction.customerName, transaction.customerEmail, transaction.customerPhone, transaction.softwareTitle, transaction.billingCycle, transaction.amount, transaction.gatewayId, transaction.paymentMethod, transaction.status, transaction.slipReference, transaction.createdAt);
+        `).run(
+          transaction.id,
+          transaction.invoiceNumber,
+          vault.encryptField(rootTid, transaction.customerName),
+          vault.encryptField(rootTid, transaction.customerEmail),
+          vault.encryptField(rootTid, transaction.customerPhone),
+          transaction.softwareTitle,
+          transaction.billingCycle,
+          transaction.amount,
+          transaction.gatewayId,
+          transaction.paymentMethod,
+          transaction.status,
+          vault.encryptField(rootTid, transaction.slipReference),
+          transaction.createdAt
+        );
       } catch (e) {}
     }
 
