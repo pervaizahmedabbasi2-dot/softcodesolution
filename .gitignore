@@ -31,3 +31,14 @@ node_modules
 node_modules
 
 *.tar.gz
+.env
+.env.*.local
+dist/
+frontend/dist/
+frontend/.angular/
+*.db-wal
+*.db-shm
+backend/backup/data/*
+!backend/backup/data/.gitkeep
+public/assets/aistudio/
+.aistudio/
