@@ -214,9 +214,20 @@
                     <span class="text-xs truncate">Fee Structure</span>
                   </div>
                 </button>
-                <button (click)="setTab('finance')" class="w-full flex items-center justify-between px-3 py-2 rounded-2xl text-left transition-all duration-200 cursor-pointer group" [class]="currentTab === 'finance' ? 'bg-gradient-to-r from-indigo-600 via-indigo-600 to-blue-600 text-white shadow-md shadow-indigo-600/30 border border-indigo-500/20 font-extrabold' : 'text-slate-700 hover:bg-slate-100/80 hover:text-slate-900 font-bold'">
+                <button (click)="openFinancialMonitoring()" class="w-full flex items-center justify-between px-3 py-2 rounded-2xl text-left transition-all duration-200 cursor-pointer group" [class]="currentTab === 'finance' && financeSubTab === 'monitoring' ? 'bg-gradient-to-r from-indigo-600 via-indigo-600 to-blue-600 text-white shadow-md shadow-indigo-600/30 border border-indigo-500/20 font-extrabold' : 'text-slate-700 hover:bg-slate-100/80 hover:text-slate-900 font-bold'">
                   <div class="flex items-center gap-2.5 min-w-0">
-                    <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105" [class]="currentTab === 'finance' ? 'bg-white/20 text-white' : 'bg-gradient-to-tr from-blue-600 via-blue-600 to-indigo-600 text-white shadow-2xs'">
+                    <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105" [class]="currentTab === 'finance' && financeSubTab === 'monitoring' ? 'bg-white/20 text-white' : 'bg-gradient-to-tr from-teal-500 via-emerald-600 to-indigo-600 text-white shadow-2xs'">
+                      <lucide-icon [name]="'trending-up'" class="w-4 h-4"></lucide-icon>
+                    </div>
+                    <span class="text-xs truncate">Financial Monitoring</span>
+                  </div>
+                  @if (pendingOwnerClosingsCount > 0) {
+                    <span class="px-1.5 py-0.5 rounded-md text-[10px] font-black tabular-nums" [class]="currentTab === 'finance' && financeSubTab === 'monitoring' ? 'bg-white/20 text-white' : 'bg-rose-100 text-rose-700'">{{ pendingOwnerClosingsCount }}</span>
+                  }
+                </button>
+                <button (click)="setTab('finance'); financeSubTab = 'ledger'" class="w-full flex items-center justify-between px-3 py-2 rounded-2xl text-left transition-all duration-200 cursor-pointer group" [class]="currentTab === 'finance' && financeSubTab !== 'monitoring' ? 'bg-gradient-to-r from-indigo-600 via-indigo-600 to-blue-600 text-white shadow-md shadow-indigo-600/30 border border-indigo-500/20 font-extrabold' : 'text-slate-700 hover:bg-slate-100/80 hover:text-slate-900 font-bold'">
+                  <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105" [class]="currentTab === 'finance' && financeSubTab !== 'monitoring' ? 'bg-white/20 text-white' : 'bg-gradient-to-tr from-blue-600 via-blue-600 to-indigo-600 text-white shadow-2xs'">
                       <lucide-icon [name]="'credit-card'" class="w-4 h-4"></lucide-icon>
                     </div>
                     <span class="text-xs truncate">Fee Collection</span>
@@ -1243,12 +1254,15 @@
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <!-- Left Chart: Monthly Fee Collection -->
             <div class="apple-card rounded-2xl p-5 border border-slate-200/80 shadow-xs bg-white space-y-4">
-              <div class="flex items-center justify-between">
+              <div class="flex items-center justify-between gap-2">
                 <div class="flex items-center gap-2">
                   <lucide-icon [name]="'trending-up'" class="w-4 h-4 text-indigo-600"></lucide-icon>
                   <h3 class="font-bold text-slate-900 text-sm tracking-tight">Monthly Fee Collection</h3>
                 </div>
-                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Session 2026-27</span>
+                <button (click)="openFinancialMonitoring()" class="text-[11px] font-bold text-indigo-600 hover:text-indigo-700 cursor-pointer flex items-center gap-1">
+                  <span>Live Cash Flow &amp; Charts</span>
+                  <lucide-icon [name]="'arrow-up-right'" class="w-3.5 h-3.5"></lucide-icon>
+                </button>
               </div>
 
               <!-- Bar Chart Visual (Refined Enterprise Indigo/Slate Gradient) -->
@@ -4096,7 +4110,7 @@
               <span class="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">Pending Dues (Bakaya Khata)</span>
               <div class="flex items-baseline justify-between">
                 <span class="text-2xl font-black text-amber-700 tabular">PKR {{ formatCurrency(totalUncollectedDues) }}</span>
-                <span class="text-xs font-bold text-amber-600">48 Students</span>
+                <span class="text-xs font-bold text-amber-600 tabular-nums">{{ filteredAccountantDefaulters.length }} Students</span>
               </div>
               <p class="text-[11px] text-slate-400">Uncollected fee vouchers</p>
             </div>
@@ -4115,6 +4129,12 @@
               <div class="flex items-center gap-2 flex-wrap">
                 <!-- Sub Tab Switcher Pills -->
                 <div class="flex items-center gap-1 p-1 rounded-xl bg-slate-100 border border-slate-200/80 text-xs font-bold overflow-x-auto custom-scrollbar">
+                  <button (click)="openFinancialMonitoring()"
+                    class="px-3 py-1.5 rounded-lg transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5"
+                    [class]="financeSubTab === 'monitoring' ? 'bg-white text-indigo-700 shadow-xs font-black' : 'text-slate-600 hover:text-slate-900'">
+                    <lucide-icon [name]="'trending-up'" class="w-3.5 h-3.5"></lucide-icon>
+                    <span>Financial Monitoring</span>
+                  </button>
                   <button (click)="financeSubTab = 'ledger'"
                     class="px-3 py-1.5 rounded-lg transition-all cursor-pointer whitespace-nowrap"
                     [class]="financeSubTab === 'ledger' ? 'bg-white text-indigo-700 shadow-xs font-black' : 'text-slate-600 hover:text-slate-900'">
@@ -4163,6 +4183,374 @@
                 </button>
               </div>
             </div>
+
+            <!-- SUB-TAB 0: OWNER REAL-TIME FINANCIAL MONITORING DASHBOARD -->
+            @if (financeSubTab === 'monitoring') {
+              <div class="space-y-5">
+                <!-- Executive Toolbar -->
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+                  <div>
+                    <h4 class="font-black text-slate-950 text-sm tracking-tight">Executive Financial Monitoring &amp; Fee Clerk Oversight</h4>
+                    <p class="text-xs text-slate-500">Live cash flow, pending dues &amp; daily revenue aggregated from Fee Clerk, Principal Desk &amp; digital channels</p>
+                  </div>
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <div class="inline-flex items-center p-1 rounded-xl bg-slate-100 text-xs font-bold">
+                      <button (click)="setMonitoringRange(7)" class="px-2.5 py-1 rounded-lg cursor-pointer transition-colors"
+                        [class]="monitoringRangeDays === 7 ? 'bg-white text-slate-950 shadow-2xs font-black' : 'text-slate-500 hover:text-slate-900'">7D</button>
+                      <button (click)="setMonitoringRange(14)" class="px-2.5 py-1 rounded-lg cursor-pointer transition-colors"
+                        [class]="monitoringRangeDays === 14 ? 'bg-white text-slate-950 shadow-2xs font-black' : 'text-slate-500 hover:text-slate-900'">14D</button>
+                      <button (click)="setMonitoringRange(30)" class="px-2.5 py-1 rounded-lg cursor-pointer transition-colors"
+                        [class]="monitoringRangeDays === 30 ? 'bg-white text-slate-950 shadow-2xs font-black' : 'text-slate-500 hover:text-slate-900'">30D</button>
+                    </div>
+                    <button (click)="refreshOwnerFinancialMonitoring()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs cursor-pointer flex items-center gap-1.5">
+                      <lucide-icon [name]="'activity'" class="w-3.5 h-3.5 text-teal-600"></lucide-icon>
+                      <span>Sync Live</span>
+                    </button>
+                    <button (click)="switchPortalRole('accountant')" class="px-3 py-1.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs cursor-pointer flex items-center gap-1.5">
+                      <lucide-icon [name]="'receipt'" class="w-3.5 h-3.5"></lucide-icon>
+                      <span>Open Fee Clerk Counter</span>
+                    </button>
+                  </div>
+                </div>
+
+                @if (pendingOwnerClosingsCount > 0) {
+                  <div class="rounded-2xl p-4 bg-gradient-to-r from-amber-50 via-white to-teal-50 shadow-[0_6px_20px_-6px_rgba(245,158,11,0.18)] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                      <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
+                        <lucide-icon [name]="'shield-check'" class="w-5 h-5"></lucide-icon>
+                      </div>
+                      <div>
+                        <p class="text-xs font-black text-slate-950">{{ pendingOwnerClosingsCount }} Fee Clerk Daily Closing {{ pendingOwnerClosingsCount === 1 ? 'Report' : 'Reports' }} Awaiting Owner Sign-Off</p>
+                        <p class="text-[11px] text-slate-600">Review physical drawer cash, bank deposit slips, and petty vouchers below before locking.</p>
+                      </div>
+                    </div>
+                    <button (click)="financeSubTab = 'daily_closing'" class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs cursor-pointer shrink-0">
+                      Review Closing Queue
+                    </button>
+                  </div>
+                }
+
+                <!-- Real-Time Cash Flow KPI Strip (4 Unified Borderless Cards) -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div class="rounded-2xl p-4 sm:p-5 bg-gradient-to-b from-white to-teal-50/40 shadow-[0_8px_24px_-8px_rgba(13,148,136,0.14),0_2px_6px_-1px_rgba(15,23,42,0.05)] space-y-1.5">
+                    <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Gross Fee Inflow</span>
+                    <div class="text-xl sm:text-2xl font-black text-slate-950 tabular-nums">PKR {{ formatCurrency(monitoringCashFlowSummary.grossRevenue) }}</div>
+                    <p class="text-[11px] text-slate-500 font-medium tabular-nums">
+                      Clerk {{ formatCurrency(monitoringCashFlowSummary.accInflow) }} · Principal {{ formatCurrency(monitoringCashFlowSummary.prinInflow) }}
+                    </p>
+                  </div>
+
+                  <div class="rounded-2xl p-4 sm:p-5 bg-gradient-to-b from-white to-emerald-50/45 shadow-[0_8px_24px_-8px_rgba(5,150,105,0.14),0_2px_6px_-1px_rgba(15,23,42,0.05)] space-y-1.5">
+                    <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Net Real-Time Cash Flow</span>
+                    <div class="text-xl sm:text-2xl font-black text-emerald-700 tabular-nums">PKR {{ formatCurrency(monitoringCashFlowSummary.netCashFlow) }}</div>
+                    <p class="text-[11px] text-rose-600 font-semibold tabular-nums">
+                      After -PKR {{ formatCurrency(monitoringCashFlowSummary.pettyOutflow) }} petty vouchers
+                    </p>
+                  </div>
+
+                  <div class="rounded-2xl p-4 sm:p-5 bg-gradient-to-b from-white to-indigo-50/45 shadow-[0_8px_24px_-8px_rgba(79,70,229,0.14),0_2px_6px_-1px_rgba(15,23,42,0.05)] space-y-1.5">
+                    <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Vault Cash On Hand</span>
+                    <div class="text-xl sm:text-2xl font-black text-indigo-700 tabular-nums">PKR {{ formatCurrency(monitoringCashFlowSummary.vaultCashOnHand) }}</div>
+                    <p class="text-[11px] text-slate-500 font-medium tabular-nums">
+                      Opening {{ formatCurrency(monitoringCashFlowSummary.openingVault) }} + Cash Counter
+                    </p>
+                  </div>
+
+                  <div class="rounded-2xl p-4 sm:p-5 bg-gradient-to-b from-white to-amber-50/45 shadow-[0_8px_24px_-8px_rgba(245,158,11,0.14),0_2px_6px_-1px_rgba(15,23,42,0.05)] space-y-2">
+                    <div class="flex items-center justify-between">
+                      <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Pending Bakaya</span>
+                      <span class="text-[11px] font-black text-emerald-700 tabular-nums">{{ monitoringCashFlowSummary.recoveryRatePct }}% Recovered</span>
+                    </div>
+                    <div class="text-xl sm:text-2xl font-black text-amber-700 tabular-nums">PKR {{ formatCurrency(monitoringCashFlowSummary.pendingBakaya) }}</div>
+                    <div class="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                      <div class="h-full rounded-full bg-emerald-600 transition-all duration-500" [style.width.%]="monitoringCashFlowSummary.recoveryRatePct"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Interactive Daily Revenue & Cash Flow SVG Chart + Day Inspector -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                  <div class="lg:col-span-8 rounded-2xl p-5 bg-white shadow-[0_8px_28px_-8px_rgba(15,23,42,0.08)] border border-slate-100 space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div>
+                        <h5 class="font-black text-slate-950 text-sm">Daily Revenue vs Net Cash Flow &amp; Petty Outflow ({{ monitoringRangeDays }} Days)</h5>
+                        <p class="text-[11px] text-slate-500">Click or hover any day point to inspect Fee Clerk, Principal &amp; Online collections</p>
+                      </div>
+                      <div class="flex items-center gap-3 text-[11px] font-bold text-slate-600">
+                        <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-indigo-600 inline-block"></span>Gross Revenue</span>
+                        <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-600 inline-block"></span>Net Cash Flow</span>
+                        <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block"></span>Petty Outflow</span>
+                      </div>
+                    </div>
+
+                    <div class="w-full overflow-x-auto">
+                      <svg [attr.viewBox]="monitoringSvgChart.viewBox" class="w-full h-52 min-w-[480px]" role="img" aria-label="Daily revenue and net cash flow trend chart">
+                        <defs>
+                          <linearGradient id="monRevGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="#4f46e5" stop-opacity="0.22"></stop>
+                            <stop offset="100%" stop-color="#4f46e5" stop-opacity="0.01"></stop>
+                          </linearGradient>
+                        </defs>
+
+                        @for (tk of monitoringSvgChart.yTicks; track tk.y) {
+                          <line [attr.x1]="monitoringSvgChart.padL" [attr.x2]="662" [attr.y1]="tk.y" [attr.y2]="tk.y" stroke="#e2e8f0" stroke-dasharray="3 3" stroke-width="1"></line>
+                          <text [attr.x]="monitoringSvgChart.padL - 8" [attr.y]="tk.y + 3" text-anchor="end" fill="#64748b" font-size="10" font-weight="600">{{ tk.label }}</text>
+                        }
+
+                        @if (monitoringSvgChart.revAreaPath) {
+                          <path [attr.d]="monitoringSvgChart.revAreaPath" fill="url(#monRevGrad)"></path>
+                        }
+                        @if (monitoringSvgChart.outLinePath) {
+                          <path [attr.d]="monitoringSvgChart.outLinePath" fill="none" stroke="#f43f5e" stroke-width="2" stroke-dasharray="4 3"></path>
+                        }
+                        @if (monitoringSvgChart.netLinePath) {
+                          <path [attr.d]="monitoringSvgChart.netLinePath" fill="none" stroke="#059669" stroke-width="2.25"></path>
+                        }
+                        @if (monitoringSvgChart.revLinePath) {
+                          <path [attr.d]="monitoringSvgChart.revLinePath" fill="none" stroke="#4f46e5" stroke-width="2.5"></path>
+                        }
+
+                        @for (pt of monitoringSvgChart.points; track pt.date) {
+                          @if (pt.idx % monitoringSvgChart.labelStep === 0 || pt.idx === monitoringSvgChart.points.length - 1) {
+                            <text [attr.x]="pt.x" [attr.y]="192" text-anchor="middle" fill="#64748b" font-size="9.5" font-weight="600">{{ pt.label }}</text>
+                          }
+                          <circle [attr.cx]="pt.x" [attr.cy]="pt.yRev"
+                            [attr.r]="selectedMonitoringDayDetail?.date === pt.date ? 5.5 : 3.5"
+                            [attr.fill]="selectedMonitoringDayDetail?.date === pt.date ? '#4f46e5' : '#ffffff'"
+                            stroke="#4f46e5" stroke-width="2"
+                            class="cursor-pointer"
+                            (mouseenter)="selectedMonitoringDayIndex = pt.idx"
+                            (click)="selectedMonitoringDayIndex = pt.idx"></circle>
+                        }
+                      </svg>
+                    </div>
+                  </div>
+
+                  <!-- Day Inspector Card -->
+                  <div class="lg:col-span-4 rounded-2xl p-5 bg-gradient-to-b from-slate-50/80 to-white shadow-[0_8px_28px_-8px_rgba(15,23,42,0.08)] border border-slate-100 flex flex-col justify-between space-y-4">
+                    @if (selectedMonitoringDayDetail; as day) {
+                      <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                          <span class="text-[11px] font-bold uppercase tracking-wider text-indigo-700">Selected Day Breakdown</span>
+                          <span class="font-mono text-xs font-bold text-slate-600">{{ day.date }}</span>
+                        </div>
+                        <div class="rounded-xl p-3.5 bg-white shadow-2xs space-y-1">
+                          <span class="text-[11px] font-semibold text-slate-500 block">Gross Daily Revenue ({{ day.label }})</span>
+                          <span class="text-2xl font-black text-slate-950 tabular-nums">PKR {{ formatCurrency(day.totalRevenue) }}</span>
+                          <div class="flex items-center justify-between text-[11px] pt-1">
+                            <span class="font-semibold text-emerald-700 tabular-nums">Net Cash Flow: PKR {{ formatCurrency(day.netCashFlow) }}</span>
+                            <span class="font-semibold text-rose-600 tabular-nums">-{{ formatCurrency(day.pettyOutflow) }} Petty</span>
+                          </div>
+                        </div>
+                        <div class="space-y-2 text-xs pt-1">
+                          <div class="flex items-center justify-between">
+                            <span class="text-slate-600 font-semibold">Fee Clerk / Accountant</span>
+                            <span class="font-mono font-black text-teal-700 tabular-nums">PKR {{ formatCurrency(day.accountantRevenue) }}</span>
+                          </div>
+                          <div class="flex items-center justify-between">
+                            <span class="text-slate-600 font-semibold">Principal Office Desk</span>
+                            <span class="font-mono font-black text-amber-700 tabular-nums">PKR {{ formatCurrency(day.principalRevenue) }}</span>
+                          </div>
+                          <div class="flex items-center justify-between">
+                            <span class="text-slate-600 font-semibold">Online / Digital Portal</span>
+                            <span class="font-mono font-black text-indigo-700 tabular-nums">PKR {{ formatCurrency(day.onlineRevenue) }}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="text-[11px] text-slate-500 pt-2 border-t border-slate-200/70 flex items-center justify-between">
+                        <span>Verified Fee Receipts</span>
+                        <span class="font-mono font-bold text-slate-800">{{ day.receiptsCount }} Slips</span>
+                      </div>
+                    }
+                  </div>
+                </div>
+
+                <!-- Middle Charts Grid: Payment Channel Donut + Collector Aggregation & Pending Dues -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                  <!-- Payment Channel Mix SVG Donut -->
+                  <div class="rounded-2xl p-5 bg-white shadow-[0_8px_28px_-8px_rgba(15,23,42,0.08)] border border-slate-100 space-y-4">
+                    <div class="flex items-center justify-between">
+                      <div>
+                        <h5 class="font-black text-slate-950 text-sm">Real-Time Cash Flow by Payment Channel</h5>
+                        <p class="text-[11px] text-slate-500">Counter Cash vs Bank Deposits vs Digital Wallets</p>
+                      </div>
+                      <span class="text-xs font-mono font-black text-slate-900 tabular-nums">PKR {{ formatCurrency(monitoringChannelDonut.total) }}</span>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row items-center gap-6">
+                      <div class="relative w-36 h-36 shrink-0">
+                        <svg viewBox="0 0 136 136" class="w-full h-full -rotate-90" role="img" aria-label="Payment channel mix donut chart">
+                          <circle cx="68" cy="68" r="52" fill="none" stroke="#f1f5f9" stroke-width="18"></circle>
+                          @for (seg of monitoringChannelDonut.segments; track seg.label) {
+                            <circle cx="68" cy="68" r="52" fill="none"
+                              [attr.stroke]="seg.color"
+                              stroke-width="18"
+                              [attr.stroke-dasharray]="seg.strokeDasharray"
+                              [attr.stroke-dashoffset]="seg.strokeDashoffset"></circle>
+                          }
+                        </svg>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+                          <span class="text-[10px] font-bold uppercase text-slate-400">Inflow</span>
+                          <span class="text-xs font-black text-slate-900 tabular-nums">{{ principalFeeCollections.length }} Slips</span>
+                        </div>
+                      </div>
+
+                      <div class="flex-1 w-full space-y-2.5 text-xs">
+                        @for (seg of monitoringChannelDonut.segments; track seg.label) {
+                          <div class="flex items-center justify-between gap-2">
+                            <div class="flex items-center gap-2 min-w-0">
+                              <span class="w-2.5 h-2.5 rounded-full shrink-0" [class]="seg.dotClass"></span>
+                              <span class="font-bold text-slate-700 truncate">{{ seg.label }}</span>
+                            </div>
+                            <div class="flex items-center gap-2 shrink-0 tabular-nums">
+                              <span class="font-mono font-black text-slate-900">PKR {{ formatCurrency(seg.amount) }}</span>
+                              <span class="text-[11px] font-bold text-slate-400 w-9 text-right">{{ seg.pct }}%</span>
+                            </div>
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Collector Desk Aggregation + Pending Dues by Class -->
+                  <div class="rounded-2xl p-5 bg-white shadow-[0_8px_28px_-8px_rgba(15,23,42,0.08)] border border-slate-100 space-y-5">
+                    <div class="space-y-3">
+                      <div class="flex items-center justify-between">
+                        <h5 class="font-black text-slate-950 text-sm">Desk Contribution (Fee Clerk vs Principal vs Online)</h5>
+                        <span class="text-[11px] font-bold text-slate-500">Synced Real-Time</span>
+                      </div>
+                      <div class="space-y-2.5">
+                        @for (desk of monitoringCollectorSplit; track desk.key) {
+                          <div class="space-y-1 text-xs">
+                            <div class="flex items-center justify-between">
+                              <span class="font-bold text-slate-800">{{ desk.label }} <span class="text-slate-400 font-medium">({{ desk.count }})</span></span>
+                              <span class="font-mono font-black text-slate-900 tabular-nums">PKR {{ formatCurrency(desk.amount) }} · {{ desk.pct }}%</span>
+                            </div>
+                            <div class="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
+                              <div class="h-full rounded-full transition-all duration-500" [class]="desk.barClass" [style.width.%]="desk.pct"></div>
+                            </div>
+                          </div>
+                        }
+                      </div>
+                    </div>
+
+                    <div class="pt-3 border-t border-slate-100 space-y-2.5">
+                      <div class="flex items-center justify-between">
+                        <h5 class="font-black text-slate-950 text-xs uppercase tracking-wider">Pending Dues (Bakaya) by Class</h5>
+                        <button (click)="financeSubTab = 'defaulters'" class="text-[11px] font-bold text-amber-700 hover:text-amber-800 cursor-pointer">
+                          View Defaulters →
+                        </button>
+                      </div>
+                      @if (monitoringPendingDuesByGrade.length === 0) {
+                        <p class="text-xs text-emerald-700 font-semibold">All enrolled student classes are currently cleared with zero Bakaya.</p>
+                      } @else {
+                        <div class="space-y-2">
+                          @for (gd of monitoringPendingDuesByGrade; track gd.grade) {
+                            <div class="flex items-center gap-3 text-xs">
+                              <span class="w-24 font-bold text-slate-700 truncate shrink-0">{{ gd.grade }}</span>
+                              <div class="flex-1 h-2 rounded-full bg-slate-100 overflow-hidden">
+                                <div class="h-full rounded-full bg-amber-500 transition-all duration-500" [style.width.%]="gd.widthPct"></div>
+                              </div>
+                              <span class="font-mono font-black text-amber-800 tabular-nums shrink-0">PKR {{ formatCurrency(gd.dueAmount) }}</span>
+                            </div>
+                          }
+                        </div>
+                      }
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Bottom Row: Fee Clerk Daily Closing Queue + Petty Cash Vouchers Audit Feed -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                  <!-- Fee Clerk Closings Sign-off Card -->
+                  <div class="rounded-2xl p-5 bg-white shadow-[0_8px_28px_-8px_rgba(15,23,42,0.08)] border border-slate-100 space-y-3">
+                    <div class="flex items-center justify-between">
+                      <div>
+                        <h5 class="font-black text-slate-950 text-sm">Fee Clerk Daily Closings Queue</h5>
+                        <p class="text-[11px] text-slate-500">Approve or flag submitted Rooznama closings directly</p>
+                      </div>
+                      <button (click)="financeSubTab = 'daily_closing'" class="text-xs font-bold text-indigo-600 hover:text-indigo-700 cursor-pointer">
+                        Full Rooznama →
+                      </button>
+                    </div>
+                    <div class="space-y-3">
+                      @for (rec of feeReconciliations.slice(0, 3); track rec.id) {
+                        <div class="rounded-xl p-3.5 bg-slate-50/80 space-y-2.5">
+                          <div class="flex items-center justify-between gap-2 flex-wrap">
+                            <div class="flex items-center gap-2">
+                              <span class="font-mono font-black text-xs text-slate-950">{{ rec.id }}</span>
+                              <span class="font-mono text-[11px] text-slate-500">{{ rec.date }}</span>
+                              <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase"
+                                [class]="rec.ownerApprovalStatus === 'Pending Owner Review' ? 'bg-amber-100 text-amber-800' : (rec.ownerApprovalStatus === 'Flagged by Owner' ? 'bg-rose-100 text-rose-800' : 'bg-emerald-100 text-emerald-800')">
+                                {{ rec.ownerApprovalStatus || 'Verified' }}
+                              </span>
+                            </div>
+                            <span class="font-mono font-black text-sm text-emerald-700 tabular-nums">PKR {{ formatCurrency(rec.actualCollected) }}</span>
+                          </div>
+                          <div class="flex items-center justify-between text-[11px] text-slate-600">
+                            <span>{{ rec.cashierName }} · Slip: {{ rec.bankDepositSlipNo || 'N/A' }}</span>
+                            <span class="text-rose-600 font-semibold tabular-nums">Petty: PKR {{ formatCurrency(rec.pettyExpenses || 0) }}</span>
+                          </div>
+                          @if (rec.ownerApprovalStatus === 'Pending Owner Review') {
+                            <div class="flex items-center gap-2 pt-1">
+                              <button (click)="ownerApproveDailyClosing(rec, 'Verified & Approved by Owner')"
+                                class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[11px] cursor-pointer flex items-center gap-1">
+                                <lucide-icon [name]="'check-circle-2'" class="w-3.5 h-3.5"></lucide-icon>
+                                <span>Approve &amp; Lock</span>
+                              </button>
+                              <button (click)="ownerApproveDailyClosing(rec, 'Flagged by Owner')"
+                                class="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-black text-[11px] cursor-pointer flex items-center gap-1">
+                                <lucide-icon [name]="'alert-circle'" class="w-3.5 h-3.5"></lucide-icon>
+                                <span>Flag</span>
+                              </button>
+                            </div>
+                          }
+                        </div>
+                      }
+                    </div>
+                  </div>
+
+                  <!-- Live Petty Cash Voucher Feed -->
+                  <div class="rounded-2xl p-5 bg-white shadow-[0_8px_28px_-8px_rgba(15,23,42,0.08)] border border-slate-100 space-y-3">
+                    <div class="flex items-center justify-between">
+                      <div>
+                        <h5 class="font-black text-slate-950 text-sm">Fee Counter Petty Cash Vouchers</h5>
+                        <p class="text-[11px] text-slate-500">Itemized counter expenses deducted from physical vault cash</p>
+                      </div>
+                      <span class="font-mono font-black text-xs text-rose-700 tabular-nums">Total: PKR {{ formatCurrency(totalAccountantPettyVouchers) }}</span>
+                    </div>
+                    <div class="overflow-x-auto border border-slate-100 rounded-xl">
+                      <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-50 text-slate-500 uppercase font-black text-[10px]">
+                          <tr>
+                            <th class="px-3 py-2">Voucher #</th>
+                            <th class="px-3 py-2">Category &amp; Detail</th>
+                            <th class="px-3 py-2 text-right">Amount</th>
+                          </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                          @for (pv of accountantPettyVouchers.slice(0, 5); track pv.id) {
+                            <tr class="hover:bg-slate-50/70">
+                              <td class="px-3 py-2 font-mono font-bold text-slate-900 whitespace-nowrap">{{ pv.voucherNo }}</td>
+                              <td class="px-3 py-2">
+                                <div class="font-bold text-slate-800">{{ pv.description }}</div>
+                                <div class="text-[10px] text-slate-500">{{ pv.category }} · Paid to {{ pv.paidTo }}</div>
+                              </td>
+                              <td class="px-3 py-2 text-right font-mono font-black text-rose-700 tabular-nums whitespace-nowrap">PKR {{ formatCurrency(pv.amount) }}</td>
+                            </tr>
+                          }
+                          @if (accountantPettyVouchers.length === 0) {
+                            <tr>
+                              <td colspan="3" class="px-3 py-4 text-center text-slate-400 font-medium">No petty vouchers recorded yet.</td>
+                            </tr>
+                          }
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            }
 
             <!-- SUB-TAB 1: MASTER CASH BOOK & LEDGER -->
             @if (financeSubTab === 'ledger') {
@@ -16490,10 +16878,16 @@
 
               <!-- Recent Fee Receipts Across Desks -->
               <div class="apple-card rounded-2xl p-5 space-y-4">
-                <div class="flex items-center justify-between flex-wrap gap-2">
+                <div class="flex items-center justify-between flex-wrap gap-3">
                   <div>
                     <h3 class="font-black text-slate-900 text-sm">Live Counter Receipts Ledger (Accountant &amp; Principal Synced)</h3>
-                    <p class="text-xs text-slate-500">Strict audit view — existing student fee collections remain intact across both desks.</p>
+                    <p class="text-xs text-slate-500">Petty Cash Outflow Today: <strong class="font-mono text-rose-700">PKR {{ formatCurrency(totalAccountantPettyVouchers) }}</strong> ({{ accountantPettyVouchers.length }} vouchers)</p>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <button (click)="printAccountantShiftHandover()" class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs cursor-pointer flex items-center gap-1.5">
+                      <lucide-icon [name]="'printer'" class="w-3.5 h-3.5"></lucide-icon>
+                      <span>Print Shift Handover</span>
+                    </button>
                   </div>
                 </div>
                 <div class="overflow-x-auto border border-slate-200 rounded-xl">
@@ -16736,6 +17130,18 @@
                       </select>
                     </div>
                   </div>
+                  <div class="rounded-xl p-3 bg-slate-50 border border-slate-200/80 space-y-1.5">
+                    <label class="flex items-center justify-between cursor-pointer">
+                      <span class="font-bold text-slate-800">Partial / Installment Payment</span>
+                      <input type="checkbox" [(ngModel)]="accountantCollectForm.isPartialPayment" class="w-4 h-4 accent-teal-600 rounded cursor-pointer">
+                    </label>
+                    @if (accountantCollectForm.isPartialPayment) {
+                      <div class="flex items-center justify-between text-[11px] pt-1 border-t border-slate-200/70">
+                        <span class="text-slate-600 font-semibold">Expected Due: PKR {{ formatCurrency(accountantCollectForm.expectedDueAmount || 0) }}</span>
+                        <span class="font-mono font-black text-amber-700 tabular-nums">Remaining Bakaya: PKR {{ formatCurrency(accountantRemainingBakayaPreview) }}</span>
+                      </div>
+                    }
+                  </div>
                   <div class="grid grid-cols-2 gap-3">
                     <div>
                       <label class="block font-bold text-slate-700 mb-1">Bank Slip / Txn Ref #</label>
@@ -16751,7 +17157,7 @@
                     <input type="text" [(ngModel)]="accountantCollectForm.notes" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-medium">
                   </div>
                   <button (click)="submitAccountantFeeReceipt()" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white font-black text-xs cursor-pointer flex items-center justify-center gap-2 shadow-md">
-                    <lucide-icon [name]="'check-circle'" class="w-4 h-4"></lucide-icon>
+                    <lucide-icon [name]="'check-circle-2'" class="w-4 h-4"></lucide-icon>
                     <span>Confirm Receipt &amp; Print Official Voucher</span>
                   </button>
                 </div>
@@ -16807,12 +17213,18 @@
               <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <h3 class="font-black text-slate-900 text-sm">Outstanding Fee Defaulters (Bakaya) &amp; Parent Follow-Up</h3>
-                  <p class="text-xs text-slate-500">Collect overdue balances or dispatch official WhatsApp/SMS payment reminders.</p>
+                  <p class="text-xs text-slate-500">Collect overdue balances, export call sheet CSV, or dispatch official WhatsApp/SMS payment reminders.</p>
                 </div>
-                <div class="relative w-full sm:w-72">
-                  <lucide-icon [name]="'search'" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></lucide-icon>
-                  <input type="text" [(ngModel)]="accountantDefaulterSearch" placeholder="Search defaulter student, roll, class..."
-                    class="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <div class="relative w-full sm:w-64">
+                    <lucide-icon [name]="'search'" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></lucide-icon>
+                    <input type="text" [(ngModel)]="accountantDefaulterSearch" placeholder="Search defaulter student, roll, class..."
+                      class="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold">
+                  </div>
+                  <button (click)="exportAccountantDefaultersCsv()" class="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs cursor-pointer flex items-center gap-1.5 shrink-0">
+                    <lucide-icon [name]="'download'" class="w-3.5 h-3.5"></lucide-icon>
+                    <span>Export Call Sheet</span>
+                  </button>
                 </div>
               </div>
 
@@ -16922,53 +17334,123 @@
                     </span>
                   </div>
 
-                  <button (click)="submitAccountantDailyClosing()" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-slate-900 to-teal-700 hover:from-slate-800 hover:to-teal-600 text-white font-black text-xs cursor-pointer flex items-center justify-center gap-2 shadow-md">
-                    <lucide-icon [name]="'send'" class="w-4 h-4"></lucide-icon>
-                    <span>Submit Daily Closing Report to School Owner</span>
-                  </button>
+                  <div class="flex items-center gap-2">
+                    <button (click)="submitAccountantDailyClosing()" class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-slate-900 to-teal-700 hover:from-slate-800 hover:to-teal-600 text-white font-black text-xs cursor-pointer flex items-center justify-center gap-2 shadow-md">
+                      <lucide-icon [name]="'send'" class="w-4 h-4"></lucide-icon>
+                      <span>Submit Closing to Owner</span>
+                    </button>
+                    <button (click)="printAccountantShiftHandover()" class="px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-900 font-black text-xs cursor-pointer flex items-center gap-1.5 shrink-0">
+                      <lucide-icon [name]="'printer'" class="w-4 h-4"></lucide-icon>
+                      <span>Handover Slip</span>
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              <!-- Owner Review Status Tracker -->
-              <div class="lg:col-span-3 apple-card rounded-2xl p-5 space-y-4">
-                <div>
-                  <h3 class="font-black text-slate-900 text-sm">Submitted Closings &amp; School Owner Approval Status</h3>
-                  <p class="text-xs text-slate-500">Only School Owner can verify, approve, or flag submitted Daily Closings (dual-control security).</p>
-                </div>
-                <div class="overflow-x-auto border border-slate-200 rounded-xl">
-                  <table class="w-full text-left text-xs">
-                    <thead class="bg-slate-50 text-slate-600 uppercase font-black text-[10px] border-b border-slate-200">
-                      <tr>
-                        <th class="px-3 py-2.5">Closing ID &amp; Date</th>
-                        <th class="px-3 py-2.5 text-right">Cash</th>
-                        <th class="px-3 py-2.5 text-right">Bank / Digital</th>
-                        <th class="px-3 py-2.5 text-right">Total</th>
-                        <th class="px-3 py-2.5">Owner Decision</th>
-                      </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100 font-medium">
-                      @for (rec of feeReconciliations; track rec.id) {
-                        <tr class="hover:bg-slate-50/70">
-                          <td class="px-3 py-2.5">
-                            <div class="font-mono font-black text-slate-900">{{ rec.id }}</div>
-                            <div class="font-mono text-[10px] text-slate-500">{{ rec.date }} · Slip: {{ rec.bankDepositSlipNo || 'N/A' }}</div>
-                          </td>
-                          <td class="px-3 py-2.5 text-right font-mono">PKR {{ formatCurrency(rec.counterCashReceived) }}</td>
-                          <td class="px-3 py-2.5 text-right font-mono text-indigo-700">PKR {{ formatCurrency((rec.bankDepositedMeezan || 0) + (rec.bankDepositedHBL || 0) + (rec.onlineDigitalKuickPay || 0)) }}</td>
-                          <td class="px-3 py-2.5 text-right font-mono font-black text-emerald-700">PKR {{ formatCurrency(rec.actualCollected) }}</td>
-                          <td class="px-3 py-2.5">
-                            <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase inline-block"
-                              [class]="rec.ownerApprovalStatus === 'Pending Owner Review' ? 'bg-amber-100 text-amber-800' : (rec.ownerApprovalStatus === 'Flagged by Owner' ? 'bg-rose-100 text-rose-800' : 'bg-emerald-100 text-emerald-800')">
-                              {{ rec.ownerApprovalStatus || 'Verified & Approved by Owner' }}
-                            </span>
-                            @if (rec.ownerRemarks) {
-                              <div class="text-[10px] text-slate-500 mt-0.5">{{ rec.ownerRemarks }}</div>
-                            }
-                          </td>
+              <!-- Owner Review Status Tracker & Petty Cash Voucher Logger -->
+              <div class="lg:col-span-3 space-y-5">
+                <!-- Itemized Petty Cash Voucher Logger -->
+                <div class="apple-card rounded-2xl p-5 space-y-4">
+                  <div class="flex items-center justify-between flex-wrap gap-2">
+                    <div>
+                      <h3 class="font-black text-slate-900 text-sm">Itemized Petty Cash Voucher Register</h3>
+                      <p class="text-xs text-slate-500">Auto-sums directly into Daily Closing Petty Expenses &amp; Owner Financial Monitoring outflow.</p>
+                    </div>
+                    <span class="font-mono font-black text-xs text-rose-700 tabular-nums">Total: PKR {{ formatCurrency(totalAccountantPettyVouchers) }}</span>
+                  </div>
+
+                  <div class="grid grid-cols-1 sm:grid-cols-4 gap-2.5 text-xs">
+                    <select [(ngModel)]="accountantPettyForm.category" class="px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold">
+                      <option value="Stationery & Printing">Stationery &amp; Printing</option>
+                      <option value="Generator & Utility Fuel">Generator &amp; Fuel</option>
+                      <option value="Campus Hospitality">Tea &amp; Hospitality</option>
+                      <option value="Maintenance & Repairs">Minor Repairs</option>
+                      <option value="Misc Counter Expense">Misc Expense</option>
+                    </select>
+                    <input type="text" [(ngModel)]="accountantPettyForm.paidTo" placeholder="Paid To (Vendor)" class="px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold">
+                    <input type="text" [(ngModel)]="accountantPettyForm.description" placeholder="Expense Description" class="px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-medium">
+                    <div class="flex items-center gap-2">
+                      <input type="number" [(ngModel)]="accountantPettyForm.amount" placeholder="PKR" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-mono font-bold">
+                      <button (click)="addAccountantPettyVoucher()" class="px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black cursor-pointer shrink-0">
+                        + Add
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                    <table class="w-full text-left text-xs">
+                      <thead class="bg-slate-50 text-slate-600 uppercase font-black text-[10px] border-b border-slate-200">
+                        <tr>
+                          <th class="px-3 py-2">Voucher #</th>
+                          <th class="px-3 py-2">Category</th>
+                          <th class="px-3 py-2">Description &amp; Payee</th>
+                          <th class="px-3 py-2 text-right">Amount</th>
+                          <th class="px-3 py-2 text-right">Remove</th>
                         </tr>
-                      }
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody class="divide-y divide-slate-100 font-medium">
+                        @for (pv of accountantPettyVouchers; track pv.id) {
+                          <tr class="hover:bg-slate-50/70">
+                            <td class="px-3 py-2 font-mono font-bold text-slate-900">{{ pv.voucherNo }}</td>
+                            <td class="px-3 py-2 text-slate-600">{{ pv.category }}</td>
+                            <td class="px-3 py-2">
+                              <div class="font-bold text-slate-900">{{ pv.description }}</div>
+                              <div class="text-[10px] text-slate-500">{{ pv.date }} · Paid to {{ pv.paidTo }}</div>
+                            </td>
+                            <td class="px-3 py-2 text-right font-mono font-black text-rose-700 tabular-nums">PKR {{ formatCurrency(pv.amount) }}</td>
+                            <td class="px-3 py-2 text-right">
+                              <button (click)="deleteAccountantPettyVoucher(pv)" class="p-1 rounded-lg text-slate-400 hover:text-rose-600 cursor-pointer">
+                                <lucide-icon [name]="'trash-2'" class="w-3.5 h-3.5"></lucide-icon>
+                              </button>
+                            </td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <!-- Submitted Closings Tracker -->
+                <div class="apple-card rounded-2xl p-5 space-y-4">
+                  <div>
+                    <h3 class="font-black text-slate-900 text-sm">Submitted Closings &amp; School Owner Approval Status</h3>
+                    <p class="text-xs text-slate-500">Only School Owner can verify, approve, or flag submitted Daily Closings (dual-control security).</p>
+                  </div>
+                  <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                    <table class="w-full text-left text-xs">
+                      <thead class="bg-slate-50 text-slate-600 uppercase font-black text-[10px] border-b border-slate-200">
+                        <tr>
+                          <th class="px-3 py-2.5">Closing ID &amp; Date</th>
+                          <th class="px-3 py-2.5 text-right">Cash</th>
+                          <th class="px-3 py-2.5 text-right">Bank / Digital</th>
+                          <th class="px-3 py-2.5 text-right">Total</th>
+                          <th class="px-3 py-2.5">Owner Decision</th>
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y divide-slate-100 font-medium">
+                        @for (rec of feeReconciliations; track rec.id) {
+                          <tr class="hover:bg-slate-50/70">
+                            <td class="px-3 py-2.5">
+                              <div class="font-mono font-black text-slate-900">{{ rec.id }}</div>
+                              <div class="font-mono text-[10px] text-slate-500">{{ rec.date }} · Slip: {{ rec.bankDepositSlipNo || 'N/A' }}</div>
+                            </td>
+                            <td class="px-3 py-2.5 text-right font-mono">PKR {{ formatCurrency(rec.counterCashReceived) }}</td>
+                            <td class="px-3 py-2.5 text-right font-mono text-indigo-700">PKR {{ formatCurrency((rec.bankDepositedMeezan || 0) + (rec.bankDepositedHBL || 0) + (rec.onlineDigitalKuickPay || 0)) }}</td>
+                            <td class="px-3 py-2.5 text-right font-mono font-black text-emerald-700">PKR {{ formatCurrency(rec.actualCollected) }}</td>
+                            <td class="px-3 py-2.5">
+                              <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase inline-block"
+                                [class]="rec.ownerApprovalStatus === 'Pending Owner Review' ? 'bg-amber-100 text-amber-800' : (rec.ownerApprovalStatus === 'Flagged by Owner' ? 'bg-rose-100 text-rose-800' : 'bg-emerald-100 text-emerald-800')">
+                                {{ rec.ownerApprovalStatus || 'Verified & Approved by Owner' }}
+                              </span>
+                              @if (rec.ownerRemarks) {
+                                <div class="text-[10px] text-slate-500 mt-0.5">{{ rec.ownerRemarks }}</div>
+                              }
+                            </td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             </div>

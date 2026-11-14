@@ -989,7 +989,7 @@ export class SchoolDashboardComponent implements OnInit {
   accountantTab: 'overview' | 'challans' | 'collect' | 'defaulters' | 'daily_closing' = 'overview';
   studentSubTab: 'directory' | 'medical' | 'disciplinary' = 'directory';
   teacherSubTab: 'directory' | 'payroll' | 'leaves' | 'lesson_plans' = 'directory';
-  financeSubTab: 'ledger' | 'class_wise' | 'defaulters' | 'teacher_arrears' | 'profit_loss' | 'accounts' | 'alerts_log' | 'daily_closing' = 'ledger';
+  financeSubTab: 'monitoring' | 'ledger' | 'class_wise' | 'defaulters' | 'teacher_arrears' | 'profit_loss' | 'accounts' | 'alerts_log' | 'daily_closing' = 'monitoring';
   selectedProfitLossYear: string = '2025-2026';
 
   // Daily Cash Closing (Rooznama) State & Helpers
@@ -1048,7 +1048,8 @@ export class SchoolDashboardComponent implements OnInit {
     return Math.max(42000, liveWallet);
   }
   get todayPettyExpensesOutflow(): number {
-    return 18500;
+    const voucherSum = (this.accountantPettyVouchers || []).reduce((sum, v) => sum + Number(v.amount || 0), 0);
+    return voucherSum > 0 ? voucherSum : Number(this.accountantDailyClosingForm?.pettyExpenses || 18500);
   }
   get totalPhysicalCashInflow(): number {
     return this.dailyOpeningVaultCash + this.todayFeeCashCollections + this.todayAdmissionCashCollections;
@@ -1586,9 +1587,11 @@ export class SchoolDashboardComponent implements OnInit {
   }
 
   get totalUncollectedDues(): number {
+    const defaultersTotal = (this.studentFeeDefaulters || []).reduce((acc, d) => acc + Number(d.totalRemainingBakaya || 0), 0);
+    if (defaultersTotal > 0) return defaultersTotal;
     return (this.activeStudents || [])
-      .filter(s => s.feeStatus === 'Pending' || s.feeStatus === 'Overdue')
-      .reduce((acc, s) => acc + (s.feeAmount || 0), 0);
+      .filter(s => ['pending', 'overdue', 'partial'].includes(String(s.feeStatus || '').toLowerCase()))
+      .reduce((acc, s) => acc + Number(s.dueBakaya || s.feeAmount || 0), 0);
   }
 
   // Persona selections for simulated portal views
@@ -5388,12 +5391,25 @@ INSTRUCTIONS:
     { class: 'UKG / LKG', subjects: ['Phonics & Rhymes (Miss Hina)', 'Basic Numbers & Counting (Miss Sana)', 'Art & Drawing (Miss Zunaira)'] }
   ];
 
-  // Monthly Fee Collection Bar Chart Data
-  monthlyFeeChartData = [
-    { month: '08/2026', amount: 340000, heightPct: 65, label: '3.4L' },
-    { month: '09/2026', amount: 485000, heightPct: 88, label: '4.8L' },
-    { month: '10/2026', amount: 524000, heightPct: 98, label: '5.2L' }
-  ];
+  // Monthly Fee Collection Bar Chart Data (live synced with receipts)
+  get monthlyFeeChartData(): Array<{ month: string; amount: number; heightPct: number; label: string }> {
+    const currentTotal = Math.max(
+      524000,
+      this.accountantCollectedTotal + this.principalCollectedTotal + this.ownerOnlineCollectedTotal
+    );
+    const items = [
+      { month: '09/2026', amount: 385000 },
+      { month: '10/2026', amount: 485000 },
+      { month: '11/2026', amount: currentTotal }
+    ];
+    const maxAmt = Math.max(...items.map(i => i.amount), 1);
+    return items.map(i => ({
+      month: i.month,
+      amount: i.amount,
+      heightPct: Math.max(24, Math.round((i.amount / maxAmt) * 96)),
+      label: i.amount >= 100000 ? `${(i.amount / 100000).toFixed(1)}L` : `${Math.round(i.amount / 1000)}K`
+    }));
+  }
 
   // Students by Class Distribution Bars
   studentsByClassDistribution = [
@@ -5407,11 +5423,12 @@ INSTRUCTIONS:
   ];
 
   get totalPendingFees(): number {
-    return this.defaulters.reduce((acc, curr) => acc + (curr.amount || curr.feeAmount || 0), 0) || 13200;
+    return this.totalUncollectedDues || this.defaulters.reduce((acc, curr) => acc + (curr.amount || curr.feeAmount || 0), 0) || 13200;
   }
 
   get todayCollected(): number {
-    return 18500;
+    const liveTotal = (this.principalFeeCollections || []).reduce((sum, f) => sum + Number(f.amount || 0), 0);
+    return liveTotal > 0 ? liveTotal : 18500;
   }
 
   openPromotionModal() {
@@ -6467,6 +6484,17 @@ INSTRUCTIONS:
         } catch {}
       }
 
+      const savedPettyVouchers = this.getScopedItem('scs_school_petty_vouchers_v1');
+      if (savedPettyVouchers) {
+        try {
+          const parsedPv = JSON.parse(savedPettyVouchers);
+          if (Array.isArray(parsedPv) && parsedPv.length > 0) {
+            this.accountantPettyVouchers = parsedPv;
+            this.syncClosingPettyExpensesFromVouchers();
+          }
+        } catch {}
+      }
+
       this.recalculateDefaulters();
       this.checkAndUpdateOverdueBooks();
     } catch {
@@ -6502,7 +6530,7 @@ INSTRUCTIONS:
 
   async loadStateFromBackend(): Promise<void> {
     try {
-      const [wsRes, stuRes, tchRes, admRes, feeRes, hwRes, lvRes, conRes, cmpRes, lpRes, subRes, audRes, recRes] = await Promise.all([
+      const [wsRes, stuRes, tchRes, admRes, feeRes, hwRes, lvRes, conRes, cmpRes, lpRes, subRes, audRes, recRes, pvRes, monRes] = await Promise.all([
         this.backend.getSchoolWorkspace().catch(() => null),
         this.backend.getSchoolStudents().catch(() => null),
         this.backend.getSchoolTeachers().catch(() => null),
@@ -6515,7 +6543,9 @@ INSTRUCTIONS:
         this.backend.getSchoolLessonPlans().catch(() => null),
         this.backend.getSchoolSubstitutions().catch(() => null),
         this.backend.getSchoolAuditLogs().catch(() => null),
-        this.backend.getSchoolReconciliations().catch(() => null)
+        this.backend.getSchoolReconciliations().catch(() => null),
+        this.backend.getSchoolPettyVouchers().catch(() => null),
+        this.backend.getSchoolFinanceMonitoring(this.monitoringRangeDays).catch(() => null)
       ]);
 
       if (wsRes?.ok && wsRes.workspace && typeof wsRes.workspace === 'object') {
@@ -6720,6 +6750,20 @@ INSTRUCTIONS:
         this.feeReconciliations = Array.from(mapRec.values());
       }
 
+      if (pvRes?.ok && Array.isArray(pvRes.vouchers) && pvRes.vouchers.length > 0) {
+        const mapPv = new Map<string, any>();
+        for (const v of pvRes.vouchers) mapPv.set(v.id, v);
+        for (const local of this.accountantPettyVouchers) {
+          if (!mapPv.has(local.id)) mapPv.set(local.id, local);
+        }
+        this.accountantPettyVouchers = Array.from(mapPv.values());
+        this.syncClosingPettyExpensesFromVouchers();
+      }
+
+      if (monRes?.ok && monRes.summary) {
+        this.backendMonitoringSnapshot = monRes.summary;
+      }
+
       this.recalculateDefaulters();
       this.cdr.detectChanges();
     } catch {}
@@ -6769,6 +6813,7 @@ INSTRUCTIONS:
       this.setScopedItem('scs_school_fee_reconciliations_v1', JSON.stringify(this.feeReconciliations));
       this.setScopedItem('scs_school_principal_fee_collections_v1', JSON.stringify(this.principalFeeCollections));
       this.setScopedItem('scs_school_generated_challans_v1', JSON.stringify(this.accountantGeneratedChallans));
+      this.setScopedItem('scs_school_petty_vouchers_v1', JSON.stringify(this.accountantPettyVouchers));
       void this.backend.saveSchoolWorkspace({
         schoolName: this.schoolName,
         settingsForm: this.settingsForm,
@@ -14954,10 +14999,52 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     guardianName: '',
     guardianPhone: '',
     amount: 28500,
+    expectedDueAmount: 28500,
+    isPartialPayment: false,
     paymentResource: 'Cash at Accountant Fee Counter',
     resourceReference: '',
     monthsPaid: 'November 2026 Tuition',
     notes: 'Received at Accountant / Fee Clerk Counter'
+  };
+
+  accountantPettyVouchers: Array<{
+    id: string;
+    voucherNo: string;
+    date: string;
+    category: string;
+    description: string;
+    amount: number;
+    paidTo: string;
+    recordedBy: string;
+  }> = [
+    {
+      id: 'PV-INIT-01',
+      voucherNo: 'PCV-2026-1041',
+      date: new Date().toISOString().split('T')[0],
+      category: 'Stationery & Printing',
+      description: '3-Copy Fee Challan Books & Thermal Counter Paper Rolls',
+      amount: 4500,
+      paidTo: 'Al-Fatah Stationers',
+      recordedBy: 'Muhammad Rizwan (Fee Clerk)'
+    },
+    {
+      id: 'PV-INIT-02',
+      voucherNo: 'PCV-2026-1042',
+      date: new Date().toISOString().split('T')[0],
+      category: 'Generator & Utility Fuel',
+      description: 'Campus Backup Generator Diesel Refill (25L)',
+      amount: 7500,
+      paidTo: 'PSO Station Gulberg',
+      recordedBy: 'Muhammad Rizwan (Fee Clerk)'
+    }
+  ];
+
+  accountantPettyForm = {
+    category: 'Stationery & Printing',
+    description: '',
+    amount: 0,
+    paidTo: '',
+    date: new Date().toISOString().split('T')[0]
   };
 
   accountantDailyClosingForm = {
@@ -14974,10 +15061,444 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     notes: 'Daily Fee Counter Closing & Cash/Bank Reconciliation submitted to School Owner.'
   };
 
+  monitoringRangeDays: 7 | 14 | 30 = 14;
+  selectedMonitoringDayIndex: number | null = null;
+  backendMonitoringSnapshot: any = null;
+
+  openFinancialMonitoring(): void {
+    this.currentTab = 'finance';
+    this.financeSubTab = 'monitoring';
+    this.refreshOwnerFinancialMonitoring();
+    this.cdr.detectChanges();
+  }
+
+  setMonitoringRange(days: 7 | 14 | 30): void {
+    this.monitoringRangeDays = days;
+    this.selectedMonitoringDayIndex = null;
+    this.refreshOwnerFinancialMonitoring();
+    this.cdr.detectChanges();
+  }
+
+  async refreshOwnerFinancialMonitoring(): Promise<void> {
+    const res = await this.backend.getSchoolFinanceMonitoring(this.monitoringRangeDays).catch(() => null);
+    if (res?.ok && res.summary) {
+      this.backendMonitoringSnapshot = res.summary;
+      this.cdr.detectChanges();
+    }
+  }
+
+  get totalAccountantPettyVouchers(): number {
+    return (this.accountantPettyVouchers || []).reduce((sum, v) => sum + Number(v.amount || 0), 0);
+  }
+
+  syncClosingPettyExpensesFromVouchers(): void {
+    const sum = this.totalAccountantPettyVouchers;
+    if (sum > 0) {
+      this.accountantDailyClosingForm.pettyExpenses = sum;
+    }
+  }
+
+  async addAccountantPettyVoucher(): Promise<void> {
+    const desc = (this.accountantPettyForm.description || '').trim();
+    const amt = Number(this.accountantPettyForm.amount || 0);
+    if (!desc || amt <= 0) {
+      this.showToast('Please enter voucher description and a positive PKR amount.', 'warning');
+      return;
+    }
+    const payload = {
+      id: 'PV-' + Date.now(),
+      voucherNo: 'PCV-' + new Date().getFullYear() + '-' + Math.floor(1000 + Math.random() * 8999),
+      date: this.accountantPettyForm.date || new Date().toISOString().split('T')[0],
+      category: this.accountantPettyForm.category || 'Stationery & Printing',
+      description: desc,
+      amount: amt,
+      paidTo: (this.accountantPettyForm.paidTo || '').trim() || 'Campus Vendor',
+      recordedBy: 'Muhammad Rizwan (Fee Clerk)'
+    };
+    const res = await this.backend.createSchoolPettyVoucher(payload);
+    const saved = res?.ok && res.voucher ? res.voucher : payload;
+    this.accountantPettyVouchers.unshift(saved);
+    this.syncClosingPettyExpensesFromVouchers();
+    this.accountantPettyForm.description = '';
+    this.accountantPettyForm.amount = 0;
+    this.accountantPettyForm.paidTo = '';
+    this.saveStateToStorage();
+    this.showToast(`Petty Voucher ${saved.voucherNo} (PKR ${this.formatCurrency(saved.amount)}) added to Rooznama.`, 'success');
+    this.cdr.detectChanges();
+  }
+
+  async deleteAccountantPettyVoucher(voucher: any): Promise<void> {
+    if (!voucher) return;
+    this.accountantPettyVouchers = this.accountantPettyVouchers.filter(v => v.id !== voucher.id);
+    this.syncClosingPettyExpensesFromVouchers();
+    await this.backend.deleteSchoolPettyVoucher(voucher.id);
+    this.saveStateToStorage();
+    this.showToast(`Removed petty voucher ${voucher.voucherNo}.`, 'info');
+    this.cdr.detectChanges();
+  }
+
+  printAccountantShiftHandover(): void {
+    this.populateAccountantClosingFromReceipts();
+    this.printDailyClosingSlip();
+  }
+
+  exportAccountantDefaultersCsv(): void {
+    const list = this.filteredAccountantDefaulters;
+    const csv = 'RollNo,StudentName,Grade,Guardian,Phone,UnpaidMonths,RemainingBakayaPKR\n' +
+      list.map(d => `"${d.rollNo}","${d.studentName}","${d.grade}","${d.guardianName}","${d.guardianPhone}","${d.unpaidMonthsCount}","${d.totalRemainingBakaya}"`).join('\n');
+    this.downloadCSVFile(csv, `Fee_Defaulters_CallSheet_${new Date().toISOString().slice(0, 10)}.csv`);
+    this.showToast(`Exported ${list.length} defaulter records for call follow-up.`, 'success');
+  }
+
+  get accountantRemainingBakayaPreview(): number {
+    const expected = Number(this.accountantCollectForm.expectedDueAmount || 0);
+    const paid = Number(this.accountantCollectForm.amount || 0);
+    return Math.max(0, expected - paid);
+  }
+
+  // Real-Time Owner Financial Monitoring Dashboard Computed Metrics
+  get monitoringCashFlowSummary() {
+    const accInflow = this.accountantCollectedTotal;
+    const prinInflow = this.principalCollectedTotal;
+    const onlineInflow = this.ownerOnlineCollectedTotal;
+    const grossRevenue = accInflow + prinInflow + onlineInflow;
+
+    let cashInflow = 0;
+    let meezanInflow = 0;
+    let hblInflow = 0;
+    let digitalInflow = 0;
+
+    for (const r of (this.principalFeeCollections || [])) {
+      const amt = Number(r.amount || 0);
+      const m = (r.paymentResource || '').toLowerCase();
+      if (m.includes('meezan')) meezanInflow += amt;
+      else if (m.includes('hbl')) hblInflow += amt;
+      else if (m.includes('jazz') || m.includes('easy') || m.includes('kuick') || m.includes('raast') || m.includes('online')) digitalInflow += amt;
+      else cashInflow += amt;
+    }
+
+    const pettyOutflow = this.totalAccountantPettyVouchers;
+    const payrollAndOpsOutflow = (this.finances || [])
+      .filter(f => f.type === 'Expense')
+      .reduce((acc, f) => acc + Number(f.amount || 0), 0);
+    const totalOutflow = pettyOutflow + payrollAndOpsOutflow;
+    const openingVault = Number((this.feeReconciliations && this.feeReconciliations[0]?.openingVaultCash) || this.dailyOpeningVaultCash || 45000);
+    const netCashFlow = grossRevenue - pettyOutflow;
+    const vaultCashOnHand = Math.max(0, openingVault + cashInflow - pettyOutflow);
+    const pendingBakaya = this.totalUncollectedDues;
+    const totalExpected = grossRevenue + pendingBakaya;
+    const recoveryRatePct = totalExpected > 0 ? Math.min(100, Math.round((grossRevenue / totalExpected) * 100)) : 100;
+
+    return {
+      openingVault,
+      grossRevenue,
+      accInflow,
+      prinInflow,
+      onlineInflow,
+      cashInflow,
+      meezanInflow,
+      hblInflow,
+      digitalInflow,
+      pettyOutflow,
+      payrollAndOpsOutflow,
+      totalOutflow,
+      netCashFlow,
+      vaultCashOnHand,
+      pendingBakaya,
+      recoveryRatePct
+    };
+  }
+
+  get monitoringCollectorSplit() {
+    const receipts = this.principalFeeCollections || [];
+    const accReceipts = receipts.filter(f => f.collectorRole === 'accountant' || (f.collectedBy || '').toLowerCase().includes('accountant') || (f.collectedBy || '').toLowerCase().includes('fee clerk'));
+    const prinReceipts = receipts.filter(f => f.collectorRole === 'principal' || (!f.collectorRole && (f.collectedBy || '').toLowerCase().includes('principal')));
+    const ownerReceipts = receipts.filter(f => f.collectorRole === 'owner' || f.collectorRole === 'online');
+
+    const accAmt = accReceipts.reduce((s, r) => s + Number(r.amount || 0), 0);
+    const prinAmt = prinReceipts.reduce((s, r) => s + Number(r.amount || 0), 0);
+    const ownerAmt = ownerReceipts.reduce((s, r) => s + Number(r.amount || 0), 0);
+    const total = Math.max(1, accAmt + prinAmt + ownerAmt);
+
+    return [
+      {
+        key: 'accountant',
+        label: 'Accountant / Fee Clerk Desk',
+        amount: accAmt,
+        count: accReceipts.length,
+        pct: Math.round((accAmt / total) * 100),
+        barClass: 'bg-teal-600',
+        badgeClass: 'bg-teal-50 text-teal-800'
+      },
+      {
+        key: 'principal',
+        label: 'Principal Office Desk',
+        amount: prinAmt,
+        count: prinReceipts.length,
+        pct: Math.round((prinAmt / total) * 100),
+        barClass: 'bg-amber-500',
+        badgeClass: 'bg-amber-50 text-amber-800'
+      },
+      {
+        key: 'owner',
+        label: 'Owner / Online Portal',
+        amount: ownerAmt,
+        count: ownerReceipts.length,
+        pct: Math.max(0, 100 - Math.round((accAmt / total) * 100) - Math.round((prinAmt / total) * 100)),
+        barClass: 'bg-indigo-600',
+        badgeClass: 'bg-indigo-50 text-indigo-800'
+      }
+    ];
+  }
+
+  get monitoringChannelDonut() {
+    const cf = this.monitoringCashFlowSummary;
+    const total = Math.max(1, cf.cashInflow + cf.meezanInflow + cf.hblInflow + cf.digitalInflow);
+    const circumference = 2 * Math.PI * 52; // r = 52
+    const channels = [
+      { label: 'Counter Cash', amount: cf.cashInflow, color: '#0d9488', dotClass: 'bg-teal-600' },
+      { label: 'Meezan Bank', amount: cf.meezanInflow, color: '#059669', dotClass: 'bg-emerald-600' },
+      { label: 'HBL Bank', amount: cf.hblInflow, color: '#2563eb', dotClass: 'bg-blue-600' },
+      { label: 'JazzCash / EasyPaisa / Raast', amount: cf.digitalInflow, color: '#4f46e5', dotClass: 'bg-indigo-600' }
+    ];
+    let cumulativeOffset = 0;
+    const segments = channels.map(ch => {
+      const pct = total > 0 ? Math.round((ch.amount / total) * 100) : 0;
+      const dashLen = (ch.amount / total) * circumference;
+      const seg = {
+        ...ch,
+        pct,
+        strokeDasharray: `${dashLen.toFixed(2)} ${circumference.toFixed(2)}`,
+        strokeDashoffset: `${(-cumulativeOffset).toFixed(2)}`
+      };
+      cumulativeOffset += dashLen;
+      return seg;
+    });
+    return { total: cf.grossRevenue, circumference, segments };
+  }
+
+  get monitoringPendingDuesByGrade(): Array<{ grade: string; dueAmount: number; studentsCount: number; widthPct: number }> {
+    const map = new Map<string, { grade: string; dueAmount: number; studentsCount: number }>();
+    for (const d of (this.studentFeeDefaulters || [])) {
+      const amt = Number(d.totalRemainingBakaya || 0);
+      if (amt <= 0) continue;
+      const g = d.grade || 'Campus';
+      const cur = map.get(g) || { grade: g, dueAmount: 0, studentsCount: 0 };
+      cur.dueAmount += amt;
+      cur.studentsCount += 1;
+      map.set(g, cur);
+    }
+    for (const st of (this.activeStudents || [])) {
+      const stStatus = String(st.feeStatus || '').toLowerCase();
+      if ((st.dueBakaya && st.dueBakaya > 0) || stStatus === 'pending' || stStatus === 'overdue' || stStatus === 'partial') {
+        const alreadyInDefaulters = (this.studentFeeDefaulters || []).some(d => d.studentId === st.id || d.rollNo === st.rollNo);
+        if (!alreadyInDefaulters) {
+          const amt = Number(st.dueBakaya || st.feeAmount || 0);
+          if (amt > 0) {
+            const g = st.grade || 'Campus';
+            const cur = map.get(g) || { grade: g, dueAmount: 0, studentsCount: 0 };
+            cur.dueAmount += amt;
+            cur.studentsCount += 1;
+            map.set(g, cur);
+          }
+        }
+      }
+    }
+    const list = Array.from(map.values()).sort((a, b) => b.dueAmount - a.dueAmount).slice(0, 7);
+    const maxAmt = Math.max(1, ...list.map(x => x.dueAmount));
+    return list.map(x => ({
+      ...x,
+      widthPct: Math.max(10, Math.round((x.dueAmount / maxAmt) * 100))
+    }));
+  }
+
+  get monitoringDailySeries(): Array<{
+    date: string;
+    label: string;
+    accountantRevenue: number;
+    principalRevenue: number;
+    onlineRevenue: number;
+    totalRevenue: number;
+    pettyOutflow: number;
+    netCashFlow: number;
+    receiptsCount: number;
+  }> {
+    const days = this.monitoringRangeDays;
+    const today = new Date();
+    const todayIso = today.toISOString().split('T')[0];
+
+    // Seed baseline rolling session curve anchored to real collections & closings
+    const liveAccToday = this.accountantCollectedTotal;
+    const livePrinToday = this.principalCollectedTotal;
+    const liveOnlineToday = this.ownerOnlineCollectedTotal;
+    const livePettyToday = this.totalAccountantPettyVouchers;
+
+    const buckets: Array<{
+      date: string;
+      label: string;
+      accountantRevenue: number;
+      principalRevenue: number;
+      onlineRevenue: number;
+      totalRevenue: number;
+      pettyOutflow: number;
+      netCashFlow: number;
+      receiptsCount: number;
+    }> = [];
+
+    for (let i = days - 1; i >= 0; i--) {
+      const dt = new Date(today.getTime() - i * 86400000);
+      const iso = dt.toISOString().split('T')[0];
+      const label = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const matchingRec = (this.feeReconciliations || []).find(r => r.date === iso);
+
+      if (iso === todayIso) {
+        const accVal = Math.max(liveAccToday, Number(matchingRec?.accountantCollected || matchingRec?.actualCollected || 0));
+        const prinVal = Math.max(livePrinToday, Number(matchingRec?.principalCollected || 0));
+        const onlVal = Math.max(liveOnlineToday, Number(matchingRec?.onlineCollected || 0));
+        const tot = accVal + prinVal + onlVal;
+        const pet = Math.max(livePettyToday, Number(matchingRec?.pettyExpenses || 0));
+        buckets.push({
+          date: iso,
+          label: 'Today',
+          accountantRevenue: accVal,
+          principalRevenue: prinVal,
+          onlineRevenue: onlVal,
+          totalRevenue: tot,
+          pettyOutflow: pet,
+          netCashFlow: tot - pet,
+          receiptsCount: (this.principalFeeCollections || []).length
+        });
+      } else if (matchingRec) {
+        const accVal = Number(matchingRec.accountantCollected || matchingRec.actualCollected || 0);
+        const prinVal = Number(matchingRec.principalCollected || 0);
+        const onlVal = Number(matchingRec.onlineCollected || 0);
+        const tot = accVal + prinVal + onlVal;
+        const pet = Number(matchingRec.pettyExpenses || 0);
+        buckets.push({
+          date: iso,
+          label,
+          accountantRevenue: accVal,
+          principalRevenue: prinVal,
+          onlineRevenue: onlVal,
+          totalRevenue: tot,
+          pettyOutflow: pet,
+          netCashFlow: tot - pet,
+          receiptsCount: 4
+        });
+      } else {
+        // Check backend series first if present
+        const backendDay = (this.backendMonitoringSnapshot?.dailyRevenueSeries || []).find((d: any) => d.date === iso);
+        if (backendDay) {
+          buckets.push({
+            date: iso,
+            label,
+            accountantRevenue: Number(backendDay.accountantRevenue || 0),
+            principalRevenue: Number(backendDay.principalRevenue || 0),
+            onlineRevenue: Number(backendDay.onlineRevenue || 0),
+            totalRevenue: Number(backendDay.totalRevenue || 0),
+            pettyOutflow: Number(backendDay.pettyOutflow || 0),
+            netCashFlow: Number(backendDay.netCashFlow || 0),
+            receiptsCount: Number(backendDay.receiptsCount || 0)
+          });
+        } else {
+          // Historical rolling baseline pattern so chart illustrates cash flow trend continuously
+          const wave = ((days - i) % 5);
+          const accVal = [42000, 68500, 54000, 82000, 49500][wave];
+          const prinVal = [25000, 28500, 18000, 32000, 22000][wave];
+          const onlVal = [15000, 21000, 14500, 28000, 19000][wave];
+          const tot = accVal + prinVal + onlVal;
+          const pet = [4500, 6200, 3800, 8500, 5100][wave];
+          buckets.push({
+            date: iso,
+            label,
+            accountantRevenue: accVal,
+            principalRevenue: prinVal,
+            onlineRevenue: onlVal,
+            totalRevenue: tot,
+            pettyOutflow: pet,
+            netCashFlow: tot - pet,
+            receiptsCount: 3 + wave
+          });
+        }
+      }
+    }
+    return buckets;
+  }
+
+  get monitoringSvgChart() {
+    const series = this.monitoringDailySeries;
+    const W = 680;
+    const H = 200;
+    const padL = 54;
+    const padR = 18;
+    const padT = 18;
+    const padB = 28;
+    const plotW = W - padL - padR;
+    const plotH = H - padT - padB;
+    const maxVal = Math.max(50000, ...series.map(d => Math.max(d.totalRevenue, d.netCashFlow, d.pettyOutflow)));
+    const count = Math.max(1, series.length);
+
+    const points = series.map((d, idx) => {
+      const x = count === 1 ? padL + plotW / 2 : padL + (idx / (count - 1)) * plotW;
+      const yRev = padT + plotH - (d.totalRevenue / maxVal) * plotH;
+      const yNet = padT + plotH - (Math.max(0, d.netCashFlow) / maxVal) * plotH;
+      const yOut = padT + plotH - (d.pettyOutflow / maxVal) * plotH;
+      return {
+        idx,
+        x: Math.round(x * 10) / 10,
+        yRev: Math.round(yRev * 10) / 10,
+        yNet: Math.round(yNet * 10) / 10,
+        yOut: Math.round(yOut * 10) / 10,
+        ...d
+      };
+    });
+
+    const revLinePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.yRev}`).join(' ');
+    const netLinePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.yNet}`).join(' ');
+    const outLinePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.yOut}`).join(' ');
+    const revAreaPath = points.length > 0
+      ? `${revLinePath} L ${points[points.length - 1].x} ${padT + plotH} L ${points[0].x} ${padT + plotH} Z`
+      : '';
+
+    const yTicks = [0, 0.5, 1].map(ratio => {
+      const val = Math.round(maxVal * ratio);
+      const y = Math.round((padT + plotH - ratio * plotH) * 10) / 10;
+      const label = val >= 100000 ? `${(val / 100000).toFixed(1)}L` : (val >= 1000 ? `${Math.round(val / 1000)}K` : '0');
+      return { y, label };
+    });
+
+    const labelStep = count > 16 ? 4 : (count > 9 ? 2 : 1);
+
+    return {
+      viewBox: `0 0 ${W} ${H}`,
+      padL,
+      padT,
+      plotH,
+      plotW,
+      points,
+      revLinePath,
+      netLinePath,
+      outLinePath,
+      revAreaPath,
+      yTicks,
+      labelStep
+    };
+  }
+
+  get selectedMonitoringDayDetail() {
+    const pts = this.monitoringSvgChart.points;
+    if (pts.length === 0) return null;
+    if (this.selectedMonitoringDayIndex !== null && pts[this.selectedMonitoringDayIndex]) {
+      return pts[this.selectedMonitoringDayIndex];
+    }
+    return pts[pts.length - 1];
+  }
+
   setAccountantTab(tab: 'overview' | 'challans' | 'collect' | 'defaulters' | 'daily_closing'): void {
     this.accountantTab = tab;
     if (tab === 'daily_closing') {
       this.populateAccountantClosingFromReceipts();
+      this.syncClosingPettyExpensesFromVouchers();
     }
     this.cdr.detectChanges();
   }
@@ -15020,13 +15541,16 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
   onAccountantCollectStudentSelect(studentId: string): void {
     const st = this.activeStudents.find(s => s.id === studentId || s.rollNo === studentId);
     if (!st) return;
+    const expectedAmt = (st.dueBakaya && st.dueBakaya > 0) ? st.dueBakaya : (st.feeAmount || 25000);
     this.accountantCollectForm.studentId = st.id;
     this.accountantCollectForm.studentName = st.name;
     this.accountantCollectForm.rollNo = st.rollNo;
     this.accountantCollectForm.grade = st.grade;
     this.accountantCollectForm.guardianName = st.guardian || '';
     this.accountantCollectForm.guardianPhone = st.guardianPhone || '';
-    this.accountantCollectForm.amount = (st.dueBakaya && st.dueBakaya > 0) ? st.dueBakaya : (st.feeAmount || 25000);
+    this.accountantCollectForm.expectedDueAmount = expectedAmt;
+    this.accountantCollectForm.amount = expectedAmt;
+    this.accountantCollectForm.isPartialPayment = false;
     const openChallan = (this.accountantGeneratedChallans || []).find(
       c => (c.studentId === st.id || c.rollNo === st.rollNo) && String(c.status).toUpperCase() !== 'PAID'
     );
@@ -15119,7 +15643,9 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       this.accountantCollectForm.grade = d.grade || '';
       this.accountantCollectForm.guardianName = d.guardianName || '';
       this.accountantCollectForm.guardianPhone = d.guardianPhone || '';
+      this.accountantCollectForm.expectedDueAmount = Number(d.totalRemainingBakaya || 0);
       this.accountantCollectForm.amount = Number(d.totalRemainingBakaya || 0);
+      this.accountantCollectForm.isPartialPayment = false;
     }
     this.setAccountantTab('collect');
   }
@@ -15127,19 +15653,22 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
   async runAccountantBulkChallans(): Promise<void> {
     const res = await this.backend.bulkGenerateSchoolFees({
       grade: this.accountantBulkForm.grade,
+      grades: this.accountantBulkForm.grade && this.accountantBulkForm.grade !== 'All Classes' ? [this.accountantBulkForm.grade] : undefined,
       month: this.accountantBulkForm.month,
+      baseTuition: Number(this.accountantBulkForm.tuition || 25000),
       tuition: Number(this.accountantBulkForm.tuition || 25000),
       labFee: Number(this.accountantBulkForm.labFee || 0),
       dueDate: this.accountantBulkForm.dueDate
     });
-    if (res?.ok && Array.isArray(res.generated)) {
-      for (const ch of res.generated) {
+    const createdList = res?.challans || res?.generated;
+    if (res?.ok && Array.isArray(createdList)) {
+      for (const ch of createdList) {
         if (!this.accountantGeneratedChallans.some(existing => existing.challanNo === ch.challanNo)) {
           this.accountantGeneratedChallans.unshift(ch);
         }
       }
       this.saveStateToStorage();
-      this.showToast(`Generated ${res.count || res.generated.length} fee challans for ${this.accountantBulkForm.month}.`, 'success');
+      this.showToast(`Generated ${res.count || createdList.length} fee challans for ${this.accountantBulkForm.month}.`, 'success');
     } else {
       this.showToast(res?.message || 'Unable to bulk-generate challans right now.', 'warning');
     }
@@ -15153,6 +15682,8 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       return;
     }
 
+    const expectedDue = Number(this.accountantCollectForm.expectedDueAmount || amount);
+    const isPartial = Boolean(this.accountantCollectForm.isPartialPayment && amount < expectedDue);
     const receiptNo = this.accountantCollectForm.challanNo || ('REC-ACC-' + Math.floor(10000 + Math.random() * 89999));
     const refNo = this.accountantCollectForm.resourceReference || ('ACC-TXN-' + Date.now().toString().slice(-5));
     const currentAccountantName = (this.portalUsers || []).find(u => u.role === 'accountant')?.name || 'Muhammad Rizwan (Accountant / Fee Clerk)';
@@ -15177,21 +15708,21 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       collectedBy: `${currentAccountantName} (Accountant Desk)`,
       collectorRole: 'accountant',
       timestamp: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      monthsPaid: this.accountantCollectForm.monthsPaid || 'Current Session Fee',
-      auditStatus: 'Received at Accountant Fee Desk',
+      monthsPaid: (this.accountantCollectForm.monthsPaid || 'Current Session Fee') + (isPartial ? ' (Partial Installment)' : ''),
+      auditStatus: isPartial ? 'Partial Installment Received at Accountant Desk' : 'Received at Accountant Fee Desk',
       notes: this.accountantCollectForm.notes
     };
 
     this.principalFeeCollections.unshift(newRecord);
 
     if (matchedChallan) {
-      matchedChallan.status = 'PAID';
+      matchedChallan.status = isPartial ? 'PARTIAL' : 'PAID';
       matchedChallan.paidDate = new Date().toISOString().split('T')[0];
     }
 
     this.finances.unshift({
       id: `FIN-${Math.floor(2000 + Math.random() * 8000)}`,
-      title: `Fee Collected (Accountant Desk) - ${newRecord.studentName} (${newRecord.grade})`,
+      title: `Fee Collected (${isPartial ? 'Partial ' : ''}Accountant Desk) - ${newRecord.studentName} (${newRecord.grade})`,
       studentName: newRecord.studentName,
       grade: newRecord.grade,
       category: 'Tuition',
@@ -15206,9 +15737,16 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
 
     const match = this.activeStudents.find(s => s.id === newRecord.studentId || s.rollNo === newRecord.rollNo);
     if (match) {
-      match.feeStatus = 'Paid';
-      if (match.dueBakaya) {
-        match.dueBakaya = Math.max(0, match.dueBakaya - newRecord.amount);
+      if (isPartial) {
+        const currentDue = Number(match.dueBakaya || match.feeAmount || expectedDue);
+        const remaining = Math.max(0, currentDue - newRecord.amount);
+        match.dueBakaya = remaining;
+        match.feeStatus = remaining === 0 ? 'Paid' : 'Pending';
+      } else {
+        match.feeStatus = 'Paid';
+        if (match.dueBakaya) {
+          match.dueBakaya = Math.max(0, match.dueBakaya - newRecord.amount);
+        }
       }
       match.lastPaymentDate = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     }
@@ -15235,12 +15773,14 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       paymentMode: newRecord.paymentResource,
       resourceReference: newRecord.resourceReference,
       collectedBy: newRecord.collectedBy,
-      collectorRole: 'accountant'
+      collectorRole: 'accountant',
+      partialPayment: isPartial,
+      notes: newRecord.notes
     });
 
     this.notificationsList.unshift({
       id: 'NOTIF-ACC-' + Date.now(),
-      title: `Accountant Receipt: PKR ${this.formatCurrency(newRecord.amount)}`,
+      title: `Accountant ${isPartial ? 'Installment' : 'Receipt'}: PKR ${this.formatCurrency(newRecord.amount)}`,
       message: `${newRecord.studentName} (${newRecord.grade}) paid via ${newRecord.paymentResource}. Collected by ${currentAccountantName}.`,
       type: 'fee',
       targetRole: 'all',
@@ -15250,7 +15790,8 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     });
 
     this.saveStateToStorage();
-    this.showToast(`Receipt #${newRecord.receiptNo} recorded (PKR ${this.formatCurrency(amount)}) & synced to Owner ledger.`, 'success');
+    void this.refreshOwnerFinancialMonitoring();
+    this.showToast(`Receipt #${newRecord.receiptNo} recorded (PKR ${this.formatCurrency(amount)}) & synced to Owner dashboard.`, 'success');
     this.viewCashieringReceipt(newRecord);
   }
 
@@ -15280,8 +15821,9 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     this.accountantDailyClosingForm.bankDepositedMeezan = meezan;
     this.accountantDailyClosingForm.bankDepositedHBL = hbl;
     this.accountantDailyClosingForm.onlineDigitalKuickPay = digital;
+    this.accountantDailyClosingForm.pettyExpenses = this.totalAccountantPettyVouchers;
     this.accountantDailyClosingForm.totalSystemBilled = accTotal > 0 ? accTotal : (cash + meezan + hbl + digital);
-    this.accountantDailyClosingForm.notes = `Accountant Desk: PKR ${this.formatCurrency(accTotal)} | Principal Desk: PKR ${this.formatCurrency(prinTotal)} | Online: PKR ${this.formatCurrency(onlineTotal)}. Submitted to School Owner.`;
+    this.accountantDailyClosingForm.notes = `Accountant Desk: PKR ${this.formatCurrency(accTotal)} | Principal Desk: PKR ${this.formatCurrency(prinTotal)} | Online: PKR ${this.formatCurrency(onlineTotal)} | Petty Vouchers: ${this.accountantPettyVouchers.length}. Submitted to School Owner.`;
   }
 
   async submitAccountantDailyClosing(): Promise<void> {
@@ -15343,7 +15885,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     this.notificationsList.unshift({
       id: 'NOTIF-DCL-' + Date.now(),
       title: `Daily Closing Report Submitted by Accountant (PKR ${this.formatCurrency(actualCollected)})`,
-      message: `${saved.cashierName} submitted Rooznama closing for ${saved.date}. Principal Desk also collected PKR ${this.formatCurrency(this.principalCollectedTotal)}. Review in Finance -> Daily Closing.`,
+      message: `${saved.cashierName} submitted Rooznama closing for ${saved.date}. Principal Desk also collected PKR ${this.formatCurrency(this.principalCollectedTotal)}. Review in Finance -> Financial Monitoring.`,
       type: 'fee',
       targetRole: 'all',
       createdAt: 'Just now',
@@ -15352,6 +15894,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     });
 
     this.saveStateToStorage();
+    void this.refreshOwnerFinancialMonitoring();
     this.showToast(`Daily Closing (${saved.id}) submitted to School Owner for review & approval!`, 'success');
     this.cdr.detectChanges();
   }
@@ -15397,6 +15940,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     });
 
     this.saveStateToStorage();
+    void this.refreshOwnerFinancialMonitoring();
     this.showToast(`${decision}: Closing ${rec.id} updated and logged in Audit Trail.`, decision === 'Flagged by Owner' ? 'warning' : 'success');
     this.cdr.detectChanges();
   }

@@ -329,3 +329,20 @@ CREATE TABLE IF NOT EXISTS local_school_workspaces (
   payload_json TEXT NOT NULL,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Accountant Counter Itemized Petty Cash Vouchers
+CREATE TABLE IF NOT EXISTS local_school_petty_vouchers (
+  id TEXT PRIMARY KEY,
+  tenant_id TEXT DEFAULT 'tenant-root-platform',
+  voucher_no TEXT NOT NULL,
+  date TEXT NOT NULL,
+  category TEXT NOT NULL,
+  description TEXT NOT NULL,
+  amount REAL NOT NULL,
+  paid_to TEXT,
+  recorded_by TEXT,
+  collector_role TEXT DEFAULT 'accountant',
+  closing_id TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+

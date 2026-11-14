@@ -1018,6 +1018,46 @@ export class BackendService {
     } catch { return { ok: false }; }
   }
 
+  async getSchoolPettyVouchers() {
+    try {
+      const res = await fetch('/api/school/petty-vouchers', { headers: this.getSchoolHeaders(false), credentials: 'include' });
+      return await res.json().catch(() => ({ ok: false, vouchers: [] }));
+    } catch { return { ok: false, vouchers: [] }; }
+  }
+
+  async createSchoolPettyVoucher(payload: any) {
+    try {
+      const res = await fetch('/api/school/petty-vouchers', {
+        method: 'POST',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async deleteSchoolPettyVoucher(id: string) {
+    try {
+      const res = await fetch(`/api/school/petty-vouchers/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        headers: this.getSchoolHeaders(false),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async getSchoolFinanceMonitoring(days: number = 14) {
+    try {
+      const res = await fetch(`/api/school/finance/monitoring?days=${days}`, {
+        headers: this.getSchoolHeaders(false),
+        credentials: 'include'
+      });
+      return await res.json().catch(() => ({ ok: false, summary: null }));
+    } catch { return { ok: false, summary: null }; }
+  }
+
   // --- PROPERTY & REAL ESTATE ---
   async getProperties() {
     try {

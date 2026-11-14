@@ -469,3 +469,109 @@ test('Accountant 6th Role: RBAC isolation, challan + fee receipt collection, Pri
   const logs = (await auditRes.json()).logs;
   assert.ok(logs.some((l) => l.entityId === reconciliation.id && l.actionType === 'Owner Daily Closing Oversight'));
 });
+
+test('School Business: Owner Financial Monitoring, Partial Installments & Petty Cash Vouchers', async () => {
+  const tenantId = `tenant-school-mon-${Date.now()}`;
+  const ownerHeaders = { 'Content-Type': 'application/json', 'x-tenant-id': tenantId, 'x-user-role': 'owner' };
+  const accountantHeaders = { 'Content-Type': 'application/json', 'x-tenant-id': tenantId, 'x-user-role': 'accountant' };
+  const principalHeaders = { 'Content-Type': 'application/json', 'x-tenant-id': tenantId, 'x-user-role': 'principal' };
+  const studentHeaders = { 'Content-Type': 'application/json', 'x-tenant-id': tenantId, 'x-user-role': 'student' };
+
+  // Seed 2 students with due balances
+  const st1 = (await (await fetch(`${baseUrl}/api/school/students`, {
+    method: 'POST',
+    headers: ownerHeaders,
+    body: JSON.stringify({ fullName: 'Bilal Ahmed', grade: 'Grade 9', section: 'A', guardianName: 'Ahmed Khan', feeAmount: 30000, dueBakaya: 30000 })
+  })).json()).student;
+
+  const st2 = (await (await fetch(`${baseUrl}/api/school/students`, {
+    method: 'POST',
+    headers: ownerHeaders,
+    body: JSON.stringify({ fullName: 'Hira Fatima', grade: 'Grade 10', section: 'B', guardianName: 'Fatima Noor', feeAmount: 25000, dueBakaya: 25000 })
+  })).json()).student;
+
+  // 1. Accountant logs a Petty Cash Voucher; student is blocked (403)
+  const blockedPetty = await fetch(`${baseUrl}/api/school/petty-vouchers`, {
+    method: 'POST',
+    headers: studentHeaders,
+    body: JSON.stringify({ category: 'Stationery', description: 'Unauthorized', amount: 500 })
+  });
+  assert.equal(blockedPetty.status, 403);
+
+  const pettyRes = await fetch(`${baseUrl}/api/school/petty-vouchers`, {
+    method: 'POST',
+    headers: accountantHeaders,
+    body: JSON.stringify({
+      category: 'Stationery & Printing',
+      description: 'Thermal Receipt Rolls',
+      amount: 3500,
+      paidTo: 'City Stationers',
+      date: '2026-11-14'
+    })
+  });
+  assert.equal(pettyRes.status, 201);
+  const { voucher } = await pettyRes.json();
+  assert.equal(voucher.amount, 3500);
+
+  // 2. Accountant creates a challan and collects a PARTIAL installment
+  const chRes = await fetch(`${baseUrl}/api/school/fees`, {
+    method: 'POST',
+    headers: accountantHeaders,
+    body: JSON.stringify({ studentId: st1.id, studentName: st1.fullName, grade: st1.grade, month: 'November 2026', tuition: 30000, labFee: 0 })
+  });
+  assert.equal(chRes.status, 201);
+  const { fee: ch1 } = await chRes.json();
+
+  const partialCollectRes = await fetch(`${baseUrl}/api/school/fees/collect`, {
+    method: 'POST',
+    headers: accountantHeaders,
+    body: JSON.stringify({
+      id: ch1.id,
+      studentId: st1.id,
+      amount: 12000,
+      partialPayment: true,
+      paymentMode: 'Cash at Accountant Fee Counter',
+      notes: 'First installment paid at fee counter'
+    })
+  });
+  assert.equal(partialCollectRes.status, 200);
+  const partialFee = (await partialCollectRes.json()).fee;
+  assert.equal(partialFee.status, 'PARTIAL');
+  assert.equal(partialFee.paidAmount, 12000);
+  assert.equal(partialFee.collectorRole, 'accountant');
+
+  // Principal collects full fee for st2 via Meezan Bank
+  const prinRes = await fetch(`${baseUrl}/api/school/fees/collect`, {
+    method: 'POST',
+    headers: principalHeaders,
+    body: JSON.stringify({
+      studentId: st2.id,
+      studentName: st2.fullName,
+      grade: st2.grade,
+      amount: 25000,
+      paymentMode: 'Meezan Bank Challan',
+      resourceReference: 'MEZN-9981'
+    })
+  });
+  assert.equal(prinRes.status, 200);
+
+  // 3. Student cannot read Owner Financial Monitoring endpoint (403)
+  const blockedMon = await fetch(`${baseUrl}/api/school/finance/monitoring?days=14`, { headers: studentHeaders });
+  assert.equal(blockedMon.status, 403);
+
+  // 4. Owner fetches aggregated real-time Financial Monitoring metrics
+  const monRes = await fetch(`${baseUrl}/api/school/finance/monitoring?days=14`, { headers: ownerHeaders });
+  assert.equal(monRes.status, 200);
+  const { summary } = await monRes.json();
+
+  assert.equal(summary.collectorBreakdown.accountantCollected, 12000);
+  assert.equal(summary.collectorBreakdown.principalCollected, 25000);
+  assert.equal(summary.cashFlow.grossRevenue, 37000);
+  assert.equal(summary.cashFlow.pettyExpensesOutflow, 3500);
+  assert.equal(summary.channelMix.cash, 12000);
+  assert.equal(summary.channelMix.meezan, 25000);
+  assert.equal(summary.pendingDues.totalDueBakaya, 18000); // st1 remaining 30000 - 12000 = 18000, st2 = 0
+  assert.ok(Array.isArray(summary.pendingDues.byGrade) && summary.pendingDues.byGrade.some(g => g.grade === 'Grade 9' && g.dueAmount === 18000));
+  assert.ok(Array.isArray(summary.dailyRevenueSeries) && summary.dailyRevenueSeries.length >= 1);
+  assert.ok(Array.isArray(summary.pettyVouchers) && summary.pettyVouchers.some(v => v.id === voucher.id));
+});

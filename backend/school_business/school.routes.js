@@ -137,7 +137,9 @@ function ensureColumnMigrations(sqliteDb) {
     ['payment_mode', 'TEXT'],
     ['resource_reference', 'TEXT'],
     ['collected_by', 'TEXT'],
-    ['collector_role', "TEXT DEFAULT 'owner'"]
+    ['collector_role', "TEXT DEFAULT 'owner'"],
+    ['paid_amount', 'REAL DEFAULT 0'],
+    ['notes', 'TEXT']
   ];
   for (const [c, d] of feeCols) safeAddCol('local_school_fees', c, d);
 
@@ -176,6 +178,25 @@ function ensureColumnMigrations(sqliteDb) {
 
   safeAddCol('local_school_exams', 'tenant_id', "TEXT DEFAULT 'tenant-root-platform'");
   safeAddCol('local_school_results', 'tenant_id', "TEXT DEFAULT 'tenant-root-platform'");
+
+  try {
+    sqliteDb.exec(`
+      CREATE TABLE IF NOT EXISTS local_school_petty_vouchers (
+        id TEXT PRIMARY KEY,
+        tenant_id TEXT DEFAULT 'tenant-root-platform',
+        voucher_no TEXT NOT NULL,
+        date TEXT NOT NULL,
+        category TEXT NOT NULL,
+        description TEXT NOT NULL,
+        amount REAL NOT NULL,
+        paid_to TEXT,
+        recorded_by TEXT,
+        collector_role TEXT DEFAULT 'accountant',
+        closing_id TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+  } catch {}
 }
 
 export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedData) {
@@ -743,11 +764,13 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     labFee: Number(r.lab_fee || 0),
     discount: Number(r.discount || 0),
     total: Number(r.total || 0),
+    paidAmount: Number(r.paid_amount ?? (r.status === 'PAID' ? r.total : 0)),
     status: r.status || 'PENDING',
     paymentMode: r.payment_mode || '',
     resourceReference: r.resource_reference || '',
     collectedBy: r.collected_by || '',
     collectorRole: r.collector_role || 'owner',
+    notes: r.notes || '',
     dueDate: r.due_date || '',
     paidDate: r.paid_date || '',
     isSynced: r.is_synced === 1
@@ -856,7 +879,14 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
   router.post('/fees/bulk-generate', rejectRestrictedRole(['student', 'parent']), async (req, res) => {
     const tid = resolveTenantId(req);
-    const { month = 'April 2026', dueDate, baseTuition = 18000, labFee = 1500, grades } = req.body || {};
+    const body = req.body || {};
+    const month = body.month || 'April 2026';
+    const dueDate = body.dueDate;
+    const baseTuition = Number(body.baseTuition ?? body.tuition ?? 18000);
+    const labFee = Number(body.labFee ?? 1500);
+    const grades = Array.isArray(body.grades)
+      ? body.grades
+      : (body.grade && body.grade !== 'All Classes' ? [body.grade] : undefined);
     if (Number(baseTuition) < 0 || Number(labFee) < 0) {
       return res.status(400).json({ ok: false, message: 'Base tuition and lab fee must be non-negative.' });
     }
@@ -866,10 +896,10 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       const rows = sqliteDb.prepare('SELECT * FROM local_school_students WHERE tenant_id = ?').all(tid);
       targetStudents = rows
         .map((r) => mapStudentRow(r, tid))
-        .filter((s) => !String(s.status || '').includes('ALUMNI') && (!Array.isArray(grades) || grades.length === 0 || grades.includes(s.grade)));
+        .filter((s) => !String(s.status || '').includes('ALUMNI') && (!Array.isArray(grades) || grades.length === 0 || grades.some((g) => s.grade.includes(g) || g === s.grade)));
     }
     if (targetStudents.length === 0 && tid === ROOT_TENANT_ID) {
-      targetStudents = defaultStudentsSeed.filter((s) => !Array.isArray(grades) || grades.length === 0 || grades.includes(s.grade));
+      targetStudents = defaultStudentsSeed.filter((s) => !Array.isArray(grades) || grades.length === 0 || grades.some((g) => s.grade.includes(g) || g === s.grade));
     }
 
     const resolvedDue = dueDate || new Date(Date.now() + 15 * 86400000).toISOString().split('T')[0];
@@ -897,6 +927,7 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
           labFee: labAmt,
           discount: 0,
           total,
+          paidAmount: 0,
           status: 'PENDING',
           collectorRole: reqRole,
           dueDate: resolvedDue
@@ -906,8 +937,8 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
           sqliteDb.prepare(`
             INSERT INTO local_school_fees (
               id, tenant_id, challan_no, student_id, student_name, roll_no, grade, month,
-              tuition, lab_fee, discount, total, status, collector_role, due_date, is_synced, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
+              tuition, lab_fee, discount, total, paid_amount, status, collector_role, due_date, is_synced, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, 0, ?)
           `).run(
             challan.id, tid, challan.challanNo, challan.studentId, encName, challan.rollNo, challan.grade,
             challan.month, challan.tuition, challan.labFee, 0, challan.total, 'PENDING', challan.collectorRole, resolvedDue,
@@ -938,7 +969,8 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       ok: true,
       message: `Bulk generation complete: ${generated.length} fee challan(s) created for ${month}.`,
       count: generated.length,
-      challans: generated
+      challans: generated,
+      generated
     });
   });
 
@@ -957,58 +989,77 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       challanNo,
       paymentMode = body.paymentMethod || 'Cash Counter',
       resourceReference = '',
-      collectedBy = 'Accounts Desk'
+      collectedBy = 'Accounts Desk',
+      partialPayment = false,
+      notes = ''
     } = body;
     const reqRole = resolveUserRole(req);
     const collectorRole = String(body.collectorRole || reqRole || (String(collectedBy).toLowerCase().includes('principal') ? 'principal' : 'accountant')).toLowerCase();
     const paidDate = new Date().toISOString().split('T')[0];
+    const numPaidNow = Number(amount || 0);
 
     let updatedFee = null;
     if (sqliteDb && id) {
       const row = sqliteDb.prepare('SELECT * FROM local_school_fees WHERE id = ? AND tenant_id = ?').get(id, tid);
       if (row) {
+        const totalDue = Number(row.total || 0);
+        const previouslyPaid = Number(row.paid_amount || 0);
+        const appliedPay = numPaidNow > 0 ? numPaidNow : Math.max(0, totalDue - previouslyPaid);
+        const cumulativePaid = Math.min(totalDue > 0 ? totalDue : appliedPay, previouslyPaid + appliedPay);
+        const nextStatus = (partialPayment && totalDue > 0 && cumulativePaid < totalDue) ? 'PARTIAL' : 'PAID';
         sqliteDb.prepare(`
           UPDATE local_school_fees
-          SET status = 'PAID', paid_date = ?, payment_mode = ?, resource_reference = ?, collected_by = ?, collector_role = ?, is_synced = 0
+          SET status = ?, paid_amount = ?, paid_date = ?, payment_mode = ?, resource_reference = ?, collected_by = ?, collector_role = ?, notes = ?, is_synced = 0
           WHERE id = ? AND tenant_id = ?
-        `).run(paidDate, paymentMode, resourceReference, collectedBy, collectorRole, id, tid);
+        `).run(nextStatus, cumulativePaid, paidDate, paymentMode, resourceReference, collectedBy, collectorRole, String(notes || ''), id, tid);
         updatedFee = mapFeeRow(sqliteDb.prepare('SELECT * FROM local_school_fees WHERE id = ? AND tenant_id = ?').get(id, tid), tid);
       }
     }
 
-    if (sqliteDb && !updatedFee && studentName && Number(amount) > 0) {
+    if (sqliteDb && !updatedFee && studentName && numPaidNow > 0) {
       const feeId = 'FEE-' + Date.now() + '-' + Math.floor(10 + Math.random() * 90);
       const resolvedChallanNo = String(challanNo || receiptNo || (`REC-${new Date().getFullYear()}-${Date.now().toString().slice(-4)}`));
-      const numAmount = Number(amount);
       const encStuName = enc(tid, String(studentName).trim());
+      const feeStatus = partialPayment ? 'PARTIAL' : 'PAID';
       sqliteDb.prepare(`
         INSERT INTO local_school_fees (
           id, tenant_id, challan_no, student_id, student_name, roll_no, grade, month, tuition, lab_fee,
-          discount, total, status, payment_mode, resource_reference, collected_by, collector_role, due_date, paid_date, is_synced, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, ?, 'PAID', ?, ?, ?, ?, ?, ?, 0, ?)
+          discount, total, paid_amount, status, payment_mode, resource_reference, collected_by, collector_role, notes, due_date, paid_date, is_synced, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
       `).run(
         feeId, tid, resolvedChallanNo, String(studentId || ''), encStuName, String(rollNo), String(grade),
-        String(month), numAmount, numAmount, String(paymentMode), String(resourceReference),
-        String(collectedBy), collectorRole, paidDate, paidDate, new Date().toISOString()
+        String(month), numPaidNow, numPaidNow, numPaidNow, feeStatus, String(paymentMode), String(resourceReference),
+        String(collectedBy), collectorRole, String(notes || ''), paidDate, paidDate, new Date().toISOString()
       );
       updatedFee = mapFeeRow(sqliteDb.prepare('SELECT * FROM local_school_fees WHERE id = ? AND tenant_id = ?').get(feeId, tid), tid);
     }
 
     const targetStdId = studentId || updatedFee?.studentId;
     if (sqliteDb && targetStdId) {
-      sqliteDb.prepare("UPDATE local_school_students SET fee_status = 'PAID', due_bakaya = 0, is_synced = 0 WHERE id = ? AND tenant_id = ?")
-        .run(targetStdId, tid);
+      const stRow = sqliteDb.prepare('SELECT due_bakaya, fee_amount FROM local_school_students WHERE id = ? AND tenant_id = ?').get(targetStdId, tid);
+      if (stRow) {
+        const currentDue = Number(stRow.due_bakaya ?? stRow.fee_amount ?? 0);
+        if (partialPayment && numPaidNow > 0) {
+          const remaining = Math.max(0, currentDue - numPaidNow);
+          const nextStudentStatus = remaining === 0 ? 'PAID' : 'PARTIAL';
+          sqliteDb.prepare('UPDATE local_school_students SET fee_status = ?, due_bakaya = ?, is_synced = 0 WHERE id = ? AND tenant_id = ?')
+            .run(nextStudentStatus, remaining, targetStdId, tid);
+        } else {
+          sqliteDb.prepare("UPDATE local_school_students SET fee_status = 'PAID', due_bakaya = 0, is_synced = 0 WHERE id = ? AND tenant_id = ?")
+            .run(targetStdId, tid);
+        }
+      }
     }
 
     if (updatedFee) {
       recordAudit(tid, {
         operatorName: collectedBy || (collectorRole === 'accountant' ? 'Accountant / Fee Clerk' : 'Principal Office'),
         operatorRole: collectorRole === 'accountant' ? 'Accountant / Fee Clerk' : (collectorRole === 'principal' ? 'Principal' : 'School Owner'),
-        actionType: 'Fee Receipt Collected',
+        actionType: updatedFee.status === 'PARTIAL' ? 'Partial Fee Installment Collected' : 'Fee Receipt Collected',
         category: 'Financial',
         entityId: updatedFee.challanNo || updatedFee.id,
         entityDescription: `${updatedFee.studentName} (${updatedFee.grade})`,
-        details: `Collected PKR ${updatedFee.total} via ${paymentMode}${resourceReference ? ' (Ref: ' + resourceReference + ')' : ''} [Collector: ${collectorRole.toUpperCase()}].`,
+        details: `Collected PKR ${numPaidNow > 0 ? numPaidNow : updatedFee.total} via ${paymentMode}${resourceReference ? ' (Ref: ' + resourceReference + ')' : ''} [${updatedFee.status} · Collector: ${collectorRole.toUpperCase()}].`,
         severity: 'Normal Audit',
         verifiedBy: collectorRole === 'accountant' ? 'Pending Owner Daily Closing' : 'Principal / Owner Desk'
       });
@@ -1975,6 +2026,292 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     }
 
     res.json({ ok: true, reconciliation: updated });
+  });
+
+  // =========================================================================
+  // PETTY CASH VOUCHERS & OWNER REAL-TIME FINANCIAL MONITORING DASHBOARD
+  // =========================================================================
+  const mapPettyVoucherRow = (v) => ({
+    id: v.id,
+    tenantId: v.tenant_id,
+    voucherNo: v.voucher_no,
+    date: v.date,
+    category: v.category || 'Stationery & Office',
+    description: v.description,
+    amount: Number(v.amount || 0),
+    paidTo: v.paid_to || 'Campus Vendor',
+    recordedBy: v.recorded_by || 'Accountant / Fee Clerk',
+    collectorRole: v.collector_role || 'accountant',
+    closingId: v.closing_id || ''
+  });
+
+  router.get('/petty-vouchers', (req, res) => {
+    const tid = resolveTenantId(req);
+    let vouchers = [];
+    if (sqliteDb) {
+      try {
+        const rows = sqliteDb.prepare('SELECT * FROM local_school_petty_vouchers WHERE tenant_id = ? ORDER BY date DESC, created_at DESC LIMIT 200').all(tid);
+        vouchers = rows.map(mapPettyVoucherRow);
+      } catch {}
+    }
+    res.json({ ok: true, tenantId: tid, vouchers });
+  });
+
+  router.post('/petty-vouchers', rejectRestrictedRole(['student', 'parent', 'teacher']), (req, res) => {
+    const tid = resolveTenantId(req);
+    const b = req.body || {};
+    const description = String(b.description || '').trim();
+    const amount = Number(b.amount || 0);
+    if (!description || !Number.isFinite(amount) || amount <= 0) {
+      return res.status(400).json({ ok: false, message: 'Voucher description and positive amount are required.' });
+    }
+    const reqRole = resolveUserRole(req) || 'accountant';
+    const voucher = {
+      id: b.id || ('PV-' + Date.now() + '-' + Math.floor(10 + Math.random() * 90)),
+      tenantId: tid,
+      voucherNo: String(b.voucherNo || ('PCV-' + new Date().getFullYear() + '-' + Math.floor(1000 + Math.random() * 9000))),
+      date: String(b.date || new Date().toISOString().split('T')[0]),
+      category: String(b.category || 'Stationery & Supplies'),
+      description,
+      amount,
+      paidTo: String(b.paidTo || 'Cash Counter Vendor'),
+      recordedBy: String(b.recordedBy || (reqRole === 'accountant' ? 'Muhammad Rizwan (Fee Clerk)' : 'Accounts Office')),
+      collectorRole: reqRole,
+      closingId: String(b.closingId || '')
+    };
+
+    if (sqliteDb) {
+      sqliteDb.prepare(`
+        INSERT OR REPLACE INTO local_school_petty_vouchers
+        (id, tenant_id, voucher_no, date, category, description, amount, paid_to, recorded_by, collector_role, closing_id, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        voucher.id, tid, voucher.voucherNo, voucher.date, voucher.category, voucher.description,
+        voucher.amount, voucher.paidTo, voucher.recordedBy, voucher.collectorRole, voucher.closingId,
+        new Date().toISOString()
+      );
+      recordAudit(tid, {
+        operatorName: voucher.recordedBy,
+        operatorRole: reqRole === 'accountant' ? 'Accountant / Fee Clerk' : 'Accounts Office',
+        actionType: 'Petty Cash Voucher Logged',
+        category: 'Financial',
+        entityId: voucher.voucherNo,
+        entityDescription: `${voucher.category}: ${voucher.description}`,
+        details: `Disbursed PKR ${voucher.amount.toLocaleString()} to ${voucher.paidTo} (${voucher.date}).`,
+        severity: 'Normal Audit',
+        verifiedBy: 'Owner Daily Closing Oversight'
+      });
+    }
+    res.status(201).json({ ok: true, voucher });
+  });
+
+  router.delete('/petty-vouchers/:id', rejectRestrictedRole(['student', 'parent', 'teacher']), (req, res) => {
+    const tid = resolveTenantId(req);
+    const id = req.params.id;
+    if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
+    const row = sqliteDb.prepare('SELECT * FROM local_school_petty_vouchers WHERE id = ? AND tenant_id = ?').get(id, tid);
+    if (!row) return res.status(404).json({ ok: false, message: 'Petty cash voucher not found.' });
+    sqliteDb.prepare('DELETE FROM local_school_petty_vouchers WHERE id = ? AND tenant_id = ?').run(id, tid);
+    res.json({ ok: true, id });
+  });
+
+  router.get('/finance/monitoring', rejectRestrictedRole(['student', 'parent']), (req, res) => {
+    const tid = resolveTenantId(req);
+    const daysParam = Math.min(90, Math.max(7, Number(req.query?.days || 14)));
+    let fees = [];
+    let students = [];
+    let reconciliations = [];
+    let pettyVouchers = [];
+    let teachers = [];
+
+    if (sqliteDb) {
+      try {
+        fees = sqliteDb.prepare('SELECT * FROM local_school_fees WHERE tenant_id = ? ORDER BY created_at DESC').all(tid).map((r) => mapFeeRow(r, tid));
+        students = sqliteDb.prepare('SELECT * FROM local_school_students WHERE tenant_id = ?').all(tid).map((r) => mapStudentRow(r, tid));
+        reconciliations = sqliteDb.prepare('SELECT * FROM local_school_reconciliation WHERE tenant_id = ? ORDER BY date DESC, created_at DESC LIMIT 100').all(tid).map(mapReconciliationRow);
+        pettyVouchers = sqliteDb.prepare('SELECT * FROM local_school_petty_vouchers WHERE tenant_id = ? ORDER BY date DESC, created_at DESC LIMIT 200').all(tid).map(mapPettyVoucherRow);
+        teachers = sqliteDb.prepare('SELECT * FROM local_school_teachers WHERE tenant_id = ?').all(tid);
+      } catch {}
+    }
+
+    if (fees.length === 0 && students.length === 0 && tid === ROOT_TENANT_ID) {
+      fees = defaultFeesSeed;
+      students = defaultStudentsSeed;
+      reconciliations = SCHOOL_FEE_RECONCILIATION;
+    }
+
+    const paidFees = fees.filter((f) => String(f.status).toUpperCase() === 'PAID' || String(f.status).toUpperCase() === 'PARTIAL');
+    let accountantCollected = 0;
+    let accountantReceiptsCount = 0;
+    let principalCollected = 0;
+    let principalReceiptsCount = 0;
+    let ownerOnlineCollected = 0;
+    let ownerReceiptsCount = 0;
+
+    let cashInflow = 0;
+    let bankMeezanInflow = 0;
+    let bankHblInflow = 0;
+    let digitalInflow = 0;
+
+    for (const f of paidFees) {
+      const amt = Number(f.status === 'PARTIAL' ? (f.paidAmount || 0) : (f.paidAmount || f.total || 0));
+      const role = String(f.collectorRole || '').toLowerCase();
+      const by = String(f.collectedBy || '').toLowerCase();
+      if (role === 'accountant' || by.includes('accountant') || by.includes('fee clerk')) {
+        accountantCollected += amt;
+        accountantReceiptsCount++;
+      } else if (role === 'principal' || by.includes('principal')) {
+        principalCollected += amt;
+        principalReceiptsCount++;
+      } else {
+        ownerOnlineCollected += amt;
+        ownerReceiptsCount++;
+      }
+
+      const mode = String(f.paymentMode || '').toLowerCase();
+      if (mode.includes('meezan')) bankMeezanInflow += amt;
+      else if (mode.includes('hbl')) bankHblInflow += amt;
+      else if (mode.includes('jazz') || mode.includes('easy') || mode.includes('kuick') || mode.includes('raast') || mode.includes('online')) digitalInflow += amt;
+      else cashInflow += amt;
+    }
+
+    const pettyVouchersTotal = pettyVouchers.reduce((s, v) => s + Number(v.amount || 0), 0);
+    const closingPettyTotal = reconciliations.reduce((s, r) => s + Number(r.pettyExpenses || 0), 0);
+    const pettyExpensesOutflow = Math.max(pettyVouchersTotal, closingPettyTotal);
+    const staffPayrollOutflow = teachers.filter((t) => String(t.salary_status || '').toLowerCase() === 'paid').reduce((s, t) => s + Number(t.basic_salary || 0), 0);
+    const grossRevenue = accountantCollected + principalCollected + ownerOnlineCollected;
+    const latestClosing = reconciliations[0] || null;
+    const openingVaultCash = Number(latestClosing?.openingVaultCash || 0);
+    const netCashPosition = openingVaultCash + grossRevenue - pettyExpensesOutflow;
+
+    const gradeDuesMap = new Map();
+    let totalDueBakaya = 0;
+    let defaulterStudentsCount = 0;
+    for (const st of students) {
+      const due = Number(st.dueBakaya || 0);
+      if (due > 0 || String(st.feeStatus).toUpperCase() === 'PENDING' || String(st.feeStatus).toUpperCase() === 'OVERDUE' || String(st.feeStatus).toUpperCase() === 'PARTIAL') {
+        const effectiveDue = due > 0 ? due : Number(st.feeAmount || 0);
+        if (effectiveDue > 0) {
+          defaulterStudentsCount++;
+          totalDueBakaya += effectiveDue;
+          const g = st.grade || 'Campus';
+          const prev = gradeDuesMap.get(g) || { grade: g, dueAmount: 0, studentsCount: 0 };
+          prev.dueAmount += effectiveDue;
+          prev.studentsCount++;
+          gradeDuesMap.set(g, prev);
+        }
+      }
+    }
+
+    const pendingChallansCount = fees.filter((f) => String(f.status).toUpperCase() === 'PENDING' || String(f.status).toUpperCase() === 'PARTIAL').length;
+    const overdueChallansCount = fees.filter((f) => String(f.status).toUpperCase() === 'OVERDUE').length;
+    const totalExpected = grossRevenue + totalDueBakaya;
+    const recoveryRatePct = totalExpected > 0 ? Math.round((grossRevenue / totalExpected) * 100) : 100;
+
+    // Daily revenue & cash flow series keyed by ISO YYYY-MM-DD
+    const dayBucket = new Map();
+    const ensureDay = (dateKey) => {
+      if (!dayBucket.has(dateKey)) {
+        dayBucket.set(dateKey, {
+          date: dateKey,
+          label: dateKey.slice(5),
+          accountantRevenue: 0,
+          principalRevenue: 0,
+          onlineRevenue: 0,
+          totalRevenue: 0,
+          pettyOutflow: 0,
+          netCashFlow: 0,
+          receiptsCount: 0
+        });
+      }
+      return dayBucket.get(dateKey);
+    };
+
+    for (const f of paidFees) {
+      const dk = (f.paidDate && /^\d{4}-\d{2}-\d{2}/.test(f.paidDate)) ? f.paidDate.slice(0, 10) : new Date().toISOString().slice(0, 10);
+      const b = ensureDay(dk);
+      const amt = Number(f.status === 'PARTIAL' ? (f.paidAmount || 0) : (f.paidAmount || f.total || 0));
+      const role = String(f.collectorRole || '').toLowerCase();
+      if (role === 'accountant') b.accountantRevenue += amt;
+      else if (role === 'principal') b.principalRevenue += amt;
+      else b.onlineRevenue += amt;
+      b.totalRevenue += amt;
+      b.receiptsCount++;
+    }
+
+    for (const r of reconciliations) {
+      const dk = (r.date && /^\d{4}-\d{2}-\d{2}/.test(r.date)) ? r.date.slice(0, 10) : null;
+      if (dk) {
+        const b = ensureDay(dk);
+        if (b.totalRevenue === 0) {
+          b.accountantRevenue += Number(r.accountantCollected || r.actualCollected || 0);
+          b.principalRevenue += Number(r.principalCollected || 0);
+          b.onlineRevenue += Number(r.onlineCollected || 0);
+          b.totalRevenue += Number(r.actualCollected || 0) + Number(r.principalCollected || 0) + Number(r.onlineCollected || 0);
+        }
+        b.pettyOutflow = Math.max(b.pettyOutflow, Number(r.pettyExpenses || 0));
+      }
+    }
+
+    for (const pv of pettyVouchers) {
+      const dk = (pv.date && /^\d{4}-\d{2}-\d{2}/.test(pv.date)) ? pv.date.slice(0, 10) : new Date().toISOString().slice(0, 10);
+      const b = ensureDay(dk);
+      b.pettyOutflow += Number(pv.amount || 0);
+    }
+
+    const dailyRevenueSeries = Array.from(dayBucket.values())
+      .map((d) => ({ ...d, netCashFlow: d.totalRevenue - d.pettyOutflow }))
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .slice(-daysParam);
+
+    res.json({
+      ok: true,
+      tenantId: tid,
+      summary: {
+        cashFlow: {
+          openingVaultCash,
+          cashInflow,
+          bankMeezanInflow,
+          bankHblInflow,
+          digitalInflow,
+          grossRevenue,
+          pettyExpensesOutflow,
+          staffPayrollOutflow,
+          netCashPosition
+        },
+        collectorBreakdown: {
+          accountantCollected,
+          accountantReceiptsCount,
+          principalCollected,
+          principalReceiptsCount,
+          ownerOnlineCollected,
+          ownerReceiptsCount
+        },
+        channelMix: {
+          cash: cashInflow,
+          meezan: bankMeezanInflow,
+          hbl: bankHblInflow,
+          digital: digitalInflow
+        },
+        pendingDues: {
+          totalDueBakaya,
+          defaulterStudentsCount,
+          pendingChallansCount,
+          overdueChallansCount,
+          recoveryRatePct,
+          byGrade: Array.from(gradeDuesMap.values()).sort((a, b) => b.dueAmount - a.dueAmount)
+        },
+        dailyRevenueSeries,
+        closingsSummary: {
+          totalClosings: reconciliations.length,
+          pendingOwnerReviewCount: reconciliations.filter((r) => r.ownerApprovalStatus === 'Pending Owner Review').length,
+          flaggedCount: reconciliations.filter((r) => r.ownerApprovalStatus === 'Flagged by Owner').length,
+          approvedCount: reconciliations.filter((r) => !['Pending Owner Review', 'Flagged by Owner'].includes(r.ownerApprovalStatus || '')).length,
+          latestClosing
+        },
+        pettyVouchers
+      }
+    });
   });
 
   router.get('/compliance-scan', (req, res) => {
