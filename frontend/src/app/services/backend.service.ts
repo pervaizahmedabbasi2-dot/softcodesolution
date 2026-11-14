@@ -512,6 +512,7 @@ export class BackendService {
   private getSchoolHeaders(includeJson = true): Record<string, string> {
     let tenantId = 'tenant-root-platform';
     let userRole = '';
+    let userName = '';
     try {
       const raw = typeof localStorage !== 'undefined' ? localStorage.getItem('user_data') : null;
       if (raw) {
@@ -522,10 +523,25 @@ export class BackendService {
         if (parsed?.role) {
           userRole = String(parsed.role).trim().toLowerCase();
         }
+        if (parsed?.fullName || parsed?.name) {
+          userName = String(parsed.fullName || parsed.name).trim();
+        }
+      }
+      const activeRole = typeof localStorage !== 'undefined' ? String(localStorage.getItem('activeSchoolRole') || '').trim().toLowerCase() : '';
+      if (activeRole && ['accountant', 'principal', 'teacher', 'student', 'parent', 'owner'].includes(activeRole)) {
+        if (!userRole || userRole === 'client_admin' || userRole === 'super_admin' || userRole === 'owner') {
+          userRole = activeRole;
+        }
+      }
+      const portalUserRaw = typeof localStorage !== 'undefined' ? localStorage.getItem('activeSchoolPortalUser') : null;
+      if (portalUserRaw) {
+        const pu = JSON.parse(portalUserRaw);
+        if (pu?.name) userName = String(pu.name).trim();
       }
     } catch {}
     const headers: Record<string, string> = { 'x-tenant-id': tenantId };
     if (userRole) headers['x-user-role'] = userRole;
+    if (userName) headers['x-user-name'] = userName;
     if (includeJson) headers['Content-Type'] = 'application/json';
     return headers;
   }
@@ -963,6 +979,37 @@ export class BackendService {
     try {
       const res = await fetch('/api/school/results', {
         method: 'POST',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async getSchoolReconciliations() {
+    try {
+      const res = await fetch('/api/school/reconciliation', { headers: this.getSchoolHeaders(false), credentials: 'include' });
+      return await res.json().catch(() => ({ ok: false, reconciliations: [] }));
+    } catch { return { ok: false, reconciliations: [] }; }
+  }
+
+  async saveSchoolReconciliation(payload: any) {
+    try {
+      const res = await fetch('/api/school/reconciliation', {
+        method: 'POST',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async verifySchoolReconciliation(id: string, payload: { ownerApprovalStatus: string; ownerRemarks?: string; approvedBy?: string }) {
+    try {
+      const res = await fetch(`/api/school/reconciliation/${encodeURIComponent(id)}/verify`, {
+        method: 'PUT',
         headers: this.getSchoolHeaders(),
         body: JSON.stringify(payload),
         credentials: 'include'

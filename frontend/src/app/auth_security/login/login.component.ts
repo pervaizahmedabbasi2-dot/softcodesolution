@@ -78,7 +78,7 @@ export class LoginComponent implements OnInit {
   private botPowNonce = 0;
 
   // Multi-Portal Gateway Selection
-  portalType: 'owner' | 'teacher' | 'student' | 'parent' | 'staff' = 'owner';
+  portalType: 'owner' | 'teacher' | 'student' | 'parent' | 'staff' | 'accountant' = 'owner';
 
   showForgotPopup = false;
   showForgotSuccess = false;
@@ -118,6 +118,8 @@ export class LoginComponent implements OnInit {
         this.selectPortal('parent');
       } else if (p.includes('teacher') || p.includes('faculty')) {
         this.selectPortal('teacher');
+      } else if (p.includes('accountant') || p.includes('feeclerk') || p.includes('bursar') || p.includes('cashier')) {
+        this.selectPortal('accountant');
       } else if (p.includes('staff') || p.includes('worker')) {
         this.selectPortal('staff');
       } else if (p.includes('owner') || p.includes('admin')) {
@@ -126,13 +128,13 @@ export class LoginComponent implements OnInit {
     });
   }
 
-  selectPortal(type: 'owner' | 'teacher' | 'student' | 'parent' | 'staff'): void {
+  selectPortal(type: 'owner' | 'teacher' | 'student' | 'parent' | 'staff' | 'accountant'): void {
     this.portalType = type;
     this.showLoginError = false;
     this.cdr.detectChanges();
   }
 
-  quickFillDemo(type: 'owner' | 'teacher' | 'student' | 'parent'): void {
+  quickFillDemo(type: 'owner' | 'teacher' | 'student' | 'parent' | 'accountant'): void {
     this.portalType = type;
     if (type === 'student') {
       this.loginForm.patchValue({
@@ -148,6 +150,11 @@ export class LoginComponent implements OnInit {
       this.loginForm.patchValue({
         email: 'farhan@school.edu',
         password: 'Teacher#2026!'
+      });
+    } else if (type === 'accountant') {
+      this.loginForm.patchValue({
+        email: 'accountant@campus.edu',
+        password: 'Accountant#2026!'
       });
     } else {
       this.loginForm.patchValue({
@@ -318,7 +325,7 @@ export class LoginComponent implements OnInit {
     };
 
     // Smart Role Determination (Portal users registry lookup first)
-    let targetPortal: 'owner' | 'teacher' | 'student' | 'parent' | 'staff' = this.portalType;
+    let targetPortal: 'owner' | 'teacher' | 'student' | 'parent' | 'staff' | 'accountant' = this.portalType;
     let matchedPortalUser: any = null;
 
     try {
@@ -330,7 +337,8 @@ export class LoginComponent implements OnInit {
           { id: 'ST-1001', name: 'Zayan Ahmed Khan', role: 'student', email: 'zayan.1001@student.edu', linkedEntity: 'Grade 10-A (Roll #1001)', status: 'Active', pin: '8821', lastLogin: 'Never' },
           { id: 'ST-1002', name: 'Amna Salman Khan', role: 'student', email: 'amna.1102@student.edu', linkedEntity: 'Grade 11-C (Roll #1102)', status: 'Active', pin: '8824', lastLogin: 'Never' },
           { id: 'PAR-001', name: 'Tariq Ahmed Khan (Guardian)', role: 'parent', email: 'tariq.parent@guardian.com', linkedEntity: 'Zayan Ahmed Khan (ST-1001)', status: 'Active', pin: '4041', lastLogin: 'Never' },
-          { id: 'PAR-002', name: 'Dr. Salman Khan (Guardian)', role: 'parent', email: 'salman.parent@guardian.com', linkedEntity: 'Amna Salman Khan (ST-1002)', status: 'Active', pin: '4042', lastLogin: 'Never' }
+          { id: 'PAR-002', name: 'Dr. Salman Khan (Guardian)', role: 'parent', email: 'salman.parent@guardian.com', linkedEntity: 'Amna Salman Khan (ST-1002)', status: 'Active', pin: '4042', lastLogin: 'Never' },
+          { id: 'ACC-001', name: 'Muhammad Rizwan (Accountant)', role: 'accountant', email: 'accountant@campus.edu', linkedEntity: 'Fee Counter & Daily Closing Desk', status: 'Active', pin: '4455', lastLogin: 'Never' }
         ];
         localStorage.setItem('scs_school_portal_users_v1', JSON.stringify(initialUsers));
         storedUsersRaw = JSON.stringify(initialUsers);
@@ -382,6 +390,8 @@ export class LoginComponent implements OnInit {
     } else {
       if (sanitizedEmail.includes('owner') || sanitizedEmail.includes('principal') || sanitizedEmail.includes('headmaster') || sanitizedEmail.includes('admin@school')) {
         targetPortal = 'owner';
+      } else if (sanitizedEmail.includes('accountant') || sanitizedEmail.includes('feeclerk') || sanitizedEmail.includes('bursar') || sanitizedEmail.includes('cashier')) {
+        targetPortal = 'accountant';
       } else if (sanitizedEmail.startsWith('sch-') || sanitizedEmail.endsWith('.sch') || sanitizedEmail.includes('std-') || sanitizedEmail.includes('student') || sanitizedEmail.includes('zayan') || sanitizedEmail.includes('amna') || /^\d{4,6}$/.test(sanitizedEmail)) {
         targetPortal = 'student';
       } else if (sanitizedEmail.startsWith('+92') || sanitizedEmail.startsWith('03') || /^\d{10,12}$/.test(sanitizedEmail.replace(/\D/g, '')) || sanitizedEmail.includes('parent') || sanitizedEmail.includes('guardian')) {
@@ -404,6 +414,9 @@ export class LoginComponent implements OnInit {
       localStorage.setItem('activeSchoolPortal', 'teacher-portal');
       localStorage.setItem('activeSchoolRole', 'teacher');
       localStorage.setItem('activeSchoolTargetTeacher', matchedPortalUser?.id || rawInput);
+    } else if (targetPortal === 'accountant') {
+      localStorage.setItem('activeSchoolPortal', 'accountant-portal');
+      localStorage.setItem('activeSchoolRole', 'accountant');
     } else if (targetPortal === 'staff') {
       localStorage.setItem('activeSchoolPortal', 'attendance');
       localStorage.setItem('activeSchoolRole', 'staff');

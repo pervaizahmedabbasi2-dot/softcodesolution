@@ -69,14 +69,14 @@ import { FirebaseDbService } from '../../../services/firebase-db.service';
 import { BackendService } from '../../../services/backend.service';
 
 export type SchoolDashboardTab = 'overview' | 'stage_wise' | 'feed' | 'events' | 'students' | 'teachers' | 'admissions' | 'attendance' | 'finance' | 'invoices' | 'expenses' | 'payment_gateway' | 'transport' | 'library' | 'exams' | 'timetable' | 'hostel' | 'labs' | 'alumni' | 'portals' | 'reports' | 'settings' | 'audit' | 'lesson_plans' | 'appraisals' | 'inspections' | 'exam_moderation' | 'parent_complaints' | 'substitutions' | 'syllabus' | 'safeguarding' | 'directives';
-export type SchoolPortalRole = 'owner' | 'principal' | 'teacher' | 'student' | 'parent';
+export type SchoolPortalRole = 'owner' | 'principal' | 'teacher' | 'student' | 'parent' | 'accountant';
 
 export interface SchoolAuditTrailRecord {
   id: string;
   timestamp: string;
   operatorName: string;
-  operatorRole: 'Principal' | 'School Owner' | 'Owner Executive' | 'Accounts Controller' | 'Examination Dean' | 'System Auditor';
-  actionType: 'Fee Waiver / Concession' | 'Mark Moderation Lock' | 'Salary Arrears Clearance' | 'Student Leaving Certificate (SLC)' | 'Fee Voucher Deletion' | 'Attendance Modification' | 'Biometric IP Override' | 'Asset Write-Off' | 'Exam Moderation & Tamper-Lock';
+  operatorRole: 'Principal' | 'School Owner' | 'Owner Executive' | 'Accounts Controller' | 'Accountant / Fee Clerk' | 'Examination Dean' | 'System Auditor';
+  actionType: 'Fee Waiver / Concession' | 'Mark Moderation Lock' | 'Salary Arrears Clearance' | 'Student Leaving Certificate (SLC)' | 'Fee Voucher Deletion' | 'Attendance Modification' | 'Biometric IP Override' | 'Asset Write-Off' | 'Exam Moderation & Tamper-Lock' | 'Daily Closing Submission' | 'Owner Daily Closing Oversight' | 'Fee Collection Receipt';
   category: 'Financial' | 'Academic' | 'Administrative' | 'Security & Biometric';
   entityId: string;
   entityDescription: string;
@@ -100,6 +100,18 @@ export interface FeeReconciliationRecord {
   cashierName: string;
   verifiedByAuditor: string;
   notes?: string;
+  submittedByRole?: string;
+  principalCollected?: number;
+  accountantCollected?: number;
+  onlineCollected?: number;
+  openingVaultCash?: number;
+  pettyExpenses?: number;
+  closingVaultCash?: number;
+  bankDepositSlipNo?: string;
+  ownerApprovalStatus?: 'Pending Owner Review' | 'Verified & Approved by Owner' | 'Flagged by Owner' | string;
+  ownerRemarks?: string;
+  approvedBy?: string;
+  approvedAt?: string;
 }
 
 export interface StudentLeavingCertificateRecord {
@@ -531,7 +543,7 @@ export interface PortalUserRecord {
   name: string;
   email: string;
   pin: string;
-  role: 'owner' | 'principal' | 'teacher' | 'student' | 'parent' | string;
+  role: 'owner' | 'principal' | 'teacher' | 'student' | 'parent' | 'accountant' | string;
   linkedEntity: string;
   status: 'Active' | 'Suspended';
   lastLogin: string;
@@ -550,6 +562,7 @@ export interface RoleModulePermission {
   teacher: boolean;
   student: boolean;
   parent: boolean;
+  accountant: boolean;
 }
 
 export interface TeacherHomeworkRecord {
@@ -735,12 +748,14 @@ export interface PrincipalFeeCollectionRecord {
   guardianName: string;
   guardianPhone: string;
   amount: number;
-  paymentResource: 'Cash at Principal Desk Counter' | 'Meezan Bank Challan' | 'HBL Bank Challan' | 'JazzCash Wallet' | 'EasyPaisa Wallet' | 'Raast Instant Transfer' | string;
+  paymentResource: 'Cash at Principal Desk Counter' | 'Cash at Accountant Fee Counter' | 'Meezan Bank Challan' | 'HBL Bank Challan' | 'JazzCash Wallet' | 'EasyPaisa Wallet' | 'Raast Instant Transfer' | string;
   resourceReference: string;
   collectedBy: string;
+  collectorRole?: 'principal' | 'accountant' | 'owner' | 'online' | string;
+  challanNo?: string;
   timestamp: string;
   monthsPaid: string;
-  auditStatus: 'Verified by Principal Office' | 'Bank Cleared' | 'Pending Reconciliation' | string;
+  auditStatus: 'Verified by Principal Office' | 'Received at Accountant Fee Desk' | 'Bank Cleared' | 'Pending Reconciliation' | string;
   notes?: string;
   guardian?: string;
   amountPaid?: number;
@@ -971,31 +986,66 @@ export class SchoolDashboardComponent implements OnInit {
   teacherTab: 'schedule' | 'feed' | 'events' | 'attendance' | 'marks' | 'lessons' | 'homework' | 'students' | 'communication' | 'library' = 'schedule';
   studentTab: 'overview' | 'feed' | 'events' | 'routine' | 'academics' | 'attendance' | 'fee' | 'homework' | 'library' = 'overview';
   parentTab: 'overview' | 'feed' | 'events' | 'attendance' | 'academics' | 'fee' | 'leave' | 'library' = 'overview';
+  accountantTab: 'overview' | 'challans' | 'collect' | 'defaulters' | 'daily_closing' = 'overview';
   studentSubTab: 'directory' | 'medical' | 'disciplinary' = 'directory';
   teacherSubTab: 'directory' | 'payroll' | 'leaves' | 'lesson_plans' = 'directory';
   financeSubTab: 'ledger' | 'class_wise' | 'defaulters' | 'teacher_arrears' | 'profit_loss' | 'accounts' | 'alerts_log' | 'daily_closing' = 'ledger';
   selectedProfitLossYear: string = '2025-2026';
 
   // Daily Cash Closing (Rooznama) State & Helpers
-  dailyClosingDate: string = '2026-10-14';
-  dailyClosingCashier: string = 'Muhammad Farooq (Senior Cashier)';
+  dailyClosingDate: string = new Date().toISOString().split('T')[0];
+  dailyClosingCashier: string = 'Muhammad Rizwan (Accountant / Fee Clerk)';
   dailyOpeningVaultCash: number = 45000;
   dailyBankDepositSlipNo: string = 'MEZN-DEP-49102';
   dailyBankDepositAmount: number = 200000;
   dailySupervisorRemarks: string = 'All counter cash, bank challan collections, and petty vouchers reconciled. Verified with Meezan Bank deposit slip.';
   isDailyClosingReconciled: boolean = true;
 
+  get accountantCollectedTotal(): number {
+    return (this.principalFeeCollections || [])
+      .filter(f => f.collectorRole === 'accountant' || (f.collectedBy || '').toLowerCase().includes('accountant') || (f.collectedBy || '').toLowerCase().includes('fee clerk'))
+      .reduce((acc, f) => acc + Number(f.amount || 0), 0);
+  }
+  get principalCollectedTotal(): number {
+    return (this.principalFeeCollections || [])
+      .filter(f => f.collectorRole === 'principal' || (!f.collectorRole && (f.collectedBy || '').toLowerCase().includes('principal')))
+      .reduce((acc, f) => acc + Number(f.amount || 0), 0);
+  }
+  get ownerOnlineCollectedTotal(): number {
+    return (this.principalFeeCollections || [])
+      .filter(f => f.collectorRole === 'owner' || f.collectorRole === 'online')
+      .reduce((acc, f) => acc + Number(f.amount || 0), 0);
+  }
+  get pendingOwnerClosingsCount(): number {
+    return (this.feeReconciliations || []).filter(r => r.ownerApprovalStatus === 'Pending Owner Review').length;
+  }
+
   get todayFeeCashCollections(): number {
-    return 185000;
+    const liveCash = (this.principalFeeCollections || [])
+      .filter(f => (f.paymentResource || '').toLowerCase().includes('cash'))
+      .reduce((sum, f) => sum + Number(f.amount || 0), 0);
+    return Math.max(185000, liveCash);
   }
   get todayAdmissionCashCollections(): number {
     return 50000;
   }
   get todayOnlineBankCollections(): number {
-    return 95000;
+    const liveBank = (this.principalFeeCollections || [])
+      .filter(f => {
+        const pr = (f.paymentResource || '').toLowerCase();
+        return pr.includes('meezan') || pr.includes('hbl') || pr.includes('bank') || pr.includes('raast');
+      })
+      .reduce((sum, f) => sum + Number(f.amount || 0), 0);
+    return Math.max(95000, liveBank);
   }
   get todayEasyPaisaCollections(): number {
-    return 42000;
+    const liveWallet = (this.principalFeeCollections || [])
+      .filter(f => {
+        const pr = (f.paymentResource || '').toLowerCase();
+        return pr.includes('jazzcash') || pr.includes('easypaisa') || pr.includes('kuickpay');
+      })
+      .reduce((sum, f) => sum + Number(f.amount || 0), 0);
+    return Math.max(42000, liveWallet);
   }
   get todayPettyExpensesOutflow(): number {
     return 18500;
@@ -1040,6 +1090,37 @@ export class SchoolDashboardComponent implements OnInit {
   formatCurrency(val: number | string | undefined | null): string {
     const num = Number(val);
     return (Number.isFinite(num) ? num : 0).toLocaleString();
+  }
+
+  get voucherTuitionFee(): number {
+    const raw = Number(this.voucherStudent?.feeAmount ?? 12500);
+    return Number.isFinite(raw) && raw > 0 ? raw : 12500;
+  }
+
+  get voucherWithinDueTotal(): number {
+    return this.voucherTuitionFee + 3500;
+  }
+
+  get voucherAfterDueTotal(): number {
+    return this.voucherTuitionFee + 4000;
+  }
+
+  get studentMonthlyTuition(): number {
+    const raw = Number(this.currentStudentProfile?.feeAmount ?? 25000);
+    return Number.isFinite(raw) && raw > 0 ? raw : 25000;
+  }
+
+  get studentChallanWithinDueTotal(): number {
+    return this.studentMonthlyTuition + 3500;
+  }
+
+  get parentChildMonthlyTuition(): number {
+    const raw = Number(this.selectedParentChild?.feeAmount ?? 25000);
+    return Number.isFinite(raw) && raw > 0 ? raw : 25000;
+  }
+
+  get parentChildChallanWithinDueTotal(): number {
+    return this.parentChildMonthlyTuition + 3500;
   }
 
   setPrincipalTab(tab: 'overview' | 'stage_wise' | 'master_registries' | 'supervision' | 'substitutions' | 'syllabus' | 'inspections' | 'discipline' | 'directives' | 'appraisals' | 'exam_moderation' | 'academic_reports' | 'faculty_tasks' | 'teacher_leaves' | 'student_certificates' | 'ptm_interventions' | 'admissions_review' | 'fee_oversight' | 'parent_complaints' | 'safeguarding' | 'facilities_transport' | 'biometric_attendance'): void {
@@ -1329,8 +1410,8 @@ export class SchoolDashboardComponent implements OnInit {
         const u = JSON.parse(userData);
         const r = (u.role || '').toLowerCase();
 
-        // Real students, parents, guardians are strictly restricted: CANNOT access Owner ERP or see Exit to Owner
-        if (['student', 'parent', 'student_guardian', 'guardian'].includes(r)) {
+        // Real students, parents, guardians, and accountant clerks are strictly restricted: CANNOT access Owner ERP or see Exit to Owner
+        if (['student', 'parent', 'student_guardian', 'guardian', 'accountant', 'fee_clerk', 'bursar'].includes(r)) {
           return false;
         }
         // Pure teachers without admin privileges cannot access Owner ERP
@@ -1342,16 +1423,16 @@ export class SchoolDashboardComponent implements OnInit {
           return true;
         }
       } else {
-        // Fallback when no explicit user_data: check if simulating real student or parent
+        // Fallback when no explicit user_data: check if simulating real student, parent, or accountant
         const activeSchoolRole = localStorage.getItem('activeSchoolRole');
         const activePortalUser = localStorage.getItem('activeSchoolPortalUser');
         if (activePortalUser) {
           try {
             const pu = JSON.parse(activePortalUser);
-            if (pu.role === 'student' || pu.role === 'parent') return false;
+            if (pu.role === 'student' || pu.role === 'parent' || pu.role === 'accountant') return false;
           } catch {}
         }
-        if (activeSchoolRole === 'student' || activeSchoolRole === 'parent') {
+        if (activeSchoolRole === 'student' || activeSchoolRole === 'parent' || activeSchoolRole === 'accountant') {
           const mockAuth = localStorage.getItem('scs_auth_mock');
           if (mockAuth && !this.isSuperAdminPreview) {
             return false;
@@ -1395,6 +1476,8 @@ export class SchoolDashboardComponent implements OnInit {
     // 1. Role-specific explicit switches ONLY when the target explicitly dictates a portal
     if (v.startsWith('principal-') || v === 'principal-portal' || v === 'principal') {
       this.currentPortalRole = 'principal';
+    } else if (v.startsWith('accountant-') || v === 'accountant-portal' || v === 'accountant') {
+      this.currentPortalRole = 'accountant';
     } else if (v.startsWith('teacher-') || v === 'teacher-portal') {
       this.currentPortalRole = 'teacher';
     } else if (v.startsWith('student-') || v === 'student-portal') {
@@ -1406,13 +1489,13 @@ export class SchoolDashboardComponent implements OnInit {
         this.currentPortalRole = 'owner';
       }
     } else if (v === 'school-hub') {
-      if (savedRole && ['principal', 'teacher', 'student', 'parent', 'owner'].includes(savedRole)) {
+      if (savedRole && ['principal', 'teacher', 'student', 'parent', 'accountant', 'owner'].includes(savedRole)) {
         this.currentPortalRole = savedRole as SchoolPortalRole;
       }
     }
 
     // 2. Route tabs strictly within the CURRENT active portal role!
-    // Never switch portal role to 'owner' when navigating within principal, teacher, student, or parent portals!
+    // Never switch portal role to 'owner' when navigating within principal, teacher, student, parent, or accountant portals!
     if (this.currentPortalRole === 'principal') {
       if (v.includes('supervision') || v.includes('lesson')) this.principalTab = 'supervision';
       else if (v.includes('substitut') || v.includes('arrangement')) this.principalTab = 'substitutions';
@@ -1433,6 +1516,12 @@ export class SchoolDashboardComponent implements OnInit {
       else if (v.includes('safeguard') || v.includes('welfare') || v.includes('medical_alert')) this.principalTab = 'safeguarding';
       else if (v.includes('facility') || v.includes('transport_supervision') || v.includes('bus_route')) this.principalTab = 'facilities_transport';
       else this.principalTab = 'overview';
+    } else if (this.currentPortalRole === 'accountant') {
+      if (v.includes('challan')) this.accountantTab = 'challans';
+      else if (v.includes('collect') || v.includes('receipt') || v.includes('cash')) this.accountantTab = 'collect';
+      else if (v.includes('defaulter') || v.includes('reminder')) this.accountantTab = 'defaulters';
+      else if (v.includes('closing') || v.includes('reconcil') || v.includes('owner')) this.accountantTab = 'daily_closing';
+      else this.accountantTab = 'overview';
     } else if (this.currentPortalRole === 'teacher') {
       if (v.includes('feed') || v.includes('notice')) this.teacherTab = 'feed';
       else if (v.includes('event')) this.teacherTab = 'events';
@@ -4020,6 +4109,7 @@ INSTRUCTIONS:
       paymentResource: 'Cash at Principal Desk Counter',
       resourceReference: 'CASH-PRIN-101',
       collectedBy: 'Dr. Tahir Malik (Principal - Verified Desk)',
+      collectorRole: 'principal',
       timestamp: '26 Oct 2026, 09:30 AM',
       monthsPaid: 'October 2026 Tuition',
       auditStatus: 'Verified by Principal Office',
@@ -4038,6 +4128,7 @@ INSTRUCTIONS:
       paymentResource: 'Meezan Bank Challan',
       resourceReference: 'SLIP-MEZN-881290',
       collectedBy: 'Dr. Tahir Malik (Principal - Verified Desk)',
+      collectorRole: 'principal',
       timestamp: '26 Oct 2026, 10:15 AM',
       monthsPaid: 'October 2026 Tuition',
       auditStatus: 'Verified by Principal Office',
@@ -4056,6 +4147,7 @@ INSTRUCTIONS:
       paymentResource: 'JazzCash Wallet',
       resourceReference: 'TRX-JC-4491028',
       collectedBy: 'Dr. Tahir Malik (Principal - Verified Desk)',
+      collectorRole: 'principal',
       timestamp: '25 Oct 2026, 02:45 PM',
       monthsPaid: 'August & September 2026 Bakaya Recovery',
       auditStatus: 'Verified by Principal Office',
@@ -4074,6 +4166,7 @@ INSTRUCTIONS:
       paymentResource: 'Raast Instant Transfer',
       resourceReference: 'RAAST-PK-772189',
       collectedBy: 'Dr. Tahir Malik (Principal - Verified Desk)',
+      collectorRole: 'principal',
       timestamp: '25 Oct 2026, 11:20 AM',
       monthsPaid: 'October 2026 Tuition',
       auditStatus: 'Verified by Principal Office',
@@ -4092,6 +4185,7 @@ INSTRUCTIONS:
       paymentResource: 'Cash at Principal Desk Counter',
       resourceReference: 'CASH-PRIN-105',
       collectedBy: 'Dr. Tahir Malik (Principal - Verified Desk)',
+      collectorRole: 'principal',
       timestamp: '24 Oct 2026, 12:10 PM',
       monthsPaid: 'October 2026 Tuition',
       auditStatus: 'Verified by Principal Office',
@@ -4110,6 +4204,7 @@ INSTRUCTIONS:
       paymentResource: 'EasyPaisa Wallet',
       resourceReference: 'EP-PK-991203',
       collectedBy: 'Dr. Tahir Malik (Principal - Verified Desk)',
+      collectorRole: 'principal',
       timestamp: '23 Oct 2026, 01:30 PM',
       monthsPaid: 'September 2026 Recovery',
       auditStatus: 'Verified by Principal Office',
@@ -4946,9 +5041,15 @@ INSTRUCTIONS:
       return;
     }
     const receiptNo = 'REC-2026-' + Math.floor(1000 + Math.random() * 8999);
+    const activeDeskRole: 'principal' | 'accountant' | 'owner' =
+      this.currentPortalRole === 'accountant' ? 'accountant' : (this.currentPortalRole === 'principal' ? 'principal' : 'principal');
+    const collectorLabel = activeDeskRole === 'accountant'
+      ? 'Muhammad Rizwan (Accountant / Fee Clerk)'
+      : 'Dr. Tahir Malik (Principal - Verified Desk)';
     const newRecord: PrincipalFeeCollectionRecord = {
       id: 'PFC-' + Date.now(),
       receiptNo,
+      challanNo: receiptNo,
       studentId: this.principalFeeCollectForm.studentId,
       studentName: this.principalFeeCollectForm.studentName,
       rollNo: this.principalFeeCollectForm.rollNo,
@@ -4958,10 +5059,11 @@ INSTRUCTIONS:
       amount: Number(this.principalFeeCollectForm.amount),
       paymentResource: this.principalFeeCollectForm.paymentResource,
       resourceReference: this.principalFeeCollectForm.resourceReference || ('REF-' + Date.now().toString().slice(-5)),
-      collectedBy: 'Owner & Accounts Desk (Verified)',
+      collectedBy: collectorLabel,
+      collectorRole: activeDeskRole,
       timestamp: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       monthsPaid: this.principalFeeCollectForm.monthsPaid || 'Current Session Fee',
-      auditStatus: 'Verified by Accounts Desk',
+      auditStatus: activeDeskRole === 'accountant' ? 'Received at Accountant Fee Desk' : 'Verified by Principal Office',
       notes: this.principalFeeCollectForm.notes
     };
 
@@ -4970,7 +5072,7 @@ INSTRUCTIONS:
     // Also add to financial cash book for school owner audit
     this.finances.unshift({
       id: `FIN-${Math.floor(2000 + Math.random() * 8000)}`,
-      title: `Fee Collected (Accounts Desk) - ${newRecord.studentName} (${newRecord.grade})`,
+      title: `Fee Collected (${activeDeskRole === 'accountant' ? 'Accountant Desk' : 'Principal Desk'}) - ${newRecord.studentName} (${newRecord.grade})`,
       studentName: newRecord.studentName,
       grade: newRecord.grade,
       category: 'Tuition',
@@ -5003,22 +5105,26 @@ INSTRUCTIONS:
       }
     }
 
-    // Persist fee collection to SQLite + audit trail
+    // Persist fee collection to SQLite + audit trail (recording collectorRole for Owner supervision)
     void this.backend.collectSchoolFee(newRecord.studentId, {
       studentId: newRecord.studentId,
       studentName: newRecord.studentName,
+      rollNo: newRecord.rollNo,
       grade: newRecord.grade,
       amount: newRecord.amount,
       receiptNo: newRecord.receiptNo,
       challanNo: newRecord.receiptNo,
       paymentMethod: newRecord.paymentResource,
-      collectedBy: 'Owner & Accounts Desk'
+      paymentMode: newRecord.paymentResource,
+      resourceReference: newRecord.resourceReference,
+      collectedBy: collectorLabel,
+      collectorRole: activeDeskRole
     });
 
     // Owner notification
     this.notificationsList.unshift({
       id: 'NOTIF-FEE-' + Date.now(),
-      title: `Fee Collected: PKR ${this.formatCurrency(newRecord.amount)}`,
+      title: `Fee Collected (${activeDeskRole === 'accountant' ? 'Accountant Desk' : 'Principal Desk'}): PKR ${this.formatCurrency(newRecord.amount)}`,
       message: `${newRecord.studentName} (Roll #${newRecord.rollNo}, ${newRecord.grade}) paid PKR ${this.formatCurrency(newRecord.amount)} via ${newRecord.paymentResource}. Ref: ${newRecord.resourceReference}.`,
       type: 'fee',
       targetRole: 'all',
@@ -5029,7 +5135,7 @@ INSTRUCTIONS:
 
     this.saveStateToStorage();
     this.closePrincipalFeeCollectModal();
-    this.showToast(`✅ Fee of PKR ${this.formatCurrency(newRecord.amount)} collected by Principal! Receipt #${newRecord.receiptNo} generated.`, 'success');
+    this.showToast(`Fee of PKR ${this.formatCurrency(newRecord.amount)} collected at Principal Desk & synced to Owner! Receipt #${newRecord.receiptNo} generated.`, 'success');
     this.viewCashieringReceipt(newRecord);
   }
 
@@ -5576,6 +5682,7 @@ INSTRUCTIONS:
   get portals() {
     return [
       { name: 'Principal & Academic Director Command Nexus', users: 'Prof. Dr. Tahir Malik (Principal)', uptime: '100.0%', status: 'Active', security: 'Executive Academic Clearance', role: 'principal' as SchoolPortalRole },
+      { name: 'Accountant & Fee Clerk Counter Desk', users: 'Muhammad Rizwan (Fee Clerk)', uptime: '100.0%', status: 'Active', security: 'Dual-Control Closing to Owner', role: 'accountant' as SchoolPortalRole },
       { name: 'Teacher & Faculty Portal Nexus', users: `${this.liveFacultyCount} Faculty Members`, uptime: '99.95%', status: 'Active', security: 'MFA Enforced / RBAC Active', role: 'teacher' as SchoolPortalRole },
       { name: 'Student Nexus Mobile & Web App', users: `${this.liveEnrolledCount} Enrolled Students`, uptime: '100.0%', status: 'Active', security: 'Biometric RFID Sync', role: 'student' as SchoolPortalRole },
       { name: 'Parent Portal Nexus Alpha', users: `${this.liveGuardianCount} Connected Guardians`, uptime: '99.99%', status: 'Stable', security: 'Encrypted 256-bit SSL', role: 'parent' as SchoolPortalRole }
@@ -5716,7 +5823,7 @@ INSTRUCTIONS:
     void this.loadStateFromBackend();
     this.loadStateFromCloud();
     const savedRole = localStorage.getItem('activeSchoolRole');
-    if (savedRole && ['owner', 'principal', 'teacher', 'student', 'parent'].includes(savedRole)) {
+    if (savedRole && ['owner', 'principal', 'teacher', 'student', 'parent', 'accountant'].includes(savedRole)) {
       this.currentPortalRole = savedRole as SchoolPortalRole;
     }
     const savedPortalUserRaw = localStorage.getItem('activeSchoolPortalUser');
@@ -5753,6 +5860,29 @@ INSTRUCTIONS:
   handleSchoolAction(actionId: string): void {
     if (!actionId) return;
     const a = actionId.toLowerCase();
+
+    // Check if targeted Accountant / Fee Clerk action
+    if (a === 'accountant' || a === 'accountant-portal' || a.startsWith('accountant-') || (this.currentPortalRole === 'accountant' && !['logout', 'settings', 'password_change'].includes(a))) {
+      this.currentPortalRole = 'accountant';
+      try { localStorage.setItem('activeSchoolRole', 'accountant'); } catch {}
+      const sub = a.replace('accountant-', '').replace('accountant', '').trim();
+      if (!sub || sub === 'portal' || sub === 'overview') {
+        this.accountantTab = 'overview';
+      } else if (sub.includes('challan')) {
+        this.accountantTab = 'challans';
+      } else if (sub.includes('collect') || sub.includes('receipt') || sub.includes('cash')) {
+        this.accountantTab = 'collect';
+      } else if (sub.includes('defaulter') || sub.includes('reminder')) {
+        this.accountantTab = 'defaulters';
+      } else if (sub.includes('closing') || sub.includes('reconcil') || sub.includes('owner')) {
+        this.accountantTab = 'daily_closing';
+        this.populateAccountantClosingFromReceipts();
+      } else {
+        this.accountantTab = 'overview';
+      }
+      this.cdr.detectChanges();
+      return;
+    }
 
     // Check if targeted principal action or principal role selected
     if (a === 'principal' || a === 'principal-portal' || a.startsWith('principal-') || (this.currentPortalRole === 'principal' && !['logout', 'settings', 'password_change'].includes(a))) {
@@ -6132,6 +6262,10 @@ INSTRUCTIONS:
             const initPrincipal = this.getInitialPortalUsers().find(u => u.role === 'principal');
             if (initPrincipal) this.portalUsers.unshift(initPrincipal);
           }
+          if (!this.portalUsers.some(u => u.role === 'accountant')) {
+            const initAccountant = this.getInitialPortalUsers().find(u => u.role === 'accountant');
+            if (initAccountant) this.portalUsers.splice(1, 0, initAccountant);
+          }
         } catch {
           this.portalUsers = this.getInitialPortalUsers();
         }
@@ -6140,8 +6274,15 @@ INSTRUCTIONS:
         try { this.setScopedItem('scs_school_portal_users_v1', JSON.stringify(this.portalUsers)); } catch {}
       }
 
-      if (savedPerms) this.rolePermissions = JSON.parse(savedPerms);
-      else this.rolePermissions = this.getInitialRolePermissions();
+      if (savedPerms) {
+        const parsedPerms = JSON.parse(savedPerms);
+        this.rolePermissions = (Array.isArray(parsedPerms) ? parsedPerms : this.getInitialRolePermissions()).map((p: any) => ({
+          ...p,
+          accountant: p.accountant !== undefined ? Boolean(p.accountant) : (p.id === 'perm_fee_ledger' || p.id === 'perm_fee_voucher')
+        }));
+      } else {
+        this.rolePermissions = this.getInitialRolePermissions();
+      }
 
       if (savedHw) this.teacherHomeworks = JSON.parse(savedHw);
       else this.teacherHomeworks = this.getInitialHomeworks();
@@ -6302,6 +6443,30 @@ INSTRUCTIONS:
         this.masterInvoices = this.getInitialMasterInvoices();
       }
 
+      const savedReconciliations = this.getScopedItem('scs_school_fee_reconciliations_v1');
+      if (savedReconciliations) {
+        try {
+          const parsedRec = JSON.parse(savedReconciliations);
+          if (Array.isArray(parsedRec) && parsedRec.length > 0) this.feeReconciliations = parsedRec;
+        } catch {}
+      }
+
+      const savedDeskCollections = this.getScopedItem('scs_school_principal_fee_collections_v1');
+      if (savedDeskCollections) {
+        try {
+          const parsedCol = JSON.parse(savedDeskCollections);
+          if (Array.isArray(parsedCol) && parsedCol.length > 0) this.principalFeeCollections = parsedCol;
+        } catch {}
+      }
+
+      const savedGenChallans = this.getScopedItem('scs_school_generated_challans_v1');
+      if (savedGenChallans) {
+        try {
+          const parsedCh = JSON.parse(savedGenChallans);
+          if (Array.isArray(parsedCh)) this.accountantGeneratedChallans = parsedCh;
+        } catch {}
+      }
+
       this.recalculateDefaulters();
       this.checkAndUpdateOverdueBooks();
     } catch {
@@ -6337,7 +6502,7 @@ INSTRUCTIONS:
 
   async loadStateFromBackend(): Promise<void> {
     try {
-      const [wsRes, stuRes, tchRes, admRes, feeRes, hwRes, lvRes, conRes, cmpRes, lpRes, subRes, audRes] = await Promise.all([
+      const [wsRes, stuRes, tchRes, admRes, feeRes, hwRes, lvRes, conRes, cmpRes, lpRes, subRes, audRes, recRes] = await Promise.all([
         this.backend.getSchoolWorkspace().catch(() => null),
         this.backend.getSchoolStudents().catch(() => null),
         this.backend.getSchoolTeachers().catch(() => null),
@@ -6349,7 +6514,8 @@ INSTRUCTIONS:
         this.backend.getSchoolComplaints().catch(() => null),
         this.backend.getSchoolLessonPlans().catch(() => null),
         this.backend.getSchoolSubstitutions().catch(() => null),
-        this.backend.getSchoolAuditLogs().catch(() => null)
+        this.backend.getSchoolAuditLogs().catch(() => null),
+        this.backend.getSchoolReconciliations().catch(() => null)
       ]);
 
       if (wsRes?.ok && wsRes.workspace && typeof wsRes.workspace === 'object') {
@@ -6408,7 +6574,13 @@ INSTRUCTIONS:
 
       if (feeRes?.ok && Array.isArray(feeRes.fees) && feeRes.fees.length > 0) {
         const mapFee = new Map<string, any>();
+        const challanMap = new Map<string, any>();
+        const colMap = new Map<string, PrincipalFeeCollectionRecord>();
+        for (const existing of this.principalFeeCollections) colMap.set(existing.receiptNo || existing.id, existing);
+
         for (const f of feeRes.fees) {
+          const totalAmt = Number(f.total ?? f.amount ?? 0);
+          const isPaid = String(f.status || '').toUpperCase() === 'PAID';
           mapFee.set(f.id, {
             id: f.id,
             title: f.title || `Fee Ledger - ${f.studentName || f.student_name || 'Student'}`,
@@ -6416,16 +6588,63 @@ INSTRUCTIONS:
             grade: f.grade || 'Campus',
             category: f.category || 'Tuition',
             type: f.type || 'Income',
-            amount: Number(f.amount || 0),
+            amount: totalAmt,
             date: f.date || f.paidDate || 'Oct 2026',
-            status: f.status === 'Paid' ? 'Verified' : (f.status || 'Verified'),
-            challanNo: f.challanNo || f.id
+            status: isPaid ? 'Verified' : (f.status || 'Pending'),
+            challanNo: f.challanNo || f.id,
+            paymentMethod: f.paymentMode || ''
           });
+          challanMap.set(f.challanNo || f.id, {
+            id: f.id,
+            challanNo: f.challanNo || f.id,
+            studentId: f.studentId || '',
+            studentName: f.studentName || '',
+            rollNo: f.rollNo || '',
+            grade: f.grade || '',
+            month: f.month || 'Current Month',
+            tuition: Number(f.tuition ?? totalAmt),
+            labFee: Number(f.labFee ?? 0),
+            discount: Number(f.discount ?? 0),
+            total: totalAmt,
+            status: f.status || 'PENDING',
+            dueDate: f.dueDate || '',
+            paidDate: f.paidDate || '',
+            collectorRole: f.collectorRole || 'accountant'
+          });
+          if (isPaid && totalAmt > 0) {
+            const key = f.challanNo || f.id;
+            if (!colMap.has(key)) {
+              colMap.set(key, {
+                id: f.id,
+                receiptNo: key,
+                challanNo: f.challanNo || f.id,
+                studentId: f.studentId || '',
+                studentName: f.studentName || 'Student',
+                rollNo: f.rollNo || '',
+                grade: f.grade || '',
+                guardianName: '',
+                guardianPhone: '',
+                amount: totalAmt,
+                paymentResource: f.paymentMode || 'Cash Counter',
+                resourceReference: f.resourceReference || f.id,
+                collectedBy: f.collectedBy || 'Accounts Desk',
+                collectorRole: f.collectorRole || 'accountant',
+                timestamp: f.paidDate || new Date().toLocaleDateString(),
+                monthsPaid: f.month || 'Tuition Fee',
+                auditStatus: f.collectorRole === 'principal' ? 'Verified by Principal Office' : 'Received at Accountant Fee Desk'
+              });
+            }
+          }
         }
         for (const local of this.finances) {
           if (!mapFee.has(local.id)) mapFee.set(local.id, local);
         }
         this.finances = Array.from(mapFee.values());
+        for (const localCh of this.accountantGeneratedChallans) {
+          if (!challanMap.has(localCh.challanNo || localCh.id)) challanMap.set(localCh.challanNo || localCh.id, localCh);
+        }
+        this.accountantGeneratedChallans = Array.from(challanMap.values());
+        this.principalFeeCollections = Array.from(colMap.values());
       }
 
       if (hwRes?.ok && Array.isArray(hwRes.homework) && hwRes.homework.length > 0) {
@@ -6492,6 +6711,15 @@ INSTRUCTIONS:
         this.schoolAuditLogs = Array.from(mapAud.values());
       }
 
+      if (recRes?.ok && Array.isArray(recRes.reconciliations) && recRes.reconciliations.length > 0) {
+        const mapRec = new Map<string, FeeReconciliationRecord>();
+        for (const r of recRes.reconciliations) mapRec.set(r.id, r);
+        for (const local of this.feeReconciliations) {
+          if (!mapRec.has(local.id)) mapRec.set(local.id, local);
+        }
+        this.feeReconciliations = Array.from(mapRec.values());
+      }
+
       this.recalculateDefaulters();
       this.cdr.detectChanges();
     } catch {}
@@ -6538,6 +6766,9 @@ INSTRUCTIONS:
       this.setScopedItem('scs_school_principal_complaints_v1', JSON.stringify(this.parentComplaintList));
       this.setScopedItem('scs_school_principal_safeguard_v1', JSON.stringify(this.safeguardingIncidents));
       this.setScopedItem('scs_school_principal_facilities_v1', JSON.stringify(this.facilityMaintenanceLogs));
+      this.setScopedItem('scs_school_fee_reconciliations_v1', JSON.stringify(this.feeReconciliations));
+      this.setScopedItem('scs_school_principal_fee_collections_v1', JSON.stringify(this.principalFeeCollections));
+      this.setScopedItem('scs_school_generated_challans_v1', JSON.stringify(this.accountantGeneratedChallans));
       void this.backend.saveSchoolWorkspace({
         schoolName: this.schoolName,
         settingsForm: this.settingsForm,
@@ -7979,6 +8210,7 @@ INSTRUCTIONS:
   getInitialPortalUsers(): PortalUserRecord[] {
     return [
       { id: 'USR-601', name: 'Prof. Dr. Tahir Malik', email: 'principal@campus.edu', pin: '9900', role: 'principal', linkedEntity: 'Academic Directorate & Examination Council', status: 'Active', lastLogin: 'Today at 07:30 AM', staffIdOrRoll: 'DIR-001', designation: 'Principal & Academic Director', department: 'Academic Directorate', clearanceLevel: 'Level 5 - Executive Authority', phone: '+92 300 9876543' },
+      { id: 'USR-501', name: 'Muhammad Rizwan', email: 'accountant@campus.edu', pin: '4455', role: 'accountant', linkedEntity: 'Fee Counter, Challans & Daily Closing Desk', status: 'Active', lastLogin: 'Today at 07:45 AM', staffIdOrRoll: 'ACC-001', designation: 'Accountant / Fee Clerk', department: 'Accounts & Fee Desk', clearanceLevel: 'Level 2 - Fee Counter & Closing Submission Only', phone: '+92 300 4455661' },
       { id: 'USR-801', name: 'Prof. Tariq Mehmood', email: 'tariq.math@campus.edu', pin: '8821', role: 'teacher', linkedEntity: 'Grade 10-A Mathematics', status: 'Active', lastLogin: 'Today at 08:12 AM' },
       { id: 'USR-802', name: 'Ms. Sarah Jenkins', email: 'sarah.eng@campus.edu', pin: '4410', role: 'teacher', linkedEntity: 'Grade 11-C English Literature', status: 'Active', lastLogin: 'Yesterday at 04:30 PM' },
       { id: 'USR-803', name: 'Dr. Rehan Alvi', email: 'rehan.phy@campus.edu', pin: '1920', role: 'teacher', linkedEntity: 'Grade 10-B Physics & Labs', status: 'Active', lastLogin: 'Today at 09:05 AM' },
@@ -7993,18 +8225,18 @@ INSTRUCTIONS:
 
   getInitialRolePermissions(): RoleModulePermission[] {
     return [
-      { id: 'perm_attendance', name: 'Attendance & Biometric Marking', description: 'Mark daily roll call and sync gate entries', teacher: true, student: false, parent: false },
-      { id: 'perm_attendance_view', name: 'Attendance History View', description: 'View personal or child monthly attendance streak', teacher: true, student: true, parent: true },
-      { id: 'perm_grades_entry', name: 'Exam Marks & GPA Entry', description: 'Enter term marks, grading remarks, and scores', teacher: true, student: false, parent: false },
-      { id: 'perm_grades_view', name: 'Report Cards & Exam Result Slips', description: 'View and print official academic transcript', teacher: true, student: true, parent: true },
-      { id: 'perm_fee_ledger', name: 'Fee Collection & Finance Ledger', description: 'Access full institutional finance and revenue logs', teacher: false, student: false, parent: false },
-      { id: 'perm_fee_voucher', name: 'Bank Fee Challan Download', description: 'Generate and print official 3-copy fee voucher', teacher: false, student: true, parent: true },
-      { id: 'perm_timetable', name: 'Timetable & Class Routine', description: 'Access period schedule and room assignments', teacher: true, student: true, parent: true },
-      { id: 'perm_homework', name: 'Homework & Study Materials', description: 'Post or download daily syllabus assignments', teacher: true, student: true, parent: true },
-      { id: 'perm_directory', name: 'Class Roster & Guardian Directory', description: 'Access emergency contacts and student roster', teacher: true, student: false, parent: false },
-      { id: 'perm_leave', name: 'Online Leave Application', description: 'Submit official sickness or family leave request', teacher: false, student: true, parent: true },
-      { id: 'perm_chat', name: 'Direct Teacher-Parent Message Center', description: 'Private encrypted messaging channel with faculty', teacher: true, student: false, parent: true },
-      { id: 'perm_rfid', name: 'Live RFID Gate & Bus Telemetry', description: 'Real-time entry/exit alerts and commute status', teacher: false, student: true, parent: true }
+      { id: 'perm_attendance', name: 'Attendance & Biometric Marking', description: 'Mark daily roll call and sync gate entries', teacher: true, student: false, parent: false, accountant: false },
+      { id: 'perm_attendance_view', name: 'Attendance History View', description: 'View personal or child monthly attendance streak', teacher: true, student: true, parent: true, accountant: false },
+      { id: 'perm_grades_entry', name: 'Exam Marks & GPA Entry', description: 'Enter term marks, grading remarks, and scores', teacher: true, student: false, parent: false, accountant: false },
+      { id: 'perm_grades_view', name: 'Report Cards & Exam Result Slips', description: 'View and print official academic transcript', teacher: true, student: true, parent: true, accountant: false },
+      { id: 'perm_fee_ledger', name: 'Fee Collection & Daily Closing Desk', description: 'Receive cash/bank fee receipts and submit Daily Closing to Owner', teacher: false, student: false, parent: false, accountant: true },
+      { id: 'perm_fee_voucher', name: 'Bank Fee Challan Generation & Print', description: 'Generate and print official 3-copy fee voucher', teacher: false, student: true, parent: true, accountant: true },
+      { id: 'perm_timetable', name: 'Timetable & Class Routine', description: 'Access period schedule and room assignments', teacher: true, student: true, parent: true, accountant: false },
+      { id: 'perm_homework', name: 'Homework & Study Materials', description: 'Post or download daily syllabus assignments', teacher: true, student: true, parent: true, accountant: false },
+      { id: 'perm_directory', name: 'Class Roster & Guardian Directory', description: 'Access emergency contacts and student roster', teacher: true, student: false, parent: false, accountant: false },
+      { id: 'perm_leave', name: 'Online Leave Application', description: 'Submit official sickness or family leave request', teacher: false, student: true, parent: true, accountant: false },
+      { id: 'perm_chat', name: 'Direct Teacher-Parent Message Center', description: 'Private encrypted messaging channel with faculty', teacher: true, student: false, parent: true, accountant: false },
+      { id: 'perm_rfid', name: 'Live RFID Gate & Bus Telemetry', description: 'Real-time entry/exit alerts and commute status', teacher: false, student: true, parent: true, accountant: false }
     ];
   }
 
@@ -8229,10 +8461,10 @@ INSTRUCTIONS:
       this.showToast('Access restricted: Only School Owner or Administrator can access Owner ERP.', 'warning');
       return;
     }
-    // Block real student or parent accounts from jumping into other portals
+    // Block real student, parent, or accountant accounts from jumping into other portals
     if (!this.isOwnerSession) {
       const realRole = this.getRealUserRole();
-      if (['student', 'parent', 'student_guardian'].includes(realRole) && role !== realRole) {
+      if (['student', 'parent', 'student_guardian', 'accountant', 'fee_clerk', 'bursar'].includes(realRole) && role !== realRole) {
         this.showToast(`Access restricted: You cannot switch to ${role} portal.`, 'warning');
         return;
       }
@@ -8244,6 +8476,9 @@ INSTRUCTIONS:
       else if (role === 'student') this.activeStudentId = personaId;
       else if (role === 'parent') this.activeParentChildId = personaId;
     }
+    if (role === 'accountant') {
+      this.populateAccountantClosingFromReceipts();
+    }
     try {
       localStorage.setItem('activeSchoolRole', role);
       localStorage.setItem('activeSchoolPortal', role === 'owner' ? 'overview' : role + '-portal');
@@ -8254,6 +8489,7 @@ INSTRUCTIONS:
     const roleLabels: { [key in SchoolPortalRole]: string } = {
       owner: 'School Owner Executive ERP',
       principal: 'Principal & Academic Director Portal',
+      accountant: 'Accountant / Fee Clerk Desk',
       teacher: 'Teacher & Faculty Portal',
       student: 'Student Academic Portal',
       parent: 'Parent & Guardian Portal'
@@ -8379,7 +8615,7 @@ INSTRUCTIONS:
   }
 
   // --- OWNER RBAC PERMISSION TOGGLES ---
-  togglePermission(permId: string, role: 'teacher' | 'student' | 'parent') {
+  togglePermission(permId: string, role: 'teacher' | 'student' | 'parent' | 'accountant') {
     const item = this.rolePermissions.find(p => p.id === permId);
     if (item) {
       item[role] = !item[role];
@@ -8414,15 +8650,22 @@ INSTRUCTIONS:
     const r = this.portalUserForm.role;
     if (r === 'principal') {
       if (!this.portalUserForm.designation) this.portalUserForm.designation = 'Principal & Academic Director';
-      if (!this.portalUserForm.staffIdOrRoll || this.portalUserForm.staffIdOrRoll.startsWith('ST-') || this.portalUserForm.staffIdOrRoll.startsWith('TCH-')) {
+      if (!this.portalUserForm.staffIdOrRoll || this.portalUserForm.staffIdOrRoll.startsWith('ST-') || this.portalUserForm.staffIdOrRoll.startsWith('TCH-') || this.portalUserForm.staffIdOrRoll.startsWith('ACC-')) {
         this.portalUserForm.staffIdOrRoll = `DIR-${Math.floor(100 + Math.random() * 900)}`;
       }
       this.portalUserForm.department = 'Academic Directorate';
       this.portalUserForm.clearanceLevel = 'Level 5 - Executive Academic Authority';
       this.portalUserForm.linkedEntity = 'Academic Directorate & Executive Council';
-      if (!this.portalUserForm.email || this.portalUserForm.email.includes('teacher') || this.portalUserForm.email.includes('student')) {
+      if (!this.portalUserForm.email || this.portalUserForm.email.includes('teacher') || this.portalUserForm.email.includes('student') || this.portalUserForm.email.includes('accountant')) {
         this.portalUserForm.email = 'principal@campus.edu';
       }
+    } else if (r === 'accountant') {
+      this.portalUserForm.designation = 'Accountant / Fee Clerk';
+      this.portalUserForm.staffIdOrRoll = `ACC-${Math.floor(100 + Math.random() * 900)}`;
+      this.portalUserForm.department = 'Accounts & Fee Desk';
+      this.portalUserForm.clearanceLevel = 'Level 2 - Fee Counter & Daily Closing Submission Only';
+      this.portalUserForm.linkedEntity = 'Fee Counter, Challans & Daily Closing Desk';
+      if (this.portalUserForm.email === 'principal@campus.edu' || this.portalUserForm.email === 'principal@alhuda.edu.pk') this.portalUserForm.email = '';
     } else if (r === 'teacher') {
       this.portalUserForm.designation = 'Senior Subject Teacher';
       this.portalUserForm.staffIdOrRoll = `TCH-${Math.floor(100 + Math.random() * 900)}`;
@@ -8471,21 +8714,21 @@ INSTRUCTIONS:
       this.showToast(`Updated credentials for ${this.portalUserForm.name}`, 'success');
     } else {
       const role = this.portalUserForm.role || 'principal';
-      const prefix = role === 'principal' ? 'DIR' : (role === 'teacher' ? 'TCH' : (role === 'student' ? 'ST' : 'GRD'));
+      const prefix = role === 'principal' ? 'DIR' : (role === 'accountant' ? 'ACC' : (role === 'teacher' ? 'TCH' : (role === 'student' ? 'ST' : 'GRD')));
       const newUser: PortalUserRecord = {
         id: `USR-${Math.floor(800 + Math.random() * 199)}`,
         name: this.portalUserForm.name || '',
         email: this.portalUserForm.email || '',
         pin: this.portalUserForm.pin || '1234',
         role: role,
-        linkedEntity: this.portalUserForm.linkedEntity || 'General Campus Scope',
+        linkedEntity: this.portalUserForm.linkedEntity || (role === 'accountant' ? 'Fee Counter & Daily Closing Desk' : 'General Campus Scope'),
         status: this.portalUserForm.status || 'Active',
         lastLogin: 'Never logged in',
         phone: this.portalUserForm.phone || '+92 300 0000000',
         staffIdOrRoll: this.portalUserForm.staffIdOrRoll || `${prefix}-${Math.floor(100 + Math.random() * 900)}`,
-        designation: this.portalUserForm.designation || (role === 'principal' ? 'Principal & Academic Director' : 'Academic Member'),
-        department: this.portalUserForm.department || 'Academic Directorate',
-        clearanceLevel: this.portalUserForm.clearanceLevel || 'Level 3 - Standard Access',
+        designation: this.portalUserForm.designation || (role === 'principal' ? 'Principal & Academic Director' : (role === 'accountant' ? 'Accountant / Fee Clerk' : 'Academic Member')),
+        department: this.portalUserForm.department || (role === 'accountant' ? 'Accounts & Fee Desk' : 'Academic Directorate'),
+        clearanceLevel: this.portalUserForm.clearanceLevel || (role === 'accountant' ? 'Level 2 - Fee Counter Only' : 'Level 3 - Standard Access'),
         branch: this.portalUserForm.branch || 'Main Executive Campus'
       };
       this.portalUsers.unshift(newUser);
@@ -14659,6 +14902,506 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
   }
 
   // ==========================================
+  // FEATURE 6B: ACCOUNTANT / FEE CLERK DESK & OWNER SUPERVISION
+  // ==========================================
+  accountantChallanSearch: string = '';
+  accountantDefaulterSearch: string = '';
+  ownerReviewRemarks: Record<string, string> = {};
+  accountantGeneratedChallans: Array<{
+    id: string;
+    challanNo: string;
+    studentId: string;
+    studentName: string;
+    rollNo: string;
+    grade: string;
+    month: string;
+    tuition: number;
+    labFee: number;
+    discount: number;
+    total: number;
+    status: string;
+    dueDate: string;
+    paidDate?: string;
+    collectorRole?: string;
+  }> = [];
+
+  accountantChallanForm = {
+    studentId: '',
+    studentName: '',
+    rollNo: '',
+    grade: 'Class 10-A',
+    month: 'November 2026',
+    tuition: 25000,
+    labFee: 3500,
+    discount: 0,
+    dueDate: new Date(Date.now() + 10 * 86400000).toISOString().split('T')[0]
+  };
+
+  accountantBulkForm = {
+    grade: 'All Classes',
+    month: 'November 2026',
+    tuition: 25000,
+    labFee: 3500,
+    dueDate: new Date(Date.now() + 10 * 86400000).toISOString().split('T')[0]
+  };
+
+  accountantCollectForm = {
+    studentId: '',
+    challanNo: '',
+    studentName: '',
+    rollNo: '',
+    grade: '',
+    guardianName: '',
+    guardianPhone: '',
+    amount: 28500,
+    paymentResource: 'Cash at Accountant Fee Counter',
+    resourceReference: '',
+    monthsPaid: 'November 2026 Tuition',
+    notes: 'Received at Accountant / Fee Clerk Counter'
+  };
+
+  accountantDailyClosingForm = {
+    date: new Date().toISOString().split('T')[0],
+    openingVaultCash: 45000,
+    counterCashReceived: 0,
+    bankDepositedMeezan: 0,
+    bankDepositedHBL: 0,
+    onlineDigitalKuickPay: 0,
+    pettyExpenses: 12000,
+    bankDepositSlipNo: 'MEZN-SLIP-' + Math.floor(10000 + Math.random() * 89999),
+    totalSystemBilled: 0,
+    cashierName: 'Muhammad Rizwan (Accountant / Fee Clerk)',
+    notes: 'Daily Fee Counter Closing & Cash/Bank Reconciliation submitted to School Owner.'
+  };
+
+  setAccountantTab(tab: 'overview' | 'challans' | 'collect' | 'defaulters' | 'daily_closing'): void {
+    this.accountantTab = tab;
+    if (tab === 'daily_closing') {
+      this.populateAccountantClosingFromReceipts();
+    }
+    this.cdr.detectChanges();
+  }
+
+  get filteredAccountantChallans(): any[] {
+    const q = (this.accountantChallanSearch || '').toLowerCase().trim();
+    const list = this.accountantGeneratedChallans || [];
+    if (!q) return list;
+    return list.filter(c =>
+      (c.challanNo || '').toLowerCase().includes(q) ||
+      (c.studentName || '').toLowerCase().includes(q) ||
+      (c.rollNo || '').toLowerCase().includes(q) ||
+      (c.grade || '').toLowerCase().includes(q)
+    );
+  }
+
+  get filteredAccountantDefaulters(): any[] {
+    const q = (this.accountantDefaulterSearch || '').toLowerCase().trim();
+    const list = this.studentFeeDefaulters || [];
+    const active = list.filter(d => Number(d.totalRemainingBakaya || 0) > 0);
+    if (!q) return active;
+    return active.filter(d =>
+      (d.studentName || '').toLowerCase().includes(q) ||
+      (d.rollNo || '').toLowerCase().includes(q) ||
+      (d.grade || '').toLowerCase().includes(q)
+    );
+  }
+
+  onAccountantChallanStudentSelect(studentId: string): void {
+    const st = this.activeStudents.find(s => s.id === studentId || s.rollNo === studentId);
+    if (!st) return;
+    this.accountantChallanForm.studentId = st.id;
+    this.accountantChallanForm.studentName = st.name;
+    this.accountantChallanForm.rollNo = st.rollNo;
+    this.accountantChallanForm.grade = st.grade;
+    this.accountantChallanForm.tuition = Number(st.feeAmount || 25000);
+    this.cdr.detectChanges();
+  }
+
+  onAccountantCollectStudentSelect(studentId: string): void {
+    const st = this.activeStudents.find(s => s.id === studentId || s.rollNo === studentId);
+    if (!st) return;
+    this.accountantCollectForm.studentId = st.id;
+    this.accountantCollectForm.studentName = st.name;
+    this.accountantCollectForm.rollNo = st.rollNo;
+    this.accountantCollectForm.grade = st.grade;
+    this.accountantCollectForm.guardianName = st.guardian || '';
+    this.accountantCollectForm.guardianPhone = st.guardianPhone || '';
+    this.accountantCollectForm.amount = (st.dueBakaya && st.dueBakaya > 0) ? st.dueBakaya : (st.feeAmount || 25000);
+    const openChallan = (this.accountantGeneratedChallans || []).find(
+      c => (c.studentId === st.id || c.rollNo === st.rollNo) && String(c.status).toUpperCase() !== 'PAID'
+    );
+    this.accountantCollectForm.challanNo = openChallan ? openChallan.challanNo : '';
+    this.accountantCollectForm.resourceReference = 'ACC-RCP-' + Math.floor(10000 + Math.random() * 89999);
+    this.cdr.detectChanges();
+  }
+
+  async generateAccountantChallan(openPrint: boolean = false): Promise<void> {
+    if (!this.accountantChallanForm.studentName) {
+      this.showToast('Please select or enter a student first.', 'warning');
+      return;
+    }
+    const tuition = Number(this.accountantChallanForm.tuition || 0);
+    const labFee = Number(this.accountantChallanForm.labFee || 0);
+    const discount = Number(this.accountantChallanForm.discount || 0);
+    const total = Math.max(0, tuition + labFee - discount);
+    const challanNo = 'CHLN-' + new Date().getFullYear() + '-' + Math.floor(1000 + Math.random() * 8999);
+
+    const localChallan = {
+      id: 'FEE-' + Date.now(),
+      challanNo,
+      studentId: this.accountantChallanForm.studentId,
+      studentName: this.accountantChallanForm.studentName,
+      rollNo: this.accountantChallanForm.rollNo || '0000',
+      grade: this.accountantChallanForm.grade || 'Campus',
+      month: this.accountantChallanForm.month || 'Current Month',
+      tuition,
+      labFee,
+      discount,
+      total,
+      status: 'PENDING',
+      dueDate: this.accountantChallanForm.dueDate,
+      collectorRole: 'accountant'
+    };
+
+    const res = await this.backend.createSchoolFee(localChallan);
+    const saved = res?.ok && res.fee ? res.fee : localChallan;
+    this.accountantGeneratedChallans.unshift(saved);
+
+    const matchedStudent = this.activeStudents.find(
+      s => s.id === saved.studentId || s.rollNo === saved.rollNo || s.name === saved.studentName
+    );
+    if (matchedStudent && openPrint) {
+      this.openFeeChallanVoucher(matchedStudent);
+    } else if (openPrint) {
+      this.openFeeChallanVoucher({
+        id: saved.studentId || saved.id,
+        name: saved.studentName,
+        grade: saved.grade,
+        rollNo: saved.rollNo,
+        feeAmount: saved.total,
+        feeStatus: 'Pending',
+        guardian: 'Registered Guardian',
+        section: 'A'
+      } as any);
+    }
+
+    this.saveStateToStorage();
+    this.showToast(`Challan #${saved.challanNo} generated for ${saved.studentName} (PKR ${this.formatCurrency(saved.total)}).`, 'success');
+    this.cdr.detectChanges();
+  }
+
+  printAccountantChallan(ch: any): void {
+    const matchedStudent = this.activeStudents.find(
+      s => s.id === ch?.studentId || s.rollNo === ch?.rollNo || s.name === ch?.studentName
+    );
+    if (matchedStudent) {
+      this.openFeeChallanVoucher(matchedStudent);
+      return;
+    }
+    this.openFeeChallanVoucher({
+      id: ch?.studentId || ch?.id || 'ST-CHLN',
+      name: ch?.studentName || 'Enrolled Student',
+      grade: ch?.grade || 'Class',
+      rollNo: ch?.rollNo || '0000',
+      feeAmount: Number(ch?.total || 0),
+      feeStatus: String(ch?.status || 'Pending'),
+      guardian: 'Registered Guardian',
+      section: 'A'
+    } as any);
+  }
+
+  collectFromAccountantDefaulter(d: any): void {
+    this.onAccountantCollectStudentSelect(d?.studentId || d?.rollNo || '');
+    if (!this.accountantCollectForm.studentName && d?.studentName) {
+      this.accountantCollectForm.studentId = d.studentId || '';
+      this.accountantCollectForm.studentName = d.studentName;
+      this.accountantCollectForm.rollNo = d.rollNo || '';
+      this.accountantCollectForm.grade = d.grade || '';
+      this.accountantCollectForm.guardianName = d.guardianName || '';
+      this.accountantCollectForm.guardianPhone = d.guardianPhone || '';
+      this.accountantCollectForm.amount = Number(d.totalRemainingBakaya || 0);
+    }
+    this.setAccountantTab('collect');
+  }
+
+  async runAccountantBulkChallans(): Promise<void> {
+    const res = await this.backend.bulkGenerateSchoolFees({
+      grade: this.accountantBulkForm.grade,
+      month: this.accountantBulkForm.month,
+      tuition: Number(this.accountantBulkForm.tuition || 25000),
+      labFee: Number(this.accountantBulkForm.labFee || 0),
+      dueDate: this.accountantBulkForm.dueDate
+    });
+    if (res?.ok && Array.isArray(res.generated)) {
+      for (const ch of res.generated) {
+        if (!this.accountantGeneratedChallans.some(existing => existing.challanNo === ch.challanNo)) {
+          this.accountantGeneratedChallans.unshift(ch);
+        }
+      }
+      this.saveStateToStorage();
+      this.showToast(`Generated ${res.count || res.generated.length} fee challans for ${this.accountantBulkForm.month}.`, 'success');
+    } else {
+      this.showToast(res?.message || 'Unable to bulk-generate challans right now.', 'warning');
+    }
+    this.cdr.detectChanges();
+  }
+
+  async submitAccountantFeeReceipt(): Promise<void> {
+    const amount = Number(this.accountantCollectForm.amount || 0);
+    if (!this.accountantCollectForm.studentName || amount <= 0) {
+      this.showToast('Please select a student and enter a valid payment amount.', 'warning');
+      return;
+    }
+
+    const receiptNo = this.accountantCollectForm.challanNo || ('REC-ACC-' + Math.floor(10000 + Math.random() * 89999));
+    const refNo = this.accountantCollectForm.resourceReference || ('ACC-TXN-' + Date.now().toString().slice(-5));
+    const currentAccountantName = (this.portalUsers || []).find(u => u.role === 'accountant')?.name || 'Muhammad Rizwan (Accountant / Fee Clerk)';
+
+    const matchedChallan = (this.accountantGeneratedChallans || []).find(
+      c => (this.accountantCollectForm.challanNo && c.challanNo === this.accountantCollectForm.challanNo)
+    );
+
+    const newRecord: PrincipalFeeCollectionRecord = {
+      id: matchedChallan?.id || ('ACC-PAY-' + Date.now()),
+      receiptNo,
+      challanNo: receiptNo,
+      studentId: this.accountantCollectForm.studentId,
+      studentName: this.accountantCollectForm.studentName,
+      rollNo: this.accountantCollectForm.rollNo,
+      grade: this.accountantCollectForm.grade,
+      guardianName: this.accountantCollectForm.guardianName,
+      guardianPhone: this.accountantCollectForm.guardianPhone,
+      amount,
+      paymentResource: this.accountantCollectForm.paymentResource,
+      resourceReference: refNo,
+      collectedBy: `${currentAccountantName} (Accountant Desk)`,
+      collectorRole: 'accountant',
+      timestamp: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      monthsPaid: this.accountantCollectForm.monthsPaid || 'Current Session Fee',
+      auditStatus: 'Received at Accountant Fee Desk',
+      notes: this.accountantCollectForm.notes
+    };
+
+    this.principalFeeCollections.unshift(newRecord);
+
+    if (matchedChallan) {
+      matchedChallan.status = 'PAID';
+      matchedChallan.paidDate = new Date().toISOString().split('T')[0];
+    }
+
+    this.finances.unshift({
+      id: `FIN-${Math.floor(2000 + Math.random() * 8000)}`,
+      title: `Fee Collected (Accountant Desk) - ${newRecord.studentName} (${newRecord.grade})`,
+      studentName: newRecord.studentName,
+      grade: newRecord.grade,
+      category: 'Tuition',
+      type: 'Income',
+      amount: newRecord.amount,
+      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      status: 'Verified',
+      challanNo: newRecord.receiptNo,
+      paymentMethod: newRecord.paymentResource,
+      accountHead: 'Tuition Fee Collection'
+    });
+
+    const match = this.activeStudents.find(s => s.id === newRecord.studentId || s.rollNo === newRecord.rollNo);
+    if (match) {
+      match.feeStatus = 'Paid';
+      if (match.dueBakaya) {
+        match.dueBakaya = Math.max(0, match.dueBakaya - newRecord.amount);
+      }
+      match.lastPaymentDate = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    const matchDef = this.studentFeeDefaulters.find(d => d.studentId === newRecord.studentId || d.rollNo === newRecord.rollNo);
+    if (matchDef) {
+      matchDef.totalRemainingBakaya = Math.max(0, matchDef.totalRemainingBakaya - newRecord.amount);
+      if (matchDef.totalRemainingBakaya === 0) {
+        matchDef.unpaidMonthsCount = 0;
+        matchDef.unpaidMonthsList = [];
+      }
+    }
+
+    await this.backend.collectSchoolFee(matchedChallan?.id || newRecord.studentId || newRecord.id, {
+      studentId: newRecord.studentId,
+      studentName: newRecord.studentName,
+      rollNo: newRecord.rollNo,
+      grade: newRecord.grade,
+      month: newRecord.monthsPaid,
+      amount: newRecord.amount,
+      receiptNo: newRecord.receiptNo,
+      challanNo: newRecord.receiptNo,
+      paymentMethod: newRecord.paymentResource,
+      paymentMode: newRecord.paymentResource,
+      resourceReference: newRecord.resourceReference,
+      collectedBy: newRecord.collectedBy,
+      collectorRole: 'accountant'
+    });
+
+    this.notificationsList.unshift({
+      id: 'NOTIF-ACC-' + Date.now(),
+      title: `Accountant Receipt: PKR ${this.formatCurrency(newRecord.amount)}`,
+      message: `${newRecord.studentName} (${newRecord.grade}) paid via ${newRecord.paymentResource}. Collected by ${currentAccountantName}.`,
+      type: 'fee',
+      targetRole: 'all',
+      createdAt: 'Just now',
+      isUnread: true,
+      linkTab: 'finance'
+    });
+
+    this.saveStateToStorage();
+    this.showToast(`Receipt #${newRecord.receiptNo} recorded (PKR ${this.formatCurrency(amount)}) & synced to Owner ledger.`, 'success');
+    this.viewCashieringReceipt(newRecord);
+  }
+
+  populateAccountantClosingFromReceipts(): void {
+    const accReceipts = (this.principalFeeCollections || []).filter(
+      f => f.collectorRole === 'accountant' || (f.collectedBy || '').toLowerCase().includes('accountant') || (f.collectedBy || '').toLowerCase().includes('fee clerk')
+    );
+    let cash = 0;
+    let meezan = 0;
+    let hbl = 0;
+    let digital = 0;
+
+    for (const r of accReceipts) {
+      const mode = (r.paymentResource || '').toLowerCase();
+      const amt = Number(r.amount || 0);
+      if (mode.includes('cash')) cash += amt;
+      else if (mode.includes('meezan')) meezan += amt;
+      else if (mode.includes('hbl')) hbl += amt;
+      else digital += amt;
+    }
+
+    const accTotal = cash + meezan + hbl + digital;
+    const prinTotal = this.principalCollectedTotal;
+    const onlineTotal = this.ownerOnlineCollectedTotal;
+
+    this.accountantDailyClosingForm.counterCashReceived = cash;
+    this.accountantDailyClosingForm.bankDepositedMeezan = meezan;
+    this.accountantDailyClosingForm.bankDepositedHBL = hbl;
+    this.accountantDailyClosingForm.onlineDigitalKuickPay = digital;
+    this.accountantDailyClosingForm.totalSystemBilled = accTotal > 0 ? accTotal : (cash + meezan + hbl + digital);
+    this.accountantDailyClosingForm.notes = `Accountant Desk: PKR ${this.formatCurrency(accTotal)} | Principal Desk: PKR ${this.formatCurrency(prinTotal)} | Online: PKR ${this.formatCurrency(onlineTotal)}. Submitted to School Owner.`;
+  }
+
+  async submitAccountantDailyClosing(): Promise<void> {
+    const cash = Number(this.accountantDailyClosingForm.counterCashReceived || 0);
+    const meezan = Number(this.accountantDailyClosingForm.bankDepositedMeezan || 0);
+    const hbl = Number(this.accountantDailyClosingForm.bankDepositedHBL || 0);
+    const digital = Number(this.accountantDailyClosingForm.onlineDigitalKuickPay || 0);
+    const actualCollected = cash + meezan + hbl + digital;
+    const totalSystemBilled = Number(this.accountantDailyClosingForm.totalSystemBilled || actualCollected);
+    const varianceAmount = actualCollected - totalSystemBilled;
+    const openingVaultCash = Number(this.accountantDailyClosingForm.openingVaultCash || 0);
+    const pettyExpenses = Number(this.accountantDailyClosingForm.pettyExpenses || 0);
+    const closingVaultCash = openingVaultCash + cash - pettyExpenses;
+
+    const payload: FeeReconciliationRecord = {
+      id: 'DCL-' + Date.now(),
+      date: this.accountantDailyClosingForm.date || new Date().toISOString().split('T')[0],
+      counterCashReceived: cash,
+      bankDepositedMeezan: meezan,
+      bankDepositedHBL: hbl,
+      onlineDigitalKuickPay: digital,
+      totalSystemBilled,
+      actualCollected,
+      varianceAmount,
+      reconciliationStatus: varianceAmount === 0 ? 'Balanced & Cleared' : (varianceAmount > 0 ? 'Surplus Recorded' : 'Audit Deficit Flagged'),
+      cashierName: this.accountantDailyClosingForm.cashierName || 'Muhammad Rizwan (Accountant / Fee Clerk)',
+      verifiedByAuditor: 'Pending School Owner Review',
+      submittedByRole: 'accountant',
+      principalCollected: this.principalCollectedTotal,
+      accountantCollected: actualCollected,
+      onlineCollected: this.ownerOnlineCollectedTotal,
+      openingVaultCash,
+      pettyExpenses,
+      closingVaultCash,
+      bankDepositSlipNo: this.accountantDailyClosingForm.bankDepositSlipNo || '',
+      ownerApprovalStatus: 'Pending Owner Review',
+      notes: this.accountantDailyClosingForm.notes
+    };
+
+    const res = await this.backend.saveSchoolReconciliation(payload);
+    const saved = res?.ok && res.reconciliation ? res.reconciliation : payload;
+    this.feeReconciliations.unshift(saved);
+
+    this.schoolAuditLogs.unshift({
+      id: 'AUD-' + Math.floor(1000 + Math.random() * 9000),
+      timestamp: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      operatorName: saved.cashierName,
+      operatorRole: 'Accountant / Fee Clerk',
+      actionType: 'Daily Closing Submission',
+      category: 'Financial',
+      entityId: saved.id,
+      entityDescription: `Accountant Daily Closing (${saved.date}) — PKR ${this.formatCurrency(actualCollected)}`,
+      details: `Cash: PKR ${this.formatCurrency(cash)}, Meezan: PKR ${this.formatCurrency(meezan)}, HBL: PKR ${this.formatCurrency(hbl)}, Digital: PKR ${this.formatCurrency(digital)}. Principal Desk: PKR ${this.formatCurrency(this.principalCollectedTotal)}. Submitted to School Owner.`,
+      severity: varianceAmount === 0 ? 'Normal Audit' : 'Compliance Flag',
+      verifiedBy: 'Pending School Owner Review',
+      ipAddress: '192.168.10.25 (Fee Counter)'
+    });
+
+    this.notificationsList.unshift({
+      id: 'NOTIF-DCL-' + Date.now(),
+      title: `Daily Closing Report Submitted by Accountant (PKR ${this.formatCurrency(actualCollected)})`,
+      message: `${saved.cashierName} submitted Rooznama closing for ${saved.date}. Principal Desk also collected PKR ${this.formatCurrency(this.principalCollectedTotal)}. Review in Finance -> Daily Closing.`,
+      type: 'fee',
+      targetRole: 'all',
+      createdAt: 'Just now',
+      isUnread: true,
+      linkTab: 'finance'
+    });
+
+    this.saveStateToStorage();
+    this.showToast(`Daily Closing (${saved.id}) submitted to School Owner for review & approval!`, 'success');
+    this.cdr.detectChanges();
+  }
+
+  async ownerApproveDailyClosing(rec: FeeReconciliationRecord, decision: 'Verified & Approved by Owner' | 'Flagged by Owner'): Promise<void> {
+    if (!rec) return;
+    const remarks = (this.ownerReviewRemarks[rec.id] || '').trim() || (
+      decision === 'Flagged by Owner'
+        ? 'Flagged by School Owner for physical cash/bank slip recount.'
+        : 'Verified, reconciled, and locked by School Owner.'
+    );
+    const approvedBy = 'School Owner Executive';
+    const approvedAt = new Date().toISOString();
+
+    rec.ownerApprovalStatus = decision;
+    rec.ownerRemarks = remarks;
+    rec.approvedBy = approvedBy;
+    rec.approvedAt = approvedAt;
+    rec.verifiedByAuditor = decision === 'Flagged by Owner' ? `Flagged by ${approvedBy}` : `${approvedBy} (Verified)`;
+
+    const res = await this.backend.verifySchoolReconciliation(rec.id, {
+      ownerApprovalStatus: decision,
+      ownerRemarks: remarks,
+      approvedBy
+    });
+    if (res?.ok && res.reconciliation) {
+      Object.assign(rec, res.reconciliation);
+    }
+
+    this.schoolAuditLogs.unshift({
+      id: 'AUD-' + Math.floor(1000 + Math.random() * 9000),
+      timestamp: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      operatorName: approvedBy,
+      operatorRole: 'School Owner',
+      actionType: 'Owner Daily Closing Oversight',
+      category: 'Financial',
+      entityId: rec.id,
+      entityDescription: `${decision} — ${rec.date}`,
+      details: `Owner reviewed Accountant Daily Closing (${rec.cashierName}) for PKR ${this.formatCurrency(rec.actualCollected)}. Remarks: ${remarks}`,
+      severity: decision === 'Flagged by Owner' ? 'Compliance Flag' : 'Normal Audit',
+      verifiedBy: approvedBy,
+      ipAddress: '192.168.10.2 (Owner Executive Suite)'
+    });
+
+    this.saveStateToStorage();
+    this.showToast(`${decision}: Closing ${rec.id} updated and logged in Audit Trail.`, decision === 'Flagged by Owner' ? 'warning' : 'success');
+    this.cdr.detectChanges();
+  }
+
+  // ==========================================
   // FEATURE 7: FIRESTORE CLOUD PERSISTENCE
   // ==========================================
   async syncToCloud(isManual: boolean = false) {
@@ -14671,6 +15414,9 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
         admissionsList: this.admissionsList,
         finances: this.finances,
         studentFeeDefaulters: this.studentFeeDefaulters,
+        feeReconciliations: this.feeReconciliations,
+        principalFeeCollections: this.principalFeeCollections,
+        accountantGeneratedChallans: this.accountantGeneratedChallans,
         hostelRooms: this.hostelRooms,
         alumniList: this.alumniList,
         workstations: this.workstations,
@@ -14703,6 +15449,18 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
         }
         if (cloudData.studentFeeDefaulters && Array.isArray(cloudData.studentFeeDefaulters)) {
           this.studentFeeDefaulters = cloudData.studentFeeDefaulters;
+        }
+        if (cloudData.feeReconciliations && Array.isArray(cloudData.feeReconciliations)) {
+          const localOnlyRec = this.feeReconciliations.filter(r => !cloudData.feeReconciliations.some((c: any) => c.id === r.id));
+          this.feeReconciliations = [...localOnlyRec, ...cloudData.feeReconciliations];
+        }
+        if (cloudData.principalFeeCollections && Array.isArray(cloudData.principalFeeCollections)) {
+          const localOnlyCol = this.principalFeeCollections.filter(p => !cloudData.principalFeeCollections.some((c: any) => c.receiptNo === p.receiptNo || c.id === p.id));
+          this.principalFeeCollections = [...localOnlyCol, ...cloudData.principalFeeCollections];
+        }
+        if (cloudData.accountantGeneratedChallans && Array.isArray(cloudData.accountantGeneratedChallans)) {
+          const localOnlyCh = this.accountantGeneratedChallans.filter(ch => !cloudData.accountantGeneratedChallans.some((c: any) => c.challanNo === ch.challanNo));
+          this.accountantGeneratedChallans = [...localOnlyCh, ...cloudData.accountantGeneratedChallans];
         }
         if (cloudData.hostelRooms && Array.isArray(cloudData.hostelRooms)) {
           this.hostelRooms = cloudData.hostelRooms;

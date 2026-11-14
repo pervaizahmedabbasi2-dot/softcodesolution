@@ -332,3 +332,140 @@ test('School workflows: Admission approve -> enrollment -> bulk challans -> fee 
   const auditLogs = (await auditRes.json()).logs;
   assert.ok(auditLogs.some((l) => l.entityId === slcJson.student.slcSerial));
 });
+
+test('Accountant 6th Role: RBAC isolation, challan + fee receipt collection, Principal fee intact, and Owner Daily Closing approval', async () => {
+  const tenantId = 'tenant-accountant-rbac';
+  const ownerHeaders = { 'Content-Type': 'application/json', 'x-tenant-id': tenantId, 'x-user-role': 'owner' };
+  const accountantHeaders = { 'Content-Type': 'application/json', 'x-tenant-id': tenantId, 'x-user-role': 'accountant', 'x-user-name': 'Muhammad Rizwan' };
+  const principalHeaders = { 'Content-Type': 'application/json', 'x-tenant-id': tenantId, 'x-user-role': 'principal', 'x-user-name': 'Dr. Tahir Malik' };
+
+  // 1. Seed 2 students via Owner
+  const st1 = (await (await fetch(`${baseUrl}/api/school/students`, {
+    method: 'POST',
+    headers: ownerHeaders,
+    body: JSON.stringify({ fullName: 'Hammad Raza', grade: 'Grade 10', section: 'A', guardianName: 'Raza Khan', feeAmount: 25000, dueBakaya: 25000 })
+  })).json()).student;
+  const st2 = (await (await fetch(`${baseUrl}/api/school/students`, {
+    method: 'POST',
+    headers: ownerHeaders,
+    body: JSON.stringify({ fullName: 'SanaTariq', grade: 'Grade 10', section: 'A', guardianName: 'Tariq Saeed', feeAmount: 25000, dueBakaya: 25000 })
+  })).json()).student;
+
+  // 2. Accountant generates fee challan & receives cash receipt (collectorRole: 'accountant')
+  const challanRes = await fetch(`${baseUrl}/api/school/fees`, {
+    method: 'POST',
+    headers: accountantHeaders,
+    body: JSON.stringify({ studentId: st1.id, studentName: st1.fullName, grade: st1.grade, month: 'November 2026', tuition: 25000, labFee: 2000 })
+  });
+  assert.equal(challanRes.status, 201);
+  const { fee: accChallan } = await challanRes.json();
+  assert.equal(accChallan.total, 27000);
+
+  const accCollectRes = await fetch(`${baseUrl}/api/school/fees/collect`, {
+    method: 'POST',
+    headers: accountantHeaders,
+    body: JSON.stringify({ id: accChallan.id, studentId: st1.id, paymentMode: 'Cash at Accountant Fee Counter' })
+  });
+  assert.equal(accCollectRes.status, 200);
+  const accCollected = (await accCollectRes.json()).fee;
+  assert.equal(accCollected.status, 'PAID');
+  assert.equal(accCollected.collectorRole, 'accountant');
+
+  // 3. Principal Desk fee collection still works & tags collectorRole: 'principal'
+  const prinCollectRes = await fetch(`${baseUrl}/api/school/fees/collect`, {
+    method: 'POST',
+    headers: principalHeaders,
+    body: JSON.stringify({ studentId: st2.id, studentName: st2.fullName, grade: st2.grade, amount: 25000, paymentMode: 'Meezan Bank', resourceReference: 'PRIN-MEZN-11' })
+  });
+  assert.equal(prinCollectRes.status, 200);
+  const prinCollected = (await prinCollectRes.json()).fee;
+  assert.equal(prinCollected.status, 'PAID');
+  assert.equal(prinCollected.collectorRole, 'principal');
+
+  // 4. Accountant RBAC: blocked (403 ROLE_FORBIDDEN) on promote, SLC, salary disburse, delete fee, and owner verification
+  const blockedPromote = await fetch(`${baseUrl}/api/school/students/promote`, {
+    method: 'POST',
+    headers: accountantHeaders,
+    body: JSON.stringify({ studentIds: [st1.id], toGrade: 'Grade 11' })
+  });
+  assert.equal(blockedPromote.status, 403);
+  assert.equal((await blockedPromote.json()).error, 'ROLE_FORBIDDEN');
+
+  const blockedSlc = await fetch(`${baseUrl}/api/school/students/slc`, {
+    method: 'POST',
+    headers: accountantHeaders,
+    body: JSON.stringify({ studentId: st1.id, reason: 'Transfer' })
+  });
+  assert.equal(blockedSlc.status, 403);
+
+  const blockedSalary = await fetch(`${baseUrl}/api/school/teachers/salary/disburse`, {
+    method: 'POST',
+    headers: accountantHeaders,
+    body: JSON.stringify({ teacherId: 'T-1', month: 'November 2026' })
+  });
+  assert.equal(blockedSalary.status, 403);
+
+  const blockedDeleteFee = await fetch(`${baseUrl}/api/school/fees/${accChallan.id}`, {
+    method: 'DELETE',
+    headers: accountantHeaders
+  });
+  assert.equal(blockedDeleteFee.status, 403);
+
+  // 5. Accountant submits Daily Closing (Rooznama) -> Pending Owner Review
+  const closingRes = await fetch(`${baseUrl}/api/school/reconciliation`, {
+    method: 'POST',
+    headers: accountantHeaders,
+    body: JSON.stringify({
+      date: '2026-11-14',
+      counterCashReceived: 27000,
+      bankDepositedMeezan: 0,
+      bankDepositedHBL: 0,
+      onlineDigitalKuickPay: 0,
+      principalCollected: 25000,
+      openingVaultCash: 10000,
+      pettyExpenses: 2000,
+      bankDepositSlipNo: 'MEZN-DEP-7788',
+      submittedByRole: 'accountant',
+      cashierName: 'Muhammad Rizwan (Accountant / Fee Clerk)'
+    })
+  });
+  assert.equal(closingRes.status, 201);
+  const { reconciliation } = await closingRes.json();
+  assert.equal(reconciliation.ownerApprovalStatus, 'Pending Owner Review');
+  assert.equal(reconciliation.actualCollected, 27000);
+  assert.equal(reconciliation.principalCollected, 25000);
+  assert.equal(reconciliation.closingVaultCash, 35000);
+
+  // Accountant cannot verify/approve their own Daily Closing
+  const selfApprove = await fetch(`${baseUrl}/api/school/reconciliation/${reconciliation.id}/verify`, {
+    method: 'PUT',
+    headers: accountantHeaders,
+    body: JSON.stringify({ ownerApprovalStatus: 'Verified & Approved by Owner' })
+  });
+  assert.equal(selfApprove.status, 403);
+
+  // 6. School Owner reviews & approves the Daily Closing
+  const ownerApproveRes = await fetch(`${baseUrl}/api/school/reconciliation/${reconciliation.id}/verify`, {
+    method: 'PUT',
+    headers: ownerHeaders,
+    body: JSON.stringify({
+      ownerApprovalStatus: 'Verified & Approved by Owner',
+      ownerRemarks: 'Vault cash and Meezan deposit slip verified.',
+      approvedBy: 'School Owner Executive'
+    })
+  });
+  assert.equal(ownerApproveRes.status, 200);
+  const { reconciliation: approved } = await ownerApproveRes.json();
+  assert.equal(approved.ownerApprovalStatus, 'Verified & Approved by Owner');
+  assert.equal(approved.approvedBy, 'School Owner Executive');
+
+  // Verify GET reconciliations + immutable audit logs
+  const listRecsRes = await fetch(`${baseUrl}/api/school/reconciliation`, { headers: { 'x-tenant-id': tenantId } });
+  assert.equal(listRecsRes.status, 200);
+  const listRecs = (await listRecsRes.json()).reconciliations;
+  assert.ok(listRecs.some((r) => r.id === reconciliation.id && r.ownerApprovalStatus === 'Verified & Approved by Owner'));
+
+  const auditRes = await fetch(`${baseUrl}/api/school/audit-logs`, { headers: { 'x-tenant-id': tenantId } });
+  const logs = (await auditRes.json()).logs;
+  assert.ok(logs.some((l) => l.entityId === reconciliation.id && l.actionType === 'Owner Daily Closing Oversight'));
+});

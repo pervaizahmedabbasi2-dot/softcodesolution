@@ -136,9 +136,26 @@ function ensureColumnMigrations(sqliteDb) {
     ['student_id', 'TEXT'],
     ['payment_mode', 'TEXT'],
     ['resource_reference', 'TEXT'],
-    ['collected_by', 'TEXT']
+    ['collected_by', 'TEXT'],
+    ['collector_role', "TEXT DEFAULT 'owner'"]
   ];
   for (const [c, d] of feeCols) safeAddCol('local_school_fees', c, d);
+
+  const reconciliationCols = [
+    ['submitted_by_role', "TEXT DEFAULT 'accountant'"],
+    ['principal_collected', 'REAL DEFAULT 0'],
+    ['accountant_collected', 'REAL DEFAULT 0'],
+    ['online_collected', 'REAL DEFAULT 0'],
+    ['opening_vault_cash', 'REAL DEFAULT 0'],
+    ['petty_expenses', 'REAL DEFAULT 0'],
+    ['closing_vault_cash', 'REAL DEFAULT 0'],
+    ['bank_deposit_slip_no', 'TEXT'],
+    ['owner_approval_status', "TEXT DEFAULT 'Pending Owner Review'"],
+    ['owner_remarks', 'TEXT'],
+    ['approved_by', 'TEXT'],
+    ['approved_at', 'TEXT']
+  ];
+  for (const [c, d] of reconciliationCols) safeAddCol('local_school_reconciliation', c, d);
 
   safeAddCol('local_school_attendance', 'tenant_id', "TEXT DEFAULT 'tenant-root-platform'");
   safeAddCol('local_school_attendance', 'gate_name', "TEXT DEFAULT 'Main Turnstile 01'");
@@ -279,7 +296,7 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     res.json({ ok: true, tenantId: tid, students: list });
   });
 
-  router.post('/students', rejectRestrictedRole(['student', 'parent']), async (req, res) => {
+  router.post('/students', rejectRestrictedRole(['student', 'parent', 'accountant']), async (req, res) => {
     const tid = resolveTenantId(req);
     const s = req.body || {};
     const fullName = String(s.fullName || s.name || '').trim();
@@ -382,7 +399,7 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     });
   });
 
-  router.put('/students/:id', rejectRestrictedRole(['student', 'parent']), async (req, res) => {
+  router.put('/students/:id', rejectRestrictedRole(['student', 'parent', 'accountant']), async (req, res) => {
     const tid = resolveTenantId(req);
     const id = req.params.id;
     const u = req.body || {};
@@ -458,7 +475,7 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     res.json({ ok: true, message: 'Student record updated', student: updated });
   });
 
-  router.delete('/students/:id', rejectRestrictedRole(['student', 'parent']), (req, res) => {
+  router.delete('/students/:id', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
     const tid = resolveTenantId(req);
     const id = req.params.id;
     if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
@@ -479,7 +496,7 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     res.json({ ok: true, message: 'Student removed from tenant registry', id });
   });
 
-  router.post('/students/promote', rejectRestrictedRole(['student', 'parent', 'teacher']), async (req, res) => {
+  router.post('/students/promote', rejectRestrictedRole(['student', 'parent', 'teacher', 'accountant']), async (req, res) => {
     const tid = resolveTenantId(req);
     const { fromGrade, toGrade, studentIds } = req.body || {};
     if (!toGrade) {
@@ -501,7 +518,7 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     res.json({ ok: true, message: `Successfully promoted ${count} student(s) from ${fromGrade || 'selected'} to ${toGrade}`, count });
   });
 
-  router.post('/students/slc', rejectRestrictedRole(['student', 'parent', 'teacher']), async (req, res) => {
+  router.post('/students/slc', rejectRestrictedRole(['student', 'parent', 'teacher', 'accountant']), async (req, res) => {
     const tid = resolveTenantId(req);
     const { studentId, reason, conduct } = req.body || {};
     if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
@@ -632,7 +649,7 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     res.status(201).json({ ok: true, admission: saved });
   });
 
-  router.put('/admissions/:id', rejectRestrictedRole(['student', 'parent']), (req, res) => {
+  router.put('/admissions/:id', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
     const tid = resolveTenantId(req);
     const id = req.params.id;
     const u = req.body || {};
@@ -666,7 +683,7 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     res.json({ ok: true, admission: mapAdmissionRow(updated, tid) });
   });
 
-  router.post('/admissions/:id/approve', rejectRestrictedRole(['student', 'parent']), (req, res) => {
+  router.post('/admissions/:id/approve', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
     const tid = resolveTenantId(req);
     const id = req.params.id;
     if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
@@ -702,7 +719,7 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     res.json({ ok: true, message: `${adm.applicant} approved and enrolled cleanly.`, student: enrolled });
   });
 
-  router.delete('/admissions/:id', rejectRestrictedRole(['student', 'parent']), (req, res) => {
+  router.delete('/admissions/:id', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
     const tid = resolveTenantId(req);
     if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
     const info = sqliteDb.prepare('DELETE FROM local_school_admissions WHERE id = ? AND tenant_id = ?').run(req.params.id, tid);
@@ -730,6 +747,7 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     paymentMode: r.payment_mode || '',
     resourceReference: r.resource_reference || '',
     collectedBy: r.collected_by || '',
+    collectorRole: r.collector_role || 'owner',
     dueDate: r.due_date || '',
     paidDate: r.paid_date || '',
     isSynced: r.is_synced === 1
@@ -766,6 +784,9 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       return res.status(400).json({ ok: false, message: 'Fee amounts must be valid non-negative numbers.' });
     }
 
+    const reqRole = resolveUserRole(req);
+    const collectorRole = String(f.collectorRole || reqRole || 'owner').toLowerCase();
+
     const newFee = {
       id: f.id || ('FEE-' + Date.now() + '-' + Math.floor(10 + Math.random() * 90)),
       tenantId: tid,
@@ -782,7 +803,8 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       status: String(f.status || 'PENDING').toUpperCase(),
       paymentMode: String(f.paymentMode || ''),
       resourceReference: String(f.resourceReference || ''),
-      collectedBy: String(f.collectedBy || ''),
+      collectedBy: String(f.collectedBy || (collectorRole === 'accountant' ? 'Accountant / Fee Desk' : '')),
+      collectorRole,
       dueDate: String(f.dueDate || new Date(Date.now() + 10 * 86400000).toISOString().split('T')[0]),
       paidDate: String(f.paidDate || '')
     };
@@ -792,14 +814,27 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       sqliteDb.prepare(`
         INSERT INTO local_school_fees (
           id, tenant_id, challan_no, student_id, student_name, roll_no, grade, month, tuition, lab_fee,
-          discount, total, status, payment_mode, resource_reference, collected_by, due_date, paid_date, is_synced, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
+          discount, total, status, payment_mode, resource_reference, collected_by, collector_role, due_date, paid_date, is_synced, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
       `).run(
         newFee.id, tid, newFee.challanNo, newFee.studentId, encStudentName, newFee.rollNo, newFee.grade,
         newFee.month, newFee.tuition, newFee.labFee, newFee.discount, newFee.total, newFee.status,
-        newFee.paymentMode, newFee.resourceReference, newFee.collectedBy, newFee.dueDate, newFee.paidDate,
+        newFee.paymentMode, newFee.resourceReference, newFee.collectedBy, newFee.collectorRole, newFee.dueDate, newFee.paidDate,
         new Date().toISOString()
       );
+      if (collectorRole === 'accountant') {
+        recordAudit(tid, {
+          operatorName: newFee.collectedBy || 'Accountant / Fee Clerk',
+          operatorRole: 'Accountant / Fee Clerk',
+          actionType: 'Fee Challan Generated',
+          category: 'Financial',
+          entityId: newFee.challanNo,
+          entityDescription: `${newFee.studentName} (${newFee.grade}) — ${newFee.month}`,
+          details: `Fee challan #${newFee.challanNo} generated for PKR ${newFee.total}. Due: ${newFee.dueDate}.`,
+          severity: 'Normal Audit',
+          verifiedBy: 'Pending Collection / Owner Oversight'
+        });
+      }
     }
 
     if (db) {
@@ -839,6 +874,7 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
     const resolvedDue = dueDate || new Date(Date.now() + 15 * 86400000).toISOString().split('T')[0];
     const generated = [];
+    const reqRole = resolveUserRole(req) || 'accountant';
 
     for (const st of targetStudents) {
       const exists = sqliteDb
@@ -862,6 +898,7 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
           discount: 0,
           total,
           status: 'PENDING',
+          collectorRole: reqRole,
           dueDate: resolvedDue
         };
         const encName = enc(tid, challan.studentName);
@@ -869,11 +906,11 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
           sqliteDb.prepare(`
             INSERT INTO local_school_fees (
               id, tenant_id, challan_no, student_id, student_name, roll_no, grade, month,
-              tuition, lab_fee, discount, total, status, due_date, is_synced, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
+              tuition, lab_fee, discount, total, status, collector_role, due_date, is_synced, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
           `).run(
             challan.id, tid, challan.challanNo, challan.studentId, encName, challan.rollNo, challan.grade,
-            challan.month, challan.tuition, challan.labFee, 0, challan.total, 'PENDING', resolvedDue,
+            challan.month, challan.tuition, challan.labFee, 0, challan.total, 'PENDING', challan.collectorRole, resolvedDue,
             new Date().toISOString()
           );
         }
@@ -882,6 +919,19 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
           try { setDoc(doc(db, 'school_fees', challan.id), { ...challan, tenant_id: tid, studentName: encName }); } catch {}
         }
       }
+    }
+
+    if (generated.length > 0) {
+      recordAudit(tid, {
+        operatorName: reqRole === 'accountant' ? 'Accountant / Fee Clerk' : 'Admin Desk',
+        operatorRole: reqRole === 'accountant' ? 'Accountant / Fee Clerk' : 'Principal',
+        actionType: 'Bulk Challan Generation',
+        category: 'Financial',
+        entityId: month,
+        entityDescription: `Generated ${generated.length} bulk challans for ${month}`,
+        details: `Bulk challans issued for grades: ${Array.isArray(grades) && grades.length ? grades.join(', ') : 'All Grades'}.`,
+        severity: 'Normal Audit'
+      });
     }
 
     res.json({
@@ -894,7 +944,23 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
   router.post('/fees/collect', async (req, res) => {
     const tid = resolveTenantId(req);
-    const { id, studentId, paymentMode = 'Cash Counter', resourceReference = '', collectedBy = 'Accounts Desk' } = req.body || {};
+    const body = req.body || {};
+    const {
+      id,
+      studentId,
+      studentName,
+      rollNo = 'SCH-GEN',
+      grade = 'Campus',
+      month = 'Current Session Fee',
+      amount,
+      receiptNo,
+      challanNo,
+      paymentMode = body.paymentMethod || 'Cash Counter',
+      resourceReference = '',
+      collectedBy = 'Accounts Desk'
+    } = body;
+    const reqRole = resolveUserRole(req);
+    const collectorRole = String(body.collectorRole || reqRole || (String(collectedBy).toLowerCase().includes('principal') ? 'principal' : 'accountant')).toLowerCase();
     const paidDate = new Date().toISOString().split('T')[0];
 
     let updatedFee = null;
@@ -903,11 +969,29 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       if (row) {
         sqliteDb.prepare(`
           UPDATE local_school_fees
-          SET status = 'PAID', paid_date = ?, payment_mode = ?, resource_reference = ?, collected_by = ?, is_synced = 0
+          SET status = 'PAID', paid_date = ?, payment_mode = ?, resource_reference = ?, collected_by = ?, collector_role = ?, is_synced = 0
           WHERE id = ? AND tenant_id = ?
-        `).run(paidDate, paymentMode, resourceReference, collectedBy, id, tid);
+        `).run(paidDate, paymentMode, resourceReference, collectedBy, collectorRole, id, tid);
         updatedFee = mapFeeRow(sqliteDb.prepare('SELECT * FROM local_school_fees WHERE id = ? AND tenant_id = ?').get(id, tid), tid);
       }
+    }
+
+    if (sqliteDb && !updatedFee && studentName && Number(amount) > 0) {
+      const feeId = 'FEE-' + Date.now() + '-' + Math.floor(10 + Math.random() * 90);
+      const resolvedChallanNo = String(challanNo || receiptNo || (`REC-${new Date().getFullYear()}-${Date.now().toString().slice(-4)}`));
+      const numAmount = Number(amount);
+      const encStuName = enc(tid, String(studentName).trim());
+      sqliteDb.prepare(`
+        INSERT INTO local_school_fees (
+          id, tenant_id, challan_no, student_id, student_name, roll_no, grade, month, tuition, lab_fee,
+          discount, total, status, payment_mode, resource_reference, collected_by, collector_role, due_date, paid_date, is_synced, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, ?, 'PAID', ?, ?, ?, ?, ?, ?, 0, ?)
+      `).run(
+        feeId, tid, resolvedChallanNo, String(studentId || ''), encStuName, String(rollNo), String(grade),
+        String(month), numAmount, numAmount, String(paymentMode), String(resourceReference),
+        String(collectedBy), collectorRole, paidDate, paidDate, new Date().toISOString()
+      );
+      updatedFee = mapFeeRow(sqliteDb.prepare('SELECT * FROM local_school_fees WHERE id = ? AND tenant_id = ?').get(feeId, tid), tid);
     }
 
     const targetStdId = studentId || updatedFee?.studentId;
@@ -916,8 +1000,30 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
         .run(targetStdId, tid);
     }
 
+    if (updatedFee) {
+      recordAudit(tid, {
+        operatorName: collectedBy || (collectorRole === 'accountant' ? 'Accountant / Fee Clerk' : 'Principal Office'),
+        operatorRole: collectorRole === 'accountant' ? 'Accountant / Fee Clerk' : (collectorRole === 'principal' ? 'Principal' : 'School Owner'),
+        actionType: 'Fee Receipt Collected',
+        category: 'Financial',
+        entityId: updatedFee.challanNo || updatedFee.id,
+        entityDescription: `${updatedFee.studentName} (${updatedFee.grade})`,
+        details: `Collected PKR ${updatedFee.total} via ${paymentMode}${resourceReference ? ' (Ref: ' + resourceReference + ')' : ''} [Collector: ${collectorRole.toUpperCase()}].`,
+        severity: 'Normal Audit',
+        verifiedBy: collectorRole === 'accountant' ? 'Pending Owner Daily Closing' : 'Principal / Owner Desk'
+      });
+    }
+
     if (updatedFee && db) {
-      try { await updateDoc(doc(db, 'school_fees', updatedFee.id), { status: 'PAID', paidDate, paymentMode, resourceReference }); } catch {}
+      try {
+        await setDoc(doc(db, 'school_fees', updatedFee.id), {
+          ...updatedFee,
+          tenant_id: tid,
+          studentName: enc(tid, updatedFee.studentName),
+          is_synced: 1,
+          synced_at: new Date().toISOString()
+        }, { merge: true });
+      } catch {}
     }
 
     res.json({
@@ -927,7 +1033,7 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     });
   });
 
-  router.delete('/fees/:id', rejectRestrictedRole(['student', 'parent']), (req, res) => {
+  router.delete('/fees/:id', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
     const tid = resolveTenantId(req);
     const id = req.params.id;
     if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
@@ -986,7 +1092,7 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     res.json({ ok: true, tenantId: tid, teachers: list });
   });
 
-  router.post('/teachers', rejectRestrictedRole(['student', 'parent']), (req, res) => {
+  router.post('/teachers', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
     const tid = resolveTenantId(req);
     const t = req.body || {};
     const name = String(t.name || '').trim();
@@ -1039,7 +1145,7 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     res.status(201).json({ ok: true, teacher });
   });
 
-  router.put('/teachers/:id', rejectRestrictedRole(['student', 'parent']), (req, res) => {
+  router.put('/teachers/:id', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
     const tid = resolveTenantId(req);
     const id = req.params.id;
     const u = req.body || {};
@@ -1077,7 +1183,7 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     res.json({ ok: true, teacher: mapTeacherRow(updated, tid) });
   });
 
-  router.delete('/teachers/:id', rejectRestrictedRole(['student', 'parent']), (req, res) => {
+  router.delete('/teachers/:id', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
     const tid = resolveTenantId(req);
     if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
     const info = sqliteDb.prepare('DELETE FROM local_school_teachers WHERE id = ? AND tenant_id = ?').run(req.params.id, tid);
@@ -1085,7 +1191,7 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     res.json({ ok: true, id: req.params.id });
   });
 
-  router.post('/teachers/salary/disburse', rejectRestrictedRole(['student', 'parent', 'teacher']), async (req, res) => {
+  router.post('/teachers/salary/disburse', rejectRestrictedRole(['student', 'parent', 'teacher', 'accountant']), async (req, res) => {
     const tid = resolveTenantId(req);
     const { teacherId, month, amount } = req.body || {};
     const targetMonth = String(month || 'March 2026');
@@ -1154,7 +1260,7 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     res.json({ ok: true, tenantId: tid, attendance: list });
   });
 
-  router.post('/attendance', rejectRestrictedRole(['student', 'parent']), async (req, res) => {
+  router.post('/attendance', rejectRestrictedRole(['student', 'parent', 'accountant']), async (req, res) => {
     const tid = resolveTenantId(req);
     const body = req.body || {};
     const recId = body.id || ('att-' + Date.now() + '-' + Math.floor(10 + Math.random() * 90));
@@ -1185,7 +1291,7 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     });
   });
 
-  router.post('/attendance/mark-all', rejectRestrictedRole(['student', 'parent']), (req, res) => {
+  router.post('/attendance/mark-all', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
     const tid = resolveTenantId(req);
     const date = String(req.body?.date || new Date().toISOString().split('T')[0]);
     const gradeFilter = String(req.body?.grade || '').trim();
@@ -1241,7 +1347,7 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     res.json({ ok: true, tenantId: tid, exams: list });
   });
 
-  router.post('/exams', rejectRestrictedRole(['student', 'parent']), (req, res) => {
+  router.post('/exams', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
     const tid = resolveTenantId(req);
     const b = req.body || {};
     const totalMarks = Number(b.totalMarks ?? 100);
@@ -1297,7 +1403,7 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     res.json({ ok: true, tenantId: tid, results: list });
   });
 
-  router.post('/results', rejectRestrictedRole(['student', 'parent']), (req, res) => {
+  router.post('/results', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
     const tid = resolveTenantId(req);
     const b = req.body || {};
     const marksObtained = Number(b.marksObtained);
@@ -1347,7 +1453,7 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     });
   });
 
-  router.post('/homework', rejectRestrictedRole(['student', 'parent']), (req, res) => {
+  router.post('/homework', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
     const tid = resolveTenantId(req);
     const h = req.body || {};
     if (!String(h.title || '').trim() || !String(h.subject || '').trim() || !String(h.description || '').trim()) {
@@ -1375,7 +1481,7 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     res.status(201).json({ ok: true, homework: item });
   });
 
-  router.delete('/homework/:id', rejectRestrictedRole(['student', 'parent']), (req, res) => {
+  router.delete('/homework/:id', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
     const tid = resolveTenantId(req);
     if (!sqliteDb) return res.status(503).json({ ok: false });
     sqliteDb.prepare('DELETE FROM local_school_homework WHERE id = ? AND tenant_id = ?').run(req.params.id, tid);
@@ -1422,7 +1528,7 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     res.status(201).json({ ok: true, leave: item });
   });
 
-  router.put('/leaves/:id', rejectRestrictedRole(['student', 'parent']), (req, res) => {
+  router.put('/leaves/:id', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
     const tid = resolveTenantId(req);
     if (!sqliteDb) return res.status(503).json({ ok: false });
     const info = sqliteDb.prepare('UPDATE local_school_leaves SET status = ? WHERE id = ? AND tenant_id = ?').run(String(req.body?.status || 'Approved'), req.params.id, tid);
@@ -1482,7 +1588,7 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     res.status(201).json({ ok: true, concession: item });
   });
 
-  router.put('/concessions/:id', rejectRestrictedRole(['student', 'parent', 'teacher']), (req, res) => {
+  router.put('/concessions/:id', rejectRestrictedRole(['student', 'parent', 'teacher', 'accountant']), (req, res) => {
     const tid = resolveTenantId(req);
     if (!sqliteDb) return res.status(503).json({ ok: false });
     const status = String(req.body?.status || 'Approved');
@@ -1541,7 +1647,7 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     res.status(201).json({ ok: true, complaint: item });
   });
 
-  router.put('/complaints/:id', rejectRestrictedRole(['student', 'parent']), (req, res) => {
+  router.put('/complaints/:id', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
     const tid = resolveTenantId(req);
     if (!sqliteDb) return res.status(503).json({ ok: false });
     const status = String(req.body?.status || 'Resolved');
@@ -1565,7 +1671,7 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     });
   });
 
-  router.post('/lesson-plans', rejectRestrictedRole(['student', 'parent']), (req, res) => {
+  router.post('/lesson-plans', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
     const tid = resolveTenantId(req);
     const lp = req.body || {};
     if (!String(lp.topic || '').trim() || !String(lp.subject || '').trim()) {
@@ -1593,7 +1699,7 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     res.status(201).json({ ok: true, lessonPlan: item });
   });
 
-  router.put('/lesson-plans/:id', rejectRestrictedRole(['student', 'parent']), (req, res) => {
+  router.put('/lesson-plans/:id', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
     const tid = resolveTenantId(req);
     if (!sqliteDb) return res.status(503).json({ ok: false });
     const status = String(req.body?.status || 'Approved');
@@ -1615,7 +1721,7 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     });
   });
 
-  router.post('/substitutions', rejectRestrictedRole(['student', 'parent']), (req, res) => {
+  router.post('/substitutions', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
     const tid = resolveTenantId(req);
     const s = req.body || {};
     if (!String(s.absentTeacher || '').trim() || !String(s.substituteTeacher || '').trim()) {
@@ -1671,41 +1777,82 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     res.status(201).json({ ok: true, log: newEntry });
   });
 
+  const mapReconciliationRow = (r) => ({
+    id: r.id,
+    date: r.date,
+    counterCashReceived: Number(r.counter_cash || 0),
+    bankDepositedMeezan: Number(r.bank_meezan || 0),
+    bankDepositedHBL: Number(r.bank_hbl || 0),
+    onlineDigitalKuickPay: Number(r.online_digital || 0),
+    totalSystemBilled: Number(r.total_billed || 0),
+    actualCollected: Number(r.actual_collected || 0),
+    varianceAmount: Number(r.variance_amount || 0),
+    reconciliationStatus: r.status || 'Balanced & Cleared',
+    cashierName: r.cashier_name || 'Accountant / Fee Clerk',
+    verifiedByAuditor: r.verified_by_auditor || 'Pending Owner Review',
+    submittedByRole: r.submitted_by_role || 'accountant',
+    principalCollected: Number(r.principal_collected || 0),
+    accountantCollected: Number(r.accountant_collected || 0),
+    onlineCollected: Number(r.online_collected || 0),
+    openingVaultCash: Number(r.opening_vault_cash || 0),
+    pettyExpenses: Number(r.petty_expenses || 0),
+    closingVaultCash: Number(r.closing_vault_cash || 0),
+    bankDepositSlipNo: r.bank_deposit_slip_no || '',
+    ownerApprovalStatus: r.owner_approval_status || 'Pending Owner Review',
+    ownerRemarks: r.owner_remarks || '',
+    approvedBy: r.approved_by || '',
+    approvedAt: r.approved_at || '',
+    notes: r.notes || ''
+  });
+
   router.get('/reconciliation', (req, res) => {
     const tid = resolveTenantId(req);
     let reconciliations = [];
     if (sqliteDb) {
       try {
         const rows = sqliteDb.prepare('SELECT * FROM local_school_reconciliation WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 100').all(tid);
-        reconciliations = rows.map((r) => ({
-          id: r.id, date: r.date, counterCashReceived: r.counter_cash, bankDepositedMeezan: r.bank_meezan,
-          bankDepositedHBL: r.bank_hbl, onlineDigitalKuickPay: r.online_digital, totalSystemBilled: r.total_billed,
-          actualCollected: r.actual_collected, varianceAmount: r.variance_amount, reconciliationStatus: r.status,
-          cashierName: r.cashier_name, verifiedByAuditor: r.verified_by_auditor, notes: r.notes
-        }));
+        reconciliations = rows.map(mapReconciliationRow);
       } catch {}
     }
     if (reconciliations.length === 0 && tid === ROOT_TENANT_ID) {
-      reconciliations = SCHOOL_FEE_RECONCILIATION;
+      reconciliations = SCHOOL_FEE_RECONCILIATION.map((rec) => ({
+        ...rec,
+        submittedByRole: 'accountant',
+        ownerApprovalStatus: 'Verified & Approved by Owner',
+        approvedBy: 'School Owner Executive'
+      }));
     }
     res.json({ ok: true, tenantId: tid, reconciliations });
   });
 
-  router.post('/reconciliation', rejectRestrictedRole(['student', 'parent']), (req, res) => {
+  router.post('/reconciliation', rejectRestrictedRole(['student', 'parent']), async (req, res) => {
     const tid = resolveTenantId(req);
     const r = req.body || {};
     const counterCashReceived = Number(r.counterCashReceived || 0);
     const bankDepositedMeezan = Number(r.bankDepositedMeezan || 0);
     const bankDepositedHBL = Number(r.bankDepositedHBL || 0);
     const onlineDigitalKuickPay = Number(r.onlineDigitalKuickPay || 0);
-    const totalSystemBilled = Number(r.totalSystemBilled || 0);
-    if ([counterCashReceived, bankDepositedMeezan, bankDepositedHBL, onlineDigitalKuickPay, totalSystemBilled].some((v) => !Number.isFinite(v) || v < 0)) {
+    const openingVaultCash = Number(r.openingVaultCash || 0);
+    const pettyExpenses = Number(r.pettyExpenses || 0);
+    const principalCollected = Number(r.principalCollected || 0);
+    const onlineCollected = Number(r.onlineCollected || 0);
+    const totalSystemBilled = Number(r.totalSystemBilled ?? (counterCashReceived + bankDepositedMeezan + bankDepositedHBL + onlineDigitalKuickPay));
+    if ([counterCashReceived, bankDepositedMeezan, bankDepositedHBL, onlineDigitalKuickPay, totalSystemBilled, openingVaultCash, pettyExpenses].some((v) => !Number.isFinite(v) || v < 0)) {
       return res.status(400).json({ ok: false, message: 'Reconciliation amounts must be non-negative.' });
     }
     const actualCollected = counterCashReceived + bankDepositedMeezan + bankDepositedHBL + onlineDigitalKuickPay;
     const varianceAmount = actualCollected - totalSystemBilled;
+    const accountantCollected = Number(r.accountantCollected ?? actualCollected);
+    const closingVaultCash = Number(r.closingVaultCash ?? Math.max(0, openingVaultCash + counterCashReceived - pettyExpenses));
+    const reqRole = resolveUserRole(req);
+    const submittedByRole = String(r.submittedByRole || reqRole || 'accountant').toLowerCase();
+    const isAccountantSubmission = submittedByRole === 'accountant';
+    const ownerApprovalStatus = String(
+      r.ownerApprovalStatus || (isAccountantSubmission ? 'Pending Owner Review' : 'Verified & Approved by Owner')
+    );
+
     const newRec = {
-      id: r.id || ('REC-' + Date.now()),
+      id: r.id || ('DCL-' + Date.now()),
       date: String(r.date || new Date().toISOString().split('T')[0]),
       counterCashReceived,
       bankDepositedMeezan,
@@ -1715,22 +1862,119 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       actualCollected,
       varianceAmount,
       reconciliationStatus: varianceAmount === 0 ? 'Balanced & Cleared' : (varianceAmount > 0 ? 'Surplus Recorded' : 'Audit Deficit Flagged'),
-      cashierName: String(r.cashierName || 'Accounts Desk'),
-      verifiedByAuditor: String(r.verifiedByAuditor || 'Accounts Controller'),
-      notes: String(r.notes || 'Reconciliation entry recorded.')
+      cashierName: String(r.cashierName || (isAccountantSubmission ? 'Muhammad Rizwan (Accountant / Fee Clerk)' : 'Accounts Desk')),
+      verifiedByAuditor: String(r.verifiedByAuditor || (isAccountantSubmission ? 'Pending School Owner Review' : 'School Owner Executive')),
+      submittedByRole,
+      principalCollected,
+      accountantCollected,
+      onlineCollected,
+      openingVaultCash,
+      pettyExpenses,
+      closingVaultCash,
+      bankDepositSlipNo: String(r.bankDepositSlipNo || ''),
+      ownerApprovalStatus,
+      ownerRemarks: String(r.ownerRemarks || ''),
+      approvedBy: isAccountantSubmission ? '' : String(r.approvedBy || 'School Owner Executive'),
+      approvedAt: isAccountantSubmission ? '' : new Date().toISOString(),
+      notes: String(r.notes || 'Daily Cash & Bank Closing submitted for Owner review.')
     };
+
     if (sqliteDb) {
       sqliteDb.prepare(`
         INSERT OR REPLACE INTO local_school_reconciliation
-        (id, tenant_id, date, counter_cash, bank_meezan, bank_hbl, online_digital, total_billed, actual_collected, variance_amount, status, cashier_name, verified_by_auditor, notes)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (
+          id, tenant_id, date, counter_cash, bank_meezan, bank_hbl, online_digital,
+          total_billed, actual_collected, variance_amount, status, cashier_name, verified_by_auditor,
+          submitted_by_role, principal_collected, accountant_collected, online_collected,
+          opening_vault_cash, petty_expenses, closing_vault_cash, bank_deposit_slip_no,
+          owner_approval_status, owner_remarks, approved_by, approved_at, notes
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
         newRec.id, tid, newRec.date, counterCashReceived, bankDepositedMeezan, bankDepositedHBL,
         onlineDigitalKuickPay, totalSystemBilled, actualCollected, varianceAmount,
-        newRec.reconciliationStatus, newRec.cashierName, newRec.verifiedByAuditor, newRec.notes
+        newRec.reconciliationStatus, newRec.cashierName, newRec.verifiedByAuditor,
+        newRec.submittedByRole, principalCollected, accountantCollected, onlineCollected,
+        openingVaultCash, pettyExpenses, closingVaultCash, newRec.bankDepositSlipNo,
+        newRec.ownerApprovalStatus, newRec.ownerRemarks, newRec.approvedBy, newRec.approvedAt, newRec.notes
       );
+
+      recordAudit(tid, {
+        operatorName: newRec.cashierName,
+        operatorRole: isAccountantSubmission ? 'Accountant / Fee Clerk' : 'Accounts Controller',
+        actionType: 'Daily Closing Submission',
+        category: 'Financial',
+        entityId: newRec.id,
+        entityDescription: `Daily Closing (${newRec.date}) — PKR ${actualCollected.toLocaleString()}`,
+        details: `Cash: PKR ${counterCashReceived.toLocaleString()}, Meezan: PKR ${bankDepositedMeezan.toLocaleString()}, HBL: PKR ${bankDepositedHBL.toLocaleString()}, Digital: PKR ${onlineDigitalKuickPay.toLocaleString()}. Principal Desk: PKR ${principalCollected.toLocaleString()}. Status: ${newRec.ownerApprovalStatus}.`,
+        severity: varianceAmount === 0 ? 'Normal Audit' : 'Compliance Flag',
+        verifiedBy: newRec.verifiedByAuditor
+      });
     }
+
+    if (db) {
+      try {
+        await setDoc(doc(db, 'school_reconciliations', newRec.id), {
+          ...newRec,
+          tenant_id: tid,
+          synced_at: new Date().toISOString()
+        }, { merge: true });
+      } catch {}
+    }
+
     res.status(201).json({ ok: true, reconciliation: newRec });
+  });
+
+  router.put('/reconciliation/:id/verify', rejectRestrictedRole(['student', 'parent', 'teacher', 'accountant']), async (req, res) => {
+    const tid = resolveTenantId(req);
+    const id = req.params.id;
+    const b = req.body || {};
+    if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
+
+    const row = sqliteDb.prepare('SELECT * FROM local_school_reconciliation WHERE id = ? AND tenant_id = ?').get(id, tid);
+    if (!row) return res.status(404).json({ ok: false, message: 'Daily Closing / Reconciliation record not found' });
+
+    const ownerApprovalStatus = String(b.ownerApprovalStatus || 'Verified & Approved by Owner');
+    const ownerRemarks = String(b.ownerRemarks || (ownerApprovalStatus.includes('Flag') ? 'Flagged by School Owner for counter review.' : 'Verified and approved by School Owner.'));
+    const approvedBy = String(b.approvedBy || 'School Owner Executive');
+    const approvedAt = new Date().toISOString();
+    const verifiedByAuditor = ownerApprovalStatus.includes('Flag')
+      ? `Flagged by ${approvedBy}`
+      : `${approvedBy} (Verified)`;
+
+    sqliteDb.prepare(`
+      UPDATE local_school_reconciliation
+      SET owner_approval_status = ?, owner_remarks = ?, approved_by = ?, approved_at = ?, verified_by_auditor = ?
+      WHERE id = ? AND tenant_id = ?
+    `).run(ownerApprovalStatus, ownerRemarks, approvedBy, approvedAt, verifiedByAuditor, id, tid);
+
+    const updated = mapReconciliationRow(
+      sqliteDb.prepare('SELECT * FROM local_school_reconciliation WHERE id = ? AND tenant_id = ?').get(id, tid)
+    );
+
+    recordAudit(tid, {
+      operatorName: approvedBy,
+      operatorRole: 'School Owner',
+      actionType: 'Owner Daily Closing Oversight',
+      category: 'Financial',
+      entityId: updated.id,
+      entityDescription: `${ownerApprovalStatus} — ${updated.date}`,
+      details: `Owner reviewed Accountant Daily Closing (${updated.cashierName}) totaling PKR ${updated.actualCollected.toLocaleString()}. Remarks: ${ownerRemarks}`,
+      severity: ownerApprovalStatus.includes('Flag') ? 'Compliance Flag' : 'Normal Audit',
+      verifiedBy: approvedBy
+    });
+
+    if (db) {
+      try {
+        await setDoc(doc(db, 'school_reconciliations', updated.id), {
+          ...updated,
+          tenant_id: tid,
+          synced_at: approvedAt
+        }, { merge: true });
+      } catch {}
+    }
+
+    res.json({ ok: true, reconciliation: updated });
   });
 
   router.get('/compliance-scan', (req, res) => {

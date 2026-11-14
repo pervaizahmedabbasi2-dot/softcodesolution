@@ -1869,7 +1869,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       items: [
         { id: 'transport', label: 'School Bus & Transport', icon: 'Bus', badge: 'GPS' },
         { id: 'library', label: 'Library & Books', icon: 'BookOpen', count: '4,500' },
-        { id: 'portals', label: 'Role Portals & RBAC', icon: 'ShieldCheck', count: '3 Portals' },
+        { id: 'portals', label: 'Role Portals & RBAC', icon: 'ShieldCheck', count: '5 Portals' },
       ]
     },
     {
@@ -1995,14 +1995,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
     { id: 'library', label: 'Library & Book Register', icon: 'Library', count: '4,500' },
     { id: 'exams', label: 'Examinations & Marks', icon: 'Trophy', count: 'GPA 3.8' },
     { id: 'timetable', label: 'Timetable & Routine', icon: 'Calendar', count: '8 Periods' },
-    { id: 'portals', label: 'Role Portals & RBAC', icon: 'ShieldCheck', count: '3 Portals' },
+    { id: 'portals', label: 'Role Portals & RBAC', icon: 'ShieldCheck', count: '5 Portals' },
     { id: 'reports', label: 'Certificates & Transcripts', icon: 'FileText', badge: 'SLC/PDF' },
     { id: 'settings', label: 'School Settings', icon: 'Settings' }
   ];
 
-  get activeSchoolRole(): 'owner' | 'principal' | 'teacher' | 'student' | 'parent' {
+  get activeSchoolRole(): 'owner' | 'principal' | 'teacher' | 'student' | 'parent' | 'accountant' {
     const saved = localStorage.getItem('activeSchoolRole');
-    if (saved === 'principal' || saved === 'teacher' || saved === 'student' || saved === 'parent') return saved;
+    if (saved === 'principal' || saved === 'teacher' || saved === 'student' || saved === 'parent' || saved === 'accountant') return saved;
     return 'owner';
   }
 
@@ -2012,6 +2012,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (r === 'teacher') return 'Faculty / Teacher Portal';
     if (r === 'student') return 'Student Academic Portal';
     if (r === 'parent') return 'Parent & Guardian Portal';
+    if (r === 'accountant') return 'Accountant / Fee Clerk Desk';
     return 'School Owner Executive ERP';
   }
 
@@ -2073,6 +2074,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
         { id: 'parent-communication', label: 'Teacher Messaging', icon: 'MessageSquare', count: '1 New' },
         { id: 'parent-leave', label: 'Leave Applications', icon: 'FileText', badge: 'Apply' }
       ];
+    } else if (role === 'accountant') {
+      return [
+        { id: 'accountant-portal', label: 'Fee Desk Overview', icon: 'LayoutDashboard', badge: 'Live' },
+        { id: 'accountant-challans', label: 'Generate Fee Challans', icon: 'Receipt', badge: 'Print' },
+        { id: 'accountant-collect', label: 'Collect Cash & Bank Fee', icon: 'Banknote', badge: 'PKR' },
+        { id: 'accountant-defaulters', label: 'Defaulters & Reminders', icon: 'MessageSquare', badge: 'Alert' },
+        { id: 'accountant-daily_closing', label: 'Daily Closing to Owner', icon: 'FileCheck2', badge: 'Submit' }
+      ];
     }
     return this.schoolSidebarModules;
   }
@@ -2096,6 +2105,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       teacher_portal: true,
       student_portal: true,
       parent_portal: true,
+      accountant_portal: true,
       parent_chat: true,
       leave_requests: true
     };
@@ -2126,7 +2136,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('school-role-changed', { detail: { role: 'principal' } }));
       }
-    } else if (modId === 'overview' && this.activeSchoolRole !== 'principal') {
+    } else if (modId === 'accountant' || modId === 'accountant-portal' || modId.startsWith('accountant-')) {
+      localStorage.setItem('activeSchoolRole', 'accountant');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('school-role-changed', { detail: { role: 'accountant' } }));
+      }
+    } else if (modId === 'overview' && this.activeSchoolRole !== 'principal' && this.activeSchoolRole !== 'accountant') {
       localStorage.setItem('activeSchoolRole', 'owner');
     }
     this.activePreviewSubModule = modId;
