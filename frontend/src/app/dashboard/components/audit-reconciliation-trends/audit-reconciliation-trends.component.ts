@@ -167,7 +167,7 @@ export type ChartVisualizationType = 'area' | 'bar' | 'health' | 'composed';
             <div class="text-lg sm:text-xl font-black text-slate-900 font-mono"
                  [class.text-emerald-600]="totalVariance() === 0"
                  [class.text-rose-600]="totalVariance() !== 0">
-              PKR {{ totalVariance().toLocaleString() }}
+              PKR {{ (totalVariance() || 0).toLocaleString() }}
             </div>
             <div class="flex items-center gap-1 text-[11px] text-emerald-700 font-bold">
               <mat-icon class="text-xs">check_circle</mat-icon>
@@ -386,7 +386,7 @@ export type ChartVisualizationType = 'area' | 'bar' | 'health' | 'composed';
                       <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
                       <span>Billed Amount:</span>
                     </span>
-                    <strong class="text-white font-bold">PKR {{ hp.billed.toLocaleString() }}</strong>
+                    <strong class="text-white font-bold">PKR {{ (hp.billed || 0).toLocaleString() }}</strong>
                   </div>
 
                   <div class="flex items-center justify-between">
@@ -394,7 +394,7 @@ export type ChartVisualizationType = 'area' | 'bar' | 'health' | 'composed';
                       <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
                       <span>Bank Reconciled:</span>
                     </span>
-                    <strong class="text-emerald-400 font-bold">PKR {{ hp.collected.toLocaleString() }}</strong>
+                    <strong class="text-emerald-400 font-bold">PKR {{ (hp.collected || 0).toLocaleString() }}</strong>
                   </div>
 
                   <div class="flex items-center justify-between">
@@ -403,7 +403,7 @@ export type ChartVisualizationType = 'area' | 'bar' | 'health' | 'composed';
                       <span>Variance Delta:</span>
                     </span>
                     <strong [class.text-emerald-400]="hp.variance === 0" [class.text-rose-400]="hp.variance !== 0">
-                      PKR {{ hp.variance.toLocaleString() }}
+                      PKR {{ (hp.variance || 0).toLocaleString() }}
                     </strong>
                   </div>
 
@@ -538,12 +538,12 @@ export type ChartVisualizationType = 'area' | 'bar' | 'health' | 'composed';
               @for (row of activePoints(); track row.id) {
                 <tr class="hover:bg-white transition-colors">
                   <td class="py-2.5 px-3 font-bold text-slate-900">{{ row.date }}</td>
-                  <td class="py-2.5 px-3 font-mono font-bold text-indigo-700">PKR {{ row.billed.toLocaleString() }}</td>
-                  <td class="py-2.5 px-3 font-mono font-bold text-emerald-700">PKR {{ row.collected.toLocaleString() }}</td>
+                  <td class="py-2.5 px-3 font-mono font-bold text-indigo-700">PKR {{ (row.billed || 0).toLocaleString() }}</td>
+                  <td class="py-2.5 px-3 font-mono font-bold text-emerald-700">PKR {{ (row.collected || 0).toLocaleString() }}</td>
                   <td class="py-2.5 px-3 font-mono">
                     <span class="px-2 py-0.5 rounded text-[10px] font-bold"
                           [class]="row.variance === 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'">
-                      {{ row.variance === 0 ? 'Balanced (PKR 0)' : 'PKR ' + row.variance.toLocaleString() }}
+                      {{ row.variance === 0 ? 'Balanced (PKR 0)' : 'PKR ' + (row.variance || 0).toLocaleString() }}
                     </span>
                   </td>
                   <td class="py-2.5 px-3 font-mono font-bold text-cyan-700">

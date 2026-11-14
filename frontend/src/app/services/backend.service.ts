@@ -509,9 +509,30 @@ export class BackendService {
   }
 
   // --- SCHOOL & EDUCATION ---
+  private getSchoolHeaders(includeJson = true): Record<string, string> {
+    let tenantId = 'tenant-root-platform';
+    let userRole = '';
+    try {
+      const raw = typeof localStorage !== 'undefined' ? localStorage.getItem('user_data') : null;
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed?.tenantId || parsed?.tenant_id) {
+          tenantId = String(parsed.tenantId || parsed.tenant_id).trim();
+        }
+        if (parsed?.role) {
+          userRole = String(parsed.role).trim().toLowerCase();
+        }
+      }
+    } catch {}
+    const headers: Record<string, string> = { 'x-tenant-id': tenantId };
+    if (userRole) headers['x-user-role'] = userRole;
+    if (includeJson) headers['Content-Type'] = 'application/json';
+    return headers;
+  }
+
   async getSchoolStudents() {
     try {
-      const res = await fetch('/api/school/students', { credentials: 'include' });
+      const res = await fetch('/api/school/students', { headers: this.getSchoolHeaders(false), credentials: 'include' });
       return await res.json().catch(() => ({ ok: false, students: [] }));
     } catch { return { ok: false, students: [] }; }
   }
@@ -520,8 +541,62 @@ export class BackendService {
     try {
       const res = await fetch('/api/school/students', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: this.getSchoolHeaders(),
         body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async deleteSchoolStudent(id: string) {
+    try {
+      const res = await fetch(`/api/school/students/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        headers: this.getSchoolHeaders(false),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async getSchoolAdmissions() {
+    try {
+      const res = await fetch('/api/school/admissions', { headers: this.getSchoolHeaders(false), credentials: 'include' });
+      return await res.json().catch(() => ({ ok: false, admissions: [] }));
+    } catch { return { ok: false, admissions: [] }; }
+  }
+
+  async saveSchoolAdmission(payload: any) {
+    try {
+      const res = await fetch('/api/school/admissions', {
+        method: 'POST',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async updateSchoolAdmission(id: string, payload: any) {
+    try {
+      const res = await fetch(`/api/school/admissions/${encodeURIComponent(id)}`, {
+        method: 'PUT',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async approveSchoolAdmission(id: string, remarks?: string) {
+    try {
+      const res = await fetch(`/api/school/admissions/${encodeURIComponent(id)}/approve`, {
+        method: 'POST',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify({ remarks }),
         credentials: 'include'
       });
       return await res.json();
@@ -530,17 +605,28 @@ export class BackendService {
 
   async getSchoolFees() {
     try {
-      const res = await fetch('/api/school/fees', { credentials: 'include' });
+      const res = await fetch('/api/school/fees', { headers: this.getSchoolHeaders(false), credentials: 'include' });
       return await res.json().catch(() => ({ ok: false, fees: [] }));
     } catch { return { ok: false, fees: [] }; }
   }
 
-  async collectSchoolFee(feeId: string) {
+  async collectSchoolFee(feeId: string, meta?: any) {
     try {
       const res = await fetch('/api/school/fees/collect', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: feeId }),
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify({ id: feeId, ...(meta || {}) }),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async deleteSchoolFee(id: string) {
+    try {
+      const res = await fetch(`/api/school/fees/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        headers: this.getSchoolHeaders(false),
         credentials: 'include'
       });
       return await res.json();
@@ -549,9 +635,9 @@ export class BackendService {
 
   async updateSchoolStudent(id: string, payload: any) {
     try {
-      const res = await fetch(`/api/school/students/${id}`, {
+      const res = await fetch(`/api/school/students/${encodeURIComponent(id)}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: this.getSchoolHeaders(),
         body: JSON.stringify(payload),
         credentials: 'include'
       });
@@ -563,7 +649,7 @@ export class BackendService {
     try {
       const res = await fetch('/api/school/students/promote', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: this.getSchoolHeaders(),
         body: JSON.stringify(payload),
         credentials: 'include'
       });
@@ -575,7 +661,7 @@ export class BackendService {
     try {
       const res = await fetch('/api/school/students/slc', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: this.getSchoolHeaders(),
         body: JSON.stringify(payload),
         credentials: 'include'
       });
@@ -587,7 +673,7 @@ export class BackendService {
     try {
       const res = await fetch('/api/school/fees', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: this.getSchoolHeaders(),
         body: JSON.stringify(payload),
         credentials: 'include'
       });
@@ -599,7 +685,7 @@ export class BackendService {
     try {
       const res = await fetch('/api/school/fees/bulk-generate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: this.getSchoolHeaders(),
         body: JSON.stringify(payload),
         credentials: 'include'
       });
@@ -609,17 +695,76 @@ export class BackendService {
 
   async getSchoolTeachers() {
     try {
-      const res = await fetch('/api/school/teachers', { credentials: 'include' });
+      const res = await fetch('/api/school/teachers', { headers: this.getSchoolHeaders(false), credentials: 'include' });
       return await res.json().catch(() => ({ ok: false, teachers: [] }));
     } catch { return { ok: false, teachers: [] }; }
+  }
+
+  async saveSchoolTeacher(payload: any) {
+    try {
+      const res = await fetch('/api/school/teachers', {
+        method: 'POST',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async updateSchoolTeacher(id: string, payload: any) {
+    try {
+      const res = await fetch(`/api/school/teachers/${encodeURIComponent(id)}`, {
+        method: 'PUT',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async deleteSchoolTeacher(id: string) {
+    try {
+      const res = await fetch(`/api/school/teachers/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        headers: this.getSchoolHeaders(false),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
   }
 
   async disburseTeacherSalary(payload: any) {
     try {
       const res = await fetch('/api/school/teachers/salary/disburse', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: this.getSchoolHeaders(),
         body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async saveSchoolAttendance(payload: any) {
+    try {
+      const res = await fetch('/api/school/attendance', {
+        method: 'POST',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async markAllSchoolAttendance(payload?: any) {
+    try {
+      const res = await fetch('/api/school/attendance/mark-all', {
+        method: 'POST',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify(payload || {}),
         credentials: 'include'
       });
       return await res.json();
@@ -630,7 +775,195 @@ export class BackendService {
     try {
       const res = await fetch('/api/school/attendance/alert-parents', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async getSchoolHomework() {
+    try {
+      const res = await fetch('/api/school/homework', { headers: this.getSchoolHeaders(false), credentials: 'include' });
+      return await res.json().catch(() => ({ ok: false, homework: [] }));
+    } catch { return { ok: false, homework: [] }; }
+  }
+
+  async saveSchoolHomework(payload: any) {
+    try {
+      const res = await fetch('/api/school/homework', {
+        method: 'POST',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async getSchoolLeaves() {
+    try {
+      const res = await fetch('/api/school/leaves', { headers: this.getSchoolHeaders(false), credentials: 'include' });
+      return await res.json().catch(() => ({ ok: false, leaves: [] }));
+    } catch { return { ok: false, leaves: [] }; }
+  }
+
+  async saveSchoolLeave(payload: any) {
+    try {
+      const res = await fetch('/api/school/leaves', {
+        method: 'POST',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async updateSchoolLeave(id: string, status: string) {
+    try {
+      const res = await fetch(`/api/school/leaves/${encodeURIComponent(id)}`, {
+        method: 'PUT',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify({ status }),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async getSchoolConcessions() {
+    try {
+      const res = await fetch('/api/school/concessions', { headers: this.getSchoolHeaders(false), credentials: 'include' });
+      return await res.json().catch(() => ({ ok: false, concessions: [] }));
+    } catch { return { ok: false, concessions: [] }; }
+  }
+
+  async approveSchoolConcession(id: string, status: string, approvedBy?: string) {
+    try {
+      const res = await fetch(`/api/school/concessions/${encodeURIComponent(id)}`, {
+        method: 'PUT',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify({ status, approvedBy }),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async getSchoolComplaints() {
+    try {
+      const res = await fetch('/api/school/complaints', { headers: this.getSchoolHeaders(false), credentials: 'include' });
+      return await res.json().catch(() => ({ ok: false, complaints: [] }));
+    } catch { return { ok: false, complaints: [] }; }
+  }
+
+  async saveSchoolComplaint(payload: any) {
+    try {
+      const res = await fetch('/api/school/complaints', {
+        method: 'POST',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async resolveSchoolComplaint(id: string, status: string, investigationNotes?: string) {
+    try {
+      const res = await fetch(`/api/school/complaints/${encodeURIComponent(id)}`, {
+        method: 'PUT',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify({ status, investigationNotes }),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async getSchoolLessonPlans() {
+    try {
+      const res = await fetch('/api/school/lesson-plans', { headers: this.getSchoolHeaders(false), credentials: 'include' });
+      return await res.json().catch(() => ({ ok: false, lessonPlans: [] }));
+    } catch { return { ok: false, lessonPlans: [] }; }
+  }
+
+  async approveSchoolLessonPlan(id: string, status: string) {
+    try {
+      const res = await fetch(`/api/school/lesson-plans/${encodeURIComponent(id)}`, {
+        method: 'PUT',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify({ status }),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async getSchoolSubstitutions() {
+    try {
+      const res = await fetch('/api/school/substitutions', { headers: this.getSchoolHeaders(false), credentials: 'include' });
+      return await res.json().catch(() => ({ ok: false, substitutions: [] }));
+    } catch { return { ok: false, substitutions: [] }; }
+  }
+
+  async saveSchoolSubstitution(payload: any) {
+    try {
+      const res = await fetch('/api/school/substitutions', {
+        method: 'POST',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async getSchoolAuditLogs() {
+    try {
+      const res = await fetch('/api/school/audit-logs', { headers: this.getSchoolHeaders(false), credentials: 'include' });
+      return await res.json().catch(() => ({ ok: false, logs: [] }));
+    } catch { return { ok: false, logs: [] }; }
+  }
+
+  async saveSchoolAuditLog(payload: any) {
+    try {
+      const res = await fetch('/api/school/audit-logs', {
+        method: 'POST',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async getSchoolWorkspace() {
+    try {
+      const res = await fetch('/api/school/workspace', { headers: this.getSchoolHeaders(false), credentials: 'include' });
+      return await res.json().catch(() => ({ ok: false, workspace: null }));
+    } catch { return { ok: false, workspace: null }; }
+  }
+
+  async saveSchoolWorkspace(payload: any) {
+    try {
+      const res = await fetch('/api/school/workspace', {
+        method: 'PUT',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async saveSchoolExamResult(payload: any) {
+    try {
+      const res = await fetch('/api/school/results', {
+        method: 'POST',
+        headers: this.getSchoolHeaders(),
         body: JSON.stringify(payload),
         credentials: 'include'
       });

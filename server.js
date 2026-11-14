@@ -234,7 +234,9 @@ async function runBackgroundAutoSync() {
       try {
         await setDoc(doc(db, 'school_fees', fee.id), {
           id: fee.id,
+          tenant_id: fee.tenant_id || 'tenant-root-platform',
           challanNo: fee.challan_no,
+          studentId: fee.student_id || '',
           studentName: fee.student_name,
           rollNo: fee.roll_no,
           grade: fee.grade,
@@ -260,6 +262,7 @@ async function runBackgroundAutoSync() {
       try {
         await setDoc(doc(db, 'school_attendance', att.id), {
           id: att.id,
+          tenant_id: att.tenant_id || 'tenant-root-platform',
           studentId: att.student_id,
           rollNo: att.roll_no,
           studentName: att.student_name,

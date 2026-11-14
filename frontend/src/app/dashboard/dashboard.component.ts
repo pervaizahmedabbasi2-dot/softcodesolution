@@ -207,7 +207,13 @@ import {
   MessageSquareWarning,
   Truck,
   ArrowRight,
-  CalendarCheck
+  CalendarCheck,
+  FingerprintPattern,
+  Camera,
+  Scan,
+  ScanFace,
+  RefreshCw,
+  Maximize2
 } from 'lucide-angular';
 
 type BackendRole = 'super_admin' | 'client_admin' | 'client_user' | 'support';
@@ -6865,5 +6871,21 @@ export const dashboardIcons = {
     ArrowRight,
     'arrow-right': ArrowRight,
     CalendarCheck,
-    'calendar-check': CalendarCheck
+    'calendar-check': CalendarCheck,
+    'edit-2': Pencil,
+    Edit2: Pencil,
+    FingerprintPattern,
+    'fingerprint-pattern': FingerprintPattern,
+    fingerprint: FingerprintPattern,
+    Fingerprint: FingerprintPattern,
+    Camera,
+    camera: Camera,
+    Scan,
+    scan: Scan,
+    ScanFace,
+    'scan-face': ScanFace,
+    RefreshCw,
+    'refresh-cw': RefreshCw,
+    Maximize2,
+    'maximize-2': Maximize2
   };

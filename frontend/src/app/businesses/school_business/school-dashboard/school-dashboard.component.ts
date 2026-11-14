@@ -64,7 +64,9 @@ import {
   MessageSquareWarning
 } from 'lucide-angular';
 import { MatIconModule } from '@angular/material/icon';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { FirebaseDbService } from '../../../services/firebase-db.service';
+import { BackendService } from '../../../services/backend.service';
 
 export type SchoolDashboardTab = 'overview' | 'stage_wise' | 'feed' | 'events' | 'students' | 'teachers' | 'admissions' | 'attendance' | 'finance' | 'invoices' | 'expenses' | 'payment_gateway' | 'transport' | 'library' | 'exams' | 'timetable' | 'hostel' | 'labs' | 'alumni' | 'portals' | 'reports' | 'settings' | 'audit' | 'lesson_plans' | 'appraisals' | 'inspections' | 'exam_moderation' | 'parent_complaints' | 'substitutions' | 'syllabus' | 'safeguarding' | 'directives';
 export type SchoolPortalRole = 'owner' | 'principal' | 'teacher' | 'student' | 'parent';
@@ -809,8 +811,159 @@ export interface PrincipalFeeCollectionRecord {
 })
 export class SchoolDashboardComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
+  private backend = inject(BackendService);
+  private sanitizer = inject(DomSanitizer);
+  private avatarCache = new Map<string, SafeUrl>();
   readonly Math = Math;
   icons = dashboardIcons;
+
+  isStudentDossierModalOpen: boolean = false;
+  selectedStudentForDossier: StudentRecord | null = null;
+
+  openStudentDossierModal(student: StudentRecord): void {
+    this.selectedStudentForDossier = student;
+    this.isStudentDossierModalOpen = true;
+    this.cdr.detectChanges();
+  }
+
+  closeStudentDossierModal(): void {
+    this.isStudentDossierModalOpen = false;
+    this.selectedStudentForDossier = null;
+    this.cdr.detectChanges();
+  }
+
+  get activeTenantId(): string {
+    if (typeof localStorage === 'undefined') return 'tenant-root-platform';
+    try {
+      const raw = localStorage.getItem('user_data');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed?.tenantId || parsed?.tenant_id) {
+          return String(parsed.tenantId || parsed.tenant_id).trim();
+        }
+      }
+    } catch {}
+    return 'tenant-root-platform';
+  }
+
+  private tKey(base: string): string {
+    return `${base}_${this.activeTenantId}`;
+  }
+
+  avatarSvgDataUri(name: string = 'SC', bgHex?: string): string {
+    const clean = String(name || 'SC').trim();
+    const parts = clean.split(/\s+/).filter(Boolean);
+    const initialsRaw = parts.length >= 2
+      ? `${parts[0][0] || ''}${parts[parts.length - 1][0] || ''}`
+      : clean.slice(0, 2);
+    const initials = (initialsRaw || 'SC').replace(/[^A-Za-z0-9]/g, '').toUpperCase() || 'SC';
+    const palette = ['#4f46e5', '#0284c7', '#059669', '#7c3aed', '#d97706', '#0f766e', '#be123c'];
+    let hash = 0;
+    for (let i = 0; i < clean.length; i++) {
+      hash = ((hash << 5) - hash) + clean.charCodeAt(i);
+      hash |= 0;
+    }
+    const bg = bgHex || palette[Math.abs(hash) % palette.length];
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"><rect width="128" height="128" rx="28" fill="${bg}"/><text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle" fill="#ffffff" font-family="system-ui,-apple-system,sans-serif" font-size="46" font-weight="800">${initials}</text></svg>`;
+    if (typeof btoa === 'function') {
+      return `data:image/svg+xml;base64,${btoa(svg)}`;
+    }
+    return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+  }
+
+  safeAvatar(image: string | undefined | null, name: string = 'SC'): SafeUrl | string {
+    const val = String(image || '').trim();
+    if (val && !val.includes('unsplash.com')) {
+      if (val.startsWith('data:image/svg+xml')) {
+        let cached = this.avatarCache.get(val);
+        if (!cached) {
+          cached = this.sanitizer.bypassSecurityTrustUrl(val);
+          this.avatarCache.set(val, cached);
+        }
+        return cached;
+      }
+      return val;
+    }
+    const key = `svg:${name}`;
+    let cached = this.avatarCache.get(key);
+    if (!cached) {
+      cached = this.sanitizer.bypassSecurityTrustUrl(this.avatarSvgDataUri(name));
+      this.avatarCache.set(key, cached);
+    }
+    return cached;
+  }
+
+  get liveEnrolledCount(): number {
+    return (this.activeStudents || []).length;
+  }
+
+  get liveFacultyCount(): number {
+    const active = (this.teachers || []).filter(t => t.status !== 'Resigned').length;
+    return active > 0 ? active : (this.teachers || []).length;
+  }
+
+  get liveGuardianCount(): number {
+    const dir = this.getParentsDirectory();
+    return dir.length;
+  }
+
+  get liveAttendanceRateLabel(): string {
+    const total = (this.activeStudents || []).length;
+    if (total === 0) return this.attendanceSummary?.attendanceRate || '0%';
+    const present = (this.activeStudents || []).filter(s => s.status === 'Present' || s.status === 'Late').length;
+    return `${((present / total) * 100).toFixed(1)}%`;
+  }
+
+  get currentTeacherProfile(): any {
+    const found = (this.teachers || []).find(t => t.id === this.activeTeacherId)
+      || (this.portalUsers || []).find(u => u.id === this.activeTeacherId && u.role === 'teacher');
+    if (found) {
+      const matchedTeacher = (this.teachers || []).find(t => t.id === found.id || t.name === found.name) || this.activeTeacherPersona;
+      return {
+        id: found.id,
+        name: found.name,
+        subject: (found as any).subject || matchedTeacher?.subject || 'Core Faculty',
+        assignedGrade: (found as any).assignedGrade || (found as any).linkedEntity || 'Class 10-A',
+        qualification: (found as any).qualification || matchedTeacher?.qualification || 'M.Phil / M.Sc.',
+        email: found.email || matchedTeacher?.email || 'faculty@campus.edu',
+        phone: found.phone || matchedTeacher?.phone || '',
+        image: (found as any).image || matchedTeacher?.image || '',
+        initials: String(found.name || 'FC').split(/\s+/).map((p: string) => p[0]).slice(0, 2).join('').toUpperCase()
+      };
+    }
+    const t = this.activeTeacherPersona;
+    return {
+      ...t,
+      assignedGrade: t.assignedGrade || 'Class 10-A',
+      initials: String(t.name || 'FC').split(/\s+/).map((p: string) => p[0]).slice(0, 2).join('').toUpperCase()
+    };
+  }
+
+  get currentStudentProfile(): any {
+    const found = (this.activeStudents || []).find(s => s.id === this.activeStudentId || s.rollNo === this.activeStudentId)
+      || this.activeStudentPersona;
+    return {
+      ...found,
+      initials: String(found?.name || 'ST').split(/\s+/).map((p: string) => p[0]).slice(0, 2).join('').toUpperCase()
+    };
+  }
+
+  get currentGuardianProfile(): any {
+    const child = this.selectedParentChild;
+    const matchedStudent = (this.activeStudents || []).find(s => s.id === child?.id) || this.activeStudents?.[0];
+    const guardianUser = (this.portalUsers || []).find(u => u.role === 'parent' && (u.linkedEntity?.includes(child?.name || '') || u.name === matchedStudent?.guardian));
+    const name = matchedStudent?.guardian || guardianUser?.name || 'Registered Parent / Guardian';
+    const phone = matchedStudent?.guardianPhone || guardianUser?.phone || '+92 300 0000000';
+    return {
+      id: guardianUser?.id || 'PAR-001',
+      name,
+      phone,
+      email: matchedStudent?.guardianEmail || guardianUser?.email || 'guardian@campus.edu',
+      cnic: matchedStudent?.guardianCnic || 'Verified on File',
+      childrenCount: (this.parentChildren || []).length || 1,
+      initials: String(name).split(/\s+/).map((p: string) => p[0]).slice(0, 2).join('').toUpperCase()
+    };
+  }
 
   currentPortalRole: SchoolPortalRole = 'owner';
   currentTab: SchoolDashboardTab = 'overview';
@@ -884,8 +1037,9 @@ export class SchoolDashboardComponent implements OnInit {
     return Math.min(a, b);
   }
 
-  formatCurrency(val: number | undefined | null): string {
-    return (val || 0).toLocaleString();
+  formatCurrency(val: number | string | undefined | null): string {
+    const num = Number(val);
+    return (Number.isFinite(num) ? num : 0).toLocaleString();
   }
 
   setPrincipalTab(tab: 'overview' | 'stage_wise' | 'master_registries' | 'supervision' | 'substitutions' | 'syllabus' | 'inspections' | 'discipline' | 'directives' | 'appraisals' | 'exam_moderation' | 'academic_reports' | 'faculty_tasks' | 'teacher_leaves' | 'student_certificates' | 'ptm_interventions' | 'admissions_review' | 'fee_oversight' | 'parent_complaints' | 'safeguarding' | 'facilities_transport' | 'biometric_attendance'): void {
@@ -1114,6 +1268,7 @@ export class SchoolDashboardComponent implements OnInit {
     if (this.currentPortalRole === 'parent') {
       const child = this.selectedParentChild;
       if (child) {
+        const g = this.currentGuardianProfile;
         this.openFeeChallanVoucher({
           id: child.id,
           name: child.name,
@@ -1122,8 +1277,8 @@ export class SchoolDashboardComponent implements OnInit {
           rollNo: child.rollNo,
           feeAmount: child.feeAmount,
           feeStatus: child.feeStatus,
-          guardian: 'Tariq Ahmed Khan',
-          guardianPhone: '+92 300 8472910'
+          guardian: child.guardian || g.name,
+          guardianPhone: child.guardianPhone || g.phone
         } as any);
         return;
       }
@@ -1226,7 +1381,7 @@ export class SchoolDashboardComponent implements OnInit {
     }
   }
 
-  @Input() schoolName: string = 'Al-Huda International Academy & College';
+  @Input() schoolName: string = 'SoftCode Premier Academy';
   @Output() tabChanged = new EventEmitter<string>();
   
   private _activeTab: string = 'overview';
@@ -1348,10 +1503,9 @@ export class SchoolDashboardComponent implements OnInit {
   }
 
   // Persona selections for simulated portal views
-  activeTeacherId: string = 'USR-801';
+  activeTeacherId: string = 'TCH-001';
   get activeTeacherName(): string {
-    const t = (this.teachers || []).find((item: any) => item.id === this.activeTeacherId);
-    return t ? t.name : 'Prof. Tariq Mehmood';
+    return this.currentTeacherProfile?.name || 'Senior Faculty';
   }
   activeStudentId: string = 'ST-1001';
   activeParentChildId: string = 'ST-1001';
@@ -3175,9 +3329,9 @@ INSTRUCTIONS:
 
   // Settings Form Model
   settingsForm = {
-    schoolName: 'Al-Huda International Academy & College',
-    principalName: 'Prof. Dr. Tariq Mahmood Khan',
-    email: 'principal@alhuda.edu.pk',
+    schoolName: 'SoftCode Premier Academy',
+    principalName: 'Prof. Dr. Tahir Mahmood Malik',
+    email: 'principal@campus.edu',
     phone: '+92 51 9283741',
     academicYear: '2026 - 2027',
     biometricIp: '192.168.10.45:8080',
@@ -3207,10 +3361,10 @@ INSTRUCTIONS:
 
   sidebarItems = [
     { id: 'overview', label: 'Dashboard Overview', shortLabel: 'Overview', icon: LayoutDashboard, badge: 'LIVE' },
-    { id: 'students', label: 'Active Students', shortLabel: 'Students', icon: Users, count: '1,240' },
-    { id: 'teachers', label: 'Faculty & Teachers', shortLabel: 'Faculty', icon: GraduationCap, count: '86' },
+    { id: 'students', label: 'Active Students', shortLabel: 'Students', icon: Users, count: 'Live' },
+    { id: 'teachers', label: 'Faculty & Teachers', shortLabel: 'Faculty', icon: GraduationCap, count: 'Live' },
     { id: 'admissions', label: 'Admissions & Inquiries', shortLabel: 'Admissions', icon: BookOpen, badge: 'New' },
-    { id: 'attendance', label: 'Attendance & Biometrics', shortLabel: 'Attendance', icon: Clock, count: '95.3%' },
+    { id: 'attendance', label: 'Attendance & Biometrics', shortLabel: 'Attendance', icon: Clock, count: 'Live' },
     { id: 'finance', label: 'Fees & Finance Ledger', shortLabel: 'Finance', icon: CreditCard, badge: 'PKR' },
     { id: 'invoices', label: 'Invoices & Billing Hub', shortLabel: 'Invoices', icon: Receipt, badge: 'PRO' },
     { id: 'expenses', label: 'School Expenses Ledger', shortLabel: 'Expenses', icon: Receipt, badge: 'Bills' },
@@ -3750,7 +3904,7 @@ INSTRUCTIONS:
   }
 
   shareInvoiceWhatsApp(inv: MasterInvoiceRecord): void {
-    const text = `🧾 *OFFICIAL INVOICE NOTICE - AL-HUDA ACADEMY*\n\nInvoice #: ${inv.invoiceNo}\nRecipient: ${inv.recipientName}\nTitle: ${inv.title}\nTotal Payable: PKR ${inv.netPayable.toLocaleString()}\nDue Date: ${inv.dueDate}\nStatus: ${inv.status.toUpperCase()}\n\nPlease pay via 1Link / KuickPay or HBL Online Transfer. Thank you!`;
+    const text = `🧾 *OFFICIAL INVOICE NOTICE - ${this.schoolName}*\n\nInvoice #: ${inv.invoiceNo}\nRecipient: ${inv.recipientName}\nTitle: ${inv.title}\nTotal Payable: PKR ${this.formatCurrency(inv.netPayable)}\nDue Date: ${inv.dueDate}\nStatus: ${String(inv.status || 'PENDING').toUpperCase()}\n\nPlease pay via 1Link / KuickPay or HBL Online Transfer. Thank you!`;
     const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
     if (typeof window !== 'undefined') {
       window.open(url, '_blank');
@@ -4185,11 +4339,11 @@ INSTRUCTIONS:
     if (!sample) return '';
     const parentName = sample.parentName;
     const studentName = sample.studentName;
-    const amountStr = `PKR ${sample.amount.toLocaleString()}`;
+    const amountStr = `PKR ${this.formatCurrency(sample.amount)}`;
     const dueDate = sample.dueDate;
     const agingDays = sample.agingDays;
-    const schoolName = 'Al-Huda Model Academy';
-    const paymentLink = `https://alhuda.softcode.app/pay?id=${sample.id}`;
+    const schoolName = this.schoolName || 'SoftCode Premier Academy';
+    const paymentLink = `https://portal.softcodesolution.app/pay?id=${sample.id}`;
 
     if (this.whatsappTemplateType === 'gentle') {
       return `*Fee Payment Reminder - ${schoolName}*\n\nRespected *${parentName}*,\n\nThis is a gentle reminder regarding the outstanding monthly tuition fee for *${studentName}* (${sample.grade}).\n\n📌 *Outstanding Amount:* ${amountStr}\n📅 *Due Date:* ${dueDate}\n⏳ *Overdue Status:* ${agingDays} Days\n\nKindly clear the dues at your earliest convenience via the online portal or school accounts office:\n🔗 ${paymentLink}\n\nThank you for your cooperation.\n*Accounts & Finance Directorate*`;
@@ -4239,7 +4393,7 @@ INSTRUCTIONS:
           reminders: selectedList,
           templateType: this.whatsappTemplateType,
           customTemplate: this.whatsappCustomTemplate,
-          schoolName: 'Al-Huda Model Academy'
+          schoolName: this.schoolName || 'SoftCode Premier Academy'
         })
       });
 
@@ -4309,10 +4463,10 @@ INSTRUCTIONS:
   }
 
   liveGateBiometricStream = [
-    { id: 'BIO-981', name: 'Zayan Ahmed Khan', rollNo: '1001', grade: 'Class 10-A', time: '07:48:12 AM', gate: 'Main Senior Turnstile 01', rfid: 'RFID-88219', status: 'On-Time', photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150' },
-    { id: 'BIO-982', name: 'Prof. Tariq Mehmood', rollNo: 'FAC-MTH-105', grade: 'HOD Mathematics', time: '07:49:05 AM', gate: 'Faculty Biometric Terminal', rfid: 'RFID-FAC-01', status: 'On-Time', photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150' },
-    { id: 'BIO-983', name: 'Omar Farooq Malik', rollNo: '0903', grade: 'Class 8-B', time: '08:08:44 AM', gate: 'Junior Wing Turnstile 02', rfid: 'RFID-0903', status: 'Late (+8 Min)', photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=150' },
-    { id: 'BIO-984', name: 'Aria Noor Lodhi', rollNo: '0712', grade: 'Class 7-C', time: '07:51:30 AM', gate: 'Junior Wing Turnstile 02', rfid: 'RFID-0712', status: 'On-Time', photo: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150' }
+    { id: 'BIO-981', name: 'Zayan Ahmed Khan', rollNo: '1001', grade: 'Class 10-A', time: '07:48:12 AM', gate: 'Main Senior Turnstile 01', rfid: 'RFID-88219', status: 'On-Time', photo: '' },
+    { id: 'BIO-982', name: 'Prof. Tariq Mehmood', rollNo: 'FAC-MTH-105', grade: 'HOD Mathematics', time: '07:49:05 AM', gate: 'Faculty Biometric Terminal', rfid: 'RFID-FAC-01', status: 'On-Time', photo: '' },
+    { id: 'BIO-983', name: 'Omar Farooq Malik', rollNo: '0903', grade: 'Class 8-B', time: '08:08:44 AM', gate: 'Junior Wing Turnstile 02', rfid: 'RFID-0903', status: 'Late (+8 Min)', photo: '' },
+    { id: 'BIO-984', name: 'Aria Noor Lodhi', rollNo: '0712', grade: 'Class 7-C', time: '07:51:30 AM', gate: 'Junior Wing Turnstile 02', rfid: 'RFID-0712', status: 'On-Time', photo: '' }
   ];
 
   admissionsPipelineStages = [
@@ -4435,9 +4589,9 @@ INSTRUCTIONS:
   }
 
   parentLiveGateLogs = [
-    { id: 'GL-1', date: 'Today, 24 Oct 2026', childName: 'Zayan Ahmed Khan', photo: 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=120&auto=format&fit=crop&q=80', event: 'Campus Entry Gate Swiped', type: 'Campus Entry (Gate 1)', time: '07:48 AM', gate: 'Senior Wing Turnstile 01', rfid: 'RFID-88219 (Zayan)', status: 'On-Time (Present)', alertStatus: 'SMS & App Alert Delivered' },
-    { id: 'GL-2', date: 'Yesterday, 23 Oct 2026', childName: 'Zayan Ahmed Khan', photo: 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=120&auto=format&fit=crop&q=80', event: 'Campus Departure Gate Swiped', type: 'Campus Exit (Bus #04)', time: '01:45 PM', gate: 'Main Exit Turnstile 01', rfid: 'RFID-88219 (Zayan)', status: 'Boarded Bus #04', alertStatus: 'Parent SMS Sent ✓' },
-    { id: 'GL-3', date: 'Yesterday, 23 Oct 2026', childName: 'Zayan Ahmed Khan', photo: 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=120&auto=format&fit=crop&q=80', event: 'Campus Entry Gate Swiped', type: 'Campus Entry (Gate 1)', time: '07:45 AM', gate: 'Senior Wing Turnstile 01', rfid: 'RFID-88219 (Zayan)', status: 'On-Time (Present)', alertStatus: 'Parent SMS Sent ✓' }
+    { id: 'GL-1', date: 'Today, 24 Oct 2026', childName: 'Zayan Ahmed Khan', photo: '', event: 'Campus Entry Gate Swiped', type: 'Campus Entry (Gate 1)', time: '07:48 AM', gate: 'Senior Wing Turnstile 01', rfid: 'RFID-88219 (Zayan)', status: 'On-Time (Present)', alertStatus: 'SMS & App Alert Delivered' },
+    { id: 'GL-2', date: 'Yesterday, 23 Oct 2026', childName: 'Zayan Ahmed Khan', photo: '', event: 'Campus Departure Gate Swiped', type: 'Campus Exit (Bus #04)', time: '01:45 PM', gate: 'Main Exit Turnstile 01', rfid: 'RFID-88219 (Zayan)', status: 'Boarded Bus #04', alertStatus: 'Parent SMS Sent ✓' },
+    { id: 'GL-3', date: 'Yesterday, 23 Oct 2026', childName: 'Zayan Ahmed Khan', photo: '', event: 'Campus Entry Gate Swiped', type: 'Campus Entry (Gate 1)', time: '07:45 AM', gate: 'Senior Wing Turnstile 01', rfid: 'RFID-88219 (Zayan)', status: 'On-Time (Present)', alertStatus: 'Parent SMS Sent ✓' }
   ];
 
   instantLeaveForm = {
@@ -4804,10 +4958,10 @@ INSTRUCTIONS:
       amount: Number(this.principalFeeCollectForm.amount),
       paymentResource: this.principalFeeCollectForm.paymentResource,
       resourceReference: this.principalFeeCollectForm.resourceReference || ('REF-' + Date.now().toString().slice(-5)),
-      collectedBy: 'Dr. Tahir Malik (Principal - Verified Desk)',
+      collectedBy: 'Owner & Accounts Desk (Verified)',
       timestamp: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       monthsPaid: this.principalFeeCollectForm.monthsPaid || 'Current Session Fee',
-      auditStatus: 'Verified by Principal Office',
+      auditStatus: 'Verified by Accounts Desk',
       notes: this.principalFeeCollectForm.notes
     };
 
@@ -4816,7 +4970,7 @@ INSTRUCTIONS:
     // Also add to financial cash book for school owner audit
     this.finances.unshift({
       id: `FIN-${Math.floor(2000 + Math.random() * 8000)}`,
-      title: `Fee Collected (Principal Office) - ${newRecord.studentName} (${newRecord.grade})`,
+      title: `Fee Collected (Accounts Desk) - ${newRecord.studentName} (${newRecord.grade})`,
       studentName: newRecord.studentName,
       grade: newRecord.grade,
       category: 'Tuition',
@@ -4849,11 +5003,23 @@ INSTRUCTIONS:
       }
     }
 
+    // Persist fee collection to SQLite + audit trail
+    void this.backend.collectSchoolFee(newRecord.studentId, {
+      studentId: newRecord.studentId,
+      studentName: newRecord.studentName,
+      grade: newRecord.grade,
+      amount: newRecord.amount,
+      receiptNo: newRecord.receiptNo,
+      challanNo: newRecord.receiptNo,
+      paymentMethod: newRecord.paymentResource,
+      collectedBy: 'Owner & Accounts Desk'
+    });
+
     // Owner notification
     this.notificationsList.unshift({
       id: 'NOTIF-FEE-' + Date.now(),
-      title: `💰 Fee Collected by Principal: PKR ${newRecord.amount.toLocaleString()}`,
-      message: `${newRecord.studentName} (Roll #${newRecord.rollNo}, ${newRecord.grade}) paid PKR ${newRecord.amount.toLocaleString()} via ${newRecord.paymentResource}. Ref: ${newRecord.resourceReference}. Collected by Principal Dr. Tahir Malik.`,
+      title: `Fee Collected: PKR ${this.formatCurrency(newRecord.amount)}`,
+      message: `${newRecord.studentName} (Roll #${newRecord.rollNo}, ${newRecord.grade}) paid PKR ${this.formatCurrency(newRecord.amount)} via ${newRecord.paymentResource}. Ref: ${newRecord.resourceReference}.`,
       type: 'fee',
       targetRole: 'all',
       createdAt: 'Just now',
@@ -4863,7 +5029,7 @@ INSTRUCTIONS:
 
     this.saveStateToStorage();
     this.closePrincipalFeeCollectModal();
-    this.showToast(`✅ Fee of PKR ${newRecord.amount.toLocaleString()} collected by Principal! Receipt #${newRecord.receiptNo} generated.`, 'success');
+    this.showToast(`✅ Fee of PKR ${this.formatCurrency(newRecord.amount)} collected by Principal! Receipt #${newRecord.receiptNo} generated.`, 'success');
     this.viewCashieringReceipt(newRecord);
   }
 
@@ -5297,7 +5463,7 @@ INSTRUCTIONS:
     });
     this.saveStateToStorage();
     this.closeExpenseModal();
-    this.showToast(`Expense of PKR ${newExp.amount.toLocaleString()} recorded!`, 'success');
+    this.showToast(`Expense of PKR ${this.formatCurrency(newExp.amount)} recorded!`, 'success');
   }
 
   deleteExpense(exp: any) {
@@ -5328,7 +5494,8 @@ INSTRUCTIONS:
   exportAllSchoolData() {
     const csvContent = 'RollNo,Name,Grade,Guardian,Phone,FeeStatus,FeeAmount\n' +
       this.activeStudents.map(s => `"${s.rollNo}","${s.name}","${s.grade}","${s.guardian}","${s.guardianPhone}","${s.feeStatus}","${s.feeAmount}"`).join('\n');
-    this.downloadCSVFile(csvContent, `Al-Huda_School_Complete_Data_Export_${new Date().toISOString().slice(0, 10)}.csv`);
+    const slug = (this.schoolName || 'School').replace(/[^A-Za-z0-9]+/g, '_');
+    this.downloadCSVFile(csvContent, `${slug}_Complete_Data_Export_${new Date().toISOString().slice(0, 10)}.csv`);
     this.showToast('Full school data exported as CSV/Excel successfully!', 'success');
   }
 
@@ -5353,9 +5520,9 @@ INSTRUCTIONS:
       classes: 5,
       status: 'Active',
       rating: 4.9,
-      email: 'sarah.ahmed@school.edu',
+      email: 'sarah.ahmed@campus.edu',
       phone: '+92 300 5551234',
-      image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
+      image: '',
       salaryStatus: 'Disbursed',
       monthlySalary: 125000
     };
@@ -5369,7 +5536,7 @@ INSTRUCTIONS:
       section: 'A',
       status: 'Present',
       attendance: '98%',
-      image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+      image: '',
       guardian: 'Tariq Mahmood Ahmed',
       guardianPhone: '+92 301 9876543',
       feeStatus: 'Paid',
@@ -5406,12 +5573,14 @@ INSTRUCTIONS:
 
   defaulters: any[] = [];
 
-  portals = [
-    { name: 'Principal & Academic Director Command Nexus', users: 'Prof. Dr. Tahir Malik (Principal)', uptime: '100.0%', status: 'Active', security: 'Executive Academic Clearance', role: 'principal' as SchoolPortalRole },
-    { name: 'Teacher & Faculty Portal Nexus', users: '86 Faculty Members', uptime: '99.95%', status: 'Active', security: 'MFA Enforced / RBAC Active', role: 'teacher' as SchoolPortalRole },
-    { name: 'Student Nexus Mobile & Web App', users: '1,240 Enrolled Students', uptime: '100.0%', status: 'Active', security: 'Biometric RFID Sync', role: 'student' as SchoolPortalRole },
-    { name: 'Parent Portal Nexus Alpha', users: '850 Connected Guardians', uptime: '99.99%', status: 'Stable', security: 'Encrypted 256-bit SSL', role: 'parent' as SchoolPortalRole }
-  ];
+  get portals() {
+    return [
+      { name: 'Principal & Academic Director Command Nexus', users: 'Prof. Dr. Tahir Malik (Principal)', uptime: '100.0%', status: 'Active', security: 'Executive Academic Clearance', role: 'principal' as SchoolPortalRole },
+      { name: 'Teacher & Faculty Portal Nexus', users: `${this.liveFacultyCount} Faculty Members`, uptime: '99.95%', status: 'Active', security: 'MFA Enforced / RBAC Active', role: 'teacher' as SchoolPortalRole },
+      { name: 'Student Nexus Mobile & Web App', users: `${this.liveEnrolledCount} Enrolled Students`, uptime: '100.0%', status: 'Active', security: 'Biometric RFID Sync', role: 'student' as SchoolPortalRole },
+      { name: 'Parent Portal Nexus Alpha', users: `${this.liveGuardianCount} Connected Guardians`, uptime: '99.99%', status: 'Stable', security: 'Encrypted 256-bit SSL', role: 'parent' as SchoolPortalRole }
+    ];
+  }
 
   upcomingEvents = [
     { title: 'Annual Inter-School Science & AI Expo 2026', date: 'Oct 28', time: '09:00 AM', type: 'Academic', location: 'Main Auditorium' },
@@ -5424,10 +5593,10 @@ INSTRUCTIONS:
     title: 'Principal & Academic Director',
     qualification: 'Ph.D. Educational Leadership & Pure Mathematics (Oxford)',
     experience: '22 Years Senior Academic Management',
-    email: 'principal@alhuda.edu.pk',
+    email: 'principal@campus.edu',
     phone: '+92 51 9283741',
     mobile: '+92 300 5544991',
-    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200',
+    image: '',
     office: 'Executive Directorate, Admin Block 1',
     status: 'On Duty · Daily Campus Inspection Active'
   };
@@ -5544,6 +5713,7 @@ INSTRUCTIONS:
 
   ngOnInit(): void {
     this.loadStateFromStorage();
+    void this.loadStateFromBackend();
     this.loadStateFromCloud();
     const savedRole = localStorage.getItem('activeSchoolRole');
     if (savedRole && ['owner', 'principal', 'teacher', 'student', 'parent'].includes(savedRole)) {
@@ -5840,38 +6010,56 @@ INSTRUCTIONS:
     this.cdr.detectChanges();
   }
 
-  // Persistent Local Storage Sync
+  private getScopedItem(key: string): string | null {
+    if (typeof localStorage === 'undefined') return null;
+    const scoped = localStorage.getItem(this.tKey(key));
+    if (scoped !== null) return scoped;
+    if (this.activeTenantId === 'tenant-root-platform') {
+      return localStorage.getItem(key);
+    }
+    return null;
+  }
+
+  private setScopedItem(key: string, value: string): void {
+    if (typeof localStorage === 'undefined') return;
+    localStorage.setItem(this.tKey(key), value);
+    if (this.activeTenantId === 'tenant-root-platform') {
+      localStorage.setItem(key, value);
+    }
+  }
+
+  // Persistent Local Storage Sync (Tenant-Isolated)
   loadStateFromStorage(): void {
     try {
-      const savedStudents = localStorage.getItem('scs_school_students_v2');
-      const savedTeachers = localStorage.getItem('scs_school_teachers_v2');
-      const savedAdmissions = localStorage.getItem('scs_school_admissions_v2');
-      const savedFinances = localStorage.getItem('scs_school_finances_v2');
-      const savedExams = localStorage.getItem('scs_school_exams_v2');
-      const savedTimetables = localStorage.getItem('scs_school_timetables_v2');
-      const savedAnnouncements = localStorage.getItem('scs_school_announcements_v2');
-      const savedUsers = localStorage.getItem('scs_school_portal_users_v1');
-      const savedPerms = localStorage.getItem('scs_school_role_perms_v1');
-      const savedHw = localStorage.getItem('scs_school_homeworks_v1');
-      const savedLeaves = localStorage.getItem('scs_school_leaves_v1');
-      const savedMsgs = localStorage.getItem('scs_school_msgs_v1');
-      const savedLPs = localStorage.getItem('scs_school_lessons_v1');
-      const savedGb = localStorage.getItem('scs_school_gradebook_v1');
-      const savedModules = localStorage.getItem('scs_school_modules_active');
-      const savedVisitors = localStorage.getItem('scs_school_visitors_v1');
-      const savedMedicals = localStorage.getItem('scs_school_medicals_v1');
-      const savedDisciplinary = localStorage.getItem('scs_school_disciplinary_v1');
-      const savedAssets = localStorage.getItem('scs_school_assets_v1');
-      const savedPayrolls = localStorage.getItem('scs_school_payrolls_v1');
-      const savedStaffLeaves = localStorage.getItem('scs_school_staff_leaves_v1');
-      const savedDefaulters = localStorage.getItem('scs_school_fee_defaulters_v1');
-      const savedPL = localStorage.getItem('scs_school_profit_loss_v1');
-      const savedAlerts = localStorage.getItem('scs_school_dispatch_alerts_v1');
+      const savedStudents = this.getScopedItem('scs_school_students_v2');
+      const savedTeachers = this.getScopedItem('scs_school_teachers_v2');
+      const savedAdmissions = this.getScopedItem('scs_school_admissions_v2');
+      const savedFinances = this.getScopedItem('scs_school_finances_v2');
+      const savedExams = this.getScopedItem('scs_school_exams_v2');
+      const savedTimetables = this.getScopedItem('scs_school_timetables_v2');
+      const savedAnnouncements = this.getScopedItem('scs_school_announcements_v2');
+      const savedUsers = this.getScopedItem('scs_school_portal_users_v1');
+      const savedPerms = this.getScopedItem('scs_school_role_perms_v1');
+      const savedHw = this.getScopedItem('scs_school_homeworks_v1');
+      const savedLeaves = this.getScopedItem('scs_school_leaves_v1');
+      const savedMsgs = this.getScopedItem('scs_school_msgs_v1');
+      const savedLPs = this.getScopedItem('scs_school_lessons_v1');
+      const savedGb = this.getScopedItem('scs_school_gradebook_v1');
+      const savedModules = this.getScopedItem('scs_school_modules_active');
+      const savedVisitors = this.getScopedItem('scs_school_visitors_v1');
+      const savedMedicals = this.getScopedItem('scs_school_medicals_v1');
+      const savedDisciplinary = this.getScopedItem('scs_school_disciplinary_v1');
+      const savedAssets = this.getScopedItem('scs_school_assets_v1');
+      const savedPayrolls = this.getScopedItem('scs_school_payrolls_v1');
+      const savedStaffLeaves = this.getScopedItem('scs_school_staff_leaves_v1');
+      const savedDefaulters = this.getScopedItem('scs_school_fee_defaulters_v1');
+      const savedPL = this.getScopedItem('scs_school_profit_loss_v1');
+      const savedAlerts = this.getScopedItem('scs_school_dispatch_alerts_v1');
 
       if (savedStudents) {
         try {
           const parsed = JSON.parse(savedStudents);
-          if (Array.isArray(parsed) && parsed.length >= 15 && parsed.some(s => s.guardianOccupation)) {
+          if (Array.isArray(parsed) && parsed.length > 0) {
             this.activeStudents = parsed;
           } else {
             this.activeStudents = this.getInitialStudents();
@@ -5902,7 +6090,7 @@ INSTRUCTIONS:
               previousSchool: item.previousSchool || def?.previousSchool || 'Prior Recognized Academic Institution',
               relation: item.relation || def?.relation || 'Father',
               fatherCnic: item.fatherCnic || def?.fatherCnic || '37405-1122334-5',
-              email: item.email || def?.email || 'guardian.contact@gmail.com',
+              email: item.email || def?.email || 'guardian.contact@campus.edu',
               fatherOccupation: item.fatherOccupation || def?.fatherOccupation || 'Private Business / Executive',
               address: item.address || def?.address || 'Islamabad, Pakistan',
               emergencyContact: item.emergencyContact || def?.emergencyContact || item.phone || '+92 300 1234567',
@@ -5949,7 +6137,7 @@ INSTRUCTIONS:
         }
       } else {
         this.portalUsers = this.getInitialPortalUsers();
-        try { localStorage.setItem('scs_school_portal_users_v1', JSON.stringify(this.portalUsers)); } catch {}
+        try { this.setScopedItem('scs_school_portal_users_v1', JSON.stringify(this.portalUsers)); } catch {}
       }
 
       if (savedPerms) this.rolePermissions = JSON.parse(savedPerms);
@@ -5983,34 +6171,42 @@ INSTRUCTIONS:
       else this.schoolAssets = this.getInitialAssets();
 
       if (savedPayrolls) this.staffPayrolls = JSON.parse(savedPayrolls);
-    else this.staffPayrolls = this.getInitialPayrolls();
-
-    const savedBooks = localStorage.getItem('scs_school_library_books_v1');
-    if (savedBooks) {
-      try { this.libraryBooks = JSON.parse(savedBooks); } catch { this.libraryBooks = this.getInitialLibraryBooks(); }
-    } else {
-      this.libraryBooks = this.getInitialLibraryBooks();
-    }
-
-    const savedCirculations = localStorage.getItem('scs_school_library_circulations_v1');
-    if (savedCirculations) {
-      try { this.libraryCirculations = JSON.parse(savedCirculations); } catch { this.libraryCirculations = this.getInitialLibraryCirculations(); }
-    } else {
-      this.libraryCirculations = this.getInitialLibraryCirculations();
-    }
-
-    const savedDigital = localStorage.getItem('scs_school_library_digital_v1');
-    if (savedDigital) {
-      try { this.libraryDigitalResources = JSON.parse(savedDigital); } catch { this.libraryDigitalResources = this.getInitialDigitalResources(); }
-    } else {
-      this.libraryDigitalResources = this.getInitialDigitalResources();
-    }
-
-    const savedRate = localStorage.getItem('scs_school_library_fine_rate_v1');
-    if (savedRate) {
-      this.dailyFineRatePKR = Number(savedRate) || 50;
-    }
       else this.staffPayrolls = this.getInitialPayrolls();
+
+      const savedBooks = this.getScopedItem('scs_school_library_books_v1');
+      if (savedBooks) {
+        try { this.libraryBooks = JSON.parse(savedBooks); } catch { this.libraryBooks = this.getInitialLibraryBooks(); }
+      } else {
+        this.libraryBooks = this.getInitialLibraryBooks();
+      }
+
+      const savedCirculations = this.getScopedItem('scs_school_library_circulations_v1');
+      if (savedCirculations) {
+        try { this.libraryCirculations = JSON.parse(savedCirculations); } catch { this.libraryCirculations = this.getInitialLibraryCirculations(); }
+      } else {
+        this.libraryCirculations = this.getInitialLibraryCirculations();
+      }
+
+      const savedDigital = this.getScopedItem('scs_school_library_digital_v1');
+      if (savedDigital) {
+        try { this.libraryDigitalResources = JSON.parse(savedDigital); } catch { this.libraryDigitalResources = this.getInitialDigitalResources(); }
+      } else {
+        this.libraryDigitalResources = this.getInitialDigitalResources();
+      }
+
+      const savedRate = this.getScopedItem('scs_school_library_fine_rate_v1');
+      if (savedRate) {
+        this.dailyFineRatePKR = Number(savedRate) || 50;
+      }
+
+      const savedSettings = this.getScopedItem('scs_school_settings_v2');
+      if (savedSettings) {
+        try {
+          const parsedSettings = JSON.parse(savedSettings);
+          this.settingsForm = { ...this.settingsForm, ...parsedSettings };
+          if (parsedSettings.schoolName) this.schoolName = parsedSettings.schoolName;
+        } catch {}
+      }
 
       if (savedStaffLeaves) this.staffLeaveRequests = JSON.parse(savedStaffLeaves);
       else this.staffLeaveRequests = this.getInitialStaffLeaves();
@@ -6052,7 +6248,17 @@ INSTRUCTIONS:
       if (savedExpenses) this.schoolExpenses = JSON.parse(savedExpenses);
 
       const savedRecentPay = localStorage.getItem('scs_school_recent_payments_v1');
-      if (savedRecentPay) this.recentPayments = JSON.parse(savedRecentPay);
+      if (savedRecentPay) {
+        try {
+          const parsedRecent = JSON.parse(savedRecentPay);
+          if (Array.isArray(parsedRecent)) {
+            this.recentPayments = parsedRecent.map((rp: any) => ({
+              ...rp,
+              amount: Number(rp?.amount || 0)
+            }));
+          }
+        } catch {}
+      }
 
       const savedPrincipalAdmissions = localStorage.getItem('scs_school_principal_admissions_v1');
       if (savedPrincipalAdmissions) {
@@ -6129,66 +6335,239 @@ INSTRUCTIONS:
     }
   }
 
+  async loadStateFromBackend(): Promise<void> {
+    try {
+      const [wsRes, stuRes, tchRes, admRes, feeRes, hwRes, lvRes, conRes, cmpRes, lpRes, subRes, audRes] = await Promise.all([
+        this.backend.getSchoolWorkspace().catch(() => null),
+        this.backend.getSchoolStudents().catch(() => null),
+        this.backend.getSchoolTeachers().catch(() => null),
+        this.backend.getSchoolAdmissions().catch(() => null),
+        this.backend.getSchoolFees().catch(() => null),
+        this.backend.getSchoolHomework().catch(() => null),
+        this.backend.getSchoolLeaves().catch(() => null),
+        this.backend.getSchoolConcessions().catch(() => null),
+        this.backend.getSchoolComplaints().catch(() => null),
+        this.backend.getSchoolLessonPlans().catch(() => null),
+        this.backend.getSchoolSubstitutions().catch(() => null),
+        this.backend.getSchoolAuditLogs().catch(() => null)
+      ]);
+
+      if (wsRes?.ok && wsRes.workspace && typeof wsRes.workspace === 'object') {
+        const w = wsRes.workspace;
+        if (w.schoolName) this.schoolName = w.schoolName;
+        if (w.settingsForm) this.settingsForm = { ...this.settingsForm, ...w.settingsForm };
+        if (Array.isArray(w.announcements) && w.announcements.length > 0) this.announcements = w.announcements;
+        if (Array.isArray(w.timetables) && w.timetables.length > 0) this.timetables = w.timetables;
+        if (Array.isArray(w.parentMessages) && w.parentMessages.length > 0) this.parentMessages = w.parentMessages;
+        if (Array.isArray(w.portalUsers) && w.portalUsers.length > 0) this.portalUsers = w.portalUsers;
+      }
+
+      if (stuRes?.ok && Array.isArray(stuRes.students) && stuRes.students.length > 0) {
+        const mapById = new Map<string, any>();
+        for (const s of stuRes.students) {
+          mapById.set(s.id, {
+            ...s,
+            guardian: s.guardian || s.guardianName || 'Guardian',
+            guardianPhone: s.guardianPhone || '+92 300 0000000',
+            feeStatus: s.feeStatus || 'Pending',
+            feeAmount: Number(s.feeAmount ?? 25000) || 0,
+            dueBakaya: Number(s.dueBakaya ?? 0) || 0,
+            attendance: s.attendance || '96%',
+            status: s.status || 'Present'
+          });
+        }
+        for (const local of this.activeStudents) {
+          if (!mapById.has(local.id)) mapById.set(local.id, local);
+        }
+        this.activeStudents = Array.from(mapById.values());
+      }
+
+      if (tchRes?.ok && Array.isArray(tchRes.teachers) && tchRes.teachers.length > 0) {
+        const mapTch = new Map<string, any>();
+        for (const t of tchRes.teachers) {
+          mapTch.set(t.id, {
+            ...t,
+            monthlySalary: Number(t.monthlySalary ?? 0) || 0,
+            remainingSalaryArrears: Number(t.remainingSalaryArrears ?? 0) || 0
+          });
+        }
+        for (const local of this.teachers) {
+          if (!mapTch.has(local.id)) mapTch.set(local.id, local);
+        }
+        this.teachers = Array.from(mapTch.values());
+      }
+
+      if (admRes?.ok && Array.isArray(admRes.admissions) && admRes.admissions.length > 0) {
+        const mapAdm = new Map<string, any>();
+        for (const a of admRes.admissions) mapAdm.set(a.id, a);
+        for (const local of this.admissionsList) {
+          if (!mapAdm.has(local.id)) mapAdm.set(local.id, local);
+        }
+        this.admissionsList = Array.from(mapAdm.values());
+      }
+
+      if (feeRes?.ok && Array.isArray(feeRes.fees) && feeRes.fees.length > 0) {
+        const mapFee = new Map<string, any>();
+        for (const f of feeRes.fees) {
+          mapFee.set(f.id, {
+            id: f.id,
+            title: f.title || `Fee Ledger - ${f.studentName || f.student_name || 'Student'}`,
+            studentName: f.studentName || f.student_name,
+            grade: f.grade || 'Campus',
+            category: f.category || 'Tuition',
+            type: f.type || 'Income',
+            amount: Number(f.amount || 0),
+            date: f.date || f.paidDate || 'Oct 2026',
+            status: f.status === 'Paid' ? 'Verified' : (f.status || 'Verified'),
+            challanNo: f.challanNo || f.id
+          });
+        }
+        for (const local of this.finances) {
+          if (!mapFee.has(local.id)) mapFee.set(local.id, local);
+        }
+        this.finances = Array.from(mapFee.values());
+      }
+
+      if (hwRes?.ok && Array.isArray(hwRes.homework) && hwRes.homework.length > 0) {
+        const mapHw = new Map<string, any>();
+        for (const h of hwRes.homework) mapHw.set(h.id, h);
+        for (const local of this.teacherHomeworks) {
+          if (!mapHw.has(local.id)) mapHw.set(local.id, local);
+        }
+        this.teacherHomeworks = Array.from(mapHw.values());
+      }
+
+      if (lvRes?.ok && Array.isArray(lvRes.leaves) && lvRes.leaves.length > 0) {
+        const mapLv = new Map<string, any>();
+        for (const l of lvRes.leaves) mapLv.set(l.id, l);
+        for (const local of this.parentLeaveRequests) {
+          if (!mapLv.has(local.id)) mapLv.set(local.id, local);
+        }
+        this.parentLeaveRequests = Array.from(mapLv.values());
+      }
+
+      if (conRes?.ok && Array.isArray(conRes.concessions) && conRes.concessions.length > 0) {
+        const mapCon = new Map<string, any>();
+        for (const c of conRes.concessions) mapCon.set(c.id, c);
+        for (const local of this.feeConcessionRequests) {
+          if (!mapCon.has(local.id)) mapCon.set(local.id, local);
+        }
+        this.feeConcessionRequests = Array.from(mapCon.values());
+      }
+
+      if (cmpRes?.ok && Array.isArray(cmpRes.complaints) && cmpRes.complaints.length > 0) {
+        const mapCmp = new Map<string, any>();
+        for (const c of cmpRes.complaints) mapCmp.set(c.id, c);
+        for (const local of this.parentComplaintList) {
+          if (!mapCmp.has(local.id)) mapCmp.set(local.id, local);
+        }
+        this.parentComplaintList = Array.from(mapCmp.values());
+      }
+
+      if (lpRes?.ok && Array.isArray(lpRes.lessonPlans) && lpRes.lessonPlans.length > 0) {
+        const mapLp = new Map<string, any>();
+        for (const lp of lpRes.lessonPlans) mapLp.set(lp.id, lp);
+        for (const local of this.teacherLessonPlans) {
+          if (!mapLp.has(local.id)) mapLp.set(local.id, local);
+        }
+        this.teacherLessonPlans = Array.from(mapLp.values());
+      }
+
+      if (subRes?.ok && Array.isArray(subRes.substitutions) && subRes.substitutions.length > 0) {
+        const mapSub = new Map<string, any>();
+        for (const sb of subRes.substitutions) mapSub.set(sb.id, sb);
+        for (const local of this.substituteArrangements) {
+          if (!mapSub.has(local.id)) mapSub.set(local.id, local);
+        }
+        this.substituteArrangements = Array.from(mapSub.values());
+      }
+
+      const incomingAudLogs = audRes?.logs || audRes?.auditLogs;
+      if (audRes?.ok && Array.isArray(incomingAudLogs) && incomingAudLogs.length > 0) {
+        const mapAud = new Map<string, any>();
+        for (const al of incomingAudLogs) mapAud.set(al.id, al);
+        for (const local of this.schoolAuditLogs) {
+          if (!mapAud.has(local.id)) mapAud.set(local.id, local);
+        }
+        this.schoolAuditLogs = Array.from(mapAud.values());
+      }
+
+      this.recalculateDefaulters();
+      this.cdr.detectChanges();
+    } catch {}
+  }
+
   saveStateToStorage(): void {
     try {
-      localStorage.setItem('scs_school_students_v2', JSON.stringify(this.activeStudents));
-      localStorage.setItem('scs_school_teachers_v2', JSON.stringify(this.teachers));
-      localStorage.setItem('scs_school_admissions_v2', JSON.stringify(this.admissionsList));
-      localStorage.setItem('scs_school_finances_v2', JSON.stringify(this.finances));
-      localStorage.setItem('scs_school_exams_v2', JSON.stringify(this.examsList));
-      localStorage.setItem('scs_school_timetables_v2', JSON.stringify(this.timetables));
-      localStorage.setItem('scs_school_announcements_v2', JSON.stringify(this.announcements));
-      localStorage.setItem('scs_school_portal_users_v1', JSON.stringify(this.portalUsers));
-      localStorage.setItem('scs_school_role_perms_v1', JSON.stringify(this.rolePermissions));
-      localStorage.setItem('scs_school_homeworks_v1', JSON.stringify(this.teacherHomeworks));
-      localStorage.setItem('scs_school_leaves_v1', JSON.stringify(this.parentLeaveRequests));
-      localStorage.setItem('scs_school_msgs_v1', JSON.stringify(this.parentMessages));
-      localStorage.setItem('scs_school_lessons_v1', JSON.stringify(this.teacherLessonPlans));
-      localStorage.setItem('scs_school_gradebook_v1', JSON.stringify(this.teacherGradebook));
-      localStorage.setItem('scs_school_modules_active', JSON.stringify(this.enabledModules));
-      localStorage.setItem('scs_school_visitors_v1', JSON.stringify(this.visitorGatePasses));
-      localStorage.setItem('scs_school_medicals_v1', JSON.stringify(this.studentMedicalRecords));
-      localStorage.setItem('scs_school_disciplinary_v1', JSON.stringify(this.disciplinaryIncidents));
-      localStorage.setItem('scs_school_assets_v1', JSON.stringify(this.schoolAssets));
-      localStorage.setItem('scs_school_payrolls_v1', JSON.stringify(this.staffPayrolls));
-      localStorage.setItem('scs_school_library_books_v1', JSON.stringify(this.libraryBooks));
-      localStorage.setItem('scs_school_library_circulations_v1', JSON.stringify(this.libraryCirculations));
-      localStorage.setItem('scs_school_library_digital_v1', JSON.stringify(this.libraryDigitalResources));
-      localStorage.setItem('scs_school_staff_leaves_v1', JSON.stringify(this.staffLeaveRequests));
-      localStorage.setItem('scs_school_fee_defaulters_v1', JSON.stringify(this.studentFeeDefaulters));
-      localStorage.setItem('scs_school_profit_loss_v1', JSON.stringify(this.profitLossLedger));
-      localStorage.setItem('scs_school_dispatch_alerts_v1', JSON.stringify(this.dispatchAlertLogs));
-      localStorage.setItem('scs_school_hostel_rooms_v1', JSON.stringify(this.hostelRooms));
-      localStorage.setItem('scs_school_alumni_list_v1', JSON.stringify(this.alumniList));
-      localStorage.setItem('scs_school_lab_workstations_v1', JSON.stringify(this.workstations));
-      localStorage.setItem('scs_school_lab_schedules_v1', JSON.stringify(this.labSchedules));
-      localStorage.setItem('scs_school_sms_gateway_v1', JSON.stringify(this.smsGatewayConfig));
-      localStorage.setItem('scs_school_expenses_v1', JSON.stringify(this.schoolExpenses));
-      localStorage.setItem('scs_school_recent_payments_v1', JSON.stringify(this.recentPayments));
-      localStorage.setItem('scs_school_principal_admissions_v1', JSON.stringify(this.admissionReviewList));
-      localStorage.setItem('scs_school_principal_concessions_v1', JSON.stringify(this.feeConcessionRequests));
-      localStorage.setItem('scs_school_principal_complaints_v1', JSON.stringify(this.parentComplaintList));
-      localStorage.setItem('scs_school_principal_safeguard_v1', JSON.stringify(this.safeguardingIncidents));
-      localStorage.setItem('scs_school_principal_facilities_v1', JSON.stringify(this.facilityMaintenanceLogs));
+      this.setScopedItem('scs_school_students_v2', JSON.stringify(this.activeStudents));
+      this.setScopedItem('scs_school_teachers_v2', JSON.stringify(this.teachers));
+      this.setScopedItem('scs_school_admissions_v2', JSON.stringify(this.admissionsList));
+      this.setScopedItem('scs_school_finances_v2', JSON.stringify(this.finances));
+      this.setScopedItem('scs_school_exams_v2', JSON.stringify(this.examsList));
+      this.setScopedItem('scs_school_timetables_v2', JSON.stringify(this.timetables));
+      this.setScopedItem('scs_school_announcements_v2', JSON.stringify(this.announcements));
+      this.setScopedItem('scs_school_portal_users_v1', JSON.stringify(this.portalUsers));
+      this.setScopedItem('scs_school_role_perms_v1', JSON.stringify(this.rolePermissions));
+      this.setScopedItem('scs_school_homeworks_v1', JSON.stringify(this.teacherHomeworks));
+      this.setScopedItem('scs_school_leaves_v1', JSON.stringify(this.parentLeaveRequests));
+      this.setScopedItem('scs_school_msgs_v1', JSON.stringify(this.parentMessages));
+      this.setScopedItem('scs_school_lessons_v1', JSON.stringify(this.teacherLessonPlans));
+      this.setScopedItem('scs_school_gradebook_v1', JSON.stringify(this.teacherGradebook));
+      this.setScopedItem('scs_school_modules_active', JSON.stringify(this.enabledModules));
+      this.setScopedItem('scs_school_visitors_v1', JSON.stringify(this.visitorGatePasses));
+      this.setScopedItem('scs_school_medicals_v1', JSON.stringify(this.studentMedicalRecords));
+      this.setScopedItem('scs_school_disciplinary_v1', JSON.stringify(this.disciplinaryIncidents));
+      this.setScopedItem('scs_school_assets_v1', JSON.stringify(this.schoolAssets));
+      this.setScopedItem('scs_school_payrolls_v1', JSON.stringify(this.staffPayrolls));
+      this.setScopedItem('scs_school_library_books_v1', JSON.stringify(this.libraryBooks));
+      this.setScopedItem('scs_school_library_circulations_v1', JSON.stringify(this.libraryCirculations));
+      this.setScopedItem('scs_school_library_digital_v1', JSON.stringify(this.libraryDigitalResources));
+      this.setScopedItem('scs_school_staff_leaves_v1', JSON.stringify(this.staffLeaveRequests));
+      this.setScopedItem('scs_school_fee_defaulters_v1', JSON.stringify(this.studentFeeDefaulters));
+      this.setScopedItem('scs_school_profit_loss_v1', JSON.stringify(this.profitLossLedger));
+      this.setScopedItem('scs_school_dispatch_alerts_v1', JSON.stringify(this.dispatchAlertLogs));
+      this.setScopedItem('scs_school_hostel_rooms_v1', JSON.stringify(this.hostelRooms));
+      this.setScopedItem('scs_school_alumni_list_v1', JSON.stringify(this.alumniList));
+      this.setScopedItem('scs_school_lab_workstations_v1', JSON.stringify(this.workstations));
+      this.setScopedItem('scs_school_lab_schedules_v1', JSON.stringify(this.labSchedules));
+      this.setScopedItem('scs_school_sms_gateway_v1', JSON.stringify(this.smsGatewayConfig));
+      this.setScopedItem('scs_school_expenses_v1', JSON.stringify(this.schoolExpenses));
+      this.setScopedItem('scs_school_recent_payments_v1', JSON.stringify(this.recentPayments));
+      this.setScopedItem('scs_school_principal_admissions_v1', JSON.stringify(this.admissionReviewList));
+      this.setScopedItem('scs_school_principal_concessions_v1', JSON.stringify(this.feeConcessionRequests));
+      this.setScopedItem('scs_school_principal_complaints_v1', JSON.stringify(this.parentComplaintList));
+      this.setScopedItem('scs_school_principal_safeguard_v1', JSON.stringify(this.safeguardingIncidents));
+      this.setScopedItem('scs_school_principal_facilities_v1', JSON.stringify(this.facilityMaintenanceLogs));
+      void this.backend.saveSchoolWorkspace({
+        schoolName: this.schoolName,
+        settingsForm: this.settingsForm,
+        announcements: this.announcements,
+        timetables: this.timetables,
+        parentMessages: this.parentMessages,
+        portalUsers: this.portalUsers
+      });
       this.syncToCloud(false);
     } catch {}
     this.recalculateDefaulters();
   }
 
   recalculateDefaulters(): void {
-    this.defaulters = this.activeStudents
-      .filter(s => s.feeStatus === 'Overdue' || s.feeStatus === 'Pending')
-      .map(s => ({
-        name: s.name,
-        grade: s.grade,
-        amount: s.feeAmount || 28500,
-        feeAmount: s.feeAmount || 28500,
-        dueDate: 'Oct 05, 2026',
-        daysOverdue: s.feeStatus === 'Overdue' ? 14 : 5,
-        guardianPhone: s.guardianPhone,
-        id: s.id,
-        rollNo: s.rollNo
-      }));
+    this.defaulters = (this.activeStudents || [])
+      .filter(s => s && (s.feeStatus === 'Overdue' || s.feeStatus === 'Pending'))
+      .map(s => {
+        const feeNum = Number(s.dueBakaya || s.feeAmount || 28500) || 28500;
+        return {
+          name: s.name || 'Student',
+          grade: s.grade || 'Class 1',
+          amount: feeNum,
+          feeAmount: Number(s.feeAmount ?? feeNum) || feeNum,
+          dueDate: 'Oct 05, 2026',
+          daysOverdue: s.feeStatus === 'Overdue' ? 14 : 5,
+          guardianPhone: s.guardianPhone || '',
+          id: s.id,
+          rollNo: s.rollNo || ''
+        };
+      });
   }
 
   // Initial Seed Data - Class-Wise Multi-Student Register with Rich Profiles
@@ -6202,7 +6581,7 @@ INSTRUCTIONS:
         section: 'Science',
         status: 'Present',
         attendance: '98.5%',
-        image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
+        image: '',
         guardian: 'Tariq Ahmed Khan',
         guardianPhone: '+92 300 8472910',
         guardianEmail: 'tariq.ahmed@gmail.com',
@@ -6232,7 +6611,7 @@ INSTRUCTIONS:
         section: 'Science',
         status: 'Present',
         attendance: '99.1%',
-        image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=200',
+        image: '',
         guardian: 'Pervaiz Ahmed Abbasi',
         guardianPhone: '+92 300 1234567',
         guardianEmail: 'p.abbasi@gmail.com',
@@ -6262,7 +6641,7 @@ INSTRUCTIONS:
         section: 'Science',
         status: 'Late',
         attendance: '92.4%',
-        image: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=200',
+        image: '',
         guardian: 'Syed Waqar Shah',
         guardianPhone: '+92 300 8877665',
         guardianEmail: 'waqar.shah@alshah.pk',
@@ -6292,7 +6671,7 @@ INSTRUCTIONS:
         section: 'Arts & Humanities',
         status: 'Present',
         attendance: '95.6%',
-        image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=200',
+        image: '',
         guardian: 'Nawazish Ali Mir',
         guardianPhone: '+92 322 5544112',
         guardianEmail: 'nawazish.mir@hotmail.com',
@@ -6320,7 +6699,7 @@ INSTRUCTIONS:
         section: 'Science',
         status: 'Present',
         attendance: '96.2%',
-        image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=200',
+        image: '',
         guardian: 'Dr. Salman Farooq',
         guardianPhone: '+92 321 9988112',
         guardianEmail: 'dr.salman@shifa.pk',
@@ -6346,7 +6725,7 @@ INSTRUCTIONS:
         section: 'Science',
         status: 'Present',
         attendance: '97.4%',
-        image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=200',
+        image: '',
         guardian: 'Farhan Siddiqui',
         guardianPhone: '+92 331 4455889',
         guardianEmail: 'farhan.s@gmail.com',
@@ -6372,7 +6751,7 @@ INSTRUCTIONS:
         section: 'Computer Science',
         status: 'Absent',
         attendance: '88.3%',
-        image: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=200',
+        image: '',
         guardian: 'Khalid Mehmood',
         guardianPhone: '+92 345 6677889',
         guardianEmail: 'khalid.m@yahoo.com',
@@ -6400,7 +6779,7 @@ INSTRUCTIONS:
         section: 'General',
         status: 'Late',
         attendance: '89.0%',
-        image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200',
+        image: '',
         guardian: 'Mrs. Fatima Malik',
         guardianPhone: '+92 333 4455667',
         guardianEmail: 'fatima.malik@outlook.com',
@@ -6426,7 +6805,7 @@ INSTRUCTIONS:
         section: 'Science',
         status: 'Present',
         attendance: '94.8%',
-        image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=200',
+        image: '',
         guardian: 'Zafar Iqbal',
         guardianPhone: '+92 301 2233445',
         guardianEmail: 'zafar.iqbal@trade.com.pk',
@@ -6454,7 +6833,7 @@ INSTRUCTIONS:
         section: 'English Medium',
         status: 'Present',
         attendance: '98.0%',
-        image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=200',
+        image: '',
         guardian: 'Dr. Kashif Lodhi',
         guardianPhone: '+92 321 5544332',
         guardianEmail: 'kashif.lodhi@cardio.pk',
@@ -6480,7 +6859,7 @@ INSTRUCTIONS:
         section: 'General',
         status: 'Present',
         attendance: '93.5%',
-        image: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=200',
+        image: '',
         guardian: 'Rasheed Ahmed',
         guardianPhone: '+92 332 9988334',
         guardianEmail: 'rasheed.a@fbr.gov.pk',
@@ -6508,7 +6887,7 @@ INSTRUCTIONS:
         section: 'Standard',
         status: 'Present',
         attendance: '96.8%',
-        image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=200',
+        image: '',
         guardian: 'Nadeem Ahmed',
         guardianPhone: '+92 313 1122445',
         guardianEmail: 'nadeem.ahmed@yahoo.com',
@@ -6534,7 +6913,7 @@ INSTRUCTIONS:
         section: 'Standard',
         status: 'On Leave',
         attendance: '91.2%',
-        image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=200',
+        image: '',
         guardian: 'Ghulam Mustafa',
         guardianPhone: '+92 321 7766112',
         guardianEmail: 'g.mustafa@finance.gov.pk',
@@ -6562,7 +6941,7 @@ INSTRUCTIONS:
         section: 'Primary Section',
         status: 'Present',
         attendance: '97.5%',
-        image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200',
+        image: '',
         guardian: 'Mehmood Ul Hassan',
         guardianPhone: '+92 302 4455112',
         guardianEmail: 'mehmood.h@corp.pk',
@@ -6588,7 +6967,7 @@ INSTRUCTIONS:
         section: 'Primary Section',
         status: 'Present',
         attendance: '98.8%',
-        image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=200',
+        image: '',
         guardian: 'Tariq Aziz',
         guardianPhone: '+92 312 9988771',
         guardianEmail: 'tariq.aziz@airline.pk',
@@ -6616,7 +6995,7 @@ INSTRUCTIONS:
         section: 'Primary Section',
         status: 'Present',
         attendance: '95.2%',
-        image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=200',
+        image: '',
         guardian: 'Asif Nadeem',
         guardianPhone: '+92 333 8899001',
         guardianEmail: 'asif.nadeem@bankalfalah.com',
@@ -6642,7 +7021,7 @@ INSTRUCTIONS:
         section: 'Primary Section',
         status: 'Present',
         attendance: '99.0%',
-        image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=200',
+        image: '',
         guardian: 'Syed Ali Raza',
         guardianPhone: '+92 300 3344556',
         guardianEmail: 'raza.syed@gmail.com',
@@ -6670,7 +7049,7 @@ INSTRUCTIONS:
         section: 'Junior Wing',
         status: 'Present',
         attendance: '96.0%',
-        image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
+        image: '',
         guardian: 'Sheikh Naveed',
         guardianPhone: '+92 301 4455998',
         guardianEmail: 'sheikh.naveed@textiles.pk',
@@ -6696,7 +7075,7 @@ INSTRUCTIONS:
         section: 'Junior Wing',
         status: 'Late',
         attendance: '89.4%',
-        image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=200',
+        image: '',
         guardian: 'Syed Moazzam Ali',
         guardianPhone: '+92 334 1122998',
         guardianEmail: 'moazzam.ali@suparco.gov.pk',
@@ -6724,7 +7103,7 @@ INSTRUCTIONS:
         section: 'Junior Wing',
         status: 'Present',
         attendance: '98.2%',
-        image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=200',
+        image: '',
         guardian: 'Noor Muhammad',
         guardianPhone: '+92 323 5566778',
         guardianEmail: 'noor.m@gmail.com',
@@ -6750,7 +7129,7 @@ INSTRUCTIONS:
         section: 'Junior Wing',
         status: 'Present',
         attendance: '95.5%',
-        image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=200',
+        image: '',
         guardian: 'Dr. Jahangir Khan',
         guardianPhone: '+92 300 9988221',
         guardianEmail: 'jahangir.k@shifa.pk',
@@ -6778,7 +7157,7 @@ INSTRUCTIONS:
         section: 'Junior Wing',
         status: 'Present',
         attendance: '97.2%',
-        image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=200',
+        image: '',
         guardian: 'Ali Shan',
         guardianPhone: '+92 333 7788990',
         guardianEmail: 'ali.shan@telecom.pk',
@@ -6804,7 +7183,7 @@ INSTRUCTIONS:
         section: 'Junior Wing',
         status: 'Present',
         attendance: '99.3%',
-        image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=200',
+        image: '',
         guardian: 'Syed Tanveer Shah',
         guardianPhone: '+92 301 6655443',
         guardianEmail: 'tanveer.shah@law.gov.pk',
@@ -6830,7 +7209,7 @@ INSTRUCTIONS:
         section: 'Junior Wing',
         status: 'Absent',
         attendance: '85.5%',
-        image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200',
+        image: '',
         guardian: 'Imran Ashraf',
         guardianPhone: '+92 315 2233887',
         guardianEmail: 'imran.ashraf@auto.pk',
@@ -6858,7 +7237,7 @@ INSTRUCTIONS:
         section: 'Primary Kindergarten',
         status: 'Absent',
         attendance: '82.4%',
-        image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=200',
+        image: '',
         guardian: 'Bilal Qureshi',
         guardianPhone: '+92 312 7766554',
         guardianEmail: 'bilal.q@agri.pk',
@@ -6884,7 +7263,7 @@ INSTRUCTIONS:
         section: 'Primary Kindergarten',
         status: 'Present',
         attendance: '98.5%',
-        image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=200',
+        image: '',
         guardian: 'Muhammad Maryam',
         guardianPhone: '+92 322 8877112',
         guardianEmail: 'm.maryam@yahoo.com',
@@ -6912,7 +7291,7 @@ INSTRUCTIONS:
         section: 'Pre-School Montessori',
         status: 'Present',
         attendance: '97.0%',
-        image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=200',
+        image: '',
         guardian: 'Dr. Usman Siddiqui',
         guardianPhone: '+92 301 5566778',
         guardianEmail: 'dr.usman.siddiqui@gmail.com',
@@ -6938,7 +7317,7 @@ INSTRUCTIONS:
         section: 'Pre-School Montessori',
         status: 'Present',
         attendance: '96.4%',
-        image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=200',
+        image: '',
         guardian: 'Zubair Rayyan',
         guardianPhone: '+92 331 9900887',
         guardianEmail: 'zubair.r@gmail.com',
@@ -7164,12 +7543,12 @@ INSTRUCTIONS:
 
   getInitialTeachers(): TeacherRecord[] {
     return [
-      { id: 'TCH-001', name: 'Prof. Tariq Mehmood', subject: 'Advanced Mathematics', qualification: 'Ph.D. Applied Mathematics', classes: 6, status: 'Active', rating: 4.95, email: 'tariq.math@alhuda.edu.pk', phone: '+92 311 9988776', image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=200', salaryStatus: 'Disbursed', monthlySalary: 185000, appointmentDate: '2021-08-15', tenureDuration: '5 Yrs 2 Mos', unpaidSalaryMonths: 0, remainingSalaryArrears: 0, cnic: '35202-1829102-1' },
-      { id: 'TCH-002', name: 'Dr. Sarah Jenkins', subject: 'English Literature & Rhetoric', qualification: 'M.Phil Oxford University', classes: 5, status: 'Active', rating: 4.88, email: 'sarah.eng@alhuda.edu.pk', phone: '+92 300 7766554', image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=200', salaryStatus: 'Disbursed', monthlySalary: 165000, appointmentDate: '2022-09-01', tenureDuration: '4 Yrs 1 Mo', unpaidSalaryMonths: 0, remainingSalaryArrears: 0, cnic: '35202-9988112-2' },
-      { id: 'TCH-003', name: 'Prof. Rehan Alvi', subject: 'Physics & Quantum Mechanics', qualification: 'M.S. Nuclear Physics', classes: 5, status: 'Active', rating: 4.92, email: 'rehan.phy@alhuda.edu.pk', phone: '+92 321 4455667', image: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=200', salaryStatus: 'Pending Arrears', monthlySalary: 155000, appointmentDate: '2023-01-10', tenureDuration: '3 Yrs 9 Mos', unpaidSalaryMonths: 1, remainingSalaryArrears: 155000, cnic: '35202-4455667-3' },
-      { id: 'TCH-004', name: 'Ms. Hira Naeem', subject: 'Biochemistry & Genetics', qualification: 'M.Phil Molecular Biology', classes: 4, status: 'Active', rating: 4.79, email: 'hira.bio@alhuda.edu.pk', phone: '+92 333 1122334', image: 'https://images.unsplash.com/photo-1580894732444-8ecded7900cd?auto=format&fit=crop&q=80&w=200', salaryStatus: 'Pending Arrears', monthlySalary: 140000, appointmentDate: '2024-03-01', tenureDuration: '2 Yrs 7 Mos', unpaidSalaryMonths: 2, remainingSalaryArrears: 280000, cnic: '35202-1122334-4' },
-      { id: 'TCH-005', name: 'Engr. Bilal Hashmi', subject: 'Computer Science & AI', qualification: 'M.S. Computer Science', classes: 6, status: 'Active', rating: 4.97, email: 'bilal.cs@alhuda.edu.pk', phone: '+92 312 9900112', image: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=200', salaryStatus: 'Disbursed', monthlySalary: 175000, appointmentDate: '2020-10-01', tenureDuration: '6 Yrs 0 Mos', unpaidSalaryMonths: 0, remainingSalaryArrears: 0, cnic: '35202-9900112-5' },
-      { id: 'TCH-006', name: 'Prof. Asadullah Qazi', subject: 'Islamic History & Arabic', qualification: 'M.A. Islamic Studies Al-Azhar', classes: 0, status: 'Resigned', rating: 4.85, email: 'asad.qazi@alhuda.edu.pk', phone: '+92 301 4433221', image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200', salaryStatus: 'Pending Arrears', monthlySalary: 120000, appointmentDate: '2022-01-15', resignationDate: '2026-06-30', tenureDuration: 'Served 4 Yrs 5 Mos', unpaidSalaryMonths: 1, remainingSalaryArrears: 120000, cnic: '35202-4433221-6' }
+      { id: 'TCH-001', name: 'Prof. Tariq Mehmood', subject: 'Advanced Mathematics', qualification: 'Ph.D. Applied Mathematics', classes: 6, status: 'Active', rating: 4.95, email: 'tariq.math@campus.edu', phone: '+92 311 9988776', image: '', salaryStatus: 'Disbursed', monthlySalary: 185000, appointmentDate: '2021-08-15', tenureDuration: '5 Yrs 2 Mos', unpaidSalaryMonths: 0, remainingSalaryArrears: 0, cnic: '35202-1829102-1' },
+      { id: 'TCH-002', name: 'Dr. Sarah Jenkins', subject: 'English Literature & Rhetoric', qualification: 'M.Phil Oxford University', classes: 5, status: 'Active', rating: 4.88, email: 'sarah.eng@campus.edu', phone: '+92 300 7766554', image: '', salaryStatus: 'Disbursed', monthlySalary: 165000, appointmentDate: '2022-09-01', tenureDuration: '4 Yrs 1 Mo', unpaidSalaryMonths: 0, remainingSalaryArrears: 0, cnic: '35202-9988112-2' },
+      { id: 'TCH-003', name: 'Prof. Rehan Alvi', subject: 'Physics & Quantum Mechanics', qualification: 'M.S. Nuclear Physics', classes: 5, status: 'Active', rating: 4.92, email: 'rehan.phy@campus.edu', phone: '+92 321 4455667', image: '', salaryStatus: 'Pending Arrears', monthlySalary: 155000, appointmentDate: '2023-01-10', tenureDuration: '3 Yrs 9 Mos', unpaidSalaryMonths: 1, remainingSalaryArrears: 155000, cnic: '35202-4455667-3' },
+      { id: 'TCH-004', name: 'Ms. Hira Naeem', subject: 'Biochemistry & Genetics', qualification: 'M.Phil Molecular Biology', classes: 4, status: 'Active', rating: 4.79, email: 'hira.bio@campus.edu', phone: '+92 333 1122334', image: '', salaryStatus: 'Pending Arrears', monthlySalary: 140000, appointmentDate: '2024-03-01', tenureDuration: '2 Yrs 7 Mos', unpaidSalaryMonths: 2, remainingSalaryArrears: 280000, cnic: '35202-1122334-4' },
+      { id: 'TCH-005', name: 'Engr. Bilal Hashmi', subject: 'Computer Science & AI', qualification: 'M.S. Computer Science', classes: 6, status: 'Active', rating: 4.97, email: 'bilal.cs@campus.edu', phone: '+92 312 9900112', image: '', salaryStatus: 'Disbursed', monthlySalary: 175000, appointmentDate: '2020-10-01', tenureDuration: '6 Yrs 0 Mos', unpaidSalaryMonths: 0, remainingSalaryArrears: 0, cnic: '35202-9900112-5' },
+      { id: 'TCH-006', name: 'Prof. Asadullah Qazi', subject: 'Islamic History & Arabic', qualification: 'M.A. Islamic Studies Al-Azhar', classes: 0, status: 'Resigned', rating: 4.85, email: 'asad.qazi@campus.edu', phone: '+92 301 4433221', image: '', salaryStatus: 'Pending Arrears', monthlySalary: 120000, appointmentDate: '2022-01-15', resignationDate: '2026-06-30', tenureDuration: 'Served 4 Yrs 5 Mos', unpaidSalaryMonths: 1, remainingSalaryArrears: 120000, cnic: '35202-4433221-6' }
     ];
   }
 
@@ -7574,7 +7953,7 @@ INSTRUCTIONS:
         title: 'General Chemistry & Laboratory Safety Protocols Manual',
         category: 'Chemistry',
         grade: 'Class 9-10',
-        authorOrPublisher: 'Al-Huda Science Faculty',
+        authorOrPublisher: 'Campus Science Faculty',
         fileType: 'PDF',
         fileSize: '8.1 MB',
         downloadsCount: 176
@@ -7599,16 +7978,16 @@ INSTRUCTIONS:
 
   getInitialPortalUsers(): PortalUserRecord[] {
     return [
-      { id: 'USR-601', name: 'Prof. Dr. Tahir Malik', email: 'principal@alhuda.edu.pk', pin: '9900', role: 'principal', linkedEntity: 'Academic Directorate & Examination Council', status: 'Active', lastLogin: 'Today at 07:30 AM', staffIdOrRoll: 'DIR-001', designation: 'Principal & Academic Director', department: 'Academic Directorate', clearanceLevel: 'Level 5 - Executive Authority', phone: '+92 300 9876543' },
-      { id: 'USR-801', name: 'Prof. Tariq Mehmood', email: 'tariq.math@alhuda.edu.pk', pin: '8821', role: 'teacher', linkedEntity: 'Grade 10-A Mathematics', status: 'Active', lastLogin: 'Today at 08:12 AM' },
-      { id: 'USR-802', name: 'Ms. Sarah Jenkins', email: 'sarah.eng@alhuda.edu.pk', pin: '4410', role: 'teacher', linkedEntity: 'Grade 11-C English Literature', status: 'Active', lastLogin: 'Yesterday at 04:30 PM' },
-      { id: 'USR-803', name: 'Dr. Rehan Alvi', email: 'rehan.phy@alhuda.edu.pk', pin: '1920', role: 'teacher', linkedEntity: 'Grade 10-B Physics & Labs', status: 'Active', lastLogin: 'Today at 09:05 AM' },
-      { id: 'USR-901', name: 'Zayan Ahmed Khan', email: 'zayan.1001@student.alhuda.edu.pk', pin: '1001', role: 'student', linkedEntity: 'Roll #1001 (Grade 10-A)', status: 'Active', lastLogin: 'Today at 07:50 AM' },
-      { id: 'USR-902', name: 'Amna Salman', email: 'amna.1102@student.alhuda.edu.pk', pin: '1102', role: 'student', linkedEntity: 'Roll #1102 (Grade 11-C)', status: 'Active', lastLogin: 'Today at 08:00 AM' },
-      { id: 'USR-903', name: 'Omar Farooq Malik', email: 'omar.0903@student.alhuda.edu.pk', pin: '0903', role: 'student', linkedEntity: 'Roll #0903 (Grade 9-B)', status: 'Active', lastLogin: 'Oct 14 at 02:40 PM' },
-      { id: 'USR-701', name: 'Tariq Ahmed Khan', email: 'tariq.khan@guardian.alhuda.edu.pk', pin: '5521', role: 'parent', linkedEntity: 'Guardian of Zayan (10-A) & Amna (11-C)', status: 'Active', lastLogin: 'Today at 07:52 AM' },
-      { id: 'USR-702', name: 'Dr. Salman Farooq', email: 'salman.farooq@guardian.alhuda.edu.pk', pin: '3319', role: 'parent', linkedEntity: 'Guardian of Amna Salman (11-C)', status: 'Active', lastLogin: 'Oct 13 at 08:15 PM' },
-      { id: 'USR-703', name: 'Mrs. Fatima Malik', email: 'fatima.malik@guardian.alhuda.edu.pk', pin: '7742', role: 'parent', linkedEntity: 'Guardian of Omar Farooq (9-B)', status: 'Active', lastLogin: 'Oct 14 at 10:20 AM' }
+      { id: 'USR-601', name: 'Prof. Dr. Tahir Malik', email: 'principal@campus.edu', pin: '9900', role: 'principal', linkedEntity: 'Academic Directorate & Examination Council', status: 'Active', lastLogin: 'Today at 07:30 AM', staffIdOrRoll: 'DIR-001', designation: 'Principal & Academic Director', department: 'Academic Directorate', clearanceLevel: 'Level 5 - Executive Authority', phone: '+92 300 9876543' },
+      { id: 'USR-801', name: 'Prof. Tariq Mehmood', email: 'tariq.math@campus.edu', pin: '8821', role: 'teacher', linkedEntity: 'Grade 10-A Mathematics', status: 'Active', lastLogin: 'Today at 08:12 AM' },
+      { id: 'USR-802', name: 'Ms. Sarah Jenkins', email: 'sarah.eng@campus.edu', pin: '4410', role: 'teacher', linkedEntity: 'Grade 11-C English Literature', status: 'Active', lastLogin: 'Yesterday at 04:30 PM' },
+      { id: 'USR-803', name: 'Dr. Rehan Alvi', email: 'rehan.phy@campus.edu', pin: '1920', role: 'teacher', linkedEntity: 'Grade 10-B Physics & Labs', status: 'Active', lastLogin: 'Today at 09:05 AM' },
+      { id: 'USR-901', name: 'Zayan Ahmed Khan', email: 'zayan.1001@student.campus.edu', pin: '1001', role: 'student', linkedEntity: 'Roll #1001 (Grade 10-A)', status: 'Active', lastLogin: 'Today at 07:50 AM' },
+      { id: 'USR-902', name: 'Amna Salman', email: 'amna.1102@student.campus.edu', pin: '1102', role: 'student', linkedEntity: 'Roll #1102 (Grade 11-C)', status: 'Active', lastLogin: 'Today at 08:00 AM' },
+      { id: 'USR-903', name: 'Omar Farooq Malik', email: 'omar.0903@student.campus.edu', pin: '0903', role: 'student', linkedEntity: 'Roll #0903 (Grade 9-B)', status: 'Active', lastLogin: 'Oct 14 at 02:40 PM' },
+      { id: 'USR-701', name: 'Tariq Ahmed Khan', email: 'tariq.khan@guardian.campus.edu', pin: '5521', role: 'parent', linkedEntity: 'Guardian of Zayan (10-A) & Amna (11-C)', status: 'Active', lastLogin: 'Today at 07:52 AM' },
+      { id: 'USR-702', name: 'Dr. Salman Farooq', email: 'salman.farooq@guardian.campus.edu', pin: '3319', role: 'parent', linkedEntity: 'Guardian of Amna Salman (11-C)', status: 'Active', lastLogin: 'Oct 13 at 08:15 PM' },
+      { id: 'USR-703', name: 'Mrs. Fatima Malik', email: 'fatima.malik@guardian.campus.edu', pin: '7742', role: 'parent', linkedEntity: 'Guardian of Omar Farooq (9-B)', status: 'Active', lastLogin: 'Oct 14 at 10:20 AM' }
     ];
   }
 
@@ -7692,12 +8071,12 @@ INSTRUCTIONS:
 
   getInitialGradebook(): TeacherGradeRecord[] {
     return [
-      { rollNo: '1001', studentId: 'ST-1001', name: 'Zayan Ahmed Khan', image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200', subject: 'Advanced Mathematics', maxMarks: 100, obtainedMarks: 96, grade: 'A+', remarks: 'Outstanding analytical skills and proofs', rank: 1 },
-      { rollNo: '1002', studentId: 'ST-1002', name: 'Amna Salman', image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=200', subject: 'Advanced Mathematics', maxMarks: 100, obtainedMarks: 92, grade: 'A+', remarks: 'Strong conceptual clarity in quadratic theory', rank: 3 },
-      { rollNo: '1003', studentId: 'ST-1003', name: 'Omar Farooq Malik', image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200', subject: 'Advanced Mathematics', maxMarks: 100, obtainedMarks: 84, grade: 'A', remarks: 'Good effort, needs practice on word problems', rank: 5 },
-      { rollNo: '1004', studentId: 'ST-1004', name: 'Fatima Zahra Abbasi', image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=200', subject: 'Advanced Mathematics', maxMarks: 100, obtainedMarks: 95, grade: 'A+', remarks: 'Consistently high test performance', rank: 2 },
-      { rollNo: '1005', studentId: 'ST-1005', name: 'Hamza Bilal Qureshi', image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=200', subject: 'Advanced Mathematics', maxMarks: 100, obtainedMarks: 76, grade: 'B+', remarks: 'Remedial coaching recommended for algebra', rank: 6 },
-      { rollNo: '1006', studentId: 'ST-1006', name: 'Ayesha Siddiqua', image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=200', subject: 'Advanced Mathematics', maxMarks: 100, obtainedMarks: 89, grade: 'A', remarks: 'Thorough step-by-step problem solver', rank: 4 }
+      { rollNo: '1001', studentId: 'ST-1001', name: 'Zayan Ahmed Khan', image: '', subject: 'Advanced Mathematics', maxMarks: 100, obtainedMarks: 96, grade: 'A+', remarks: 'Outstanding analytical skills and proofs', rank: 1 },
+      { rollNo: '1002', studentId: 'ST-1002', name: 'Amna Salman', image: '', subject: 'Advanced Mathematics', maxMarks: 100, obtainedMarks: 92, grade: 'A+', remarks: 'Strong conceptual clarity in quadratic theory', rank: 3 },
+      { rollNo: '1003', studentId: 'ST-1003', name: 'Omar Farooq Malik', image: '', subject: 'Advanced Mathematics', maxMarks: 100, obtainedMarks: 84, grade: 'A', remarks: 'Good effort, needs practice on word problems', rank: 5 },
+      { rollNo: '1004', studentId: 'ST-1004', name: 'Fatima Zahra Abbasi', image: '', subject: 'Advanced Mathematics', maxMarks: 100, obtainedMarks: 95, grade: 'A+', remarks: 'Consistently high test performance', rank: 2 },
+      { rollNo: '1005', studentId: 'ST-1005', name: 'Hamza Bilal Qureshi', image: '', subject: 'Advanced Mathematics', maxMarks: 100, obtainedMarks: 76, grade: 'B+', remarks: 'Remedial coaching recommended for algebra', rank: 6 },
+      { rollNo: '1006', studentId: 'ST-1006', name: 'Ayesha Siddiqua', image: '', subject: 'Advanced Mathematics', maxMarks: 100, obtainedMarks: 89, grade: 'A', remarks: 'Thorough step-by-step problem solver', rank: 4 }
     ];
   }
 
@@ -8042,7 +8421,7 @@ INSTRUCTIONS:
       this.portalUserForm.clearanceLevel = 'Level 5 - Executive Academic Authority';
       this.portalUserForm.linkedEntity = 'Academic Directorate & Executive Council';
       if (!this.portalUserForm.email || this.portalUserForm.email.includes('teacher') || this.portalUserForm.email.includes('student')) {
-        this.portalUserForm.email = 'principal@alhuda.edu.pk';
+        this.portalUserForm.email = 'principal@campus.edu';
       }
     } else if (r === 'teacher') {
       this.portalUserForm.designation = 'Senior Subject Teacher';
@@ -8050,21 +8429,21 @@ INSTRUCTIONS:
       this.portalUserForm.department = 'Department of Sciences';
       this.portalUserForm.clearanceLevel = 'Level 3 - Faculty & Grading Authority';
       this.portalUserForm.linkedEntity = 'Grade 10-A Mathematics';
-      if (this.portalUserForm.email === 'principal@alhuda.edu.pk') this.portalUserForm.email = '';
+      if (this.portalUserForm.email === 'principal@campus.edu' || this.portalUserForm.email === 'principal@alhuda.edu.pk') this.portalUserForm.email = '';
     } else if (r === 'student') {
       this.portalUserForm.designation = 'Enrolled Student';
       this.portalUserForm.staffIdOrRoll = `ST-${Math.floor(1000 + Math.random() * 9000)}`;
       this.portalUserForm.department = 'Class 10-A (Matric / O-Levels)';
       this.portalUserForm.clearanceLevel = 'Level 1 - Student Academic Access';
       this.portalUserForm.linkedEntity = `Roll #${this.portalUserForm.staffIdOrRoll} (Grade 10-A)`;
-      if (this.portalUserForm.email === 'principal@alhuda.edu.pk') this.portalUserForm.email = '';
+      if (this.portalUserForm.email === 'principal@campus.edu' || this.portalUserForm.email === 'principal@alhuda.edu.pk') this.portalUserForm.email = '';
     } else if (r === 'parent') {
       this.portalUserForm.designation = 'Parent / Guardian';
       this.portalUserForm.staffIdOrRoll = `GRD-${Math.floor(100 + Math.random() * 900)}`;
       this.portalUserForm.department = 'Family Guardian Wing';
       this.portalUserForm.clearanceLevel = 'Level 1 - Parent View Access';
       this.portalUserForm.linkedEntity = 'Guardian of Student ST-1001';
-      if (this.portalUserForm.email === 'principal@alhuda.edu.pk') this.portalUserForm.email = '';
+      if (this.portalUserForm.email === 'principal@campus.edu' || this.portalUserForm.email === 'principal@alhuda.edu.pk') this.portalUserForm.email = '';
     }
     this.cdr.detectChanges();
   }
@@ -8131,12 +8510,14 @@ INSTRUCTIONS:
   // --- TEACHER ACTIONS ---
   markTeacherAttendance(student: StudentRecord, status: 'Present' | 'Late' | 'Absent') {
     student.status = status;
+    void this.backend.saveSchoolAttendance({ studentId: student.id, status });
     this.saveStateToStorage();
     this.showToast(`Marked ${student.name} as ${status}`, 'success');
   }
 
   markAllTeacherStudents(status: 'Present') {
     this.activeStudents.forEach(s => s.status = status);
+    void this.backend.markAllSchoolAttendance({ status });
     this.saveStateToStorage();
     this.showToast('All students in class marked Present!', 'success');
   }
@@ -8147,6 +8528,7 @@ INSTRUCTIONS:
     else if (newMarks >= 80) subject.grade = 'A';
     else if (newMarks >= 70) subject.grade = 'B';
     else subject.grade = 'C';
+    this.saveStateToStorage();
     this.showToast(`Marks updated to ${newMarks} (Grade ${subject.grade})`, 'success');
   }
 
@@ -8184,6 +8566,7 @@ INSTRUCTIONS:
       description: this.teacherHomeworkForm.description
     };
     this.teacherHomeworks.unshift(newHw);
+    void this.backend.saveSchoolHomework({ ...newHw, teacherId: this.currentTeacherProfile.id });
     this.saveStateToStorage();
     this.closeTeacherHomeworkModal();
     this.showToast(`Posted assignment to ${newHw.grade} student portals!`, 'success');
@@ -8211,7 +8594,7 @@ INSTRUCTIONS:
       this.showToast('Please describe reason for leave.', 'warning');
       return;
     }
-    const child = this.parentChildren.find(c => c.id === this.parentLeaveForm.childId) || this.parentChildren[0];
+    const child = this.parentChildren.find(c => c.id === this.parentLeaveForm.childId) || this.selectedParentChild || this.parentChildren[0];
     const newLeave: ParentLeaveRecord = {
       id: `LEV-${Math.floor(100 + Math.random() * 899)}`,
       childName: child.name,
@@ -8219,19 +8602,20 @@ INSTRUCTIONS:
       fromDate: this.parentLeaveForm.fromDate,
       toDate: this.parentLeaveForm.toDate,
       reason: this.parentLeaveForm.reason,
-      status: 'Approved',
+      status: 'Pending',
       submittedDate: 'Today'
     };
     this.parentLeaveRequests.unshift(newLeave);
+    void this.backend.saveSchoolLeave({ ...newLeave, guardianName: this.currentGuardianProfile.name });
     this.saveStateToStorage();
     this.closeParentLeaveModal();
-    this.showToast('Official leave application submitted and approved by principal office!', 'success');
+    this.showToast('Official leave application submitted for review!', 'success');
   }
 
   openParentMessageModal() {
     this.parentMessageForm = {
       childId: this.activeParentChildId,
-      recipient: 'Prof. Tariq Mehmood (Mathematics)',
+      recipient: `${this.currentTeacherProfile.name} (${this.currentTeacherProfile.subject})`,
       subject: '',
       message: ''
     };
@@ -8251,7 +8635,7 @@ INSTRUCTIONS:
     }
     const newMsg: ParentMessageRecord = {
       id: `MSG-${Math.floor(300 + Math.random() * 699)}`,
-      sender: 'Tariq Ahmed Khan (Guardian)',
+      sender: `${this.currentGuardianProfile.name} (Guardian)`,
       recipient: this.parentMessageForm.recipient,
       subject: this.parentMessageForm.subject,
       message: this.parentMessageForm.message,
@@ -8261,7 +8645,7 @@ INSTRUCTIONS:
     this.parentMessages.unshift(newMsg);
     this.saveStateToStorage();
     this.closeParentMessageModal();
-    this.showToast('Message sent to teacher. Notification dispatched via SMS gateway.', 'success');
+    this.showToast('Message sent to teacher.', 'success');
   }
 
   // --- EXISTING OWNER ERP METHODS ---
@@ -8825,7 +9209,7 @@ INSTRUCTIONS:
         remainingBakaya: target.totalRemainingBakaya,
         unpaidMonths: target.unpaidMonthsList
       };
-      this.customAlertMessage = `Assalam-o-Alaikum ${target.guardianName}, Fee for ${target.studentName} (${target.grade}, Roll #${target.rollNo}) for ${target.unpaidMonthsList ? target.unpaidMonthsList.join(', ') : 'pending session'} totaling PKR ${target.totalRemainingBakaya.toLocaleString()} is remaining. Kindly clear outstanding dues at earliest via Meezan / JazzCash or Bank Challan. School Accounts Office.`;
+      this.customAlertMessage = `Assalam-o-Alaikum ${target.guardianName}, Fee for ${target.studentName} (${target.grade}, Roll #${target.rollNo}) for ${target.unpaidMonthsList ? target.unpaidMonthsList.join(', ') : 'pending session'} totaling PKR ${this.formatCurrency(target.totalRemainingBakaya)} is remaining. Kindly clear outstanding dues at earliest via Meezan / JazzCash or Bank Challan. School Accounts Office.`;
     } else if ('name' in target) {
       // Teacher or General student
       this.alertTarget = {
@@ -8909,7 +9293,7 @@ INSTRUCTIONS:
     }
 
     this.saveStateToStorage();
-    this.showToast(`Recorded fee collection PKR ${paymentAmount.toLocaleString()} for ${defaulter.studentName}`, 'success');
+    this.showToast(`Recorded fee collection PKR ${this.formatCurrency(paymentAmount)} for ${defaulter.studentName}`, 'success');
   }
 
   disburseTeacherSalaryArrears(teacher: TeacherRecord) {
@@ -8936,7 +9320,13 @@ INSTRUCTIONS:
     });
 
     this.saveStateToStorage();
-    this.showToast(`Successfully disbursed PKR ${arrearsAmount.toLocaleString()} salary arrears for ${teacher.name}!`, 'success');
+    void this.backend.disburseTeacherSalary({
+      teacherId: teacher.id,
+      teacherName: teacher.name,
+      amount: arrearsAmount,
+      subject: teacher.subject
+    });
+    this.showToast(`Successfully disbursed PKR ${this.formatCurrency(arrearsAmount)} salary arrears for ${teacher.name}!`, 'success');
   }
 
   get filteredExams(): ExamRecord[] {
@@ -9083,6 +9473,7 @@ INSTRUCTIONS:
     };
     this.finances.unshift(newRecord);
     this.saveStateToStorage();
+    void this.backend.createSchoolFee(newRecord);
     this.closePaymentModal();
     this.showToast(`Recorded Online Payment for ${newRecord.studentName}`, 'success');
   }
@@ -9094,23 +9485,22 @@ INSTRUCTIONS:
   }
 
   deletePaymentRecord(record: FinanceRecord) {
-    if (confirm(`Are you sure you want to delete payment record ${record.challanNo}?`)) {
-      this.finances = this.finances.filter(f => f.id !== record.id);
-      this.saveStateToStorage();
-      this.showToast(`Deleted payment record ${record.challanNo}`, 'warning');
-    }
+    this.finances = this.finances.filter(f => f.id !== record.id);
+    this.saveStateToStorage();
+    void this.backend.deleteSchoolFee(record.id);
+    this.showToast(`Deleted payment record ${record.challanNo}`, 'warning');
   }
 
   get totalRevenue(): number {
-    return this.finances
-      .filter(f => f.type === 'Income')
-      .reduce((acc, curr) => acc + curr.amount, 0);
+    return (this.finances || [])
+      .filter(f => f && f.type === 'Income')
+      .reduce((acc, curr) => acc + (Number(curr?.amount) || 0), 0);
   }
 
   get totalExpenses(): number {
-    return this.finances
-      .filter(f => f.type === 'Expense')
-      .reduce((acc, curr) => acc + curr.amount, 0);
+    return (this.finances || [])
+      .filter(f => f && f.type === 'Expense')
+      .reduce((acc, curr) => acc + (Number(curr?.amount) || 0), 0);
   }
 
   // --- STUDENT CRUD ---
@@ -9138,6 +9528,7 @@ INSTRUCTIONS:
     }
     if (this.activeStudentForEdit) {
       Object.assign(this.activeStudentForEdit, this.studentForm);
+      void this.backend.updateSchoolStudent(this.activeStudentForEdit.id, this.activeStudentForEdit);
       this.showToast(`Updated student profile for ${this.studentForm.name}`, 'success');
     } else {
       const newStudent: StudentRecord = {
@@ -9147,13 +9538,13 @@ INSTRUCTIONS:
         section: this.studentForm.section || 'Science',
         status: (this.studentForm.status as any) || 'Present',
         attendance: this.studentForm.attendance || '96%',
-        image: `https://images.unsplash.com/photo-${1534528741775 + Math.floor(Math.random() * 50)}?auto=format&fit=crop&q=80&w=200`,
+        image: '',
         guardian: this.studentForm.guardian || '',
         guardianPhone: this.studentForm.guardianPhone || '+92 300 0000000',
         feeStatus: (this.studentForm.feeStatus as any) || 'Pending',
         feeAmount: this.studentForm.feeAmount || 28500,
         rollNo: Math.floor(1000 + Math.random() * 9000).toString(),
-        admissionDate: '2026-10-14'
+        admissionDate: new Date().toISOString().slice(0, 10)
       };
       this.activeStudents.unshift(newStudent);
       this.studentsSortColumn = '';
@@ -9163,6 +9554,8 @@ INSTRUCTIONS:
       this.studentSearchQuery = '';
       this.newlyEnrolledStudentId = newStudent.id;
       this.expandedStudentId = newStudent.id;
+
+      void this.backend.admitStudent(newStudent);
 
       this.triggerAdmissionAlert({
         id: newStudent.id,
@@ -9195,12 +9588,14 @@ INSTRUCTIONS:
   deleteStudent(student: StudentRecord) {
     this.activeStudents = this.activeStudents.filter(s => s.id !== student.id);
     this.saveStateToStorage();
+    void this.backend.deleteSchoolStudent(student.id);
     this.showToast(`Removed student record for ${student.name}`, 'info');
   }
 
   markStudentFeePaid(student: any) {
     const s = this.activeStudents.find(x => x.id === student.id) || student;
     s.feeStatus = 'Paid';
+    s.dueBakaya = 0;
     const newRecord: FinanceRecord = {
       id: `FIN-${Math.floor(1000 + Math.random() * 9000)}`,
       title: `Tuition Fee Clearance - ${s.name}`,
@@ -9209,12 +9604,18 @@ INSTRUCTIONS:
       category: 'Tuition',
       type: 'Income',
       amount: s.feeAmount || s.amount || 28500,
-      date: 'Oct 15, 2026',
+      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
       status: 'Verified',
       challanNo: `CH-AUTO-${s.rollNo || s.id}`
     };
     this.finances.unshift(newRecord);
     this.saveStateToStorage();
+    void this.backend.collectSchoolFee(s.id, {
+      amountPaid: newRecord.amount,
+      studentName: s.name,
+      grade: s.grade,
+      challanNo: newRecord.challanNo
+    });
     this.showToast(`Cleared fee payment of PKR ${newRecord.amount} for ${s.name}`, 'success');
   }
 
@@ -9330,6 +9731,7 @@ INSTRUCTIONS:
         assignedGrade: finalGrade,
         inchargeClass: finalIncharge
       });
+      void this.backend.updateSchoolTeacher(this.activeTeacherForEdit.id, this.activeTeacherForEdit);
       this.showToast(`Updated faculty profile for ${this.teacherForm.name}`, 'success');
     } else {
       const newTeacher: TeacherRecord = {
@@ -9342,7 +9744,7 @@ INSTRUCTIONS:
         classes: Number(this.teacherForm.classes || this.teacherForm.weeklyPeriods) || 5,
         status: (this.teacherForm.status as any) || 'Active',
         rating: Number(this.teacherForm.rating) || 4.9,
-        email: this.teacherForm.email || `${this.teacherForm.name?.toLowerCase().replace(/\s+/g, '.')}@alhuda.edu.pk`,
+        email: this.teacherForm.email || `${this.teacherForm.name?.toLowerCase().replace(/\s+/g, '.')}@campus.edu`,
         phone: this.teacherForm.phone || '+92 300 0000000',
         cnic: this.teacherForm.cnic || '35202-0000000-1',
         gender: (this.teacherForm.gender as any) || 'Male',
@@ -9356,9 +9758,7 @@ INSTRUCTIONS:
         employmentType: (this.teacherForm.employmentType as any) || 'Permanent',
         previousInstitute: this.teacherForm.previousInstitute || 'Beaconhouse',
         weeklyPeriods: Number(this.teacherForm.weeklyPeriods) || 24,
-        image: this.teacherForm.gender === 'Female'
-          ? 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=200'
-          : 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=200',
+        image: '',
         salaryStatus: (this.teacherForm.salaryStatus as any) || 'Processing',
         monthlySalary: Number(this.teacherForm.monthlySalary) || 145000,
         appointmentDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
@@ -9368,6 +9768,7 @@ INSTRUCTIONS:
       this.teachersSearchQuery = '';
       this.currentPage['teachers'] = 1;
       this.newlyAddedTeacherId = newTeacher.id;
+      void this.backend.saveSchoolTeacher(newTeacher);
 
       this.triggerAdmissionAlert({
         id: newTeacher.id,
@@ -9376,14 +9777,14 @@ INSTRUCTIONS:
         grade: `${newTeacher.subject} [${finalGrade}]`,
         guardian: `Appointed by Principal • ${newTeacher.employmentType}`,
         phone: newTeacher.phone,
-        feeStatus: `PKR ${newTeacher.monthlySalary.toLocaleString()}/mo`,
+        feeStatus: `PKR ${this.formatCurrency(newTeacher.monthlySalary)}/mo`,
         source: 'Faculty Recruitment' as any
       });
 
       this.notificationsList.unshift({
         id: 'NOTIF-TCH-' + Date.now(),
         title: `🎓 Faculty Appointed: ${newTeacher.name} (${finalRole} — ${newTeacher.subject})`,
-        message: `${newTeacher.name} appointed as ${finalRole} (${newTeacher.subject}). Assigned Class: ${finalGrade}. Salary: PKR ${newTeacher.monthlySalary.toLocaleString()}. Positioned at Row #1 in table.`,
+        message: `${newTeacher.name} appointed as ${finalRole} (${newTeacher.subject}). Assigned Class: ${finalGrade}. Salary: PKR ${this.formatCurrency(newTeacher.monthlySalary)}. Positioned at Row #1 in table.`,
         type: 'general',
         targetRole: 'all',
         createdAt: 'Just now',
@@ -9400,6 +9801,7 @@ INSTRUCTIONS:
   deleteTeacher(teacher: TeacherRecord) {
     this.teachers = this.teachers.filter(t => t.id !== teacher.id);
     this.saveStateToStorage();
+    void this.backend.deleteSchoolTeacher(teacher.id);
     this.showToast(`Removed faculty member ${teacher.name}`, 'info');
   }
 
@@ -9568,9 +9970,7 @@ INSTRUCTIONS:
       section: this.admissionForm.section || 'A',
       status: 'Present',
       attendance: '100%',
-      image: this.admissionForm.gender === 'Female'
-        ? 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=200'
-        : 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=200',
+      image: '',
       guardian: father,
       guardianPhone: phoneNum,
       guardianEmail: this.admissionForm.email ? this.admissionForm.email.trim() : undefined,
@@ -9672,6 +10072,8 @@ INSTRUCTIONS:
     this.newlyEnrolledStudentId = newStudent.id;
     this.expandedStudentId = newStudent.id; // Auto-expand dossier so school owner sees full record immediately
 
+    void this.backend.saveSchoolAdmission(newAdm);
+    void this.backend.admitStudent(newStudent);
     this.saveStateToStorage();
     this.syncToCloud(false);
     this.closeAdmissionModal();
@@ -9789,9 +10191,7 @@ INSTRUCTIONS:
         section: adm.section || 'A',
         status: 'Present',
         attendance: '100%',
-        image: adm.gender === 'Female'
-          ? 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=200'
-          : 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=200',
+        image: '',
         guardian: adm.fatherName.trim(),
         guardianPhone: adm.phone.trim(),
         guardianEmail: adm.email,
@@ -9817,6 +10217,7 @@ INSTRUCTIONS:
     }
 
     this.saveStateToStorage();
+    void this.backend.approveSchoolAdmission(adm.id, adm.decisionRemarks);
     this.showToast(`✅ ${adm.applicant} has been formally Approved & Enrolled into Institutional Register!`, 'success');
   }
 
@@ -9843,11 +10244,14 @@ INSTRUCTIONS:
   markAllPresent() {
     this.activeStudents.forEach(s => s.status = 'Present');
     this.attendanceSummary.presentToday = this.activeStudents.length;
+    this.attendanceSummary.totalStudents = this.activeStudents.length;
     this.attendanceSummary.absent = 0;
     this.attendanceSummary.lateArrivals = 0;
+    this.attendanceSummary.attendanceRate = '100%';
     this.saveStateToStorage();
+    void this.backend.markAllSchoolAttendance({ date: new Date().toISOString().slice(0, 10) });
     this.closeAttendanceMarkModal();
-    this.showToast('Attendance Synchronized: All 1,240 students marked Present!', 'success');
+    this.showToast(`Attendance Synchronized: All ${this.activeStudents.length} active students marked Present!`, 'success');
   }
 
   // --- FINANCE CRUD ---
@@ -10825,7 +11229,7 @@ INSTRUCTIONS:
         category: 'Financial',
         entityId: d.rollNo,
         entityDescription: `Promissory Bond ${this.promissoryBondNo} for ${d.studentName} (${d.grade})`,
-        details: `Restructured PKR ${d.totalRemainingBakaya.toLocaleString()} into ${this.promissoryForm.installmentsCount} installments with down payment PKR ${this.promissoryForm.downPayment.toLocaleString()}`,
+        details: `Restructured PKR ${this.formatCurrency(d.totalRemainingBakaya)} into ${this.promissoryForm.installmentsCount} installments with down payment PKR ${this.formatCurrency(this.promissoryForm.downPayment)}`,
         severity: 'Authorized Override',
         verifiedBy: 'Dr. Tahir Malik (Principal)'
       });
@@ -10844,8 +11248,8 @@ INSTRUCTIONS:
   sendDefaulterWhatsAppDirect(defaulter: StudentFeeDefaulterRecord): void {
     const phone = defaulter.guardianPhone ? defaulter.guardianPhone.replace(/[^0-9]/g, '') : '923001234567';
     const msg = `Dear Guardian of ${defaulter.studentName} (${defaulter.grade}),\n\n` +
-      `This is an urgent notice from Data Click IT HUB School Accounts Directorate.\n` +
-      `Total Fee Bakaya Dues: PKR ${defaulter.totalRemainingBakaya.toLocaleString()} (${defaulter.unpaidMonthsCount} months unpaid).\n` +
+      `This is an urgent notice from ${this.schoolName} Accounts Directorate.\n` +
+      `Total Fee Bakaya Dues: PKR ${this.formatCurrency(defaulter.totalRemainingBakaya)} (${defaulter.unpaidMonthsCount} months unpaid).\n` +
       `Unpaid Months: ${defaulter.unpaidMonthsList.join(', ')}.\n\n` +
       `Please clear dues immediately or visit the Accounts Office to sign an Installment Restructuring Agreement to prevent student portal lock.\n\n` +
       `Accounts Office Contact: +92 51 9283741`;
@@ -10984,7 +11388,7 @@ INSTRUCTIONS:
   }
 
   captureViewfinderBiometricLandmarks(context: 'enrollment' | 'verification'): void {
-    const sample = 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&auto=format&fit=crop&q=80';
+    const sample = this.avatarSvgDataUri(this.selectedVerificationMember?.name || 'Campus Member');
     if (context === 'enrollment') {
       this.enrolledCapturedImage = sample;
       this.showToast('📸 Optical sensor captured eye & face landmarks from viewfinder! Processing registration...', 'info');
@@ -11018,7 +11422,7 @@ INSTRUCTIONS:
       this.showToast(`⚡ Instant biometric profile generated for ${target.name}!`, 'info');
     }
 
-    this.verificationCapturedImage = target.image || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&auto=format&fit=crop&q=80';
+    this.verificationCapturedImage = target.image || this.avatarSvgDataUri(target.name || 'Candidate');
     this.startSecureEyeMatchingLoop();
   }
 
@@ -11062,7 +11466,7 @@ INSTRUCTIONS:
   }
 
   useSampleBiometricEyePhoto(context: 'enrollment' | 'verification'): void {
-    const sample = 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&auto=format&fit=crop&q=80';
+    const sample = this.avatarSvgDataUri(this.selectedVerificationMember?.name || 'Biometric Profile');
     if (context === 'enrollment') {
       this.enrolledCapturedImage = sample;
       this.showToast('🧪 Verified biometric eye & face sample loaded! Extracting landmarks...', 'info');
@@ -11096,7 +11500,7 @@ INSTRUCTIONS:
         section: this.newEnrollmentUser.section || 'A',
         status: 'Absent',
         attendance: '0%',
-        image: `https://images.unsplash.com/photo-${1534528741775 + Math.floor(Math.random() * 1000)}?w=150&auto=format&fit=crop&q=80`,
+        image: '',
         guardian: this.newEnrollmentUser.fatherName.trim() || 'Parent / Guardian',
         guardianPhone: '+92 300 0000000',
         feeStatus: 'Paid',
@@ -11118,9 +11522,9 @@ INSTRUCTIONS:
         classes: 4,
         status: 'Active',
         rating: 4.9,
-        email: `${this.newEnrollmentUser.name.toLowerCase().replace(/\s+/g, '')}@school.edu.pk`,
+        email: `${this.newEnrollmentUser.name.toLowerCase().replace(/\s+/g, '')}@campus.edu`,
         phone: '+92 311 0000000',
-        image: `https://images.unsplash.com/photo-${1507003211169 + Math.floor(Math.random() * 1000)}?w=150&auto=format&fit=crop&q=80`,
+        image: '',
         designation: this.newEnrollmentUser.gradeOrRole || 'Teacher',
         biometricEnrolled: false,
         fingerprintEnrolled: false,
@@ -11166,7 +11570,7 @@ INSTRUCTIONS:
     // Check if camera is active OR a real photo was captured from mobile camera
     if (!this.isCameraActive && !this.enrolledCapturedImage) {
       // Auto optical viewfinder sensor snapshot fallback so enrollment is 100% operational
-      this.enrolledCapturedImage = 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&auto=format&fit=crop&q=80';
+      this.enrolledCapturedImage = this.avatarSvgDataUri(this.selectedEnrollmentRole);
       this.showToast('📸 Optical biometric viewfinder captured facial landmarks! Proceeding with registration...', 'info');
     }
 
@@ -11316,7 +11720,7 @@ INSTRUCTIONS:
 
     // Camera stream or mobile capture check with auto optical sensor fallback
     if (!this.isCameraActive && !this.verificationCapturedImage) {
-      this.verificationCapturedImage = target.image || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&auto=format&fit=crop&q=80';
+      this.verificationCapturedImage = target.image || this.avatarSvgDataUri(target.name || 'Candidate');
       this.showToast('👁️ Optical biometric sensor active! Calibrating retinal vectors...', 'info');
     }
 
@@ -11450,11 +11854,8 @@ INSTRUCTIONS:
   }
 
   saveOwnerPolicy(): void {
-    if (typeof localStorage !== 'undefined') {
-      try {
-        localStorage.setItem('scs_attendance_biometric_policy_v1', JSON.stringify(this.ownerBiometricPolicy));
-      } catch {}
-    }
+    this.setScopedItem('scs_attendance_biometric_policy_v1', JSON.stringify(this.ownerBiometricPolicy));
+    this.saveStateToStorage();
     this.showToast('🛡️ School Owner Biometric & RFID Attendance Policy updated & enforced globally!', 'success');
     this.closeOwnerPolicyModal();
   }
@@ -11661,19 +12062,16 @@ INSTRUCTIONS:
   }
 
   deleteAdmission(adm: AdmissionRecord) {
-    if (confirm(`Delete admission record for ${adm.applicant}?`)) {
-      this.admissionsList = this.admissionsList.filter(a => a.id !== adm.id);
-      this.saveStateToStorage();
-      this.showToast(`Removed admission application for ${adm.applicant}`, 'info');
-    }
+    this.admissionsList = this.admissionsList.filter(a => a.id !== adm.id);
+    this.saveStateToStorage();
+    this.showToast(`Removed admission application for ${adm.applicant}`, 'info');
   }
 
   // --- SETTINGS SAVE ---
   saveSettings() {
     this.schoolName = this.settingsForm.schoolName;
-    try {
-      localStorage.setItem('scs_school_settings_v2', JSON.stringify(this.settingsForm));
-    } catch {}
+    this.setScopedItem('scs_school_settings_v2', JSON.stringify(this.settingsForm));
+    this.saveStateToStorage();
     this.showToast('Campus Configuration & Settings updated successfully!', 'success');
   }
 
@@ -11990,14 +12388,14 @@ INSTRUCTIONS:
     this.staffPayrolls.unshift(newPay);
     this.saveStateToStorage();
     this.closeStaffPayrollModal();
-    this.showToast(`Disbursed salary PKR ${newPay.netPayable.toLocaleString()} for ${newPay.staffName}`, 'success');
+    this.showToast(`Disbursed salary PKR ${this.formatCurrency(newPay.netPayable)} for ${newPay.staffName}`, 'success');
   }
 
   disbursePayroll(p: StaffPayrollRecord) {
     p.status = 'Paid';
     p.disbursedDate = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     this.saveStateToStorage();
-    this.showToast(`Disbursed salary for ${p.staffName} (PKR ${p.netPayable.toLocaleString()})`, 'success');
+    this.showToast(`Disbursed salary for ${p.staffName} (PKR ${this.formatCurrency(p.netPayable)})`, 'success');
   }
 
   openPaySlipPrintModal(p: StaffPayrollRecord) {
@@ -12198,23 +12596,23 @@ INSTRUCTIONS:
         name: t.name,
         email: t.email,
         phone: t.phone,
-        image: t.image || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
+        image: t.image || '',
         guardianName: '',
         address: 'Faculty Block B, Campus Staff Colony',
         subject: t.subject,
-        grade: 'Grade 10-A'
+        grade: t.assignedGrade || 'Grade 10-A'
       };
     } else if (role === 'student') {
       const s = this.activeStudentPersona;
       this.profileEditForm = {
         id: s.id,
         name: s.name,
-        email: 'student.portal@school.edu',
+        email: `${(s.name || 'student').toLowerCase().replace(/\s+/g, '.')}@student.campus.edu`,
         phone: s.guardianPhone,
-        image: s.image || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+        image: s.image || '',
         guardianName: s.guardian,
-        address: 'Sector F-8/3, Islamabad',
-        subject: 'General Science Stream',
+        address: s.address || 'Campus Residential Sector',
+        subject: s.section || 'General Science Stream',
         grade: s.grade
       };
     } else if (role === 'parent') {
@@ -12222,11 +12620,11 @@ INSTRUCTIONS:
       this.profileEditForm = {
         id: `PAR-${s.id}`,
         name: s.guardian,
-        email: 'guardian.parent@gmail.com',
+        email: s.guardianEmail || 'guardian@campus.edu',
         phone: s.guardianPhone,
-        image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+        image: '',
         guardianName: s.guardian,
-        address: 'Sector F-8/3, Islamabad',
+        address: s.address || 'Campus Residential Sector',
         subject: '',
         grade: s.grade
       };
@@ -12254,20 +12652,24 @@ INSTRUCTIONS:
         t.email = this.profileEditForm.email;
         if (this.profileEditForm.image) t.image = this.profileEditForm.image;
         if (this.profileEditForm.subject) t.subject = this.profileEditForm.subject;
+        void this.backend.updateSchoolTeacher(t.id, t);
       }
     } else if (this.activeProfileRole === 'student') {
-      const s = this.students.find(x => x.id === this.profileEditForm.id) || this.students[0];
+      const s = this.activeStudents.find(x => x.id === this.profileEditForm.id) || this.activeStudents[0];
       if (s) {
         s.name = this.profileEditForm.name;
         s.guardianPhone = this.profileEditForm.phone;
         if (this.profileEditForm.image) s.image = this.profileEditForm.image;
         if (this.profileEditForm.guardianName) s.guardian = this.profileEditForm.guardianName;
+        void this.backend.updateSchoolStudent(s.id, s);
       }
     } else if (this.activeProfileRole === 'parent') {
-      const s = this.students.find(x => x.id === this.activeParentChildId) || this.students[0];
+      const s = this.activeStudents.find(x => x.id === this.activeParentChildId) || this.activeStudents[0];
       if (s) {
         if (this.profileEditForm.name) s.guardian = this.profileEditForm.name;
         if (this.profileEditForm.phone) s.guardianPhone = this.profileEditForm.phone;
+        if (this.profileEditForm.email) s.guardianEmail = this.profileEditForm.email;
+        void this.backend.updateSchoolStudent(s.id, s);
       }
     }
 
@@ -12430,7 +12832,7 @@ INSTRUCTIONS:
       return;
     }
     const totalPending = overdueInvoices.reduce((sum, i) => sum + i.netPayable, 0);
-    this.showToast(`💬 Dispatched 1-Click WhatsApp fee recovery reminders to ${overdueInvoices.length} students/guardians (Total PKR ${totalPending.toLocaleString()}).`, 'success');
+    this.showToast(`💬 Dispatched 1-Click WhatsApp fee recovery reminders to ${overdueInvoices.length} students/guardians (Total PKR ${this.formatCurrency(totalPending)}).`, 'success');
   }
 
   // --- CERTIFICATE GENERATOR MODAL ---
@@ -12949,7 +13351,7 @@ INSTRUCTIONS:
 
   downloadSLCPDF(slc: StudentLeavingCertificateRecord): void {
     const content = `===================================================================
-                    AL-HUDA INTERNATIONAL ACADEMY
+                    ${this.schoolName.toUpperCase()}
       OFFICIAL SCHOOL LEAVING / TRANSFER CERTIFICATE (SLC)
 ===================================================================
 Certificate Serial No : ${slc.certificateNo}
@@ -12981,8 +13383,8 @@ Certified that the above information is in strict accordance with the
 Official Admission and Withdrawal Register of the Institution.
 
 Issued & Attested By  : ${slc.issuedBy}
-Official Seal         : AL-HUDA INTERNATIONAL ACADEMY [DIGITALLY SEALED]
-Verification Portal   : https://alhuda.edu.pk/verify-slc/${slc.securityHash}
+Official Seal         : ${this.schoolName.toUpperCase()} [DIGITALLY SEALED]
+Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
 ===================================================================`;
 
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8;' });
@@ -13053,7 +13455,7 @@ Verification Portal   : https://alhuda.edu.pk/verify-slc/${slc.securityHash}
       category: 'Financial',
       entityId: newRec.id,
       entityDescription: `Fee Reconciliation Entry for ${newRec.date}`,
-      details: `Reconciliation balanced: PKR ${collected.toLocaleString()} collected vs PKR ${billed.toLocaleString()} billed. Status: ${newRec.reconciliationStatus}. Verified by ${newRec.verifiedByAuditor}.`,
+      details: `Reconciliation balanced: PKR ${this.formatCurrency(collected)} collected vs PKR ${this.formatCurrency(billed)} billed. Status: ${newRec.reconciliationStatus}. Verified by ${newRec.verifiedByAuditor}.`,
       severity: variance === 0 ? 'Normal Audit' : 'Compliance Flag',
       verifiedBy: newRec.verifiedByAuditor,
       ipAddress: '192.168.10.22 (Bursar Counter)'
@@ -13092,7 +13494,7 @@ Verification Portal   : https://alhuda.edu.pk/verify-slc/${slc.securityHash}
       return;
     }
     const cleanPhone = phone.replace(/[^0-9]/g, '');
-    const message = `Assalam-o-Alaikum! Fee reminder from ${this.schoolName} for ${studentName}. Outstanding balance is PKR ${amount.toLocaleString()} for (${months}). Please clear through Online Fee Portal or Bank Challan. Shukriya.`;
+    const message = `Assalam-o-Alaikum! Fee reminder from ${this.schoolName} for ${studentName}. Outstanding balance is PKR ${this.formatCurrency(amount)} for (${months}). Please clear through Online Fee Portal or Bank Challan. Shukriya.`;
     
     // Log dispatch
     const newLog: DispatchAlertLog = {
@@ -14099,7 +14501,7 @@ Verification Portal   : https://alhuda.edu.pk/verify-slc/${slc.securityHash}
       category: 'Sibling Concession',
       guardianIncome: 'PKR 65,000 / month',
       status: 'Approved & Recorded',
-      reason: '3 siblings actively studying in Al-Huda Academy Campus.',
+      reason: '3 siblings actively studying on campus.',
       principalAuthorizedLimit: 'Standard Institutional Sibling Rule'
     }
   ];
@@ -14179,6 +14581,7 @@ Verification Portal   : https://alhuda.edu.pk/verify-slc/${slc.securityHash}
     const item = this.admissionReviewList.find(a => a.id === applicantId);
     if (item) {
       item.status = 'Approved & Enrolled (Principal Signed)';
+      void this.backend.updateSchoolAdmission(applicantId, { status: 'Approved', decisionRemarks: item.status });
       this.saveStateToStorage();
       this.showToast(`Admission Approved: ${item.applicantName} enrolled in ${item.appliedGrade}!`, 'success');
     }
@@ -14188,6 +14591,7 @@ Verification Portal   : https://alhuda.edu.pk/verify-slc/${slc.securityHash}
     const item = this.feeConcessionRequests.find(c => c.id === concessionId);
     if (item) {
       item.status = 'Approved & Recorded';
+      void this.backend.approveSchoolConcession(concessionId, 'Approved & Recorded', this.principalPersona?.name || 'Principal Directorate');
       this.saveStateToStorage();
       this.showToast(`Fee Concession Approved: ${item.requestedDiscount} granted to ${item.studentName}.`, 'success');
     }
@@ -14197,6 +14601,7 @@ Verification Portal   : https://alhuda.edu.pk/verify-slc/${slc.securityHash}
     const item = this.parentComplaintList.find(c => c.id === complaintId);
     if (item) {
       item.status = 'Resolved & Closed';
+      void this.backend.resolveSchoolComplaint(complaintId, 'Resolved & Closed', item.investigationNotes || 'Resolved by Principal Directorate');
       this.saveStateToStorage();
       this.showToast(`Parent Complaint #${complaintId} marked resolved. Resolution notification sent to parent!`, 'success');
     }
@@ -14206,11 +14611,11 @@ Verification Portal   : https://alhuda.edu.pk/verify-slc/${slc.securityHash}
     const schoolReport = {
       academyName: this.schoolName,
       exportedAt: new Date().toISOString(),
-      principal: 'Dr. Tahir Malik',
+      principal: this.principalPersona?.name || 'Campus Principal',
       summaryStats: {
-        totalStudents: 1240,
-        totalFaculty: 86,
-        attendanceRate: '95.3%',
+        totalStudents: this.liveEnrolledCount,
+        totalFaculty: this.liveFacultyCount,
+        attendanceRate: this.liveAttendanceRateLabel,
         substitutionsActive: this.substituteArrangements.length,
         inspectionsLogged: this.dailyInspectionLogs.length,
         syllabusItemsTracked: this.syllabusTracker.length,
@@ -14275,7 +14680,7 @@ Verification Portal   : https://alhuda.edu.pk/verify-slc/${slc.securityHash}
         schoolName: this.schoolName,
         announcements: this.announcements
       };
-      const ok = await this.firebaseDb.saveSchoolData('alhuda_academy', payload);
+      const ok = await this.firebaseDb.saveSchoolData(this.activeTenantId, payload);
       this.lastCloudSyncTimestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       if (ok && isManual) {
         this.showToast('Cloud Firestore: School data permanently synced & backed up!', 'success');
@@ -14290,7 +14695,7 @@ Verification Portal   : https://alhuda.edu.pk/verify-slc/${slc.securityHash}
 
   async loadStateFromCloud() {
     try {
-      const cloudData = await this.firebaseDb.loadSchoolData('alhuda_academy');
+      const cloudData = await this.firebaseDb.loadSchoolData(this.activeTenantId);
       if (cloudData) {
         if (cloudData.activeStudents && Array.isArray(cloudData.activeStudents) && cloudData.activeStudents.length > 0) {
           const localOnly = this.activeStudents.filter(local => !cloudData.activeStudents.some((c: any) => c.id === local.id));

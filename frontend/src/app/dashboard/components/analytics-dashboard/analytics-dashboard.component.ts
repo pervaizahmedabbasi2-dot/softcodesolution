@@ -152,7 +152,7 @@ export type GrowthMetricType = 'health' | 'enrollment' | 'examSecurity' | 'civil
             </div>
             <div class="text-xl sm:text-2xl font-black text-slate-900 font-mono"
                  [class.text-emerald-600]="cumulativeVariance() === 0">
-              PKR {{ cumulativeVariance().toLocaleString() }}
+              PKR {{ (cumulativeVariance() || 0).toLocaleString() }}
             </div>
             <div class="text-[11px] text-emerald-700 font-bold">
               100% Balanced · Zero Unreconciled
@@ -456,11 +456,11 @@ export type GrowthMetricType = 'health' | 'enrollment' | 'examSecurity' | 'civil
                 <div class="space-y-1 font-mono text-[11px]">
                   <div class="flex items-center justify-between">
                     <span class="text-slate-300">Billed Target:</span>
-                    <strong class="text-indigo-300">PKR {{ bp.billedAmount.toLocaleString() }}</strong>
+                    <strong class="text-indigo-300">PKR {{ (bp.billedAmount || 0).toLocaleString() }}</strong>
                   </div>
                   <div class="flex items-center justify-between">
                     <span class="text-slate-300">Realized Collections:</span>
-                    <strong class="text-emerald-400 font-bold">PKR {{ bp.collectedAmount.toLocaleString() }}</strong>
+                    <strong class="text-emerald-400 font-bold">PKR {{ (bp.collectedAmount || 0).toLocaleString() }}</strong>
                   </div>
                   <div class="flex items-center justify-between pt-0.5 border-t border-slate-700/60 text-[10px]">
                     <span class="text-slate-400">Meezan: {{ (bp.meezanShare / 1000).toFixed(0) }}k</span>
@@ -526,8 +526,8 @@ export type GrowthMetricType = 'health' | 'enrollment' | 'examSecurity' | 'civil
               @for (row of activeMonthlyData(); track row.id) {
                 <tr class="hover:bg-slate-50/80 transition-colors">
                   <td class="py-3 px-3 font-bold text-slate-900">{{ row.month }}</td>
-                  <td class="py-3 px-3 font-mono font-bold text-indigo-700">PKR {{ row.billedAmount.toLocaleString() }}</td>
-                  <td class="py-3 px-3 font-mono font-bold text-emerald-700">PKR {{ row.collectedAmount.toLocaleString() }}</td>
+                  <td class="py-3 px-3 font-mono font-bold text-indigo-700">PKR {{ (row.billedAmount || 0).toLocaleString() }}</td>
+                  <td class="py-3 px-3 font-mono font-bold text-emerald-700">PKR {{ (row.collectedAmount || 0).toLocaleString() }}</td>
                   <td class="py-3 px-3 font-mono font-bold text-slate-700">
                     <div class="flex items-center gap-1.5">
                       <div class="w-10 bg-slate-200 rounded-full h-1.5 overflow-hidden">
@@ -536,10 +536,10 @@ export type GrowthMetricType = 'health' | 'enrollment' | 'examSecurity' | 'civil
                       <span>{{ row.efficiencyRate.toFixed(1) }}%</span>
                     </div>
                   </td>
-                  <td class="py-3 px-3 font-mono text-slate-600">PKR {{ row.meezanShare.toLocaleString() }}</td>
-                  <td class="py-3 px-3 font-mono text-slate-600">PKR {{ row.hblShare.toLocaleString() }}</td>
-                  <td class="py-3 px-3 font-mono text-slate-600">PKR {{ row.digitalKuickPay.toLocaleString() }}</td>
-                  <td class="py-3 px-3 font-mono text-slate-600">PKR {{ row.counterCash.toLocaleString() }}</td>
+                  <td class="py-3 px-3 font-mono text-slate-600">PKR {{ (row.meezanShare || 0).toLocaleString() }}</td>
+                  <td class="py-3 px-3 font-mono text-slate-600">PKR {{ (row.hblShare || 0).toLocaleString() }}</td>
+                  <td class="py-3 px-3 font-mono text-slate-600">PKR {{ (row.digitalKuickPay || 0).toLocaleString() }}</td>
+                  <td class="py-3 px-3 font-mono text-slate-600">PKR {{ (row.counterCash || 0).toLocaleString() }}</td>
                   <td class="py-3 px-3 text-right">
                     <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">
                       ✓ {{ row.status }}

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getFirestore, doc, getDoc, setDoc, Firestore } from 'firebase/firestore';
+import { getFirestore, getDocFromServer, doc, getDoc, setDoc, Firestore } from 'firebase/firestore';
 
 const firebaseConfig = {
   projectId: "gen-lang-client-0477585150",
@@ -12,12 +12,22 @@ const firebaseConfig = {
   messagingSenderId: "327041716084"
 };
 
+export enum OperationType {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  LIST = 'list',
+  GET = 'get',
+  WRITE = 'write',
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class FirebaseDbService {
   private db: Firestore | null = null;
   public isConnected: boolean = false;
+  public lastError: string | null = null;
 
   constructor() {
     this.initFirebase();
@@ -28,38 +38,77 @@ export class FirebaseDbService {
       const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
       this.db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
       this.isConnected = true;
+      void this.testConnection();
     } catch (err) {
       console.warn('Firebase init fallback to local:', err);
       this.isConnected = false;
     }
   }
 
-  async saveSchoolData(tenantId: string, data: any): Promise<boolean> {
-    if (!this.db) return false;
+  private async testConnection(): Promise<void> {
+    if (!this.db) return;
     try {
-      const schoolDocRef = doc(this.db, 'school_workspaces', tenantId || 'alhuda_academy');
+      await getDocFromServer(doc(this.db, 'test', 'connection'));
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('the client is offline')) {
+        this.isConnected = false;
+        this.lastError = 'Firestore client offline';
+      }
+    }
+  }
+
+  private resolveActiveTenantId(tenantId?: string): string {
+    if (tenantId && tenantId.trim() && tenantId !== 'alhuda_academy') {
+      return tenantId.trim();
+    }
+    try {
+      const raw = typeof localStorage !== 'undefined' ? localStorage.getItem('user_data') : null;
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        const tid = parsed?.tenantId || parsed?.tenant_id;
+        if (tid && String(tid).trim()) return String(tid).trim();
+      }
+    } catch {}
+    return 'tenant-root-platform';
+  }
+
+  private handleFirestoreError(error: unknown, operationType: OperationType, path: string): void {
+    const errMessage = error instanceof Error ? error.message : String(error);
+    this.lastError = `${operationType} on ${path}: ${errMessage}`;
+    console.warn('[Firestore Service]', this.lastError);
+  }
+
+  async saveSchoolData(tenantId: string, data: any): Promise<boolean> {
+    const resolvedTenant = this.resolveActiveTenantId(tenantId);
+    if (!this.db) return false;
+    const path = `school_workspaces/${resolvedTenant}`;
+    try {
+      const schoolDocRef = doc(this.db, 'school_workspaces', resolvedTenant);
       await setDoc(schoolDocRef, {
         ...data,
+        tenant_id: resolvedTenant,
         updatedAt: new Date().toISOString()
       }, { merge: true });
       return true;
     } catch (err) {
-      console.error('Firestore save failed:', err);
+      this.handleFirestoreError(err, OperationType.WRITE, path);
       return false;
     }
   }
 
   async loadSchoolData(tenantId: string): Promise<any | null> {
+    const resolvedTenant = this.resolveActiveTenantId(tenantId);
     if (!this.db) return null;
+    const path = `school_workspaces/${resolvedTenant}`;
     try {
-      const schoolDocRef = doc(this.db, 'school_workspaces', tenantId || 'alhuda_academy');
+      const schoolDocRef = doc(this.db, 'school_workspaces', resolvedTenant);
       const snap = await getDoc(schoolDocRef);
       if (snap.exists()) {
         return snap.data();
       }
       return null;
     } catch (err) {
-      console.warn('Firestore load failed, falling back:', err);
+      this.handleFirestoreError(err, OperationType.GET, path);
       return null;
     }
   }
