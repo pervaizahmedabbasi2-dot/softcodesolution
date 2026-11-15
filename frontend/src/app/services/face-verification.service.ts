@@ -1,5 +1,12 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { FaceProfileRecord } from '../businesses/school_business/models/school-attendance.models';
+
+export interface FaceBoxNormalized {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
 
 export interface FaceExtractionResult {
   descriptor: number[];
@@ -9,6 +16,8 @@ export interface FaceExtractionResult {
   brightness: number;
   sharpness: number;
   faceDetectedLikely: boolean;
+  faceBox?: FaceBoxNormalized | null;
+  detectedCount?: number;
   reason?: string;
 }
 
@@ -24,26 +33,223 @@ export interface FaceMatchResult {
   providedIn: 'root'
 })
 export class FaceVerificationService {
-  private readonly sampleSize = 64;
-  private thumbCanvas: HTMLCanvasElement | null = null;
-  private featCanvas: HTMLCanvasElement | null = null;
-  private lumaCanvas: HTMLCanvasElement | null = null;
+  readonly neuralReady = signal<boolean>(false);
+  readonly neuralLoading = signal<boolean>(false);
+  readonly neuralError = signal<string>('');
 
-  extractFromVideo(
+  private faceapiMod: any = null;
+  private modelLoadPromise: Promise<boolean> | null = null;
+  private thumbCanvas: HTMLCanvasElement | null = null;
+  private lumaCanvas: HTMLCanvasElement | null = null;
+  private readonly upgradedDescriptors = new Map<string, number[]>();
+  private upgradingInProgress = false;
+
+  /**
+   * Loads local offline neural weights from /face-models/ once per session.
+   * Zero external network calls or cloud dependencies.
+   */
+  async ensureModelsLoaded(): Promise<boolean> {
+    if (typeof window === 'undefined' || typeof document === 'undefined') {
+      return false;
+    }
+    if (this.neuralReady() && this.faceapiMod) {
+      return true;
+    }
+    if (this.modelLoadPromise) {
+      return this.modelLoadPromise;
+    }
+
+    this.neuralLoading.set(true);
+    this.neuralError.set('');
+
+    this.modelLoadPromise = (async () => {
+      try {
+        const mod = await import('@vladmandic/face-api');
+        this.faceapiMod = mod;
+
+        const modelPath = '/face-models';
+        await Promise.all([
+          mod.nets.tinyFaceDetector.loadFromUri(modelPath),
+          mod.nets.faceLandmark68TinyNet.loadFromUri(modelPath),
+          mod.nets.faceRecognitionNet.loadFromUri(modelPath)
+        ]);
+
+        this.neuralReady.set(true);
+        this.neuralError.set('');
+        return true;
+      } catch (err: any) {
+        const msg = String(err?.message || 'Offline face AI initialization failed.');
+        this.neuralError.set(msg);
+        this.neuralReady.set(false);
+        this.modelLoadPromise = null;
+        return false;
+      } finally {
+        this.neuralLoading.set(false);
+      }
+    })();
+
+    return this.modelLoadPromise;
+  }
+
+  /**
+   * Automatically upgrades any previously enrolled profiles that have a stored photo
+   * but legacy non-128D descriptors so they match accurately with the neural engine.
+   */
+  async upgradeLegacyProfiles(profiles: FaceProfileRecord[]): Promise<void> {
+    if (this.upgradingInProgress || typeof window === 'undefined') return;
+    const needUpgrade = (profiles || []).filter(
+      (p) =>
+        p.facePhotoData &&
+        (!Array.isArray(p.faceDescriptor) || p.faceDescriptor.length !== 128) &&
+        !this.upgradedDescriptors.has(p.id)
+    );
+    if (needUpgrade.length === 0) return;
+
+    const ok = await this.ensureModelsLoaded();
+    if (!ok) return;
+
+    this.upgradingInProgress = true;
+    try {
+      for (const prof of needUpgrade) {
+        try {
+          const res = await this.extractFromImageDataUrl(prof.facePhotoData);
+          if (res?.faceDetectedLikely && res.descriptor.length === 128) {
+            this.upgradedDescriptors.set(prof.id, res.descriptor);
+          }
+        } catch {
+          // Skip unreadable legacy photo gracefully
+        }
+      }
+    } finally {
+      this.upgradingInProgress = false;
+    }
+  }
+
+  /**
+   * Real-time neural face detection + 128-D embedding extraction on a live <video> element.
+   * Picks the closest/largest human face cleanly and ignores walls/empty backgrounds.
+   * When includePhotoThumbnail is false (live gate scanning), ZERO JPEG photo is captured.
+   */
+  async extractFromVideoAsync(
     videoEl: HTMLVideoElement,
     mirror: boolean = true,
-    includePhotoThumbnail: boolean = true
-  ): FaceExtractionResult | null {
+    includePhotoThumbnail: boolean = false
+  ): Promise<FaceExtractionResult | null> {
     if (!videoEl || videoEl.readyState < 2 || videoEl.videoWidth === 0 || videoEl.videoHeight === 0) {
       return null;
     }
 
-    const size = Math.min(videoEl.videoWidth, videoEl.videoHeight);
-    const cropSize = Math.round(size * 0.72);
-    const sx = Math.round((videoEl.videoWidth - cropSize) / 2);
-    const sy = Math.round((videoEl.videoHeight - cropSize) / 2);
+    const ready = await this.ensureModelsLoaded();
+    if (!ready || !this.faceapiMod) {
+      return {
+        descriptor: [],
+        photoDataUrl: '',
+        hash: '',
+        qualityScore: 0,
+        brightness: 50,
+        sharpness: 0,
+        faceDetectedLikely: false,
+        faceBox: null,
+        detectedCount: 0,
+        reason: this.neuralError() || 'Loading offline face recognition engine...'
+      };
+    }
 
-    return this.processDrawable(videoEl, sx, sy, cropSize, cropSize, mirror, includePhotoThumbnail);
+    const faceapi = this.faceapiMod;
+    const vw = videoEl.videoWidth;
+    const vh = videoEl.videoHeight;
+
+    try {
+      const options = new faceapi.TinyFaceDetectorOptions({
+        inputSize: 320,
+        scoreThreshold: 0.42
+      });
+
+      const detections = await faceapi
+        .detectAllFaces(videoEl, options)
+        .withFaceLandmarks(true)
+        .withFaceDescriptors();
+
+      if (!Array.isArray(detections) || detections.length === 0) {
+        return {
+          descriptor: [],
+          photoDataUrl: '',
+          hash: '',
+          qualityScore: 0,
+          brightness: 50,
+          sharpness: 0,
+          faceDetectedLikely: false,
+          faceBox: null,
+          detectedCount: 0,
+          reason: 'No face detected — step in front of the camera.'
+        };
+      }
+
+      // Select single closest / largest human face in frame (1-at-a-time gate flow)
+      let primary = detections[0];
+      let bestArea = 0;
+      for (const det of detections) {
+        const b = det?.detection?.box;
+        if (!b) continue;
+        const area = Number(b.width || 0) * Number(b.height || 0);
+        if (area > bestArea) {
+          bestArea = area;
+          primary = det;
+        }
+      }
+
+      const box = primary.detection.box;
+      const score = Number(primary.detection.score || 0.85);
+      const descriptor = Array.from(primary.descriptor as Float32Array).map((v) => Number(v.toFixed(6)));
+
+      // Pad slightly for visual reticle and optional enrollment crop
+      const padW = box.width * 0.16;
+      const padH = box.height * 0.18;
+      const rx = Math.max(0, box.x - padW / 2);
+      const ry = Math.max(0, box.y - padH / 2);
+      const rw = Math.min(vw - rx, box.width + padW);
+      const rh = Math.min(vh - ry, box.height + padH);
+
+      const normalizedBox: FaceBoxNormalized = {
+        x: Math.max(0, Math.min(1, mirror ? 1 - (rx + rw) / vw : rx / vw)),
+        y: Math.max(0, Math.min(1, ry / vh)),
+        w: Math.max(0.08, Math.min(1, rw / vw)),
+        h: Math.max(0.08, Math.min(1, rh / vh))
+      };
+
+      const brightness = this.estimateRegionBrightness(videoEl, rx, ry, rw, rh);
+      const qualityScore = Math.max(60, Math.min(99, Math.round(score * 75 + (brightness >= 22 && brightness <= 90 ? 22 : 10))));
+
+      let photoDataUrl = '';
+      if (includePhotoThumbnail) {
+        photoDataUrl = this.captureCroppedThumbnail(videoEl, rx, ry, rw, rh, mirror);
+      }
+
+      return {
+        descriptor,
+        photoDataUrl,
+        hash: this.computeHash(descriptor),
+        qualityScore,
+        brightness,
+        sharpness: Math.round(score * 100),
+        faceDetectedLikely: true,
+        faceBox: normalizedBox,
+        detectedCount: detections.length
+      };
+    } catch {
+      return {
+        descriptor: [],
+        photoDataUrl: '',
+        hash: '',
+        qualityScore: 0,
+        brightness: 50,
+        sharpness: 0,
+        faceDetectedLikely: false,
+        faceBox: null,
+        detectedCount: 0,
+        reason: 'Unable to analyze camera frame.'
+      };
+    }
   }
 
   captureThumbnailFromVideo(videoEl: HTMLVideoElement, mirror: boolean = true): string {
@@ -54,38 +260,79 @@ export class FaceVerificationService {
     const cropSize = Math.round(size * 0.72);
     const sx = Math.round((videoEl.videoWidth - cropSize) / 2);
     const sy = Math.round((videoEl.videoHeight - cropSize) / 2);
-
-    const canvas = this.getThumbCanvas();
-    const ctx = canvas?.getContext('2d');
-    if (!canvas || !ctx) return '';
-    ctx.clearRect(0, 0, 200, 200);
-    ctx.save();
-    if (mirror) {
-      ctx.translate(200, 0);
-      ctx.scale(-1, 1);
-    }
-    ctx.drawImage(videoEl, sx, sy, cropSize, cropSize, 0, 0, 200, 200);
-    ctx.restore();
-    return canvas.toDataURL('image/jpeg', 0.8);
+    return this.captureCroppedThumbnail(videoEl, sx, sy, cropSize, cropSize, mirror);
   }
 
   async extractFromImageDataUrl(dataUrl: string): Promise<FaceExtractionResult | null> {
     if (!dataUrl || typeof document === 'undefined') return null;
+    const ready = await this.ensureModelsLoaded();
+    if (!ready || !this.faceapiMod) return null;
+
+    const faceapi = this.faceapiMod;
+
     return new Promise((resolve) => {
       const img = new Image();
       img.crossOrigin = 'anonymous';
-      img.onload = () => {
-        const w = img.naturalWidth || img.width;
-        const h = img.naturalHeight || img.height;
-        if (!w || !h) {
+      img.onload = async () => {
+        try {
+          const w = img.naturalWidth || img.width;
+          const h = img.naturalHeight || img.height;
+          if (!w || !h) {
+            resolve(null);
+            return;
+          }
+
+          let det = await faceapi
+            .detectSingleFace(img, new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.3 }))
+            .withFaceLandmarks(true)
+            .withFaceDescriptor();
+
+          if (!det) {
+            det = await faceapi
+              .detectSingleFace(img, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.22 }))
+              .withFaceLandmarks(true)
+              .withFaceDescriptor();
+          }
+
+          if (!det) {
+            resolve(null);
+            return;
+          }
+
+          const box = det.detection.box;
+          const score = Number(det.detection.score || 0.85);
+          const descriptor = Array.from(det.descriptor as Float32Array).map((v) => Number(v.toFixed(6)));
+          const pad = Math.max(box.width, box.height) * 0.25;
+          const side = Math.min(Math.max(w, h), Math.max(box.width, box.height) + pad);
+          const cx = box.x + box.width / 2;
+          const cy = box.y + box.height / 2;
+          const sx = Math.max(0, Math.min(w - Math.min(w, side), cx - side / 2));
+          const sy = Math.max(0, Math.min(h - Math.min(h, side), cy - side / 2));
+          const cw = Math.min(w - sx, side);
+          const ch = Math.min(h - sy, side);
+
+          const photoDataUrl = this.captureCroppedThumbnail(img, sx, sy, cw, ch, false);
+          const brightness = this.estimateRegionBrightness(img, sx, sy, cw, ch);
+
+          resolve({
+            descriptor,
+            photoDataUrl,
+            hash: this.computeHash(descriptor),
+            qualityScore: Math.max(65, Math.min(99, Math.round(score * 75 + 22))),
+            brightness,
+            sharpness: Math.round(score * 100),
+            faceDetectedLikely: true,
+            faceBox: {
+              x: box.x / w,
+              y: box.y / h,
+              w: box.width / w,
+              h: box.height / h
+            },
+            detectedCount: 1
+          });
+        } catch {
           resolve(null);
-          return;
         }
-        const side = Math.min(w, h);
-        const cropSize = Math.round(side * 0.85);
-        const sx = Math.round((w - cropSize) / 2);
-        const sy = Math.round((h - cropSize) / 2);
-        resolve(this.processDrawable(img, sx, sy, cropSize, cropSize, false, true));
       };
       img.onerror = () => resolve(null);
       img.src = dataUrl;
@@ -107,7 +354,7 @@ export class FaceVerificationService {
   async checkVideoLiveness(videoEl: HTMLVideoElement): Promise<{ passed: boolean; motionDelta: number }> {
     const frameA = this.sampleCenterLuma(videoEl);
     if (!frameA) return { passed: false, motionDelta: 0 };
-    await new Promise((r) => setTimeout(r, 220));
+    await new Promise((r) => setTimeout(r, 180));
     const frameB = this.sampleCenterLuma(videoEl);
     if (!frameB) return { passed: false, motionDelta: 0 };
 
@@ -116,34 +363,27 @@ export class FaceVerificationService {
       diffSum += Math.abs(frameA[i] - frameB[i]);
     }
     const meanDiff = diffSum / frameA.length;
-    // Live feeds exhibit slight sensor noise or natural head/eye micro-motion (> 0.15 intensity delta),
-    // while frozen/blocked feeds have ~0 delta. Avoid rejecting steady tripod users unnecessarily (> 0.05).
-    return { passed: meanDiff >= 0.05, motionDelta: Number(meanDiff.toFixed(2)) };
+    return { passed: meanDiff >= 0.04, motionDelta: Number(meanDiff.toFixed(2)) };
   }
 
+  /**
+   * Computes calibrated similarity % (0..100) from 128-D Euclidean face distance:
+   * - d <= 0.50 (same person) => 76% - 100%
+   * - d = 0.51..0.57 (same person, tough angle) => 67% - 75%
+   * - d >= 0.59 (stranger) => <= 65% (cleanly rejected)
+   */
   compareDescriptors(a: number[], b: number[]): number {
     if (!Array.isArray(a) || !Array.isArray(b) || a.length === 0 || a.length !== b.length) {
       return 0;
     }
-    let dot = 0;
-    let magA = 0;
-    let magB = 0;
-    let l1Diff = 0;
+    let sqDist = 0;
     for (let i = 0; i < a.length; i++) {
-      const va = Number(a[i]) || 0;
-      const vb = Number(b[i]) || 0;
-      dot += va * vb;
-      magA += va * va;
-      magB += vb * vb;
-      l1Diff += Math.abs(va - vb);
+      const diff = (Number(a[i]) || 0) - (Number(b[i]) || 0);
+      sqDist += diff * diff;
     }
-    const denom = Math.sqrt(magA) * Math.sqrt(magB);
-    if (denom === 0) return 0;
-    const cos = Math.max(-1, Math.min(1, dot / denom));
-    // Blend cosine similarity with inverse L1 distance for crisp discrimination
-    const cosPct = Math.max(0, cos) * 100;
-    const l1Score = Math.max(0, 100 - (l1Diff / a.length) * 320);
-    return Math.round(cosPct * 0.72 + l1Score * 0.28);
+    const euclidean = Math.sqrt(sqDist);
+    const similarity = Math.round(138 - euclidean * 124);
+    return Math.max(0, Math.min(100, similarity));
   }
 
   matchAgainstProfiles(
@@ -161,20 +401,70 @@ export class FaceVerificationService {
     }
 
     const scored = candidates
-      .map((profile) => ({
-        profile,
-        score: this.compareDescriptors(liveDescriptor, profile.faceDescriptor || [])
-      }))
+      .map((profile) => {
+        const effectiveDesc = this.upgradedDescriptors.get(profile.id) || profile.faceDescriptor || [];
+        return {
+          profile,
+          score: this.compareDescriptors(liveDescriptor, effectiveDesc)
+        };
+      })
       .sort((a, b) => b.score - a.score);
 
     const best = scored[0];
+    const second = scored[1];
+    const clearWinner = !second || best.score - second.score >= 4 || best.score >= 82;
+    const isMatched = best.score >= threshold && clearWinner;
+
     return {
-      matched: best.score >= threshold,
-      profile: best.score >= threshold ? best.profile : null,
+      matched: isMatched,
+      profile: isMatched ? best.profile : null,
       confidence: best.score,
       thresholdUsed: threshold,
       candidateScores: scored.slice(0, 5)
     };
+  }
+
+  private captureCroppedThumbnail(
+    source: CanvasImageSource,
+    sx: number,
+    sy: number,
+    sw: number,
+    sh: number,
+    mirror: boolean
+  ): string {
+    if (typeof document === 'undefined' || sw <= 0 || sh <= 0) return '';
+    const canvas = this.getThumbCanvas();
+    const ctx = canvas?.getContext('2d');
+    if (!canvas || !ctx) return '';
+    ctx.clearRect(0, 0, 200, 200);
+    ctx.save();
+    if (mirror) {
+      ctx.translate(200, 0);
+      ctx.scale(-1, 1);
+    }
+    ctx.drawImage(source, sx, sy, sw, sh, 0, 0, 200, 200);
+    ctx.restore();
+    return canvas.toDataURL('image/jpeg', 0.84);
+  }
+
+  private estimateRegionBrightness(source: CanvasImageSource, sx: number, sy: number, sw: number, sh: number): number {
+    if (typeof document === 'undefined' || sw <= 0 || sh <= 0) return 60;
+    if (!this.lumaCanvas) {
+      this.lumaCanvas = document.createElement('canvas');
+      this.lumaCanvas.width = 32;
+      this.lumaCanvas.height = 32;
+    }
+    const ctx = this.lumaCanvas.getContext('2d');
+    if (!ctx) return 60;
+    ctx.drawImage(source, sx, sy, sw, sh, 0, 0, 32, 32);
+    const data = ctx.getImageData(0, 0, 32, 32).data;
+    let sum = 0;
+    const total = 32 * 32;
+    for (let i = 0; i < total; i++) {
+      const idx = i * 4;
+      sum += data[idx] * 0.299 + data[idx + 1] * 0.587 + data[idx + 2] * 0.114;
+    }
+    return Math.round((sum / total / 255) * 100);
   }
 
   private getThumbCanvas(): HTMLCanvasElement | null {
@@ -185,16 +475,6 @@ export class FaceVerificationService {
       this.thumbCanvas.height = 200;
     }
     return this.thumbCanvas;
-  }
-
-  private getFeatCanvas(): HTMLCanvasElement | null {
-    if (typeof document === 'undefined') return null;
-    if (!this.featCanvas) {
-      this.featCanvas = document.createElement('canvas');
-      this.featCanvas.width = this.sampleSize;
-      this.featCanvas.height = this.sampleSize;
-    }
-    return this.featCanvas;
   }
 
   private sampleCenterLuma(videoEl: HTMLVideoElement): Float32Array | null {
@@ -216,169 +496,13 @@ export class FaceVerificationService {
     return out;
   }
 
-  private processDrawable(
-    source: CanvasImageSource,
-    sx: number,
-    sy: number,
-    sw: number,
-    sh: number,
-    mirror: boolean,
-    includePhotoThumbnail: boolean = true
-  ): FaceExtractionResult | null {
-    if (typeof document === 'undefined') return null;
-
-    // 1. Analyze 64x64 normalized grayscale & chroma grid directly from source (near 0ms per tick)
-    const featCanvas = this.getFeatCanvas();
-    const fCtx = featCanvas?.getContext('2d');
-    if (!featCanvas || !fCtx) return null;
-    fCtx.clearRect(0, 0, this.sampleSize, this.sampleSize);
-    fCtx.save();
-    if (mirror) {
-      fCtx.translate(this.sampleSize, 0);
-      fCtx.scale(-1, 1);
-    }
-    fCtx.drawImage(source, sx, sy, sw, sh, 0, 0, this.sampleSize, this.sampleSize);
-    fCtx.restore();
-    const pixels = fCtx.getImageData(0, 0, this.sampleSize, this.sampleSize).data;
-
-    // 2. Encode JPEG thumbnail only when requested (skipped on high-FPS continuous polling ticks)
-    let photoDataUrl = '';
-    if (includePhotoThumbnail) {
-      const thumbCanvas = this.getThumbCanvas();
-      const tCtx = thumbCanvas?.getContext('2d');
-      if (thumbCanvas && tCtx) {
-        tCtx.clearRect(0, 0, 200, 200);
-        tCtx.save();
-        if (mirror) {
-          tCtx.translate(200, 0);
-          tCtx.scale(-1, 1);
-        }
-        tCtx.drawImage(source, sx, sy, sw, sh, 0, 0, 200, 200);
-        tCtx.restore();
-        photoDataUrl = thumbCanvas.toDataURL('image/jpeg', 0.8);
-      }
-    }
-
-    const n = this.sampleSize;
-    const luma = new Float32Array(n * n);
-    let totalLuma = 0;
-    for (let i = 0; i < n * n; i++) {
-      const idx = i * 4;
-      const y = pixels[idx] * 0.299 + pixels[idx + 1] * 0.587 + pixels[idx + 2] * 0.114;
-      luma[i] = y;
-      totalLuma += y;
-    }
-    const meanLuma = totalLuma / (n * n);
-
-    // Zero-mean lighting compensation so slight ambient light shifts remain robust
-    let varSum = 0;
-    for (let i = 0; i < luma.length; i++) {
-      varSum += (luma[i] - meanLuma) ** 2;
-    }
-    const stdLuma = Math.max(12, Math.sqrt(varSum / luma.length));
-
-    const descriptor: number[] = [];
-    const blockSize = n / 4; // 16x16 per cell -> 4x4 = 16 cells
-
-    let edgeEnergySum = 0;
-    let centerContrastSum = 0;
-
-    // 16 spatial normalized luma + 32 directional gradient energies = 48 dims
-    for (let gy = 0; gy < 4; gy++) {
-      for (let gx = 0; gx < 4; gx++) {
-        let cellMean = 0;
-        let gxEnergy = 0;
-        let gyEnergy = 0;
-        let count = 0;
-
-        for (let y = gy * blockSize; y < (gy + 1) * blockSize; y++) {
-          for (let x = gx * blockSize; x < (gx + 1) * blockSize; x++) {
-            const p = y * n + x;
-            const normVal = (luma[p] - meanLuma) / stdLuma;
-            cellMean += normVal;
-
-            const right = x + 1 < n ? luma[y * n + (x + 1)] : luma[p];
-            const down = y + 1 < n ? luma[(y + 1) * n + x] : luma[p];
-            const dx = Math.abs(right - luma[p]) / stdLuma;
-            const dy = Math.abs(down - luma[p]) / stdLuma;
-            gxEnergy += dx;
-            gyEnergy += dy;
-            edgeEnergySum += dx + dy;
-            if ((gx === 1 || gx === 2) && (gy === 1 || gy === 2)) {
-              centerContrastSum += dx + dy;
-            }
-            count++;
-          }
-        }
-        descriptor.push(cellMean / count);
-        descriptor.push(gxEnergy / count);
-        descriptor.push(gyEnergy / count);
-      }
-    }
-
-    // 16 center T-zone chroma & RGB balance + 8 bilateral left-right symmetry dims = 24 dims (total 72)
-    for (let gy = 1; gy <= 2; gy++) {
-      for (let gx = 0; gx < 4; gx++) {
-        let rRatio = 0;
-        let gRatio = 0;
-        let symDiff = 0;
-        let cCount = 0;
-        for (let y = gy * blockSize; y < (gy + 1) * blockSize; y++) {
-          for (let x = gx * blockSize; x < (gx + 1) * blockSize; x++) {
-            const idx = (y * n + x) * 4;
-            const sumRgb = Math.max(30, pixels[idx] + pixels[idx + 1] + pixels[idx + 2]);
-            rRatio += pixels[idx] / sumRgb;
-            gRatio += pixels[idx + 1] / sumRgb;
-
-            const mirrorX = n - 1 - x;
-            const mirrorDiff = Math.abs(luma[y * n + x] - luma[y * n + mirrorX]) / stdLuma;
-            symDiff += mirrorDiff;
-            cCount++;
-          }
-        }
-        descriptor.push(rRatio / cCount);
-        descriptor.push(gRatio / cCount);
-        descriptor.push(1 - Math.min(1, symDiff / cCount));
-      }
-    }
-
-    // L2 normalize entire 72-d vector
-    let normSq = 0;
-    for (const v of descriptor) normSq += v * v;
-    const norm = Math.sqrt(normSq) || 1;
-    const normalized = descriptor.map((v) => Number((v / norm).toFixed(5)));
-
-    // Quality scoring (brightness window [38..225] and center edge sharpness)
-    const brightness = Math.round((meanLuma / 255) * 100);
-    const avgEdge = edgeEnergySum / (n * n);
-    const sharpness = Math.min(100, Math.round(avgEdge * 145));
-    const centerDetail = centerContrastSum / ((n * n) / 4);
-    const faceDetectedLikely = meanLuma > 18 && meanLuma < 248 && centerDetail > 0.055;
-
-    let qualityScore = 88;
-    if (brightness < 18 || brightness > 92) qualityScore -= 18;
-    if (sharpness < 22) qualityScore -= 20;
-    else qualityScore += Math.min(11, Math.round(sharpness / 12));
-    qualityScore = Math.max(40, Math.min(99, qualityScore));
-
-    // Deterministic compact hash from descriptor
+  private computeHash(descriptor: number[]): string {
     let h1 = 2166136261;
-    for (const v of normalized) {
+    for (const v of descriptor) {
       const q = Math.round((v + 1) * 1000);
       h1 ^= q;
       h1 = Math.imul(h1, 16777619);
     }
-    const hash = 'FACE-' + (h1 >>> 0).toString(16).toUpperCase().padStart(8, '0');
-
-    return {
-      descriptor: normalized,
-      photoDataUrl,
-      hash,
-      qualityScore,
-      brightness,
-      sharpness,
-      faceDetectedLikely,
-      reason: !faceDetectedLikely ? 'Low contrast or covered frame — ensure face is clearly centered with adequate light.' : undefined
-    };
+    return 'FACE-' + (h1 >>> 0).toString(16).toUpperCase().padStart(8, '0');
   }
 }

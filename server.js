@@ -267,9 +267,14 @@ async function runBackgroundAutoSync() {
           rollNo: att.roll_no,
           studentName: att.student_name,
           grade: att.grade,
+          memberCategory: att.member_category || 'student',
           status: att.status,
           date: att.date,
+          gateName: att.gate_name || 'Camera Face Terminal · IN',
           verificationMode: att.verification_mode,
+          confidenceScore: Number(att.confidence_score ?? 0),
+          verifiedBy: att.verified_by || 'Camera Face Verification',
+          markedByRole: att.marked_by_role || 'kiosk',
           is_synced: 1,
           synced_at: new Date().toISOString()
         });
@@ -279,6 +284,39 @@ async function runBackgroundAutoSync() {
         break;
       }
     }
+
+    try {
+      const pendingFaces = sqliteDb.prepare('SELECT * FROM local_school_face_profiles WHERE is_synced = 0 LIMIT 25').all();
+      for (const fp of pendingFaces) {
+        try {
+          let desc = [];
+          try { desc = JSON.parse(fp.face_descriptor_json || '[]'); } catch {}
+          await setDoc(doc(db, 'school_face_profiles', fp.id), {
+            id: fp.id,
+            tenant_id: fp.tenant_id || 'tenant-root-platform',
+            memberId: fp.member_id,
+            memberCategory: fp.member_category,
+            memberName: fp.member_name,
+            memberCode: fp.member_code || '',
+            gradeOrDept: fp.grade_or_dept || '',
+            faceDescriptor: desc,
+            facePhotoData: fp.face_photo_data || '',
+            faceHash: fp.face_hash,
+            qualityScore: Number(fp.quality_score ?? 92),
+            liteEnabled: fp.lite_enabled !== 0,
+            enrolledBy: fp.enrolled_by || 'kiosk',
+            enrolledAt: fp.enrolled_at,
+            is_synced: 1,
+            synced_at: new Date().toISOString()
+          });
+          sqliteDb.prepare('UPDATE local_school_face_profiles SET is_synced = 1 WHERE id = ?').run(fp.id);
+          syncedThisRun += 1;
+        } catch {
+          break;
+        }
+      }
+    } catch {}
+
     observability.recordSyncRun({ ok: true, syncedCount: syncedThisRun });
   } catch (syncErr) {
     observability.recordSyncRun({ ok: false, error: syncErr });

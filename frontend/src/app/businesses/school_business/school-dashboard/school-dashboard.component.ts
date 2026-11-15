@@ -5869,20 +5869,28 @@ INSTRUCTIONS:
     void this.loadStateFromBackend();
     this.loadStateFromCloud();
 
-    if (typeof window !== 'undefined') {
-      try {
-        const params = new URLSearchParams(window.location.search);
-        const requestedTab = params.get('tab');
-        if (requestedTab === 'attendance') {
-          this.currentTab = 'attendance';
-        }
-      } catch {}
-    }
-
     const savedRole = localStorage.getItem('activeSchoolRole');
     if (savedRole && ['owner', 'principal', 'teacher', 'student', 'parent', 'accountant'].includes(savedRole)) {
       this.currentPortalRole = savedRole as SchoolPortalRole;
     }
+
+    if (typeof window !== 'undefined') {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const requestedTab = params.get('tab');
+        const isKiosk = params.get('kiosk') === '1';
+        if (requestedTab === 'attendance' || isKiosk) {
+          this.currentTab = 'attendance';
+          this.principalTab = 'biometric_attendance';
+          this.teacherTab = 'attendance';
+          this.studentTab = 'attendance';
+          if (isKiosk && (this.currentPortalRole === 'parent' || this.currentPortalRole === 'accountant')) {
+            this.currentPortalRole = 'owner';
+          }
+        }
+      } catch {}
+    }
+
     const savedPortalUserRaw = localStorage.getItem('activeSchoolPortalUser');
     if (savedPortalUserRaw) {
       try {
@@ -6001,9 +6009,9 @@ INSTRUCTIONS:
       this.offlineAttendanceQueue = remaining;
       this.saveOfflineQueue();
       if (syncedCount > 0) {
-        this.showToast(`Internet restored — synced ${syncedCount} offline attendance item(s) to server.`, 'success');
-        this.cdr.detectChanges();
+        this.showToast(`Online sync complete — ${syncedCount} attendance record(s) synced to SQLite & cloud.`, 'success');
       }
+      this.cdr.detectChanges();
     } finally {
       this.isFlushingOfflineQueue = false;
     }

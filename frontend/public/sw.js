@@ -1,9 +1,19 @@
-// SoftCode Enterprise Service Worker - Network First with Offline Shell Resilience
-const CACHE_NAME = 'scs-multi-tenant-cloud-v8';
+// SoftCode Enterprise Service Worker - Network First with Offline Shell & Face AI Model Resilience
+const CACHE_NAME = 'scs-multi-tenant-cloud-v9';
+const FACE_MODEL_ASSETS = [
+  '/',
+  '/manifest.json',
+  '/face-models/tiny_face_detector_model-weights_manifest.json',
+  '/face-models/tiny_face_detector_model.bin',
+  '/face-models/face_landmark_68_tiny_model-weights_manifest.json',
+  '/face-models/face_landmark_68_tiny_model.bin',
+  '/face-models/face_recognition_model-weights_manifest.json',
+  '/face-models/face_recognition_model.bin'
+];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(['/', '/manifest.json']).catch(() => {})).finally(() => self.skipWaiting())
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(FACE_MODEL_ASSETS).catch(() => {})).finally(() => self.skipWaiting())
   );
 });
 

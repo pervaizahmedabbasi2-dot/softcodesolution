@@ -3830,6 +3830,7 @@
           [faceProfiles]="schoolFaceProfiles"
           [policy]="ownerAttendancePolicy"
           [verificationLogs]="faceVerificationLogs"
+          [pendingSyncCount]="offlineAttendanceQueue.length"
           [currentActorName]="'School Owner'"
           (policySaved)="onAttendancePolicySaved($event)"
           (faceEnrolled)="onFaceProfileEnrolled($event)"
@@ -3840,6 +3841,7 @@
           (absentAlertRequested)="onHubAbsentAlertRequested($event)"
           (toast)="onAttendanceHubToast($event)"
           (switchToOwnerPortal)="switchPortal('owner')"
+          (syncRequested)="flushOfflineSyncQueue()"
         />
       }
 
@@ -12413,6 +12415,7 @@
           [faceProfiles]="schoolFaceProfiles"
           [policy]="ownerAttendancePolicy"
           [verificationLogs]="faceVerificationLogs"
+          [pendingSyncCount]="offlineAttendanceQueue.length"
           [currentActorName]="'Principal Directorate'"
           (policySaved)="onAttendancePolicySaved($event)"
           (faceEnrolled)="onFaceProfileEnrolled($event)"
@@ -12423,6 +12426,7 @@
           (absentAlertRequested)="onHubAbsentAlertRequested($event)"
           (toast)="onAttendanceHubToast($event)"
           (switchToOwnerPortal)="switchPortal('owner')"
+          (syncRequested)="flushOfflineSyncQueue()"
         />
       }
 
@@ -13445,6 +13449,7 @@
             [faceProfiles]="schoolFaceProfiles"
             [policy]="ownerAttendancePolicy"
             [verificationLogs]="faceVerificationLogs"
+            [pendingSyncCount]="offlineAttendanceQueue.length"
             [currentActorName]="currentTeacherProfile.name || 'Faculty Operator'"
             [currentTeacherGrade]="currentTeacherProfile.assignedGrade || 'All'"
             (faceEnrolled)="onFaceProfileEnrolled($event)"
@@ -13453,6 +13458,7 @@
             (absentAlertRequested)="onHubAbsentAlertRequested($event)"
             (toast)="onAttendanceHubToast($event)"
             (switchToOwnerPortal)="switchPortal('owner')"
+            (syncRequested)="flushOfflineSyncQueue()"
           />
         </div>
       }
@@ -14377,10 +14383,14 @@
             [faceProfiles]="schoolFaceProfiles"
             [policy]="ownerAttendancePolicy"
             [verificationLogs]="faceVerificationLogs"
+            [pendingSyncCount]="offlineAttendanceQueue.length"
             [currentActorName]="currentStudentProfile.name || 'Student'"
             [currentStudentId]="currentStudentProfile.id || ''"
+            (faceEnrolled)="onFaceProfileEnrolled($event)"
+            (faceRemoved)="onFaceProfileRemoved($event)"
             (attendanceRecorded)="onHubAttendanceRecorded($event)"
             (toast)="onAttendanceHubToast($event)"
+            (syncRequested)="flushOfflineSyncQueue()"
           />
 
           <div class="apple-card rounded-2xl p-5 space-y-4">

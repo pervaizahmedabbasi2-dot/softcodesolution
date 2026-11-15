@@ -25,9 +25,14 @@ import {
   StaffMemberRecord,
   createDefaultOwnerAttendancePolicy
 } from '../../models/school-attendance.models';
-import { FaceExtractionResult, FaceVerificationService } from '../../../../services/face-verification.service';
+import {
+  FaceBoxNormalized,
+  FaceExtractionResult,
+  FaceVerificationService
+} from '../../../../services/face-verification.service';
 
 export type AttendanceSubTab = 'terminal' | 'students' | 'teachers' | 'staff' | 'enrollment' | 'setup';
+export type ScannerCategoryFilter = 'all' | AttendanceMemberCategory;
 
 @Component({
   selector: 'app-school-attendance-hub',
@@ -42,6 +47,7 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   @ViewChild('enrollVideoEl') enrollVideoEl?: ElementRef<HTMLVideoElement>;
   @ViewChild('phoneVerifyInputEl') phoneVerifyInputEl?: ElementRef<HTMLInputElement>;
   @ViewChild('phoneEnrollInputEl') phoneEnrollInputEl?: ElementRef<HTMLInputElement>;
+  @ViewChild('quickSelfieFileEl') quickSelfieFileEl?: ElementRef<HTMLInputElement>;
 
   // Inputs
   portalContext = input<AttendancePortalContext>('owner');
@@ -86,15 +92,22 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   absentAlertRequested = output<{ category: AttendanceMemberCategory; memberId?: string }>();
   toast = output<{ message: string; type: 'success' | 'info' | 'warning' }>();
   switchToOwnerPortal = output<void>();
+  syncRequested = output<void>();
 
   // Local reactive state
   activeSubTab = signal<AttendanceSubTab>('terminal');
-  activeCategory = signal<AttendanceMemberCategory>('student');
+  activeCategory = signal<ScannerCategoryFilter>('all');
   searchQuery = signal<string>('');
   selectedGradeFilter = signal<string>('All');
   selectedDate = signal<string>(new Date().toISOString().split('T')[0]);
   punchFilter = signal<'all' | 'checked_in' | 'checked_out' | 'pending'>('all');
   private readonly punchRevision = signal<number>(0);
+
+  // Network & Offline-First Telemetry
+  isBrowserOnline = signal<boolean>(typeof navigator !== 'undefined' ? navigator.onLine !== false : true);
+  kioskFullscreen = signal<boolean>(false);
+  quickEnrollDrawerOpen = signal<boolean>(false);
+  isDraggingFiles = signal<boolean>(false);
 
   // Camera & Verification Terminal state
   readonly isInIframe: boolean = (() => {
@@ -106,9 +119,10 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   })();
   readonly fullTabUrl: string = (() => {
     try {
-      if (typeof window === 'undefined') return '/?tab=attendance';
+      if (typeof window === 'undefined') return '/?tab=attendance&kiosk=1';
       const u = new URL(window.location.href);
       u.searchParams.set('tab', 'attendance');
+      u.searchParams.set('kiosk', '1');
       return u.toString();
     } catch {
       return typeof window !== 'undefined' ? window.location.href : '/';
@@ -129,13 +143,20 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   cameraError = signal<string>('');
   cameraErrorKind = signal<'none' | 'iframe_blocked' | 'permission_denied' | 'no_device' | 'in_use' | 'unsupported'>('none');
   fillLightBoost = signal<boolean>(true);
-  liteVerifyActive = signal<boolean>(false);
+  liteVerifyActive = signal<boolean>(true);
   autoScanEnabled = signal<boolean>(true);
   autoScanActive = signal<boolean>(false);
+  gateMode = signal<'auto' | 'in' | 'out'>('auto');
+  readonly neuralReady = this.faceVerifier.neuralReady;
+  readonly neuralLoading = this.faceVerifier.neuralLoading;
   scanScope = signal<'auto' | 'targeted'>('auto');
   selectedTargetMemberId = signal<string>('');
   isProcessingScan = signal<boolean>(false);
   capturedVerifyPreview = signal<string>('');
+  detectedFaceBox = signal<FaceBoxNormalized | null>(null);
+  multiFaceDetected = signal<boolean>(false);
+  batchQueueStatus = signal<string>('');
+
   lastVerificationResult = signal<{
     matched: boolean;
     resultType?: 'success' | 'duplicate' | 'mismatch';
@@ -148,7 +169,9 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     statusMarked: string;
     enrolledPhoto?: string;
     livePhoto?: string;
+    savedOffline?: boolean;
   } | null>(null);
+
   scanOverlay = signal<{
     kind: 'success' | 'duplicate' | 'mismatch';
     title: string;
@@ -157,10 +180,29 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     punchType?: 'IN' | 'OUT';
     confidence?: number;
     memberCode?: string;
+    storageLabel?: string;
   } | null>(null);
-  recentVerifiedFeed = signal<Array<{ id: string; name: string; punch: 'IN' | 'OUT'; time: string }>>([]);
 
-  // Face Enrollment state
+  recentVerifiedFeed = signal<
+    Array<{
+      id: string;
+      name: string;
+      category: AttendanceMemberCategory;
+      punch: 'IN' | 'OUT';
+      time: string;
+      confidence: number;
+      syncedLabel: string;
+    }>
+  >([]);
+
+  // Inline Quick Selfie Enrollment (right on the Scanner Platform)
+  quickEnrollCategory = signal<AttendanceMemberCategory>('student');
+  quickEnrollMemberId = signal<string>('');
+  quickEnrollSearch = signal<string>('');
+  quickEnrollPreviewUrl = signal<string>('');
+  quickEnrollExtraction = signal<FaceExtractionResult | null>(null);
+
+  // Full Face Enrollment tab state
   enrollCategory = signal<AttendanceMemberCategory>('student');
   enrollTargetMemberId = signal<string>('');
   enrollCapturedDataUrl = signal<string>('');
@@ -188,38 +230,59 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   private audioCtx: AudioContext | null = null;
   private readonly localSessionPunches = new Map<string, { inTime?: string; inAtMs?: number; outTime?: string; outAtMs?: number }>();
   private lastActiveFaceKey = '';
+  private lastSuccessAtMs = 0;
   private lastAlertBeepAt = 0;
+  private stableCandidateKey = '';
+  private stableCandidateHits = 0;
+  private unknownConsecutiveHits = 0;
+  private unknownLastFeedbackAt = 0;
+  private unknownWarnedThisVisit = false;
+  private noFaceStreak = 0;
 
   constructor() {
     effect(() => {
       const incoming = this.policy();
       this.policyDraft.set(this.clonePolicy(incoming));
       this.fillLightBoost.set(Boolean(incoming.cameraFillLightEnabled));
-      this.liteVerifyActive.set(incoming.verificationMode === 'lite');
-      this.autoScanEnabled.set(Boolean(incoming.autoCaptureOnMatch));
+      this.liteVerifyActive.set(incoming.verificationMode === 'lite' || incoming.liteModeEnabled);
+      this.autoScanEnabled.set(incoming.autoCaptureOnMatch !== false);
     });
 
     effect(() => {
       const ctx = this.portalContext();
-      if (ctx === 'teacher') {
-        this.activeCategory.set('student');
-        if (this.activeSubTab() === 'setup' || this.activeSubTab() === 'teachers' || this.activeSubTab() === 'staff') {
-          this.activeSubTab.set('terminal');
-        }
-      } else if (ctx === 'student') {
-        this.activeCategory.set('student');
-        this.scanScope.set('targeted');
-        if (this.currentStudentId()) {
-          this.selectedTargetMemberId.set(this.currentStudentId());
-        }
-        if (!['terminal'].includes(this.activeSubTab())) {
-          this.activeSubTab.set('terminal');
-        }
-      } else if (ctx === 'principal' && this.activeSubTab() === 'setup') {
+      if (ctx === 'student' && this.currentStudentId()) {
+        this.selectedTargetMemberId.set(this.currentStudentId());
+      }
+      if (ctx !== 'owner' && this.activeSubTab() === 'setup') {
         this.activeSubTab.set('terminal');
       }
     });
+
+    effect(() => {
+      const list = this.quickEnrollFilteredMembers();
+      if (list.length > 0 && !list.some((m) => m.id === this.quickEnrollMemberId())) {
+        this.quickEnrollMemberId.set(list[0].id);
+      }
+    });
+
+    effect(() => {
+      const profiles = this.faceProfiles();
+      if (profiles && profiles.length > 0) {
+        void this.faceVerifier.upgradeLegacyProfiles(profiles);
+      }
+    });
+
+    void this.faceVerifier.ensureModelsLoaded();
   }
+
+  private readonly boundOnlineHandler = () => {
+    this.isBrowserOnline.set(true);
+    this.syncRequested.emit();
+  };
+
+  private readonly boundOfflineHandler = () => {
+    this.isBrowserOnline.set(false);
+  };
 
   private readonly boundVisibilityHandler = () => {
     if (
@@ -227,34 +290,47 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       document.visibilityState === 'visible' &&
       this.keepCameraOn() &&
       this.activeSubTab() === 'terminal' &&
-      !this.cameraActive() &&
-      !this.isPortalLocked()
+      !this.cameraActive()
     ) {
       void this.startCamera('verify', true);
     }
   };
 
   ngAfterViewInit(): void {
+    if (typeof window !== 'undefined') {
+      window.addEventListener('online', this.boundOnlineHandler);
+      window.addEventListener('offline', this.boundOfflineHandler);
+      try {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('kiosk') === '1') {
+          this.kioskFullscreen.set(true);
+        }
+      } catch {}
+    }
     if (typeof document !== 'undefined') {
       document.addEventListener('visibilitychange', this.boundVisibilityHandler);
     }
-    if (this.activeSubTab() === 'terminal' && this.keepCameraOn() && !this.isPortalLocked()) {
+    if (this.activeSubTab() === 'terminal' && this.keepCameraOn()) {
       setTimeout(() => {
         if (!this.cameraActive() && this.activeSubTab() === 'terminal' && this.keepCameraOn()) {
           void this.startCamera('verify', true);
         }
-      }, 80);
+      }, 60);
     }
   }
 
   ngOnDestroy(): void {
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('online', this.boundOnlineHandler);
+      window.removeEventListener('offline', this.boundOfflineHandler);
+    }
     if (typeof document !== 'undefined') {
       document.removeEventListener('visibilitychange', this.boundVisibilityHandler);
     }
     this.stopCamera(false);
   }
 
-  // Permission & Access Computeds
+  // Zero-Permission-Friction Access Computeds (No role lockouts on the scanning platform)
   readonly isOwner = computed(() => this.portalContext() === 'owner');
 
   readonly rolePerms = computed<RoleAttendancePermission>(() => {
@@ -279,17 +355,10 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     return p.roleAccess.student;
   });
 
-  readonly isPortalLocked = computed(() => !this.rolePerms().enabled);
+  // Never lock out the self-contained face scanner platform
+  readonly isPortalLocked = computed(() => false);
 
-  readonly allowedCategories = computed<AttendanceMemberCategory[]>(() => {
-    const perms = this.rolePerms();
-    const cats = this.policy().categories;
-    const list: AttendanceMemberCategory[] = [];
-    if (this.isOwner() || (cats.student.enabled && perms.canScanStudents)) list.push('student');
-    if (this.isOwner() || (cats.teacher.enabled && perms.canScanTeachers)) list.push('teacher');
-    if (this.isOwner() || (cats.staff.enabled && perms.canScanStaff)) list.push('staff');
-    return list;
-  });
+  readonly allowedCategories = computed<AttendanceMemberCategory[]>(() => ['student', 'teacher', 'staff']);
 
   readonly canUseManualFallback = computed(() => {
     const p = this.policy();
@@ -299,14 +368,9 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     return !p.requireCameraForAllAttendance && this.rolePerms().manualFallbackAllowed;
   });
 
-  readonly canEnrollCurrentPortal = computed(() => this.isOwner() || this.rolePerms().canEnrollFaces);
-
+  readonly canEnrollCurrentPortal = computed(() => true);
   readonly canExportCurrentPortal = computed(() => this.isOwner() || this.rolePerms().canExportReports);
-
-  readonly studentSelfCheckInAllowed = computed(() => {
-    const p = this.policy();
-    return Boolean(p.roleAccess.student.enabled && p.roleAccess.student.selfCheckInEnabled && p.categories.student.enabled);
-  });
+  readonly studentSelfCheckInAllowed = computed(() => true);
 
   readonly effectiveThreshold = computed(() => {
     const p = this.policy();
@@ -486,11 +550,25 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     });
   });
 
+  readonly allCampusMembers = computed<AttendanceMemberView[]>(() => [
+    ...this.studentMembers(),
+    ...this.teacherMembers(),
+    ...this.staffMembers()
+  ]);
+
   readonly activeCategoryMembers = computed<AttendanceMemberView[]>(() => {
     const cat = this.activeCategory();
+    if (cat === 'all') return this.allCampusMembers();
     if (cat === 'teacher') return this.teacherMembers();
     if (cat === 'staff') return this.staffMembers();
     return this.studentMembers();
+  });
+
+  readonly activeFaceProfiles = computed<FaceProfileRecord[]>(() => {
+    const cat = this.activeCategory();
+    const all = this.faceProfiles() || [];
+    if (cat === 'all') return all;
+    return all.filter((fp) => fp.memberCategory === cat);
   });
 
   readonly enrollCategoryMembers = computed<AttendanceMemberView[]>(() => {
@@ -498,6 +576,21 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     if (cat === 'teacher') return this.teacherMembers();
     if (cat === 'staff') return this.staffMembers();
     return this.studentMembers();
+  });
+
+  readonly quickEnrollFilteredMembers = computed<AttendanceMemberView[]>(() => {
+    const cat = this.quickEnrollCategory();
+    const base =
+      cat === 'teacher'
+        ? this.teacherMembers()
+        : cat === 'staff'
+          ? this.staffMembers()
+          : this.studentMembers();
+    const q = this.quickEnrollSearch().trim().toLowerCase();
+    if (!q) return base;
+    return base.filter(
+      (m) => m.name.toLowerCase().includes(q) || m.code.toLowerCase().includes(q) || m.subLabel.toLowerCase().includes(q)
+    );
   });
 
   readonly studentGrades = computed<string[]>(() => {
@@ -510,13 +603,10 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
 
   readonly currentTabMembersUnfiltered = computed<AttendanceMemberView[]>(() => {
     const tab = this.activeSubTab();
-    return tab === 'teachers'
-      ? this.teacherMembers()
-      : tab === 'staff'
-        ? this.staffMembers()
-        : tab === 'students'
-          ? this.studentMembers()
-          : this.activeCategoryMembers();
+    if (tab === 'teachers') return this.teacherMembers();
+    if (tab === 'staff') return this.staffMembers();
+    if (tab === 'students') return this.studentMembers();
+    return this.activeCategoryMembers();
   });
 
   readonly rosterTabSummary = computed(() => {
@@ -569,42 +659,34 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     };
   });
 
-  readonly currentStudentSelfMember = computed<AttendanceMemberView | null>(() => {
-    const list = this.studentMembers();
-    const id = this.currentStudentId();
-    return list.find((s) => s.id === id || s.code === id) || list[0] || null;
-  });
+  readonly totalEnrolledCount = computed(() => (this.faceProfiles() || []).length);
 
   readonly activeLogs = computed(() => {
     const cat = this.activeCategory();
     const tab = this.activeSubTab();
     const logs = this.verificationLogs() || [];
-    if (tab === 'terminal') {
-      return logs.filter((l) => l.memberCategory === cat).slice(0, 12);
+    if (tab === 'terminal' && cat !== 'all') {
+      return logs.filter((l) => l.memberCategory === cat).slice(0, 14);
     }
-    return logs.slice(0, 15);
+    return logs.slice(0, 16);
   });
 
   readonly fillLightFrameClass = computed(() => {
     if (!this.fillLightBoost()) return 'ring-1 ring-slate-800';
     const color = this.policy().fillLightColor;
     if (color === 'warm') {
-      return 'ring-[10px] ring-amber-100/95 shadow-[inset_0_0_60px_rgba(254,243,199,0.55)]';
+      return 'ring-[8px] ring-amber-100/95 shadow-[inset_0_0_55px_rgba(254,243,199,0.45)]';
     }
     if (color === 'bright') {
-      return 'ring-[14px] ring-white shadow-[inset_0_0_80px_rgba(255,255,255,0.7)]';
+      return 'ring-[12px] ring-white shadow-[inset_0_0_75px_rgba(255,255,255,0.65)]';
     }
-    return 'ring-[10px] ring-slate-100/95 shadow-[inset_0_0_55px_rgba(248,250,252,0.55)]';
+    return 'ring-[8px] ring-slate-100/95 shadow-[inset_0_0_50px_rgba(248,250,252,0.45)]';
   });
 
   // Navigation & Tab Controls
   setSubTab(tab: AttendanceSubTab): void {
     if (tab === 'setup' && !this.isOwner()) {
-      this.emitToast('Only School Owner can modify attendance setup and access rights.', 'warning');
-      return;
-    }
-    if (tab === 'enrollment' && !this.canEnrollCurrentPortal()) {
-      this.emitToast('Face enrollment permission is restricted for your role by School Owner.', 'warning');
+      this.emitToast('Only School Owner can modify attendance threshold & cutoff policy.', 'warning');
       return;
     }
     this.stopCamera(false);
@@ -612,11 +694,11 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     if (tab === 'students') this.activeCategory.set('student');
     if (tab === 'teachers') this.activeCategory.set('teacher');
     if (tab === 'staff') this.activeCategory.set('staff');
-    if (tab === 'terminal' && this.keepCameraOn() && !this.isPortalLocked()) {
+    if (tab === 'terminal' && this.keepCameraOn()) {
       setTimeout(() => void this.startCamera('verify', true), 60);
     }
     if (tab === 'enrollment') {
-      const cat = this.activeCategory();
+      const cat = this.activeCategory() === 'all' ? 'student' : (this.activeCategory() as AttendanceMemberCategory);
       this.enrollCategory.set(cat);
       const list = this.enrollCategoryMembers();
       if (list.length > 0 && !this.enrollTargetMemberId()) {
@@ -628,11 +710,109 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  setCategory(cat: AttendanceMemberCategory): void {
+  setCategory(cat: ScannerCategoryFilter): void {
     this.activeCategory.set(cat);
     this.selectedTargetMemberId.set('');
     this.lastVerificationResult.set(null);
     this.capturedVerifyPreview.set('');
+    this.stableCandidateKey = '';
+    this.stableCandidateHits = 0;
+  }
+
+  toggleKioskFullscreen(): void {
+    this.kioskFullscreen.update((v) => !v);
+  }
+
+  openQuickEnrollPanel(prefillFromLive: boolean = false): void {
+    this.quickEnrollDrawerOpen.set(true);
+    const list = this.quickEnrollFilteredMembers();
+    if (list.length > 0 && !this.quickEnrollMemberId()) {
+      this.quickEnrollMemberId.set(list[0].id);
+    }
+    if (this.cameraActive()) {
+      if (prefillFromLive) {
+        this.snapQuickSelfieFromLiveCamera();
+      }
+    } else {
+      void this.startCamera('verify', true);
+    }
+  }
+
+  closeQuickEnrollPanel(): void {
+    this.quickEnrollDrawerOpen.set(false);
+    this.quickEnrollPreviewUrl.set('');
+    this.quickEnrollExtraction.set(null);
+  }
+
+  async snapQuickSelfieFromLiveCamera(): Promise<void> {
+    const videoEl = this.verifyVideoEl?.nativeElement;
+    if (!this.cameraActive() || !videoEl || videoEl.readyState < 2) {
+      this.quickSelfieFileEl?.nativeElement?.click();
+      return;
+    }
+    const result = await this.faceVerifier.extractFromVideoAsync(videoEl, this.cameraFacingMode() === 'user', true);
+    if (!result || !result.faceDetectedLikely || result.descriptor.length === 0) {
+      this.emitToast(result?.reason || 'No clear face detected in camera. Look straight into the lens and tap Snap again.', 'warning');
+      return;
+    }
+    this.quickEnrollPreviewUrl.set(result.photoDataUrl);
+    this.quickEnrollExtraction.set(result);
+    this.emitToast(`Face captured (${result.qualityScore}% quality · 128-D ID ready). Tap Save & Activate Face.`, 'info');
+  }
+
+  async onQuickSelfieFileSelected(event: Event): Promise<void> {
+    const inputEl = event.target as HTMLInputElement;
+    const file = inputEl?.files?.[0];
+    if (!file) return;
+    inputEl.value = '';
+    const { result, rawDataUrl } = await this.faceVerifier.extractFromFile(file);
+    if (!result) {
+      this.emitToast('Could not read face signature from selfie image. Try a clear front photo.', 'warning');
+      return;
+    }
+    this.quickEnrollPreviewUrl.set(result.photoDataUrl || rawDataUrl);
+    this.quickEnrollExtraction.set(result);
+    this.quickEnrollDrawerOpen.set(true);
+  }
+
+  saveQuickSelfieEnrollment(): void {
+    const memberId = this.quickEnrollMemberId();
+    const extraction = this.quickEnrollExtraction();
+    if (!memberId || !extraction) {
+      this.emitToast('Choose a member and capture their selfie first.', 'warning');
+      return;
+    }
+    const cat = this.quickEnrollCategory();
+    const list =
+      cat === 'teacher' ? this.teacherMembers() : cat === 'staff' ? this.staffMembers() : this.studentMembers();
+    const member = list.find((m) => m.id === memberId);
+    if (!member) {
+      this.emitToast('Selected member could not be found.', 'warning');
+      return;
+    }
+
+    const profile: FaceProfileRecord = {
+      id: `FP-${cat}-${member.id}`,
+      memberId: member.id,
+      memberCategory: cat,
+      memberName: member.name,
+      memberCode: member.code,
+      gradeOrDept: member.subLabel,
+      faceDescriptor: extraction.descriptor,
+      facePhotoData: extraction.photoDataUrl,
+      faceHash: extraction.hash,
+      qualityScore: extraction.qualityScore,
+      liteEnabled: true,
+      enrolledBy: this.currentActorName() || 'Selfie Kiosk',
+      enrolledAt: new Date().toISOString()
+    };
+
+    this.faceEnrolled.emit(profile);
+    this.playMatchChime();
+    this.quickEnrollPreviewUrl.set('');
+    this.quickEnrollExtraction.set(null);
+    this.quickEnrollDrawerOpen.set(false);
+    this.emitToast(`${member.name} face registered! Ready for instant auto-recognition.`, 'success');
   }
 
   openCameraForMember(member: AttendanceMemberView): void {
@@ -647,10 +827,6 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   }
 
   openEnrollmentForMember(member: AttendanceMemberView): void {
-    if (!this.canEnrollCurrentPortal()) {
-      this.emitToast('Face enrollment access is locked for this role by School Owner.', 'warning');
-      return;
-    }
     this.keepCameraOn.set(true);
     this.enrollCategory.set(member.category);
     this.enrollTargetMemberId.set(member.id);
@@ -669,14 +845,14 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     this.enrollExtraction.set(null);
   }
 
-  // WebRTC Camera Controls (Continuous Live Stream — stays ON until explicit Stop)
+  // WebRTC Continuous Camera Engine (stays ON non-stop once started)
   async startCamera(slot: 'verify' | 'enroll', silent: boolean = false): Promise<boolean> {
     this.keepCameraOn.set(true);
     this.cameraError.set('');
     this.cameraErrorKind.set('none');
     if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
       this.cameraErrorKind.set('unsupported');
-      this.cameraError.set('Live camera requires HTTPS or a dedicated browser tab. Open Full Tab on your phone/desktop for non-stop auto scanning.');
+      this.cameraError.set('Camera access requires HTTPS or a supported browser with a webcam.');
       return false;
     }
 
@@ -687,8 +863,8 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: this.cameraFacingMode(),
-          width: { ideal: 720 },
-          height: { ideal: 540 }
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
         },
         audio: false
       });
@@ -700,7 +876,6 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       } catch (err: any) {
         this.cameraActive.set(false);
         const errName = String(err?.name || '');
-        const errMsg = String(err?.message || '');
 
         let videoInputCount = -1;
         try {
@@ -710,26 +885,15 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
           videoInputCount = -1;
         }
 
-        if (this.isInIframe && (errName === 'NotAllowedError' || errName === 'SecurityError' || /permission|policy|allowed/i.test(errMsg))) {
-          this.cameraErrorKind.set('iframe_blocked');
-          this.cameraError.set(
-            'Preview window blocks live camera stream. Click "Open Full Tab (Live Camera)" to keep your phone/PC camera ON non-stop, or use Phone Camera Snap.'
-          );
-        } else if (errName === 'NotFoundError' || errName === 'DevicesNotFoundError' || videoInputCount === 0) {
+        if (errName === 'NotFoundError' || errName === 'DevicesNotFoundError' || videoInputCount === 0) {
           this.cameraErrorKind.set('no_device');
-          this.cameraError.set(
-            'No webcam detected here. Use "Open Full Tab" on a phone or tap "Phone Camera" to capture.'
-          );
+          this.cameraError.set('No webcam detected on this device. Connect a camera and tap Open Live Camera.');
         } else if (errName === 'NotReadableError' || errName === 'TrackStartError') {
           this.cameraErrorKind.set('in_use');
-          this.cameraError.set(
-            'Camera is currently busy in another browser tab or app. Close it and click Retry.'
-          );
+          this.cameraError.set('Camera is in use by another app. Close it and tap Open Live Camera.');
         } else {
           this.cameraErrorKind.set('permission_denied');
-          this.cameraError.set(
-            'Camera permission blocked in browser. Allow Camera in address bar or tap "Open Full Tab".'
-          );
+          this.cameraError.set('Tap Open Live Camera and allow camera permission in your browser to begin automatic scanning.');
         }
         if (!silent && errName && errName !== 'NotAllowedError') {
           this.emitToast(this.cameraError(), 'warning');
@@ -750,6 +914,7 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       track.onended = () => {
         if (this.mediaStream === stream) {
           this.cameraActive.set(false);
+          this.detectedFaceBox.set(null);
           if (this.keepCameraOn() && this.activeSubTab() === 'terminal') {
             setTimeout(() => void this.startCamera('verify', true), 250);
           }
@@ -762,13 +927,11 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     return true;
   }
 
-  // Smart Phone Camera: tries live non-stop WebRTC camera first so phone stays ON continuously;
-  // falls back to native OS camera snap ONLY when preview iframe restricts getUserMedia.
   async activatePhoneCamera(slot: 'verify' | 'enroll'): Promise<void> {
     this.keepCameraOn.set(true);
     const liveStarted = await this.startCamera(slot, true);
     if (liveStarted) {
-      this.emitToast('Phone live camera ON — keep scanning students automatically until you tap Stop.', 'success');
+      this.emitToast('Live camera ON — everyone can walk up and scan automatically without extra clicks.', 'success');
       return;
     }
     this.phoneContinuousSnap.set(true);
@@ -781,17 +944,20 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   copyAppUrl(): void {
     if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
       navigator.clipboard.writeText(this.fullTabUrl).then(
-        () => this.emitToast('Live Kiosk link copied! Open it on your phone Chrome/Safari for non-stop auto camera.', 'success'),
-        () => this.emitToast('Use the Open Full Tab button to launch live camera in a dedicated tab.', 'info')
+        () => this.emitToast('Standalone Kiosk link copied! Open on phone or tablet for continuous hands-free camera.', 'success'),
+        () => this.emitToast('Use the Open Standalone Kiosk button to launch live camera in a dedicated tab.', 'info')
       );
     } else {
-      this.emitToast('Use the Open Full Tab button to launch live camera in a dedicated browser tab.', 'info');
+      this.emitToast('Use the Open Standalone Kiosk button to launch live camera in a dedicated browser tab.', 'info');
     }
   }
 
   private attachVideoStream(slot: 'verify' | 'enroll', stream: MediaStream, retries: number): void {
     const el = slot === 'verify' ? this.verifyVideoEl?.nativeElement : this.enrollVideoEl?.nativeElement;
     if (el) {
+      el.muted = true;
+      el.playsInline = true;
+      el.autoplay = true;
       el.srcObject = stream;
       el.play().catch(() => {});
       return;
@@ -820,6 +986,14 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       this.phoneContinuousSnap.set(false);
     }
     this.stopAutoScanLoop();
+    this.detectedFaceBox.set(null);
+    this.multiFaceDetected.set(false);
+    this.noFaceStreak = 0;
+    this.unknownWarnedThisVisit = false;
+    this.lastActiveFaceKey = '';
+    this.stableCandidateKey = '';
+    this.stableCandidateHits = 0;
+    this.unknownConsecutiveHits = 0;
     if (this.overlayTimerId !== null) {
       clearTimeout(this.overlayTimerId);
       this.overlayTimerId = null;
@@ -849,6 +1023,7 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   private startAutoScanLoop(): void {
     this.stopAutoScanLoop();
     this.autoScanActive.set(true);
+    void this.faceVerifier.ensureModelsLoaded();
     this.autoScanTimerId = setInterval(() => {
       if (!this.cameraActive() || this.activeCameraSlot !== 'verify' || !this.autoScanEnabled()) {
         this.stopAutoScanLoop();
@@ -856,7 +1031,7 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       }
       if (this.isProcessingScan()) return;
       void this.runSingleAutoScanTick();
-    }, 120);
+    }, 130);
   }
 
   private stopAutoScanLoop(): void {
@@ -868,65 +1043,95 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   }
 
   private async runSingleAutoScanTick(): Promise<void> {
-    const cat = this.activeCategory();
-    const catProfiles = this.faceProfiles().filter((fp) => fp.memberCategory === cat);
-    if (catProfiles.length === 0) return;
-    if (this.portalContext() === 'student' && !this.studentSelfCheckInAllowed()) return;
-
     const videoEl = this.verifyVideoEl?.nativeElement;
     if (!videoEl || videoEl.readyState < 2) return;
 
     this.isProcessingScan.set(true);
     try {
       const mirror = this.cameraFacingMode() === 'user';
-      // Descriptor-only pass (~1ms) skips JPEG compression until an identity match/alert actually fires
-      const extraction = this.faceVerifier.extractFromVideo(videoEl, mirror, false);
+      const extraction = await this.faceVerifier.extractFromVideoAsync(videoEl, mirror, false);
       if (!extraction || !extraction.faceDetectedLikely) {
-        this.lastActiveFaceKey = '';
+        this.noFaceStreak++;
+        this.detectedFaceBox.set(null);
+        this.multiFaceDetected.set(false);
+
+        if (this.noFaceStreak >= 2) {
+          this.lastActiveFaceKey = '';
+          this.stableCandidateKey = '';
+          this.stableCandidateHits = 0;
+          this.unknownConsecutiveHits = 0;
+          this.unknownWarnedThisVisit = false;
+          const activeOv = this.scanOverlay();
+          if (activeOv && (activeOv.kind === 'mismatch' || activeOv.kind === 'duplicate')) {
+            this.scanOverlay.set(null);
+          }
+        }
+
+        // After ~1.1s with no face in front of camera, return screen to clean idle standby
+        if (this.noFaceStreak >= 9) {
+          if (this.overlayTimerId !== null) {
+            clearTimeout(this.overlayTimerId);
+            this.overlayTimerId = null;
+          }
+          if (this.scanOverlay()) {
+            this.scanOverlay.set(null);
+          }
+          if (this.lastVerificationResult()) {
+            this.lastVerificationResult.set(null);
+          }
+        }
         return;
       }
-      this.completeVerificationMatch(extraction, cat, catProfiles, true, videoEl, mirror);
+
+      this.noFaceStreak = 0;
+      this.multiFaceDetected.set(Boolean(extraction.detectedCount && extraction.detectedCount > 1));
+      this.detectedFaceBox.set(extraction.faceBox || null);
+      const profiles = this.activeFaceProfiles();
+      if (profiles.length === 0) {
+        this.unknownConsecutiveHits++;
+        if (!this.unknownWarnedThisVisit && this.unknownConsecutiveHits >= 3) {
+          this.unknownWarnedThisVisit = true;
+          this.triggerScanOverlay(
+            {
+              kind: 'mismatch',
+              title: 'Face Not Enrolled',
+              subtitle: 'No faces registered yet — tap Enroll Now to register this person',
+              badgeText: 'UNREGISTERED · ENROLL FIRST'
+            },
+            2000
+          );
+          this.playAlertTone('mismatch');
+        }
+        return;
+      }
+
+      this.completeVerificationMatch(extraction, profiles, true, videoEl, mirror);
     } finally {
       this.isProcessingScan.set(false);
     }
   }
 
   toggleFillLight(): void {
-    if (!this.isOwner() && !this.rolePerms().liteModeAllowed) {
-      this.emitToast('Light / Lite controls disabled for this role by Owner.', 'warning');
-      return;
-    }
     this.fillLightBoost.update((v) => !v);
   }
 
   toggleLiteVerifyMode(): void {
-    const p = this.policy();
-    if (!p.liteModeEnabled || (!this.isOwner() && !this.rolePerms().liteModeAllowed)) {
-      this.emitToast('Lite Mode is disabled in School Owner Attendance Setup.', 'warning');
-      return;
-    }
     this.liteVerifyActive.update((v) => !v);
   }
 
-  // Real Camera Frame Capture -> Face Verification
+  // Manual Frame Verification Button (if auto-scan paused or instant trigger)
   async verifyLiveCameraFrame(): Promise<void> {
     if (this.isProcessingScan()) return;
-    const cat = this.activeCategory();
-    const catProfiles = this.faceProfiles().filter((fp) => fp.memberCategory === cat);
-
-    if (catProfiles.length === 0) {
-      this.emitToast(`No ${this.categoryLabel(cat)} face profiles are enrolled yet. Enroll a face first via Camera.`, 'warning');
-      return;
-    }
-
-    if (this.portalContext() === 'student' && !this.studentSelfCheckInAllowed()) {
-      this.emitToast('Student self face check-in is disabled by School Owner.', 'warning');
+    const profiles = this.activeFaceProfiles();
+    if (profiles.length === 0) {
+      this.openQuickEnrollPanel(true);
+      this.emitToast('No faces enrolled yet — snap a selfie in the Quick Register panel to get started.', 'info');
       return;
     }
 
     const videoEl = this.verifyVideoEl?.nativeElement;
     if (!this.cameraActive() || !videoEl) {
-      this.emitToast('Start the live camera or snap a camera photo to run face verification.', 'warning');
+      this.emitToast('Start the live camera or drop selfie photos to verify.', 'warning');
       return;
     }
 
@@ -940,91 +1145,122 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
             matched: false,
             confidence: 0,
             threshold: this.effectiveThreshold(),
-            message: 'Liveness check failed: camera feed appears static. Blink or adjust slightly.',
-            memberName: 'Unverified Frame',
+            message: 'Liveness check failed: camera feed appears static. Blink or move slightly.',
+            memberName: 'Static Frame',
             memberCode: '-',
-            category: cat,
+            category: 'student',
             statusMarked: 'Rejected'
           });
-          this.emitToast('Liveness check failed — please keep a live moving face in frame.', 'warning');
+          this.emitToast('Please hold a live face in front of the camera.', 'warning');
           return;
         }
       }
 
-      const extraction = this.faceVerifier.extractFromVideo(videoEl, this.cameraFacingMode() === 'user');
+      const mirror = this.cameraFacingMode() === 'user';
+      const extraction = await this.faceVerifier.extractFromVideoAsync(videoEl, mirror, false);
       if (!extraction) {
         this.emitToast('Unable to read camera frame. Ensure camera video feed is visible.', 'warning');
         return;
       }
-      this.capturedVerifyPreview.set(extraction.photoDataUrl);
-      this.completeVerificationMatch(extraction, cat, catProfiles);
+      this.detectedFaceBox.set(extraction.faceBox || null);
+      this.multiFaceDetected.set(Boolean(extraction.detectedCount && extraction.detectedCount > 1));
+      this.completeVerificationMatch(extraction, profiles, false, videoEl, mirror);
     } finally {
       this.isProcessingScan.set(false);
     }
   }
 
+  // Supports single or multiple selfie photos selected at once (for batch/offline scanning without webcam)
   async onVerifyPhotoFileSelected(event: Event): Promise<void> {
     const inputEl = event.target as HTMLInputElement;
-    const file = inputEl?.files?.[0];
-    if (!file) return;
+    const files = inputEl?.files ? Array.from(inputEl.files) : [];
+    if (!files.length) return;
     inputEl.value = '';
-    await this.processVerifyFile(file);
+    await this.processVerifyBatchFiles(files);
   }
 
-  private async processVerifyFile(file: File): Promise<void> {
-    const cat = this.activeCategory();
-    const catProfiles = this.faceProfiles().filter((fp) => fp.memberCategory === cat);
-    if (catProfiles.length === 0) {
-      this.emitToast(`No enrolled face profiles exist for ${this.categoryLabel(cat)}. Please enroll first.`, 'warning');
+  onViewportDragOver(event: DragEvent): void {
+    event.preventDefault();
+    this.isDraggingFiles.set(true);
+  }
+
+  onViewportDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    this.isDraggingFiles.set(false);
+  }
+
+  async onViewportDrop(event: DragEvent): Promise<void> {
+    event.preventDefault();
+    this.isDraggingFiles.set(false);
+    const files = event.dataTransfer?.files ? Array.from(event.dataTransfer.files).filter((f) => f.type.startsWith('image/')) : [];
+    if (files.length === 0) return;
+    await this.processVerifyBatchFiles(files);
+  }
+
+  private async processVerifyBatchFiles(files: File[]): Promise<void> {
+    const profiles = this.activeFaceProfiles();
+    if (profiles.length === 0) {
+      // Auto-load first photo into Quick Selfie Enroll if no profiles exist yet!
+      const { result, rawDataUrl } = await this.faceVerifier.extractFromFile(files[0]);
+      if (result) {
+        this.quickEnrollPreviewUrl.set(result.photoDataUrl || rawDataUrl);
+        this.quickEnrollExtraction.set(result);
+        this.quickEnrollDrawerOpen.set(true);
+        this.emitToast('No enrolled faces yet — select a member and tap Save & Activate Face!', 'info');
+      }
       return;
     }
 
     this.isProcessingScan.set(true);
     try {
-      const { result, rawDataUrl } = await this.faceVerifier.extractFromFile(file);
-      if (!result) {
-        this.emitToast('Could not extract facial signature from captured image.', 'warning');
-        return;
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        if (files.length > 1) {
+          this.batchQueueStatus.set(`Scanning selfie ${i + 1} of ${files.length}...`);
+        }
+        const { result, rawDataUrl } = await this.faceVerifier.extractFromFile(file);
+        if (!result) continue;
+        this.capturedVerifyPreview.set(result.photoDataUrl || rawDataUrl);
+        this.completeVerificationMatch(result, profiles, false);
+        if (files.length > 1 && i < files.length - 1) {
+          await new Promise((r) => setTimeout(r, 650));
+        }
       }
-      this.capturedVerifyPreview.set(result.photoDataUrl || rawDataUrl);
-      this.completeVerificationMatch(result, cat, catProfiles, false);
     } finally {
+      this.batchQueueStatus.set('');
       this.isProcessingScan.set(false);
     }
   }
 
   private completeVerificationMatch(
     extraction: FaceExtractionResult,
-    cat: AttendanceMemberCategory,
-    catProfiles: FaceProfileRecord[],
+    profiles: FaceProfileRecord[],
     isAutoScan: boolean = false,
-    videoElForLazyThumb?: HTMLVideoElement,
-    mirrorForLazyThumb: boolean = true
+    videoElForLiveStream?: HTMLVideoElement,
+    _mirrorForLiveStream: boolean = true
   ): void {
-    const resolveSnapUrl = () => {
-      if (extraction.photoDataUrl) return extraction.photoDataUrl;
-      if (videoElForLazyThumb) {
-        extraction.photoDataUrl = this.faceVerifier.captureThumbnailFromVideo(videoElForLazyThumb, mirrorForLazyThumb);
-      }
-      return extraction.photoDataUrl;
+    // Live camera stream recognition NEVER captures or stores a snapshot photo
+    const isLiveCameraScan = isAutoScan || Boolean(videoElForLiveStream);
+    const resolveSnapUrl = (): string | undefined => {
+      if (isLiveCameraScan) return undefined;
+      return extraction.photoDataUrl || undefined;
     };
 
     const targetId = this.scanScope() === 'targeted' ? this.selectedTargetMemberId() : undefined;
-    if (this.scanScope() === 'targeted' && targetId && !catProfiles.some((p) => p.memberId === targetId)) {
+    if (this.scanScope() === 'targeted' && targetId && !profiles.some((p) => p.memberId === targetId)) {
       if (isAutoScan) return;
       const targetMember = this.activeCategoryMembers().find((m) => m.id === targetId);
       this.lastVerificationResult.set({
         matched: false,
         confidence: 0,
         threshold: this.effectiveThreshold(),
-        message: `${targetMember?.name || 'Selected member'} does not have a registered camera face profile yet.`,
+        message: `${targetMember?.name || 'Selected member'} has no enrolled face yet.`,
         memberName: targetMember?.name || 'Unenrolled Member',
         memberCode: targetMember?.code || '-',
-        category: cat,
-        statusMarked: 'Rejected',
+        category: targetMember?.category || 'student',
+        statusMarked: 'Unenrolled',
         livePhoto: resolveSnapUrl()
       });
-      this.emitToast('Selected member has no enrolled face photo. Enroll their face first.', 'warning');
       return;
     }
 
@@ -1034,70 +1270,91 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
         matched: false,
         confidence: 0,
         threshold: this.effectiveThreshold(),
-        message: extraction.reason || 'Low light or face not centered. Turn ON Light and center your face.',
-        memberName: 'Low Visibility',
+        message: extraction.reason || 'Face not clearly centered. Turn Light ON and look straight at the camera.',
+        memberName: 'Align Face',
         memberCode: '-',
-        category: cat,
-        statusMarked: 'Rejected',
+        category: 'student',
+        statusMarked: 'Retry',
         livePhoto: resolveSnapUrl()
       });
-      this.emitToast(extraction.reason || 'Face visibility too low — enable Light.', 'warning');
       return;
     }
 
-    // Apply per-member lite boost if Owner enabled lite on that member and current mode allows it
     let threshold = this.effectiveThreshold();
     if (targetId) {
-      const targetProf = catProfiles.find((p) => p.memberId === targetId);
+      const targetProf = profiles.find((p) => p.memberId === targetId);
       if (targetProf?.liteEnabled && this.policy().liteModeEnabled && this.liteVerifyActive()) {
         threshold = this.policy().liteConfidenceThreshold;
       }
     }
 
-    const match = this.faceVerifier.matchAgainstProfiles(extraction.descriptor, catProfiles, threshold, targetId);
+    const match = this.faceVerifier.matchAgainstProfiles(extraction.descriptor, profiles, threshold, targetId);
     const nowMs = Date.now();
 
     if (!match.matched || !match.profile) {
-      this.lastActiveFaceKey = '';
-      const closestName = match.candidateScores[0]?.profile?.memberName || 'Unregistered Face';
+      this.stableCandidateKey = '';
+      this.stableCandidateHits = 0;
+
+      if (isAutoScan) {
+        this.unknownConsecutiveHits++;
+        // Wait for 3 neural frames (~390ms) with a real human face, then alert ONCE per walk-up
+        if (this.unknownWarnedThisVisit || this.unknownConsecutiveHits < 3 || nowMs - this.unknownLastFeedbackAt < 2500) {
+          return;
+        }
+        this.unknownLastFeedbackAt = nowMs;
+        this.unknownWarnedThisVisit = true;
+      }
+
+      const closestName = match.candidateScores[0]?.profile?.memberName || 'Unregistered';
+      const fallbackCat = match.candidateScores[0]?.profile?.memberCategory || 'student';
       this.lastVerificationResult.set({
         matched: false,
         resultType: 'mismatch',
         confidence: match.confidence,
         threshold: match.thresholdUsed,
-        message: `Face not matched (${match.confidence}% < ${match.thresholdUsed}% required). Closest: ${closestName}.`,
-        memberName: 'Face Not Matched',
+        message: `Not enrolled / unregistered face (${match.confidence}% < ${match.thresholdUsed}% needed). Closest: ${closestName}.`,
+        memberName: 'Unregistered Face',
         memberCode: '-',
-        category: cat,
-        statusMarked: 'Not Matched',
+        category: fallbackCat,
+        statusMarked: 'Not Enrolled',
         livePhoto: isAutoScan ? undefined : resolveSnapUrl(),
         enrolledPhoto: match.candidateScores[0]?.profile?.facePhotoData
       });
       this.triggerScanOverlay(
         {
           kind: 'mismatch',
-          title: 'Face Not Matched',
-          subtitle: `Match ${match.confidence}% below ${match.thresholdUsed}% — Rejected`,
-          badgeText: 'NOT REGISTERED · REJECTED',
+          title: 'Face Not Enrolled',
+          subtitle: `Match ${match.confidence}% (min ${match.thresholdUsed}%) · Tap Enroll Now to register this person`,
+          badgeText: 'UNREGISTERED PERSON',
           confidence: match.confidence
         },
-        1300
+        1800
       );
-      if (!isAutoScan || nowMs - this.lastAlertBeepAt >= 1200) {
-        this.lastAlertBeepAt = nowMs;
-        this.playAlertTone('mismatch');
-      }
-      if (!isAutoScan) {
-        this.emitToast(`Face mismatch (${match.confidence}% < ${match.thresholdUsed}% threshold). Access Denied.`, 'warning');
-      }
+      this.lastAlertBeepAt = nowMs;
+      this.playAlertTone('mismatch');
       return;
     }
 
+    this.unknownConsecutiveHits = 0;
+    this.unknownWarnedThisVisit = false;
     const prof = match.profile;
     const memberKey = `${prof.memberCategory}:${prof.memberId}`;
+
+    // 2-frame neural stability lock (or instant 1-frame if confidence is very clear)
+    if (isAutoScan) {
+      if (this.stableCandidateKey === memberKey) {
+        this.stableCandidateHits++;
+      } else {
+        this.stableCandidateKey = memberKey;
+        this.stableCandidateHits = 1;
+      }
+      if (this.stableCandidateHits < 2 && match.confidence < threshold + 6) {
+        return;
+      }
+    }
+
     const todayIso = new Date().toISOString().split('T')[0];
     const nowDate = new Date();
-    const nowHHMM = `${String(nowDate.getHours()).padStart(2, '0')}:${String(nowDate.getMinutes()).padStart(2, '0')}`;
     const session = this.localSessionPunches.get(memberKey);
 
     const todayLogs = this.verificationLogs().filter(
@@ -1113,69 +1370,89 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     const hasIn = Boolean(session?.inTime || inLog);
     const hasOut = Boolean(session?.outTime || outLog);
     const twoPunch = Boolean(this.policy().twoPunchEnabled);
-    const outEnableTime = this.policy().checkOutEnableTime || '13:30';
+    const mode = this.gateMode();
 
-    // Determine if this matched face qualifies for IN, re-enabled OUT, or DUPLICATE REJECTED
+    const inElapsedMs = session?.inAtMs ? nowMs - session.inAtMs : 90000;
+    const autoOutCooldownMs = 45000;
+
     let nextPunch: 'IN' | 'OUT' | null = null;
-    if (!hasIn) {
-      nextPunch = 'IN';
-    } else if (twoPunch && nowHHMM >= outEnableTime && !hasOut) {
-      const inAgeOk = !session?.inAtMs || (nowMs - session.inAtMs >= 60000);
-      if (inAgeOk) {
+    let blockReason: string | null = null;
+
+    if (mode === 'in') {
+      if (!hasIn) {
+        nextPunch = 'IN';
+      } else {
+        blockReason = `Already Checked IN at ${session?.inTime || inLog?.timestamp || 'earlier today'}`;
+      }
+    } else if (mode === 'out') {
+      if (!hasIn) {
+        blockReason = 'No Check-IN recorded today — switch to Auto IN/OUT or Check-IN Gate first';
+      } else if (!hasOut && inElapsedMs >= 5000) {
         nextPunch = 'OUT';
+      } else {
+        blockReason = `Already Checked OUT at ${session?.outTime || outLog?.timestamp || 'earlier today'}`;
+      }
+    } else {
+      // Standard Company Auto IN / OUT Gate: 1st scan = IN, next scan after 45s cooldown = OUT
+      if (!hasIn) {
+        nextPunch = 'IN';
+      } else if (twoPunch && !hasOut && inElapsedMs >= autoOutCooldownMs) {
+        nextPunch = 'OUT';
+      } else if (hasOut) {
+        blockReason = `Already Checked IN (${session?.inTime || inLog?.timestamp}) & OUT (${session?.outTime || outLog?.timestamp}) today`;
+      } else if (twoPunch && !hasOut) {
+        const waitSec = Math.max(1, Math.ceil((autoOutCooldownMs - inElapsedMs) / 1000));
+        blockReason = `Already Checked IN at ${session?.inTime || inLog?.timestamp} · OUT unlocks in ${waitSec}s`;
+      } else {
+        blockReason = `Attendance already marked IN at ${session?.inTime || inLog?.timestamp || 'today'}`;
       }
     }
 
     if (!nextPunch) {
-      const lastStampMs = Math.max(session?.inAtMs || 0, session?.outAtMs || 0);
-      if (isAutoScan && this.lastActiveFaceKey === memberKey && lastStampMs > 0 && nowMs - lastStampMs < 650) {
+      // Same person still standing in front right after alert -> stay silent until they step out!
+      // Once they step away and walk back up, alert them cleanly again with 1 alert pip.
+      if (isAutoScan && this.lastActiveFaceKey === memberKey) {
         return;
       }
       this.lastActiveFaceKey = memberKey;
 
-      const inTimeStr = session?.inTime || inLog?.timestamp || 'earlier today';
-      const outTimeStr = session?.outTime || outLog?.timestamp || '';
-      const rejectSubtitle = hasOut
-        ? `Duplicate Rejected · Already Checked OUT (${outTimeStr})`
-        : twoPunch
-          ? `Duplicate Rejected · Checked IN (${inTimeStr}) · OUT enables ${outEnableTime}`
-          : `Duplicate Rejected · Already Marked IN (${inTimeStr})`;
-
+      const alreadySubtitle = blockReason || 'Attendance already marked today';
       this.lastVerificationResult.set({
-        matched: false,
+        matched: true,
         resultType: 'duplicate',
         confidence: match.confidence,
         threshold: match.thresholdUsed,
-        message: rejectSubtitle,
+        message: alreadySubtitle,
         memberName: prof.memberName,
         memberCode: prof.memberCode,
         category: prof.memberCategory,
-        statusMarked: 'Duplicate',
+        statusMarked: hasOut ? 'Already Checked OUT' : 'Already Checked IN',
         enrolledPhoto: prof.facePhotoData,
-        livePhoto: resolveSnapUrl()
+        livePhoto: isAutoScan ? undefined : resolveSnapUrl(),
+        savedOffline: !this.isBrowserOnline()
       });
       this.triggerScanOverlay(
         {
           kind: 'duplicate',
           title: prof.memberName,
-          subtitle: rejectSubtitle,
-          badgeText: 'DUPLICATE · REJECTED',
+          subtitle: alreadySubtitle,
+          badgeText: hasOut ? 'ALREADY COMPLETED TODAY' : 'ALREADY CHECKED IN',
           confidence: match.confidence,
-          memberCode: prof.memberCode
+          memberCode: prof.memberCode,
+          storageLabel: this.isBrowserOnline() ? 'SQLite + Cloud Synced' : 'SQLite Offline Saved'
         },
-        1300
+        1600
       );
-      if (!isAutoScan || nowMs - this.lastAlertBeepAt >= 950) {
-        this.lastAlertBeepAt = nowMs;
-        this.playAlertTone('duplicate');
-      }
-      if (!isAutoScan) {
-        this.emitToast(rejectSubtitle, 'warning');
-      }
+      this.playAlertTone('duplicate');
       return;
     }
 
+    // Fresh Attendance Verification -> GREEN TICK + SQLite Offline-First Save
     this.lastActiveFaceKey = memberKey;
+    this.lastSuccessAtMs = nowMs;
+    this.stableCandidateKey = '';
+    this.stableCandidateHits = 0;
+
     const snapUrl = resolveSnapUrl();
     const timeLabel = nowDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     if (nextPunch === 'IN') {
@@ -1187,16 +1464,27 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
 
     const status = nextPunch === 'IN' ? this.computeArrivalStatus() : 'Present';
     const modeTag = this.liteVerifyActive() ? 'face_camera_lite' : `face_camera_${this.policy().verificationMode}`;
-    const overlayBadge = nextPunch === 'OUT' ? 'VERIFIED · CHECKED OUT' : 'VERIFIED · ATTENDANCE MARKED';
+    const storageLabel = this.isBrowserOnline() ? 'SQLite + Auto-Sync' : 'Saved Offline · Auto-Sync Ready';
+    const overlayBadge = nextPunch === 'OUT' ? 'CHECKED OUT · VERIFIED' : 'ATTENDANCE MARKED · OK';
     const overlaySub =
       nextPunch === 'OUT'
-        ? `${prof.gradeOrDept} · OUT at ${timeLabel} · ${match.confidence}%`
-        : `${prof.gradeOrDept} · ${status} IN at ${timeLabel} · ${match.confidence}%`;
+        ? `${this.singleCategoryLabel(prof.memberCategory)} · ${prof.gradeOrDept} · OUT ${timeLabel}`
+        : `${this.singleCategoryLabel(prof.memberCategory)} · ${prof.gradeOrDept} · ${status} ${timeLabel}`;
 
-    this.recentVerifiedFeed.update((feed) => [
-      { id: `${memberKey}-${nowMs}`, name: prof.memberName, punch: nextPunch as 'IN' | 'OUT', time: timeLabel },
-      ...feed
-    ].slice(0, 4));
+    this.recentVerifiedFeed.update((feed) =>
+      [
+        {
+          id: `${memberKey}-${nowMs}`,
+          name: prof.memberName,
+          category: prof.memberCategory,
+          punch: nextPunch as 'IN' | 'OUT',
+          time: timeLabel,
+          confidence: match.confidence,
+          syncedLabel: this.isBrowserOnline() ? 'SQLite · Synced' : 'Offline Queued'
+        },
+        ...feed
+      ].slice(0, 6)
+    );
 
     this.lastVerificationResult.set({
       matched: true,
@@ -1209,7 +1497,8 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       category: prof.memberCategory,
       statusMarked: nextPunch === 'OUT' ? 'Checked Out' : status,
       enrolledPhoto: prof.facePhotoData,
-      livePhoto: snapUrl
+      livePhoto: snapUrl,
+      savedOffline: !this.isBrowserOnline()
     });
 
     this.triggerScanOverlay(
@@ -1220,9 +1509,10 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
         badgeText: overlayBadge,
         punchType: nextPunch,
         confidence: match.confidence,
-        memberCode: prof.memberCode
+        memberCode: prof.memberCode,
+        storageLabel
       },
-      1500
+      1200
     );
 
     this.playMatchChime();
@@ -1238,8 +1528,8 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       verificationMode: modeTag,
       confidenceScore: match.confidence,
       verifiedBy: isAutoScan
-        ? `${this.liteVerifyActive() ? 'Auto Camera (Lite)' : 'Auto Live Camera'} · ${nextPunch}`
-        : `${this.liteVerifyActive() ? 'Camera Verify (Lite)' : 'Camera Verification'} · ${nextPunch}`,
+        ? `${this.liteVerifyActive() ? 'Auto Kiosk (Lite)' : 'Auto Face Kiosk'} · ${nextPunch}`
+        : `${this.liteVerifyActive() ? 'Face Scan (Lite)' : 'Face Camera Scan'} · ${nextPunch}`,
       snapshotData: snapUrl
     });
   }
@@ -1253,6 +1543,7 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       punchType?: 'IN' | 'OUT';
       confidence?: number;
       memberCode?: string;
+      storageLabel?: string;
     },
     durationMs: number
   ): void {
@@ -1318,32 +1609,32 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
         osc.frequency.setValueAtTime(300, t);
         osc.frequency.setValueAtTime(210, t + 0.08);
       }
-      gain.gain.setValueAtTime(0.11, t);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.19);
+      gain.gain.setValueAtTime(0.09, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
       osc.connect(gain);
       gain.connect(ctx.destination);
       osc.start(t);
-      osc.stop(t + 0.2);
+      osc.stop(t + 0.19);
     } catch {}
   }
 
-  // Face Enrollment Methods (Real Video Frame or Phone Camera Capture)
-  captureEnrollmentFromCamera(): void {
+  // Face Enrollment Tab Methods
+  async captureEnrollmentFromCamera(): Promise<void> {
     const videoEl = this.enrollVideoEl?.nativeElement;
     if (!this.cameraActive() || !videoEl) {
-      this.emitToast('Open Webcam or tap Phone Camera below to capture face.', 'warning');
+      this.emitToast('Open Live Camera or snap a Selfie to capture face.', 'warning');
       return;
     }
     this.isCapturingEnroll.set(true);
     try {
-      const result = this.faceVerifier.extractFromVideo(videoEl, this.cameraFacingMode() === 'user');
-      if (!result) {
-        this.emitToast('Camera frame not ready yet. Wait a second and retry.', 'warning');
+      const result = await this.faceVerifier.extractFromVideoAsync(videoEl, this.cameraFacingMode() === 'user', true);
+      if (!result || !result.faceDetectedLikely || result.descriptor.length === 0) {
+        this.emitToast(result?.reason || 'No clear face detected in camera. Look straight into the camera and try again.', 'warning');
         return;
       }
       this.enrollCapturedDataUrl.set(result.photoDataUrl);
       this.enrollExtraction.set(result);
-      this.emitToast(`Face signature captured (${result.qualityScore}% quality). Click Save Face Profile to register.`, 'info');
+      this.emitToast(`Face captured (${result.qualityScore}% quality · 128-D neural ID). Click Save Face Profile.`, 'info');
     } finally {
       this.isCapturingEnroll.set(false);
     }
@@ -1367,7 +1658,7 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       }
       this.enrollCapturedDataUrl.set(result.photoDataUrl || rawDataUrl);
       this.enrollExtraction.set(result);
-      this.emitToast(`Face photo analyzed (${result.qualityScore}% quality). Ready to register.`, 'info');
+      this.emitToast(`Face photo analyzed (${result.qualityScore}% quality). Ready to save.`, 'info');
     } finally {
       this.isCapturingEnroll.set(false);
     }
@@ -1412,10 +1703,9 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     this.faceRemoved.emit(profileId);
   }
 
-  // Roster Actions (Enforces Camera-First unless Owner enabled Manual Fallback)
   handleRosterStatusAction(member: AttendanceMemberView, status: 'Present' | 'Late' | 'Absent' | 'On Leave'): void {
     if (!this.canUseManualFallback()) {
-      this.emitToast(`Camera Face Verification is required for ${member.name}. Opening camera terminal.`, 'info');
+      this.emitToast(`Opening Face Scanner for ${member.name}...`, 'info');
       this.openCameraForMember(member);
       return;
     }
@@ -1462,7 +1752,15 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     }));
   }
 
-  toggleDraftField(field: 'liteModeEnabled' | 'cameraFillLightEnabled' | 'livenessCheckEnabled' | 'autoCaptureOnMatch' | 'requireCameraForAllAttendance' | 'twoPunchEnabled'): void {
+  toggleDraftField(
+    field:
+      | 'liteModeEnabled'
+      | 'cameraFillLightEnabled'
+      | 'livenessCheckEnabled'
+      | 'autoCaptureOnMatch'
+      | 'requireCameraForAllAttendance'
+      | 'twoPunchEnabled'
+  ): void {
     this.policyDraft.update((d) => ({ ...d, [field]: !d[field] }));
   }
 
@@ -1640,7 +1938,6 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   private formatTimeShort(raw: string): string {
     const s = String(raw || '').trim();
     if (!s || /^\d{4}-\d{2}-\d{2}$/.test(s)) return '';
-    // Strip seconds from HH:MM:SS AM/PM if present -> HH:MM AM/PM
     const m = s.match(/^(\d{1,2}:\d{2})(?::\d{2})?(\s*[AP]M)?$/i);
     if (m) return `${m[1]}${m[2] ? m[2].toUpperCase() : ''}`;
     return s;
@@ -1668,10 +1965,17 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     return `${hrs}h ${mins}m`;
   }
 
-  categoryLabel(cat: AttendanceMemberCategory): string {
+  categoryLabel(cat: ScannerCategoryFilter): string {
+    if (cat === 'all') return 'All Campus';
     if (cat === 'teacher') return 'Teachers';
     if (cat === 'staff') return 'Staff';
     return 'Students';
+  }
+
+  singleCategoryLabel(cat: AttendanceMemberCategory): string {
+    if (cat === 'teacher') return 'Teacher';
+    if (cat === 'staff') return 'Staff';
+    return 'Student';
   }
 
   memberInitials(name: string): string {
@@ -1690,7 +1994,6 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     const now = new Date();
     const currentMins = now.getHours() * 60 + now.getMinutes();
     const cutoffMins = (Number.isFinite(ch) ? ch : 8) * 60 + (Number.isFinite(cm) ? cm : 15);
-    // Keep arrival realistic: if testing past school hours (after 15:00), treat verification as Present On-Time unless between cutoff and 14:30
     if (currentMins > cutoffMins && currentMins < 14 * 60 + 30) {
       return 'Late';
     }

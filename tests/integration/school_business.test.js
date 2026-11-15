@@ -618,20 +618,34 @@ test('School Business: Multi-Category Face Verification Attendance (Student, Tea
     assert.equal((await forbidden.json()).error, 'ROLE_FORBIDDEN');
   }
 
-  // Student self check-in initially disabled -> blocked 403
-  const blockedSelf = await fetch(`${baseUrl}/api/school/attendance`, {
+  // Manual attendance by student is still RBAC-blocked (403), while face_camera kiosk works with zero permission friction
+  const blockedManualSelf = await fetch(`${baseUrl}/api/school/attendance`, {
     method: 'POST',
     headers: studentHeaders,
     body: JSON.stringify({
       studentId: 'STD-SELF-1',
       studentName: 'Self Student',
       memberCategory: 'student',
+      verificationMode: 'manual',
+      confidenceScore: 0,
+      status: 'Present'
+    })
+  });
+  assert.equal(blockedManualSelf.status, 403);
+
+  const openCameraSelf = await fetch(`${baseUrl}/api/school/attendance`, {
+    method: 'POST',
+    headers: studentHeaders,
+    body: JSON.stringify({
+      studentId: 'STD-SELF-0',
+      studentName: 'Self Student Open',
+      memberCategory: 'student',
       verificationMode: 'face_camera',
       confidenceScore: 88,
       status: 'Present'
     })
   });
-  assert.equal(blockedSelf.status, 403);
+  assert.equal(openCameraSelf.status, 200);
 
   // Owner enables Lite mode, fills lighting boost & allows student self camera check-in
   const savePolicyRes = await fetch(`${baseUrl}/api/school/attendance/policy`, {

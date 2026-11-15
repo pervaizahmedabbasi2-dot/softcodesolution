@@ -240,6 +240,7 @@ function ensureColumnMigrations(sqliteDb) {
   safeAddCol('local_school_attendance', 'confidence_score', 'REAL DEFAULT 0');
   safeAddCol('local_school_attendance', 'verified_by', "TEXT DEFAULT 'Camera Face Verification'");
   safeAddCol('local_school_attendance', 'marked_by_role', "TEXT DEFAULT 'owner'");
+  safeAddCol('local_school_face_profiles', 'is_synced', 'INTEGER DEFAULT 0');
 
   const teacherCols = [
     ['tenant_id', "TEXT DEFAULT 'tenant-root-platform'"],
@@ -1616,7 +1617,7 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     res.json({ ok: true, tenantId: tid, policy: merged });
   });
 
-  router.get('/attendance/face-profiles', (req, res) => {
+  router.get('/attendance/face-profiles', async (req, res) => {
     const tid = resolveTenantId(req);
     const category = String(req.query?.category || '').trim().toLowerCase();
     let profiles = [];
@@ -1639,14 +1640,27 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
           qualityScore: Number(r.quality_score ?? 92),
           liteEnabled: r.lite_enabled !== 0,
           enrolledBy: r.enrolled_by || 'owner',
-          enrolledAt: r.enrolled_at
+          enrolledAt: r.enrolled_at,
+          isSynced: r.is_synced === 1
         }));
+      } catch {}
+    }
+    if (profiles.length === 0 && getCollectionDocs) {
+      try {
+        const cloudProfiles = await getCollectionDocs('school_face_profiles', []);
+        profiles = (cloudProfiles || [])
+          .filter((p) => (!p.tenant_id || p.tenant_id === tid) && (!category || p.memberCategory === category))
+          .map((p) => ({
+            ...p,
+            memberName: dec(p.tenant_id || tid, p.memberName || ''),
+            isSynced: true
+          }));
       } catch {}
     }
     res.json({ ok: true, tenantId: tid, profiles });
   });
 
-  router.post('/attendance/face-profiles', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
+  router.post('/attendance/face-profiles', (req, res) => {
     const tid = resolveTenantId(req);
     const b = req.body || {};
     const memberId = String(b.memberId || '').trim();
@@ -1674,15 +1688,16 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       faceHash: String(b.faceHash || `FACE-SHA-${memberId}`),
       qualityScore: Number(b.qualityScore ?? 94),
       liteEnabled: b.liteEnabled !== false,
-      enrolledBy: String(b.enrolledBy || resolveUserRole(req) || 'owner'),
-      enrolledAt
+      enrolledBy: String(b.enrolledBy || resolveUserRole(req) || 'kiosk'),
+      enrolledAt,
+      isSynced: false
     };
 
     if (sqliteDb) {
       sqliteDb.prepare(`
         INSERT OR REPLACE INTO local_school_face_profiles
-        (id, tenant_id, member_id, member_category, member_name, member_code, grade_or_dept, face_descriptor_json, face_photo_data, face_hash, quality_score, lite_enabled, enrolled_by, enrolled_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (id, tenant_id, member_id, member_category, member_name, member_code, grade_or_dept, face_descriptor_json, face_photo_data, face_hash, quality_score, lite_enabled, enrolled_by, enrolled_at, is_synced, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
       `).run(
         profile.id, tid, profile.memberId, profile.memberCategory, enc(tid, profile.memberName),
         profile.memberCode, profile.gradeOrDept, JSON.stringify(profile.faceDescriptor), profile.facePhotoData,
@@ -1694,10 +1709,36 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
         } catch {}
       }
     }
+    if (db) {
+      setDoc(doc(db, 'school_face_profiles', id), {
+        id: profile.id,
+        tenant_id: tid,
+        memberId: profile.memberId,
+        memberCategory: profile.memberCategory,
+        memberName: enc(tid, profile.memberName),
+        memberCode: profile.memberCode,
+        gradeOrDept: profile.gradeOrDept,
+        faceDescriptor: profile.faceDescriptor,
+        facePhotoData: profile.facePhotoData,
+        faceHash: profile.faceHash,
+        qualityScore: profile.qualityScore,
+        liteEnabled: profile.liteEnabled,
+        enrolledBy: profile.enrolledBy,
+        enrolledAt: profile.enrolledAt,
+        is_synced: 1,
+        synced_at: new Date().toISOString()
+      }, { merge: true }).then(() => {
+        try {
+          if (sqliteDb) {
+            sqliteDb.prepare('UPDATE local_school_face_profiles SET is_synced = 1 WHERE id = ? AND tenant_id = ?').run(id, tid);
+          }
+        } catch {}
+      }).catch(() => {});
+    }
     res.status(201).json({ ok: true, profile });
   });
 
-  router.delete('/attendance/face-profiles/:id', rejectRestrictedRole(['student', 'parent', 'teacher', 'accountant']), (req, res) => {
+  router.delete('/attendance/face-profiles/:id', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
     const tid = resolveTenantId(req);
     const id = req.params.id;
     if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
@@ -1754,24 +1795,14 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     const body = req.body || {};
     const memberCategory = String(body.memberCategory || 'student').trim().toLowerCase();
     const mode = String(body.verificationMode || body.verification_mode || 'face_camera');
-    const policy = loadTenantAttendancePolicy(tid);
+    const isCameraScan = mode.startsWith('face_camera') || mode.startsWith('face_kiosk');
 
-    if (role && ['student', 'parent', 'accountant'].includes(role)) {
-      const studentSelfAllowed = role === 'student' &&
-        policy?.roleAccess?.student?.enabled &&
-        policy?.roleAccess?.student?.selfCheckInEnabled &&
-        memberCategory === 'student' &&
-        mode.startsWith('face_camera');
-      const accountantStaffSelf = role === 'accountant' &&
-        policy?.roleAccess?.staff?.enabled &&
-        mode.startsWith('face_camera');
-      if (!studentSelfAllowed && !accountantStaffSelf) {
-        return res.status(403).json({
-          ok: false,
-          error: 'ROLE_FORBIDDEN',
-          message: `Role '${role}' is not authorized by School Owner policy to mark this attendance.`
-        });
-      }
+    if (!isCameraScan && role && ['student', 'parent', 'accountant'].includes(role)) {
+      return res.status(403).json({
+        ok: false,
+        error: 'ROLE_FORBIDDEN',
+        message: `Role '${role}' is not authorized to mark manual attendance.`
+      });
     }
 
     const recId = body.id || ('att-' + Date.now() + '-' + Math.floor(10 + Math.random() * 90));
@@ -1788,7 +1819,7 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     const gateName = String(body.gateName || `Camera Face Terminal · ${punchType}`);
     const confidenceScore = Number(body.confidenceScore ?? 0);
     const verifiedBy = String(body.verifiedBy || 'Camera Face Verification');
-    const markedByRole = String(body.markedByRole || role || 'owner');
+    const markedByRole = String(body.markedByRole || role || 'kiosk');
 
     if (sqliteDb) {
       sqliteDb.prepare(`
@@ -1817,7 +1848,15 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     };
 
     if (db) {
-      setDoc(doc(db, 'school_attendance', recId), { ...record, tenant_id: tid, synced_at: new Date().toISOString() }, { merge: true }).catch(() => {});
+      setDoc(doc(db, 'school_attendance', recId), { ...record, tenant_id: tid, is_synced: 1, synced_at: new Date().toISOString() }, { merge: true })
+        .then(() => {
+          try {
+            if (sqliteDb) {
+              sqliteDb.prepare('UPDATE local_school_attendance SET is_synced = 1 WHERE id = ? AND tenant_id = ?').run(recId, tid);
+            }
+          } catch {}
+        })
+        .catch(() => {});
     }
 
     res.json({
