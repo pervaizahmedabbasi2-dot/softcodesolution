@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, Output, EventEmitter, inject, ChangeDetectorRef, importProvidersFrom } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, Output, EventEmitter, inject, ChangeDetectorRef, importProvidersFrom } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { dashboardIcons } from '../../../dashboard/dashboard.component';
@@ -67,6 +67,15 @@ import { MatIconModule } from '@angular/material/icon';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { FirebaseDbService } from '../../../services/firebase-db.service';
 import { BackendService } from '../../../services/backend.service';
+import { SchoolAttendanceHubComponent } from '../components/school-attendance-hub/school-attendance-hub.component';
+import {
+  AttendanceMemberCategory,
+  FaceProfileRecord,
+  FaceVerificationLogRecord,
+  OwnerAttendancePolicy,
+  StaffMemberRecord,
+  createDefaultOwnerAttendancePolicy
+} from '../models/school-attendance.models';
 
 export type SchoolDashboardTab = 'overview' | 'stage_wise' | 'feed' | 'events' | 'students' | 'teachers' | 'admissions' | 'attendance' | 'finance' | 'invoices' | 'expenses' | 'payment_gateway' | 'transport' | 'library' | 'exams' | 'timetable' | 'hostel' | 'labs' | 'alumni' | 'portals' | 'reports' | 'settings' | 'audit' | 'lesson_plans' | 'appraisals' | 'inspections' | 'exam_moderation' | 'parent_complaints' | 'substitutions' | 'syllabus' | 'safeguarding' | 'directives';
 export type SchoolPortalRole = 'owner' | 'principal' | 'teacher' | 'student' | 'parent' | 'accountant';
@@ -346,6 +355,7 @@ export interface TeacherRecord {
   weeklyPeriods?: number;
   role?: string;
   designation?: string;
+  attendanceStatus?: 'Present' | 'Late' | 'Absent' | 'On Leave';
 }
 
 export interface StudentFeeDefaulterRecord {
@@ -765,7 +775,7 @@ export interface PrincipalFeeCollectionRecord {
 @Component({
   selector: 'app-school-dashboard',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule, FormsModule, MatIconModule, DataTableComponent, AuditReconciliationTrendsComponent, AnalyticsDashboardComponent],
+  imports: [CommonModule, LucideAngularModule, FormsModule, MatIconModule, DataTableComponent, AuditReconciliationTrendsComponent, AnalyticsDashboardComponent, SchoolAttendanceHubComponent],
   templateUrl: './school-dashboard.component.html',
   styles: [`
     .glass-surface {
@@ -824,7 +834,7 @@ export interface PrincipalFeeCollectionRecord {
     }
   `]
 })
-export class SchoolDashboardComponent implements OnInit {
+export class SchoolDashboardComponent implements OnInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
   private backend = inject(BackendService);
   private sanitizer = inject(DomSanitizer);
@@ -3891,6 +3901,12 @@ INSTRUCTIONS:
     geofenceHardwareBinding: true
   };
 
+  // Unified Camera Face Verification Attendance Hub State (Students + Teachers + Staff + Owner Access Control)
+  schoolStaff: StaffMemberRecord[] = [];
+  schoolFaceProfiles: FaceProfileRecord[] = [];
+  ownerAttendancePolicy: OwnerAttendancePolicy = createDefaultOwnerAttendancePolicy();
+  faceVerificationLogs: FaceVerificationLogRecord[] = [];
+
   biometricScanLogs: Array<{
     id: string;
     timestamp: string;
@@ -5835,10 +5851,34 @@ INSTRUCTIONS:
     }
   ];
 
+  offlineAttendanceQueue: Array<{
+    id: string;
+    kind: 'attendance' | 'face_profile' | 'face_delete' | 'policy';
+    payload: any;
+    queuedAt: string;
+  }> = [];
+  private isFlushingOfflineQueue = false;
+  private offlineSyncIntervalId: ReturnType<typeof setInterval> | null = null;
+  private readonly boundOnlineSyncHandler = () => {
+    void this.flushOfflineSyncQueue();
+  };
+
   ngOnInit(): void {
     this.loadStateFromStorage();
+    this.loadOfflineQueue();
     void this.loadStateFromBackend();
     this.loadStateFromCloud();
+
+    if (typeof window !== 'undefined') {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const requestedTab = params.get('tab');
+        if (requestedTab === 'attendance') {
+          this.currentTab = 'attendance';
+        }
+      } catch {}
+    }
+
     const savedRole = localStorage.getItem('activeSchoolRole');
     if (savedRole && ['owner', 'principal', 'teacher', 'student', 'parent', 'accountant'].includes(savedRole)) {
       this.currentPortalRole = savedRole as SchoolPortalRole;
@@ -5854,6 +5894,12 @@ INSTRUCTIONS:
     }
 
     if (typeof window !== 'undefined') {
+      window.addEventListener('online', this.boundOnlineSyncHandler);
+      this.offlineSyncIntervalId = setInterval(() => {
+        if (this.offlineAttendanceQueue.length > 0 && navigator.onLine !== false) {
+          void this.flushOfflineSyncQueue();
+        }
+      }, 15000);
       window.addEventListener('scs-school-modules-updated', (ev: any) => {
         if (ev.detail) {
           this.enabledModules = ev.detail;
@@ -5871,6 +5917,95 @@ INSTRUCTIONS:
           this.handleSchoolAction(ev.detail);
         }
       });
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (this.offlineSyncIntervalId !== null) {
+      clearInterval(this.offlineSyncIntervalId);
+      this.offlineSyncIntervalId = null;
+    }
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('online', this.boundOnlineSyncHandler);
+    }
+  }
+
+  private loadOfflineQueue(): void {
+    try {
+      const raw = this.getScopedItem('scs_school_offline_sync_queue_v1');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          this.offlineAttendanceQueue = parsed;
+        }
+      }
+    } catch {
+      this.offlineAttendanceQueue = [];
+    }
+  }
+
+  private saveOfflineQueue(): void {
+    try {
+      this.setScopedItem('scs_school_offline_sync_queue_v1', JSON.stringify(this.offlineAttendanceQueue));
+    } catch {}
+  }
+
+  private enqueueOfflineMutation(
+    kind: 'attendance' | 'face_profile' | 'face_delete' | 'policy',
+    payload: any
+  ): void {
+    const item = {
+      id: `OFF-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
+      kind,
+      payload,
+      queuedAt: new Date().toISOString()
+    };
+    this.offlineAttendanceQueue = [...this.offlineAttendanceQueue, item];
+    this.saveOfflineQueue();
+  }
+
+  async flushOfflineSyncQueue(): Promise<void> {
+    if (this.isFlushingOfflineQueue || this.offlineAttendanceQueue.length === 0) return;
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
+
+    this.isFlushingOfflineQueue = true;
+    const remaining: typeof this.offlineAttendanceQueue = [];
+    let syncedCount = 0;
+
+    try {
+      for (const item of this.offlineAttendanceQueue) {
+        let ok = false;
+        try {
+          if (item.kind === 'attendance') {
+            const r = await this.backend.saveSchoolAttendance(item.payload);
+            ok = Boolean(r?.ok);
+          } else if (item.kind === 'face_profile') {
+            const r = await this.backend.saveSchoolFaceProfile(item.payload);
+            ok = Boolean(r?.ok);
+          } else if (item.kind === 'face_delete') {
+            const r = await this.backend.deleteSchoolFaceProfile(item.payload);
+            ok = Boolean(r?.ok);
+          } else if (item.kind === 'policy') {
+            const r = await this.backend.saveSchoolAttendancePolicy(item.payload);
+            ok = Boolean(r?.ok);
+          }
+        } catch {
+          ok = false;
+        }
+        if (ok) {
+          syncedCount++;
+        } else {
+          remaining.push(item);
+        }
+      }
+      this.offlineAttendanceQueue = remaining;
+      this.saveOfflineQueue();
+      if (syncedCount > 0) {
+        this.showToast(`Internet restored — synced ${syncedCount} offline attendance item(s) to server.`, 'success');
+        this.cdr.detectChanges();
+      }
+    } finally {
+      this.isFlushingOfflineQueue = false;
     }
   }
 
@@ -6448,6 +6583,54 @@ INSTRUCTIONS:
         try { this.ownerBiometricPolicy = { ...this.ownerBiometricPolicy, ...JSON.parse(savedBioPolicy) }; } catch {}
       }
 
+      const savedStaff = this.getScopedItem('scs_school_staff_v1');
+      if (savedStaff) {
+        try {
+          const parsedStaff = JSON.parse(savedStaff);
+          this.schoolStaff = Array.isArray(parsedStaff) && parsedStaff.length > 0 ? parsedStaff : this.getInitialSchoolStaff();
+        } catch {
+          this.schoolStaff = this.getInitialSchoolStaff();
+        }
+      } else {
+        this.schoolStaff = this.getInitialSchoolStaff();
+      }
+
+      const savedFaceProfiles = this.getScopedItem('scs_school_face_profiles_v1');
+      if (savedFaceProfiles) {
+        try {
+          const parsedFp = JSON.parse(savedFaceProfiles);
+          if (Array.isArray(parsedFp)) this.schoolFaceProfiles = parsedFp;
+        } catch {}
+      }
+
+      const savedOwnerAttPolicy = this.getScopedItem('scs_school_owner_attendance_policy_v1');
+      if (savedOwnerAttPolicy) {
+        try {
+          const parsedPol = JSON.parse(savedOwnerAttPolicy);
+          const def = createDefaultOwnerAttendancePolicy();
+          this.ownerAttendancePolicy = {
+            ...def,
+            ...parsedPol,
+            categories: { ...def.categories, ...(parsedPol?.categories || {}) },
+            roleAccess: { ...def.roleAccess, ...(parsedPol?.roleAccess || {}) },
+            operatorOverrides: { ...(parsedPol?.operatorOverrides || {}) }
+          };
+          this.ownerBiometricPolicy.principalBiometricAccessGranted = Boolean(this.ownerAttendancePolicy.roleAccess.principal.enabled);
+        } catch {
+          this.ownerAttendancePolicy = createDefaultOwnerAttendancePolicy();
+        }
+      } else {
+        this.ownerAttendancePolicy = createDefaultOwnerAttendancePolicy();
+      }
+
+      const savedFaceLogs = this.getScopedItem('scs_school_face_verification_logs_v1');
+      if (savedFaceLogs) {
+        try {
+          const parsedLogs = JSON.parse(savedFaceLogs);
+          if (Array.isArray(parsedLogs)) this.faceVerificationLogs = parsedLogs;
+        } catch {}
+      }
+
       const savedDocked = localStorage.getItem('scs_school_sidebar_docked');
       if (savedDocked !== null) {
         try { this.isSidebarDocked = JSON.parse(savedDocked); } catch {}
@@ -6530,7 +6713,8 @@ INSTRUCTIONS:
 
   async loadStateFromBackend(): Promise<void> {
     try {
-      const [wsRes, stuRes, tchRes, admRes, feeRes, hwRes, lvRes, conRes, cmpRes, lpRes, subRes, audRes, recRes, pvRes, monRes] = await Promise.all([
+      await this.flushOfflineSyncQueue();
+      const [wsRes, stuRes, tchRes, admRes, feeRes, hwRes, lvRes, conRes, cmpRes, lpRes, subRes, audRes, recRes, pvRes, monRes, stfRes, polRes, fpRes, attRes] = await Promise.all([
         this.backend.getSchoolWorkspace().catch(() => null),
         this.backend.getSchoolStudents().catch(() => null),
         this.backend.getSchoolTeachers().catch(() => null),
@@ -6545,7 +6729,11 @@ INSTRUCTIONS:
         this.backend.getSchoolAuditLogs().catch(() => null),
         this.backend.getSchoolReconciliations().catch(() => null),
         this.backend.getSchoolPettyVouchers().catch(() => null),
-        this.backend.getSchoolFinanceMonitoring(this.monitoringRangeDays).catch(() => null)
+        this.backend.getSchoolFinanceMonitoring(this.monitoringRangeDays).catch(() => null),
+        this.backend.getSchoolStaff().catch(() => null),
+        this.backend.getSchoolAttendancePolicy().catch(() => null),
+        this.backend.getSchoolFaceProfiles().catch(() => null),
+        this.backend.getSchoolAttendance().catch(() => null)
       ]);
 
       if (wsRes?.ok && wsRes.workspace && typeof wsRes.workspace === 'object') {
@@ -6764,6 +6952,79 @@ INSTRUCTIONS:
         this.backendMonitoringSnapshot = monRes.summary;
       }
 
+      if (stfRes?.ok && Array.isArray(stfRes.staff) && stfRes.staff.length > 0) {
+        const mapStf = new Map<string, StaffMemberRecord>();
+        for (const s of stfRes.staff) mapStf.set(s.id, s);
+        for (const local of this.schoolStaff) {
+          if (!mapStf.has(local.id)) mapStf.set(local.id, local);
+        }
+        this.schoolStaff = Array.from(mapStf.values());
+      }
+
+      if (polRes?.ok && polRes.policy) {
+        const def = createDefaultOwnerAttendancePolicy();
+        this.ownerAttendancePolicy = {
+          ...def,
+          ...polRes.policy,
+          categories: { ...def.categories, ...(polRes.policy.categories || {}) },
+          roleAccess: { ...def.roleAccess, ...(polRes.policy.roleAccess || {}) },
+          operatorOverrides: { ...(polRes.policy.operatorOverrides || {}) }
+        };
+        this.ownerBiometricPolicy.principalBiometricAccessGranted = Boolean(this.ownerAttendancePolicy.roleAccess.principal.enabled);
+      }
+
+      if (fpRes?.ok && Array.isArray(fpRes.profiles)) {
+        const mapFp = new Map<string, FaceProfileRecord>();
+        for (const p of fpRes.profiles) {
+          if (p && p.id) mapFp.set(p.id, p);
+        }
+        for (const local of this.schoolFaceProfiles) {
+          if (local && local.id && !mapFp.has(local.id)) mapFp.set(local.id, local);
+        }
+        this.schoolFaceProfiles = Array.from(mapFp.values());
+        this.syncBiometricFlagsFromFaceProfiles();
+      }
+
+      if (attRes?.ok && Array.isArray(attRes.attendance) && attRes.attendance.length > 0) {
+        const todayIso = new Date().toISOString().split('T')[0];
+        const logs: FaceVerificationLogRecord[] = [];
+        for (const row of attRes.attendance) {
+          const cat: AttendanceMemberCategory = (row.memberCategory || 'student') as AttendanceMemberCategory;
+          logs.push({
+            id: row.id || `ATT-${Math.random().toString(36).slice(2, 7)}`,
+            memberCategory: cat,
+            memberId: row.studentId || row.memberId || '',
+            memberName: row.studentName || row.memberName || 'Member',
+            memberCode: row.rollNo || row.memberCode || '',
+            gradeOrDept: row.grade || row.gradeOrDept || 'Campus',
+            status: row.status || 'Present',
+            punchType: row.punchType || (String(row.gateName || '').includes('OUT') ? 'OUT' : 'IN'),
+            verificationMode: row.verificationMode || 'face_camera',
+            confidenceScore: Number(row.confidenceScore ?? 92),
+            verifiedBy: row.verifiedBy || 'Face Camera',
+            markedByRole: row.markedByRole || 'owner',
+            date: row.date || todayIso,
+            timestamp: row.timestamp || row.date || todayIso
+          });
+          if (row.date === todayIso) {
+            if (cat === 'student') {
+              const st = this.activeStudents.find((s) => s.id === row.studentId || s.rollNo === row.rollNo);
+              if (st) st.status = row.status;
+            } else if (cat === 'teacher') {
+              const tch = this.teachers.find((t) => t.id === row.studentId);
+              if (tch) tch.attendanceStatus = row.status;
+            } else if (cat === 'staff') {
+              const sf = this.schoolStaff.find((x) => x.id === row.studentId);
+              if (sf) sf.attendanceStatus = row.status;
+            }
+          }
+        }
+        if (logs.length > 0) {
+          this.faceVerificationLogs = logs;
+        }
+      }
+
+      this.recomputeAttendanceSummary();
       this.recalculateDefaulters();
       this.cdr.detectChanges();
     } catch {}
@@ -6814,6 +7075,10 @@ INSTRUCTIONS:
       this.setScopedItem('scs_school_principal_fee_collections_v1', JSON.stringify(this.principalFeeCollections));
       this.setScopedItem('scs_school_generated_challans_v1', JSON.stringify(this.accountantGeneratedChallans));
       this.setScopedItem('scs_school_petty_vouchers_v1', JSON.stringify(this.accountantPettyVouchers));
+      this.setScopedItem('scs_school_staff_v1', JSON.stringify(this.schoolStaff));
+      this.setScopedItem('scs_school_face_profiles_v1', JSON.stringify(this.schoolFaceProfiles));
+      this.setScopedItem('scs_school_owner_attendance_policy_v1', JSON.stringify(this.ownerAttendancePolicy));
+      this.setScopedItem('scs_school_face_verification_logs_v1', JSON.stringify(this.faceVerificationLogs));
       void this.backend.saveSchoolWorkspace({
         schoolName: this.schoolName,
         settingsForm: this.settingsForm,
@@ -11586,75 +11851,345 @@ INSTRUCTIONS:
     this.showToast(`WhatsApp substitution slip sent to ${sub.substituteTeacher}`, 'success');
   }
 
-  // --- INITIAL BIOMETRIC EYE IRIS ENROLLMENT REGISTRATION ---
-  openBiometricEnrollmentModal(memberId?: string, role: 'Student' | 'Teacher' = 'Student'): void {
-    this.closeBiometricKioskModal();
-    this.openFaceEnrollmentModal(memberId, role);
+  // --- UNIFIED CAMERA FACE VERIFICATION ATTENDANCE HUB HANDLERS ---
+  getInitialSchoolStaff(): StaffMemberRecord[] {
+    return [
+      { id: 'STF-101', empCode: 'STF-101', name: 'Haji Abdul Rashid', roleTitle: 'Head Security Officer', department: 'Campus Security', phone: '+92 300 4412233', shift: 'Morning (06:30 AM - 02:30 PM)', status: 'ACTIVE', attendanceStatus: 'Present', faceEnrolled: false, liteEnabled: true },
+      { id: 'STF-102', empCode: 'STF-102', name: 'Muhammad Irfan', roleTitle: 'Gate Turnstile Attendant', department: 'Campus Security', phone: '+92 321 9981122', shift: 'Morning (07:00 AM - 03:00 PM)', status: 'ACTIVE', attendanceStatus: 'Present', faceEnrolled: false, liteEnabled: true },
+      { id: 'STF-103', empCode: 'STF-103', name: 'Sajida Parveen', roleTitle: 'Front Desk Coordinator', department: 'Administration', phone: '+92 333 5511099', shift: 'Full Day (07:30 AM - 03:30 PM)', status: 'ACTIVE', attendanceStatus: 'Present', faceEnrolled: false, liteEnabled: true },
+      { id: 'STF-104', empCode: 'STF-104', name: 'Kamran Qureshi', roleTitle: 'Senior Accounts Clerk', department: 'Finance & Fee Desk', phone: '+92 301 7744221', shift: 'Full Day (08:00 AM - 04:00 PM)', status: 'ACTIVE', attendanceStatus: 'Present', faceEnrolled: false, liteEnabled: true },
+      { id: 'STF-105', empCode: 'STF-105', name: 'Nadeem Abbas', roleTitle: 'Science Lab Attendant', department: 'Academic Support', phone: '+92 345 6622110', shift: 'Morning (07:30 AM - 02:30 PM)', status: 'ACTIVE', attendanceStatus: 'Absent', faceEnrolled: false, liteEnabled: true },
+      { id: 'STF-106', empCode: 'STF-106', name: 'Rukhsana Bibi', roleTitle: 'Campus Caretaker', department: 'Facilities', phone: '+92 312 8833445', shift: 'Morning (06:45 AM - 02:45 PM)', status: 'ACTIVE', attendanceStatus: 'Present', faceEnrolled: false, liteEnabled: true }
+    ];
+  }
+
+  private syncBiometricFlagsFromFaceProfiles(): void {
+    const enrolledSet = new Set(this.schoolFaceProfiles.map((fp) => `${fp.memberCategory}:${fp.memberId}`));
+    const photoMap = new Map(this.schoolFaceProfiles.map((fp) => [`${fp.memberCategory}:${fp.memberId}`, fp.facePhotoData]));
+
+    this.activeStudents = (this.activeStudents || []).map((st) => {
+      const key = `student:${st.id}`;
+      const hasProfile = enrolledSet.has(key);
+      return {
+        ...st,
+        biometricEnrolled: hasProfile ? true : st.biometricEnrolled,
+        image: photoMap.get(key) || st.image
+      };
+    });
+
+    this.teachers = (this.teachers || []).map((t) => {
+      const key = `teacher:${t.id}`;
+      const hasProfile = enrolledSet.has(key);
+      return {
+        ...t,
+        biometricEnrolled: hasProfile ? true : t.biometricEnrolled,
+        image: photoMap.get(key) || t.image
+      };
+    });
+
+    this.schoolStaff = (this.schoolStaff || []).map((sf) => {
+      const key = `staff:${sf.id}`;
+      const hasProfile = enrolledSet.has(key);
+      return {
+        ...sf,
+        faceEnrolled: hasProfile ? true : sf.faceEnrolled,
+        image: photoMap.get(key) || sf.image
+      };
+    });
+  }
+
+  private recomputeAttendanceSummary(): void {
+    const total = (this.activeStudents || []).length;
+    const present = (this.activeStudents || []).filter((s) => s.status === 'Present').length;
+    const late = (this.activeStudents || []).filter((s) => s.status === 'Late').length;
+    const absent = (this.activeStudents || []).filter((s) => s.status === 'Absent').length;
+    const rate = total > 0 ? `${(((present + late) / total) * 100).toFixed(1)}%` : '0%';
+    this.attendanceSummary = {
+      ...this.attendanceSummary,
+      totalStudents: total,
+      presentToday: present + late,
+      absent,
+      lateArrivals: late,
+      attendanceRate: rate
+    };
+  }
+
+  onAttendanceHubToast(ev: { message: string; type: 'success' | 'info' | 'warning' }): void {
+    this.showToast(ev.message, ev.type);
+  }
+
+  async onAttendancePolicySaved(policy: OwnerAttendancePolicy): Promise<void> {
+    this.ownerAttendancePolicy = {
+      ...policy,
+      categories: { ...policy.categories },
+      roleAccess: { ...policy.roleAccess },
+      operatorOverrides: { ...(policy.operatorOverrides || {}) }
+    };
+    this.ownerBiometricPolicy = {
+      ...this.ownerBiometricPolicy,
+      principalBiometricAccessGranted: Boolean(policy.roleAccess.principal.enabled),
+      manualRollCallEnabled: !policy.requireCameraForAllAttendance
+    };
+    this.saveStateToStorage();
+    const isOnline = typeof navigator === 'undefined' || navigator.onLine !== false;
+    const res = isOnline ? await this.backend.saveSchoolAttendancePolicy(this.ownerAttendancePolicy) : { ok: false };
+    if (res?.ok && res.policy) {
+      this.ownerAttendancePolicy = { ...this.ownerAttendancePolicy, ...res.policy };
+      this.showToast('School Owner Attendance Setup & Access Control saved & enforced across all portals.', 'success');
+    } else {
+      this.enqueueOfflineMutation('policy', this.ownerAttendancePolicy);
+      this.showToast('Offline mode: Owner setup saved locally & queued to sync automatically when internet returns.', 'info');
+    }
+    this.cdr.detectChanges();
+  }
+
+  async onFaceProfileEnrolled(profile: FaceProfileRecord): Promise<void> {
+    const filtered = this.schoolFaceProfiles.filter(
+      (fp) => !(fp.memberCategory === profile.memberCategory && fp.memberId === profile.memberId)
+    );
+    this.schoolFaceProfiles = [profile, ...filtered];
+    this.syncBiometricFlagsFromFaceProfiles();
+    this.saveStateToStorage();
+    const isOnline = typeof navigator === 'undefined' || navigator.onLine !== false;
+    const res = isOnline ? await this.backend.saveSchoolFaceProfile(profile) : { ok: false };
+    if (!res?.ok) {
+      this.enqueueOfflineMutation('face_profile', profile);
+      this.showToast(`Offline mode: Face profile saved locally for ${profile.memberName} & queued for sync.`, 'info');
+    } else {
+      this.showToast(`Face profile enrolled & saved for ${profile.memberName} (${profile.memberCategory}).`, 'success');
+    }
+    this.cdr.detectChanges();
+  }
+
+  async onFaceProfileRemoved(profileId: string): Promise<void> {
+    const removed = this.schoolFaceProfiles.find((fp) => fp.id === profileId);
+    this.schoolFaceProfiles = this.schoolFaceProfiles.filter((fp) => fp.id !== profileId);
+    if (removed) {
+      if (removed.memberCategory === 'student') {
+        this.activeStudents = this.activeStudents.map((s) => (s.id === removed.memberId ? { ...s, biometricEnrolled: false } : s));
+      } else if (removed.memberCategory === 'teacher') {
+        this.teachers = this.teachers.map((t) => (t.id === removed.memberId ? { ...t, biometricEnrolled: false } : t));
+      } else {
+        this.schoolStaff = this.schoolStaff.map((sf) => (sf.id === removed.memberId ? { ...sf, faceEnrolled: false } : sf));
+      }
+    }
+    this.saveStateToStorage();
+    const isOnline = typeof navigator === 'undefined' || navigator.onLine !== false;
+    const res = isOnline ? await this.backend.deleteSchoolFaceProfile(profileId) : { ok: false };
+    if (!res?.ok) {
+      this.enqueueOfflineMutation('face_delete', profileId);
+    }
+    this.showToast('Face biometric profile removed.', 'info');
+    this.cdr.detectChanges();
+  }
+
+  async onHubAttendanceRecorded(ev: {
+    memberCategory: AttendanceMemberCategory;
+    memberId: string;
+    memberName: string;
+    memberCode: string;
+    gradeOrDept: string;
+    status: 'Present' | 'Late' | 'Absent' | 'On Leave';
+    punchType?: 'IN' | 'OUT';
+    verificationMode: string;
+    confidenceScore: number;
+    verifiedBy: string;
+    snapshotData?: string;
+  }): Promise<void> {
+    const punch: 'IN' | 'OUT' = ev.punchType === 'OUT' ? 'OUT' : 'IN';
+    if (ev.memberCategory === 'student') {
+      this.activeStudents = this.activeStudents.map((s) =>
+        s.id === ev.memberId || s.rollNo === ev.memberCode
+          ? { ...s, status: ev.status }
+          : s
+      );
+      const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const todayLabel = new Date().toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
+      const dayLabel = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+      if (punch === 'OUT') {
+        const existingIdx = this.studentAttendanceLog.findIndex((l) => l.date === todayLabel);
+        if (existingIdx >= 0) {
+          this.studentAttendanceLog = this.studentAttendanceLog.map((l, idx) =>
+            idx === existingIdx ? { ...l, checkOut: nowTime } : l
+          );
+        }
+      } else if (!this.studentAttendanceLog.some((l) => l.date === todayLabel)) {
+        this.studentAttendanceLog = [
+          {
+            date: todayLabel,
+            day: dayLabel,
+            checkIn: nowTime,
+            checkOut: 'Active',
+            gate: `Face Camera Terminal (${Math.round(ev.confidenceScore)}%)`,
+            status: ev.status
+          },
+          ...this.studentAttendanceLog
+        ];
+      }
+    } else if (ev.memberCategory === 'teacher') {
+      this.teachers = this.teachers.map((t) =>
+        t.id === ev.memberId ? { ...t, attendanceStatus: ev.status } : t
+      );
+    } else {
+      this.schoolStaff = this.schoolStaff.map((sf) =>
+        sf.id === ev.memberId ? { ...sf, attendanceStatus: ev.status } : sf
+      );
+    }
+
+    const nowTs = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const logEntry: FaceVerificationLogRecord = {
+      id: `FLOG-${Date.now().toString(36).slice(-5)}`,
+      memberCategory: ev.memberCategory,
+      memberId: ev.memberId,
+      memberName: ev.memberName,
+      memberCode: ev.memberCode,
+      gradeOrDept: ev.gradeOrDept,
+      status: ev.status,
+      punchType: punch,
+      verificationMode: ev.verificationMode,
+      confidenceScore: ev.confidenceScore,
+      verifiedBy: ev.verifiedBy,
+      markedByRole: this.currentPortalRole || 'owner',
+      date: new Date().toISOString().split('T')[0],
+      timestamp: nowTs,
+      snapshotData: ev.snapshotData
+    };
+    this.faceVerificationLogs = [logEntry, ...this.faceVerificationLogs].slice(0, 80);
+
+    this.recomputeAttendanceSummary();
+    this.saveStateToStorage();
+
+    const attendancePayload = {
+      studentId: ev.memberId,
+      studentName: ev.memberName,
+      rollNo: ev.memberCode,
+      grade: ev.gradeOrDept,
+      status: ev.status,
+      punchType: punch,
+      gateName: `Camera Face Terminal · ${punch}`,
+      memberCategory: ev.memberCategory,
+      verificationMode: ev.verificationMode,
+      confidenceScore: ev.confidenceScore,
+      verifiedBy: ev.verifiedBy,
+      markedByRole: this.currentPortalRole || 'owner'
+    };
+
+    const isOnline = typeof navigator === 'undefined' || navigator.onLine !== false;
+    const punchLabel = punch === 'OUT' ? 'CHECKED OUT' : ev.status;
+
+    if (!isOnline) {
+      this.enqueueOfflineMutation('attendance', attendancePayload);
+      this.showToast(
+        `Offline saved (${ev.memberCategory.toUpperCase()}): ${ev.memberName} ${punchLabel} — auto-sync when online`,
+        'info'
+      );
+      this.cdr.detectChanges();
+      return;
+    }
+
+    this.cdr.detectChanges();
+    void this.backend.saveSchoolAttendance(attendancePayload).then((res) => {
+      if (!res?.ok) {
+        this.enqueueOfflineMutation('attendance', attendancePayload);
+        this.showToast(
+          `Saved locally (${ev.memberCategory.toUpperCase()}): ${ev.memberName} ${punchLabel} — auto-sync queued`,
+          'info'
+        );
+      }
+      this.cdr.detectChanges();
+    });
+  }
+
+  async onHubStaffCreated(payload: {
+    name: string;
+    roleTitle: string;
+    department: string;
+    phone: string;
+    shift: string;
+    liteEnabled: boolean;
+  }): Promise<void> {
+    const res = await this.backend.saveSchoolStaff(payload);
+    const created: StaffMemberRecord = res?.ok && res.staff
+      ? res.staff
+      : {
+          id: `STF-${Date.now().toString(36).slice(-5).toUpperCase()}`,
+          empCode: `STF-${Math.floor(200 + Math.random() * 799)}`,
+          name: payload.name,
+          roleTitle: payload.roleTitle,
+          department: payload.department,
+          phone: payload.phone,
+          shift: payload.shift,
+          attendanceStatus: 'Absent',
+          faceEnrolled: false,
+          liteEnabled: payload.liteEnabled
+        };
+    this.schoolStaff = [created, ...this.schoolStaff];
+    this.saveStateToStorage();
+    this.showToast(`Campus staff member ${created.name} added (${created.empCode}). Enroll their face photo to activate gate scanning.`, 'success');
+    this.cdr.detectChanges();
+  }
+
+  async onHubStaffDeleted(staffId: string): Promise<void> {
+    this.schoolStaff = this.schoolStaff.filter((s) => s.id !== staffId);
+    this.schoolFaceProfiles = this.schoolFaceProfiles.filter((fp) => !(fp.memberCategory === 'staff' && fp.memberId === staffId));
+    this.saveStateToStorage();
+    await this.backend.deleteSchoolStaff(staffId);
+    this.showToast('Staff record removed from campus attendance roster.', 'info');
+    this.cdr.detectChanges();
+  }
+
+  onHubAbsentAlertRequested(ev: { category: AttendanceMemberCategory; memberId?: string }): void {
+    if (ev.category === 'student') {
+      this.broadcastTodayAbsentAlerts();
+    } else if (ev.category === 'teacher') {
+      const absentTeachers = (this.teachers || []).filter((t) => (t.attendanceStatus || 'Present') === 'Absent');
+      this.showToast(
+        absentTeachers.length > 0
+          ? `Dispatched absence follow-up alert to ${absentTeachers.length} faculty members.`
+          : 'All teachers have verified presence today.',
+        absentTeachers.length > 0 ? 'success' : 'info'
+      );
+    } else {
+      const absentStaff = (this.schoolStaff || []).filter((s) => (s.attendanceStatus || 'Absent') === 'Absent');
+      this.showToast(
+        absentStaff.length > 0
+          ? `Dispatched shift alert to ${absentStaff.length} campus staff members.`
+          : 'All campus staff members have checked in today.',
+        absentStaff.length > 0 ? 'success' : 'info'
+      );
+    }
+  }
+
+  // --- LEGACY MODAL REDIRECTORS (Route smoothly to unified Camera Face Attendance Hub) ---
+  openBiometricEnrollmentModal(_memberId?: string, _role: 'Student' | 'Teacher' = 'Student'): void {
+    this.openFaceEnrollmentModal(_memberId, _role);
   }
 
   closeBiometricEnrollmentModal(): void {
     this.stopCameraStream();
     this.isBiometricEnrollmentModalOpen = false;
-    this.enrollmentScanStatus = 'Idle';
     this.cdr.detectChanges();
   }
 
   triggerBiometricEnrollmentScan(): void {
-    if (!this.selectedEnrollmentMemberId) {
-      this.showToast('Please select a student or teacher profile for eye iris & fingerprint enrollment.', 'warning');
-      return;
-    }
-    this.enrollmentScanStatus = 'Scanning';
-    this.cdr.detectChanges();
-
-    setTimeout(() => {
-      let memberName = 'Member';
-      if (this.selectedEnrollmentRole === 'Student') {
-        const st = this.activeStudents.find(s => s.id === this.selectedEnrollmentMemberId);
-        if (st) {
-          st.biometricEnrolled = true;
-          st.irisScanCode = 'IRIS-' + Math.floor(10000 + Math.random() * 89999);
-          st.irisEnrolledAt = new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
-          st.fingerprintEnrolled = true;
-          st.fingerprintTemplateHash = 'FP-SHA256-ST-' + st.rollNo + '-' + Math.floor(10000 + Math.random() * 89999);
-          st.faceEmbeddingToken = 'SEC-FACE-256-' + st.rollNo + '-X99';
-          memberName = st.name;
-        }
-      } else {
-        const tch = this.teachers.find(t => t.id === this.selectedEnrollmentMemberId);
-        if (tch) {
-          tch.biometricEnrolled = true;
-          tch.irisScanCode = 'IRIS-' + Math.floor(10000 + Math.random() * 89999);
-          tch.irisEnrolledAt = new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
-          tch.fingerprintEnrolled = true;
-          tch.fingerprintTemplateHash = 'FP-SHA256-TCH-' + tch.id + '-' + Math.floor(10000 + Math.random() * 89999);
-          tch.faceEmbeddingToken = 'SEC-FACE-256-' + tch.id + '-TCH';
-          memberName = tch.name;
-        }
-      }
-
-      this.saveStateToStorage();
-      this.enrollmentScanStatus = 'Enrolled';
-      this.showToast(`✅ Biometric Eye Iris & Fingerprint Profile for ${memberName} successfully registered & saved!`, 'success');
-      this.cdr.detectChanges();
-    }, 1800);
+    this.openFaceEnrollmentModal();
   }
 
   // --- FACE BIOMETRIC ENROLLMENT COMPONENT METHODS ---
-  openFaceEnrollmentModal(memberId?: string, role: 'Student' | 'Teacher' = 'Student'): void {
-    if (this.autoScanTimerRef) {
-      clearInterval(this.autoScanTimerRef);
-      this.autoScanTimerRef = null;
+  openFaceEnrollmentModal(_memberId?: string, _role: 'Student' | 'Teacher' = 'Student'): void {
+    this.stopCameraStream();
+    this.isFaceEnrollmentModalOpen = false;
+    if (this.currentPortalRole === 'principal') {
+      this.setPrincipalTab('biometric_attendance');
+    } else if (this.currentPortalRole === 'teacher') {
+      this.setTeacherTab('attendance');
+    } else if (this.currentPortalRole === 'student') {
+      this.setStudentTab('attendance');
+    } else {
+      this.setTab('attendance');
     }
-    this.isFaceEnrollmentModalOpen = true;
-    this.enrollmentMode = 'select_existing';
-    this.selectedEnrollmentRole = role;
-    this.selectedEnrollmentMemberId = memberId || (role === 'Student' ? (this.activeStudents[0]?.id || '') : (this.teachers[0]?.id || ''));
-    this.enrollmentStep = 'camera';
-    this.enrolledCapturedImage = '';
-    this.cameraPermissionError = '';
+    this.showToast('Use the Face Enrollment Studio inside the Attendance Hub to capture & register camera profiles.', 'info');
     this.cdr.detectChanges();
-    this.startCameraScanner('user', 'face-enrollment-video-feed');
   }
 
   closeFaceEnrollmentModal(): void {
@@ -11922,35 +12457,14 @@ INSTRUCTIONS:
     this.openSecureEyeAttendanceOverlay(idToVerify, roleToVerify);
   }
 
-  // --- SECURE REAL-TIME EYE-SCAN ATTENDANCE CAPTURE OVERLAY ---
-  openSecureEyeAttendanceOverlay(targetMemberId?: string, role: 'Student' | 'Teacher' = 'Student'): void {
-    if (this.autoScanTimerRef) {
-      clearInterval(this.autoScanTimerRef);
-      this.autoScanTimerRef = null;
-    }
-    this.isSecureEyeOverlayOpen = true;
-    this.targetVerificationRole = role;
-    this.targetVerificationMemberId = targetMemberId || (role === 'Student' ? (this.activeStudents[0]?.id || '') : (this.teachers[0]?.id || ''));
-    this.secureEyeScanStatus = 'Scanning';
-    this.matchedBiometricProfile = null;
-    this.verificationCapturedImage = '';
-    this.cameraPermissionError = '';
-    this.autoScanCountdown = 3;
-    this.autoScanProgress = 25;
-    this.cdr.detectChanges();
-    this.startCameraScanner('user', 'secure-eye-overlay-video-feed');
+  // --- SECURE REAL-TIME CAMERA ATTENDANCE REDIRECTORS ---
+  openSecureEyeAttendanceOverlay(_targetMemberId?: string, _role: 'Student' | 'Teacher' = 'Student'): void {
+    this.openFaceEnrollmentModal(_targetMemberId, _role);
   }
 
   closeSecureEyeAttendanceOverlay(): void {
-    if (this.autoScanTimerRef) {
-      clearInterval(this.autoScanTimerRef);
-      this.autoScanTimerRef = null;
-    }
     this.stopCameraStream();
     this.isSecureEyeOverlayOpen = false;
-    this.secureEyeScanStatus = 'Scanning';
-    this.matchedBiometricProfile = null;
-    this.verificationCapturedImage = '';
     this.cdr.detectChanges();
   }
 
@@ -11961,178 +12475,26 @@ INSTRUCTIONS:
     return this.teachers.find(t => t.id === this.targetVerificationMemberId) || this.teachers[0];
   }
 
-  retakeEnrollmentPhoto(): void {
-    this.enrolledCapturedImage = '';
-    this.enrollmentStep = 'camera';
-    this.cdr.detectChanges();
-    this.startCameraScanner('user', 'face-enrollment-video-feed');
-  }
+  retakeEnrollmentPhoto(): void {}
+  retakeVerificationPhoto(): void {}
+  triggerLiveEyeScanVerification(): void {}
+  startSecureEyeMatchingLoop(): void {}
 
-  retakeVerificationPhoto(): void {
-    this.verificationCapturedImage = '';
-    this.secureEyeScanStatus = 'Scanning';
-    this.matchedBiometricProfile = null;
-    this.cdr.detectChanges();
-    this.startCameraScanner('user', 'secure-eye-overlay-video-feed');
-  }
-
-  triggerLiveEyeScanVerification(): void {
-    if (this.autoScanTimerRef) {
-      clearInterval(this.autoScanTimerRef);
-      this.autoScanTimerRef = null;
-    }
-    this.secureEyeScanStatus = 'Scanning';
-    this.matchedBiometricProfile = null;
-    this.autoScanCountdown = 3;
-    this.autoScanProgress = 25;
-    this.cdr.detectChanges();
-    this.startSecureEyeMatchingLoop();
-  }
-
-  startSecureEyeMatchingLoop(): void {
-    // Check if target is chosen
-    let target: any = null;
-    if (this.targetVerificationRole === 'Student') {
-      target = this.activeStudents.find(s => s.id === this.targetVerificationMemberId) || this.activeStudents[0];
-    } else {
-      target = this.teachers.find(t => t.id === this.targetVerificationMemberId) || this.teachers[0];
-    }
-
-    if (!target || !(target as any).biometricEnrolled) {
-      this.secureEyeScanStatus = 'Unenrolled';
-      const personName = target ? target.name : 'Candidate';
-      this.showToast(`⛔ Unenrolled Face/Eye Profile for ${personName}. Attendance Access Denied.`, 'warning');
-      this.cdr.detectChanges();
-      return;
-    }
-
-    // Camera stream or mobile capture check with auto optical sensor fallback
-    if (!this.isCameraActive && !this.verificationCapturedImage) {
-      this.verificationCapturedImage = target.image || this.avatarSvgDataUri(target.name || 'Candidate');
-      this.showToast('👁️ Optical biometric sensor active! Calibrating retinal vectors...', 'info');
-    }
-
-    // Candidate is enrolled and camera/photo is present: perform match
-    this.autoScanCountdown = 2;
-    this.autoScanProgress = 35;
-    this.secureEyeScanStatus = 'Verifying';
-    this.cdr.detectChanges();
-
-    if (this.autoScanTimerRef) {
-      clearInterval(this.autoScanTimerRef);
-    }
-
-    this.autoScanTimerRef = setInterval(() => {
-      this.autoScanCountdown--;
-      this.autoScanProgress += 32;
-      this.cdr.detectChanges();
-
-      if (this.autoScanCountdown <= 0) {
-        clearInterval(this.autoScanTimerRef);
-        this.autoScanTimerRef = null;
-
-        if (!this.isSecureEyeOverlayOpen) return;
-
-        this.matchedBiometricProfile = target;
-        const score = (99.4 + Math.random() * 0.5).toFixed(1) + '%';
-        this.secureEyeLivenessScore = score;
-        this.secureEyeScanStatus = 'Verified';
-
-        // Mark present in database
-        target.status = 'Present';
-        target.attendanceStatus = 'Present';
-
-        // Log to database
-        const personName = target.name || target.studentName || 'Campus Member';
-        const roleLabel = target.designation ? 'Teacher' : 'Student';
-
-        this.biometricScanLogs.unshift({
-          id: 'LOG-' + Math.floor(1000 + Math.random() * 9000),
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-          personName: `${personName} (${target.grade || target.designation || 'Campus'})`,
-          role: roleLabel,
-          mode: '👁️ Secure Eye-Scan Match (Liveness 3D)',
-          confidence: score,
-          status: 'Present (On-Time)',
-          ipDevice: 'SECURE-CAMERA-OVERLAY (192.168.1.200)'
-        });
-
-        if (this.attendanceSummary) {
-          this.attendanceSummary.presentToday = Math.min(this.attendanceSummary.totalStudents, this.attendanceSummary.presentToday + 1);
-        }
-
-        this.saveStateToStorage();
-        this.showToast(`✅ REAL-TIME EYE SCAN MATCH: ${personName} Attendance Logged (${score} Liveness)`, 'success');
-        this.cdr.detectChanges();
-      }
-    }, 800);
-  }
-
-  // --- MULTI-MODAL BIOMETRIC & RFID ATTENDANCE KIOSK METHODS ---
-  openBiometricKioskModal(role: 'Student' | 'Teacher' | 'Staff' | 'All' = 'All'): void {
-    this.targetScanRole = role;
-    this.kioskScanStatus = 'Idle';
-    this.kioskMatchedPerson = null;
-    this.kioskConfidenceScore = '99.8%';
-    
-    if (this.ownerBiometricPolicy.irisRetinalEnabled) {
-      this.activeScanMethod = 'iris';
-    } else if (this.ownerBiometricPolicy.fingerprintEnabled) {
-      this.activeScanMethod = 'fingerprint';
-    } else if (this.ownerBiometricPolicy.rfidCardEnabled) {
-      this.activeScanMethod = 'rfid';
-    } else {
-      this.activeScanMethod = 'manual';
-    }
-
-    this.isBiometricKioskModalOpen = true;
-    this.cdr.detectChanges();
-
-    if (this.activeScanMethod === 'iris') {
-      this.startCameraScanner('user', 'kiosk-iris-video-feed');
-    }
+  openBiometricKioskModal(_role: 'Student' | 'Teacher' | 'Staff' | 'All' = 'All'): void {
+    this.openFaceEnrollmentModal();
   }
 
   closeBiometricKioskModal(): void {
     this.stopCameraStream();
     this.isBiometricKioskModalOpen = false;
-    this.kioskScanStatus = 'Idle';
-    this.kioskMatchedPerson = null;
     this.cdr.detectChanges();
   }
 
-  setScanMethod(mode: 'iris' | 'fingerprint' | 'rfid' | 'manual'): void {
-    if (mode === 'iris' && !this.ownerBiometricPolicy.irisRetinalEnabled) {
-      this.showToast('Iris Retinal Scanning disabled by School Owner Policy.', 'warning');
-      return;
-    }
-    if (mode === 'fingerprint' && !this.ownerBiometricPolicy.fingerprintEnabled) {
-      this.showToast('Biometric Fingerprint Sensor disabled by School Owner Policy.', 'warning');
-      return;
-    }
-    if (mode === 'rfid' && !this.ownerBiometricPolicy.rfidCardEnabled) {
-      this.showToast('Smart RFID Card Tap Sensor disabled by School Owner Policy.', 'warning');
-      return;
-    }
-    if (mode === 'manual' && !this.ownerBiometricPolicy.manualRollCallEnabled) {
-      this.showToast('Manual Roll-Call Override disabled by School Owner Policy.', 'warning');
-      return;
-    }
-
-    this.activeScanMethod = mode;
-    this.kioskScanStatus = 'Idle';
-    this.kioskMatchedPerson = null;
-    this.cdr.detectChanges();
-
-    if (mode === 'iris') {
-      this.startCameraScanner('user', 'kiosk-iris-video-feed');
-    } else {
-      this.stopCameraStream();
-    }
-  }
+  setScanMethod(_mode: 'iris' | 'fingerprint' | 'rfid' | 'manual'): void {}
 
   openOwnerPolicyModal(): void {
-    this.isOwnerPolicyModalOpen = true;
+    this.setTab('attendance');
+    this.showToast('Manage all Camera, Lite Mode & Role Access permissions in Owner Attendance Setup tab.', 'info');
     this.cdr.detectChanges();
   }
 
@@ -12144,11 +12506,10 @@ INSTRUCTIONS:
   saveOwnerPolicy(): void {
     this.setScopedItem('scs_attendance_biometric_policy_v1', JSON.stringify(this.ownerBiometricPolicy));
     this.saveStateToStorage();
-    this.showToast('🛡️ School Owner Biometric & RFID Attendance Policy updated & enforced globally!', 'success');
     this.closeOwnerPolicyModal();
   }
 
-  // --- 1-CLICK ALL-MEMBERS BATCH BIOMETRIC ENROLLMENT ---
+  // --- LEGACY BATCH HELPER KEPT FOR COMPATIBILITY ---
   enrollAllMembersBatchBiometric(): void {
     let studentCount = 0;
     let teacherCount = 0;
@@ -15968,7 +16329,11 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
         smsGatewayConfig: this.smsGatewayConfig,
         settingsForm: this.settingsForm,
         schoolName: this.schoolName,
-        announcements: this.announcements
+        announcements: this.announcements,
+        schoolStaff: this.schoolStaff,
+        schoolFaceProfiles: this.schoolFaceProfiles,
+        ownerAttendancePolicy: this.ownerAttendancePolicy,
+        faceVerificationLogs: this.faceVerificationLogs
       };
       const ok = await this.firebaseDb.saveSchoolData(this.activeTenantId, payload);
       this.lastCloudSyncTimestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -16020,6 +16385,29 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
         }
         if (cloudData.smsGatewayConfig) {
           this.smsGatewayConfig = { ...this.smsGatewayConfig, ...cloudData.smsGatewayConfig };
+        }
+        if (Array.isArray(cloudData.schoolStaff) && cloudData.schoolStaff.length > 0) {
+          const localOnlyStaff = this.schoolStaff.filter(st => !cloudData.schoolStaff.some((c: any) => c.id === st.id));
+          this.schoolStaff = [...localOnlyStaff, ...cloudData.schoolStaff];
+        }
+        if (Array.isArray(cloudData.schoolFaceProfiles) && cloudData.schoolFaceProfiles.length > 0) {
+          const localOnlyFp = this.schoolFaceProfiles.filter(fp => !cloudData.schoolFaceProfiles.some((c: any) => c.id === fp.id));
+          this.schoolFaceProfiles = [...localOnlyFp, ...cloudData.schoolFaceProfiles];
+          this.syncBiometricFlagsFromFaceProfiles();
+        }
+        if (cloudData.ownerAttendancePolicy && typeof cloudData.ownerAttendancePolicy === 'object') {
+          const def = createDefaultOwnerAttendancePolicy();
+          this.ownerAttendancePolicy = {
+            ...def,
+            ...cloudData.ownerAttendancePolicy,
+            categories: { ...def.categories, ...(cloudData.ownerAttendancePolicy.categories || {}) },
+            roleAccess: { ...def.roleAccess, ...(cloudData.ownerAttendancePolicy.roleAccess || {}) },
+            operatorOverrides: { ...(cloudData.ownerAttendancePolicy.operatorOverrides || {}) }
+          };
+          this.ownerBiometricPolicy.principalBiometricAccessGranted = Boolean(this.ownerAttendancePolicy.roleAccess.principal.enabled);
+        }
+        if (Array.isArray(cloudData.faceVerificationLogs) && cloudData.faceVerificationLogs.length > 0) {
+          this.faceVerificationLogs = cloudData.faceVerificationLogs;
         }
         this.lastCloudSyncTimestamp = 'Synced Just now';
         this.cdr.detectChanges();

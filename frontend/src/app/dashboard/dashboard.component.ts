@@ -213,7 +213,9 @@ import {
   Scan,
   ScanFace,
   RefreshCw,
-  Maximize2
+  Maximize2,
+  Upload,
+  Lightbulb
 } from 'lucide-angular';
 
 type BackendRole = 'super_admin' | 'client_admin' | 'client_user' | 'support';
@@ -6902,5 +6904,9 @@ export const dashboardIcons = {
     RefreshCw,
     'refresh-cw': RefreshCw,
     Maximize2,
-    'maximize-2': Maximize2
+    'maximize-2': Maximize2,
+    Upload,
+    upload: Upload,
+    Lightbulb,
+    lightbulb: Lightbulb
   };

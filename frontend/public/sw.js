@@ -1,15 +1,17 @@
-// SoftCode Enterprise Service Worker - Network First with Auto-Refresh
-const CACHE_NAME = 'scs-multi-tenant-cloud-v7';
+// SoftCode Enterprise Service Worker - Network First with Offline Shell Resilience
+const CACHE_NAME = 'scs-multi-tenant-cloud-v8';
 
 self.addEventListener('install', (event) => {
-  self.skipWaiting();
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(['/', '/manifest.json']).catch(() => {})).finally(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
-        cacheNames.map((cache) => caches.delete(cache))
+        cacheNames.filter((cache) => cache !== CACHE_NAME).map((cache) => caches.delete(cache))
       );
     }).then(() => self.clients.claim())
   );
@@ -45,7 +47,7 @@ self.addEventListener('fetch', (event) => {
           if (cachedResponse) {
             return cachedResponse;
           }
-          return caches.match('/index.html');
+          return caches.match('/index.html').then((idx) => idx || caches.match('/'));
         });
       })
   );

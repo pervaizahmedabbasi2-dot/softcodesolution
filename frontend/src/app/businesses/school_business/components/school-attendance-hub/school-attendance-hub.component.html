@@ -1,0 +1,1405 @@
+@if (isPortalLocked()) {
+  <div class="bg-white border border-slate-200 rounded-2xl p-8 max-w-xl mx-auto text-center space-y-5">
+    <div class="w-14 h-14 rounded-2xl bg-slate-100 border border-slate-200 text-slate-600 flex items-center justify-center mx-auto">
+      <lucide-icon [name]="'lock'" class="w-7 h-7"></lucide-icon>
+    </div>
+    <div class="space-y-1.5">
+      <h3 class="text-lg font-bold text-slate-900">Attendance Access Restricted</h3>
+      <p class="text-sm text-slate-600">
+        The School Owner has currently disabled attendance terminal access for the
+        <span class="font-semibold text-slate-900 uppercase">{{ portalContext() }}</span> portal.
+      </p>
+    </div>
+    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 text-left text-xs text-slate-600 space-y-1">
+      <p class="font-semibold text-slate-800">How to enable access:</p>
+      <p>1. Open the School Owner portal and select Attendance.</p>
+      <p>2. Open Owner Setup & Access and enable Portal Access for this role.</p>
+    </div>
+    <div>
+      <button type="button" (click)="switchToOwnerPortal.emit()"
+        class="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold cursor-pointer inline-flex items-center gap-2 transition-colors">
+        <lucide-icon [name]="'shield-check'" class="w-4 h-4"></lucide-icon>
+        <span>Open School Owner Portal</span>
+      </button>
+    </div>
+  </div>
+} @else {
+  <div class="space-y-5">
+    <!-- Unified Attendance Workspace Header -->
+    <div class="bg-white border border-slate-200 rounded-2xl p-5 space-y-4">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div class="space-y-1">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="text-[11px] font-semibold uppercase tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-md">
+              Camera Face Verification
+            </span>
+            <span class="text-xs font-medium text-slate-500">
+              Mode:
+              <strong class="text-slate-900 uppercase">
+                {{ liteVerifyActive() ? 'Lite Quick-Verify' : policy().verificationMode }}
+              </strong>
+              · Threshold <span class="font-mono tabular-nums font-semibold text-slate-900">{{ effectiveThreshold() }}%</span>
+            </span>
+          </div>
+          <h2 class="text-xl font-bold text-slate-900 tracking-tight">
+            {{ portalContext() === 'student' ? 'Student Camera Face Check-In & Streak' : 'Campus Attendance & Face Verification' }}
+          </h2>
+          <p class="text-xs text-slate-500">
+            Separate face verification ledgers for Students, Teachers, and Campus Staff — controlled by School Owner access setup.
+          </p>
+        </div>
+
+        <div class="flex items-center gap-2 flex-wrap">
+          @if (isInIframe) {
+            <a [href]="fullTabUrl" target="_blank" rel="noopener noreferrer"
+              class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold inline-flex items-center gap-1.5 transition-colors">
+              <lucide-icon [name]="'external-link'" class="w-3.5 h-3.5"></lucide-icon>
+              <span>Open Full Tab (Live Camera)</span>
+            </a>
+          }
+          @if (canExportCurrentPortal() && portalContext() !== 'student') {
+            <button type="button" (click)="exportCurrentCategoryCSV()"
+              class="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold cursor-pointer inline-flex items-center gap-1.5 transition-colors">
+              <lucide-icon [name]="'download'" class="w-3.5 h-3.5 text-slate-500"></lucide-icon>
+              <span>Export CSV</span>
+            </button>
+          }
+          @if (isOwner() || rolePerms().canExportReports) {
+            <button type="button" (click)="absentAlertRequested.emit({ category: activeCategory() })"
+              class="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold cursor-pointer inline-flex items-center gap-1.5 transition-colors">
+              <lucide-icon [name]="'bell'" class="w-3.5 h-3.5 text-rose-600"></lucide-icon>
+              <span>Notify Absent</span>
+            </button>
+          }
+          @if (isOwner()) {
+            <button type="button" (click)="setSubTab('setup')"
+              class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold cursor-pointer inline-flex items-center gap-1.5 transition-colors">
+              <lucide-icon [name]="'sliders-horizontal'" class="w-3.5 h-3.5"></lucide-icon>
+              <span>Owner Setup & Access</span>
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- Summary Strip Across Categories (Compact, Tabular) -->
+      @if (portalContext() !== 'student') {
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+          <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+            <div>
+              <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Students</span>
+              <p class="text-lg font-bold text-slate-900 tabular-nums mt-0.5">
+                {{ categoryStats().student.present }} <span class="text-xs font-medium text-slate-500">/ {{ categoryStats().student.total }} present</span>
+              </p>
+            </div>
+            <div class="text-right">
+              <span class="text-[11px] font-mono font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md tabular-nums">
+                {{ categoryStats().student.enrolled }} enrolled
+              </span>
+            </div>
+          </div>
+
+          <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+            <div>
+              <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Teachers</span>
+              <p class="text-lg font-bold text-slate-900 tabular-nums mt-0.5">
+                {{ categoryStats().teacher.present }} <span class="text-xs font-medium text-slate-500">/ {{ categoryStats().teacher.total }} present</span>
+              </p>
+            </div>
+            <div class="text-right">
+              <span class="text-[11px] font-mono font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md tabular-nums">
+                {{ categoryStats().teacher.enrolled }} enrolled
+              </span>
+            </div>
+          </div>
+
+          <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+            <div>
+              <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Campus Staff</span>
+              <p class="text-lg font-bold text-slate-900 tabular-nums mt-0.5">
+                {{ categoryStats().staff.present }} <span class="text-xs font-medium text-slate-500">/ {{ categoryStats().staff.total }} present</span>
+              </p>
+            </div>
+            <div class="text-right">
+              <span class="text-[11px] font-mono font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md tabular-nums">
+                {{ categoryStats().staff.enrolled }} enrolled
+              </span>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Sub-Navigation Bar -->
+      @if (portalContext() !== 'student') {
+        <div class="flex items-center gap-1 border-t border-slate-100 pt-3 overflow-x-auto">
+          <button type="button" (click)="setSubTab('terminal')"
+            class="px-3.5 py-2 rounded-xl text-xs font-semibold cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap transition-colors"
+            [class]="activeSubTab() === 'terminal' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'">
+            <lucide-icon [name]="'scan-face'" class="w-3.5 h-3.5"></lucide-icon>
+            <span>Camera Face Terminal</span>
+          </button>
+
+          @if (allowedCategories().includes('student')) {
+            <button type="button" (click)="setSubTab('students')"
+              class="px-3.5 py-2 rounded-xl text-xs font-semibold cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap transition-colors"
+              [class]="activeSubTab() === 'students' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'">
+              <lucide-icon [name]="'graduation-cap'" class="w-3.5 h-3.5"></lucide-icon>
+              <span>Students ({{ categoryStats().student.total }})</span>
+            </button>
+          }
+
+          @if (allowedCategories().includes('teacher')) {
+            <button type="button" (click)="setSubTab('teachers')"
+              class="px-3.5 py-2 rounded-xl text-xs font-semibold cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap transition-colors"
+              [class]="activeSubTab() === 'teachers' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'">
+              <lucide-icon [name]="'users'" class="w-3.5 h-3.5"></lucide-icon>
+              <span>Teachers ({{ categoryStats().teacher.total }})</span>
+            </button>
+          }
+
+          @if (allowedCategories().includes('staff')) {
+            <button type="button" (click)="setSubTab('staff')"
+              class="px-3.5 py-2 rounded-xl text-xs font-semibold cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap transition-colors"
+              [class]="activeSubTab() === 'staff' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'">
+              <lucide-icon [name]="'briefcase'" class="w-3.5 h-3.5"></lucide-icon>
+              <span>Staff ({{ categoryStats().staff.total }})</span>
+            </button>
+          }
+
+          @if (canEnrollCurrentPortal()) {
+            <button type="button" (click)="setSubTab('enrollment')"
+              class="px-3.5 py-2 rounded-xl text-xs font-semibold cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap transition-colors"
+              [class]="activeSubTab() === 'enrollment' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'">
+              <lucide-icon [name]="'user-plus'" class="w-3.5 h-3.5"></lucide-icon>
+              <span>Face Enrollment</span>
+            </button>
+          }
+
+          @if (isOwner()) {
+            <button type="button" (click)="setSubTab('setup')"
+              class="px-3.5 py-2 rounded-xl text-xs font-semibold cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap transition-colors"
+              [class]="activeSubTab() === 'setup' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'">
+              <lucide-icon [name]="'sliders-horizontal'" class="w-3.5 h-3.5"></lucide-icon>
+              <span>Owner Setup & Access</span>
+            </button>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- ================================================================ -->
+    <!-- SUB-TAB 1: UNIFIED CAMERA FACE VERIFICATION TERMINAL             -->
+    <!-- ================================================================ -->
+    @if (activeSubTab() === 'terminal') {
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+
+        <!-- Left 7 cols: Live Camera Face Verification Studio -->
+        <div class="lg:col-span-7 bg-white border border-slate-200 rounded-2xl p-5 space-y-4">
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <div>
+              <h3 class="text-sm font-bold text-slate-900">Live Camera Face Verification</h3>
+              <p class="text-xs text-slate-500">Select category, align face inside the guide, and capture to verify identity.</p>
+            </div>
+
+            <!-- Category Selector (Students | Teachers | Staff) -->
+            @if (portalContext() !== 'student') {
+              <div class="inline-flex p-1 rounded-xl bg-slate-100 border border-slate-200 gap-1">
+                @for (cat of allowedCategories(); track cat) {
+                  <button type="button" (click)="setCategory(cat)"
+                    class="px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors"
+                    [class]="activeCategory() === cat ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-600 hover:text-slate-900'">
+                    {{ categoryLabel(cat) }}
+                  </button>
+                }
+              </div>
+            }
+          </div>
+
+          <!-- Camera Controls Top Strip (Light / Auto-Scan / Lite Mode) -->
+          <div class="flex items-center justify-between flex-wrap gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs">
+            <div class="flex items-center gap-2 flex-wrap">
+              <button type="button" (click)="toggleAutoScan()"
+                class="px-2.5 py-1.5 rounded-lg border text-xs font-semibold cursor-pointer inline-flex items-center gap-1.5 transition-colors"
+                [class]="autoScanEnabled() ? 'bg-emerald-50 border-emerald-300 text-emerald-800' : 'bg-white border-slate-200 text-slate-600 hover:text-slate-900'">
+                <lucide-icon [name]="'scan-face'" class="w-3.5 h-3.5"></lucide-icon>
+                <span>Auto Scan: {{ autoScanEnabled() ? 'ON' : 'OFF' }}</span>
+              </button>
+
+              @if (policy().liteModeEnabled && (isOwner() || rolePerms().liteModeAllowed)) {
+                <button type="button" (click)="toggleLiteVerifyMode()"
+                  class="px-2.5 py-1.5 rounded-lg border text-xs font-semibold cursor-pointer inline-flex items-center gap-1.5 transition-colors"
+                  [class]="liteVerifyActive() ? 'bg-amber-50 border-amber-300 text-amber-800' : 'bg-white border-slate-200 text-slate-600 hover:text-slate-900'">
+                  <lucide-icon [name]="'zap'" class="w-3.5 h-3.5"></lucide-icon>
+                  <span>Lite Mode: {{ liteVerifyActive() ? 'ON' : 'OFF' }}</span>
+                </button>
+              }
+
+              @if (isOwner() || rolePerms().liteModeAllowed) {
+                <button type="button" (click)="toggleFillLight()"
+                  class="px-2.5 py-1.5 rounded-lg border text-xs font-semibold cursor-pointer inline-flex items-center gap-1.5 transition-colors"
+                  [class]="fillLightBoost() ? 'bg-amber-50 border-amber-300 text-amber-900' : 'bg-white border-slate-200 text-slate-600 hover:text-slate-900'">
+                  <lucide-icon [name]="'lightbulb'" class="w-3.5 h-3.5"></lucide-icon>
+                  <span>Light: {{ fillLightBoost() ? 'ON' : 'OFF' }}</span>
+                </button>
+              }
+            </div>
+
+            <div class="text-[11px] font-mono text-slate-600">
+              Match Threshold: <strong class="text-slate-900">{{ effectiveThreshold() }}%</strong>
+            </div>
+          </div>
+
+          <!-- Camera Viewport with Owner-Controlled Light Frame -->
+          <div class="relative w-full h-80 sm:h-96 rounded-2xl bg-slate-950 overflow-hidden transition-all"
+            [class]="fillLightFrameClass()">
+
+            <video #verifyVideoEl
+              class="w-full h-full object-cover"
+              [class.hidden]="!cameraActive()"
+              [style.transform]="cameraFacingMode() === 'user' ? 'scaleX(-1)' : 'none'"
+              autoplay playsinline muted></video>
+
+            @if (!cameraActive() && capturedVerifyPreview()) {
+              <img [src]="capturedVerifyPreview()" alt="Captured Verification Frame" referrerpolicy="no-referrer"
+                class="w-full h-full object-cover" />
+              @if (phoneContinuousSnap()) {
+                <div class="absolute top-12 left-3 right-3 flex justify-center z-10">
+                  <button type="button" (click)="activatePhoneCamera('verify')"
+                    class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-lg cursor-pointer inline-flex items-center gap-1.5 border border-emerald-200">
+                    <lucide-icon [name]="'camera'" class="w-4 h-4"></lucide-icon>
+                    <span>Next Student (Phone Camera)</span>
+                  </button>
+                </div>
+              }
+            }
+
+            @if (!cameraActive() && !capturedVerifyPreview()) {
+              <div class="absolute inset-0 flex flex-col items-center justify-center p-5 text-center text-white space-y-3.5">
+                <div class="w-14 h-14 rounded-2xl bg-slate-900 border border-slate-700 flex items-center justify-center"
+                  [class]="cameraError() ? 'text-amber-400' : 'text-emerald-400'">
+                  <lucide-icon [name]="cameraError() ? 'alert-triangle' : 'scan-face'" class="w-7 h-7"></lucide-icon>
+                </div>
+
+                @if (cameraError()) {
+                  <div class="space-y-2.5 max-w-md">
+                    <p class="text-sm font-bold text-amber-300">
+                      {{ cameraErrorKind() === 'iframe_blocked' ? 'Preview Frame Blocks Live Stream' : 'Live Camera Unavailable' }}
+                    </p>
+                    <p class="text-xs text-slate-300 leading-relaxed">{{ cameraError() }}</p>
+                    <div class="flex flex-wrap items-center justify-center gap-2 pt-1">
+                      <a [href]="fullTabUrl" target="_blank" rel="noopener noreferrer"
+                        class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold inline-flex items-center gap-1.5 transition-colors">
+                        <lucide-icon [name]="'external-link'" class="w-3.5 h-3.5"></lucide-icon>
+                        <span>Open Full Tab (Live Camera)</span>
+                      </a>
+                      <button type="button" (click)="activatePhoneCamera('verify')"
+                        class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white text-xs font-semibold cursor-pointer inline-flex items-center gap-1.5">
+                        <lucide-icon [name]="'camera'" class="w-3.5 h-3.5 text-emerald-400"></lucide-icon>
+                        <span>Phone Camera</span>
+                      </button>
+                      <button type="button" (click)="copyAppUrl()"
+                        class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-semibold cursor-pointer inline-flex items-center gap-1.5">
+                        <lucide-icon [name]="'copy'" class="w-3.5 h-3.5"></lucide-icon>
+                        <span>Copy Mobile Link</span>
+                      </button>
+                      <button type="button" (click)="startCamera('verify')"
+                        class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-semibold cursor-pointer inline-flex items-center gap-1.5">
+                        <lucide-icon [name]="'refresh-cw'" class="w-3.5 h-3.5"></lucide-icon>
+                        <span>Retry</span>
+                      </button>
+                    </div>
+                  </div>
+                } @else {
+                  <div class="space-y-1 max-w-sm">
+                    <p class="text-sm font-bold text-white">Opening Camera for {{ categoryLabel(activeCategory()) }}...</p>
+                    <p class="text-xs text-slate-400">
+                      Live camera stays ON continuously once started and verifies faces in 0s (works offline &amp; online).
+                    </p>
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- Live Biometric Device Oval & Real-Time Non-Blocking Tick / Red Alert Alert Bar -->
+            @if (cameraActive() || scanOverlay()) {
+              @let ov = scanOverlay();
+              <div class="absolute inset-0 pointer-events-none flex items-center justify-center">
+                <div class="w-44 h-56 rounded-[50%] transition-all duration-150"
+                  [class]="ov ? (ov.kind === 'success' ? 'border-4 border-emerald-400 bg-emerald-500/10' : 'border-4 border-rose-500 bg-rose-500/15') : 'border-2 border-dashed border-emerald-400/85'">
+                </div>
+              </div>
+
+              @if (ov) {
+                <div class="absolute inset-0 pointer-events-none rounded-2xl border-4 transition-colors"
+                  [class]="ov.kind === 'success' ? 'border-emerald-500' : 'border-rose-500'">
+                </div>
+
+                <!-- Docked Bottom Alert Banner (Leaves Center Camera Clear for Next Person Behind) -->
+                <div class="absolute bottom-3 left-3 right-3 pointer-events-none flex justify-center z-10">
+                  @if (ov.kind === 'success') {
+                    <div class="w-full max-w-md rounded-2xl bg-emerald-600/95 border-2 border-emerald-200 px-3.5 py-2.5 shadow-lg flex items-center gap-3">
+                      <div class="w-11 h-11 rounded-full bg-white text-emerald-600 flex items-center justify-center shrink-0 shadow-sm">
+                        <lucide-icon [name]="'check'" class="w-7 h-7"></lucide-icon>
+                      </div>
+                      <div class="min-w-0 flex-1 text-left">
+                        <div class="flex items-center justify-between gap-2">
+                          <span class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-100 inline-flex items-center gap-1">
+                            <lucide-icon [name]="'check-circle-2'" class="w-3.5 h-3.5 text-white"></lucide-icon>
+                            <span>{{ ov.badgeText }}</span>
+                          </span>
+                          @if (ov.confidence) {
+                            <span class="px-1.5 py-0.5 rounded bg-white/20 text-white font-mono text-[10px] font-bold tabular-nums">
+                              {{ ov.confidence }}%
+                            </span>
+                          }
+                        </div>
+                        <p class="text-base font-extrabold text-white truncate leading-tight">{{ ov.title }}</p>
+                        <p class="text-[11px] font-medium text-emerald-50 truncate">{{ ov.subtitle }}</p>
+                      </div>
+                    </div>
+                  } @else {
+                    <div class="w-full max-w-md rounded-2xl bg-rose-600/95 border-2 border-rose-200 px-3.5 py-2.5 shadow-lg flex items-center gap-3">
+                      <div class="w-11 h-11 rounded-full bg-white text-rose-600 flex items-center justify-center shrink-0 shadow-sm">
+                        <lucide-icon [name]="ov.kind === 'duplicate' ? 'shield-alert' : 'x-circle'" class="w-7 h-7"></lucide-icon>
+                      </div>
+                      <div class="min-w-0 flex-1 text-left">
+                        <div class="flex items-center justify-between gap-2">
+                          <span class="text-[10px] font-extrabold uppercase tracking-wider text-rose-100 inline-flex items-center gap-1">
+                            <lucide-icon [name]="'alert-triangle'" class="w-3.5 h-3.5 text-white"></lucide-icon>
+                            <span>{{ ov.badgeText }}</span>
+                          </span>
+                        </div>
+                        <p class="text-base font-extrabold text-white truncate leading-tight">{{ ov.title }}</p>
+                        <p class="text-[11px] font-medium text-rose-50 truncate">{{ ov.subtitle }}</p>
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+            }
+
+            <!-- Top Status Bar inside Camera -->
+            <div class="absolute top-3 left-3 right-3 flex items-center justify-between text-[11px]">
+              <span class="px-2.5 py-1 rounded-lg bg-slate-900/80 text-white font-medium border border-white/15">
+                {{ autoScanActive() ? 'Auto-Scan Live' : (cameraActive() ? 'Webcam Active' : 'Standby') }} · {{ categoryLabel(activeCategory()) }}
+              </span>
+              @if (cameraActive()) {
+                <button type="button" (click)="switchCameraFacing()"
+                  class="px-2.5 py-1 rounded-lg bg-slate-900/80 hover:bg-slate-900 text-white font-medium border border-white/15 cursor-pointer inline-flex items-center gap-1">
+                  <lucide-icon [name]="'refresh-cw'" class="w-3 h-3"></lucide-icon>
+                  <span>Flip Lens</span>
+                </button>
+              }
+            </div>
+          </div>
+
+          <!-- Hidden fallback file capture for restricted iframe environments -->
+          <input #phoneVerifyInputEl type="file" accept="image/*" capture="user"
+            (change)="onVerifyPhotoFileSelected($event)" class="hidden" />
+
+          <!-- Camera Action Controls -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            @if (!cameraActive()) {
+              <button type="button" (click)="startCamera('verify')"
+                class="py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold cursor-pointer inline-flex items-center justify-center gap-1.5 transition-colors">
+                <lucide-icon [name]="'video'" class="w-4 h-4"></lucide-icon>
+                <span>Start Live Camera</span>
+              </button>
+            } @else {
+              <button type="button" (click)="verifyLiveCameraFrame()" [disabled]="isProcessingScan()"
+                class="py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold cursor-pointer inline-flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50">
+                <lucide-icon [name]="isProcessingScan() ? 'loader-2' : 'scan-face'" class="w-4 h-4" [class.animate-spin]="isProcessingScan()"></lucide-icon>
+                <span>{{ isProcessingScan() ? 'Verifying...' : 'Verify Face Now' }}</span>
+              </button>
+            }
+
+            <button type="button" (click)="cameraActive() ? switchCameraFacing() : activatePhoneCamera('verify')"
+              class="py-2.5 px-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 text-xs font-semibold cursor-pointer inline-flex items-center justify-center gap-1.5 transition-colors">
+              <lucide-icon [name]="cameraActive() ? 'refresh-cw' : 'camera'" class="w-4 h-4 text-emerald-600"></lucide-icon>
+              <span>{{ cameraActive() ? (cameraFacingMode() === 'user' ? 'Phone Front Lens' : 'Phone Rear Lens') : 'Phone Camera' }}</span>
+            </button>
+
+            @if (cameraActive()) {
+              <button type="button" (click)="stopCamera()"
+                class="py-2.5 px-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold cursor-pointer inline-flex items-center justify-center gap-1.5 transition-colors">
+                <lucide-icon [name]="'video-off'" class="w-4 h-4 text-rose-600"></lucide-icon>
+                <span>Stop Camera</span>
+              </button>
+            } @else if (canEnrollCurrentPortal()) {
+              <button type="button" (click)="setSubTab('enrollment')"
+                class="py-2.5 px-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold cursor-pointer inline-flex items-center justify-center gap-1.5 transition-colors">
+                <lucide-icon [name]="'user-plus'" class="w-4 h-4 text-slate-600"></lucide-icon>
+                <span>Enroll Face</span>
+              </button>
+            } @else {
+              <a [href]="fullTabUrl" target="_blank" rel="noopener noreferrer"
+                class="py-2.5 px-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold inline-flex items-center justify-center gap-1.5 transition-colors">
+                <lucide-icon [name]="'external-link'" class="w-4 h-4 text-emerald-600"></lucide-icon>
+                <span>Full Tab</span>
+              </a>
+            }
+          </div>
+
+          @if (recentVerifiedFeed().length > 0) {
+            <div class="flex items-center gap-2 flex-wrap pt-0.5">
+              <span class="text-[11px] font-semibold text-slate-500">Quick Pass:</span>
+              @for (item of recentVerifiedFeed(); track item.id) {
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-semibold">
+                  <lucide-icon [name]="'check'" class="w-3 h-3 text-emerald-600"></lucide-icon>
+                  <span class="truncate max-w-[140px]">{{ item.name }}</span>
+                  <span class="font-mono text-[10px] text-emerald-700">· {{ item.punch }} {{ item.time }}</span>
+                </span>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Right 5 cols: Target Selection, Match Feedback & Category Stream -->
+        <div class="lg:col-span-5 space-y-4">
+
+          <!-- Target Match Mode & Member Selector -->
+          <div class="bg-white border border-slate-200 rounded-2xl p-5 space-y-3.5">
+            <div class="flex items-center justify-between">
+              <h4 class="text-sm font-bold text-slate-900">Verification Target</h4>
+              @if (portalContext() !== 'student') {
+                <div class="inline-flex p-0.5 rounded-lg bg-slate-100 border border-slate-200 text-[11px] font-semibold">
+                  <button type="button" (click)="scanScope.set('auto'); selectedTargetMemberId.set('')"
+                    class="px-2.5 py-1 rounded-md cursor-pointer transition-colors"
+                    [class]="scanScope() === 'auto' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-600'">
+                    Auto 1:N
+                  </button>
+                  <button type="button" (click)="scanScope.set('targeted')"
+                    class="px-2.5 py-1 rounded-md cursor-pointer transition-colors"
+                    [class]="scanScope() === 'targeted' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-600'">
+                    Targeted 1:1
+                  </button>
+                </div>
+              }
+            </div>
+
+            @if (portalContext() === 'student') {
+              @if (currentStudentSelfMember(); as stu) {
+                <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-3">
+                  <div>
+                    <p class="text-xs font-bold text-slate-900">{{ stu.name }}</p>
+                    <p class="text-[11px] text-slate-500 font-mono">{{ stu.code }} · {{ stu.subLabel }}</p>
+                  </div>
+                  <span class="px-2 py-0.5 rounded-md text-[11px] font-semibold"
+                    [class]="stu.isEnrolled ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-800 border border-amber-200'">
+                    {{ stu.isEnrolled ? 'Face Enrolled' : 'Not Enrolled' }}
+                  </span>
+                </div>
+              }
+              @if (!studentSelfCheckInAllowed()) {
+                <div class="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900">
+                  Student self camera check-in is currently locked by School Owner. Please check in at Gate or Teacher terminal.
+                </div>
+              }
+            } @else {
+              @if (scanScope() === 'targeted') {
+                <div>
+                  <label class="block text-[11px] font-semibold text-slate-600 mb-1">Select {{ categoryLabel(activeCategory()) }} Candidate</label>
+                  <select [value]="selectedTargetMemberId()" (change)="selectedTargetMemberId.set($any($event.target).value)"
+                    class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900">
+                    <option value="">-- Choose Candidate --</option>
+                    @for (m of activeCategoryMembers(); track m.id) {
+                      <option [value]="m.id">
+                        {{ m.name }} ({{ m.code }}) — {{ m.isEnrolled ? 'Enrolled' : 'Needs Face Enroll' }}
+                      </option>
+                    }
+                  </select>
+                </div>
+              } @else {
+                <p class="text-xs text-slate-500">
+                  Auto-identify scans the camera frame against all <strong class="text-slate-900">{{ activeCategoryMembers().length }}</strong> {{ categoryLabel(activeCategory()).toLowerCase() }} with registered face profiles.
+                </p>
+              }
+            }
+
+            <!-- Last Verification Result -->
+            @if (lastVerificationResult(); as res) {
+              <div class="p-3.5 rounded-xl border space-y-2.5"
+                [class]="res.matched ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-300'">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-xs font-bold inline-flex items-center gap-1.5" [class]="res.matched ? 'text-emerald-900' : 'text-rose-900'">
+                    <lucide-icon [name]="res.matched ? 'check-circle-2' : (res.resultType === 'duplicate' ? 'shield-alert' : 'x-circle')"
+                      class="w-4 h-4" [class]="res.matched ? 'text-emerald-600' : 'text-rose-600'"></lucide-icon>
+                    <span>
+                      {{ res.matched ? ('Verified · ' + res.statusMarked) : (res.resultType === 'duplicate' ? 'Duplicate Rejected' : 'Face Not Matched') }}
+                    </span>
+                  </span>
+                  <span class="font-mono text-xs font-bold tabular-nums" [class]="res.matched ? 'text-emerald-700' : 'text-rose-700'">
+                    {{ res.confidence }}% (min {{ res.threshold }}%)
+                  </span>
+                </div>
+                <p class="text-xs" [class]="res.matched ? 'text-emerald-800' : 'text-rose-800'">
+                  {{ res.message }}
+                </p>
+                @if (res.enrolledPhoto || res.livePhoto) {
+                  <div class="grid grid-cols-2 gap-2 pt-1">
+                    @if (res.enrolledPhoto) {
+                      <div class="bg-white rounded-lg p-1.5 border border-slate-200 text-center">
+                        <img [src]="res.enrolledPhoto" alt="Enrolled Face" referrerpolicy="no-referrer" class="w-full h-20 object-cover rounded" />
+                        <span class="text-[10px] font-semibold text-slate-600 block mt-1">Registered Face</span>
+                      </div>
+                    }
+                    @if (res.livePhoto) {
+                      <div class="bg-white rounded-lg p-1.5 border border-slate-200 text-center">
+                        <img [src]="res.livePhoto" alt="Live Capture" referrerpolicy="no-referrer" class="w-full h-20 object-cover rounded" />
+                        <span class="text-[10px] font-semibold text-slate-600 block mt-1">Live Capture</span>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
+          <!-- Recent Category Verification Log -->
+          <div class="bg-white border border-slate-200 rounded-2xl p-5 space-y-3">
+            <div class="flex items-center justify-between">
+              <h4 class="text-sm font-bold text-slate-900">Recent {{ categoryLabel(activeCategory()) }} Logs</h4>
+              <span class="text-[11px] font-mono text-slate-500 tabular-nums">{{ activeLogs().length }} records</span>
+            </div>
+            <div class="divide-y divide-slate-100 max-h-64 overflow-y-auto">
+              @for (log of activeLogs(); track log.id) {
+                <div class="py-2.5 flex items-center justify-between gap-2 text-xs">
+                  <div class="min-w-0">
+                    <p class="font-semibold text-slate-900 truncate">{{ log.memberName }}</p>
+                    <p class="text-[11px] text-slate-500 font-mono truncate">{{ log.timestamp }} · {{ log.gradeOrDept }}</p>
+                  </div>
+                  <div class="text-right shrink-0">
+                    <span class="inline-block px-2 py-0.5 rounded-md text-[10px] font-semibold"
+                      [class]="log.punchType === 'OUT' ? 'bg-sky-50 text-sky-800' : (log.status === 'Present' ? 'bg-emerald-50 text-emerald-700' : (log.status === 'Late' ? 'bg-amber-50 text-amber-800' : 'bg-rose-50 text-rose-700'))">
+                      {{ log.punchType === 'OUT' ? 'OUT · Checked Out' : (log.punchType === 'IN' ? ('IN · ' + log.status) : log.status) }}
+                    </span>
+                    <span class="block text-[10px] font-mono text-slate-500 tabular-nums mt-0.5">{{ log.confidenceScore }}%</span>
+                  </div>
+                </div>
+              }
+              @if (activeLogs().length === 0) {
+                <p class="py-6 text-center text-xs text-slate-400">
+                  No camera face verifications logged yet for {{ categoryLabel(activeCategory()).toLowerCase() }}.
+                </p>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- ================================================================ -->
+    <!-- SUB-TABS 2, 3, 4: SEPARATE ROSTERS (STUDENTS / TEACHERS / STAFF) -->
+    <!-- ================================================================ -->
+    @if (activeSubTab() === 'students' || activeSubTab() === 'teachers' || activeSubTab() === 'staff') {
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 space-y-4">
+
+        <!-- Toolbar -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div class="flex items-center gap-2.5 flex-1 flex-wrap">
+            <div class="relative flex-1 min-w-[220px]">
+              <lucide-icon [name]="'search'" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></lucide-icon>
+              <input type="text" [value]="searchQuery()" (input)="searchQuery.set($any($event.target).value)"
+                placeholder="Search by name, roll/emp ID, or department..."
+                class="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-900 placeholder:text-slate-400" />
+            </div>
+
+            @if (activeSubTab() === 'students') {
+              <select [value]="selectedGradeFilter()" (change)="selectedGradeFilter.set($any($event.target).value)"
+                class="px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800">
+                @for (g of studentGrades(); track g) {
+                  <option [value]="g">{{ g }}</option>
+                }
+              </select>
+            }
+
+            <input type="date" [value]="selectedDate()" (change)="selectedDate.set($any($event.target).value)"
+              class="px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800" />
+          </div>
+
+          <div class="flex items-center gap-2">
+            @if (activeSubTab() === 'staff' && (isOwner() || portalContext() === 'principal')) {
+              <button type="button" (click)="showAddStaffForm.set(!showAddStaffForm())"
+                class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold cursor-pointer inline-flex items-center gap-1.5">
+                <lucide-icon [name]="'plus'" class="w-3.5 h-3.5"></lucide-icon>
+                <span>Add Staff Member</span>
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- Inline Add Staff Form -->
+        @if (activeSubTab() === 'staff' && showAddStaffForm()) {
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+            <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider">Register Campus Staff Member</h4>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+              <div>
+                <label class="block font-semibold text-slate-600 mb-1">Full Name *</label>
+                <input type="text" [value]="newStaffName()" (input)="newStaffName.set($any($event.target).value)"
+                  placeholder="e.g. Imran Qureshi"
+                  class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-900" />
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-600 mb-1">Role / Designation *</label>
+                <input type="text" [value]="newStaffRole()" (input)="newStaffRole.set($any($event.target).value)"
+                  placeholder="e.g. Gatekeeper / Lab Asst"
+                  class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-900" />
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-600 mb-1">Department</label>
+                <input type="text" [value]="newStaffDepartment()" (input)="newStaffDepartment.set($any($event.target).value)"
+                  class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-900" />
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-600 mb-1">Phone</label>
+                <input type="text" [value]="newStaffPhone()" (input)="newStaffPhone.set($any($event.target).value)"
+                  class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-900" />
+              </div>
+            </div>
+            <div class="flex items-center justify-between flex-wrap gap-2 pt-1">
+              <label class="inline-flex items-center gap-2 text-xs font-medium text-slate-700 cursor-pointer">
+                <input type="checkbox" [checked]="newStaffLiteEnabled()" (change)="newStaffLiteEnabled.set(!newStaffLiteEnabled())" />
+                <span>Enable Lite Camera Verification for this staff member</span>
+              </label>
+              <div class="flex items-center gap-2">
+                <button type="button" (click)="showAddStaffForm.set(false)"
+                  class="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-semibold text-slate-700 cursor-pointer">
+                  Cancel
+                </button>
+                <button type="button" (click)="submitNewStaff()"
+                  class="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold cursor-pointer">
+                  Save Staff Member
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- Enforcement Note -->
+        @if (!canUseManualFallback()) {
+          <div class="px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600 flex items-center justify-between flex-wrap gap-2">
+            <span>
+              <strong class="text-slate-900">Camera Verification Enforced:</strong> Click "Verify Face" on any row to mark attendance through live camera recognition.
+            </span>
+            @if (isOwner()) {
+              <button type="button" (click)="setSubTab('setup')" class="text-xs font-semibold text-emerald-700 hover:underline cursor-pointer">
+                Change in Owner Setup
+              </button>
+            }
+          </div>
+        }
+
+        <!-- Overall IN / OUT Summary & Quick Filter Strip -->
+        @let rSum = rosterTabSummary();
+        <div class="flex items-center justify-between flex-wrap gap-2 text-xs">
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <button type="button" (click)="punchFilter.set('all')"
+              class="px-2.5 py-1.5 rounded-lg border font-semibold cursor-pointer transition-colors"
+              [class]="punchFilter() === 'all' ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'">
+              All ({{ rSum.total }})
+            </button>
+            <button type="button" (click)="punchFilter.set('checked_in')"
+              class="px-2.5 py-1.5 rounded-lg border font-semibold cursor-pointer transition-colors"
+              [class]="punchFilter() === 'checked_in' ? 'bg-emerald-600 border-emerald-600 text-white' : 'bg-emerald-50/70 border-emerald-200 text-emerald-800 hover:bg-emerald-50'">
+              Checked IN ({{ rSum.checkedIn }})
+            </button>
+            <button type="button" (click)="punchFilter.set('checked_out')"
+              class="px-2.5 py-1.5 rounded-lg border font-semibold cursor-pointer transition-colors"
+              [class]="punchFilter() === 'checked_out' ? 'bg-sky-600 border-sky-600 text-white' : 'bg-sky-50/70 border-sky-200 text-sky-800 hover:bg-sky-50'">
+              Checked OUT ({{ rSum.checkedOut }})
+            </button>
+            <button type="button" (click)="punchFilter.set('pending')"
+              class="px-2.5 py-1.5 rounded-lg border font-semibold cursor-pointer transition-colors"
+              [class]="punchFilter() === 'pending' ? 'bg-amber-600 border-amber-600 text-white' : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'">
+              Pending ({{ rSum.pending }})
+            </button>
+          </div>
+          <div class="text-[11px] font-mono text-slate-500">
+            OUT Unlocks: <strong class="text-slate-900">{{ policy().twoPunchEnabled ? policy().checkOutEnableTime : 'Single Punch' }}</strong>
+            · Face Enrolled: <strong class="text-slate-900">{{ rSum.enrolled }}/{{ rSum.total }}</strong>
+          </div>
+        </div>
+
+        <!-- Full IN / OUT & Overall Details Roster Table -->
+        <div class="overflow-x-auto border border-slate-200 rounded-xl">
+          <table class="w-full text-left border-collapse text-xs tabular-nums">
+            <thead class="bg-slate-50 text-slate-600 uppercase font-semibold tracking-wider text-[10px] border-b border-slate-200">
+              <tr>
+                <th class="px-3.5 py-3">ID / Roll</th>
+                <th class="px-3.5 py-3">Member Details</th>
+                <th class="px-3.5 py-3">{{ activeSubTab() === 'students' ? 'Class' : 'Role / Dept' }}</th>
+                <th class="px-3.5 py-3">Check-In (IN)</th>
+                <th class="px-3.5 py-3">Check-Out (OUT)</th>
+                <th class="px-3.5 py-3">Duration / State</th>
+                <th class="px-3.5 py-3">Verify &amp; Face</th>
+                <th class="px-3.5 py-3">Overall Record</th>
+                <th class="px-3.5 py-3">Status</th>
+                <th class="px-3.5 py-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              @for (m of filteredRosterMembers(); track m.id) {
+                <tr class="hover:bg-slate-50/70 transition-colors">
+                  <td class="px-3.5 py-3 font-mono font-semibold text-slate-700 whitespace-nowrap">{{ m.code }}</td>
+                  <td class="px-3.5 py-3">
+                    <div class="flex items-center gap-2.5 min-w-[160px]">
+                      @if (m.image) {
+                        <img [src]="m.image" [alt]="m.name" referrerpolicy="no-referrer"
+                          class="w-8 h-8 rounded-full object-cover border border-slate-200 shrink-0" />
+                      } @else {
+                        <div class="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 text-slate-700 font-bold text-[11px] flex items-center justify-center shrink-0">
+                          {{ memberInitials(m.name) }}
+                        </div>
+                      }
+                      <div class="min-w-0">
+                        <p class="font-semibold text-slate-900 truncate">{{ m.name }}</p>
+                        <p class="text-[11px] text-slate-500 truncate">{{ m.phone || m.sectionOrDept }}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-3.5 py-3 text-slate-700 font-medium whitespace-nowrap">
+                    <p class="font-semibold text-slate-800">{{ m.subLabel }}</p>
+                    <p class="text-[10px] text-slate-500">{{ m.sectionOrDept }}</p>
+                  </td>
+                  <td class="px-3.5 py-3 whitespace-nowrap">
+                    @if (m.checkInTime !== '—') {
+                      <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200 font-mono text-[11px] font-semibold">
+                        <lucide-icon [name]="'check'" class="w-3 h-3 text-emerald-600"></lucide-icon>
+                        <span>{{ m.checkInTime }}</span>
+                      </span>
+                    } @else {
+                      <span class="text-slate-400 font-mono">—</span>
+                    }
+                  </td>
+                  <td class="px-3.5 py-3 whitespace-nowrap">
+                    @if (m.checkOutTime !== '—') {
+                      <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-sky-50 text-sky-800 border border-sky-200 font-mono text-[11px] font-semibold">
+                        <lucide-icon [name]="'check'" class="w-3 h-3 text-sky-600"></lucide-icon>
+                        <span>{{ m.checkOutTime }}</span>
+                      </span>
+                    } @else if (m.checkInTime !== '—' && policy().twoPunchEnabled) {
+                      <span class="text-[10px] font-medium text-slate-500">Opens {{ policy().checkOutEnableTime }}</span>
+                    } @else {
+                      <span class="text-slate-400 font-mono">—</span>
+                    }
+                  </td>
+                  <td class="px-3.5 py-3 whitespace-nowrap">
+                    <p class="font-mono font-semibold text-slate-800">{{ m.durationLabel }}</p>
+                    <span class="text-[10px] font-semibold"
+                      [class]="m.punchState === 'Checked OUT' ? 'text-sky-700' : (m.punchState === 'Checked IN' ? 'text-emerald-700' : 'text-slate-500')">
+                      {{ m.punchState }}
+                    </span>
+                  </td>
+                  <td class="px-3.5 py-3 whitespace-nowrap">
+                    <div class="space-y-0.5">
+                      @if (m.isEnrolled) {
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-semibold">
+                          <lucide-icon [name]="'check-circle-2'" class="w-3 h-3"></lucide-icon>
+                          <span>{{ m.lastConfidence > 0 ? ('Match ' + m.lastConfidence + '%') : 'Face Ready' }}</span>
+                        </span>
+                      } @else {
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-semibold">
+                          <span>Not Enrolled</span>
+                        </span>
+                      }
+                      <p class="text-[10px] text-slate-500 truncate max-w-[130px]">{{ m.verifiedMethod }}</p>
+                    </div>
+                  </td>
+                  <td class="px-3.5 py-3 whitespace-nowrap">
+                    <p class="font-semibold text-slate-900">{{ m.monthlyRate }}</p>
+                    <p class="text-[10px] font-mono text-slate-500">
+                      IN: <strong class="text-emerald-700">{{ m.totalInCount }}</strong> · OUT: <strong class="text-sky-700">{{ m.totalOutCount }}</strong>
+                    </p>
+                  </td>
+                  <td class="px-3.5 py-3 whitespace-nowrap">
+                    <span class="inline-block px-2.5 py-0.5 rounded-md text-[11px] font-semibold"
+                      [class]="m.status === 'Present' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : (m.status === 'Late' ? 'bg-amber-50 text-amber-800 border border-amber-200' : (m.status === 'On Leave' ? 'bg-slate-100 text-slate-700 border border-slate-200' : 'bg-rose-50 text-rose-700 border border-rose-200'))">
+                      {{ m.status }}
+                    </span>
+                  </td>
+                  <td class="px-3.5 py-3 whitespace-nowrap">
+                    <div class="flex items-center justify-end gap-1.5 flex-wrap">
+                      <button type="button" (click)="openCameraForMember(m)"
+                        class="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-semibold cursor-pointer inline-flex items-center gap-1">
+                        <lucide-icon [name]="'camera'" class="w-3 h-3"></lucide-icon>
+                        <span>Verify Face</span>
+                      </button>
+
+                      @if (canEnrollCurrentPortal()) {
+                        <button type="button" (click)="openEnrollmentForMember(m)"
+                          class="px-2.5 py-1.5 rounded-lg bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-[11px] font-semibold cursor-pointer">
+                          {{ m.isEnrolled ? 'Re-Enroll' : 'Enroll Face' }}
+                        </button>
+                      }
+
+                      @if (canUseManualFallback()) {
+                        <button type="button" (click)="handleRosterStatusAction(m, 'Present')"
+                          class="px-2 py-1.5 rounded-lg border text-[11px] font-semibold cursor-pointer"
+                          [class]="m.status === 'Present' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'">
+                          P
+                        </button>
+                        <button type="button" (click)="handleRosterStatusAction(m, 'Late')"
+                          class="px-2 py-1.5 rounded-lg border text-[11px] font-semibold cursor-pointer"
+                          [class]="m.status === 'Late' ? 'bg-amber-600 text-white border-amber-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'">
+                          L
+                        </button>
+                        <button type="button" (click)="handleRosterStatusAction(m, 'Absent')"
+                          class="px-2 py-1.5 rounded-lg border text-[11px] font-semibold cursor-pointer"
+                          [class]="m.status === 'Absent' ? 'bg-rose-600 text-white border-rose-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'">
+                          A
+                        </button>
+                      }
+
+                      @if (activeSubTab() === 'staff' && isOwner()) {
+                        <button type="button" (click)="staffDeleted.emit(m.id)" title="Remove staff member"
+                          class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer">
+                          <lucide-icon [name]="'trash-2'" class="w-3.5 h-3.5"></lucide-icon>
+                        </button>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              }
+              @if (filteredRosterMembers().length === 0) {
+                <tr>
+                  <td colspan="10" class="px-4 py-8 text-center text-slate-400">
+                    No members match your current filter.
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+
+    <!-- ================================================================ -->
+    <!-- SUB-TAB 5: CAMERA FACE ENROLLMENT REGISTRY                       -->
+    <!-- ================================================================ -->
+    @if (activeSubTab() === 'enrollment') {
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+
+        <!-- Left 7 cols: Live Camera Capture for Face Registration -->
+        <div class="lg:col-span-7 bg-white border border-slate-200 rounded-2xl p-5 space-y-4">
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <div>
+              <h3 class="text-sm font-bold text-slate-900">Camera Face Enrollment</h3>
+              <p class="text-xs text-slate-500">Capture a clear front-facing photo to register facial descriptor vectors.</p>
+            </div>
+            <div class="inline-flex p-1 rounded-xl bg-slate-100 border border-slate-200 gap-1">
+              @for (cat of allowedCategories(); track cat) {
+                <button type="button" (click)="setEnrollCategory(cat)"
+                  class="px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors"
+                  [class]="enrollCategory() === cat ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-600 hover:text-slate-900'">
+                  {{ categoryLabel(cat) }}
+                </button>
+              }
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Select {{ categoryLabel(enrollCategory()) }} Member</label>
+            <select [value]="enrollTargetMemberId()" (change)="enrollTargetMemberId.set($any($event.target).value)"
+              class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900">
+              <option value="">-- Select Member --</option>
+              @for (m of enrollCategoryMembers(); track m.id) {
+                <option [value]="m.id">{{ m.name }} ({{ m.code }} · {{ m.subLabel }}) {{ m.isEnrolled ? '— Enrolled' : '' }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="relative w-full h-72 sm:h-80 rounded-2xl bg-slate-950 overflow-hidden" [class]="fillLightFrameClass()">
+            <video #enrollVideoEl
+              class="w-full h-full object-cover"
+              [class.hidden]="!cameraActive() || !!enrollCapturedDataUrl()"
+              [style.transform]="cameraFacingMode() === 'user' ? 'scaleX(-1)' : 'none'"
+              autoplay playsinline muted></video>
+
+            @if (enrollCapturedDataUrl()) {
+              <img [src]="enrollCapturedDataUrl()" alt="Captured Enrollment Photo" referrerpolicy="no-referrer"
+                class="w-full h-full object-cover" />
+            }
+
+            @if (!cameraActive() && !enrollCapturedDataUrl()) {
+              <div class="absolute inset-0 flex flex-col items-center justify-center p-5 text-center text-white space-y-3">
+                <lucide-icon [name]="cameraError() ? 'alert-triangle' : 'camera'" class="w-8 h-8" [class]="cameraError() ? 'text-amber-400' : 'text-emerald-400'"></lucide-icon>
+                @if (cameraError()) {
+                  <div class="space-y-2.5 max-w-md">
+                    <p class="text-xs font-bold text-amber-300">
+                      {{ cameraErrorKind() === 'iframe_blocked' ? 'Preview Window Blocks Webcam' : 'Live Webcam Unavailable' }}
+                    </p>
+                    <p class="text-[11px] text-slate-300 leading-relaxed">{{ cameraError() }}</p>
+                    <div class="flex flex-wrap items-center justify-center gap-2">
+                      <a [href]="fullTabUrl" target="_blank" rel="noopener noreferrer"
+                        class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold inline-flex items-center gap-1.5">
+                        <lucide-icon [name]="'external-link'" class="w-3.5 h-3.5"></lucide-icon>
+                        <span>Open in Full Tab</span>
+                      </a>
+                      <button type="button" (click)="startCamera('enroll')"
+                        class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-semibold cursor-pointer inline-flex items-center gap-1.5">
+                        <lucide-icon [name]="'refresh-cw'" class="w-3.5 h-3.5"></lucide-icon>
+                        <span>Retry</span>
+                      </button>
+                    </div>
+                  </div>
+                } @else {
+                  <p class="text-xs font-semibold">Start webcam or snap via phone camera to capture a clear face photo</p>
+                }
+              </div>
+            }
+
+            @if (cameraActive() && !enrollCapturedDataUrl()) {
+              <div class="absolute inset-0 pointer-events-none flex items-center justify-center">
+                <div class="w-40 h-52 rounded-[50%] border-2 border-dashed border-emerald-400/80"></div>
+              </div>
+            }
+          </div>
+
+          <input #phoneEnrollInputEl type="file" accept="image/*" capture="user"
+            (change)="onEnrollPhotoFileSelected($event)" class="hidden" />
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            @if (!cameraActive()) {
+              <button type="button" (click)="startCamera('enroll')"
+                class="py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold cursor-pointer inline-flex items-center justify-center gap-1.5">
+                <lucide-icon [name]="'video'" class="w-4 h-4"></lucide-icon>
+                <span>Open Live Camera</span>
+              </button>
+            } @else {
+              <button type="button" (click)="captureEnrollmentFromCamera()" [disabled]="isCapturingEnroll()"
+                class="py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold cursor-pointer inline-flex items-center justify-center gap-1.5">
+                <lucide-icon [name]="'camera'" class="w-4 h-4"></lucide-icon>
+                <span>Snap Camera Frame</span>
+              </button>
+            }
+
+            <button type="button" (click)="cameraActive() ? switchCameraFacing() : activatePhoneCamera('enroll')"
+              class="py-2.5 px-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 text-xs font-semibold cursor-pointer inline-flex items-center justify-center gap-1.5">
+              <lucide-icon [name]="cameraActive() ? 'refresh-cw' : 'camera'" class="w-4 h-4 text-emerald-600"></lucide-icon>
+              <span>{{ cameraActive() ? (cameraFacingMode() === 'user' ? 'Phone Front Lens' : 'Phone Rear Lens') : 'Phone Camera' }}</span>
+            </button>
+
+            <button type="button" (click)="toggleFillLight()"
+              class="py-2.5 px-3 rounded-xl border text-xs font-semibold cursor-pointer inline-flex items-center justify-center gap-1.5 transition-colors"
+              [class]="fillLightBoost() ? 'bg-amber-50 border-amber-300 text-amber-900' : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'">
+              <lucide-icon [name]="'lightbulb'" class="w-4 h-4 text-amber-500"></lucide-icon>
+              <span>Light: {{ fillLightBoost() ? 'ON' : 'OFF' }}</span>
+            </button>
+          </div>
+
+          @if (enrollExtraction(); as ex) {
+            <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+              <div class="flex items-center justify-between text-xs">
+                <span class="font-bold text-slate-900">Captured Face Signature Metrics</span>
+                <span class="font-mono text-slate-600">{{ ex.hash }}</span>
+              </div>
+              <div class="grid grid-cols-3 gap-2 text-center text-xs tabular-nums">
+                <div class="p-2 rounded-lg bg-white border border-slate-200">
+                  <span class="text-[10px] text-slate-500 block">Quality</span>
+                  <strong class="text-slate-900">{{ ex.qualityScore }}%</strong>
+                </div>
+                <div class="p-2 rounded-lg bg-white border border-slate-200">
+                  <span class="text-[10px] text-slate-500 block">Brightness</span>
+                  <strong class="text-slate-900">{{ ex.brightness }}%</strong>
+                </div>
+                <div class="p-2 rounded-lg bg-white border border-slate-200">
+                  <span class="text-[10px] text-slate-500 block">Sharpness</span>
+                  <strong class="text-slate-900">{{ ex.sharpness }}%</strong>
+                </div>
+              </div>
+              <div class="flex items-center justify-between flex-wrap gap-2 pt-1">
+                <label class="inline-flex items-center gap-2 text-xs font-medium text-slate-700 cursor-pointer">
+                  <input type="checkbox" [checked]="enrollLiteEnabled()" (change)="enrollLiteEnabled.set(!enrollLiteEnabled())" />
+                  <span>Allow Lite Quick-Verify for this profile</span>
+                </label>
+                <div class="flex items-center gap-2">
+                  <button type="button" (click)="enrollCapturedDataUrl.set(''); enrollExtraction.set(null)"
+                    class="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-semibold text-slate-700 cursor-pointer">
+                    Retake
+                  </button>
+                  <button type="button" (click)="saveEnrolledFaceProfile()"
+                    class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold cursor-pointer">
+                    Save Face Profile
+                  </button>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Right 5 cols: Enrolled Profiles Registry -->
+        <div class="lg:col-span-5 bg-white border border-slate-200 rounded-2xl p-5 space-y-3">
+          <div class="flex items-center justify-between">
+            <h4 class="text-sm font-bold text-slate-900">Enrolled {{ categoryLabel(enrollCategory()) }} Profiles</h4>
+            <span class="text-xs font-mono text-slate-500 tabular-nums">
+              {{ enrollCategoryMembers().length }} total
+            </span>
+          </div>
+
+          <div class="divide-y divide-slate-100 max-h-[420px] overflow-y-auto">
+            @for (m of enrollCategoryMembers(); track m.id) {
+              <div class="py-2.5 flex items-center justify-between gap-2 text-xs">
+                <div class="flex items-center gap-2.5 min-w-0">
+                  @if (m.faceProfile?.facePhotoData) {
+                    <img [src]="m.faceProfile?.facePhotoData" [alt]="m.name" referrerpolicy="no-referrer"
+                      class="w-9 h-9 rounded-lg object-cover border border-slate-200 shrink-0" />
+                  } @else {
+                    <div class="w-9 h-9 rounded-lg bg-slate-100 border border-slate-200 text-slate-600 font-bold text-[11px] flex items-center justify-center shrink-0">
+                      {{ memberInitials(m.name) }}
+                    </div>
+                  }
+                  <div class="min-w-0">
+                    <p class="font-semibold text-slate-900 truncate">{{ m.name }}</p>
+                    <p class="text-[11px] text-slate-500 font-mono truncate">
+                      {{ m.code }} · {{ m.faceProfile ? m.faceProfile.faceHash : 'Pending camera capture' }}
+                    </p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-1.5 shrink-0">
+                  @if (m.faceProfile; as fp) {
+                    <button type="button" (click)="removeEnrolledFace(fp.id)" title="Remove enrolled face"
+                      class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer">
+                      <lucide-icon [name]="'trash-2'" class="w-3.5 h-3.5"></lucide-icon>
+                    </button>
+                  } @else {
+                    <button type="button" (click)="enrollTargetMemberId.set(m.id); startCamera('enroll')"
+                      class="px-2.5 py-1 rounded-lg bg-slate-900 text-white text-[11px] font-semibold cursor-pointer">
+                      Enroll
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- ================================================================ -->
+    <!-- SUB-TAB 6: SCHOOL OWNER COMPLETE ATTENDANCE SETUP & ACCESS HUB   -->
+    <!-- ================================================================ -->
+    @if (activeSubTab() === 'setup' && isOwner()) {
+      <div class="space-y-5">
+
+        <!-- Section A: Verification Engine, Lite Mode & Camera Illumination -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 space-y-5">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+            <div>
+              <h3 class="text-base font-bold text-slate-900">School Owner Attendance Verification & Lite Setup</h3>
+              <p class="text-xs text-slate-500">
+                Configure how camera face verification operates across the school, enable Lite Mode or Ring-Light illumination, and set confidence thresholds.
+              </p>
+            </div>
+            <button type="button" (click)="commitOwnerPolicy()"
+              class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold cursor-pointer inline-flex items-center gap-1.5 shrink-0">
+              <lucide-icon [name]="'check-circle-2'" class="w-4 h-4"></lucide-icon>
+              <span>Save & Enforce Setup</span>
+            </button>
+          </div>
+
+          <!-- Verification Strictness Mode Cards -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <button type="button" (click)="updateDraftMode('strict')"
+              class="p-4 rounded-xl border text-left cursor-pointer transition-colors space-y-1"
+              [class]="policyDraft().verificationMode === 'strict' ? 'bg-emerald-50 border-emerald-500' : 'bg-slate-50 border-slate-200 hover:bg-white'">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-slate-900">Strict Face + Liveness</span>
+                @if (policyDraft().verificationMode === 'strict') {
+                  <lucide-icon [name]="'check-circle-2'" class="w-4 h-4 text-emerald-600"></lucide-icon>
+                }
+              </div>
+              <p class="text-[11px] text-slate-600">Two-frame motion liveness check + higher match confidence threshold.</p>
+            </button>
+
+            <button type="button" (click)="updateDraftMode('standard')"
+              class="p-4 rounded-xl border text-left cursor-pointer transition-colors space-y-1"
+              [class]="policyDraft().verificationMode === 'standard' ? 'bg-emerald-50 border-emerald-500' : 'bg-slate-50 border-slate-200 hover:bg-white'">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-slate-900">Standard Camera Face</span>
+                @if (policyDraft().verificationMode === 'standard') {
+                  <lucide-icon [name]="'check-circle-2'" class="w-4 h-4 text-emerald-600"></lucide-icon>
+                }
+              </div>
+              <p class="text-[11px] text-slate-600">Balanced facial vector verification for daily gates and classrooms.</p>
+            </button>
+
+            <button type="button" (click)="updateDraftMode('lite')"
+              class="p-4 rounded-xl border text-left cursor-pointer transition-colors space-y-1"
+              [class]="policyDraft().verificationMode === 'lite' ? 'bg-emerald-50 border-emerald-500' : 'bg-slate-50 border-slate-200 hover:bg-white'">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-slate-900">Lite Quick-Verify Mode</span>
+                @if (policyDraft().verificationMode === 'lite') {
+                  <lucide-icon [name]="'check-circle-2'" class="w-4 h-4 text-emerald-600"></lucide-icon>
+                }
+              </div>
+              <p class="text-[11px] text-slate-600">Fast low-light tolerant camera verification for tablets and quick queues.</p>
+            </button>
+          </div>
+
+          <!-- Feature Toggles & Sliders -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+            <div class="space-y-2.5">
+              <label class="p-3 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between cursor-pointer">
+                <div>
+                  <span class="font-semibold text-slate-900 block">Allow Lite Verification Toggle</span>
+                  <span class="text-[11px] text-slate-500">Permitted portals can switch on Lite Quick-Verify</span>
+                </div>
+                <input type="checkbox" [checked]="policyDraft().liteModeEnabled" (change)="toggleDraftField('liteModeEnabled')" class="w-4 h-4 accent-emerald-600" />
+              </label>
+
+              <label class="p-3 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between cursor-pointer">
+                <div>
+                  <span class="font-semibold text-slate-900 block">Camera Light Boost</span>
+                  <span class="text-[11px] text-slate-500">Brightens screen border in dim light</span>
+                </div>
+                <input type="checkbox" [checked]="policyDraft().cameraFillLightEnabled" (change)="toggleDraftField('cameraFillLightEnabled')" class="w-4 h-4 accent-emerald-600" />
+              </label>
+
+              <label class="p-3 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between cursor-pointer">
+                <div>
+                  <span class="font-semibold text-slate-900 block">Auto-Scan Continuous Queue</span>
+                  <span class="text-[11px] text-slate-500">Hands-free live detection & save without button tap</span>
+                </div>
+                <input type="checkbox" [checked]="policyDraft().autoCaptureOnMatch" (change)="toggleDraftField('autoCaptureOnMatch')" class="w-4 h-4 accent-emerald-600" />
+              </label>
+
+              <label class="p-3 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between cursor-pointer">
+                <div>
+                  <span class="font-semibold text-slate-900 block">Two-Punch Shift (IN &amp; OUT)</span>
+                  <span class="text-[11px] text-slate-500">Locks duplicates after IN until Check-Out time enables</span>
+                </div>
+                <input type="checkbox" [checked]="policyDraft().twoPunchEnabled" (change)="toggleDraftField('twoPunchEnabled')" class="w-4 h-4 accent-emerald-600" />
+              </label>
+
+              <label class="p-3 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between cursor-pointer">
+                <div>
+                  <span class="font-semibold text-slate-900 block">Enforce Camera-Only Attendance</span>
+                  <span class="text-[11px] text-slate-500">Requires camera face verification across portals</span>
+                </div>
+                <input type="checkbox" [checked]="policyDraft().requireCameraForAllAttendance" (change)="toggleDraftField('requireCameraForAllAttendance')" class="w-4 h-4 accent-emerald-600" />
+              </label>
+
+              <label class="p-3 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between cursor-pointer">
+                <div>
+                  <span class="font-semibold text-slate-900 block">Motion Liveness Verification</span>
+                  <span class="text-[11px] text-slate-500">Detects live frame delta in Strict mode</span>
+                </div>
+                <input type="checkbox" [checked]="policyDraft().livenessCheckEnabled" (change)="toggleDraftField('livenessCheckEnabled')" class="w-4 h-4 accent-emerald-600" />
+              </label>
+            </div>
+
+            <div class="space-y-3 p-4 rounded-xl border border-slate-200 bg-slate-50">
+              <div>
+                <div class="flex items-center justify-between font-semibold text-slate-800 mb-1">
+                  <span>Standard Confidence Threshold</span>
+                  <span class="font-mono font-bold text-slate-900 tabular-nums">{{ policyDraft().confidenceThreshold }}%</span>
+                </div>
+                <input type="range" min="60" max="95" [value]="policyDraft().confidenceThreshold"
+                  (input)="setDraftNumber('confidenceThreshold', $any($event.target).value)"
+                  class="w-full accent-emerald-600 cursor-pointer" />
+              </div>
+
+              <div>
+                <div class="flex items-center justify-between font-semibold text-slate-800 mb-1">
+                  <span>Lite Mode Confidence Threshold</span>
+                  <span class="font-mono font-bold text-slate-900 tabular-nums">{{ policyDraft().liteConfidenceThreshold }}%</span>
+                </div>
+                <input type="range" min="55" max="85" [value]="policyDraft().liteConfidenceThreshold"
+                  (input)="setDraftNumber('liteConfidenceThreshold', $any($event.target).value)"
+                  class="w-full accent-emerald-600 cursor-pointer" />
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-1">Late Cutoff Time</label>
+                  <input type="time" [value]="policyDraft().lateCutoffTime"
+                    (change)="setDraftTime($any($event.target).value)"
+                    class="w-full px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-semibold text-slate-900" />
+                </div>
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-1">Check-Out Enable Time</label>
+                  <input type="time" [value]="policyDraft().checkOutEnableTime"
+                    (change)="setDraftCheckOutTime($any($event.target).value)"
+                    class="w-full px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-semibold text-slate-900" />
+                </div>
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-1">Light Color</label>
+                  <select [value]="policyDraft().fillLightColor" (change)="setDraftFillLightColor($any($event.target).value)"
+                    class="w-full px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-semibold text-slate-900">
+                    <option value="neutral">Neutral White</option>
+                    <option value="warm">Warm Soft</option>
+                    <option value="bright">Max Brightness</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section B: Category Setup (Students | Teachers | Staff) -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 space-y-4">
+          <h4 class="text-sm font-bold text-slate-900">Category-Wise Face Attendance Rules</h4>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+            @for (cat of ['student', 'teacher', 'staff']; track cat) {
+              @let rule = cat === 'student' ? policyDraft().categories.student : (cat === 'teacher' ? policyDraft().categories.teacher : policyDraft().categories.staff);
+              <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2.5">
+                <p class="font-bold text-slate-900 uppercase tracking-wider text-[11px]">
+                  {{ cat === 'student' ? 'Students' : (cat === 'teacher' ? 'Teachers' : 'Campus Staff') }}
+                </p>
+                <label class="flex items-center justify-between cursor-pointer">
+                  <span class="text-slate-700">Attendance Enabled</span>
+                  <input type="checkbox" [checked]="rule.enabled" (change)="toggleCategoryRule($any(cat), 'enabled')" class="accent-emerald-600" />
+                </label>
+                <label class="flex items-center justify-between cursor-pointer">
+                  <span class="text-slate-700">Camera Face Required</span>
+                  <input type="checkbox" [checked]="rule.cameraRequired" (change)="toggleCategoryRule($any(cat), 'cameraRequired')" class="accent-emerald-600" />
+                </label>
+                <label class="flex items-center justify-between cursor-pointer">
+                  <span class="text-slate-700">Lite Verification Enabled</span>
+                  <input type="checkbox" [checked]="rule.liteEnabled" (change)="toggleCategoryRule($any(cat), 'liteEnabled')" class="accent-emerald-600" />
+                </label>
+                <label class="flex items-center justify-between cursor-pointer">
+                  <span class="text-slate-700">Self Check-In Permitted</span>
+                  <input type="checkbox" [checked]="rule.allowSelfCheckIn" (change)="toggleCategoryRule($any(cat), 'allowSelfCheckIn')" class="accent-emerald-600" />
+                </label>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Section C: Role Access Control Matrix & Individual Operator Lite Toggles -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 space-y-5">
+          <div>
+            <h4 class="text-sm font-bold text-slate-900">Portal & Role Access Permissions</h4>
+            <p class="text-xs text-slate-500">Define which roles can access Attendance, run Camera Face Verification, enroll faces, or use Lite/Manual controls.</p>
+          </div>
+
+          <div class="overflow-x-auto border border-slate-200 rounded-xl">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead class="bg-slate-50 text-slate-600 uppercase font-semibold text-[10px] border-b border-slate-200">
+                <tr>
+                  <th class="px-3 py-2.5">Portal Role</th>
+                  <th class="px-3 py-2.5 text-center">Portal Access</th>
+                  <th class="px-3 py-2.5 text-center">Scan Students</th>
+                  <th class="px-3 py-2.5 text-center">Scan Teachers</th>
+                  <th class="px-3 py-2.5 text-center">Scan Staff</th>
+                  <th class="px-3 py-2.5 text-center">Enroll Faces</th>
+                  <th class="px-3 py-2.5 text-center">Use Lite Mode</th>
+                  <th class="px-3 py-2.5 text-center">Manual Fallback</th>
+                  <th class="px-3 py-2.5 text-center">Export</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                <tr>
+                  <td class="px-3 py-2.5 font-semibold text-slate-900">Principal</td>
+                  <td class="px-3 py-2.5 text-center"><input type="checkbox" [checked]="policyDraft().roleAccess.principal.enabled" (change)="toggleRolePermission('principal', 'enabled')" class="accent-emerald-600" /></td>
+                  <td class="px-3 py-2.5 text-center"><input type="checkbox" [checked]="policyDraft().roleAccess.principal.canScanStudents" (change)="toggleRolePermission('principal', 'canScanStudents')" class="accent-emerald-600" /></td>
+                  <td class="px-3 py-2.5 text-center"><input type="checkbox" [checked]="policyDraft().roleAccess.principal.canScanTeachers" (change)="toggleRolePermission('principal', 'canScanTeachers')" class="accent-emerald-600" /></td>
+                  <td class="px-3 py-2.5 text-center"><input type="checkbox" [checked]="policyDraft().roleAccess.principal.canScanStaff" (change)="toggleRolePermission('principal', 'canScanStaff')" class="accent-emerald-600" /></td>
+                  <td class="px-3 py-2.5 text-center"><input type="checkbox" [checked]="policyDraft().roleAccess.principal.canEnrollFaces" (change)="toggleRolePermission('principal', 'canEnrollFaces')" class="accent-emerald-600" /></td>
+                  <td class="px-3 py-2.5 text-center"><input type="checkbox" [checked]="policyDraft().roleAccess.principal.liteModeAllowed" (change)="toggleRolePermission('principal', 'liteModeAllowed')" class="accent-emerald-600" /></td>
+                  <td class="px-3 py-2.5 text-center"><input type="checkbox" [checked]="policyDraft().roleAccess.principal.manualFallbackAllowed" (change)="toggleRolePermission('principal', 'manualFallbackAllowed')" class="accent-emerald-600" /></td>
+                  <td class="px-3 py-2.5 text-center"><input type="checkbox" [checked]="policyDraft().roleAccess.principal.canExportReports" (change)="toggleRolePermission('principal', 'canExportReports')" class="accent-emerald-600" /></td>
+                </tr>
+                <tr>
+                  <td class="px-3 py-2.5 font-semibold text-slate-900">Teachers</td>
+                  <td class="px-3 py-2.5 text-center"><input type="checkbox" [checked]="policyDraft().roleAccess.teacher.enabled" (change)="toggleRolePermission('teacher', 'enabled')" class="accent-emerald-600" /></td>
+                  <td class="px-3 py-2.5 text-center"><input type="checkbox" [checked]="policyDraft().roleAccess.teacher.canScanStudents" (change)="toggleRolePermission('teacher', 'canScanStudents')" class="accent-emerald-600" /></td>
+                  <td class="px-3 py-2.5 text-center"><input type="checkbox" [checked]="policyDraft().roleAccess.teacher.canScanTeachers" (change)="toggleRolePermission('teacher', 'canScanTeachers')" class="accent-emerald-600" /></td>
+                  <td class="px-3 py-2.5 text-center"><input type="checkbox" [checked]="policyDraft().roleAccess.teacher.canScanStaff" (change)="toggleRolePermission('teacher', 'canScanStaff')" class="accent-emerald-600" /></td>
+                  <td class="px-3 py-2.5 text-center"><input type="checkbox" [checked]="policyDraft().roleAccess.teacher.canEnrollFaces" (change)="toggleRolePermission('teacher', 'canEnrollFaces')" class="accent-emerald-600" /></td>
+                  <td class="px-3 py-2.5 text-center"><input type="checkbox" [checked]="policyDraft().roleAccess.teacher.liteModeAllowed" (change)="toggleRolePermission('teacher', 'liteModeAllowed')" class="accent-emerald-600" /></td>
+                  <td class="px-3 py-2.5 text-center"><input type="checkbox" [checked]="policyDraft().roleAccess.teacher.manualFallbackAllowed" (change)="toggleRolePermission('teacher', 'manualFallbackAllowed')" class="accent-emerald-600" /></td>
+                  <td class="px-3 py-2.5 text-center"><input type="checkbox" [checked]="policyDraft().roleAccess.teacher.canExportReports" (change)="toggleRolePermission('teacher', 'canExportReports')" class="accent-emerald-600" /></td>
+                </tr>
+                <tr>
+                  <td class="px-3 py-2.5 font-semibold text-slate-900">Campus Staff / Gate</td>
+                  <td class="px-3 py-2.5 text-center"><input type="checkbox" [checked]="policyDraft().roleAccess.staff.enabled" (change)="toggleRolePermission('staff', 'enabled')" class="accent-emerald-600" /></td>
+                  <td class="px-3 py-2.5 text-center"><input type="checkbox" [checked]="policyDraft().roleAccess.staff.canScanStudents" (change)="toggleRolePermission('staff', 'canScanStudents')" class="accent-emerald-600" /></td>
+                  <td class="px-3 py-2.5 text-center"><input type="checkbox" [checked]="policyDraft().roleAccess.staff.canScanTeachers" (change)="toggleRolePermission('staff', 'canScanTeachers')" class="accent-emerald-600" /></td>
+                  <td class="px-3 py-2.5 text-center"><input type="checkbox" [checked]="policyDraft().roleAccess.staff.canScanStaff" (change)="toggleRolePermission('staff', 'canScanStaff')" class="accent-emerald-600" /></td>
+                  <td class="px-3 py-2.5 text-center"><input type="checkbox" [checked]="policyDraft().roleAccess.staff.canEnrollFaces" (change)="toggleRolePermission('staff', 'canEnrollFaces')" class="accent-emerald-600" /></td>
+                  <td class="px-3 py-2.5 text-center"><input type="checkbox" [checked]="policyDraft().roleAccess.staff.liteModeAllowed" (change)="toggleRolePermission('staff', 'liteModeAllowed')" class="accent-emerald-600" /></td>
+                  <td class="px-3 py-2.5 text-center"><input type="checkbox" [checked]="policyDraft().roleAccess.staff.manualFallbackAllowed" (change)="toggleRolePermission('staff', 'manualFallbackAllowed')" class="accent-emerald-600" /></td>
+                  <td class="px-3 py-2.5 text-center"><input type="checkbox" [checked]="policyDraft().roleAccess.staff.canExportReports" (change)="toggleRolePermission('staff', 'canExportReports')" class="accent-emerald-600" /></td>
+                </tr>
+                <tr>
+                  <td class="px-3 py-2.5 font-semibold text-slate-900">Student (Self Kiosk)</td>
+                  <td class="px-3 py-2.5 text-center"><input type="checkbox" [checked]="policyDraft().roleAccess.student.enabled" (change)="toggleRolePermission('student', 'enabled')" class="accent-emerald-600" /></td>
+                  <td class="px-3 py-2.5 text-center text-slate-400">Self Only</td>
+                  <td class="px-3 py-2.5 text-center text-slate-400">-</td>
+                  <td class="px-3 py-2.5 text-center text-slate-400">-</td>
+                  <td class="px-3 py-2.5 text-center"><input type="checkbox" [checked]="policyDraft().roleAccess.student.canEnrollFaces" (change)="toggleRolePermission('student', 'canEnrollFaces')" class="accent-emerald-600" /></td>
+                  <td class="px-3 py-2.5 text-center"><input type="checkbox" [checked]="policyDraft().roleAccess.student.liteModeAllowed" (change)="toggleRolePermission('student', 'liteModeAllowed')" class="accent-emerald-600" /></td>
+                  <td class="px-3 py-2.5 text-center">
+                    <label class="inline-flex items-center gap-1 cursor-pointer">
+                      <input type="checkbox" [checked]="policyDraft().roleAccess.student.selfCheckInEnabled" (change)="toggleRolePermission('student', 'selfCheckInEnabled')" class="accent-emerald-600" />
+                      <span class="text-[10px] text-slate-700">Self Scan</span>
+                    </label>
+                  </td>
+                  <td class="px-3 py-2.5 text-center text-slate-400">-</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Individual Operator & Lite Enablement Per Teacher / Staff Member -->
+          <div class="space-y-3 pt-2">
+            <div class="flex items-center justify-between flex-wrap gap-2">
+              <div>
+                <h5 class="text-xs font-bold text-slate-900 uppercase tracking-wider">Individual Lite & Operator Access</h5>
+                <p class="text-[11px] text-slate-500">Enable or restrict individual teachers or staff members for attendance camera operations & Lite Mode.</p>
+              </div>
+              <div class="inline-flex p-1 rounded-lg bg-slate-100 border border-slate-200 gap-1 text-xs font-semibold">
+                <button type="button" (click)="operatorFilterCategory.set('teacher')"
+                  class="px-3 py-1 rounded-md cursor-pointer"
+                  [class]="operatorFilterCategory() === 'teacher' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-600'">
+                  Teachers
+                </button>
+                <button type="button" (click)="operatorFilterCategory.set('staff')"
+                  class="px-3 py-1 rounded-md cursor-pointer"
+                  [class]="operatorFilterCategory() === 'staff' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-600'">
+                  Campus Staff
+                </button>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 text-xs">
+              @for (op of (operatorFilterCategory() === 'teacher' ? teacherMembers() : staffMembers()); track op.id) {
+                <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-2">
+                  <div class="min-w-0">
+                    <p class="font-semibold text-slate-900 truncate">{{ op.name }}</p>
+                    <p class="text-[11px] text-slate-500 truncate">{{ op.subLabel }}</p>
+                  </div>
+                  <div class="flex items-center gap-2 shrink-0">
+                    <label class="inline-flex items-center gap-1 text-[11px] text-slate-700 cursor-pointer">
+                      <input type="checkbox"
+                        [checked]="isMemberOverrideActive(operatorFilterCategory(), op.id, 'enabled')"
+                        (change)="toggleIndividualOperatorOverride(operatorFilterCategory(), op.id, 'enabled')"
+                        class="accent-emerald-600" />
+                      <span>Access</span>
+                    </label>
+                    <label class="inline-flex items-center gap-1 text-[11px] text-slate-700 cursor-pointer">
+                      <input type="checkbox"
+                        [checked]="isMemberOverrideActive(operatorFilterCategory(), op.id, 'liteEnabled')"
+                        (change)="toggleIndividualOperatorOverride(operatorFilterCategory(), op.id, 'liteEnabled')"
+                        class="accent-emerald-600" />
+                      <span>Lite</span>
+                    </label>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="pt-3 border-t border-slate-100 flex items-center justify-end">
+            <button type="button" (click)="commitOwnerPolicy()"
+              class="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold cursor-pointer inline-flex items-center gap-2">
+              <lucide-icon [name]="'shield-check'" class="w-4 h-4 text-emerald-400"></lucide-icon>
+              <span>Save Owner Attendance Setup & Permissions</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+}

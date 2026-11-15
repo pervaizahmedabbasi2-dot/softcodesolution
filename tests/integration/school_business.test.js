@@ -575,3 +575,172 @@ test('School Business: Owner Financial Monitoring, Partial Installments & Petty 
   assert.ok(Array.isArray(summary.dailyRevenueSeries) && summary.dailyRevenueSeries.length >= 1);
   assert.ok(Array.isArray(summary.pettyVouchers) && summary.pettyVouchers.some(v => v.id === voucher.id));
 });
+
+test('School Business: Multi-Category Face Verification Attendance (Student, Teacher, Staff) & Owner Access Control', async () => {
+  const tenantId = `tenant-school-face-${Date.now()}`;
+  const tenantOther = `tenant-school-other-${Date.now()}`;
+  const ownerHeaders = { 'Content-Type': 'application/json', 'x-tenant-id': tenantId, 'x-user-role': 'owner' };
+  const principalHeaders = { 'Content-Type': 'application/json', 'x-tenant-id': tenantId, 'x-user-role': 'principal' };
+  const teacherHeaders = { 'Content-Type': 'application/json', 'x-tenant-id': tenantId, 'x-user-role': 'teacher' };
+  const studentHeaders = { 'Content-Type': 'application/json', 'x-tenant-id': tenantId, 'x-user-role': 'student' };
+
+  // 1. Staff CRUD + tenant isolation
+  const staffCreateRes = await fetch(`${baseUrl}/api/school/staff`, {
+    method: 'POST',
+    headers: ownerHeaders,
+    body: JSON.stringify({
+      name: 'Tariq Gatekeeper',
+      roleTitle: 'Main Gate Officer',
+      department: 'Security',
+      phone: '+92 300 1122334',
+      shift: 'Morning',
+      liteEnabled: true
+    })
+  });
+  assert.equal(staffCreateRes.status, 201);
+  const { staff: createdStaff } = await staffCreateRes.json();
+  assert.ok(createdStaff?.id);
+
+  const staffOtherRes = await fetch(`${baseUrl}/api/school/staff`, {
+    headers: { 'x-tenant-id': tenantOther }
+  });
+  const staffOther = (await staffOtherRes.json()).staff;
+  assert.equal(staffOther.some((s) => s.id === createdStaff.id), false, 'Staff must be isolated by tenant');
+
+  // 2. Owner-only policy governance (principal, teacher, student blocked)
+  for (const hdr of [principalHeaders, teacherHeaders, studentHeaders]) {
+    const forbidden = await fetch(`${baseUrl}/api/school/attendance/policy`, {
+      method: 'PUT',
+      headers: hdr,
+      body: JSON.stringify({ verificationMode: 'lite', liteModeEnabled: true })
+    });
+    assert.equal(forbidden.status, 403);
+    assert.equal((await forbidden.json()).error, 'ROLE_FORBIDDEN');
+  }
+
+  // Student self check-in initially disabled -> blocked 403
+  const blockedSelf = await fetch(`${baseUrl}/api/school/attendance`, {
+    method: 'POST',
+    headers: studentHeaders,
+    body: JSON.stringify({
+      studentId: 'STD-SELF-1',
+      studentName: 'Self Student',
+      memberCategory: 'student',
+      verificationMode: 'face_camera',
+      confidenceScore: 88,
+      status: 'Present'
+    })
+  });
+  assert.equal(blockedSelf.status, 403);
+
+  // Owner enables Lite mode, fills lighting boost & allows student self camera check-in
+  const savePolicyRes = await fetch(`${baseUrl}/api/school/attendance/policy`, {
+    method: 'PUT',
+    headers: ownerHeaders,
+    body: JSON.stringify({
+      verificationMode: 'lite',
+      liteModeEnabled: true,
+      cameraFillLightEnabled: true,
+      fillLightColor: 'bright',
+      confidenceThreshold: 76,
+      liteConfidenceThreshold: 62,
+      roleAccess: {
+        principal: { enabled: true, canScanStudents: true, canScanTeachers: true, canScanStaff: true, canEnrollFaces: true, liteModeAllowed: true, manualFallbackAllowed: false, canExportReports: true, selfCheckInEnabled: false },
+        teacher: { enabled: true, canScanStudents: true, canScanTeachers: false, canScanStaff: false, canEnrollFaces: true, liteModeAllowed: true, manualFallbackAllowed: false, canExportReports: true, selfCheckInEnabled: false },
+        staff: { enabled: true, canScanStudents: true, canScanTeachers: true, canScanStaff: true, canEnrollFaces: false, liteModeAllowed: true, manualFallbackAllowed: false, canExportReports: false, selfCheckInEnabled: false },
+        student: { enabled: true, canScanStudents: false, canScanTeachers: false, canScanStaff: false, canEnrollFaces: false, liteModeAllowed: true, manualFallbackAllowed: false, canExportReports: false, selfCheckInEnabled: true }
+      }
+    })
+  });
+  assert.equal(savePolicyRes.status, 200);
+  const { policy: savedPolicy } = await savePolicyRes.json();
+  assert.equal(savedPolicy.verificationMode, 'lite');
+  assert.equal(savedPolicy.roleAccess.student.selfCheckInEnabled, true);
+
+  // 3. Separate face profile registration for student, teacher, staff
+  const descriptorSample = Array.from({ length: 72 }, (_, idx) => Number(((idx % 9) * 0.05).toFixed(4)));
+  for (const member of [
+    { memberId: 'STD-SELF-1', memberCategory: 'student', memberName: 'Self Student', memberCode: 'SCH-01', gradeOrDept: 'Class 10-A' },
+    { memberId: 'TCH-99', memberCategory: 'teacher', memberName: 'Prof. Imran', memberCode: 'TCH-99', gradeOrDept: 'Physics' },
+    { memberId: createdStaff.id, memberCategory: 'staff', memberName: createdStaff.name, memberCode: createdStaff.empCode, gradeOrDept: 'Security' }
+  ]) {
+    const enrollRes = await fetch(`${baseUrl}/api/school/attendance/face-profiles`, {
+      method: 'POST',
+      headers: ownerHeaders,
+      body: JSON.stringify({
+        ...member,
+        faceDescriptor: descriptorSample,
+        faceHash: `FACE-${member.memberId}`,
+        qualityScore: 91,
+        liteEnabled: true
+      })
+    });
+    assert.equal(enrollRes.status, 201);
+  }
+
+  const staffProfilesRes = await fetch(`${baseUrl}/api/school/attendance/face-profiles?category=staff`, { headers: ownerHeaders });
+  assert.equal(staffProfilesRes.status, 200);
+  const staffProfiles = (await staffProfilesRes.json()).profiles;
+  assert.equal(staffProfiles.length, 1);
+  assert.equal(staffProfiles[0].memberId, createdStaff.id);
+
+  // 4. Category-separated face verification attendance logs (now including allowed student self-check-in)
+  const stuCheckIn = await fetch(`${baseUrl}/api/school/attendance`, {
+    method: 'POST',
+    headers: studentHeaders,
+    body: JSON.stringify({
+      studentId: 'STD-SELF-1',
+      studentName: 'Self Student',
+      rollNo: 'SCH-01',
+      grade: 'Class 10-A',
+      memberCategory: 'student',
+      verificationMode: 'face_camera_lite',
+      confidenceScore: 89.4,
+      verifiedBy: 'Self Student Camera',
+      status: 'Present'
+    })
+  });
+  assert.equal(stuCheckIn.status, 200);
+
+  const tchCheckIn = await fetch(`${baseUrl}/api/school/attendance`, {
+    method: 'POST',
+    headers: principalHeaders,
+    body: JSON.stringify({
+      studentId: 'TCH-99',
+      studentName: 'Prof. Imran',
+      rollNo: 'TCH-99',
+      grade: 'Physics',
+      memberCategory: 'teacher',
+      verificationMode: 'face_camera',
+      confidenceScore: 94.2,
+      verifiedBy: 'Principal Terminal',
+      status: 'Present'
+    })
+  });
+  assert.equal(tchCheckIn.status, 200);
+
+  const stfCheckIn = await fetch(`${baseUrl}/api/school/attendance`, {
+    method: 'POST',
+    headers: ownerHeaders,
+    body: JSON.stringify({
+      studentId: createdStaff.id,
+      studentName: createdStaff.name,
+      rollNo: createdStaff.empCode,
+      grade: 'Security',
+      memberCategory: 'staff',
+      verificationMode: 'face_camera_lite',
+      confidenceScore: 87.1,
+      verifiedBy: 'Owner Terminal',
+      status: 'Present'
+    })
+  });
+  assert.equal(stfCheckIn.status, 200);
+
+  const staffAttRes = await fetch(`${baseUrl}/api/school/attendance?category=staff`, { headers: ownerHeaders });
+  assert.equal(staffAttRes.status, 200);
+  const staffAtt = (await staffAttRes.json()).attendance;
+  assert.equal(staffAtt.length, 1);
+  assert.equal(staffAtt[0].memberCategory, 'staff');
+  assert.equal(staffAtt[0].confidenceScore, 87.1);
+});
+

@@ -763,13 +763,31 @@ export class BackendService {
     } catch { return { ok: false }; }
   }
 
+  async getSchoolAttendance(category?: string) {
+    try {
+      const q = category ? `?category=${encodeURIComponent(category)}` : '';
+      const res = await fetch(`/api/school/attendance${q}`, { headers: this.getSchoolHeaders(false), credentials: 'include' });
+      return await res.json().catch(() => ({ ok: false, attendance: [] }));
+    } catch { return { ok: false, attendance: [] }; }
+  }
+
+  private createTimeoutSignal(ms: number = 3500): AbortSignal | undefined {
+    try {
+      if (typeof AbortSignal !== 'undefined' && typeof (AbortSignal as any).timeout === 'function') {
+        return (AbortSignal as any).timeout(ms);
+      }
+    } catch {}
+    return undefined;
+  }
+
   async saveSchoolAttendance(payload: any) {
     try {
       const res = await fetch('/api/school/attendance', {
         method: 'POST',
         headers: this.getSchoolHeaders(),
         body: JSON.stringify(payload),
-        credentials: 'include'
+        credentials: 'include',
+        signal: this.createTimeoutSignal(3500)
       });
       return await res.json();
     } catch { return { ok: false }; }
@@ -794,6 +812,101 @@ export class BackendService {
         headers: this.getSchoolHeaders(),
         body: JSON.stringify(payload),
         credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async getSchoolStaff() {
+    try {
+      const res = await fetch('/api/school/staff', { headers: this.getSchoolHeaders(false), credentials: 'include' });
+      return await res.json().catch(() => ({ ok: false, staff: [] }));
+    } catch { return { ok: false, staff: [] }; }
+  }
+
+  async saveSchoolStaff(payload: any) {
+    try {
+      const res = await fetch('/api/school/staff', {
+        method: 'POST',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async updateSchoolStaff(id: string, payload: any) {
+    try {
+      const res = await fetch(`/api/school/staff/${encodeURIComponent(id)}`, {
+        method: 'PUT',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async deleteSchoolStaff(id: string) {
+    try {
+      const res = await fetch(`/api/school/staff/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        headers: this.getSchoolHeaders(false),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async getSchoolAttendancePolicy() {
+    try {
+      const res = await fetch('/api/school/attendance/policy', { headers: this.getSchoolHeaders(false), credentials: 'include' });
+      return await res.json().catch(() => ({ ok: false, policy: null }));
+    } catch { return { ok: false, policy: null }; }
+  }
+
+  async saveSchoolAttendancePolicy(payload: any) {
+    try {
+      const res = await fetch('/api/school/attendance/policy', {
+        method: 'PUT',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify(payload),
+        credentials: 'include',
+        signal: this.createTimeoutSignal(3500)
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async getSchoolFaceProfiles(category?: string) {
+    try {
+      const q = category ? `?category=${encodeURIComponent(category)}` : '';
+      const res = await fetch(`/api/school/attendance/face-profiles${q}`, { headers: this.getSchoolHeaders(false), credentials: 'include' });
+      return await res.json().catch(() => ({ ok: false, profiles: [] }));
+    } catch { return { ok: false, profiles: [] }; }
+  }
+
+  async saveSchoolFaceProfile(payload: any) {
+    try {
+      const res = await fetch('/api/school/attendance/face-profiles', {
+        method: 'POST',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify(payload),
+        credentials: 'include',
+        signal: this.createTimeoutSignal(4500)
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async deleteSchoolFaceProfile(id: string) {
+    try {
+      const res = await fetch(`/api/school/attendance/face-profiles/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        headers: this.getSchoolHeaders(false),
+        credentials: 'include',
+        signal: this.createTimeoutSignal(3500)
       });
       return await res.json();
     } catch { return { ok: false }; }

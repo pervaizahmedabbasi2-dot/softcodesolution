@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS local_school_fees (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- Biometric & RFID Attendance Ledger
+-- Biometric & Camera Face Verification Attendance Ledger
 CREATE TABLE IF NOT EXISTS local_school_attendance (
   id TEXT PRIMARY KEY,
   tenant_id TEXT DEFAULT 'tenant-root-platform',
@@ -67,12 +67,60 @@ CREATE TABLE IF NOT EXISTS local_school_attendance (
   roll_no TEXT NOT NULL,
   student_name TEXT NOT NULL,
   grade TEXT NOT NULL,
+  member_category TEXT DEFAULT 'student',
   status TEXT NOT NULL,
   date TEXT NOT NULL,
   gate_name TEXT DEFAULT 'Main Turnstile 01',
-  verification_mode TEXT DEFAULT 'rfid',
+  verification_mode TEXT DEFAULT 'face_camera',
+  confidence_score REAL DEFAULT 0,
+  verified_by TEXT DEFAULT 'Camera Face Verification',
+  marked_by_role TEXT DEFAULT 'owner',
   is_synced INTEGER DEFAULT 0,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Non-Teaching Campus Staff Directory
+CREATE TABLE IF NOT EXISTS local_school_staff (
+  id TEXT PRIMARY KEY,
+  tenant_id TEXT DEFAULT 'tenant-root-platform',
+  emp_code TEXT NOT NULL,
+  name TEXT NOT NULL,
+  role_title TEXT NOT NULL,
+  department TEXT DEFAULT 'Administration',
+  phone TEXT,
+  shift TEXT DEFAULT 'Morning (07:30 AM - 03:00 PM)',
+  status TEXT DEFAULT 'ACTIVE',
+  attendance_status TEXT DEFAULT 'Absent',
+  face_enrolled INTEGER DEFAULT 0,
+  lite_enabled INTEGER DEFAULT 1,
+  is_synced INTEGER DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Camera Face Biometric Profiles (Students, Teachers, Staff)
+CREATE TABLE IF NOT EXISTS local_school_face_profiles (
+  id TEXT PRIMARY KEY,
+  tenant_id TEXT DEFAULT 'tenant-root-platform',
+  member_id TEXT NOT NULL,
+  member_category TEXT NOT NULL,
+  member_name TEXT NOT NULL,
+  member_code TEXT,
+  grade_or_dept TEXT,
+  face_descriptor_json TEXT NOT NULL,
+  face_photo_data TEXT,
+  face_hash TEXT NOT NULL,
+  quality_score REAL DEFAULT 92,
+  lite_enabled INTEGER DEFAULT 1,
+  enrolled_by TEXT DEFAULT 'owner',
+  enrolled_at TEXT NOT NULL,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- School Owner Attendance Setup, Lite Controls & Access Matrix
+CREATE TABLE IF NOT EXISTS local_school_attendance_policy (
+  tenant_id TEXT PRIMARY KEY,
+  policy_json TEXT NOT NULL,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Faculty Directory & Payroll

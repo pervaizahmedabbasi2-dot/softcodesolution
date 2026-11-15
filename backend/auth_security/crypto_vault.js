@@ -554,9 +554,18 @@ export class SoftCodeCryptoVault {
                 }
               }
             } else if (method === 'GET') {
+              const queryCategory = String(req?.query?.category || '').trim().toLowerCase();
+              const hasFilterQuery = Object.keys(req?.query || {}).some((qk) => qk !== 'tenantId');
               for (const [k, v] of Object.entries(body)) {
                 if (!Array.isArray(v) || SKIP_OBJECT_KEYS.has(k)) continue;
-                const persisted = vault.loadDecryptedDomainRecords(domainKey, k, tid);
+                let persisted = vault.loadDecryptedDomainRecords(domainKey, k, tid);
+                if (queryCategory) {
+                  persisted = persisted.filter((item) =>
+                    String(item?.memberCategory || item?.category || '').trim().toLowerCase() === queryCategory
+                  );
+                } else if (hasFilterQuery) {
+                  persisted = [];
+                }
                 const merged = [...v];
                 const seen = new Set(merged.map((item) => item?.id).filter(Boolean));
                 for (const pRec of persisted) {

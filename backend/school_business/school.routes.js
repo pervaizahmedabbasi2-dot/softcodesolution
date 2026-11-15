@@ -25,6 +25,81 @@ export const SCHOOL_TEACHERS = [
   { id: 't-5', empCode: 'EMP-2019-05', name: 'Qari Abdul Rehman', designation: 'Senior Faculty', department: 'Languages & Islamiat', qualification: 'Shahadat-ul-Almiya', subject: 'Urdu & Islamic Studies', classes: 'Grade 6 to 10', inchargeClass: 'Grade 7 - A', gender: 'Male', cnic: '35202-9911223-1', phone: '+92 301 2345678', email: 'abdul.rehman@campus.edu', salary: 'PKR 95,000', basicSalary: 95000, salaryStatus: 'Paid', status: 'ACTIVE', lastSalaryMonth: 'March 2026', salaryPaid: true, joiningDate: '2019-05-20' }
 ];
 
+export const SCHOOL_STAFF = [
+  { id: 'STF-101', empCode: 'STF-2022-01', name: 'Muhammad Rizwan', roleTitle: 'Accountant / Fee Clerk', department: 'Accounts & Fee Desk', phone: '+92 300 4455661', shift: 'Morning (07:30 AM - 03:30 PM)', status: 'ACTIVE', attendanceStatus: 'Present', faceEnrolled: false, liteEnabled: true },
+  { id: 'STF-102', empCode: 'STF-2021-02', name: 'Kamran Siddiqui', roleTitle: 'Admin Coordinator', department: 'Campus Administration', phone: '+92 321 4401928', shift: 'Morning (07:30 AM - 03:30 PM)', status: 'ACTIVE', attendanceStatus: 'Present', faceEnrolled: false, liteEnabled: true },
+  { id: 'STF-103', empCode: 'STF-2020-03', name: 'Tariq Mehmood', roleTitle: 'Gate Security Supervisor', department: 'Campus Security', phone: '+92 333 7718291', shift: 'Shift A (06:30 AM - 02:30 PM)', status: 'ACTIVE', attendanceStatus: 'Present', faceEnrolled: false, liteEnabled: true },
+  { id: 'STF-104', empCode: 'STF-2023-04', name: 'Nadia Parveen', roleTitle: 'Science Lab Assistant', department: 'Physics & Chemistry Lab', phone: '+92 312 8890123', shift: 'Morning (08:00 AM - 02:30 PM)', status: 'ACTIVE', attendanceStatus: 'Absent', faceEnrolled: false, liteEnabled: true },
+  { id: 'STF-105', empCode: 'STF-2021-05', name: 'Rashid Ali', roleTitle: 'Senior Library Assistant', department: 'Central Library', phone: '+92 302 6612390', shift: 'Morning (07:45 AM - 03:00 PM)', status: 'ACTIVE', attendanceStatus: 'Absent', faceEnrolled: false, liteEnabled: true },
+  { id: 'STF-106', empCode: 'STF-2022-06', name: 'Sajid Hussain', roleTitle: 'Transport & Gate Attendant', department: 'Fleet & Gate Operations', phone: '+92 345 1199882', shift: 'Shift A (06:30 AM - 02:30 PM)', status: 'ACTIVE', attendanceStatus: 'Absent', faceEnrolled: false, liteEnabled: true }
+];
+
+export function getDefaultAttendancePolicy() {
+  return {
+    verificationMode: 'standard',
+    liteModeEnabled: true,
+    cameraFillLightEnabled: true,
+    fillLightColor: 'neutral',
+    livenessCheckEnabled: true,
+    autoCaptureOnMatch: true,
+    requireCameraForAllAttendance: true,
+    confidenceThreshold: 76,
+    liteConfidenceThreshold: 66,
+    lateCutoffTime: '08:15',
+    twoPunchEnabled: true,
+    checkOutEnableTime: '13:30',
+    categories: {
+      student: { enabled: true, liteEnabled: true, cameraRequired: true, allowSelfCheckIn: false },
+      teacher: { enabled: true, liteEnabled: true, cameraRequired: true, allowSelfCheckIn: true },
+      staff: { enabled: true, liteEnabled: true, cameraRequired: true, allowSelfCheckIn: true }
+    },
+    roleAccess: {
+      principal: {
+        enabled: true,
+        canScanStudents: true,
+        canScanTeachers: true,
+        canScanStaff: true,
+        canEnrollFaces: true,
+        liteModeAllowed: true,
+        manualFallbackAllowed: true,
+        canExportReports: true
+      },
+      teacher: {
+        enabled: true,
+        canScanStudents: true,
+        canScanTeachers: false,
+        canScanStaff: false,
+        canEnrollFaces: true,
+        liteModeAllowed: true,
+        manualFallbackAllowed: false,
+        canExportReports: false
+      },
+      staff: {
+        enabled: true,
+        canScanStudents: true,
+        canScanTeachers: false,
+        canScanStaff: true,
+        canEnrollFaces: false,
+        liteModeAllowed: true,
+        manualFallbackAllowed: false,
+        canExportReports: false
+      },
+      student: {
+        enabled: true,
+        canScanStudents: false,
+        canScanTeachers: false,
+        canScanStaff: false,
+        canEnrollFaces: false,
+        liteModeAllowed: true,
+        manualFallbackAllowed: false,
+        selfCheckInEnabled: false,
+        canExportReports: false
+      }
+    },
+    operatorOverrides: {}
+  };
+}
+
 export const SCHOOL_AUDIT_LOGS = [
   {
     id: 'AUD-2026-901',
@@ -161,6 +236,10 @@ function ensureColumnMigrations(sqliteDb) {
 
   safeAddCol('local_school_attendance', 'tenant_id', "TEXT DEFAULT 'tenant-root-platform'");
   safeAddCol('local_school_attendance', 'gate_name', "TEXT DEFAULT 'Main Turnstile 01'");
+  safeAddCol('local_school_attendance', 'member_category', "TEXT DEFAULT 'student'");
+  safeAddCol('local_school_attendance', 'confidence_score', 'REAL DEFAULT 0');
+  safeAddCol('local_school_attendance', 'verified_by', "TEXT DEFAULT 'Camera Face Verification'");
+  safeAddCol('local_school_attendance', 'marked_by_role', "TEXT DEFAULT 'owner'");
 
   const teacherCols = [
     ['tenant_id', "TEXT DEFAULT 'tenant-root-platform'"],
@@ -194,6 +273,44 @@ function ensureColumnMigrations(sqliteDb) {
         collector_role TEXT DEFAULT 'accountant',
         closing_id TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE TABLE IF NOT EXISTS local_school_staff (
+        id TEXT PRIMARY KEY,
+        tenant_id TEXT DEFAULT 'tenant-root-platform',
+        emp_code TEXT NOT NULL,
+        name TEXT NOT NULL,
+        role_title TEXT NOT NULL,
+        department TEXT DEFAULT 'Administration',
+        phone TEXT,
+        shift TEXT DEFAULT 'Morning (07:30 AM - 03:00 PM)',
+        status TEXT DEFAULT 'ACTIVE',
+        attendance_status TEXT DEFAULT 'Absent',
+        face_enrolled INTEGER DEFAULT 0,
+        lite_enabled INTEGER DEFAULT 1,
+        is_synced INTEGER DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE TABLE IF NOT EXISTS local_school_face_profiles (
+        id TEXT PRIMARY KEY,
+        tenant_id TEXT DEFAULT 'tenant-root-platform',
+        member_id TEXT NOT NULL,
+        member_category TEXT NOT NULL,
+        member_name TEXT NOT NULL,
+        member_code TEXT,
+        grade_or_dept TEXT,
+        face_descriptor_json TEXT NOT NULL,
+        face_photo_data TEXT,
+        face_hash TEXT NOT NULL,
+        quality_score REAL DEFAULT 92,
+        lite_enabled INTEGER DEFAULT 1,
+        enrolled_by TEXT DEFAULT 'owner',
+        enrolled_at TEXT NOT NULL,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE TABLE IF NOT EXISTS local_school_attendance_policy (
+        tenant_id TEXT PRIMARY KEY,
+        policy_json TEXT NOT NULL,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       );
     `);
   } catch {}
@@ -1282,63 +1399,431 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
   });
 
   // =========================================================================
-  // BIOMETRIC & RFID ATTENDANCE
+  // CAMPUS STAFF, CAMERA FACE PROFILES, OWNER POLICY & ATTENDANCE
   // =========================================================================
+  const loadTenantAttendancePolicy = (tid) => {
+    const defaults = getDefaultAttendancePolicy();
+    if (!sqliteDb) return defaults;
+    try {
+      const row = sqliteDb.prepare('SELECT policy_json FROM local_school_attendance_policy WHERE tenant_id = ?').get(tid);
+      if (row?.policy_json) {
+        const parsed = JSON.parse(row.policy_json);
+        return {
+          ...defaults,
+          ...parsed,
+          categories: {
+            student: { ...defaults.categories.student, ...(parsed.categories?.student || {}) },
+            teacher: { ...defaults.categories.teacher, ...(parsed.categories?.teacher || {}) },
+            staff: { ...defaults.categories.staff, ...(parsed.categories?.staff || {}) }
+          },
+          roleAccess: {
+            principal: { ...defaults.roleAccess.principal, ...(parsed.roleAccess?.principal || {}) },
+            teacher: { ...defaults.roleAccess.teacher, ...(parsed.roleAccess?.teacher || {}) },
+            staff: { ...defaults.roleAccess.staff, ...(parsed.roleAccess?.staff || {}) },
+            student: { ...defaults.roleAccess.student, ...(parsed.roleAccess?.student || {}) }
+          },
+          operatorOverrides: parsed.operatorOverrides || {}
+        };
+      }
+    } catch {}
+    return defaults;
+  };
+
+  router.get('/staff', (req, res) => {
+    const tid = resolveTenantId(req);
+    let staff = [];
+    if (sqliteDb) {
+      try {
+        const rows = sqliteDb.prepare('SELECT * FROM local_school_staff WHERE tenant_id = ? ORDER BY created_at DESC').all(tid);
+        staff = rows.map((r) => ({
+          id: r.id,
+          tenantId: r.tenant_id || tid,
+          empCode: r.emp_code,
+          name: dec(r.tenant_id || tid, r.name),
+          roleTitle: r.role_title,
+          department: r.department || 'Administration',
+          phone: dec(r.tenant_id || tid, r.phone),
+          shift: r.shift || 'Morning (07:30 AM - 03:00 PM)',
+          status: r.status || 'ACTIVE',
+          attendanceStatus: r.attendance_status || 'Absent',
+          faceEnrolled: r.face_enrolled === 1,
+          liteEnabled: r.lite_enabled !== 0
+        }));
+      } catch {}
+    }
+    if (staff.length === 0 && tid === ROOT_TENANT_ID) {
+      staff = SCHOOL_STAFF.map((s) => ({ ...s, tenantId: tid }));
+    }
+    res.json({ ok: true, tenantId: tid, staff });
+  });
+
+  router.post('/staff', rejectRestrictedRole(['student', 'parent']), async (req, res) => {
+    const tid = resolveTenantId(req);
+    const b = req.body || {};
+    const name = String(b.name || '').trim();
+    const roleTitle = String(b.roleTitle || b.designation || '').trim();
+    if (!name || !roleTitle) {
+      return res.status(400).json({ ok: false, message: 'Staff name and roleTitle are required.' });
+    }
+    const staffItem = {
+      id: b.id || ('STF-' + Date.now() + '-' + Math.floor(10 + Math.random() * 90)),
+      tenantId: tid,
+      empCode: String(b.empCode || `STF-${new Date().getFullYear()}-${Date.now().toString().slice(-4)}`).trim(),
+      name,
+      roleTitle,
+      department: String(b.department || 'Administration').trim(),
+      phone: String(b.phone || '+92 300 0000000').trim(),
+      shift: String(b.shift || 'Morning (07:30 AM - 03:00 PM)').trim(),
+      status: String(b.status || 'ACTIVE').toUpperCase(),
+      attendanceStatus: String(b.attendanceStatus || 'Absent'),
+      faceEnrolled: Boolean(b.faceEnrolled),
+      liteEnabled: b.liteEnabled !== false
+    };
+    if (sqliteDb) {
+      sqliteDb.prepare(`
+        INSERT OR REPLACE INTO local_school_staff
+        (id, tenant_id, emp_code, name, role_title, department, phone, shift, status, attendance_status, face_enrolled, lite_enabled, is_synced, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
+      `).run(
+        staffItem.id, tid, staffItem.empCode, enc(tid, staffItem.name), staffItem.roleTitle,
+        staffItem.department, enc(tid, staffItem.phone), staffItem.shift, staffItem.status,
+        staffItem.attendanceStatus, staffItem.faceEnrolled ? 1 : 0, staffItem.liteEnabled ? 1 : 0, new Date().toISOString()
+      );
+    }
+    if (db) {
+      setDoc(doc(db, 'school_staff', staffItem.id), { ...staffItem, tenant_id: tid, synced_at: new Date().toISOString() }, { merge: true }).catch(() => {});
+    }
+    res.status(201).json({ ok: true, staff: staffItem });
+  });
+
+  router.put('/staff/:id', rejectRestrictedRole(['student', 'parent']), (req, res) => {
+    const tid = resolveTenantId(req);
+    const id = req.params.id;
+    const b = req.body || {};
+    if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
+    const row = sqliteDb.prepare('SELECT * FROM local_school_staff WHERE id = ? AND tenant_id = ?').get(id, tid);
+    if (!row) return res.status(404).json({ ok: false, message: 'Staff record not found for this tenant' });
+    sqliteDb.prepare(`
+      UPDATE local_school_staff SET
+        name = COALESCE(?, name),
+        role_title = COALESCE(?, role_title),
+        department = COALESCE(?, department),
+        phone = COALESCE(?, phone),
+        shift = COALESCE(?, shift),
+        status = COALESCE(?, status),
+        attendance_status = COALESCE(?, attendance_status),
+        face_enrolled = COALESCE(?, face_enrolled),
+        lite_enabled = COALESCE(?, lite_enabled)
+      WHERE id = ? AND tenant_id = ?
+    `).run(
+      b.name ? enc(tid, b.name) : null,
+      b.roleTitle ?? null,
+      b.department ?? null,
+      b.phone ? enc(tid, b.phone) : null,
+      b.shift ?? null,
+      b.status ?? null,
+      b.attendanceStatus ?? null,
+      b.faceEnrolled !== undefined ? (b.faceEnrolled ? 1 : 0) : null,
+      b.liteEnabled !== undefined ? (b.liteEnabled ? 1 : 0) : null,
+      id, tid
+    );
+    const updated = sqliteDb.prepare('SELECT * FROM local_school_staff WHERE id = ? AND tenant_id = ?').get(id, tid);
+    res.json({
+      ok: true,
+      staff: {
+        id: updated.id,
+        tenantId: tid,
+        empCode: updated.emp_code,
+        name: dec(tid, updated.name),
+        roleTitle: updated.role_title,
+        department: updated.department,
+        phone: dec(tid, updated.phone),
+        shift: updated.shift,
+        status: updated.status,
+        attendanceStatus: updated.attendance_status,
+        faceEnrolled: updated.face_enrolled === 1,
+        liteEnabled: updated.lite_enabled !== 0
+      }
+    });
+  });
+
+  router.delete('/staff/:id', rejectRestrictedRole(['student', 'parent', 'teacher', 'accountant']), (req, res) => {
+    const tid = resolveTenantId(req);
+    const id = req.params.id;
+    if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
+    const row = sqliteDb.prepare('SELECT id FROM local_school_staff WHERE id = ? AND tenant_id = ?').get(id, tid);
+    if (!row) return res.status(404).json({ ok: false, message: 'Staff record not found for this tenant' });
+    sqliteDb.prepare('DELETE FROM local_school_staff WHERE id = ? AND tenant_id = ?').run(id, tid);
+    try { sqliteDb.prepare('DELETE FROM encrypted_domain_records WHERE tenant_id = ? AND domain_key = ? AND id LIKE ?').run(tid, 'school_business', `%:${id}`); } catch {}
+    res.json({ ok: true, id });
+  });
+
+  router.get('/attendance/policy', (req, res) => {
+    const tid = resolveTenantId(req);
+    const policy = loadTenantAttendancePolicy(tid);
+    res.json({ ok: true, tenantId: tid, policy });
+  });
+
+  router.put('/attendance/policy', async (req, res) => {
+    const tid = resolveTenantId(req);
+    const role = resolveUserRole(req);
+    if (role && !['owner', 'client_admin', 'super_admin', 'admin'].includes(role)) {
+      return res.status(403).json({
+        ok: false,
+        error: 'ROLE_FORBIDDEN',
+        message: 'Only School Owner can update attendance verification mode, lite controls, and access permissions.'
+      });
+    }
+    const current = loadTenantAttendancePolicy(tid);
+    const b = req.body || {};
+    const merged = {
+      ...current,
+      ...b,
+      categories: {
+        student: { ...current.categories.student, ...(b.categories?.student || {}) },
+        teacher: { ...current.categories.teacher, ...(b.categories?.teacher || {}) },
+        staff: { ...current.categories.staff, ...(b.categories?.staff || {}) }
+      },
+      roleAccess: {
+        principal: { ...current.roleAccess.principal, ...(b.roleAccess?.principal || {}) },
+        teacher: { ...current.roleAccess.teacher, ...(b.roleAccess?.teacher || {}) },
+        staff: { ...current.roleAccess.staff, ...(b.roleAccess?.staff || {}) },
+        student: { ...current.roleAccess.student, ...(b.roleAccess?.student || {}) }
+      },
+      operatorOverrides: { ...(current.operatorOverrides || {}), ...(b.operatorOverrides || {}) }
+    };
+
+    if (sqliteDb) {
+      sqliteDb.prepare(`
+        INSERT OR REPLACE INTO local_school_attendance_policy (tenant_id, policy_json, updated_at)
+        VALUES (?, ?, ?)
+      `).run(tid, JSON.stringify(merged), new Date().toISOString());
+      recordAudit(tid, {
+        operatorName: String(req.headers['x-user-name'] || 'School Owner'),
+        operatorRole: 'School Owner',
+        actionType: 'Attendance Policy & Lite Access Updated',
+        category: 'Security & Biometric',
+        entityId: tid,
+        entityDescription: `Mode: ${merged.verificationMode} | Fill-Light: ${merged.cameraFillLightEnabled ? 'ON' : 'OFF'} | Threshold: ${merged.confidenceThreshold}%`,
+        details: `Principal: ${merged.roleAccess.principal.enabled}, Teacher: ${merged.roleAccess.teacher.enabled}, Staff: ${merged.roleAccess.staff.enabled}, Student Self Check-In: ${merged.roleAccess.student.selfCheckInEnabled}`,
+        severity: 'Authorized Override',
+        verifiedBy: 'School Owner Directorate'
+      });
+    }
+    if (db) {
+      setDoc(doc(db, 'school_attendance_policies', tid), { ...merged, tenant_id: tid, updatedAt: new Date().toISOString() }, { merge: true }).catch(() => {});
+    }
+    res.json({ ok: true, tenantId: tid, policy: merged });
+  });
+
+  router.get('/attendance/face-profiles', (req, res) => {
+    const tid = resolveTenantId(req);
+    const category = String(req.query?.category || '').trim().toLowerCase();
+    let profiles = [];
+    if (sqliteDb) {
+      try {
+        const rows = category
+          ? sqliteDb.prepare('SELECT * FROM local_school_face_profiles WHERE tenant_id = ? AND member_category = ? ORDER BY updated_at DESC').all(tid, category)
+          : sqliteDb.prepare('SELECT * FROM local_school_face_profiles WHERE tenant_id = ? ORDER BY updated_at DESC').all(tid);
+        profiles = rows.map((r) => ({
+          id: r.id,
+          tenantId: r.tenant_id || tid,
+          memberId: r.member_id,
+          memberCategory: r.member_category,
+          memberName: dec(r.tenant_id || tid, r.member_name),
+          memberCode: r.member_code || '',
+          gradeOrDept: r.grade_or_dept || '',
+          faceDescriptor: (() => { try { return JSON.parse(r.face_descriptor_json || '[]'); } catch { return []; } })(),
+          facePhotoData: r.face_photo_data || '',
+          faceHash: r.face_hash,
+          qualityScore: Number(r.quality_score ?? 92),
+          liteEnabled: r.lite_enabled !== 0,
+          enrolledBy: r.enrolled_by || 'owner',
+          enrolledAt: r.enrolled_at
+        }));
+      } catch {}
+    }
+    res.json({ ok: true, tenantId: tid, profiles });
+  });
+
+  router.post('/attendance/face-profiles', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
+    const tid = resolveTenantId(req);
+    const b = req.body || {};
+    const memberId = String(b.memberId || '').trim();
+    const memberCategory = String(b.memberCategory || 'student').trim().toLowerCase();
+    const memberName = String(b.memberName || '').trim();
+    const descriptor = Array.isArray(b.faceDescriptor) ? b.faceDescriptor.map(Number) : [];
+    if (!memberId || !memberName || descriptor.length < 8) {
+      return res.status(400).json({ ok: false, message: 'memberId, memberName, and valid camera faceDescriptor are required.' });
+    }
+    if (!['student', 'teacher', 'staff'].includes(memberCategory)) {
+      return res.status(400).json({ ok: false, message: 'memberCategory must be student, teacher, or staff.' });
+    }
+    const id = b.id || `FP-${memberCategory}-${memberId}`;
+    const enrolledAt = String(b.enrolledAt || new Date().toISOString());
+    const profile = {
+      id,
+      tenantId: tid,
+      memberId,
+      memberCategory,
+      memberName,
+      memberCode: String(b.memberCode || memberId),
+      gradeOrDept: String(b.gradeOrDept || ''),
+      faceDescriptor: descriptor,
+      facePhotoData: String(b.facePhotoData || ''),
+      faceHash: String(b.faceHash || `FACE-SHA-${memberId}`),
+      qualityScore: Number(b.qualityScore ?? 94),
+      liteEnabled: b.liteEnabled !== false,
+      enrolledBy: String(b.enrolledBy || resolveUserRole(req) || 'owner'),
+      enrolledAt
+    };
+
+    if (sqliteDb) {
+      sqliteDb.prepare(`
+        INSERT OR REPLACE INTO local_school_face_profiles
+        (id, tenant_id, member_id, member_category, member_name, member_code, grade_or_dept, face_descriptor_json, face_photo_data, face_hash, quality_score, lite_enabled, enrolled_by, enrolled_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        profile.id, tid, profile.memberId, profile.memberCategory, enc(tid, profile.memberName),
+        profile.memberCode, profile.gradeOrDept, JSON.stringify(profile.faceDescriptor), profile.facePhotoData,
+        profile.faceHash, profile.qualityScore, profile.liteEnabled ? 1 : 0, profile.enrolledBy, profile.enrolledAt, new Date().toISOString()
+      );
+      if (memberCategory === 'staff') {
+        try {
+          sqliteDb.prepare('UPDATE local_school_staff SET face_enrolled = 1 WHERE id = ? AND tenant_id = ?').run(memberId, tid);
+        } catch {}
+      }
+    }
+    res.status(201).json({ ok: true, profile });
+  });
+
+  router.delete('/attendance/face-profiles/:id', rejectRestrictedRole(['student', 'parent', 'teacher', 'accountant']), (req, res) => {
+    const tid = resolveTenantId(req);
+    const id = req.params.id;
+    if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
+    const row = sqliteDb.prepare('SELECT id FROM local_school_face_profiles WHERE id = ? AND tenant_id = ?').get(id, tid);
+    if (!row) return res.status(404).json({ ok: false, message: 'Face profile not found for this tenant' });
+    sqliteDb.prepare('DELETE FROM local_school_face_profiles WHERE id = ? AND tenant_id = ?').run(id, tid);
+    try { sqliteDb.prepare('DELETE FROM encrypted_domain_records WHERE tenant_id = ? AND domain_key = ? AND id LIKE ?').run(tid, 'school_business', `%:${id}`); } catch {}
+    res.json({ ok: true, id });
+  });
+
   router.get('/attendance', (req, res) => {
     const tid = resolveTenantId(req);
+    const categoryFilter = String(req.query?.category || '').trim().toLowerCase();
     let list = [];
     if (sqliteDb) {
       try {
-        const rows = sqliteDb
-          .prepare('SELECT * FROM local_school_attendance WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 200')
-          .all(tid);
-        list = rows.map((r) => ({
-          id: r.id,
-          tenantId: r.tenant_id || tid,
-          studentId: r.student_id,
-          rollNo: r.roll_no,
-          studentName: dec(r.tenant_id || tid, r.student_name),
-          grade: r.grade,
-          status: r.status,
-          date: r.date,
-          gateName: r.gate_name || 'Main Turnstile 01',
-          verificationMode: r.verification_mode,
-          isSynced: r.is_synced === 1,
-          createdAt: r.created_at
-        }));
+        const rows = categoryFilter
+          ? sqliteDb.prepare('SELECT * FROM local_school_attendance WHERE tenant_id = ? AND member_category = ? ORDER BY created_at DESC LIMIT 300').all(tid, categoryFilter)
+          : sqliteDb.prepare('SELECT * FROM local_school_attendance WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 300').all(tid);
+        list = rows.map((r) => {
+          const tsRaw = r.created_at ? new Date(r.created_at) : null;
+          const timeLabel = tsRaw && !Number.isNaN(tsRaw.getTime())
+            ? tsRaw.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            : (r.date || '');
+          return {
+            id: r.id,
+            tenantId: r.tenant_id || tid,
+            studentId: r.student_id,
+            rollNo: r.roll_no,
+            studentName: dec(r.tenant_id || tid, r.student_name),
+            grade: r.grade,
+            memberCategory: r.member_category || 'student',
+            status: r.status,
+            date: r.date,
+            timestamp: timeLabel,
+            gateName: r.gate_name || 'Main Turnstile 01',
+            punchType: String(r.gate_name || '').includes('OUT') ? 'OUT' : 'IN',
+            verificationMode: r.verification_mode,
+            confidenceScore: Number(r.confidence_score ?? 0),
+            verifiedBy: r.verified_by || 'Camera Face Verification',
+            markedByRole: r.marked_by_role || 'owner',
+            isSynced: r.is_synced === 1,
+            createdAt: r.created_at
+          };
+        });
       } catch {}
     }
     res.json({ ok: true, tenantId: tid, attendance: list });
   });
 
-  router.post('/attendance', rejectRestrictedRole(['student', 'parent', 'accountant']), async (req, res) => {
+  router.post('/attendance', async (req, res) => {
     const tid = resolveTenantId(req);
+    const role = resolveUserRole(req);
     const body = req.body || {};
+    const memberCategory = String(body.memberCategory || 'student').trim().toLowerCase();
+    const mode = String(body.verificationMode || body.verification_mode || 'face_camera');
+    const policy = loadTenantAttendancePolicy(tid);
+
+    if (role && ['student', 'parent', 'accountant'].includes(role)) {
+      const studentSelfAllowed = role === 'student' &&
+        policy?.roleAccess?.student?.enabled &&
+        policy?.roleAccess?.student?.selfCheckInEnabled &&
+        memberCategory === 'student' &&
+        mode.startsWith('face_camera');
+      const accountantStaffSelf = role === 'accountant' &&
+        policy?.roleAccess?.staff?.enabled &&
+        mode.startsWith('face_camera');
+      if (!studentSelfAllowed && !accountantStaffSelf) {
+        return res.status(403).json({
+          ok: false,
+          error: 'ROLE_FORBIDDEN',
+          message: `Role '${role}' is not authorized by School Owner policy to mark this attendance.`
+        });
+      }
+    }
+
     const recId = body.id || ('att-' + Date.now() + '-' + Math.floor(10 + Math.random() * 90));
-    const studentId = String(body.studentId || body.student_id || 'STD-GEN');
-    const rollNo = String(body.rollNo || body.roll_no || 'SCH-GEN');
-    const studentName = String(body.studentName || body.student_name || '').trim();
+    const studentId = String(body.studentId || body.memberId || body.student_id || 'STD-GEN');
+    const rollNo = String(body.rollNo || body.memberCode || body.roll_no || 'SCH-GEN');
+    const studentName = String(body.studentName || body.memberName || body.student_name || '').trim();
     if (!studentName) {
       return res.status(400).json({ ok: false, message: 'studentName is required to log attendance.' });
     }
-    const grade = String(body.grade || 'Grade 10');
+    const grade = String(body.grade || body.gradeOrDept || 'Grade 10');
     const status = String(body.status || 'PRESENT').toUpperCase();
     const date = String(body.date || new Date().toISOString().split('T')[0]);
-    const gateName = String(body.gateName || 'Main Turnstile 01');
-    const mode = String(body.verificationMode || body.verification_mode || 'rfid');
+    const punchType = String(body.punchType || 'IN').toUpperCase() === 'OUT' ? 'OUT' : 'IN';
+    const gateName = String(body.gateName || `Camera Face Terminal · ${punchType}`);
+    const confidenceScore = Number(body.confidenceScore ?? 0);
+    const verifiedBy = String(body.verifiedBy || 'Camera Face Verification');
+    const markedByRole = String(body.markedByRole || role || 'owner');
 
     if (sqliteDb) {
       sqliteDb.prepare(`
         INSERT OR REPLACE INTO local_school_attendance
-        (id, tenant_id, student_id, roll_no, student_name, grade, status, date, gate_name, verification_mode, is_synced)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
-      `).run(recId, tid, studentId, rollNo, enc(tid, studentName), grade, status, date, gateName, mode);
+        (id, tenant_id, student_id, roll_no, student_name, grade, member_category, status, date, gate_name, verification_mode, confidence_score, verified_by, marked_by_role, is_synced)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+      `).run(recId, tid, studentId, rollNo, enc(tid, studentName), grade, memberCategory, status, date, gateName, mode, confidenceScore, verifiedBy, markedByRole);
+    }
+
+    const record = {
+      id: recId,
+      tenantId: tid,
+      studentId,
+      rollNo,
+      studentName,
+      grade,
+      memberCategory,
+      status,
+      date,
+      gateName,
+      verificationMode: mode,
+      confidenceScore,
+      verifiedBy,
+      markedByRole,
+      isSynced: false
+    };
+
+    if (db) {
+      setDoc(doc(db, 'school_attendance', recId), { ...record, tenant_id: tid, synced_at: new Date().toISOString() }, { merge: true }).catch(() => {});
     }
 
     res.json({
       ok: true,
       message: `Attendance marked for ${studentName} (${rollNo}) as ${status} via ${mode.toUpperCase()}.`,
-      record: { id: recId, tenantId: tid, studentId, rollNo, studentName, grade, status, date, gateName, verificationMode: mode, isSynced: false }
+      record
     });
   });
 
@@ -1346,18 +1831,20 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     const tid = resolveTenantId(req);
     const date = String(req.body?.date || new Date().toISOString().split('T')[0]);
     const gradeFilter = String(req.body?.grade || '').trim();
+    const category = String(req.body?.memberCategory || 'student').trim().toLowerCase();
     let marked = 0;
     if (sqliteDb) {
       const rows = sqliteDb.prepare('SELECT * FROM local_school_students WHERE tenant_id = ?').all(tid);
       const insertStmt = sqliteDb.prepare(`
         INSERT OR REPLACE INTO local_school_attendance
-        (id, tenant_id, student_id, roll_no, student_name, grade, status, date, gate_name, verification_mode, is_synced)
-        VALUES (?, ?, ?, ?, ?, ?, 'PRESENT', ?, 'Bulk Roster Sync', 'manual_bulk', 0)
+        (id, tenant_id, student_id, roll_no, student_name, grade, member_category, status, date, gate_name, verification_mode, confidence_score, verified_by, marked_by_role, is_synced)
+        VALUES (?, ?, ?, ?, ?, ?, ?, 'PRESENT', ?, 'Bulk Roster Sync', 'manual_bulk', 100, 'Owner Bulk Policy', ?, 0)
       `);
+      const actorRole = resolveUserRole(req) || 'owner';
       for (const r of rows) {
         if (String(r.status || '').includes('ALUMNI')) continue;
         if (gradeFilter && r.grade !== gradeFilter) continue;
-        insertStmt.run(`att-${tid}-${r.id}-${date}`, tid, r.id, r.roll_no, r.full_name, r.grade, date);
+        insertStmt.run(`att-${tid}-${r.id}-${date}`, tid, r.id, r.roll_no, r.full_name, r.grade, category, date, actorRole);
         marked++;
       }
     }
