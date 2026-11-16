@@ -607,6 +607,52 @@ test('School Business: Multi-Category Face Verification Attendance (Student, Tea
   const staffOther = (await staffOtherRes.json()).staff;
   assert.equal(staffOther.some((s) => s.id === createdStaff.id), false, 'Staff must be isolated by tenant');
 
+  // 1b. Principal CRUD + tenant isolation + RBAC
+  const blockedPriCreate = await fetch(`${baseUrl}/api/school/principals`, {
+    method: 'POST',
+    headers: teacherHeaders,
+    body: JSON.stringify({ name: 'Unauthorized Teacher', phone: '+92 300 0000001' })
+  });
+  assert.equal(blockedPriCreate.status, 403);
+
+  const priCreateRes = await fetch(`${baseUrl}/api/school/principals`, {
+    method: 'POST',
+    headers: ownerHeaders,
+    body: JSON.stringify({
+      name: 'Prof. Zahid Mehmood',
+      roleTitle: 'Campus Principal',
+      department: 'Executive Directorate',
+      phone: '+92 300 5544332',
+      email: 'zahid@campus.edu.pk',
+      shift: 'Full Day (07:30 AM - 03:30 PM)',
+      liteEnabled: true
+    })
+  });
+  assert.equal(priCreateRes.status, 201);
+  const { principal: createdPrincipal } = await priCreateRes.json();
+  assert.ok(createdPrincipal?.id);
+
+  const priUpdateRes = await fetch(`${baseUrl}/api/school/principals/${createdPrincipal.id}`, {
+    method: 'PUT',
+    headers: ownerHeaders,
+    body: JSON.stringify({ roleTitle: 'Senior Principal' })
+  });
+  assert.equal(priUpdateRes.status, 200);
+  const { principal: updatedPrincipal } = await priUpdateRes.json();
+  assert.equal(updatedPrincipal.roleTitle, 'Senior Principal');
+
+  const priOtherRes = await fetch(`${baseUrl}/api/school/principals`, {
+    headers: { 'x-tenant-id': tenantOther }
+  });
+  const priOther = (await priOtherRes.json()).principals;
+  assert.equal(priOther.some((p) => p.id === createdPrincipal.id), false, 'Principals must be isolated by tenant');
+
+  const blockedPriDelete = await fetch(`${baseUrl}/api/school/principals/${createdPrincipal.id}`, {
+    method: 'DELETE',
+    headers: principalHeaders
+  });
+  assert.equal(blockedPriDelete.status, 403);
+
   // 2. Owner-only policy governance (principal, teacher, student blocked)
   for (const hdr of [principalHeaders, teacherHeaders, studentHeaders]) {
     const forbidden = await fetch(`${baseUrl}/api/school/attendance/policy`, {
@@ -671,12 +717,13 @@ test('School Business: Multi-Category Face Verification Attendance (Student, Tea
   assert.equal(savedPolicy.verificationMode, 'lite');
   assert.equal(savedPolicy.roleAccess.student.selfCheckInEnabled, true);
 
-  // 3. Separate face profile registration for student, teacher, staff
+  // 3. Separate face profile registration for student, teacher, staff, principal
   const descriptorSample = Array.from({ length: 72 }, (_, idx) => Number(((idx % 9) * 0.05).toFixed(4)));
   for (const member of [
     { memberId: 'STD-SELF-1', memberCategory: 'student', memberName: 'Self Student', memberCode: 'SCH-01', gradeOrDept: 'Class 10-A' },
     { memberId: 'TCH-99', memberCategory: 'teacher', memberName: 'Prof. Imran', memberCode: 'TCH-99', gradeOrDept: 'Physics' },
-    { memberId: createdStaff.id, memberCategory: 'staff', memberName: createdStaff.name, memberCode: createdStaff.empCode, gradeOrDept: 'Security' }
+    { memberId: createdStaff.id, memberCategory: 'staff', memberName: createdStaff.name, memberCode: createdStaff.empCode, gradeOrDept: 'Security' },
+    { memberId: createdPrincipal.id, memberCategory: 'principal', memberName: createdPrincipal.name, memberCode: createdPrincipal.empCode, gradeOrDept: 'Executive Directorate' }
   ]) {
     const enrollRes = await fetch(`${baseUrl}/api/school/attendance/face-profiles`, {
       method: 'POST',
@@ -697,6 +744,12 @@ test('School Business: Multi-Category Face Verification Attendance (Student, Tea
   const staffProfiles = (await staffProfilesRes.json()).profiles;
   assert.equal(staffProfiles.length, 1);
   assert.equal(staffProfiles[0].memberId, createdStaff.id);
+
+  const priAfterEnrollRes = await fetch(`${baseUrl}/api/school/principals`, { headers: ownerHeaders });
+  assert.equal(priAfterEnrollRes.status, 200);
+  const priListAfter = (await priAfterEnrollRes.json()).principals;
+  const enrolledPri = priListAfter.find((p) => p.id === createdPrincipal.id);
+  assert.equal(enrolledPri?.faceEnrolled, true, 'Enrolling principal face profile should mark faceEnrolled = true');
 
   // 4. Category-separated face verification attendance logs (now including allowed student self-check-in)
   const stuCheckIn = await fetch(`${baseUrl}/api/school/attendance`, {
@@ -756,5 +809,29 @@ test('School Business: Multi-Category Face Verification Attendance (Student, Tea
   assert.equal(staffAtt.length, 1);
   assert.equal(staffAtt[0].memberCategory, 'staff');
   assert.equal(staffAtt[0].confidenceScore, 87.1);
+
+  const priCheckIn = await fetch(`${baseUrl}/api/school/attendance`, {
+    method: 'POST',
+    headers: ownerHeaders,
+    body: JSON.stringify({
+      studentId: createdPrincipal.id,
+      studentName: createdPrincipal.name,
+      rollNo: createdPrincipal.empCode,
+      grade: 'Executive Directorate',
+      memberCategory: 'principal',
+      verificationMode: 'face_camera_lite',
+      confidenceScore: 95.3,
+      verifiedBy: 'Owner Gate Terminal',
+      status: 'Present'
+    })
+  });
+  assert.equal(priCheckIn.status, 200);
+
+  const priAttRes = await fetch(`${baseUrl}/api/school/attendance?category=principal`, { headers: ownerHeaders });
+  assert.equal(priAttRes.status, 200);
+  const priAtt = (await priAttRes.json()).attendance;
+  assert.equal(priAtt.length, 1);
+  assert.equal(priAtt[0].memberCategory, 'principal');
+  assert.equal(priAtt[0].confidenceScore, 95.3);
 });
 

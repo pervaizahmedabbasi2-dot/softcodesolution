@@ -34,6 +34,11 @@ export const SCHOOL_STAFF = [
   { id: 'STF-106', empCode: 'STF-2022-06', name: 'Sajid Hussain', roleTitle: 'Transport & Gate Attendant', department: 'Fleet & Gate Operations', phone: '+92 345 1199882', shift: 'Shift A (06:30 AM - 02:30 PM)', status: 'ACTIVE', attendanceStatus: 'Absent', faceEnrolled: false, liteEnabled: true }
 ];
 
+export const SCHOOL_PRINCIPALS = [
+  { id: 'PRI-101', empCode: 'DIR-001', name: 'Prof. Dr. Tahir Malik', roleTitle: 'Principal & Academic Director', department: 'Executive Directorate', phone: '+92 300 9876543', email: 'principal@campus.edu', shift: 'Full Day (07:30 AM - 04:00 PM)', status: 'ACTIVE', attendanceStatus: 'Absent', faceEnrolled: false, liteEnabled: true },
+  { id: 'PRI-102', empCode: 'DIR-002', name: 'Prof. Ayesha Siddiqua', roleTitle: 'Vice Principal & Academics Head', department: 'Academic Administration', phone: '+92 321 9876501', email: 'vice.principal@campus.edu', shift: 'Full Day (07:30 AM - 03:30 PM)', status: 'ACTIVE', attendanceStatus: 'Absent', faceEnrolled: false, liteEnabled: true }
+];
+
 export function getDefaultAttendancePolicy() {
   return {
     verificationMode: 'standard',
@@ -51,7 +56,8 @@ export function getDefaultAttendancePolicy() {
     categories: {
       student: { enabled: true, liteEnabled: true, cameraRequired: true, allowSelfCheckIn: false },
       teacher: { enabled: true, liteEnabled: true, cameraRequired: true, allowSelfCheckIn: true },
-      staff: { enabled: true, liteEnabled: true, cameraRequired: true, allowSelfCheckIn: true }
+      staff: { enabled: true, liteEnabled: true, cameraRequired: true, allowSelfCheckIn: true },
+      principal: { enabled: true, liteEnabled: true, cameraRequired: true, allowSelfCheckIn: true }
     },
     roleAccess: {
       principal: {
@@ -59,6 +65,7 @@ export function getDefaultAttendancePolicy() {
         canScanStudents: true,
         canScanTeachers: true,
         canScanStaff: true,
+        canScanPrincipal: true,
         canEnrollFaces: true,
         liteModeAllowed: true,
         manualFallbackAllowed: true,
@@ -284,6 +291,23 @@ function ensureColumnMigrations(sqliteDb) {
         department TEXT DEFAULT 'Administration',
         phone TEXT,
         shift TEXT DEFAULT 'Morning (07:30 AM - 03:00 PM)',
+        status TEXT DEFAULT 'ACTIVE',
+        attendance_status TEXT DEFAULT 'Absent',
+        face_enrolled INTEGER DEFAULT 0,
+        lite_enabled INTEGER DEFAULT 1,
+        is_synced INTEGER DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE TABLE IF NOT EXISTS local_school_principals (
+        id TEXT PRIMARY KEY,
+        tenant_id TEXT DEFAULT 'tenant-root-platform',
+        emp_code TEXT NOT NULL,
+        name TEXT NOT NULL,
+        role_title TEXT NOT NULL,
+        department TEXT DEFAULT 'Executive Directorate',
+        phone TEXT,
+        email TEXT,
+        shift TEXT DEFAULT 'Full Day (07:30 AM - 04:00 PM)',
         status TEXT DEFAULT 'ACTIVE',
         attendance_status TEXT DEFAULT 'Absent',
         face_enrolled INTEGER DEFAULT 0,
@@ -1415,7 +1439,8 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
           categories: {
             student: { ...defaults.categories.student, ...(parsed.categories?.student || {}) },
             teacher: { ...defaults.categories.teacher, ...(parsed.categories?.teacher || {}) },
-            staff: { ...defaults.categories.staff, ...(parsed.categories?.staff || {}) }
+            staff: { ...defaults.categories.staff, ...(parsed.categories?.staff || {}) },
+            principal: { ...defaults.categories.principal, ...(parsed.categories?.principal || {}) }
           },
           roleAccess: {
             principal: { ...defaults.roleAccess.principal, ...(parsed.roleAccess?.principal || {}) },
@@ -1559,6 +1584,172 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     res.json({ ok: true, id });
   });
 
+  router.get('/principals', (req, res) => {
+    const tid = resolveTenantId(req);
+    let principals = [];
+    if (sqliteDb) {
+      try {
+        const rows = sqliteDb.prepare('SELECT * FROM local_school_principals WHERE tenant_id = ? ORDER BY created_at DESC').all(tid);
+        principals = rows.map((r) => ({
+          id: r.id,
+          tenantId: r.tenant_id || tid,
+          empCode: r.emp_code,
+          name: dec(r.tenant_id || tid, r.name),
+          roleTitle: r.role_title,
+          department: r.department || 'Executive Directorate',
+          phone: dec(r.tenant_id || tid, r.phone),
+          email: dec(r.tenant_id || tid, r.email),
+          shift: r.shift || 'Full Day (07:30 AM - 04:00 PM)',
+          status: r.status || 'ACTIVE',
+          attendanceStatus: r.attendance_status || 'Absent',
+          faceEnrolled: r.face_enrolled === 1,
+          liteEnabled: r.lite_enabled !== 0
+        }));
+      } catch {}
+    }
+    if (principals.length === 0 && tid === ROOT_TENANT_ID) {
+      principals = SCHOOL_PRINCIPALS.map((p) => ({ ...p, tenantId: tid }));
+    }
+    res.json({ ok: true, tenantId: tid, principals });
+  });
+
+  router.post('/principals', rejectRestrictedRole(['student', 'parent', 'teacher', 'accountant']), async (req, res) => {
+    const tid = resolveTenantId(req);
+    const b = req.body || {};
+    const name = String(b.name || '').trim();
+    const roleTitle = String(b.roleTitle || b.designation || 'Principal & Academic Director').trim();
+    if (!name || !roleTitle) {
+      return res.status(400).json({ ok: false, message: 'Principal name and roleTitle are required.' });
+    }
+    const principalItem = {
+      id: b.id || ('PRI-' + Date.now() + '-' + Math.floor(10 + Math.random() * 90)),
+      tenantId: tid,
+      empCode: String(b.empCode || `DIR-${new Date().getFullYear()}-${Date.now().toString().slice(-3)}`).trim(),
+      name,
+      roleTitle,
+      department: String(b.department || 'Executive Directorate').trim(),
+      phone: String(b.phone || '+92 300 0000000').trim(),
+      email: String(b.email || 'principal@campus.edu').trim(),
+      shift: String(b.shift || 'Full Day (07:30 AM - 04:00 PM)').trim(),
+      status: String(b.status || 'ACTIVE').toUpperCase(),
+      attendanceStatus: String(b.attendanceStatus || 'Absent'),
+      faceEnrolled: Boolean(b.faceEnrolled),
+      liteEnabled: b.liteEnabled !== false
+    };
+    if (sqliteDb) {
+      sqliteDb.prepare(`
+        INSERT OR REPLACE INTO local_school_principals
+        (id, tenant_id, emp_code, name, role_title, department, phone, email, shift, status, attendance_status, face_enrolled, lite_enabled, is_synced, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
+      `).run(
+        principalItem.id, tid, principalItem.empCode, enc(tid, principalItem.name), principalItem.roleTitle,
+        principalItem.department, enc(tid, principalItem.phone), enc(tid, principalItem.email),
+        principalItem.shift, principalItem.status, principalItem.attendanceStatus,
+        principalItem.faceEnrolled ? 1 : 0, principalItem.liteEnabled ? 1 : 0, new Date().toISOString()
+      );
+      recordAudit(tid, {
+        operatorName: String(req.headers['x-user-name'] || 'School Owner'),
+        operatorRole: String(req.headers['x-user-role'] || 'School Owner'),
+        actionType: 'Principal / Vice Principal Registered',
+        category: 'Administrative',
+        entityId: principalItem.id,
+        entityDescription: `${principalItem.name} (${principalItem.empCode}) · ${principalItem.roleTitle}`,
+        details: `Registered in local SQLite & queued for Cloud Firestore sync under tenant ${tid}.`,
+        severity: 'Normal Audit'
+      });
+    }
+    if (db) {
+      setDoc(doc(db, 'school_principals', principalItem.id), {
+        id: principalItem.id,
+        tenant_id: tid,
+        empCode: principalItem.empCode,
+        name: enc(tid, principalItem.name),
+        roleTitle: principalItem.roleTitle,
+        department: principalItem.department,
+        phone: enc(tid, principalItem.phone),
+        email: enc(tid, principalItem.email),
+        shift: principalItem.shift,
+        status: principalItem.status,
+        attendanceStatus: principalItem.attendanceStatus,
+        faceEnrolled: principalItem.faceEnrolled,
+        liteEnabled: principalItem.liteEnabled,
+        is_synced: 1,
+        synced_at: new Date().toISOString()
+      }, { merge: true }).then(() => {
+        try {
+          if (sqliteDb) sqliteDb.prepare('UPDATE local_school_principals SET is_synced = 1 WHERE id = ? AND tenant_id = ?').run(principalItem.id, tid);
+        } catch {}
+      }).catch(() => {});
+    }
+    res.status(201).json({ ok: true, principal: principalItem });
+  });
+
+  router.put('/principals/:id', rejectRestrictedRole(['student', 'parent', 'teacher', 'accountant']), (req, res) => {
+    const tid = resolveTenantId(req);
+    const id = req.params.id;
+    const b = req.body || {};
+    if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
+    const row = sqliteDb.prepare('SELECT * FROM local_school_principals WHERE id = ? AND tenant_id = ?').get(id, tid);
+    if (!row) return res.status(404).json({ ok: false, message: 'Principal record not found for this tenant' });
+    sqliteDb.prepare(`
+      UPDATE local_school_principals SET
+        name = COALESCE(?, name),
+        role_title = COALESCE(?, role_title),
+        department = COALESCE(?, department),
+        phone = COALESCE(?, phone),
+        email = COALESCE(?, email),
+        shift = COALESCE(?, shift),
+        status = COALESCE(?, status),
+        attendance_status = COALESCE(?, attendance_status),
+        face_enrolled = COALESCE(?, face_enrolled),
+        lite_enabled = COALESCE(?, lite_enabled),
+        is_synced = 0
+      WHERE id = ? AND tenant_id = ?
+    `).run(
+      b.name ? enc(tid, b.name) : null,
+      b.roleTitle ?? null,
+      b.department ?? null,
+      b.phone ? enc(tid, b.phone) : null,
+      b.email ? enc(tid, b.email) : null,
+      b.shift ?? null,
+      b.status ?? null,
+      b.attendanceStatus ?? null,
+      b.faceEnrolled !== undefined ? (b.faceEnrolled ? 1 : 0) : null,
+      b.liteEnabled !== undefined ? (b.liteEnabled ? 1 : 0) : null,
+      id, tid
+    );
+    const updated = sqliteDb.prepare('SELECT * FROM local_school_principals WHERE id = ? AND tenant_id = ?').get(id, tid);
+    res.json({
+      ok: true,
+      principal: {
+        id: updated.id,
+        tenantId: tid,
+        empCode: updated.emp_code,
+        name: dec(tid, updated.name),
+        roleTitle: updated.role_title,
+        department: updated.department,
+        phone: dec(tid, updated.phone),
+        email: dec(tid, updated.email),
+        shift: updated.shift,
+        status: updated.status,
+        attendanceStatus: updated.attendance_status,
+        faceEnrolled: updated.face_enrolled === 1,
+        liteEnabled: updated.lite_enabled !== 0
+      }
+    });
+  });
+
+  router.delete('/principals/:id', rejectRestrictedRole(['student', 'parent', 'teacher', 'accountant', 'principal']), (req, res) => {
+    const tid = resolveTenantId(req);
+    const id = req.params.id;
+    if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
+    const row = sqliteDb.prepare('SELECT id FROM local_school_principals WHERE id = ? AND tenant_id = ?').get(id, tid);
+    if (!row) return res.status(404).json({ ok: false, message: 'Principal record not found for this tenant' });
+    sqliteDb.prepare('DELETE FROM local_school_principals WHERE id = ? AND tenant_id = ?').run(id, tid);
+    try { sqliteDb.prepare('DELETE FROM encrypted_domain_records WHERE tenant_id = ? AND domain_key = ? AND id LIKE ?').run(tid, 'school_business', `%:${id}`); } catch {}
+    res.json({ ok: true, id });
+  });
+
   router.get('/attendance/policy', (req, res) => {
     const tid = resolveTenantId(req);
     const policy = loadTenantAttendancePolicy(tid);
@@ -1583,7 +1774,8 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       categories: {
         student: { ...current.categories.student, ...(b.categories?.student || {}) },
         teacher: { ...current.categories.teacher, ...(b.categories?.teacher || {}) },
-        staff: { ...current.categories.staff, ...(b.categories?.staff || {}) }
+        staff: { ...current.categories.staff, ...(b.categories?.staff || {}) },
+        principal: { ...current.categories.principal, ...(b.categories?.principal || {}) }
       },
       roleAccess: {
         principal: { ...current.roleAccess.principal, ...(b.roleAccess?.principal || {}) },
@@ -1670,8 +1862,8 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     if (!memberId || !memberName || descriptor.length < 8) {
       return res.status(400).json({ ok: false, message: 'memberId, memberName, and valid camera faceDescriptor are required.' });
     }
-    if (!['student', 'teacher', 'staff'].includes(memberCategory)) {
-      return res.status(400).json({ ok: false, message: 'memberCategory must be student, teacher, or staff.' });
+    if (!['student', 'teacher', 'staff', 'principal'].includes(memberCategory)) {
+      return res.status(400).json({ ok: false, message: 'memberCategory must be student, teacher, staff, or principal.' });
     }
     const id = b.id || `FP-${memberCategory}-${memberId}`;
     const enrolledAt = String(b.enrolledAt || new Date().toISOString());
@@ -1706,6 +1898,10 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       if (memberCategory === 'staff') {
         try {
           sqliteDb.prepare('UPDATE local_school_staff SET face_enrolled = 1 WHERE id = ? AND tenant_id = ?').run(memberId, tid);
+        } catch {}
+      } else if (memberCategory === 'principal') {
+        try {
+          sqliteDb.prepare('UPDATE local_school_principals SET face_enrolled = 1, is_synced = 0 WHERE id = ? AND tenant_id = ?').run(memberId, tid);
         } catch {}
       }
     }
@@ -1742,9 +1938,14 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     const tid = resolveTenantId(req);
     const id = req.params.id;
     if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
-    const row = sqliteDb.prepare('SELECT id FROM local_school_face_profiles WHERE id = ? AND tenant_id = ?').get(id, tid);
+    const row = sqliteDb.prepare('SELECT id, member_id, member_category FROM local_school_face_profiles WHERE id = ? AND tenant_id = ?').get(id, tid);
     if (!row) return res.status(404).json({ ok: false, message: 'Face profile not found for this tenant' });
     sqliteDb.prepare('DELETE FROM local_school_face_profiles WHERE id = ? AND tenant_id = ?').run(id, tid);
+    if (row.member_category === 'staff') {
+      try { sqliteDb.prepare('UPDATE local_school_staff SET face_enrolled = 0 WHERE id = ? AND tenant_id = ?').run(row.member_id, tid); } catch {}
+    } else if (row.member_category === 'principal') {
+      try { sqliteDb.prepare('UPDATE local_school_principals SET face_enrolled = 0, is_synced = 0 WHERE id = ? AND tenant_id = ?').run(row.member_id, tid); } catch {}
+    }
     try { sqliteDb.prepare('DELETE FROM encrypted_domain_records WHERE tenant_id = ? AND domain_key = ? AND id LIKE ?').run(tid, 'school_business', `%:${id}`); } catch {}
     res.json({ ok: true, id });
   });
@@ -1827,6 +2028,17 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
         (id, tenant_id, student_id, roll_no, student_name, grade, member_category, status, date, gate_name, verification_mode, confidence_score, verified_by, marked_by_role, is_synced)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
       `).run(recId, tid, studentId, rollNo, enc(tid, studentName), grade, memberCategory, status, date, gateName, mode, confidenceScore, verifiedBy, markedByRole);
+      if (memberCategory === 'principal') {
+        try {
+          const attLabel = status === 'LATE' ? 'Late' : status === 'ABSENT' ? 'Absent' : status === 'ON LEAVE' || status === 'ON_LEAVE' ? 'On Leave' : 'Present';
+          sqliteDb.prepare('UPDATE local_school_principals SET attendance_status = ?, is_synced = 0 WHERE id = ? AND tenant_id = ?').run(attLabel, studentId, tid);
+        } catch {}
+      } else if (memberCategory === 'staff') {
+        try {
+          const attLabel = status === 'LATE' ? 'Late' : status === 'ABSENT' ? 'Absent' : status === 'ON LEAVE' || status === 'ON_LEAVE' ? 'On Leave' : 'Present';
+          sqliteDb.prepare('UPDATE local_school_staff SET attendance_status = ?, is_synced = 0 WHERE id = ? AND tenant_id = ?').run(attLabel, studentId, tid);
+        } catch {}
+      }
     }
 
     const record = {

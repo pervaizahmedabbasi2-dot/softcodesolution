@@ -16,6 +16,7 @@ export interface FaceExtractionResult {
   brightness: number;
   sharpness: number;
   faceDetectedLikely: boolean;
+  faceUnclear?: boolean;
   faceBox?: FaceBoxNormalized | null;
   detectedCount?: number;
   reason?: string;
@@ -161,8 +162,8 @@ export class FaceVerificationService {
 
     try {
       const options = new faceapi.TinyFaceDetectorOptions({
-        inputSize: 320,
-        scoreThreshold: 0.42
+        inputSize: 256,
+        scoreThreshold: 0.28
       });
 
       const detections = await faceapi
@@ -179,6 +180,7 @@ export class FaceVerificationService {
           brightness: 50,
           sharpness: 0,
           faceDetectedLikely: false,
+          faceUnclear: false,
           faceBox: null,
           detectedCount: 0,
           reason: 'No face detected — step in front of the camera.'
@@ -218,6 +220,36 @@ export class FaceVerificationService {
       };
 
       const brightness = this.estimateRegionBrightness(videoEl, rx, ry, rw, rh);
+      const boxWidthRatio = box.width / vw;
+      const boxHeightRatio = box.height / vh;
+
+      let unclearReason = '';
+      if (brightness < 16) {
+        unclearReason = 'Face too dark — step into brighter light or turn toward screen.';
+      } else if (brightness > 96) {
+        unclearReason = 'Too much glare/backlight — avoid bright light behind you.';
+      } else if (boxWidthRatio < 0.12 || boxHeightRatio < 0.14) {
+        unclearReason = 'Face too far — move closer to the camera.';
+      } else if (score < 0.40) {
+        unclearReason = 'Face not clear — hold steady and look straight at the camera.';
+      }
+
+      if (unclearReason) {
+        return {
+          descriptor: [],
+          photoDataUrl: '',
+          hash: '',
+          qualityScore: Math.round(score * 50),
+          brightness,
+          sharpness: Math.round(score * 100),
+          faceDetectedLikely: false,
+          faceUnclear: true,
+          faceBox: normalizedBox,
+          detectedCount: detections.length,
+          reason: unclearReason
+        };
+      }
+
       const qualityScore = Math.max(60, Math.min(99, Math.round(score * 75 + (brightness >= 22 && brightness <= 90 ? 22 : 10))));
 
       let photoDataUrl = '';
@@ -233,6 +265,7 @@ export class FaceVerificationService {
         brightness,
         sharpness: Math.round(score * 100),
         faceDetectedLikely: true,
+        faceUnclear: false,
         faceBox: normalizedBox,
         detectedCount: detections.length
       };

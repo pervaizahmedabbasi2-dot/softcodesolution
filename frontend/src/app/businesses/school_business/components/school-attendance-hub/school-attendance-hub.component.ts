@@ -21,6 +21,7 @@ import {
   FaceProfileRecord,
   FaceVerificationLogRecord,
   OwnerAttendancePolicy,
+  PrincipalMemberRecord,
   RoleAttendancePermission,
   StaffMemberRecord,
   createDefaultOwnerAttendancePolicy
@@ -31,7 +32,7 @@ import {
   FaceVerificationService
 } from '../../../../services/face-verification.service';
 
-export type AttendanceSubTab = 'terminal' | 'students' | 'teachers' | 'staff' | 'enrollment' | 'setup';
+export type AttendanceSubTab = 'terminal' | 'students' | 'teachers' | 'staff' | 'principals' | 'enrollment' | 'setup';
 export type ScannerCategoryFilter = 'all' | AttendanceMemberCategory;
 
 @Component({
@@ -55,6 +56,7 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   students = input<any[]>([]);
   teachers = input<any[]>([]);
   staff = input<StaffMemberRecord[]>([]);
+  principals = input<PrincipalMemberRecord[]>([]);
   faceProfiles = input<FaceProfileRecord[]>([]);
   policy = input<OwnerAttendancePolicy>(createDefaultOwnerAttendancePolicy());
   verificationLogs = input<FaceVerificationLogRecord[]>([]);
@@ -89,6 +91,16 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     liteEnabled: boolean;
   }>();
   staffDeleted = output<string>();
+  principalCreated = output<{
+    name: string;
+    roleTitle: string;
+    department: string;
+    phone: string;
+    email?: string;
+    shift: string;
+    liteEnabled: boolean;
+  }>();
+  principalDeleted = output<string>();
   absentAlertRequested = output<{ category: AttendanceMemberCategory; memberId?: string }>();
   toast = output<{ message: string; type: 'success' | 'info' | 'warning' }>();
   switchToOwnerPortal = output<void>();
@@ -159,7 +171,7 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
 
   lastVerificationResult = signal<{
     matched: boolean;
-    resultType?: 'success' | 'duplicate' | 'mismatch';
+    resultType?: 'success' | 'duplicate' | 'mismatch' | 'unclear';
     confidence: number;
     threshold: number;
     message: string;
@@ -173,7 +185,7 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   } | null>(null);
 
   scanOverlay = signal<{
-    kind: 'success' | 'duplicate' | 'mismatch';
+    kind: 'success' | 'duplicate' | 'mismatch' | 'unclear';
     title: string;
     subtitle: string;
     badgeText: string;
@@ -219,9 +231,18 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   newStaffShift = signal<string>('Morning (07:30 AM - 03:30 PM)');
   newStaffLiteEnabled = signal<boolean>(true);
 
+  // Add Principal / Vice Principal inline drawer state
+  showAddPrincipalForm = signal<boolean>(false);
+  newPrincipalName = signal<string>('');
+  newPrincipalRole = signal<string>('Vice Principal');
+  newPrincipalDepartment = signal<string>('Executive Directorate');
+  newPrincipalPhone = signal<string>('+92 300 ');
+  newPrincipalShift = signal<string>('Full Day (07:30 AM - 04:00 PM)');
+  newPrincipalLiteEnabled = signal<boolean>(true);
+
   // Editable policy draft for Owner Setup tab
   policyDraft = signal<OwnerAttendancePolicy>(createDefaultOwnerAttendancePolicy());
-  operatorFilterCategory = signal<'teacher' | 'staff'>('teacher');
+  operatorFilterCategory = signal<'teacher' | 'staff' | 'principal'>('teacher');
 
   private mediaStream: MediaStream | null = null;
   private activeCameraSlot: 'verify' | 'enroll' | null = null;
@@ -231,12 +252,15 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   private readonly localSessionPunches = new Map<string, { inTime?: string; inAtMs?: number; outTime?: string; outAtMs?: number }>();
   private lastActiveFaceKey = '';
   private lastSuccessAtMs = 0;
+  private lastDuplicateAlertAt = 0;
   private lastAlertBeepAt = 0;
   private stableCandidateKey = '';
   private stableCandidateHits = 0;
   private unknownConsecutiveHits = 0;
   private unknownLastFeedbackAt = 0;
   private unknownWarnedThisVisit = false;
+  private unclearConsecutiveHits = 0;
+  private unclearWarnedThisVisit = false;
   private noFaceStreak = 0;
 
   constructor() {
@@ -245,7 +269,8 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       this.policyDraft.set(this.clonePolicy(incoming));
       this.fillLightBoost.set(Boolean(incoming.cameraFillLightEnabled));
       this.liteVerifyActive.set(incoming.verificationMode === 'lite' || incoming.liteModeEnabled);
-      this.autoScanEnabled.set(incoming.autoCaptureOnMatch !== false);
+      this.autoScanEnabled.set(true);
+      this.gateMode.set('auto');
     });
 
     effect(() => {
@@ -358,7 +383,7 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   // Never lock out the self-contained face scanner platform
   readonly isPortalLocked = computed(() => false);
 
-  readonly allowedCategories = computed<AttendanceMemberCategory[]>(() => ['student', 'teacher', 'staff']);
+  readonly allowedCategories = computed<AttendanceMemberCategory[]>(() => ['student', 'teacher', 'staff', 'principal']);
 
   readonly canUseManualFallback = computed(() => {
     const p = this.policy();
@@ -550,10 +575,39 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     });
   });
 
+  readonly principalMembers = computed<AttendanceMemberView[]>(() => {
+    const map = this.profileByMemberKey();
+    const punchMap = this.punchSummaryByMember();
+    const overrides = this.policy().operatorOverrides || {};
+    return (this.principals() || []).map((pr) => {
+      const fp = map.get(`principal:${pr.id}`) || null;
+      const ov = overrides[`principal:${pr.id}`];
+      const status = this.normalizeStatus(pr.attendanceStatus);
+      const punchFields = this.buildMemberPunchView(punchMap.get(`principal:${pr.id}`), status);
+      return {
+        id: String(pr.id),
+        category: 'principal',
+        name: String(pr.name || 'Principal'),
+        code: String(pr.empCode || pr.id),
+        subLabel: String(pr.roleTitle || 'Principal'),
+        sectionOrDept: String(pr.department || 'Executive Directorate'),
+        phone: String(pr.phone || ''),
+        status,
+        monthlyRate: pr.shift || 'Full Day Shift',
+        image: fp?.facePhotoData || pr.image || '',
+        faceProfile: fp,
+        liteEnabled: ov ? ov.liteEnabled : (fp ? fp.liteEnabled : Boolean(pr.liteEnabled ?? true)),
+        isEnrolled: Boolean(fp || pr.faceEnrolled),
+        ...punchFields
+      };
+    });
+  });
+
   readonly allCampusMembers = computed<AttendanceMemberView[]>(() => [
     ...this.studentMembers(),
     ...this.teacherMembers(),
-    ...this.staffMembers()
+    ...this.staffMembers(),
+    ...this.principalMembers()
   ]);
 
   readonly activeCategoryMembers = computed<AttendanceMemberView[]>(() => {
@@ -561,6 +615,7 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     if (cat === 'all') return this.allCampusMembers();
     if (cat === 'teacher') return this.teacherMembers();
     if (cat === 'staff') return this.staffMembers();
+    if (cat === 'principal') return this.principalMembers();
     return this.studentMembers();
   });
 
@@ -575,6 +630,7 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     const cat = this.enrollCategory();
     if (cat === 'teacher') return this.teacherMembers();
     if (cat === 'staff') return this.staffMembers();
+    if (cat === 'principal') return this.principalMembers();
     return this.studentMembers();
   });
 
@@ -585,7 +641,9 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
         ? this.teacherMembers()
         : cat === 'staff'
           ? this.staffMembers()
-          : this.studentMembers();
+          : cat === 'principal'
+            ? this.principalMembers()
+            : this.studentMembers();
     const q = this.quickEnrollSearch().trim().toLowerCase();
     if (!q) return base;
     return base.filter(
@@ -605,6 +663,7 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     const tab = this.activeSubTab();
     if (tab === 'teachers') return this.teacherMembers();
     if (tab === 'staff') return this.staffMembers();
+    if (tab === 'principals') return this.principalMembers();
     if (tab === 'students') return this.studentMembers();
     return this.activeCategoryMembers();
   });
@@ -655,7 +714,8 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     return {
       student: summarize(this.studentMembers()),
       teacher: summarize(this.teacherMembers()),
-      staff: summarize(this.staffMembers())
+      staff: summarize(this.staffMembers()),
+      principal: summarize(this.principalMembers())
     };
   });
 
@@ -694,6 +754,7 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     if (tab === 'students') this.activeCategory.set('student');
     if (tab === 'teachers') this.activeCategory.set('teacher');
     if (tab === 'staff') this.activeCategory.set('staff');
+    if (tab === 'principals') this.activeCategory.set('principal');
     if (tab === 'terminal' && this.keepCameraOn()) {
       setTimeout(() => void this.startCamera('verify', true), 60);
     }
@@ -784,7 +845,13 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     }
     const cat = this.quickEnrollCategory();
     const list =
-      cat === 'teacher' ? this.teacherMembers() : cat === 'staff' ? this.staffMembers() : this.studentMembers();
+      cat === 'teacher'
+        ? this.teacherMembers()
+        : cat === 'staff'
+          ? this.staffMembers()
+          : cat === 'principal'
+            ? this.principalMembers()
+            : this.studentMembers();
     const member = list.find((m) => m.id === memberId);
     if (!member) {
       this.emitToast('Selected member could not be found.', 'warning');
@@ -839,7 +906,14 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
 
   setEnrollCategory(cat: AttendanceMemberCategory): void {
     this.enrollCategory.set(cat);
-    const list = cat === 'teacher' ? this.teacherMembers() : cat === 'staff' ? this.staffMembers() : this.studentMembers();
+    const list =
+      cat === 'teacher'
+        ? this.teacherMembers()
+        : cat === 'staff'
+          ? this.staffMembers()
+          : cat === 'principal'
+            ? this.principalMembers()
+            : this.studentMembers();
     this.enrollTargetMemberId.set(list[0]?.id || '');
     this.enrollCapturedDataUrl.set('');
     this.enrollExtraction.set(null);
@@ -850,9 +924,40 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     this.keepCameraOn.set(true);
     this.cameraError.set('');
     this.cameraErrorKind.set('none');
+    if (!silent) {
+      this.getAudioContext();
+    }
     if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
       this.cameraErrorKind.set('unsupported');
       this.cameraError.set('Camera access requires HTTPS or a supported browser with a webcam.');
+      if (!silent) {
+        this.emitToast(this.cameraError(), 'warning');
+      }
+      return false;
+    }
+
+    const policyAllowsCamera = (() => {
+      try {
+        const docAny = document as any;
+        if (docAny.permissionsPolicy?.allowsFeature) {
+          return docAny.permissionsPolicy.allowsFeature('camera') !== false;
+        }
+        if (docAny.featurePolicy?.allowsFeature) {
+          return docAny.featurePolicy.allowsFeature('camera') !== false;
+        }
+      } catch {}
+      return true;
+    })();
+
+    if (!policyAllowsCamera) {
+      this.cameraActive.set(false);
+      this.cameraErrorKind.set('iframe_blocked');
+      this.cameraError.set(
+        'Camera access is blocked by AI Studio Preview (allow Camera access when prompted on Preview load, then tap Open Live Camera).'
+      );
+      if (!silent) {
+        this.emitToast(this.cameraError(), 'warning');
+      }
       return false;
     }
 
@@ -869,37 +974,56 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
         audio: false
       });
       return this.activateMediaStream(slot, stream);
-    } catch {
-      try {
-        const fallbackStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-        return this.activateMediaStream(slot, fallbackStream);
-      } catch (err: any) {
-        this.cameraActive.set(false);
-        const errName = String(err?.name || '');
+    } catch (firstErr: any) {
+      const firstErrName = String(firstErr?.name || '');
+      const isDirectDenial =
+        firstErrName === 'NotAllowedError' ||
+        firstErrName === 'PermissionDeniedError' ||
+        firstErrName === 'SecurityError';
 
-        let videoInputCount = -1;
+      let finalErr: any = firstErr;
+      if (!isDirectDenial) {
         try {
-          const devices = await navigator.mediaDevices.enumerateDevices();
-          videoInputCount = devices.filter((d) => d.kind === 'videoinput').length;
-        } catch {
-          videoInputCount = -1;
+          const fallbackStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+          return this.activateMediaStream(slot, fallbackStream);
+        } catch (fallbackErr: any) {
+          finalErr = fallbackErr;
         }
-
-        if (errName === 'NotFoundError' || errName === 'DevicesNotFoundError' || videoInputCount === 0) {
-          this.cameraErrorKind.set('no_device');
-          this.cameraError.set('No webcam detected on this device. Connect a camera and tap Open Live Camera.');
-        } else if (errName === 'NotReadableError' || errName === 'TrackStartError') {
-          this.cameraErrorKind.set('in_use');
-          this.cameraError.set('Camera is in use by another app. Close it and tap Open Live Camera.');
-        } else {
-          this.cameraErrorKind.set('permission_denied');
-          this.cameraError.set('Tap Open Live Camera and allow camera permission in your browser to begin automatic scanning.');
-        }
-        if (!silent && errName && errName !== 'NotAllowedError') {
-          this.emitToast(this.cameraError(), 'warning');
-        }
-        return false;
       }
+
+      this.cameraActive.set(false);
+      const errName = String(finalErr?.name || '');
+      const errMsg = String(finalErr?.message || '').toLowerCase();
+
+      let videoInputCount = -1;
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        videoInputCount = devices.filter((d) => d.kind === 'videoinput').length;
+      } catch {
+        videoInputCount = -1;
+      }
+
+      if (errName === 'NotFoundError' || errName === 'DevicesNotFoundError' || videoInputCount === 0) {
+        this.cameraErrorKind.set('no_device');
+        this.cameraError.set('No camera detected on this device. Connect a camera and tap Open Live Camera.');
+      } else if (errName === 'NotReadableError' || errName === 'TrackStartError') {
+        this.cameraErrorKind.set('in_use');
+        this.cameraError.set('Camera is in use by another app. Close it and tap Open Live Camera.');
+      } else if (this.isInIframe || errMsg.includes('policy') || errMsg.includes('feature')) {
+        this.cameraErrorKind.set('iframe_blocked');
+        this.cameraError.set(
+          'Camera access is blocked in AI Studio Preview — allow Camera permission for AI Studio Preview or browser settings, then tap Open Live Camera.'
+        );
+      } else {
+        this.cameraErrorKind.set('permission_denied');
+        this.cameraError.set(
+          'Camera permission is denied in browser settings. Enable Camera permission for this site, then tap Open Live Camera.'
+        );
+      }
+      if (!silent) {
+        this.emitToast(this.cameraError(), 'warning');
+      }
+      return false;
     }
   }
 
@@ -921,7 +1045,8 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
         }
       };
     }
-    if (slot === 'verify' && this.autoScanEnabled()) {
+    if (slot === 'verify') {
+      this.autoScanEnabled.set(true);
       this.startAutoScanLoop();
     }
     return true;
@@ -958,6 +1083,8 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       el.muted = true;
       el.playsInline = true;
       el.autoplay = true;
+      el.setAttribute('playsinline', 'true');
+      el.setAttribute('webkit-playsinline', 'true');
       el.srcObject = stream;
       el.play().catch(() => {});
       return;
@@ -991,9 +1118,12 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     this.noFaceStreak = 0;
     this.unknownWarnedThisVisit = false;
     this.lastActiveFaceKey = '';
+    this.lastDuplicateAlertAt = 0;
     this.stableCandidateKey = '';
     this.stableCandidateHits = 0;
     this.unknownConsecutiveHits = 0;
+    this.unclearConsecutiveHits = 0;
+    this.unclearWarnedThisVisit = false;
     if (this.overlayTimerId !== null) {
       clearTimeout(this.overlayTimerId);
       this.overlayTimerId = null;
@@ -1050,19 +1180,57 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     try {
       const mirror = this.cameraFacingMode() === 'user';
       const extraction = await this.faceVerifier.extractFromVideoAsync(videoEl, mirror, false);
+
+      if (extraction?.faceUnclear) {
+        this.noFaceStreak = 0;
+        this.detectedFaceBox.set(extraction.faceBox || null);
+        this.multiFaceDetected.set(Boolean(extraction.detectedCount && extraction.detectedCount > 1));
+        this.unclearConsecutiveHits++;
+        if (!this.unclearWarnedThisVisit && this.unclearConsecutiveHits >= 3) {
+          this.unclearWarnedThisVisit = true;
+          const unclearMsg = extraction.reason || 'Face not clear — move closer and look straight at the camera.';
+          this.lastVerificationResult.set({
+            matched: false,
+            resultType: 'unclear',
+            confidence: 0,
+            threshold: this.effectiveThreshold(),
+            message: unclearMsg,
+            memberName: 'Clear Face Needed',
+            memberCode: '-',
+            category: 'student',
+            statusMarked: 'Not Clear'
+          });
+          this.triggerScanOverlay(
+            {
+              kind: 'unclear',
+              title: 'Face Not Clear',
+              subtitle: unclearMsg,
+              badgeText: 'ADJUST FACE / LIGHTING'
+            },
+            1800
+          );
+          this.playAlertTone('unclear');
+          this.emitToast(unclearMsg, 'warning');
+        }
+        return;
+      }
+
       if (!extraction || !extraction.faceDetectedLikely) {
         this.noFaceStreak++;
         this.detectedFaceBox.set(null);
         this.multiFaceDetected.set(false);
+        this.unclearConsecutiveHits = 0;
+        this.unclearWarnedThisVisit = false;
 
         if (this.noFaceStreak >= 2) {
           this.lastActiveFaceKey = '';
+          this.lastDuplicateAlertAt = 0;
           this.stableCandidateKey = '';
           this.stableCandidateHits = 0;
           this.unknownConsecutiveHits = 0;
           this.unknownWarnedThisVisit = false;
           const activeOv = this.scanOverlay();
-          if (activeOv && (activeOv.kind === 'mismatch' || activeOv.kind === 'duplicate')) {
+          if (activeOv && (activeOv.kind === 'mismatch' || activeOv.kind === 'duplicate' || activeOv.kind === 'unclear')) {
             this.scanOverlay.set(null);
           }
         }
@@ -1084,6 +1252,11 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       }
 
       this.noFaceStreak = 0;
+      this.unclearConsecutiveHits = 0;
+      this.unclearWarnedThisVisit = false;
+      if (this.scanOverlay()?.kind === 'unclear') {
+        this.scanOverlay.set(null);
+      }
       this.multiFaceDetected.set(Boolean(extraction.detectedCount && extraction.detectedCount > 1));
       this.detectedFaceBox.set(extraction.faceBox || null);
       const profiles = this.activeFaceProfiles();
@@ -1098,9 +1271,10 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
               subtitle: 'No faces registered yet — tap Enroll Now to register this person',
               badgeText: 'UNREGISTERED · ENROLL FIRST'
             },
-            2000
+            2200
           );
           this.playAlertTone('mismatch');
+          this.emitToast('Face not enrolled yet — tap Enroll Now to register.', 'warning');
         }
         return;
       }
@@ -1325,13 +1499,14 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
           kind: 'mismatch',
           title: 'Face Not Enrolled',
           subtitle: `Match ${match.confidence}% (min ${match.thresholdUsed}%) · Tap Enroll Now to register this person`,
-          badgeText: 'UNREGISTERED PERSON',
+          badgeText: 'UNREGISTERED · ENROLL NOW',
           confidence: match.confidence
         },
-        1800
+        2200
       );
       this.lastAlertBeepAt = nowMs;
       this.playAlertTone('mismatch');
+      this.emitToast('Unregistered face detected — tap Enroll Now to register.', 'warning');
       return;
     }
 
@@ -1372,8 +1547,23 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     const twoPunch = Boolean(this.policy().twoPunchEnabled);
     const mode = this.gateMode();
 
-    const inElapsedMs = session?.inAtMs ? nowMs - session.inAtMs : 90000;
-    const autoOutCooldownMs = 45000;
+    const nowMins = nowDate.getHours() * 60 + nowDate.getMinutes();
+    const checkOutTimeStr = this.policy().checkOutEnableTime || '13:30';
+    const checkOutMins = this.parseTimeMinutes(checkOutTimeStr) ?? (13 * 60 + 30);
+    const minStayMs = 30 * 60 * 1000;
+
+    let inElapsedMs = 0;
+    if (session?.inAtMs) {
+      inElapsedMs = Math.max(0, nowMs - session.inAtMs);
+    } else if (inLog?.timestamp) {
+      const parsedInMins = this.parseTimeMinutes(inLog.timestamp);
+      if (parsedInMins !== null) {
+        inElapsedMs = Math.max(0, (nowMins - parsedInMins) * 60 * 1000);
+      }
+    }
+
+    const inTimeDisplay = session?.inTime || inLog?.timestamp || 'earlier today';
+    const outTimeDisplay = session?.outTime || outLog?.timestamp || 'earlier today';
 
     let nextPunch: 'IN' | 'OUT' | null = null;
     let blockReason: string | null = null;
@@ -1382,41 +1572,49 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       if (!hasIn) {
         nextPunch = 'IN';
       } else {
-        blockReason = `Already Checked IN at ${session?.inTime || inLog?.timestamp || 'earlier today'}`;
+        blockReason = `Duplicate Entry — Already Checked IN at ${inTimeDisplay}`;
       }
     } else if (mode === 'out') {
       if (!hasIn) {
-        blockReason = 'No Check-IN recorded today — switch to Auto IN/OUT or Check-IN Gate first';
-      } else if (!hasOut && inElapsedMs >= 5000) {
-        nextPunch = 'OUT';
-      } else {
-        blockReason = `Already Checked OUT at ${session?.outTime || outLog?.timestamp || 'earlier today'}`;
-      }
-    } else {
-      // Standard Company Auto IN / OUT Gate: 1st scan = IN, next scan after 45s cooldown = OUT
-      if (!hasIn) {
-        nextPunch = 'IN';
-      } else if (twoPunch && !hasOut && inElapsedMs >= autoOutCooldownMs) {
+        blockReason = 'No Check-IN recorded today — check IN first';
+      } else if (!hasOut && inElapsedMs >= minStayMs) {
         nextPunch = 'OUT';
       } else if (hasOut) {
-        blockReason = `Already Checked IN (${session?.inTime || inLog?.timestamp}) & OUT (${session?.outTime || outLog?.timestamp}) today`;
-      } else if (twoPunch && !hasOut) {
-        const waitSec = Math.max(1, Math.ceil((autoOutCooldownMs - inElapsedMs) / 1000));
-        blockReason = `Already Checked IN at ${session?.inTime || inLog?.timestamp} · OUT unlocks in ${waitSec}s`;
+        blockReason = `Duplicate Entry — Already Checked OUT at ${outTimeDisplay}`;
       } else {
-        blockReason = `Attendance already marked IN at ${session?.inTime || inLog?.timestamp || 'today'}`;
+        const waitMins = Math.max(1, Math.ceil((minStayMs - inElapsedMs) / 60000));
+        blockReason = `Duplicate Entry — Checked IN at ${inTimeDisplay} (OUT allowed after ${waitMins}m)`;
+      }
+    } else {
+      // Real Biometric Gate Rule: 1st scan = IN; OUT only unlocks after checkOutEnableTime AND min 30m stay
+      if (!hasIn) {
+        nextPunch = 'IN';
+      } else if (twoPunch && !hasOut && inElapsedMs >= minStayMs && nowMins >= checkOutMins) {
+        nextPunch = 'OUT';
+      } else if (hasOut) {
+        blockReason = `Duplicate Entry — Already Checked IN (${inTimeDisplay}) & OUT (${outTimeDisplay}) today`;
+      } else if (twoPunch && !hasOut) {
+        if (nowMins < checkOutMins) {
+          blockReason = `Duplicate Entry — Checked IN at ${inTimeDisplay} (OUT opens at ${checkOutTimeStr})`;
+        } else {
+          const waitMins = Math.max(1, Math.ceil((minStayMs - inElapsedMs) / 60000));
+          blockReason = `Duplicate Entry — Checked IN at ${inTimeDisplay} (OUT opens in ${waitMins}m)`;
+        }
+      } else {
+        blockReason = `Duplicate Entry — Attendance already marked IN at ${inTimeDisplay}`;
       }
     }
 
     if (!nextPunch) {
-      // Same person still standing in front right after alert -> stay silent until they step out!
-      // Once they step away and walk back up, alert them cleanly again with 1 alert pip.
-      if (isAutoScan && this.lastActiveFaceKey === memberKey) {
+      // Right after marking IN/OUT, hold the Green Tick banner cleanly for 2.0s before showing Duplicate Caution
+      if (isAutoScan && this.lastActiveFaceKey === memberKey && nowMs - this.lastSuccessAtMs < 2000) {
         return;
       }
+
+      const isNewVisit = this.lastActiveFaceKey !== memberKey;
       this.lastActiveFaceKey = memberKey;
 
-      const alreadySubtitle = blockReason || 'Attendance already marked today';
+      const alreadySubtitle = blockReason || 'Duplicate Entry — Attendance already marked today';
       this.lastVerificationResult.set({
         matched: true,
         resultType: 'duplicate',
@@ -1426,7 +1624,7 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
         memberName: prof.memberName,
         memberCode: prof.memberCode,
         category: prof.memberCategory,
-        statusMarked: hasOut ? 'Already Checked OUT' : 'Already Checked IN',
+        statusMarked: hasOut ? 'Duplicate · Already Checked OUT' : 'Duplicate · Already Checked IN',
         enrolledPhoto: prof.facePhotoData,
         livePhoto: isAutoScan ? undefined : resolveSnapUrl(),
         savedOffline: !this.isBrowserOnline()
@@ -1436,19 +1634,25 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
           kind: 'duplicate',
           title: prof.memberName,
           subtitle: alreadySubtitle,
-          badgeText: hasOut ? 'ALREADY COMPLETED TODAY' : 'ALREADY CHECKED IN',
+          badgeText: hasOut ? 'DUPLICATE · ALREADY IN & OUT' : 'DUPLICATE · ALREADY CHECKED IN',
           confidence: match.confidence,
           memberCode: prof.memberCode,
           storageLabel: this.isBrowserOnline() ? 'SQLite + Cloud Synced' : 'SQLite Offline Saved'
         },
         1600
       );
-      this.playAlertTone('duplicate');
+
+      if (!isAutoScan || isNewVisit || nowMs - this.lastDuplicateAlertAt >= 4000) {
+        this.lastDuplicateAlertAt = nowMs;
+        this.playAlertTone('duplicate');
+        this.emitToast(`${prof.memberName} — ${alreadySubtitle}`, 'warning');
+      }
       return;
     }
 
     // Fresh Attendance Verification -> GREEN TICK + SQLite Offline-First Save
     this.lastActiveFaceKey = memberKey;
+    this.lastDuplicateAlertAt = 0;
     this.lastSuccessAtMs = nowMs;
     this.stableCandidateKey = '';
     this.stableCandidateHits = 0;
@@ -1512,10 +1716,11 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
         memberCode: prof.memberCode,
         storageLabel
       },
-      1200
+      1800
     );
 
     this.playMatchChime();
+    this.emitToast(`✔ ${prof.memberName} — ${nextPunch} (${status}) · ${match.confidence}%`, 'success');
 
     this.attendanceRecorded.emit({
       memberCategory: prof.memberCategory,
@@ -1536,7 +1741,7 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
 
   private triggerScanOverlay(
     overlay: {
-      kind: 'success' | 'duplicate' | 'mismatch';
+      kind: 'success' | 'duplicate' | 'mismatch' | 'unclear';
       title: string;
       subtitle: string;
       badgeText: string;
@@ -1580,41 +1785,75 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     if (!ctx) return;
     try {
       const t = ctx.currentTime;
-      const osc = ctx.createOscillator();
+      // Rich two-tone biometric confirmation chime (audible & crisp on mobile/desktop speakers)
+      const osc1 = ctx.createOscillator();
+      const osc2 = ctx.createOscillator();
       const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(1046.5, t);
-      osc.frequency.setValueAtTime(1567.98, t + 0.055);
-      gain.gain.setValueAtTime(0.11, t);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.16);
-      osc.connect(gain);
+      osc1.type = 'sine';
+      osc2.type = 'triangle';
+      osc1.frequency.setValueAtTime(1046.5, t);
+      osc1.frequency.setValueAtTime(1567.98, t + 0.09);
+      osc2.frequency.setValueAtTime(1318.5, t);
+      osc2.frequency.setValueAtTime(2093.0, t + 0.09);
+      gain.gain.setValueAtTime(0.01, t);
+      gain.gain.linearRampToValueAtTime(0.36, t + 0.015);
+      gain.gain.setValueAtTime(0.34, t + 0.12);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.34);
+      osc1.connect(gain);
+      osc2.connect(gain);
       gain.connect(ctx.destination);
-      osc.start(t);
-      osc.stop(t + 0.17);
+      osc1.start(t);
+      osc2.start(t);
+      osc1.stop(t + 0.35);
+      osc2.stop(t + 0.35);
     } catch {}
   }
 
-  private playAlertTone(kind: 'duplicate' | 'mismatch'): void {
+  private playAlertTone(kind: 'duplicate' | 'mismatch' | 'unclear'): void {
     const ctx = this.getAudioContext();
     if (!ctx) return;
     try {
       const t = ctx.currentTime;
+      if (kind === 'duplicate') {
+        // Distinct Red-Caution double-beep ("already marked")
+        [0, 0.16].forEach((offset, idx) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(idx === 0 ? 520 : 380, t + offset);
+          gain.gain.setValueAtTime(0.01, t + offset);
+          gain.gain.linearRampToValueAtTime(0.32, t + offset + 0.015);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + offset + 0.13);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(t + offset);
+          osc.stop(t + offset + 0.14);
+        });
+        return;
+      }
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      osc.type = 'triangle';
-      if (kind === 'duplicate') {
-        osc.frequency.setValueAtTime(420, t);
-        osc.frequency.setValueAtTime(280, t + 0.075);
+      osc.type = kind === 'unclear' ? 'sine' : 'triangle';
+      if (kind === 'unclear') {
+        osc.frequency.setValueAtTime(520, t);
+        gain.gain.setValueAtTime(0.01, t);
+        gain.gain.linearRampToValueAtTime(0.18, t + 0.015);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.17);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(t);
+        osc.stop(t + 0.18);
       } else {
-        osc.frequency.setValueAtTime(300, t);
-        osc.frequency.setValueAtTime(210, t + 0.08);
+        osc.frequency.setValueAtTime(360, t);
+        osc.frequency.setValueAtTime(220, t + 0.12);
+        gain.gain.setValueAtTime(0.01, t);
+        gain.gain.linearRampToValueAtTime(0.3, t + 0.015);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.31);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(t);
+        osc.stop(t + 0.32);
       }
-      gain.gain.setValueAtTime(0.09, t);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(t);
-      osc.stop(t + 0.19);
     } catch {}
   }
 
@@ -1742,6 +1981,26 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     this.showAddStaffForm.set(false);
   }
 
+  submitNewPrincipal(): void {
+    const name = this.newPrincipalName().trim();
+    const roleTitle = this.newPrincipalRole().trim();
+    if (!name || !roleTitle) {
+      this.emitToast('Enter principal / vice principal full name and title.', 'warning');
+      return;
+    }
+    this.principalCreated.emit({
+      name,
+      roleTitle,
+      department: this.newPrincipalDepartment().trim() || 'Executive Directorate',
+      phone: this.newPrincipalPhone().trim() || '+92 300 0000000',
+      shift: this.newPrincipalShift().trim() || 'Full Day (07:30 AM - 04:00 PM)',
+      liteEnabled: this.newPrincipalLiteEnabled()
+    });
+    this.newPrincipalName.set('');
+    this.newPrincipalRole.set('Vice Principal');
+    this.showAddPrincipalForm.set(false);
+  }
+
   // Owner Policy Draft Mutations
   updateDraftMode(mode: 'strict' | 'standard' | 'lite'): void {
     this.policyDraft.update((d) => ({
@@ -1791,6 +2050,10 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     }));
   }
 
+  getCategoryRule(cat: AttendanceMemberCategory) {
+    return this.policyDraft().categories[cat];
+  }
+
   toggleRolePermission(role: 'principal' | 'teacher' | 'staff' | 'student', key: keyof RoleAttendancePermission): void {
     this.policyDraft.update((d) => ({
       ...d,
@@ -1801,7 +2064,7 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     }));
   }
 
-  toggleIndividualOperatorOverride(cat: 'teacher' | 'staff', memberId: string, field: 'enabled' | 'liteEnabled'): void {
+  toggleIndividualOperatorOverride(cat: 'teacher' | 'staff' | 'principal', memberId: string, field: 'enabled' | 'liteEnabled'): void {
     const key = `${cat}:${memberId}`;
     this.policyDraft.update((d) => {
       const current = d.operatorOverrides[key] || { enabled: true, liteEnabled: true };
@@ -1815,10 +2078,17 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     });
   }
 
-  isMemberOverrideActive(cat: 'teacher' | 'staff', memberId: string, field: 'enabled' | 'liteEnabled'): boolean {
+  isMemberOverrideActive(cat: 'teacher' | 'staff' | 'principal', memberId: string, field: 'enabled' | 'liteEnabled'): boolean {
     const ov = this.policyDraft().operatorOverrides?.[`${cat}:${memberId}`];
     if (!ov) return true;
     return Boolean(ov[field]);
+  }
+
+  getOperatorOverrideMembers(): AttendanceMemberView[] {
+    const cat = this.operatorFilterCategory();
+    if (cat === 'teacher') return this.teacherMembers();
+    if (cat === 'principal') return this.principalMembers();
+    return this.staffMembers();
   }
 
   commitOwnerPolicy(): void {
@@ -1969,12 +2239,14 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     if (cat === 'all') return 'All Campus';
     if (cat === 'teacher') return 'Teachers';
     if (cat === 'staff') return 'Staff';
+    if (cat === 'principal') return 'Principal';
     return 'Students';
   }
 
   singleCategoryLabel(cat: AttendanceMemberCategory): string {
     if (cat === 'teacher') return 'Teacher';
     if (cat === 'staff') return 'Staff';
+    if (cat === 'principal') return 'Principal';
     return 'Student';
   }
 

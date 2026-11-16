@@ -317,6 +317,35 @@ async function runBackgroundAutoSync() {
       }
     } catch {}
 
+    try {
+      const pendingPrincipals = sqliteDb.prepare('SELECT * FROM local_school_principals WHERE is_synced = 0 LIMIT 25').all();
+      for (const p of pendingPrincipals) {
+        try {
+          await setDoc(doc(db, 'school_principals', p.id), {
+            id: p.id,
+            tenant_id: p.tenant_id || 'tenant-root-platform',
+            empCode: p.emp_code,
+            name: p.name,
+            roleTitle: p.role_title,
+            department: p.department || 'Executive Directorate',
+            phone: p.phone || '',
+            email: p.email || '',
+            shift: p.shift || 'Full Day (07:30 AM - 04:00 PM)',
+            status: p.status || 'ACTIVE',
+            attendanceStatus: p.attendance_status || 'Absent',
+            faceEnrolled: p.face_enrolled === 1,
+            liteEnabled: p.lite_enabled !== 0,
+            is_synced: 1,
+            synced_at: new Date().toISOString()
+          });
+          sqliteDb.prepare('UPDATE local_school_principals SET is_synced = 1 WHERE id = ?').run(p.id);
+          syncedThisRun += 1;
+        } catch {
+          break;
+        }
+      }
+    } catch {}
+
     observability.recordSyncRun({ ok: true, syncedCount: syncedThisRun });
   } catch (syncErr) {
     observability.recordSyncRun({ ok: false, error: syncErr });

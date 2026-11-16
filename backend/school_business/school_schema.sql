@@ -97,7 +97,26 @@ CREATE TABLE IF NOT EXISTS local_school_staff (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- Camera Face Biometric Profiles (Students, Teachers, Staff)
+-- Principal & Campus Executive Leadership Directory
+CREATE TABLE IF NOT EXISTS local_school_principals (
+  id TEXT PRIMARY KEY,
+  tenant_id TEXT DEFAULT 'tenant-root-platform',
+  emp_code TEXT NOT NULL,
+  name TEXT NOT NULL,
+  role_title TEXT NOT NULL,
+  department TEXT DEFAULT 'Executive Directorate',
+  phone TEXT,
+  email TEXT,
+  shift TEXT DEFAULT 'Full Day (07:30 AM - 04:00 PM)',
+  status TEXT DEFAULT 'ACTIVE',
+  attendance_status TEXT DEFAULT 'Absent',
+  face_enrolled INTEGER DEFAULT 0,
+  lite_enabled INTEGER DEFAULT 1,
+  is_synced INTEGER DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Camera Face Biometric Profiles (Students, Teachers, Staff, Principal)
 CREATE TABLE IF NOT EXISTS local_school_face_profiles (
   id TEXT PRIMARY KEY,
   tenant_id TEXT DEFAULT 'tenant-root-platform',

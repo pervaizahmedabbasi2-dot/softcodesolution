@@ -73,6 +73,7 @@ import {
   FaceProfileRecord,
   FaceVerificationLogRecord,
   OwnerAttendancePolicy,
+  PrincipalMemberRecord,
   StaffMemberRecord,
   createDefaultOwnerAttendancePolicy
 } from '../models/school-attendance.models';
@@ -3901,8 +3902,9 @@ INSTRUCTIONS:
     geofenceHardwareBinding: true
   };
 
-  // Unified Camera Face Verification Attendance Hub State (Students + Teachers + Staff + Owner Access Control)
+  // Unified Camera Face Verification Attendance Hub State (Students + Teachers + Staff + Principal + Owner Access Control)
   schoolStaff: StaffMemberRecord[] = [];
+  schoolPrincipals: PrincipalMemberRecord[] = [];
   schoolFaceProfiles: FaceProfileRecord[] = [];
   ownerAttendancePolicy: OwnerAttendancePolicy = createDefaultOwnerAttendancePolicy();
   faceVerificationLogs: FaceVerificationLogRecord[] = [];
@@ -6603,6 +6605,18 @@ INSTRUCTIONS:
         this.schoolStaff = this.getInitialSchoolStaff();
       }
 
+      const savedPrincipals = this.getScopedItem('scs_school_principals_v1');
+      if (savedPrincipals) {
+        try {
+          const parsedPri = JSON.parse(savedPrincipals);
+          this.schoolPrincipals = Array.isArray(parsedPri) && parsedPri.length > 0 ? parsedPri : this.getInitialSchoolPrincipals();
+        } catch {
+          this.schoolPrincipals = this.getInitialSchoolPrincipals();
+        }
+      } else {
+        this.schoolPrincipals = this.getInitialSchoolPrincipals();
+      }
+
       const savedFaceProfiles = this.getScopedItem('scs_school_face_profiles_v1');
       if (savedFaceProfiles) {
         try {
@@ -6722,7 +6736,7 @@ INSTRUCTIONS:
   async loadStateFromBackend(): Promise<void> {
     try {
       await this.flushOfflineSyncQueue();
-      const [wsRes, stuRes, tchRes, admRes, feeRes, hwRes, lvRes, conRes, cmpRes, lpRes, subRes, audRes, recRes, pvRes, monRes, stfRes, polRes, fpRes, attRes] = await Promise.all([
+      const [wsRes, stuRes, tchRes, admRes, feeRes, hwRes, lvRes, conRes, cmpRes, lpRes, subRes, audRes, recRes, pvRes, monRes, stfRes, priRes, polRes, fpRes, attRes] = await Promise.all([
         this.backend.getSchoolWorkspace().catch(() => null),
         this.backend.getSchoolStudents().catch(() => null),
         this.backend.getSchoolTeachers().catch(() => null),
@@ -6739,6 +6753,7 @@ INSTRUCTIONS:
         this.backend.getSchoolPettyVouchers().catch(() => null),
         this.backend.getSchoolFinanceMonitoring(this.monitoringRangeDays).catch(() => null),
         this.backend.getSchoolStaff().catch(() => null),
+        this.backend.getSchoolPrincipals().catch(() => null),
         this.backend.getSchoolAttendancePolicy().catch(() => null),
         this.backend.getSchoolFaceProfiles().catch(() => null),
         this.backend.getSchoolAttendance().catch(() => null)
@@ -6969,6 +6984,15 @@ INSTRUCTIONS:
         this.schoolStaff = Array.from(mapStf.values());
       }
 
+      if (priRes?.ok && Array.isArray(priRes.principals) && priRes.principals.length > 0) {
+        const mapPri = new Map<string, PrincipalMemberRecord>();
+        for (const p of priRes.principals) mapPri.set(p.id, p);
+        for (const local of this.schoolPrincipals) {
+          if (!mapPri.has(local.id)) mapPri.set(local.id, local);
+        }
+        this.schoolPrincipals = Array.from(mapPri.values());
+      }
+
       if (polRes?.ok && polRes.policy) {
         const def = createDefaultOwnerAttendancePolicy();
         this.ownerAttendancePolicy = {
@@ -7024,6 +7048,9 @@ INSTRUCTIONS:
             } else if (cat === 'staff') {
               const sf = this.schoolStaff.find((x) => x.id === row.studentId);
               if (sf) sf.attendanceStatus = row.status;
+            } else if (cat === 'principal') {
+              const pr = this.schoolPrincipals.find((x) => x.id === row.studentId);
+              if (pr) pr.attendanceStatus = row.status;
             }
           }
         }
@@ -7084,6 +7111,7 @@ INSTRUCTIONS:
       this.setScopedItem('scs_school_generated_challans_v1', JSON.stringify(this.accountantGeneratedChallans));
       this.setScopedItem('scs_school_petty_vouchers_v1', JSON.stringify(this.accountantPettyVouchers));
       this.setScopedItem('scs_school_staff_v1', JSON.stringify(this.schoolStaff));
+      this.setScopedItem('scs_school_principals_v1', JSON.stringify(this.schoolPrincipals));
       this.setScopedItem('scs_school_face_profiles_v1', JSON.stringify(this.schoolFaceProfiles));
       this.setScopedItem('scs_school_owner_attendance_policy_v1', JSON.stringify(this.ownerAttendancePolicy));
       this.setScopedItem('scs_school_face_verification_logs_v1', JSON.stringify(this.faceVerificationLogs));
@@ -11871,6 +11899,13 @@ INSTRUCTIONS:
     ];
   }
 
+  getInitialSchoolPrincipals(): PrincipalMemberRecord[] {
+    return [
+      { id: 'PRI-101', empCode: 'PRI-101', name: 'Prof. Dr. Tahir Malik', roleTitle: 'Campus Principal', department: 'Executive Directorate', phone: '+92 300 8451120', email: 'principal@campus.edu.pk', shift: 'Full Day (07:30 AM - 03:30 PM)', status: 'ACTIVE', attendanceStatus: 'Present', faceEnrolled: false, liteEnabled: true },
+      { id: 'PRI-102', empCode: 'PRI-102', name: 'Prof. Ayesha Siddiqua', roleTitle: 'Vice Principal (Academics)', department: 'Academic Directorate', phone: '+92 321 7742290', email: 'viceprincipal@campus.edu.pk', shift: 'Full Day (07:45 AM - 03:45 PM)', status: 'ACTIVE', attendanceStatus: 'Present', faceEnrolled: false, liteEnabled: true }
+    ];
+  }
+
   private syncBiometricFlagsFromFaceProfiles(): void {
     const enrolledSet = new Set(this.schoolFaceProfiles.map((fp) => `${fp.memberCategory}:${fp.memberId}`));
     const photoMap = new Map(this.schoolFaceProfiles.map((fp) => [`${fp.memberCategory}:${fp.memberId}`, fp.facePhotoData]));
@@ -11902,6 +11937,16 @@ INSTRUCTIONS:
         ...sf,
         faceEnrolled: hasProfile ? true : sf.faceEnrolled,
         image: photoMap.get(key) || sf.image
+      };
+    });
+
+    this.schoolPrincipals = (this.schoolPrincipals || []).map((pr) => {
+      const key = `principal:${pr.id}`;
+      const hasProfile = enrolledSet.has(key);
+      return {
+        ...pr,
+        faceEnrolled: hasProfile ? true : pr.faceEnrolled,
+        image: photoMap.get(key) || pr.image
       };
     });
   }
@@ -11977,6 +12022,8 @@ INSTRUCTIONS:
         this.activeStudents = this.activeStudents.map((s) => (s.id === removed.memberId ? { ...s, biometricEnrolled: false } : s));
       } else if (removed.memberCategory === 'teacher') {
         this.teachers = this.teachers.map((t) => (t.id === removed.memberId ? { ...t, biometricEnrolled: false } : t));
+      } else if (removed.memberCategory === 'principal') {
+        this.schoolPrincipals = this.schoolPrincipals.map((pr) => (pr.id === removed.memberId ? { ...pr, faceEnrolled: false } : pr));
       } else {
         this.schoolStaff = this.schoolStaff.map((sf) => (sf.id === removed.memberId ? { ...sf, faceEnrolled: false } : sf));
       }
@@ -12037,6 +12084,10 @@ INSTRUCTIONS:
     } else if (ev.memberCategory === 'teacher') {
       this.teachers = this.teachers.map((t) =>
         t.id === ev.memberId ? { ...t, attendanceStatus: ev.status } : t
+      );
+    } else if (ev.memberCategory === 'principal') {
+      this.schoolPrincipals = this.schoolPrincipals.map((pr) =>
+        pr.id === ev.memberId ? { ...pr, attendanceStatus: ev.status } : pr
       );
     } else {
       this.schoolStaff = this.schoolStaff.map((sf) =>
@@ -12146,6 +12197,46 @@ INSTRUCTIONS:
     this.cdr.detectChanges();
   }
 
+  async onHubPrincipalCreated(payload: {
+    name: string;
+    roleTitle: string;
+    department: string;
+    phone: string;
+    email?: string;
+    shift: string;
+    liteEnabled: boolean;
+  }): Promise<void> {
+    const res = await this.backend.saveSchoolPrincipal(payload);
+    const created: PrincipalMemberRecord = res?.ok && res.principal
+      ? res.principal
+      : {
+          id: `PRI-${Date.now().toString(36).slice(-5).toUpperCase()}`,
+          empCode: `PRI-${Math.floor(200 + Math.random() * 799)}`,
+          name: payload.name,
+          roleTitle: payload.roleTitle,
+          department: payload.department,
+          phone: payload.phone,
+          email: payload.email || '',
+          shift: payload.shift,
+          attendanceStatus: 'Absent',
+          faceEnrolled: false,
+          liteEnabled: payload.liteEnabled
+        };
+    this.schoolPrincipals = [created, ...this.schoolPrincipals];
+    this.saveStateToStorage();
+    this.showToast(`Principal profile ${created.name} added (${created.empCode}). Enroll their face photo to activate gate scanning.`, 'success');
+    this.cdr.detectChanges();
+  }
+
+  async onHubPrincipalDeleted(principalId: string): Promise<void> {
+    this.schoolPrincipals = this.schoolPrincipals.filter((p) => p.id !== principalId);
+    this.schoolFaceProfiles = this.schoolFaceProfiles.filter((fp) => !(fp.memberCategory === 'principal' && fp.memberId === principalId));
+    this.saveStateToStorage();
+    await this.backend.deleteSchoolPrincipal(principalId);
+    this.showToast('Principal record removed from campus attendance roster.', 'info');
+    this.cdr.detectChanges();
+  }
+
   onHubAbsentAlertRequested(ev: { category: AttendanceMemberCategory; memberId?: string }): void {
     if (ev.category === 'student') {
       this.broadcastTodayAbsentAlerts();
@@ -12156,6 +12247,14 @@ INSTRUCTIONS:
           ? `Dispatched absence follow-up alert to ${absentTeachers.length} faculty members.`
           : 'All teachers have verified presence today.',
         absentTeachers.length > 0 ? 'success' : 'info'
+      );
+    } else if (ev.category === 'principal') {
+      const absentPrincipals = (this.schoolPrincipals || []).filter((p) => (p.attendanceStatus || 'Absent') === 'Absent');
+      this.showToast(
+        absentPrincipals.length > 0
+          ? `Executive attendance reminder dispatched for ${absentPrincipals.length} Principal / VP member(s).`
+          : 'Principal & Vice Principal attendance is verified today.',
+        absentPrincipals.length > 0 ? 'success' : 'info'
       );
     } else {
       const absentStaff = (this.schoolStaff || []).filter((s) => (s.attendanceStatus || 'Absent') === 'Absent');
@@ -16339,6 +16438,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
         schoolName: this.schoolName,
         announcements: this.announcements,
         schoolStaff: this.schoolStaff,
+        schoolPrincipals: this.schoolPrincipals,
         schoolFaceProfiles: this.schoolFaceProfiles,
         ownerAttendancePolicy: this.ownerAttendancePolicy,
         faceVerificationLogs: this.faceVerificationLogs
@@ -16397,6 +16497,10 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
         if (Array.isArray(cloudData.schoolStaff) && cloudData.schoolStaff.length > 0) {
           const localOnlyStaff = this.schoolStaff.filter(st => !cloudData.schoolStaff.some((c: any) => c.id === st.id));
           this.schoolStaff = [...localOnlyStaff, ...cloudData.schoolStaff];
+        }
+        if (Array.isArray(cloudData.schoolPrincipals) && cloudData.schoolPrincipals.length > 0) {
+          const localOnlyPrincipals = this.schoolPrincipals.filter(pr => !cloudData.schoolPrincipals.some((c: any) => c.id === pr.id));
+          this.schoolPrincipals = [...localOnlyPrincipals, ...cloudData.schoolPrincipals];
         }
         if (Array.isArray(cloudData.schoolFaceProfiles) && cloudData.schoolFaceProfiles.length > 0) {
           const localOnlyFp = this.schoolFaceProfiles.filter(fp => !cloudData.schoolFaceProfiles.some((c: any) => c.id === fp.id));

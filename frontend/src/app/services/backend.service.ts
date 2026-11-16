@@ -859,6 +859,48 @@ export class BackendService {
     } catch { return { ok: false }; }
   }
 
+  async getSchoolPrincipals() {
+    try {
+      const res = await fetch('/api/school/principals', { headers: this.getSchoolHeaders(false), credentials: 'include' });
+      return await res.json().catch(() => ({ ok: false, principals: [] }));
+    } catch { return { ok: false, principals: [] }; }
+  }
+
+  async saveSchoolPrincipal(payload: any) {
+    try {
+      const res = await fetch('/api/school/principals', {
+        method: 'POST',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async updateSchoolPrincipal(id: string, payload: any) {
+    try {
+      const res = await fetch(`/api/school/principals/${encodeURIComponent(id)}`, {
+        method: 'PUT',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async deleteSchoolPrincipal(id: string) {
+    try {
+      const res = await fetch(`/api/school/principals/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        headers: this.getSchoolHeaders(false),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
   async getSchoolAttendancePolicy() {
     try {
       const res = await fetch('/api/school/attendance/policy', { headers: this.getSchoolHeaders(false), credentials: 'include' });

@@ -1,4 +1,4 @@
-export type AttendanceMemberCategory = 'student' | 'teacher' | 'staff';
+export type AttendanceMemberCategory = 'student' | 'teacher' | 'staff' | 'principal';
 
 export type AttendanceVerificationMode = 'strict' | 'standard' | 'lite';
 
@@ -11,6 +11,22 @@ export interface StaffMemberRecord {
   roleTitle: string;
   department: string;
   phone: string;
+  shift: string;
+  status: 'ACTIVE' | 'ON_LEAVE' | 'INACTIVE' | string;
+  attendanceStatus: 'Present' | 'Late' | 'Absent' | 'On Leave';
+  faceEnrolled?: boolean;
+  liteEnabled?: boolean;
+  image?: string;
+}
+
+export interface PrincipalMemberRecord {
+  id: string;
+  empCode: string;
+  name: string;
+  roleTitle: string;
+  department: string;
+  phone: string;
+  email?: string;
   shift: string;
   status: 'ACTIVE' | 'ON_LEAVE' | 'INACTIVE' | string;
   attendanceStatus: 'Present' | 'Late' | 'Absent' | 'On Leave';
@@ -40,6 +56,7 @@ export interface RoleAttendancePermission {
   canScanStudents: boolean;
   canScanTeachers: boolean;
   canScanStaff: boolean;
+  canScanPrincipal?: boolean;
   canEnrollFaces: boolean;
   liteModeAllowed: boolean;
   manualFallbackAllowed: boolean;
@@ -71,6 +88,7 @@ export interface OwnerAttendancePolicy {
     student: CategoryAttendanceRule;
     teacher: CategoryAttendanceRule;
     staff: CategoryAttendanceRule;
+    principal: CategoryAttendanceRule;
   };
   roleAccess: {
     principal: RoleAttendancePermission;
@@ -140,7 +158,8 @@ export function createDefaultOwnerAttendancePolicy(): OwnerAttendancePolicy {
     categories: {
       student: { enabled: true, liteEnabled: true, cameraRequired: true, allowSelfCheckIn: false },
       teacher: { enabled: true, liteEnabled: true, cameraRequired: true, allowSelfCheckIn: true },
-      staff: { enabled: true, liteEnabled: true, cameraRequired: true, allowSelfCheckIn: true }
+      staff: { enabled: true, liteEnabled: true, cameraRequired: true, allowSelfCheckIn: true },
+      principal: { enabled: true, liteEnabled: true, cameraRequired: true, allowSelfCheckIn: true }
     },
     roleAccess: {
       principal: {
@@ -148,6 +167,7 @@ export function createDefaultOwnerAttendancePolicy(): OwnerAttendancePolicy {
         canScanStudents: true,
         canScanTeachers: true,
         canScanStaff: true,
+        canScanPrincipal: true,
         canEnrollFaces: true,
         liteModeAllowed: true,
         manualFallbackAllowed: true,
