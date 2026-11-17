@@ -1,7 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef, HostListener } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
+import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { LegalComponent } from '../../softcodesolution_platform/landing-page/legal/legal.component';
 import { NotificationService } from '../../services/notification.service';
 import { PwaInstallComponent } from '../../pwa-install.component';
@@ -188,9 +188,14 @@ export class RegisterComponent implements OnInit {
 
   private readonly tenantId = getTenantContext().tenantId;
 
+  private pendingSuite = '';
+  private pendingPlan = '';
+  private pendingRedirect = '';
+
   constructor(
     private fb: FormBuilder,
     private router: Router,
+    private route: ActivatedRoute,
     private cdr: ChangeDetectorRef,
     private notification: NotificationService
   ) { }
@@ -201,6 +206,11 @@ export class RegisterComponent implements OnInit {
 
   ngOnInit(): void {
     this.formLoadedAt = Date.now();
+    const qp = this.route.snapshot.queryParams || {};
+    this.pendingSuite = String(qp['suite'] || '').trim();
+    this.pendingPlan = String(qp['plan'] || '').trim();
+    this.pendingRedirect = String(qp['redirect'] || '').trim();
+
     this.registerForm = this.fb.group(
       {
         fullName: ['', [Validators.required, Validators.minLength(3)]],
@@ -209,7 +219,7 @@ export class RegisterComponent implements OnInit {
         phone: ['', [Validators.required, Validators.pattern(/^[0-9]{7,15}$/)]],
         companyName: ['', Validators.required],
         businessRegNo: [''],
-        businessType: ['', Validators.required],
+        businessType: [this.pendingSuite || '', Validators.required],
         businessSize: ['', Validators.required],
         country: ['', Validators.required],
         city: ['', Validators.required],
@@ -296,9 +306,33 @@ export class RegisterComponent implements OnInit {
       ];
       this.businessTypesError = '';
     } finally {
-
+      this.applyPreselectedBusinessType();
       this.businessTypesLoading = false;
       try { this.cdr.detectChanges(); } catch {}
+    }
+  }
+
+  private applyPreselectedBusinessType(): void {
+    const targetSlug = this.pendingSuite.toLowerCase();
+    const targetName = this.pendingPlan.toLowerCase();
+    if (!targetSlug && !targetName) return;
+
+    let match = this.businessTypes.find(b => b.id.toLowerCase() === targetSlug);
+    if (!match && targetName) {
+      match = this.businessTypes.find(b => b.name.toLowerCase() === targetName);
+    }
+    if (!match && this.pendingSuite) {
+      match = {
+        id: this.pendingSuite,
+        name: this.pendingPlan || this.pendingSuite,
+        module_category: 'ENTERPRISE',
+        pricing_weight: 1.2,
+        sort_order: 99
+      };
+      this.businessTypes = [...this.businessTypes, match];
+    }
+    if (match) {
+      this.registerForm?.patchValue({ businessType: match.id });
     }
   }
 
@@ -670,11 +704,18 @@ export class RegisterComponent implements OnInit {
   private handleSuccess(result?: any): void {
     this.showSuccessAlert = true;
     localStorage.setItem('scs_auth_mock', 'true');
-    if (result?.data?.user?.tenant_id) localStorage.setItem('scs_tenant_id', result.data.user.tenant_id);
-    if (result?.data?.user) {
-      localStorage.setItem('user_data', JSON.stringify(result.data.user));
+    localStorage.setItem('scs_auth_session', result?.token || ('scs_token_' + Date.now()));
+    if (result?.data?.user?.tenant_id) {
+      localStorage.setItem('scs_tenant_id', result.data.user.tenant_id);
     }
-    this.notification.success(result?.message || 'Account created. Verification link sent to your email.');
+    if (result?.data?.user) {
+      const userObj = {
+        ...result.data.user,
+        role: result.data.user.role || 'client_admin'
+      };
+      localStorage.setItem('user_data', JSON.stringify(userObj));
+    }
+    this.notification.success(result?.message || 'Account created. Proceeding to your selected plan.');
     this.registerForm.reset({ countryCode: '+92', termsAccepted: false, enablePasskey: false, hpWebsite: '' });
     this.autoCorrectedFields = {};
     this.humanVerified = false;
@@ -683,6 +724,16 @@ export class RegisterComponent implements OnInit {
     this.evaluatePassword('');
     void this.loadRegisterPuzzle();
     this.cdr.detectChanges();
+
+    const suiteParam = this.pendingSuite || this.pendingPlan;
+    if (this.pendingRedirect === 'checkout' && suiteParam) {
+      setTimeout(() => {
+        void this.router.navigate(['/'], {
+          queryParams: { checkoutSuite: suiteParam },
+          fragment: 'store'
+        });
+      }, 600);
+    }
   }
 
   private handleError(error: string): void {
@@ -710,6 +761,16 @@ export class RegisterComponent implements OnInit {
   }
 
   goToLogin(): void {
-    this.router.navigate(['/login']);
+    if (this.pendingRedirect === 'checkout') {
+      void this.router.navigate(['/login'], {
+        queryParams: {
+          redirect: 'checkout',
+          suite: this.pendingSuite,
+          plan: this.pendingPlan
+        }
+      });
+      return;
+    }
+    void this.router.navigate(['/login']);
   }
 }

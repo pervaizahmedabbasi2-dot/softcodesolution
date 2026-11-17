@@ -50,18 +50,6 @@
           <span>{{ kioskFullscreen() ? 'Exit Full Screen' : 'Full Screen' }}</span>
         </button>
 
-        @if (canExportCurrentPortal() && portalContext() !== 'student' && !kioskFullscreen()) {
-          <button type="button" (click)="exportCurrentCategoryPDF()"
-            class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shadow-xs cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 active:scale-[0.98] transition-all">
-            <lucide-icon [name]="'printer'" class="w-3.5 h-3.5 text-emerald-400"></lucide-icon>
-            <span>Export PDF</span>
-          </button>
-          <button type="button" (click)="exportCurrentCategoryCSV()"
-            class="px-3.5 py-2 rounded-xl bg-white/90 hover:bg-white border border-slate-200/90 text-slate-700 text-xs font-semibold shadow-2xs cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 active:scale-[0.98] transition-all">
-            <lucide-icon [name]="'download'" class="w-3.5 h-3.5 text-slate-500"></lucide-icon>
-            <span>Export CSV</span>
-          </button>
-        }
 
         @if ((isOwner() || rolePerms().canExportReports) && !kioskFullscreen()) {
           <button type="button" (click)="absentAlertRequested.emit({ category: activeCategory() === 'all' ? 'student' : $any(activeCategory()) })"
@@ -765,7 +753,7 @@
                 {{ activeSubTab() === 'students' ? 'Student Attendance & Identity Roster' : (activeSubTab() === 'teachers' ? 'Faculty Attendance & Identity Roster' : (activeSubTab() === 'principals' ? 'Principal & Directorate Roster' : 'Campus Staff Attendance Roster')) }}
               </h3>
               <p class="text-[11px] font-medium text-slate-500">
-                Exact late duration after Asal time, NADRA CNIC / B-Form, Father Name, Passport &amp; selectable PDF/CSV fields
+                Exact late duration after scheduled start time, NADRA CNIC / B-Form, Father Name, Passport &amp; selectable PDF/CSV fields
               </p>
             </div>
           </div>
@@ -1129,7 +1117,7 @@
             </button>
           </div>
           <div class="text-[11px] font-semibold text-slate-500 tabular-nums flex items-center flex-wrap gap-x-2 gap-y-1">
-            <span>Asal Time <strong class="text-slate-900">{{ policy().scheduledStartTime || '08:00' }}</strong></span>
+            <span>Start Time <strong class="text-slate-900">{{ policy().scheduledStartTime || '08:00' }}</strong></span>
             <span class="text-slate-300">·</span>
             <span>Late Cutoff <strong class="text-amber-700">{{ policy().lateCutoffTime || '08:15' }}</strong></span>
             <span class="text-slate-300">·</span>
@@ -1160,7 +1148,7 @@
                 @if (isColVisible('emergencyContact')) { <th class="px-3.5 py-3.5 whitespace-nowrap">Emergency</th> }
                 @if (isColVisible('email')) { <th class="px-3.5 py-3.5 whitespace-nowrap">Email</th> }
                 @if (isColVisible('address')) { <th class="px-3.5 py-3.5 whitespace-nowrap">Address</th> }
-                @if (isColVisible('scheduledStartTime')) { <th class="px-3.5 py-3.5 whitespace-nowrap">Asal Time</th> }
+                @if (isColVisible('scheduledStartTime')) { <th class="px-3.5 py-3.5 whitespace-nowrap">Start Time</th> }
                 @if (isColVisible('checkInTime')) { <th class="px-3.5 py-3.5 whitespace-nowrap">Check-In (IN)</th> }
                 @if (isColVisible('lateByLabel')) { <th class="px-3.5 py-3.5 whitespace-nowrap">Late / Punctuality</th> }
                 @if (isColVisible('checkOutTime')) { <th class="px-3.5 py-3.5 whitespace-nowrap">Check-Out (OUT)</th> }
@@ -1845,7 +1833,7 @@
 
               <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2 border-t border-slate-200/70">
                 <div>
-                  <label class="block text-[11px] font-bold text-slate-600 mb-1.5">Asal / Start Time</label>
+                  <label class="block text-[11px] font-bold text-slate-600 mb-1.5">Scheduled Start Time</label>
                   <input type="time" [value]="policyDraft().scheduledStartTime"
                     (change)="setDraftScheduledStartTime($any($event.target).value)"
                     class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-900 tabular-nums focus:border-emerald-500 focus:outline-none" />

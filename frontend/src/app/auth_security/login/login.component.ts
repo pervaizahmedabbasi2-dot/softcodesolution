@@ -99,6 +99,9 @@ export class LoginComponent implements OnInit {
   }
 
   private redirectPath = '/dashboard';
+  private isCheckoutRedirect = false;
+  private checkoutSuiteParam = '';
+  private checkoutPlanParam = '';
 
   ngOnInit(): void {
     this.formLoadedAt = Date.now();
@@ -109,8 +112,12 @@ export class LoginComponent implements OnInit {
       hpWebsite: ['']
     });
 
-    // Smart Gateway: Check if redirected from a specific portal link (e.g. /login?portal=student)
+    // Smart Gateway: Check if redirected from a specific portal link or Store checkout
     this.route.queryParams.subscribe(params => {
+      this.isCheckoutRedirect = params['redirect'] === 'checkout';
+      this.checkoutSuiteParam = String(params['suite'] || '').trim();
+      this.checkoutPlanParam = String(params['plan'] || '').trim();
+
       const p = (params['portal'] || params['role'] || '').toLowerCase();
       if (p.includes('student')) {
         this.selectPortal('student');
@@ -484,6 +491,15 @@ export class LoginComponent implements OnInit {
       this.isLoading = false;
       this.cdr.detectChanges();
 
+      if (this.isCheckoutRedirect && !isSuperAdminRole) {
+        const suiteParam = this.checkoutSuiteParam || this.checkoutPlanParam || 'active';
+        await this.router.navigate(['/'], {
+          queryParams: { checkoutSuite: suiteParam },
+          fragment: 'store'
+        });
+        return;
+      }
+
       await this.router.navigateByUrl(targetUrl);
     } catch (error: any) {
       this.humanVerified = false;
@@ -509,6 +525,16 @@ export class LoginComponent implements OnInit {
   }
 
   goToRegister(): void {
+    if (this.isCheckoutRedirect) {
+      this.router.navigate(['/register'], {
+        queryParams: {
+          redirect: 'checkout',
+          suite: this.checkoutSuiteParam,
+          plan: this.checkoutPlanParam
+        }
+      });
+      return;
+    }
     this.router.navigate(['/register']);
   }
 

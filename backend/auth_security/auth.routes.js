@@ -449,8 +449,11 @@ export function createAuthRouter(sqliteDb, db) {
         }
       }
 
+      const registrationToken = 'scs_sec_token_' + crypto.randomBytes(16).toString('hex');
+
       res.json({
         ok: true,
+        token: registrationToken,
         message: 'Account created successfully with Argon2id + AES-256-GCM Envelope Encryption. Stored securely offline & queued for cloud sync.',
         security: {
           hashAlgorithm: 'Argon2id v=19 (Bank & National Grade)',
@@ -472,6 +475,8 @@ export function createAuthRouter(sqliteDb, db) {
             email: cleanEmail,
             full_name: cleanFullName,
             company_name: cleanCompanyName,
+            business_type: safeBusinessType,
+            role: 'client_admin',
             status: 'PENDING',
             created_at: nowIso
           }

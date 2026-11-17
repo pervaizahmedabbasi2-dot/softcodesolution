@@ -249,9 +249,9 @@ export const ATTENDANCE_COLUMN_DEFINITIONS: AttendanceColumnDefinition[] = [
   { key: 'email', label: 'Email Address', shortLabel: 'Email', group: 'Personal & Contact', description: 'Official or guardian email address' },
   { key: 'address', label: 'Residential Address', shortLabel: 'Address', group: 'Personal & Contact', description: 'Verified home or residential address' },
 
-  { key: 'scheduledStartTime', label: 'Asal / Shift Time', shortLabel: 'Asal Time', group: 'Timing & Late Audit', description: 'Scheduled campus reporting start time' },
+  { key: 'scheduledStartTime', label: 'Scheduled / Start Time', shortLabel: 'Start Time', group: 'Timing & Late Audit', description: 'Scheduled campus reporting start time' },
   { key: 'checkInTime', label: 'Check-In (IN)', shortLabel: 'Check-In (IN)', group: 'Timing & Late Audit', description: 'Exact arrival punch timestamp' },
-  { key: 'lateByLabel', label: 'Late / Punctuality', shortLabel: 'Late / Timing', group: 'Timing & Late Audit', description: 'Exact minutes/hours early, grace, or late after Asal time' },
+  { key: 'lateByLabel', label: 'Late / Punctuality', shortLabel: 'Late / Timing', group: 'Timing & Late Audit', description: 'Exact minutes/hours early, grace, or late after scheduled start time' },
   { key: 'checkOutTime', label: 'Check-Out (OUT)', shortLabel: 'Check-Out (OUT)', group: 'Timing & Late Audit', description: 'Departure punch timestamp' },
   { key: 'durationLabel', label: 'Duration / State', shortLabel: 'Duration / State', group: 'Timing & Late Audit', description: 'Stay hours on campus and current IN/OUT state' },
 

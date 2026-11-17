@@ -199,7 +199,19 @@ export function createBillingRouter(sqliteDb, db, getCollectionDocs) {
   });
 
   router.post('/public/checkout', (req, res) => {
-    const { customerName, customerEmail, customerPhone, softwareTitle, billingCycle, gatewayId, paymentMethod, amount, slipReference } = req.body || {};
+    const {
+      customerName,
+      customerEmail,
+      customerPhone,
+      softwareTitle,
+      billingCycle,
+      gatewayId,
+      paymentMethod,
+      amount,
+      slipReference,
+      tenantId,
+      businessType
+    } = req.body || {};
     const invoiceNumber = 'INV-' + Date.now().toString().slice(-6);
     const status = gatewayId === 'bank_transfer' ? 'PENDING_APPROVAL' : 'PAID';
 
@@ -216,6 +228,8 @@ export function createBillingRouter(sqliteDb, db, getCollectionDocs) {
       paymentMethod: paymentMethod || 'Online Gateway',
       status,
       slipReference: slipReference || '',
+      tenantId: tenantId || '',
+      businessType: businessType || '',
       createdAt: new Date().toISOString()
     };
 
@@ -243,6 +257,31 @@ export function createBillingRouter(sqliteDb, db, getCollectionDocs) {
           transaction.createdAt
         );
       } catch (e) {}
+
+      if (tenantId) {
+        const numericAmount = Number(String(amount || '12000').replace(/[^0-9.]/g, '')) || 12000;
+        const planSlug = businessType || softwareTitle || 'enterprise';
+        const subStatus = status === 'PAID' ? 'active' : 'pending_approval';
+        const nowIso = new Date().toISOString();
+        try {
+          sqliteDb.prepare(`
+            INSERT OR REPLACE INTO platform_subscriptions (tenant_id, plan_id, status, billing_cycle, amount, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+          `).run(String(tenantId), String(planSlug), subStatus, transaction.billingCycle, numericAmount, nowIso);
+        } catch (e) {}
+
+        if (status === 'PAID') {
+          try {
+            sqliteDb.prepare(`
+              UPDATE local_tenants
+              SET status = 'ACTIVE',
+                  business_type = COALESCE(NULLIF(?, ''), business_type),
+                  updated_at = ?
+              WHERE tenant_id = ? OR id = ?
+            `).run(String(businessType || ''), nowIso, String(tenantId), String(tenantId));
+          } catch (e) {}
+        }
+      }
     }
 
     const phone = customerPhone || '0300-1234567';
@@ -309,6 +348,8 @@ export function createBillingRouter(sqliteDb, db, getCollectionDocs) {
         : 'Order placed! Your bank deposit slip has been submitted to SuperAdmin Approvals.',
       transaction,
       status,
+      tenantActivated: status === 'PAID' && Boolean(tenantId),
+      tenantId: tenantId || null,
       notificationsDispatched: ['WHATSAPP', 'SMS', 'EMAIL']
     });
   });
