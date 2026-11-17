@@ -15,15 +15,22 @@ import {
 import { CommonModule } from '@angular/common';
 import { LucideAngularModule } from 'lucide-angular';
 import {
+  ATTENDANCE_COLUMN_DEFINITIONS,
+  AttendanceColumnDefinition,
+  AttendanceColumnGroup,
+  AttendanceColumnKey,
+  AttendanceColumnPresetKey,
   AttendanceMemberCategory,
   AttendanceMemberView,
   AttendancePortalContext,
   FaceProfileRecord,
   FaceVerificationLogRecord,
+  LateSeverityKind,
   OwnerAttendancePolicy,
   PrincipalMemberRecord,
   RoleAttendancePermission,
   StaffMemberRecord,
+  createDefaultColumnSelection,
   createDefaultOwnerAttendancePolicy
 } from '../../models/school-attendance.models';
 import {
@@ -77,6 +84,10 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     gradeOrDept: string;
     status: 'Present' | 'Late' | 'Absent' | 'On Leave';
     punchType?: 'IN' | 'OUT';
+    scheduledStartTime?: string;
+    lateMinutes?: number;
+    lateByLabel?: string;
+    checkInTime?: string;
     verificationMode: string;
     confidenceScore: number;
     verifiedBy: string;
@@ -84,6 +95,9 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   }>();
   staffCreated = output<{
     name: string;
+    fatherName?: string;
+    cnic?: string;
+    gender?: string;
     roleTitle: string;
     department: string;
     phone: string;
@@ -93,6 +107,9 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   staffDeleted = output<string>();
   principalCreated = output<{
     name: string;
+    fatherName?: string;
+    cnic?: string;
+    gender?: string;
     roleTitle: string;
     department: string;
     phone: string;
@@ -114,6 +131,22 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   selectedDate = signal<string>(new Date().toISOString().split('T')[0]);
   punchFilter = signal<'all' | 'checked_in' | 'checked_out' | 'pending'>('all');
   private readonly punchRevision = signal<number>(0);
+
+  // Dynamic Roster & Export Column Selector State (Shared across View, CSV & PDF)
+  columnPickerOpen = signal<boolean>(false);
+  activeColumnPreset = signal<AttendanceColumnPresetKey | 'custom'>('local_official');
+  selectedColumns = signal<Record<AttendanceColumnKey, boolean>>(this.loadInitialColumnSelection());
+  readonly columnDefinitions: AttendanceColumnDefinition[] = ATTENDANCE_COLUMN_DEFINITIONS;
+  readonly columnGroups: Array<{ group: AttendanceColumnGroup; items: AttendanceColumnDefinition[] }> = (
+    ['Identity', "Local & Int'l IDs", 'Personal & Contact', 'Timing & Late Audit', 'Verification & Summary'] as AttendanceColumnGroup[]
+  ).map((group) => ({
+    group,
+    items: ATTENDANCE_COLUMN_DEFINITIONS.filter((c) => c.group === group)
+  }));
+  readonly visibleColumns = computed<AttendanceColumnDefinition[]>(() =>
+    ATTENDANCE_COLUMN_DEFINITIONS.filter((c) => Boolean(this.selectedColumns()[c.key]))
+  );
+  readonly activeTableColspan = computed<number>(() => this.visibleColumns().length + 1);
 
   // Network & Offline-First Telemetry
   isBrowserOnline = signal<boolean>(typeof navigator !== 'undefined' ? navigator.onLine !== false : true);
@@ -179,6 +212,7 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     memberCode: string;
     category: AttendanceMemberCategory;
     statusMarked: string;
+    lateByLabel?: string;
     enrolledPhoto?: string;
     livePhoto?: string;
     savedOffline?: boolean;
@@ -192,6 +226,7 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     punchType?: 'IN' | 'OUT';
     confidence?: number;
     memberCode?: string;
+    lateByLabel?: string;
     storageLabel?: string;
   } | null>(null);
 
@@ -202,6 +237,7 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       category: AttendanceMemberCategory;
       punch: 'IN' | 'OUT';
       time: string;
+      lateByLabel?: string;
       confidence: number;
       syncedLabel: string;
     }>
@@ -225,6 +261,9 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   // Add Staff inline drawer state (signal-based form, no ngModel)
   showAddStaffForm = signal<boolean>(false);
   newStaffName = signal<string>('');
+  newStaffFatherName = signal<string>('');
+  newStaffCnic = signal<string>('');
+  newStaffGender = signal<string>('Male');
   newStaffRole = signal<string>('');
   newStaffDepartment = signal<string>('Campus Operations');
   newStaffPhone = signal<string>('+92 300 ');
@@ -234,6 +273,9 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   // Add Principal / Vice Principal inline drawer state
   showAddPrincipalForm = signal<boolean>(false);
   newPrincipalName = signal<string>('');
+  newPrincipalFatherName = signal<string>('');
+  newPrincipalCnic = signal<string>('');
+  newPrincipalGender = signal<string>('Male');
   newPrincipalRole = signal<string>('Vice Principal');
   newPrincipalDepartment = signal<string>('Executive Directorate');
   newPrincipalPhone = signal<string>('+92 300 ');
@@ -249,7 +291,10 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   private autoScanTimerId: ReturnType<typeof setInterval> | null = null;
   private overlayTimerId: ReturnType<typeof setTimeout> | null = null;
   private audioCtx: AudioContext | null = null;
-  private readonly localSessionPunches = new Map<string, { inTime?: string; inAtMs?: number; outTime?: string; outAtMs?: number }>();
+  private readonly localSessionPunches = new Map<
+    string,
+    { inTime?: string; inAtMs?: number; outTime?: string; outAtMs?: number; scheduledStartTime?: string; lateMinutes?: number; lateByLabel?: string }
+  >();
   private lastActiveFaceKey = '';
   private lastSuccessAtMs = 0;
   private lastDuplicateAlertAt = 0;
@@ -421,13 +466,20 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     const targetDate = this.selectedDate();
     const todayIso = new Date().toISOString().split('T')[0];
     const logs = this.verificationLogs() || [];
+    const defaultStart = this.policy().scheduledStartTime || '08:00';
     const perMember = new Map<
       string,
       {
         inTime: string;
         outTime: string;
+        scheduledStartTime: string;
+        lateMinutes: number | null;
+        lateByLabel: string;
         lastConfidence: number;
         verifiedMethod: string;
+        gateOrLocation: string;
+        markedBy: string;
+        remarks: string;
         totalInCount: number;
         totalOutCount: number;
       }
@@ -439,8 +491,14 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       const cur = perMember.get(key) || {
         inTime: '',
         outTime: '',
+        scheduledStartTime: defaultStart,
+        lateMinutes: null,
+        lateByLabel: '',
         lastConfidence: 0,
         verifiedMethod: '',
+        gateOrLocation: '',
+        markedBy: '',
+        remarks: '',
         totalInCount: 0,
         totalOutCount: 0
       };
@@ -456,12 +514,26 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
           if (!cur.outTime && ts) cur.outTime = ts;
         } else {
           if (ts) cur.inTime = ts;
+          if (l.scheduledStartTime) cur.scheduledStartTime = l.scheduledStartTime;
+          if (typeof l.lateMinutes === 'number' && Number.isFinite(l.lateMinutes)) {
+            cur.lateMinutes = l.lateMinutes;
+          }
+          if (l.lateByLabel) cur.lateByLabel = l.lateByLabel;
         }
         if (!cur.lastConfidence && Number(l.confidenceScore) > 0) {
           cur.lastConfidence = Math.round(Number(l.confidenceScore));
         }
         if (!cur.verifiedMethod && l.verifiedBy) {
           cur.verifiedMethod = l.verifiedBy;
+        }
+        if (!cur.gateOrLocation && l.gateName) {
+          cur.gateOrLocation = l.gateName;
+        }
+        if (!cur.markedBy && l.markedByRole) {
+          cur.markedBy = l.markedByRole;
+        }
+        if (!cur.remarks && l.remarks) {
+          cur.remarks = l.remarks;
         }
       }
       perMember.set(key, cur);
@@ -472,8 +544,14 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
         const cur = perMember.get(key) || {
           inTime: '',
           outTime: '',
+          scheduledStartTime: sess.scheduledStartTime || defaultStart,
+          lateMinutes: null,
+          lateByLabel: '',
           lastConfidence: 0,
           verifiedMethod: '',
+          gateOrLocation: '',
+          markedBy: '',
+          remarks: '',
           totalInCount: 0,
           totalOutCount: 0
         };
@@ -481,6 +559,9 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
           cur.inTime = sess.inTime;
           cur.totalInCount = Math.max(1, cur.totalInCount);
         }
+        if (sess.scheduledStartTime) cur.scheduledStartTime = sess.scheduledStartTime;
+        if (typeof sess.lateMinutes === 'number') cur.lateMinutes = sess.lateMinutes;
+        if (sess.lateByLabel && !cur.lateByLabel) cur.lateByLabel = sess.lateByLabel;
         if (sess.outTime && !cur.outTime) {
           cur.outTime = sess.outTime;
           cur.totalOutCount = Math.max(1, cur.totalOutCount);
@@ -507,9 +588,21 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
         code: String(s.rollNo || s.id),
         subLabel: `${s.grade || 'Class'} ${s.section ? '- ' + s.section : ''}`.trim(),
         sectionOrDept: String(s.grade || 'Campus'),
+        fatherName: String(s.guardian || s.guardianName || s.fatherName || '—'),
+        guardianRelation: String(s.guardianRelation || 'Father'),
+        cnicBForm: String(s.studentBForm || s.bForm || s.cnic || '—'),
+        guardianCnic: String(s.guardianCnic || '—'),
+        passportNo: String(s.passportNo || '—'),
+        nationality: String(s.nationality || 'Pakistani'),
+        gender: String(s.gender || '—'),
+        dob: String(s.dob || '—'),
+        bloodGroup: String(s.bloodGroup || '—'),
         phone: String(s.guardianPhone || s.phone || ''),
+        emergencyContact: String(s.emergencyContact || '—'),
+        email: String(s.guardianEmail || s.email || '—'),
+        address: String(s.address || '—'),
         status,
-        monthlyRate: String(s.attendance || '96%'),
+        monthlyRate: String(s.attendance || s.attendanceRate || '96%'),
         image: fp?.facePhotoData || s.image || '',
         faceProfile: fp,
         liteEnabled: ov ? ov.liteEnabled : (fp ? fp.liteEnabled : true),
@@ -535,9 +628,21 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
         code: String(t.empCode || t.id),
         subLabel: String(t.designation || t.subject || 'Faculty'),
         sectionOrDept: String(t.department || t.subject || 'Academics'),
+        fatherName: String(t.fatherName || '—'),
+        guardianRelation: 'Father / Spouse',
+        cnicBForm: String(t.cnic || '—'),
+        guardianCnic: '—',
+        passportNo: String(t.passportNo || '—'),
+        nationality: String(t.nationality || 'Pakistani'),
+        gender: String(t.gender || '—'),
+        dob: String(t.dob || '—'),
+        bloodGroup: String(t.bloodGroup || '—'),
         phone: String(t.phone || ''),
+        emergencyContact: String(t.emergencyContact || '—'),
+        email: String(t.email || '—'),
+        address: String(t.address || '—'),
         status,
-        monthlyRate: '98%',
+        monthlyRate: String(t.attendanceRate || '98%'),
         image: fp?.facePhotoData || t.image || '',
         faceProfile: fp,
         liteEnabled: ov ? ov.liteEnabled : (fp ? fp.liteEnabled : true),
@@ -563,7 +668,19 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
         code: String(st.empCode || st.id),
         subLabel: String(st.roleTitle || 'Staff'),
         sectionOrDept: String(st.department || 'Administration'),
+        fatherName: String(st.fatherName || '—'),
+        guardianRelation: 'Father',
+        cnicBForm: String(st.cnic || '—'),
+        guardianCnic: '—',
+        passportNo: String(st.passportNo || '—'),
+        nationality: String(st.nationality || 'Pakistani'),
+        gender: String(st.gender || '—'),
+        dob: String(st.dob || '—'),
+        bloodGroup: String(st.bloodGroup || '—'),
         phone: String(st.phone || ''),
+        emergencyContact: String(st.emergencyContact || '—'),
+        email: String(st.email || '—'),
+        address: String(st.address || '—'),
         status,
         monthlyRate: st.shift || 'Morning Shift',
         image: fp?.facePhotoData || st.image || '',
@@ -591,7 +708,19 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
         code: String(pr.empCode || pr.id),
         subLabel: String(pr.roleTitle || 'Principal'),
         sectionOrDept: String(pr.department || 'Executive Directorate'),
+        fatherName: String(pr.fatherName || '—'),
+        guardianRelation: 'Father',
+        cnicBForm: String(pr.cnic || '—'),
+        guardianCnic: '—',
+        passportNo: String(pr.passportNo || '—'),
+        nationality: String(pr.nationality || 'Pakistani'),
+        gender: String(pr.gender || '—'),
+        dob: String(pr.dob || '—'),
+        bloodGroup: String(pr.bloodGroup || '—'),
         phone: String(pr.phone || ''),
+        emergencyContact: String(pr.emergencyContact || '—'),
+        email: String(pr.email || '—'),
+        address: String(pr.address || '—'),
         status,
         monthlyRate: pr.shift || 'Full Day Shift',
         image: fp?.facePhotoData || pr.image || '',
@@ -692,7 +821,13 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
         m.name.toLowerCase().includes(q) ||
         m.code.toLowerCase().includes(q) ||
         m.subLabel.toLowerCase().includes(q) ||
-        m.sectionOrDept.toLowerCase().includes(q);
+        m.sectionOrDept.toLowerCase().includes(q) ||
+        m.fatherName.toLowerCase().includes(q) ||
+        m.cnicBForm.toLowerCase().includes(q) ||
+        m.guardianCnic.toLowerCase().includes(q) ||
+        m.passportNo.toLowerCase().includes(q) ||
+        m.phone.toLowerCase().includes(q) ||
+        m.email.toLowerCase().includes(q);
       const matchesGrade = tab !== 'students' || grade === 'All' || m.sectionOrDept.toLowerCase().includes(grade.toLowerCase());
       const matchesPunch =
         pf === 'all' ||
@@ -1659,21 +1794,35 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
 
     const snapUrl = resolveSnapUrl();
     const timeLabel = nowDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const status = nextPunch === 'IN' ? this.computeArrivalStatus() : 'Present';
+    const scheduledStartTime = this.policy().scheduledStartTime || '08:00';
+    const punctuality =
+      nextPunch === 'IN'
+        ? this.computePunctualityFromCheckIn(timeLabel, scheduledStartTime, this.policy().lateCutoffTime || '08:15', status)
+        : { lateMinutes: null as number | null, lateByLabel: '', lateSeverity: 'none' as LateSeverityKind };
+
     if (nextPunch === 'IN') {
-      this.localSessionPunches.set(memberKey, { ...(session || {}), inTime: timeLabel, inAtMs: nowMs });
+      this.localSessionPunches.set(memberKey, {
+        ...(session || {}),
+        inTime: timeLabel,
+        inAtMs: nowMs,
+        scheduledStartTime,
+        lateMinutes: punctuality.lateMinutes ?? 0,
+        lateByLabel: punctuality.lateByLabel
+      });
     } else {
       this.localSessionPunches.set(memberKey, { ...(session || {}), outTime: timeLabel, outAtMs: nowMs });
     }
     this.punchRevision.update((v) => v + 1);
 
-    const status = nextPunch === 'IN' ? this.computeArrivalStatus() : 'Present';
     const modeTag = this.liteVerifyActive() ? 'face_camera_lite' : `face_camera_${this.policy().verificationMode}`;
     const storageLabel = this.isBrowserOnline() ? 'SQLite + Auto-Sync' : 'Saved Offline · Auto-Sync Ready';
     const overlayBadge = nextPunch === 'OUT' ? 'CHECKED OUT · VERIFIED' : 'ATTENDANCE MARKED · OK';
+    const timingSuffix = punctuality.lateByLabel ? ` · ${punctuality.lateByLabel}` : '';
     const overlaySub =
       nextPunch === 'OUT'
         ? `${this.singleCategoryLabel(prof.memberCategory)} · ${prof.gradeOrDept} · OUT ${timeLabel}`
-        : `${this.singleCategoryLabel(prof.memberCategory)} · ${prof.gradeOrDept} · ${status} ${timeLabel}`;
+        : `${this.singleCategoryLabel(prof.memberCategory)} · ${prof.gradeOrDept} · ${status} ${timeLabel}${timingSuffix}`;
 
     this.recentVerifiedFeed.update((feed) =>
       [
@@ -1683,6 +1832,7 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
           category: prof.memberCategory,
           punch: nextPunch as 'IN' | 'OUT',
           time: timeLabel,
+          lateByLabel: punctuality.lateByLabel || undefined,
           confidence: match.confidence,
           syncedLabel: this.isBrowserOnline() ? 'SQLite · Synced' : 'Offline Queued'
         },
@@ -1695,11 +1845,12 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       resultType: 'success',
       confidence: match.confidence,
       threshold: match.thresholdUsed,
-      message: `${overlayBadge} (${match.confidence}% match) — ${prof.memberName} (${nextPunch} at ${timeLabel})`,
+      message: `${overlayBadge} (${match.confidence}% match) — ${prof.memberName} (${nextPunch} at ${timeLabel}${timingSuffix})`,
       memberName: prof.memberName,
       memberCode: prof.memberCode,
       category: prof.memberCategory,
       statusMarked: nextPunch === 'OUT' ? 'Checked Out' : status,
+      lateByLabel: punctuality.lateByLabel || undefined,
       enrolledPhoto: prof.facePhotoData,
       livePhoto: snapUrl,
       savedOffline: !this.isBrowserOnline()
@@ -1714,13 +1865,14 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
         punchType: nextPunch,
         confidence: match.confidence,
         memberCode: prof.memberCode,
+        lateByLabel: punctuality.lateByLabel || undefined,
         storageLabel
       },
       1800
     );
 
     this.playMatchChime();
-    this.emitToast(`✔ ${prof.memberName} — ${nextPunch} (${status}) · ${match.confidence}%`, 'success');
+    this.emitToast(`✔ ${prof.memberName} — ${nextPunch} (${status}${timingSuffix}) · ${match.confidence}%`, 'success');
 
     this.attendanceRecorded.emit({
       memberCategory: prof.memberCategory,
@@ -1730,6 +1882,10 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       gradeOrDept: prof.gradeOrDept,
       status,
       punchType: nextPunch,
+      scheduledStartTime,
+      lateMinutes: punctuality.lateMinutes ?? 0,
+      lateByLabel: punctuality.lateByLabel,
+      checkInTime: nextPunch === 'IN' ? timeLabel : undefined,
       verificationMode: modeTag,
       confidenceScore: match.confidence,
       verifiedBy: isAutoScan
@@ -1748,6 +1904,7 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       punchType?: 'IN' | 'OUT';
       confidence?: number;
       memberCode?: string;
+      lateByLabel?: string;
       storageLabel?: string;
     },
     durationMs: number
@@ -1948,6 +2105,12 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       this.openCameraForMember(member);
       return;
     }
+    const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const scheduledStartTime = this.policy().scheduledStartTime || '08:00';
+    const isPresentOrLate = status === 'Present' || status === 'Late';
+    const punctuality = isPresentOrLate
+      ? this.computePunctualityFromCheckIn(nowTime, scheduledStartTime, this.policy().lateCutoffTime || '08:15', status)
+      : { lateMinutes: 0, lateByLabel: '' };
     this.attendanceRecorded.emit({
       memberCategory: member.category,
       memberId: member.id,
@@ -1955,6 +2118,11 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       memberCode: member.code,
       gradeOrDept: member.subLabel,
       status,
+      punchType: 'IN',
+      scheduledStartTime,
+      lateMinutes: punctuality.lateMinutes ?? 0,
+      lateByLabel: punctuality.lateByLabel,
+      checkInTime: isPresentOrLate ? nowTime : undefined,
       verificationMode: 'manual_owner_override',
       confidenceScore: 100,
       verifiedBy: `${this.currentActorName()} (Manual Override)`
@@ -1970,6 +2138,9 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     }
     this.staffCreated.emit({
       name,
+      fatherName: this.newStaffFatherName().trim() || undefined,
+      cnic: this.newStaffCnic().trim() || undefined,
+      gender: this.newStaffGender() || 'Male',
       roleTitle,
       department: this.newStaffDepartment().trim() || 'Campus Administration',
       phone: this.newStaffPhone().trim() || '+92 300 0000000',
@@ -1977,6 +2148,8 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       liteEnabled: this.newStaffLiteEnabled()
     });
     this.newStaffName.set('');
+    this.newStaffFatherName.set('');
+    this.newStaffCnic.set('');
     this.newStaffRole.set('');
     this.showAddStaffForm.set(false);
   }
@@ -1990,6 +2163,9 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     }
     this.principalCreated.emit({
       name,
+      fatherName: this.newPrincipalFatherName().trim() || undefined,
+      cnic: this.newPrincipalCnic().trim() || undefined,
+      gender: this.newPrincipalGender() || 'Male',
       roleTitle,
       department: this.newPrincipalDepartment().trim() || 'Executive Directorate',
       phone: this.newPrincipalPhone().trim() || '+92 300 0000000',
@@ -1997,6 +2173,8 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       liteEnabled: this.newPrincipalLiteEnabled()
     });
     this.newPrincipalName.set('');
+    this.newPrincipalFatherName.set('');
+    this.newPrincipalCnic.set('');
     this.newPrincipalRole.set('Vice Principal');
     this.showAddPrincipalForm.set(false);
   }
@@ -2030,6 +2208,10 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   setDraftNumber(field: 'confidenceThreshold' | 'liteConfidenceThreshold', raw: string): void {
     const num = Math.max(50, Math.min(98, Number(raw) || 75));
     this.policyDraft.update((d) => ({ ...d, [field]: num }));
+  }
+
+  setDraftScheduledStartTime(raw: string): void {
+    this.policyDraft.update((d) => ({ ...d, scheduledStartTime: raw || '08:00' }));
   }
 
   setDraftTime(raw: string): void {
@@ -2099,6 +2281,124 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     this.policySaved.emit(this.clonePolicy(this.policyDraft()));
   }
 
+  // Customizable Columns & Dynamic PDF / CSV Export Engine
+  private loadInitialColumnSelection(): Record<AttendanceColumnKey, boolean> {
+    const defaults = createDefaultColumnSelection('local_official');
+    try {
+      if (typeof localStorage !== 'undefined') {
+        const raw = localStorage.getItem('scs_att_visible_columns_v1');
+        if (raw) {
+          const parsed = JSON.parse(raw) as Partial<Record<AttendanceColumnKey, boolean>>;
+          const merged = { ...defaults };
+          for (const col of ATTENDANCE_COLUMN_DEFINITIONS) {
+            if (typeof parsed[col.key] === 'boolean') {
+              merged[col.key] = Boolean(parsed[col.key]);
+            }
+          }
+          if (Object.values(merged).some(Boolean)) {
+            return merged;
+          }
+        }
+      }
+    } catch {}
+    return defaults;
+  }
+
+  private persistColumnSelection(next: Record<AttendanceColumnKey, boolean>): void {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('scs_att_visible_columns_v1', JSON.stringify(next));
+      }
+    } catch {}
+  }
+
+  isColVisible(key: AttendanceColumnKey): boolean {
+    return Boolean(this.selectedColumns()[key]);
+  }
+
+  toggleColumn(key: AttendanceColumnKey): void {
+    const cur = this.selectedColumns();
+    const activeCount = Object.values(cur).filter(Boolean).length;
+    if (cur[key] && activeCount <= 1) {
+      this.emitToast('Keep at least 1 column selected for the roster & export report.', 'warning');
+      return;
+    }
+    const next = { ...cur, [key]: !cur[key] };
+    this.selectedColumns.set(next);
+    this.activeColumnPreset.set('custom');
+    this.persistColumnSelection(next);
+  }
+
+  applyColumnPreset(preset: AttendanceColumnPresetKey): void {
+    const next = createDefaultColumnSelection(preset);
+    this.selectedColumns.set(next);
+    this.activeColumnPreset.set(preset);
+    this.persistColumnSelection(next);
+  }
+
+  formatColumnValue(m: AttendanceMemberView, key: AttendanceColumnKey): string {
+    switch (key) {
+      case 'code':
+        return m.code;
+      case 'member':
+        return m.name;
+      case 'category':
+        return this.singleCategoryLabel(m.category);
+      case 'classDept':
+        return `${m.subLabel}${m.sectionOrDept ? ' (' + m.sectionOrDept + ')' : ''}`;
+      case 'fatherName':
+        return m.fatherName && m.fatherName !== '—' ? `${m.fatherName}${m.guardianRelation && m.category === 'student' ? ' (' + m.guardianRelation + ')' : ''}` : '—';
+      case 'cnicBForm':
+        return m.cnicBForm || '—';
+      case 'guardianCnic':
+        return m.guardianCnic || '—';
+      case 'passportNo':
+        return m.passportNo || '—';
+      case 'nationality':
+        return m.nationality || 'Pakistani';
+      case 'gender':
+        return m.gender || '—';
+      case 'dob':
+        return m.dob || '—';
+      case 'bloodGroup':
+        return m.bloodGroup || '—';
+      case 'phone':
+        return m.phone || '—';
+      case 'emergencyContact':
+        return m.emergencyContact || '—';
+      case 'email':
+        return m.email || '—';
+      case 'address':
+        return m.address || '—';
+      case 'scheduledStartTime':
+        return m.scheduledStartTime || '08:00';
+      case 'checkInTime':
+        return m.checkInTime || '—';
+      case 'lateByLabel':
+        return m.lateByLabel || '—';
+      case 'checkOutTime':
+        return m.checkOutTime || '—';
+      case 'durationLabel':
+        return `${m.durationLabel} (${m.punchState})`;
+      case 'verifyFace':
+        return m.isEnrolled ? (m.lastConfidence > 0 ? `Matched ${m.lastConfidence}%` : 'Face Enrolled') : 'Not Enrolled';
+      case 'verifiedMethod':
+        return m.verifiedMethod || '—';
+      case 'overallRate':
+        return m.monthlyRate || '—';
+      case 'punchCounts':
+        return `IN: ${m.totalInCount} / OUT: ${m.totalOutCount}`;
+      case 'gateOrLocation':
+        return m.gateOrLocation || 'Campus Gate 01';
+      case 'status':
+        return m.status;
+      case 'remarks':
+        return m.remarks || '—';
+      default:
+        return '—';
+    }
+  }
+
   exportCurrentCategoryCSV(): void {
     if (!this.canExportCurrentPortal()) {
       this.emitToast('Export permission is restricted for this role by School Owner.', 'warning');
@@ -2109,57 +2409,172 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       this.emitToast('No records available to export.', 'warning');
       return;
     }
-    const headers = [
-      'Date',
-      'Code',
-      'Name',
-      'Category',
-      'Class/Role',
-      'Department',
-      'Status',
-      'IN/OUT State',
-      'Check-In Time',
-      'Check-Out Time',
-      'Duration',
-      'Confidence %',
-      'Verified Method',
-      'Overall Rate / Shift',
-      'Total IN Punches',
-      'Total OUT Punches',
-      'Face Enrolled',
-      'Contact'
-    ];
-    const rows = list.map((m) => [
-      `"${this.selectedDate()}"`,
-      `"${m.code}"`,
-      `"${m.name}"`,
-      `"${this.categoryLabel(m.category)}"`,
-      `"${m.subLabel}"`,
-      `"${m.sectionOrDept}"`,
-      `"${m.status}"`,
-      `"${m.punchState}"`,
-      `"${m.checkInTime}"`,
-      `"${m.checkOutTime}"`,
-      `"${m.durationLabel}"`,
-      `"${m.lastConfidence > 0 ? m.lastConfidence + '%' : '—'}"`,
-      `"${m.verifiedMethod}"`,
-      `"${m.monthlyRate}"`,
-      `"${m.totalInCount}"`,
-      `"${m.totalOutCount}"`,
-      `"${m.isEnrolled ? 'Yes' : 'No'}"`,
-      `"${m.phone}"`
-    ]);
-    const csv = [headers.join(','), ...rows.map((r) => r.join(','))].join('\r\n');
+    const cols = this.visibleColumns();
+    const escCsv = (val: string) => `"${String(val ?? '').replace(/"/g, '""')}"`;
+    const headers = ['Date', ...cols.map((c) => c.label)].map(escCsv);
+    const rows = list.map((m) => [escCsv(this.selectedDate()), ...cols.map((c) => escCsv(this.formatColumnValue(m, c.key)))]);
+    const csv = '\uFEFF' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\r\n');
     if (typeof document !== 'undefined') {
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `attendance_in_out_${this.activeCategory()}_${this.selectedDate()}.csv`;
+      a.download = `attendance_${this.activeSubTab()}_${this.selectedDate()}.csv`;
       a.click();
       URL.revokeObjectURL(url);
     }
-    this.emitToast(`Exported ${list.length} ${this.categoryLabel(this.activeCategory())} IN/OUT records.`, 'success');
+    this.emitToast(`Exported ${list.length} records (${cols.length} ticked columns) as CSV.`, 'success');
+  }
+
+  exportCurrentCategoryPDF(): void {
+    if (!this.canExportCurrentPortal()) {
+      this.emitToast('Export permission is restricted for this role by School Owner.', 'warning');
+      return;
+    }
+    const list = this.filteredRosterMembers();
+    if (!list.length) {
+      this.emitToast('No records available to export in PDF.', 'warning');
+      return;
+    }
+    if (typeof document === 'undefined') return;
+    const cols = this.visibleColumns();
+    const rSum = this.rosterTabSummary();
+    const reportTitle =
+      this.activeSubTab() === 'students'
+        ? 'Student Attendance & Compliance Register'
+        : this.activeSubTab() === 'teachers'
+          ? 'Faculty Attendance & Timing Register'
+          : this.activeSubTab() === 'principals'
+            ? 'Executive Directorate Attendance Register'
+            : this.activeSubTab() === 'staff'
+              ? 'Campus Staff Attendance Register'
+              : 'Campus Master Attendance Register';
+
+    const esc = (v: string) =>
+      String(v ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+
+    const headerCells = cols.map((c) => `<th>${esc(c.shortLabel)}</th>`).join('');
+    const bodyRows = list
+      .map((m, idx) => {
+        const tds = cols
+          .map((c) => {
+            const val = this.formatColumnValue(m, c.key);
+            let cls = '';
+            if (c.key === 'lateByLabel') {
+              cls =
+                m.lateSeverity === 'late'
+                  ? 'badge-late'
+                  : m.lateSeverity === 'grace'
+                    ? 'badge-grace'
+                    : m.lateSeverity === 'early' || m.lateSeverity === 'on_time'
+                      ? 'badge-ok'
+                      : '';
+            } else if (c.key === 'status') {
+              cls = m.status === 'Present' ? 'badge-ok' : m.status === 'Late' ? 'badge-late' : m.status === 'Absent' ? 'badge-absent' : '';
+            } else if (c.key === 'cnicBForm' || c.key === 'guardianCnic' || c.key === 'passportNo' || c.key === 'code') {
+              cls = 'mono';
+            }
+            return `<td class="${cls}">${esc(val)}</td>`;
+          })
+          .join('');
+        return `<tr><td class="mono muted">${idx + 1}</td>${tds}</tr>`;
+      })
+      .join('');
+
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>${esc(this.schoolName())} — ${esc(reportTitle)}</title>
+<style>
+  @page { size: ${cols.length > 8 ? 'landscape' : 'portrait'}; margin: 10mm; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #0f172a; margin: 0; font-size: 10px; }
+  .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0f172a; padding-bottom: 8px; margin-bottom: 10px; }
+  .title { font-size: 16px; font-weight: 800; margin: 0 0 2px 0; }
+  .sub { font-size: 10px; color: #475569; margin: 0; }
+  .meta { text-align: right; font-size: 10px; color: #334155; }
+  .kpis { display: flex; gap: 14px; margin-bottom: 10px; font-size: 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 10px; }
+  .kpis strong { color: #0f172a; }
+  table { width: 100%; border-collapse: collapse; table-layout: auto; }
+  th, td { border: 1px solid #cbd5e1; padding: 5px 6px; text-align: left; vertical-align: middle; word-break: break-word; }
+  th { background: #f1f5f9; font-size: 9px; text-transform: uppercase; letter-spacing: 0.03em; font-weight: 800; color: #334155; }
+  tr:nth-child(even) td { background: #fafafa; }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; white-space: nowrap; }
+  .muted { color: #64748b; }
+  .badge-ok { color: #047857; font-weight: 700; }
+  .badge-grace { color: #0369a1; font-weight: 700; }
+  .badge-late { color: #b45309; font-weight: 700; }
+  .badge-absent { color: #be123c; font-weight: 700; }
+  .footer { margin-top: 12px; display: flex; justify-content: space-between; font-size: 9px; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 6px; }
+</style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <h1 class="title">${esc(this.schoolName())}</h1>
+      <p class="sub">${esc(reportTitle)} · Selected Fields (${cols.length})</p>
+    </div>
+    <div class="meta">
+      <div><strong>Date:</strong> ${esc(this.selectedDate())}</div>
+      <div><strong>Asal Time:</strong> ${esc(this.policy().scheduledStartTime || '08:00')} · <strong>Late Cutoff:</strong> ${esc(this.policy().lateCutoffTime || '08:15')}</div>
+      <div><strong>Generated By:</strong> ${esc(this.currentActorName())}</div>
+    </div>
+  </div>
+  <div class="kpis">
+    <span><strong>Total Rows:</strong> ${list.length}</span>
+    <span><strong>Checked IN:</strong> ${rSum.checkedIn}</span>
+    <span><strong>Checked OUT:</strong> ${rSum.checkedOut}</span>
+    <span><strong>Pending/Absent:</strong> ${rSum.pending}</span>
+    <span><strong>Face Enrolled:</strong> ${rSum.enrolled}/${rSum.total}</span>
+  </div>
+  <table>
+    <thead>
+      <tr><th>#</th>${headerCells}</tr>
+    </thead>
+    <tbody>${bodyRows}</tbody>
+  </table>
+  <div class="footer">
+    <span>Official Biometric &amp; Registry Audit Export · Local &amp; International Compliance Fields</span>
+    <span>Signature / Stamp: __________________________</span>
+  </div>
+</body>
+</html>`;
+
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (!doc || !iframe.contentWindow) {
+      iframe.remove();
+      this.emitToast('Print preview could not initialize.', 'warning');
+      return;
+    }
+    doc.open();
+    doc.write(html);
+    doc.close();
+
+    setTimeout(() => {
+      try {
+        iframe.contentWindow?.focus();
+        iframe.contentWindow?.print();
+      } catch {
+        this.emitToast('Print dialog blocked by browser.', 'warning');
+      } finally {
+        setTimeout(() => iframe.remove(), 1200);
+      }
+    }, 180);
+
+    this.emitToast(`Prepared PDF/Print with ${cols.length} ticked columns (${list.length} rows).`, 'success');
   }
 
   private buildMemberPunchView(
@@ -2167,8 +2582,14 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       | {
           inTime: string;
           outTime: string;
+          scheduledStartTime: string;
+          lateMinutes: number | null;
+          lateByLabel: string;
           lastConfidence: number;
           verifiedMethod: string;
+          gateOrLocation: string;
+          markedBy: string;
+          remarks: string;
           totalInCount: number;
           totalOutCount: number;
         }
@@ -2179,6 +2600,16 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     const checkOutTime = rec?.outTime || '—';
     const hasIn = checkInTime !== '—';
     const hasOut = checkOutTime !== '—';
+    const scheduledStartTime = rec?.scheduledStartTime || this.policy().scheduledStartTime || '08:00';
+    const cutoffTime = this.policy().lateCutoffTime || '08:15';
+
+    const punctuality = hasIn
+      ? this.computePunctualityFromCheckIn(checkInTime, scheduledStartTime, cutoffTime, status, rec?.lateMinutes, rec?.lateByLabel)
+      : {
+          lateMinutes: null as number | null,
+          lateByLabel: status === 'On Leave' ? 'On Leave' : status === 'Absent' ? 'Not Checked In' : 'Pending',
+          lateSeverity: 'none' as LateSeverityKind
+        };
 
     let durationLabel = '—';
     if (hasIn && hasOut) {
@@ -2194,15 +2625,72 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     else if (status === 'Absent') punchState = 'Absent';
 
     return {
+      scheduledStartTime,
       checkInTime,
+      lateMinutes: punctuality.lateMinutes,
+      lateByLabel: punctuality.lateByLabel,
+      lateSeverity: punctuality.lateSeverity,
       checkOutTime,
       durationLabel,
       punchState,
       lastConfidence: rec?.lastConfidence || 0,
       verifiedMethod: rec?.verifiedMethod || (hasIn ? 'Face Camera' : 'Not Scanned'),
       totalInCount: rec?.totalInCount || 0,
-      totalOutCount: rec?.totalOutCount || 0
+      totalOutCount: rec?.totalOutCount || 0,
+      gateOrLocation: rec?.gateOrLocation || (hasIn ? 'Campus Gate 01' : '—'),
+      markedBy: rec?.markedBy || (hasIn ? 'Kiosk' : '—'),
+      remarks: rec?.remarks || ''
     };
+  }
+
+  private computePunctualityFromCheckIn(
+    checkInStr: string,
+    scheduledStartStr: string,
+    lateCutoffStr: string,
+    status: string,
+    storedLateMinutes?: number | null,
+    storedLateLabel?: string
+  ): { lateMinutes: number | null; lateByLabel: string; lateSeverity: LateSeverityKind } {
+    const startMins = this.parseTimeMinutes(scheduledStartStr || '08:00') ?? 480;
+    const cutoffMins = this.parseTimeMinutes(lateCutoffStr || '08:15') ?? 495;
+    const inMins = this.parseTimeMinutes(checkInStr);
+
+    if (inMins === null) {
+      if (storedLateLabel) {
+        const mins = typeof storedLateMinutes === 'number' ? storedLateMinutes : 0;
+        const sev: LateSeverityKind =
+          storedLateLabel.toLowerCase().includes('late')
+            ? 'late'
+            : storedLateLabel.toLowerCase().includes('grace')
+              ? 'grace'
+              : storedLateLabel.toLowerCase().includes('early')
+                ? 'early'
+                : 'on_time';
+        return { lateMinutes: mins, lateByLabel: storedLateLabel, lateSeverity: sev };
+      }
+      return { lateMinutes: null, lateByLabel: status === 'Late' ? 'Late Arrival' : 'On Time', lateSeverity: status === 'Late' ? 'late' : 'on_time' };
+    }
+
+    const diff = inMins - startMins;
+    if (diff < 0) {
+      return { lateMinutes: diff, lateByLabel: `Early ${this.formatDelayDuration(diff)}`, lateSeverity: 'early' };
+    }
+    if (diff === 0) {
+      return { lateMinutes: 0, lateByLabel: 'On Time', lateSeverity: 'on_time' };
+    }
+    if (inMins <= cutoffMins && status.toLowerCase() !== 'late') {
+      return { lateMinutes: diff, lateByLabel: `+${this.formatDelayDuration(diff)} (Grace)`, lateSeverity: 'grace' };
+    }
+    return { lateMinutes: diff, lateByLabel: `+${this.formatDelayDuration(diff)} late`, lateSeverity: 'late' };
+  }
+
+  private formatDelayDuration(mins: number): string {
+    const abs = Math.abs(Math.round(mins));
+    const hrs = Math.floor(abs / 60);
+    const rem = abs % 60;
+    if (hrs <= 0) return `${rem}m`;
+    if (rem === 0) return `${hrs}h`;
+    return `${hrs}h ${rem}m`;
   }
 
   private formatTimeShort(raw: string): string {

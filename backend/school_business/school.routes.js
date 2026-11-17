@@ -18,25 +18,25 @@ export const SCHOOL_FEES = [
 ];
 
 export const SCHOOL_TEACHERS = [
-  { id: 't-1', empCode: 'EMP-2021-01', name: 'Sir Farhan Qureshi', designation: 'Senior Subject Lead', department: 'Mathematics', qualification: 'M.Sc. Pure Mathematics', subject: 'Mathematics & Algebra', classes: 'Grade 8, 9, 10', inchargeClass: 'Grade 10 - A', gender: 'Male', cnic: '35202-1029384-1', phone: '+92 300 1234567', email: 'farhan.qureshi@campus.edu', salary: 'PKR 125,000', basicSalary: 125000, salaryStatus: 'Paid', status: 'ACTIVE', lastSalaryMonth: 'March 2026', salaryPaid: true, joiningDate: '2021-08-15' },
-  { id: 't-2', empCode: 'EMP-2020-02', name: 'Dr. Saima Noor', designation: 'Head of Sciences', department: 'Sciences', qualification: 'Ph.D. Chemistry', subject: 'General Science & Physics', classes: 'Grade 7, 8, 9', inchargeClass: 'Grade 9 - A', gender: 'Female', cnic: '35202-5647382-2', phone: '+92 321 9876543', email: 'saima.noor@campus.edu', salary: 'PKR 145,000', basicSalary: 145000, salaryStatus: 'Paid', status: 'ACTIVE', lastSalaryMonth: 'March 2026', salaryPaid: true, joiningDate: '2020-02-01' },
-  { id: 't-3', empCode: 'EMP-2022-03', name: 'Ms. Hina Aslam', designation: 'Senior Lecturer', department: 'Humanities', qualification: 'M.A. English Literature', subject: 'English & Composition', classes: 'Grade 6, 7, 8', inchargeClass: 'Grade 8 - B', gender: 'Female', cnic: '35202-3322110-2', phone: '+92 333 4567890', email: 'hina.aslam@campus.edu', salary: 'PKR 110,000', basicSalary: 110000, salaryStatus: 'Paid', status: 'ACTIVE', lastSalaryMonth: 'March 2026', salaryPaid: true, joiningDate: '2022-09-10' },
-  { id: 't-4', empCode: 'EMP-2023-04', name: 'Engr. Rehan Ali', designation: 'STEM Coordinator', department: 'Computer Science', qualification: 'BS Computer Science', subject: 'Computer Science & Coding', classes: 'Grade 8, 9, 10', inchargeClass: 'Grade 8 - A', gender: 'Male', cnic: '35202-8877665-1', phone: '+92 312 3456789', email: 'rehan.ali@campus.edu', salary: 'PKR 135,000', basicSalary: 135000, salaryStatus: 'Pending', status: 'ACTIVE', lastSalaryMonth: 'February 2026', salaryPaid: false, joiningDate: '2023-01-15' },
-  { id: 't-5', empCode: 'EMP-2019-05', name: 'Qari Abdul Rehman', designation: 'Senior Faculty', department: 'Languages & Islamiat', qualification: 'Shahadat-ul-Almiya', subject: 'Urdu & Islamic Studies', classes: 'Grade 6 to 10', inchargeClass: 'Grade 7 - A', gender: 'Male', cnic: '35202-9911223-1', phone: '+92 301 2345678', email: 'abdul.rehman@campus.edu', salary: 'PKR 95,000', basicSalary: 95000, salaryStatus: 'Paid', status: 'ACTIVE', lastSalaryMonth: 'March 2026', salaryPaid: true, joiningDate: '2019-05-20' }
+  { id: 't-1', empCode: 'EMP-2021-01', name: 'Sir Farhan Qureshi', fatherName: 'Qureshi Abdul Jabbar', designation: 'Senior Subject Lead', department: 'Mathematics', subject: 'Mathematics & Algebra', classes: 'Grade 8, 9, 10', inchargeClass: 'Grade 10 - A', gender: 'Male', dob: '1986-03-14', bloodGroup: 'B+', cnic: '35202-1029384-1', passportNo: 'PK-9284112', nationality: 'Pakistani', phone: '+92 300 1234567', emergencyContact: '+92 300 1234500', email: 'farhan.qureshi@campus.edu', address: 'Model Town Link Road, Lahore', salary: 'PKR 125,000', basicSalary: 125000, salaryStatus: 'Paid', status: 'ACTIVE', lastSalaryMonth: 'March 2026', salaryPaid: true, joiningDate: '2021-08-15' },
+  { id: 't-2', empCode: 'EMP-2020-02', name: 'Dr. Saima Noor', fatherName: 'Noor Muhammad Khan', designation: 'Head of Sciences', department: 'Sciences', subject: 'General Science & Physics', classes: 'Grade 7, 8, 9', inchargeClass: 'Grade 9 - A', gender: 'Female', dob: '1984-07-22', bloodGroup: 'O+', cnic: '35202-5647382-2', passportNo: 'PK-7741298', nationality: 'Pakistani', phone: '+92 321 9876543', emergencyContact: '+92 321 9876500', email: 'saima.noor@campus.edu', address: 'DHA Phase 5, Sector C, Lahore', salary: 'PKR 145,000', basicSalary: 145000, salaryStatus: 'Paid', status: 'ACTIVE', lastSalaryMonth: 'March 2026', salaryPaid: true, joiningDate: '2020-02-01' },
+  { id: 't-3', empCode: 'EMP-2022-03', name: 'Ms. Hina Aslam', fatherName: 'Muhammad Aslam Chohan', designation: 'Senior Lecturer', department: 'Humanities', subject: 'English & Composition', classes: 'Grade 6, 7, 8', inchargeClass: 'Grade 8 - B', gender: 'Female', dob: '1990-11-05', bloodGroup: 'A+', cnic: '35202-3322110-2', passportNo: '', nationality: 'Pakistani', phone: '+92 333 4567890', emergencyContact: '+92 333 4567801', email: 'hina.aslam@campus.edu', address: 'Gulberg III, Street 9, Lahore', salary: 'PKR 110,000', basicSalary: 110000, salaryStatus: 'Paid', status: 'ACTIVE', lastSalaryMonth: 'March 2026', salaryPaid: true, joiningDate: '2022-09-10' },
+  { id: 't-4', empCode: 'EMP-2023-04', name: 'Engr. Rehan Ali', fatherName: 'Shaukat Ali Gillani', designation: 'STEM Coordinator', department: 'Computer Science', subject: 'Computer Science & Coding', classes: 'Grade 8, 9, 10', inchargeClass: 'Grade 8 - A', gender: 'Male', dob: '1991-01-19', bloodGroup: 'AB+', cnic: '35202-8877665-1', passportNo: 'PK-8834210', nationality: 'Pakistani', phone: '+92 312 3456789', emergencyContact: '+92 312 3456700', email: 'rehan.ali@campus.edu', address: 'Johar Town Phase 2, Lahore', salary: 'PKR 135,000', basicSalary: 135000, salaryStatus: 'Pending', status: 'ACTIVE', lastSalaryMonth: 'February 2026', salaryPaid: false, joiningDate: '2023-01-15' },
+  { id: 't-5', empCode: 'EMP-2019-05', name: 'Qari Abdul Rehman', fatherName: 'Hafiz Fazal Ur Rehman', designation: 'Senior Faculty', department: 'Languages & Islamiat', subject: 'Urdu & Islamic Studies', classes: 'Grade 6 to 10', inchargeClass: 'Grade 7 - A', gender: 'Male', dob: '1982-06-11', bloodGroup: 'B-', cnic: '35202-9911223-1', passportNo: '', nationality: 'Pakistani', phone: '+92 301 2345678', emergencyContact: '+92 301 2345600', email: 'abdul.rehman@campus.edu', address: 'Garden Town, Block H, Lahore', salary: 'PKR 95,000', basicSalary: 95000, salaryStatus: 'Paid', status: 'ACTIVE', lastSalaryMonth: 'March 2026', salaryPaid: true, joiningDate: '2019-05-20' }
 ];
 
 export const SCHOOL_STAFF = [
-  { id: 'STF-101', empCode: 'STF-2022-01', name: 'Muhammad Rizwan', roleTitle: 'Accountant / Fee Clerk', department: 'Accounts & Fee Desk', phone: '+92 300 4455661', shift: 'Morning (07:30 AM - 03:30 PM)', status: 'ACTIVE', attendanceStatus: 'Present', faceEnrolled: false, liteEnabled: true },
-  { id: 'STF-102', empCode: 'STF-2021-02', name: 'Kamran Siddiqui', roleTitle: 'Admin Coordinator', department: 'Campus Administration', phone: '+92 321 4401928', shift: 'Morning (07:30 AM - 03:30 PM)', status: 'ACTIVE', attendanceStatus: 'Present', faceEnrolled: false, liteEnabled: true },
-  { id: 'STF-103', empCode: 'STF-2020-03', name: 'Tariq Mehmood', roleTitle: 'Gate Security Supervisor', department: 'Campus Security', phone: '+92 333 7718291', shift: 'Shift A (06:30 AM - 02:30 PM)', status: 'ACTIVE', attendanceStatus: 'Present', faceEnrolled: false, liteEnabled: true },
-  { id: 'STF-104', empCode: 'STF-2023-04', name: 'Nadia Parveen', roleTitle: 'Science Lab Assistant', department: 'Physics & Chemistry Lab', phone: '+92 312 8890123', shift: 'Morning (08:00 AM - 02:30 PM)', status: 'ACTIVE', attendanceStatus: 'Absent', faceEnrolled: false, liteEnabled: true },
-  { id: 'STF-105', empCode: 'STF-2021-05', name: 'Rashid Ali', roleTitle: 'Senior Library Assistant', department: 'Central Library', phone: '+92 302 6612390', shift: 'Morning (07:45 AM - 03:00 PM)', status: 'ACTIVE', attendanceStatus: 'Absent', faceEnrolled: false, liteEnabled: true },
-  { id: 'STF-106', empCode: 'STF-2022-06', name: 'Sajid Hussain', roleTitle: 'Transport & Gate Attendant', department: 'Fleet & Gate Operations', phone: '+92 345 1199882', shift: 'Shift A (06:30 AM - 02:30 PM)', status: 'ACTIVE', attendanceStatus: 'Absent', faceEnrolled: false, liteEnabled: true }
+  { id: 'STF-101', empCode: 'STF-2022-01', name: 'Muhammad Rizwan', fatherName: 'Muhammad Hanif', cnic: '35202-4455661-1', passportNo: '', nationality: 'Pakistani', gender: 'Male', dob: '1987-04-12', bloodGroup: 'B+', roleTitle: 'Accountant / Fee Clerk', department: 'Accounts & Fee Desk', phone: '+92 300 4455661', emergencyContact: '+92 300 4455660', address: 'Township Sector B-1, Lahore', shift: 'Morning (07:30 AM - 03:30 PM)', status: 'ACTIVE', attendanceStatus: 'Present', faceEnrolled: false, liteEnabled: true },
+  { id: 'STF-102', empCode: 'STF-2021-02', name: 'Kamran Siddiqui', fatherName: 'Anwar Siddiqui', cnic: '35202-4401928-3', passportNo: '', nationality: 'Pakistani', gender: 'Male', dob: '1989-08-24', bloodGroup: 'O+', roleTitle: 'Admin Coordinator', department: 'Campus Administration', phone: '+92 321 4401928', emergencyContact: '+92 321 4401900', address: 'Iqbal Town, Karim Block, Lahore', shift: 'Morning (07:30 AM - 03:30 PM)', status: 'ACTIVE', attendanceStatus: 'Present', faceEnrolled: false, liteEnabled: true },
+  { id: 'STF-103', empCode: 'STF-2020-03', name: 'Tariq Mehmood', fatherName: 'Ghulam Rasool', cnic: '35201-7718291-5', passportNo: '', nationality: 'Pakistani', gender: 'Male', dob: '1981-02-17', bloodGroup: 'A+', roleTitle: 'Gate Security Supervisor', department: 'Campus Security', phone: '+92 333 7718291', emergencyContact: '+92 333 7718200', address: 'Faisal Town, Block D, Lahore', shift: 'Shift A (06:30 AM - 02:30 PM)', status: 'ACTIVE', attendanceStatus: 'Present', faceEnrolled: false, liteEnabled: true },
+  { id: 'STF-104', empCode: 'STF-2023-04', name: 'Nadia Parveen', fatherName: 'Bashir Ahmed', cnic: '35202-8890123-2', passportNo: '', nationality: 'Pakistani', gender: 'Female', dob: '1993-10-08', bloodGroup: 'O-', roleTitle: 'Science Lab Assistant', department: 'Physics & Chemistry Lab', phone: '+92 312 8890123', emergencyContact: '+92 312 8890100', address: 'Samanabad, Main Blvd, Lahore', shift: 'Morning (08:00 AM - 02:30 PM)', status: 'ACTIVE', attendanceStatus: 'Absent', faceEnrolled: false, liteEnabled: true },
+  { id: 'STF-105', empCode: 'STF-2021-05', name: 'Rashid Ali', fatherName: 'Liaqat Ali', cnic: '35202-6612390-7', passportNo: '', nationality: 'Pakistani', gender: 'Male', dob: '1985-12-01', bloodGroup: 'AB+', roleTitle: 'Senior Library Assistant', department: 'Central Library', phone: '+92 302 6612390', emergencyContact: '+92 302 6612300', address: 'Wapda Town, Block E, Lahore', shift: 'Morning (07:45 AM - 03:00 PM)', status: 'ACTIVE', attendanceStatus: 'Absent', faceEnrolled: false, liteEnabled: true },
+  { id: 'STF-106', empCode: 'STF-2022-06', name: 'Sajid Hussain', fatherName: 'Khadim Hussain', cnic: '35201-1199882-9', passportNo: '', nationality: 'Pakistani', gender: 'Male', dob: '1988-05-29', bloodGroup: 'B+', roleTitle: 'Transport & Gate Attendant', department: 'Fleet & Gate Operations', phone: '+92 345 1199882', emergencyContact: '+92 345 1199800', address: 'Green Town, Sector D-II, Lahore', shift: 'Shift A (06:30 AM - 02:30 PM)', status: 'ACTIVE', attendanceStatus: 'Absent', faceEnrolled: false, liteEnabled: true }
 ];
 
 export const SCHOOL_PRINCIPALS = [
-  { id: 'PRI-101', empCode: 'DIR-001', name: 'Prof. Dr. Tahir Malik', roleTitle: 'Principal & Academic Director', department: 'Executive Directorate', phone: '+92 300 9876543', email: 'principal@campus.edu', shift: 'Full Day (07:30 AM - 04:00 PM)', status: 'ACTIVE', attendanceStatus: 'Absent', faceEnrolled: false, liteEnabled: true },
-  { id: 'PRI-102', empCode: 'DIR-002', name: 'Prof. Ayesha Siddiqua', roleTitle: 'Vice Principal & Academics Head', department: 'Academic Administration', phone: '+92 321 9876501', email: 'vice.principal@campus.edu', shift: 'Full Day (07:30 AM - 03:30 PM)', status: 'ACTIVE', attendanceStatus: 'Absent', faceEnrolled: false, liteEnabled: true }
+  { id: 'PRI-101', empCode: 'DIR-001', name: 'Prof. Dr. Tahir Malik', fatherName: 'Malik Sher Muhammad', cnic: '61101-9876543-1', passportNo: 'PK-DIR-44102', nationality: 'Pakistani', gender: 'Male', dob: '1974-09-14', bloodGroup: 'O+', roleTitle: 'Principal & Academic Director', department: 'Executive Directorate', phone: '+92 300 9876543', emergencyContact: '+92 300 9876500', email: 'principal@campus.edu', address: 'Executive Residence, Sector F-7/2, Islamabad', shift: 'Full Day (07:30 AM - 04:00 PM)', status: 'ACTIVE', attendanceStatus: 'Absent', faceEnrolled: false, liteEnabled: true },
+  { id: 'PRI-102', empCode: 'DIR-002', name: 'Prof. Ayesha Siddiqua', fatherName: 'Brig. (R) Manzoor Ahmed', cnic: '61101-9876501-2', passportNo: 'PK-DIR-55198', nationality: 'Pakistani', gender: 'Female', dob: '1979-03-27', bloodGroup: 'A+', roleTitle: 'Vice Principal & Academics Head', department: 'Academic Administration', phone: '+92 321 9876501', emergencyContact: '+92 321 9876599', email: 'vice.principal@campus.edu', address: 'House 19, Street 12, Sector F-8/3, Islamabad', shift: 'Full Day (07:30 AM - 03:30 PM)', status: 'ACTIVE', attendanceStatus: 'Absent', faceEnrolled: false, liteEnabled: true }
 ];
 
 export function getDefaultAttendancePolicy() {
@@ -50,6 +50,7 @@ export function getDefaultAttendancePolicy() {
     requireCameraForAllAttendance: true,
     confidenceThreshold: 76,
     liteConfidenceThreshold: 66,
+    scheduledStartTime: '08:00',
     lateCutoffTime: '08:15',
     twoPunchEnabled: true,
     checkOutEnableTime: '13:30',
@@ -209,7 +210,9 @@ function ensureColumnMigrations(sqliteDb) {
     ['medical_conditions', 'TEXT'],
     ['fee_amount', 'REAL DEFAULT 18000'],
     ['due_bakaya', 'REAL DEFAULT 0'],
-    ['attendance_rate', "TEXT DEFAULT '96%'"]
+    ['attendance_rate', "TEXT DEFAULT '96%'"],
+    ['passport_no', 'TEXT'],
+    ['nationality', "TEXT DEFAULT 'Pakistani'"]
   ];
   for (const [c, d] of studentCols) safeAddCol('local_school_students', c, d);
 
@@ -242,26 +245,53 @@ function ensureColumnMigrations(sqliteDb) {
   for (const [c, d] of reconciliationCols) safeAddCol('local_school_reconciliation', c, d);
 
   safeAddCol('local_school_attendance', 'tenant_id', "TEXT DEFAULT 'tenant-root-platform'");
+  safeAddCol('local_school_attendance', 'check_in_time', 'TEXT');
+  safeAddCol('local_school_attendance', 'scheduled_start_time', "TEXT DEFAULT '08:00'");
+  safeAddCol('local_school_attendance', 'late_minutes', 'INTEGER DEFAULT 0');
+  safeAddCol('local_school_attendance', 'late_by_label', 'TEXT');
+  safeAddCol('local_school_attendance', 'punch_type', "TEXT DEFAULT 'IN'");
   safeAddCol('local_school_attendance', 'gate_name', "TEXT DEFAULT 'Main Turnstile 01'");
   safeAddCol('local_school_attendance', 'member_category', "TEXT DEFAULT 'student'");
   safeAddCol('local_school_attendance', 'confidence_score', 'REAL DEFAULT 0');
   safeAddCol('local_school_attendance', 'verified_by', "TEXT DEFAULT 'Camera Face Verification'");
   safeAddCol('local_school_attendance', 'marked_by_role', "TEXT DEFAULT 'owner'");
+  safeAddCol('local_school_attendance', 'remarks', 'TEXT');
   safeAddCol('local_school_face_profiles', 'is_synced', 'INTEGER DEFAULT 0');
 
   const teacherCols = [
     ['tenant_id', "TEXT DEFAULT 'tenant-root-platform'"],
+    ['father_name', 'TEXT'],
     ['subject', 'TEXT'],
     ['qualification', 'TEXT'],
     ['classes', 'TEXT'],
     ['incharge_class', 'TEXT'],
     ['gender', "TEXT DEFAULT 'Male'"],
+    ['dob', 'TEXT'],
+    ['blood_group', "TEXT DEFAULT 'B+'"],
     ['cnic', 'TEXT'],
+    ['passport_no', 'TEXT'],
+    ['nationality', "TEXT DEFAULT 'Pakistani'"],
+    ['emergency_contact', 'TEXT'],
+    ['address', 'TEXT'],
     ['basic_salary', 'REAL DEFAULT 0'],
     ['salary_status', "TEXT DEFAULT 'Pending'"],
     ['last_salary_month', 'TEXT']
   ];
   for (const [c, d] of teacherCols) safeAddCol('local_school_teachers', c, d);
+
+  const staffExtraCols = [
+    ['father_name', 'TEXT'],
+    ['cnic', 'TEXT'],
+    ['passport_no', 'TEXT'],
+    ['nationality', "TEXT DEFAULT 'Pakistani'"],
+    ['gender', "TEXT DEFAULT 'Male'"],
+    ['dob', 'TEXT'],
+    ['blood_group', "TEXT DEFAULT 'B+'"],
+    ['emergency_contact', 'TEXT'],
+    ['address', 'TEXT']
+  ];
+  for (const [c, d] of staffExtraCols) safeAddCol('local_school_staff', c, d);
+  for (const [c, d] of staffExtraCols) safeAddCol('local_school_principals', c, d);
 
   safeAddCol('local_school_exams', 'tenant_id', "TEXT DEFAULT 'tenant-root-platform'");
   safeAddCol('local_school_results', 'tenant_id', "TEXT DEFAULT 'tenant-root-platform'");
@@ -416,6 +446,8 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     gender: r.gender || 'Male',
     dob: r.dob || '',
     studentBForm: dec(r.tenant_id || tid, r.student_bform),
+    passportNo: dec(r.tenant_id || tid, r.passport_no),
+    nationality: r.nationality || 'Pakistani',
     bloodGroup: r.blood_group || 'B+',
     guardianName: dec(r.tenant_id || tid, r.guardian_name),
     guardianRelation: r.guardian_relation || 'Father',
@@ -454,7 +486,7 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       const rawList = getCollectionDocs ? await getCollectionDocs('school_students', defaultStudentsSeed) : defaultStudentsSeed;
       list = rawList
         .filter((r) => !r.tenant_id || r.tenant_id === tid)
-        .map((r) => vault.decryptFields(r.tenant_id || tid, r, ['fullName', 'guardianName', 'phone']));
+        .map((r) => vault.decryptFields(r.tenant_id || tid, r, ['fullName', 'guardianName', 'phone', 'studentBForm', 'guardianCnic', 'guardianEmail', 'emergencyContact', 'address', 'passportNo']));
     }
     res.json({ ok: true, tenantId: tid, students: list });
   });
@@ -1251,6 +1283,7 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     tenantId: r.tenant_id || tid,
     empCode: r.emp_code,
     name: dec(r.tenant_id || tid, r.name),
+    fatherName: dec(r.tenant_id || tid, r.father_name),
     designation: r.designation,
     department: r.department,
     subject: r.subject || r.department,
@@ -1258,9 +1291,15 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     classes: r.classes || 'All Assigned',
     inchargeClass: r.incharge_class || '',
     gender: r.gender || 'Male',
+    dob: r.dob || '',
+    bloodGroup: r.blood_group || 'B+',
     cnic: dec(r.tenant_id || tid, r.cnic),
+    passportNo: dec(r.tenant_id || tid, r.passport_no),
+    nationality: r.nationality || 'Pakistani',
     phone: dec(r.tenant_id || tid, r.phone),
+    emergencyContact: dec(r.tenant_id || tid, r.emergency_contact),
     email: dec(r.tenant_id || tid, r.email),
+    address: dec(r.tenant_id || tid, r.address),
     salary: dec(r.tenant_id || tid, r.salary),
     basicSalary: Number(r.basic_salary || 0),
     salaryStatus: r.salary_status || 'Pending',
@@ -1303,6 +1342,7 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       tenantId: tid,
       empCode: String(t.empCode || `EMP-${new Date().getFullYear()}-${Date.now().toString().slice(-4)}`),
       name,
+      fatherName: String(t.fatherName || ''),
       designation: String(t.designation || 'Lecturer'),
       department: String(t.department || subject),
       subject,
@@ -1310,9 +1350,15 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       classes: String(t.classes || 'Assigned Classes'),
       inchargeClass: String(t.inchargeClass || ''),
       gender: String(t.gender || 'Male'),
+      dob: String(t.dob || ''),
+      bloodGroup: String(t.bloodGroup || 'B+'),
       cnic: String(t.cnic || ''),
+      passportNo: String(t.passportNo || ''),
+      nationality: String(t.nationality || 'Pakistani'),
       phone: String(t.phone || '+92 300 0000000'),
+      emergencyContact: String(t.emergencyContact || ''),
       email: String(t.email || ''),
+      address: String(t.address || ''),
       salary: typeof t.salary === 'string' && t.salary ? t.salary : `PKR ${basicSalary.toLocaleString()}`,
       basicSalary,
       salaryStatus: String(t.salaryStatus || 'Pending'),
@@ -1323,15 +1369,17 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     if (sqliteDb) {
       sqliteDb.prepare(`
         INSERT INTO local_school_teachers (
-          id, tenant_id, emp_code, name, designation, department, subject, qualification, classes,
-          incharge_class, gender, cnic, phone, email, salary, basic_salary, salary_status,
-          last_salary_month, status, is_synced, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
+          id, tenant_id, emp_code, name, father_name, designation, department, subject, qualification, classes,
+          incharge_class, gender, dob, blood_group, cnic, passport_no, nationality, phone, emergency_contact, email, address,
+          salary, basic_salary, salary_status, last_salary_month, status, is_synced, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
       `).run(
-        teacher.id, tid, teacher.empCode, enc(tid, teacher.name), teacher.designation, teacher.department,
-        teacher.subject, teacher.qualification, teacher.classes, teacher.inchargeClass, teacher.gender,
-        enc(tid, teacher.cnic), enc(tid, teacher.phone), enc(tid, teacher.email), enc(tid, teacher.salary),
-        teacher.basicSalary, teacher.salaryStatus, teacher.lastSalaryMonth, teacher.status, new Date().toISOString()
+        teacher.id, tid, teacher.empCode, enc(tid, teacher.name), enc(tid, teacher.fatherName),
+        teacher.designation, teacher.department, teacher.subject, teacher.qualification, teacher.classes,
+        teacher.inchargeClass, teacher.gender, teacher.dob, teacher.bloodGroup,
+        enc(tid, teacher.cnic), enc(tid, teacher.passportNo), teacher.nationality,
+        enc(tid, teacher.phone), enc(tid, teacher.emergencyContact), enc(tid, teacher.email), enc(tid, teacher.address),
+        enc(tid, teacher.salary), teacher.basicSalary, teacher.salaryStatus, teacher.lastSalaryMonth, teacher.status, new Date().toISOString()
       );
     }
 
@@ -1455,26 +1503,37 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     return defaults;
   };
 
+  const mapStaffRow = (r, tid) => ({
+    id: r.id,
+    tenantId: r.tenant_id || tid,
+    empCode: r.emp_code,
+    name: dec(r.tenant_id || tid, r.name),
+    fatherName: dec(r.tenant_id || tid, r.father_name),
+    cnic: dec(r.tenant_id || tid, r.cnic),
+    passportNo: dec(r.tenant_id || tid, r.passport_no),
+    nationality: r.nationality || 'Pakistani',
+    gender: r.gender || 'Male',
+    dob: r.dob || '',
+    bloodGroup: r.blood_group || 'B+',
+    roleTitle: r.role_title,
+    department: r.department || 'Administration',
+    phone: dec(r.tenant_id || tid, r.phone),
+    emergencyContact: dec(r.tenant_id || tid, r.emergency_contact),
+    address: dec(r.tenant_id || tid, r.address),
+    shift: r.shift || 'Morning (07:30 AM - 03:00 PM)',
+    status: r.status || 'ACTIVE',
+    attendanceStatus: r.attendance_status || 'Absent',
+    faceEnrolled: r.face_enrolled === 1,
+    liteEnabled: r.lite_enabled !== 0
+  });
+
   router.get('/staff', (req, res) => {
     const tid = resolveTenantId(req);
     let staff = [];
     if (sqliteDb) {
       try {
         const rows = sqliteDb.prepare('SELECT * FROM local_school_staff WHERE tenant_id = ? ORDER BY created_at DESC').all(tid);
-        staff = rows.map((r) => ({
-          id: r.id,
-          tenantId: r.tenant_id || tid,
-          empCode: r.emp_code,
-          name: dec(r.tenant_id || tid, r.name),
-          roleTitle: r.role_title,
-          department: r.department || 'Administration',
-          phone: dec(r.tenant_id || tid, r.phone),
-          shift: r.shift || 'Morning (07:30 AM - 03:00 PM)',
-          status: r.status || 'ACTIVE',
-          attendanceStatus: r.attendance_status || 'Absent',
-          faceEnrolled: r.face_enrolled === 1,
-          liteEnabled: r.lite_enabled !== 0
-        }));
+        staff = rows.map((r) => mapStaffRow(r, tid));
       } catch {}
     }
     if (staff.length === 0 && tid === ROOT_TENANT_ID) {
@@ -1496,9 +1555,18 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       tenantId: tid,
       empCode: String(b.empCode || `STF-${new Date().getFullYear()}-${Date.now().toString().slice(-4)}`).trim(),
       name,
+      fatherName: String(b.fatherName || '').trim(),
+      cnic: String(b.cnic || '').trim(),
+      passportNo: String(b.passportNo || '').trim(),
+      nationality: String(b.nationality || 'Pakistani').trim(),
+      gender: String(b.gender || 'Male').trim(),
+      dob: String(b.dob || '').trim(),
+      bloodGroup: String(b.bloodGroup || 'B+').trim(),
       roleTitle,
       department: String(b.department || 'Administration').trim(),
       phone: String(b.phone || '+92 300 0000000').trim(),
+      emergencyContact: String(b.emergencyContact || '').trim(),
+      address: String(b.address || '').trim(),
       shift: String(b.shift || 'Morning (07:30 AM - 03:00 PM)').trim(),
       status: String(b.status || 'ACTIVE').toUpperCase(),
       attendanceStatus: String(b.attendanceStatus || 'Absent'),
@@ -1508,12 +1576,15 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     if (sqliteDb) {
       sqliteDb.prepare(`
         INSERT OR REPLACE INTO local_school_staff
-        (id, tenant_id, emp_code, name, role_title, department, phone, shift, status, attendance_status, face_enrolled, lite_enabled, is_synced, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
+        (id, tenant_id, emp_code, name, father_name, cnic, passport_no, nationality, gender, dob, blood_group, role_title, department, phone, emergency_contact, address, shift, status, attendance_status, face_enrolled, lite_enabled, is_synced, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
       `).run(
-        staffItem.id, tid, staffItem.empCode, enc(tid, staffItem.name), staffItem.roleTitle,
-        staffItem.department, enc(tid, staffItem.phone), staffItem.shift, staffItem.status,
-        staffItem.attendanceStatus, staffItem.faceEnrolled ? 1 : 0, staffItem.liteEnabled ? 1 : 0, new Date().toISOString()
+        staffItem.id, tid, staffItem.empCode, enc(tid, staffItem.name), enc(tid, staffItem.fatherName),
+        enc(tid, staffItem.cnic), enc(tid, staffItem.passportNo), staffItem.nationality, staffItem.gender,
+        staffItem.dob, staffItem.bloodGroup, staffItem.roleTitle, staffItem.department,
+        enc(tid, staffItem.phone), enc(tid, staffItem.emergencyContact), enc(tid, staffItem.address),
+        staffItem.shift, staffItem.status, staffItem.attendanceStatus,
+        staffItem.faceEnrolled ? 1 : 0, staffItem.liteEnabled ? 1 : 0, new Date().toISOString()
       );
     }
     if (db) {
@@ -1532,9 +1603,18 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     sqliteDb.prepare(`
       UPDATE local_school_staff SET
         name = COALESCE(?, name),
+        father_name = COALESCE(?, father_name),
+        cnic = COALESCE(?, cnic),
+        passport_no = COALESCE(?, passport_no),
+        nationality = COALESCE(?, nationality),
+        gender = COALESCE(?, gender),
+        dob = COALESCE(?, dob),
+        blood_group = COALESCE(?, blood_group),
         role_title = COALESCE(?, role_title),
         department = COALESCE(?, department),
         phone = COALESCE(?, phone),
+        emergency_contact = COALESCE(?, emergency_contact),
+        address = COALESCE(?, address),
         shift = COALESCE(?, shift),
         status = COALESCE(?, status),
         attendance_status = COALESCE(?, attendance_status),
@@ -1543,9 +1623,18 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       WHERE id = ? AND tenant_id = ?
     `).run(
       b.name ? enc(tid, b.name) : null,
+      b.fatherName !== undefined ? enc(tid, b.fatherName) : null,
+      b.cnic !== undefined ? enc(tid, b.cnic) : null,
+      b.passportNo !== undefined ? enc(tid, b.passportNo) : null,
+      b.nationality ?? null,
+      b.gender ?? null,
+      b.dob ?? null,
+      b.bloodGroup ?? null,
       b.roleTitle ?? null,
       b.department ?? null,
       b.phone ? enc(tid, b.phone) : null,
+      b.emergencyContact !== undefined ? enc(tid, b.emergencyContact) : null,
+      b.address !== undefined ? enc(tid, b.address) : null,
       b.shift ?? null,
       b.status ?? null,
       b.attendanceStatus ?? null,
@@ -1554,23 +1643,7 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       id, tid
     );
     const updated = sqliteDb.prepare('SELECT * FROM local_school_staff WHERE id = ? AND tenant_id = ?').get(id, tid);
-    res.json({
-      ok: true,
-      staff: {
-        id: updated.id,
-        tenantId: tid,
-        empCode: updated.emp_code,
-        name: dec(tid, updated.name),
-        roleTitle: updated.role_title,
-        department: updated.department,
-        phone: dec(tid, updated.phone),
-        shift: updated.shift,
-        status: updated.status,
-        attendanceStatus: updated.attendance_status,
-        faceEnrolled: updated.face_enrolled === 1,
-        liteEnabled: updated.lite_enabled !== 0
-      }
-    });
+    res.json({ ok: true, staff: mapStaffRow(updated, tid) });
   });
 
   router.delete('/staff/:id', rejectRestrictedRole(['student', 'parent', 'teacher', 'accountant']), (req, res) => {
@@ -1584,27 +1657,38 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     res.json({ ok: true, id });
   });
 
+  const mapPrincipalRow = (r, tid) => ({
+    id: r.id,
+    tenantId: r.tenant_id || tid,
+    empCode: r.emp_code,
+    name: dec(r.tenant_id || tid, r.name),
+    fatherName: dec(r.tenant_id || tid, r.father_name),
+    cnic: dec(r.tenant_id || tid, r.cnic),
+    passportNo: dec(r.tenant_id || tid, r.passport_no),
+    nationality: r.nationality || 'Pakistani',
+    gender: r.gender || 'Male',
+    dob: r.dob || '',
+    bloodGroup: r.blood_group || 'O+',
+    roleTitle: r.role_title,
+    department: r.department || 'Executive Directorate',
+    phone: dec(r.tenant_id || tid, r.phone),
+    emergencyContact: dec(r.tenant_id || tid, r.emergency_contact),
+    email: dec(r.tenant_id || tid, r.email),
+    address: dec(r.tenant_id || tid, r.address),
+    shift: r.shift || 'Full Day (07:30 AM - 04:00 PM)',
+    status: r.status || 'ACTIVE',
+    attendanceStatus: r.attendance_status || 'Absent',
+    faceEnrolled: r.face_enrolled === 1,
+    liteEnabled: r.lite_enabled !== 0
+  });
+
   router.get('/principals', (req, res) => {
     const tid = resolveTenantId(req);
     let principals = [];
     if (sqliteDb) {
       try {
         const rows = sqliteDb.prepare('SELECT * FROM local_school_principals WHERE tenant_id = ? ORDER BY created_at DESC').all(tid);
-        principals = rows.map((r) => ({
-          id: r.id,
-          tenantId: r.tenant_id || tid,
-          empCode: r.emp_code,
-          name: dec(r.tenant_id || tid, r.name),
-          roleTitle: r.role_title,
-          department: r.department || 'Executive Directorate',
-          phone: dec(r.tenant_id || tid, r.phone),
-          email: dec(r.tenant_id || tid, r.email),
-          shift: r.shift || 'Full Day (07:30 AM - 04:00 PM)',
-          status: r.status || 'ACTIVE',
-          attendanceStatus: r.attendance_status || 'Absent',
-          faceEnrolled: r.face_enrolled === 1,
-          liteEnabled: r.lite_enabled !== 0
-        }));
+        principals = rows.map((r) => mapPrincipalRow(r, tid));
       } catch {}
     }
     if (principals.length === 0 && tid === ROOT_TENANT_ID) {
@@ -1626,10 +1710,19 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       tenantId: tid,
       empCode: String(b.empCode || `DIR-${new Date().getFullYear()}-${Date.now().toString().slice(-3)}`).trim(),
       name,
+      fatherName: String(b.fatherName || '').trim(),
+      cnic: String(b.cnic || '').trim(),
+      passportNo: String(b.passportNo || '').trim(),
+      nationality: String(b.nationality || 'Pakistani').trim(),
+      gender: String(b.gender || 'Male').trim(),
+      dob: String(b.dob || '').trim(),
+      bloodGroup: String(b.bloodGroup || 'O+').trim(),
       roleTitle,
       department: String(b.department || 'Executive Directorate').trim(),
       phone: String(b.phone || '+92 300 0000000').trim(),
+      emergencyContact: String(b.emergencyContact || '').trim(),
       email: String(b.email || 'principal@campus.edu').trim(),
+      address: String(b.address || '').trim(),
       shift: String(b.shift || 'Full Day (07:30 AM - 04:00 PM)').trim(),
       status: String(b.status || 'ACTIVE').toUpperCase(),
       attendanceStatus: String(b.attendanceStatus || 'Absent'),
@@ -1639,12 +1732,14 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     if (sqliteDb) {
       sqliteDb.prepare(`
         INSERT OR REPLACE INTO local_school_principals
-        (id, tenant_id, emp_code, name, role_title, department, phone, email, shift, status, attendance_status, face_enrolled, lite_enabled, is_synced, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
+        (id, tenant_id, emp_code, name, father_name, cnic, passport_no, nationality, gender, dob, blood_group, role_title, department, phone, emergency_contact, email, address, shift, status, attendance_status, face_enrolled, lite_enabled, is_synced, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
       `).run(
-        principalItem.id, tid, principalItem.empCode, enc(tid, principalItem.name), principalItem.roleTitle,
-        principalItem.department, enc(tid, principalItem.phone), enc(tid, principalItem.email),
-        principalItem.shift, principalItem.status, principalItem.attendanceStatus,
+        principalItem.id, tid, principalItem.empCode, enc(tid, principalItem.name), enc(tid, principalItem.fatherName),
+        enc(tid, principalItem.cnic), enc(tid, principalItem.passportNo), principalItem.nationality, principalItem.gender,
+        principalItem.dob, principalItem.bloodGroup, principalItem.roleTitle, principalItem.department,
+        enc(tid, principalItem.phone), enc(tid, principalItem.emergencyContact), enc(tid, principalItem.email),
+        enc(tid, principalItem.address), principalItem.shift, principalItem.status, principalItem.attendanceStatus,
         principalItem.faceEnrolled ? 1 : 0, principalItem.liteEnabled ? 1 : 0, new Date().toISOString()
       );
       recordAudit(tid, {
@@ -1664,10 +1759,19 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
         tenant_id: tid,
         empCode: principalItem.empCode,
         name: enc(tid, principalItem.name),
+        fatherName: enc(tid, principalItem.fatherName),
+        cnic: enc(tid, principalItem.cnic),
+        passportNo: enc(tid, principalItem.passportNo),
+        nationality: principalItem.nationality,
+        gender: principalItem.gender,
+        dob: principalItem.dob,
+        bloodGroup: principalItem.bloodGroup,
         roleTitle: principalItem.roleTitle,
         department: principalItem.department,
         phone: enc(tid, principalItem.phone),
+        emergencyContact: enc(tid, principalItem.emergencyContact),
         email: enc(tid, principalItem.email),
+        address: enc(tid, principalItem.address),
         shift: principalItem.shift,
         status: principalItem.status,
         attendanceStatus: principalItem.attendanceStatus,
@@ -1694,10 +1798,19 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     sqliteDb.prepare(`
       UPDATE local_school_principals SET
         name = COALESCE(?, name),
+        father_name = COALESCE(?, father_name),
+        cnic = COALESCE(?, cnic),
+        passport_no = COALESCE(?, passport_no),
+        nationality = COALESCE(?, nationality),
+        gender = COALESCE(?, gender),
+        dob = COALESCE(?, dob),
+        blood_group = COALESCE(?, blood_group),
         role_title = COALESCE(?, role_title),
         department = COALESCE(?, department),
         phone = COALESCE(?, phone),
+        emergency_contact = COALESCE(?, emergency_contact),
         email = COALESCE(?, email),
+        address = COALESCE(?, address),
         shift = COALESCE(?, shift),
         status = COALESCE(?, status),
         attendance_status = COALESCE(?, attendance_status),
@@ -1707,10 +1820,19 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       WHERE id = ? AND tenant_id = ?
     `).run(
       b.name ? enc(tid, b.name) : null,
+      b.fatherName !== undefined ? enc(tid, b.fatherName) : null,
+      b.cnic !== undefined ? enc(tid, b.cnic) : null,
+      b.passportNo !== undefined ? enc(tid, b.passportNo) : null,
+      b.nationality ?? null,
+      b.gender ?? null,
+      b.dob ?? null,
+      b.bloodGroup ?? null,
       b.roleTitle ?? null,
       b.department ?? null,
       b.phone ? enc(tid, b.phone) : null,
+      b.emergencyContact !== undefined ? enc(tid, b.emergencyContact) : null,
       b.email ? enc(tid, b.email) : null,
+      b.address !== undefined ? enc(tid, b.address) : null,
       b.shift ?? null,
       b.status ?? null,
       b.attendanceStatus ?? null,
@@ -1719,24 +1841,7 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       id, tid
     );
     const updated = sqliteDb.prepare('SELECT * FROM local_school_principals WHERE id = ? AND tenant_id = ?').get(id, tid);
-    res.json({
-      ok: true,
-      principal: {
-        id: updated.id,
-        tenantId: tid,
-        empCode: updated.emp_code,
-        name: dec(tid, updated.name),
-        roleTitle: updated.role_title,
-        department: updated.department,
-        phone: dec(tid, updated.phone),
-        email: dec(tid, updated.email),
-        shift: updated.shift,
-        status: updated.status,
-        attendanceStatus: updated.attendance_status,
-        faceEnrolled: updated.face_enrolled === 1,
-        liteEnabled: updated.lite_enabled !== 0
-      }
-    });
+    res.json({ ok: true, principal: mapPrincipalRow(updated, tid) });
   });
 
   router.delete('/principals/:id', rejectRestrictedRole(['student', 'parent', 'teacher', 'accountant', 'principal']), (req, res) => {
@@ -1950,9 +2055,50 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     res.json({ ok: true, id });
   });
 
+  const parseClockToMinutes = (raw) => {
+    const m = String(raw || '').trim().match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*([AP]M)?$/i);
+    if (!m) return null;
+    let h = Number(m[1]);
+    const min = Number(m[2]);
+    const ap = (m[3] || '').toUpperCase();
+    if (ap === 'PM' && h < 12) h += 12;
+    if (ap === 'AM' && h === 12) h = 0;
+    return h * 60 + min;
+  };
+
+  const formatDelayDuration = (mins) => {
+    const abs = Math.abs(Math.round(mins));
+    const hrs = Math.floor(abs / 60);
+    const rem = abs % 60;
+    if (hrs <= 0) return `${rem}m`;
+    if (rem === 0) return `${hrs}h`;
+    return `${hrs}h ${rem}m`;
+  };
+
+  const computeLateTimingMeta = (checkInStr, scheduledStartStr, lateCutoffStr, statusStr) => {
+    const startMins = parseClockToMinutes(scheduledStartStr || '08:00') ?? 480;
+    const cutoffMins = parseClockToMinutes(lateCutoffStr || '08:15') ?? 495;
+    const inMins = parseClockToMinutes(checkInStr);
+    if (inMins === null) {
+      return { scheduledStartTime: scheduledStartStr || '08:00', lateMinutes: 0, lateByLabel: '' };
+    }
+    const diff = inMins - startMins;
+    if (diff < 0) {
+      return { scheduledStartTime: scheduledStartStr || '08:00', lateMinutes: diff, lateByLabel: `Early ${formatDelayDuration(diff)}` };
+    }
+    if (diff === 0) {
+      return { scheduledStartTime: scheduledStartStr || '08:00', lateMinutes: 0, lateByLabel: 'On Time' };
+    }
+    if (inMins <= cutoffMins && String(statusStr || '').toUpperCase() !== 'LATE') {
+      return { scheduledStartTime: scheduledStartStr || '08:00', lateMinutes: diff, lateByLabel: `+${formatDelayDuration(diff)} (Grace)` };
+    }
+    return { scheduledStartTime: scheduledStartStr || '08:00', lateMinutes: diff, lateByLabel: `+${formatDelayDuration(diff)} late` };
+  };
+
   router.get('/attendance', (req, res) => {
     const tid = resolveTenantId(req);
     const categoryFilter = String(req.query?.category || '').trim().toLowerCase();
+    const policy = loadTenantAttendancePolicy(tid);
     let list = [];
     if (sqliteDb) {
       try {
@@ -1961,9 +2107,15 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
           : sqliteDb.prepare('SELECT * FROM local_school_attendance WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 300').all(tid);
         list = rows.map((r) => {
           const tsRaw = r.created_at ? new Date(r.created_at) : null;
-          const timeLabel = tsRaw && !Number.isNaN(tsRaw.getTime())
+          const derivedTime = tsRaw && !Number.isNaN(tsRaw.getTime())
             ? tsRaw.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
             : (r.date || '');
+          const punchType = r.punch_type || (String(r.gate_name || '').includes('OUT') ? 'OUT' : 'IN');
+          const checkInTime = r.check_in_time || (punchType === 'IN' ? derivedTime : '');
+          const scheduledStartTime = r.scheduled_start_time || policy.scheduledStartTime || '08:00';
+          const fallbackLate = punchType === 'IN' && checkInTime
+            ? computeLateTimingMeta(checkInTime, scheduledStartTime, policy.lateCutoffTime || '08:15', r.status)
+            : { lateMinutes: 0, lateByLabel: '' };
           return {
             id: r.id,
             tenantId: r.tenant_id || tid,
@@ -1974,13 +2126,18 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
             memberCategory: r.member_category || 'student',
             status: r.status,
             date: r.date,
-            timestamp: timeLabel,
+            timestamp: r.check_in_time || derivedTime,
+            checkInTime,
+            scheduledStartTime,
+            lateMinutes: r.late_minutes !== null && r.late_minutes !== undefined && r.late_by_label ? Number(r.late_minutes) : fallbackLate.lateMinutes,
+            lateByLabel: r.late_by_label || fallbackLate.lateByLabel,
             gateName: r.gate_name || 'Main Turnstile 01',
-            punchType: String(r.gate_name || '').includes('OUT') ? 'OUT' : 'IN',
+            punchType,
             verificationMode: r.verification_mode,
             confidenceScore: Number(r.confidence_score ?? 0),
             verifiedBy: r.verified_by || 'Camera Face Verification',
             markedByRole: r.marked_by_role || 'owner',
+            remarks: r.remarks || '',
             isSynced: r.is_synced === 1,
             createdAt: r.created_at
           };
@@ -2021,13 +2178,28 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     const confidenceScore = Number(body.confidenceScore ?? 0);
     const verifiedBy = String(body.verifiedBy || 'Camera Face Verification');
     const markedByRole = String(body.markedByRole || role || 'kiosk');
+    const remarks = String(body.remarks || '').trim();
+
+    const policy = loadTenantAttendancePolicy(tid);
+    const scheduledStartTime = String(body.scheduledStartTime || policy.scheduledStartTime || '08:00');
+    const nowTimeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const checkInTime = String(body.checkInTime || body.timestamp || nowTimeStr);
+    const computedLate = punchType === 'IN'
+      ? computeLateTimingMeta(checkInTime, scheduledStartTime, policy.lateCutoffTime || '08:15', status)
+      : { scheduledStartTime, lateMinutes: 0, lateByLabel: '' };
+    const lateMinutes = body.lateMinutes !== undefined ? Number(body.lateMinutes) : computedLate.lateMinutes;
+    const lateByLabel = body.lateByLabel !== undefined ? String(body.lateByLabel) : computedLate.lateByLabel;
 
     if (sqliteDb) {
       sqliteDb.prepare(`
         INSERT OR REPLACE INTO local_school_attendance
-        (id, tenant_id, student_id, roll_no, student_name, grade, member_category, status, date, gate_name, verification_mode, confidence_score, verified_by, marked_by_role, is_synced)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
-      `).run(recId, tid, studentId, rollNo, enc(tid, studentName), grade, memberCategory, status, date, gateName, mode, confidenceScore, verifiedBy, markedByRole);
+        (id, tenant_id, student_id, roll_no, student_name, grade, member_category, status, date, check_in_time, scheduled_start_time, late_minutes, late_by_label, punch_type, gate_name, verification_mode, confidence_score, verified_by, marked_by_role, remarks, is_synced)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+      `).run(
+        recId, tid, studentId, rollNo, enc(tid, studentName), grade, memberCategory, status, date,
+        checkInTime, scheduledStartTime, Number.isFinite(lateMinutes) ? lateMinutes : 0, lateByLabel,
+        punchType, gateName, mode, confidenceScore, verifiedBy, markedByRole, remarks
+      );
       if (memberCategory === 'principal') {
         try {
           const attLabel = status === 'LATE' ? 'Late' : status === 'ABSENT' ? 'Absent' : status === 'ON LEAVE' || status === 'ON_LEAVE' ? 'On Leave' : 'Present';
@@ -2051,11 +2223,17 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       memberCategory,
       status,
       date,
+      checkInTime,
+      scheduledStartTime,
+      lateMinutes: Number.isFinite(lateMinutes) ? lateMinutes : 0,
+      lateByLabel,
+      punchType,
       gateName,
       verificationMode: mode,
       confidenceScore,
       verifiedBy,
       markedByRole,
+      remarks,
       isSynced: false
     };
 

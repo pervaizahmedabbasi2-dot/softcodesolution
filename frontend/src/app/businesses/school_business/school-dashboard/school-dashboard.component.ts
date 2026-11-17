@@ -356,7 +356,15 @@ export interface TeacherRecord {
   weeklyPeriods?: number;
   role?: string;
   designation?: string;
+  department?: string;
+  empCode?: string;
+  fatherName?: string;
+  dob?: string;
+  bloodGroup?: string;
+  passportNo?: string;
+  nationality?: string;
   attendanceStatus?: 'Present' | 'Late' | 'Absent' | 'On Leave';
+  attendanceRate?: string;
 }
 
 export interface StudentFeeDefaulterRecord {
@@ -7031,12 +7039,17 @@ INSTRUCTIONS:
             gradeOrDept: row.grade || row.gradeOrDept || 'Campus',
             status: row.status || 'Present',
             punchType: row.punchType || (String(row.gateName || '').includes('OUT') ? 'OUT' : 'IN'),
+            scheduledStartTime: row.scheduledStartTime || this.ownerAttendancePolicy.scheduledStartTime || '08:00',
+            lateMinutes: row.lateMinutes !== undefined ? Number(row.lateMinutes) : undefined,
+            lateByLabel: row.lateByLabel || undefined,
+            gateName: row.gateName || undefined,
+            remarks: row.remarks || undefined,
             verificationMode: row.verificationMode || 'face_camera',
             confidenceScore: Number(row.confidenceScore ?? 92),
             verifiedBy: row.verifiedBy || 'Face Camera',
             markedByRole: row.markedByRole || 'owner',
             date: row.date || todayIso,
-            timestamp: row.timestamp || row.date || todayIso
+            timestamp: row.checkInTime || row.timestamp || row.date || todayIso
           });
           if (row.date === todayIso) {
             if (cat === 'student') {
@@ -8120,12 +8133,12 @@ INSTRUCTIONS:
 
   getInitialTeachers(): TeacherRecord[] {
     return [
-      { id: 'TCH-001', name: 'Prof. Tariq Mehmood', subject: 'Advanced Mathematics', qualification: 'Ph.D. Applied Mathematics', classes: 6, status: 'Active', rating: 4.95, email: 'tariq.math@campus.edu', phone: '+92 311 9988776', image: '', salaryStatus: 'Disbursed', monthlySalary: 185000, appointmentDate: '2021-08-15', tenureDuration: '5 Yrs 2 Mos', unpaidSalaryMonths: 0, remainingSalaryArrears: 0, cnic: '35202-1829102-1' },
-      { id: 'TCH-002', name: 'Dr. Sarah Jenkins', subject: 'English Literature & Rhetoric', qualification: 'M.Phil Oxford University', classes: 5, status: 'Active', rating: 4.88, email: 'sarah.eng@campus.edu', phone: '+92 300 7766554', image: '', salaryStatus: 'Disbursed', monthlySalary: 165000, appointmentDate: '2022-09-01', tenureDuration: '4 Yrs 1 Mo', unpaidSalaryMonths: 0, remainingSalaryArrears: 0, cnic: '35202-9988112-2' },
-      { id: 'TCH-003', name: 'Prof. Rehan Alvi', subject: 'Physics & Quantum Mechanics', qualification: 'M.S. Nuclear Physics', classes: 5, status: 'Active', rating: 4.92, email: 'rehan.phy@campus.edu', phone: '+92 321 4455667', image: '', salaryStatus: 'Pending Arrears', monthlySalary: 155000, appointmentDate: '2023-01-10', tenureDuration: '3 Yrs 9 Mos', unpaidSalaryMonths: 1, remainingSalaryArrears: 155000, cnic: '35202-4455667-3' },
-      { id: 'TCH-004', name: 'Ms. Hira Naeem', subject: 'Biochemistry & Genetics', qualification: 'M.Phil Molecular Biology', classes: 4, status: 'Active', rating: 4.79, email: 'hira.bio@campus.edu', phone: '+92 333 1122334', image: '', salaryStatus: 'Pending Arrears', monthlySalary: 140000, appointmentDate: '2024-03-01', tenureDuration: '2 Yrs 7 Mos', unpaidSalaryMonths: 2, remainingSalaryArrears: 280000, cnic: '35202-1122334-4' },
-      { id: 'TCH-005', name: 'Engr. Bilal Hashmi', subject: 'Computer Science & AI', qualification: 'M.S. Computer Science', classes: 6, status: 'Active', rating: 4.97, email: 'bilal.cs@campus.edu', phone: '+92 312 9900112', image: '', salaryStatus: 'Disbursed', monthlySalary: 175000, appointmentDate: '2020-10-01', tenureDuration: '6 Yrs 0 Mos', unpaidSalaryMonths: 0, remainingSalaryArrears: 0, cnic: '35202-9900112-5' },
-      { id: 'TCH-006', name: 'Prof. Asadullah Qazi', subject: 'Islamic History & Arabic', qualification: 'M.A. Islamic Studies Al-Azhar', classes: 0, status: 'Resigned', rating: 4.85, email: 'asad.qazi@campus.edu', phone: '+92 301 4433221', image: '', salaryStatus: 'Pending Arrears', monthlySalary: 120000, appointmentDate: '2022-01-15', resignationDate: '2026-06-30', tenureDuration: 'Served 4 Yrs 5 Mos', unpaidSalaryMonths: 1, remainingSalaryArrears: 120000, cnic: '35202-4433221-6' }
+      { id: 'TCH-001', empCode: 'EMP-2021-01', name: 'Prof. Tariq Mehmood', fatherName: 'Ch. Mehmood Ahmed', designation: 'Senior Faculty', department: 'Mathematics', subject: 'Advanced Mathematics', qualification: 'Ph.D. Applied Mathematics', classes: 6, status: 'Active', rating: 4.95, email: 'tariq.math@campus.edu', phone: '+92 311 9988776', emergencyContact: '+92 311 9988700', address: 'Sector F-8/2, Street 11, Islamabad', image: '', salaryStatus: 'Disbursed', monthlySalary: 185000, appointmentDate: '2021-08-15', tenureDuration: '5 Yrs 2 Mos', unpaidSalaryMonths: 0, remainingSalaryArrears: 0, cnic: '35202-1829102-1', passportNo: 'PK-9284112', nationality: 'Pakistani', gender: 'Male', dob: '1984-03-14', bloodGroup: 'B+' },
+      { id: 'TCH-002', empCode: 'EMP-2020-02', name: 'Dr. Sarah Jenkins', fatherName: 'Edward Jenkins', designation: 'Head of English', department: 'Humanities', subject: 'English Literature & Rhetoric', qualification: 'M.Phil Oxford University', classes: 5, status: 'Active', rating: 4.88, email: 'sarah.eng@campus.edu', phone: '+92 300 7766554', emergencyContact: '+92 300 7766500', address: 'Diplomatic Enclave, Sector G-5, Islamabad', image: '', salaryStatus: 'Disbursed', monthlySalary: 165000, appointmentDate: '2022-09-01', tenureDuration: '4 Yrs 1 Mo', unpaidSalaryMonths: 0, remainingSalaryArrears: 0, cnic: '35202-9988112-2', passportNo: 'UK-88392014', nationality: 'British / Dual', gender: 'Female', dob: '1987-07-22', bloodGroup: 'O+' },
+      { id: 'TCH-003', empCode: 'EMP-2022-03', name: 'Prof. Rehan Alvi', fatherName: 'Shaukat Ali Alvi', designation: 'Senior Lecturer', department: 'Physics', subject: 'Physics & Quantum Mechanics', qualification: 'M.S. Nuclear Physics', classes: 5, status: 'Active', rating: 4.92, email: 'rehan.phy@campus.edu', phone: '+92 321 4455667', emergencyContact: '+92 321 4455600', address: 'Sector G-10/3, Islamabad', image: '', salaryStatus: 'Pending Arrears', monthlySalary: 155000, appointmentDate: '2023-01-10', tenureDuration: '3 Yrs 9 Mos', unpaidSalaryMonths: 1, remainingSalaryArrears: 155000, cnic: '35202-4455667-3', passportNo: '', nationality: 'Pakistani', gender: 'Male', dob: '1988-11-05', bloodGroup: 'A+' },
+      { id: 'TCH-004', empCode: 'EMP-2023-04', name: 'Ms. Hira Naeem', fatherName: 'Naeemuddin Siddiqui', designation: 'Biology Coordinator', department: 'Sciences', subject: 'Biochemistry & Genetics', qualification: 'M.Phil Molecular Biology', classes: 4, status: 'Active', rating: 4.79, email: 'hira.bio@campus.edu', phone: '+92 333 1122334', emergencyContact: '+92 333 1122300', address: 'Sector I-8/4, Islamabad', image: '', salaryStatus: 'Pending Arrears', monthlySalary: 140000, appointmentDate: '2024-03-01', tenureDuration: '2 Yrs 7 Mos', unpaidSalaryMonths: 2, remainingSalaryArrears: 280000, cnic: '35202-1122334-4', passportNo: '', nationality: 'Pakistani', gender: 'Female', dob: '1992-01-19', bloodGroup: 'AB+' },
+      { id: 'TCH-005', empCode: 'EMP-2019-05', name: 'Engr. Bilal Hashmi', fatherName: 'Tariq Hashmi', designation: 'STEM Chair', department: 'Computer Science', subject: 'Computer Science & AI', qualification: 'M.S. Computer Science', classes: 6, status: 'Active', rating: 4.97, email: 'bilal.cs@campus.edu', phone: '+92 312 9900112', emergencyContact: '+92 312 9900100', address: 'Bahria Town Phase 4, Islamabad', image: '', salaryStatus: 'Disbursed', monthlySalary: 175000, appointmentDate: '2020-10-01', tenureDuration: '6 Yrs 0 Mos', unpaidSalaryMonths: 0, remainingSalaryArrears: 0, cnic: '35202-9900112-5', passportNo: 'PK-8834210', nationality: 'Pakistani', gender: 'Male', dob: '1986-06-11', bloodGroup: 'B-' },
+      { id: 'TCH-006', empCode: 'EMP-2018-06', name: 'Prof. Asadullah Qazi', fatherName: 'Maulana Hamid Qazi', designation: 'Senior Faculty', department: 'Islamic Studies', subject: 'Islamic History & Arabic', qualification: 'M.A. Islamic Studies Al-Azhar', classes: 0, status: 'Resigned', rating: 4.85, email: 'asad.qazi@campus.edu', phone: '+92 301 4433221', emergencyContact: '+92 301 4433200', address: 'Sector E-11/2, Islamabad', image: '', salaryStatus: 'Pending Arrears', monthlySalary: 120000, appointmentDate: '2022-01-15', resignationDate: '2026-06-30', tenureDuration: 'Served 4 Yrs 5 Mos', unpaidSalaryMonths: 1, remainingSalaryArrears: 120000, cnic: '35202-4433221-6', passportNo: '', nationality: 'Pakistani', gender: 'Male', dob: '1980-09-25', bloodGroup: 'O-' }
     ];
   }
 
@@ -11890,19 +11903,19 @@ INSTRUCTIONS:
   // --- UNIFIED CAMERA FACE VERIFICATION ATTENDANCE HUB HANDLERS ---
   getInitialSchoolStaff(): StaffMemberRecord[] {
     return [
-      { id: 'STF-101', empCode: 'STF-101', name: 'Haji Abdul Rashid', roleTitle: 'Head Security Officer', department: 'Campus Security', phone: '+92 300 4412233', shift: 'Morning (06:30 AM - 02:30 PM)', status: 'ACTIVE', attendanceStatus: 'Present', faceEnrolled: false, liteEnabled: true },
-      { id: 'STF-102', empCode: 'STF-102', name: 'Muhammad Irfan', roleTitle: 'Gate Turnstile Attendant', department: 'Campus Security', phone: '+92 321 9981122', shift: 'Morning (07:00 AM - 03:00 PM)', status: 'ACTIVE', attendanceStatus: 'Present', faceEnrolled: false, liteEnabled: true },
-      { id: 'STF-103', empCode: 'STF-103', name: 'Sajida Parveen', roleTitle: 'Front Desk Coordinator', department: 'Administration', phone: '+92 333 5511099', shift: 'Full Day (07:30 AM - 03:30 PM)', status: 'ACTIVE', attendanceStatus: 'Present', faceEnrolled: false, liteEnabled: true },
-      { id: 'STF-104', empCode: 'STF-104', name: 'Kamran Qureshi', roleTitle: 'Senior Accounts Clerk', department: 'Finance & Fee Desk', phone: '+92 301 7744221', shift: 'Full Day (08:00 AM - 04:00 PM)', status: 'ACTIVE', attendanceStatus: 'Present', faceEnrolled: false, liteEnabled: true },
-      { id: 'STF-105', empCode: 'STF-105', name: 'Nadeem Abbas', roleTitle: 'Science Lab Attendant', department: 'Academic Support', phone: '+92 345 6622110', shift: 'Morning (07:30 AM - 02:30 PM)', status: 'ACTIVE', attendanceStatus: 'Absent', faceEnrolled: false, liteEnabled: true },
-      { id: 'STF-106', empCode: 'STF-106', name: 'Rukhsana Bibi', roleTitle: 'Campus Caretaker', department: 'Facilities', phone: '+92 312 8833445', shift: 'Morning (06:45 AM - 02:45 PM)', status: 'ACTIVE', attendanceStatus: 'Present', faceEnrolled: false, liteEnabled: true }
+      { id: 'STF-101', empCode: 'STF-101', name: 'Haji Abdul Rashid', fatherName: 'Abdul Majeed', cnic: '35202-4412233-1', passportNo: '', nationality: 'Pakistani', gender: 'Male', dob: '1978-05-14', bloodGroup: 'B+', roleTitle: 'Head Security Officer', department: 'Campus Security', phone: '+92 300 4412233', emergencyContact: '+92 300 4412200', address: 'Sector G-9/2, Islamabad', shift: 'Morning (06:30 AM - 02:30 PM)', status: 'ACTIVE', attendanceStatus: 'Present', faceEnrolled: false, liteEnabled: true },
+      { id: 'STF-102', empCode: 'STF-102', name: 'Muhammad Irfan', fatherName: 'Ch. Nazir Ahmed', cnic: '35202-9981122-3', passportNo: '', nationality: 'Pakistani', gender: 'Male', dob: '1988-08-22', bloodGroup: 'O+', roleTitle: 'Gate Turnstile Attendant', department: 'Campus Security', phone: '+92 321 9981122', emergencyContact: '+92 321 9981100', address: 'Sector G-8/1, Islamabad', shift: 'Morning (07:00 AM - 03:00 PM)', status: 'ACTIVE', attendanceStatus: 'Present', faceEnrolled: false, liteEnabled: true },
+      { id: 'STF-103', empCode: 'STF-103', name: 'Sajida Parveen', fatherName: 'Bashir Ahmed', cnic: '35201-5511099-2', passportNo: '', nationality: 'Pakistani', gender: 'Female', dob: '1992-03-18', bloodGroup: 'A+', roleTitle: 'Front Desk Coordinator', department: 'Administration', phone: '+92 333 5511099', emergencyContact: '+92 333 5511000', email: 'frontdesk@campus.edu.pk', address: 'Sector F-10/4, Islamabad', shift: 'Full Day (07:30 AM - 03:30 PM)', status: 'ACTIVE', attendanceStatus: 'Present', faceEnrolled: false, liteEnabled: true },
+      { id: 'STF-104', empCode: 'STF-104', name: 'Kamran Qureshi', fatherName: 'Anwar Qureshi', cnic: '37405-7744221-5', passportNo: 'PK-7741002', nationality: 'Pakistani', gender: 'Male', dob: '1986-11-09', bloodGroup: 'AB+', roleTitle: 'Senior Accounts Clerk', department: 'Finance & Fee Desk', phone: '+92 301 7744221', emergencyContact: '+92 301 7744200', email: 'accounts@campus.edu.pk', address: 'Chaklala Scheme III, Rawalpindi', shift: 'Full Day (08:00 AM - 04:00 PM)', status: 'ACTIVE', attendanceStatus: 'Present', faceEnrolled: false, liteEnabled: true },
+      { id: 'STF-105', empCode: 'STF-105', name: 'Nadeem Abbas', fatherName: 'Ghulam Abbas', cnic: '35202-6622110-7', passportNo: '', nationality: 'Pakistani', gender: 'Male', dob: '1991-01-30', bloodGroup: 'O-', roleTitle: 'Science Lab Attendant', department: 'Academic Support', phone: '+92 345 6622110', emergencyContact: '+92 345 6622100', address: 'Sector I-10/2, Islamabad', shift: 'Morning (07:30 AM - 02:30 PM)', status: 'ACTIVE', attendanceStatus: 'Absent', faceEnrolled: false, liteEnabled: true },
+      { id: 'STF-106', empCode: 'STF-106', name: 'Rukhsana Bibi', fatherName: 'Muhammad Sadiq', cnic: '35202-8833445-4', passportNo: '', nationality: 'Pakistani', gender: 'Female', dob: '1983-07-04', bloodGroup: 'B-', roleTitle: 'Campus Caretaker', department: 'Facilities', phone: '+92 312 8833445', emergencyContact: '+92 312 8833400', address: 'G-7/3 Staff Quarters, Islamabad', shift: 'Morning (06:45 AM - 02:45 PM)', status: 'ACTIVE', attendanceStatus: 'Present', faceEnrolled: false, liteEnabled: true }
     ];
   }
 
   getInitialSchoolPrincipals(): PrincipalMemberRecord[] {
     return [
-      { id: 'PRI-101', empCode: 'PRI-101', name: 'Prof. Dr. Tahir Malik', roleTitle: 'Campus Principal', department: 'Executive Directorate', phone: '+92 300 8451120', email: 'principal@campus.edu.pk', shift: 'Full Day (07:30 AM - 03:30 PM)', status: 'ACTIVE', attendanceStatus: 'Present', faceEnrolled: false, liteEnabled: true },
-      { id: 'PRI-102', empCode: 'PRI-102', name: 'Prof. Ayesha Siddiqua', roleTitle: 'Vice Principal (Academics)', department: 'Academic Directorate', phone: '+92 321 7742290', email: 'viceprincipal@campus.edu.pk', shift: 'Full Day (07:45 AM - 03:45 PM)', status: 'ACTIVE', attendanceStatus: 'Present', faceEnrolled: false, liteEnabled: true }
+      { id: 'PRI-101', empCode: 'PRI-101', name: 'Prof. Dr. Tahir Malik', fatherName: 'Malik Sher Muhammad', cnic: '61101-8451120-1', passportNo: 'PK-DIR-44102', nationality: 'Pakistani', gender: 'Male', dob: '1974-09-14', bloodGroup: 'O+', roleTitle: 'Campus Principal', department: 'Executive Directorate', phone: '+92 300 8451120', emergencyContact: '+92 300 8451100', email: 'principal@campus.edu.pk', address: 'Executive Residence, Sector F-7/2, Islamabad', shift: 'Full Day (07:30 AM - 03:30 PM)', status: 'ACTIVE', attendanceStatus: 'Present', faceEnrolled: false, liteEnabled: true },
+      { id: 'PRI-102', empCode: 'PRI-102', name: 'Prof. Ayesha Siddiqua', fatherName: 'Brig. (R) Manzoor Ahmed', cnic: '61101-7742290-2', passportNo: 'PK-DIR-55198', nationality: 'Pakistani', gender: 'Female', dob: '1979-03-27', bloodGroup: 'A+', roleTitle: 'Vice Principal (Academics)', department: 'Academic Directorate', phone: '+92 321 7742290', emergencyContact: '+92 321 7742200', email: 'viceprincipal@campus.edu.pk', address: 'House 19, Street 12, Sector F-8/3, Islamabad', shift: 'Full Day (07:45 AM - 03:45 PM)', status: 'ACTIVE', attendanceStatus: 'Present', faceEnrolled: false, liteEnabled: true }
     ];
   }
 
@@ -12046,6 +12059,10 @@ INSTRUCTIONS:
     gradeOrDept: string;
     status: 'Present' | 'Late' | 'Absent' | 'On Leave';
     punchType?: 'IN' | 'OUT';
+    scheduledStartTime?: string;
+    lateMinutes?: number;
+    lateByLabel?: string;
+    checkInTime?: string;
     verificationMode: string;
     confidenceScore: number;
     verifiedBy: string;
@@ -12058,7 +12075,7 @@ INSTRUCTIONS:
           ? { ...s, status: ev.status }
           : s
       );
-      const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const nowTime = ev.checkInTime || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       const todayLabel = new Date().toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
       const dayLabel = new Date().toLocaleDateString('en-US', { weekday: 'long' });
       if (punch === 'OUT') {
@@ -12095,7 +12112,8 @@ INSTRUCTIONS:
       );
     }
 
-    const nowTs = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const nowTs = ev.checkInTime || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const scheduledStart = ev.scheduledStartTime || this.ownerAttendancePolicy.scheduledStartTime || '08:00';
     const logEntry: FaceVerificationLogRecord = {
       id: `FLOG-${Date.now().toString(36).slice(-5)}`,
       memberCategory: ev.memberCategory,
@@ -12105,6 +12123,10 @@ INSTRUCTIONS:
       gradeOrDept: ev.gradeOrDept,
       status: ev.status,
       punchType: punch,
+      scheduledStartTime: scheduledStart,
+      lateMinutes: ev.lateMinutes,
+      lateByLabel: ev.lateByLabel,
+      gateName: `Camera Face Terminal · ${punch}`,
       verificationMode: ev.verificationMode,
       confidenceScore: ev.confidenceScore,
       verifiedBy: ev.verifiedBy,
@@ -12125,6 +12147,10 @@ INSTRUCTIONS:
       grade: ev.gradeOrDept,
       status: ev.status,
       punchType: punch,
+      checkInTime: ev.checkInTime || nowTs,
+      scheduledStartTime: scheduledStart,
+      lateMinutes: ev.lateMinutes,
+      lateByLabel: ev.lateByLabel,
       gateName: `Camera Face Terminal · ${punch}`,
       memberCategory: ev.memberCategory,
       verificationMode: ev.verificationMode,
@@ -12161,6 +12187,9 @@ INSTRUCTIONS:
 
   async onHubStaffCreated(payload: {
     name: string;
+    fatherName?: string;
+    cnic?: string;
+    gender?: string;
     roleTitle: string;
     department: string;
     phone: string;
@@ -12174,10 +12203,15 @@ INSTRUCTIONS:
           id: `STF-${Date.now().toString(36).slice(-5).toUpperCase()}`,
           empCode: `STF-${Math.floor(200 + Math.random() * 799)}`,
           name: payload.name,
+          fatherName: payload.fatherName || '',
+          cnic: payload.cnic || '',
+          gender: payload.gender || 'Male',
+          nationality: 'Pakistani',
           roleTitle: payload.roleTitle,
           department: payload.department,
           phone: payload.phone,
           shift: payload.shift,
+          status: 'ACTIVE',
           attendanceStatus: 'Absent',
           faceEnrolled: false,
           liteEnabled: payload.liteEnabled
@@ -12199,6 +12233,9 @@ INSTRUCTIONS:
 
   async onHubPrincipalCreated(payload: {
     name: string;
+    fatherName?: string;
+    cnic?: string;
+    gender?: string;
     roleTitle: string;
     department: string;
     phone: string;
@@ -12213,11 +12250,16 @@ INSTRUCTIONS:
           id: `PRI-${Date.now().toString(36).slice(-5).toUpperCase()}`,
           empCode: `PRI-${Math.floor(200 + Math.random() * 799)}`,
           name: payload.name,
+          fatherName: payload.fatherName || '',
+          cnic: payload.cnic || '',
+          gender: payload.gender || 'Male',
+          nationality: 'Pakistani',
           roleTitle: payload.roleTitle,
           department: payload.department,
           phone: payload.phone,
           email: payload.email || '',
           shift: payload.shift,
+          status: 'ACTIVE',
           attendanceStatus: 'Absent',
           faceEnrolled: false,
           liteEnabled: payload.liteEnabled

@@ -584,12 +584,19 @@ test('School Business: Multi-Category Face Verification Attendance (Student, Tea
   const teacherHeaders = { 'Content-Type': 'application/json', 'x-tenant-id': tenantId, 'x-user-role': 'teacher' };
   const studentHeaders = { 'Content-Type': 'application/json', 'x-tenant-id': tenantId, 'x-user-role': 'student' };
 
-  // 1. Staff CRUD + tenant isolation
+  // 1. Staff CRUD + tenant isolation + compliance fields
   const staffCreateRes = await fetch(`${baseUrl}/api/school/staff`, {
     method: 'POST',
     headers: ownerHeaders,
     body: JSON.stringify({
       name: 'Tariq Gatekeeper',
+      fatherName: 'Haji Munir Ahmed',
+      cnic: '42101-7766554-1',
+      passportNo: 'PK9988771',
+      nationality: 'Pakistani',
+      gender: 'Male',
+      emergencyContact: '+92 300 9988776',
+      address: 'Block 6, Gulshan-e-Iqbal, Karachi',
       roleTitle: 'Main Gate Officer',
       department: 'Security',
       phone: '+92 300 1122334',
@@ -600,6 +607,9 @@ test('School Business: Multi-Category Face Verification Attendance (Student, Tea
   assert.equal(staffCreateRes.status, 201);
   const { staff: createdStaff } = await staffCreateRes.json();
   assert.ok(createdStaff?.id);
+  assert.equal(createdStaff.fatherName, 'Haji Munir Ahmed');
+  assert.equal(createdStaff.cnic, '42101-7766554-1');
+  assert.equal(createdStaff.passportNo, 'PK9988771');
 
   const staffOtherRes = await fetch(`${baseUrl}/api/school/staff`, {
     headers: { 'x-tenant-id': tenantOther }
@@ -607,7 +617,7 @@ test('School Business: Multi-Category Face Verification Attendance (Student, Tea
   const staffOther = (await staffOtherRes.json()).staff;
   assert.equal(staffOther.some((s) => s.id === createdStaff.id), false, 'Staff must be isolated by tenant');
 
-  // 1b. Principal CRUD + tenant isolation + RBAC
+  // 1b. Principal CRUD + tenant isolation + RBAC + compliance fields
   const blockedPriCreate = await fetch(`${baseUrl}/api/school/principals`, {
     method: 'POST',
     headers: teacherHeaders,
@@ -620,6 +630,10 @@ test('School Business: Multi-Category Face Verification Attendance (Student, Tea
     headers: ownerHeaders,
     body: JSON.stringify({
       name: 'Prof. Zahid Mehmood',
+      fatherName: 'Mehmood Alam',
+      cnic: '42201-3344556-7',
+      nationality: 'Pakistani',
+      gender: 'Male',
       roleTitle: 'Campus Principal',
       department: 'Executive Directorate',
       phone: '+92 300 5544332',
@@ -631,6 +645,8 @@ test('School Business: Multi-Category Face Verification Attendance (Student, Tea
   assert.equal(priCreateRes.status, 201);
   const { principal: createdPrincipal } = await priCreateRes.json();
   assert.ok(createdPrincipal?.id);
+  assert.equal(createdPrincipal.cnic, '42201-3344556-7');
+  assert.equal(createdPrincipal.fatherName, 'Mehmood Alam');
 
   const priUpdateRes = await fetch(`${baseUrl}/api/school/principals/${createdPrincipal.id}`, {
     method: 'PUT',
@@ -704,6 +720,7 @@ test('School Business: Multi-Category Face Verification Attendance (Student, Tea
       fillLightColor: 'bright',
       confidenceThreshold: 76,
       liteConfidenceThreshold: 62,
+      scheduledStartTime: '08:00',
       roleAccess: {
         principal: { enabled: true, canScanStudents: true, canScanTeachers: true, canScanStaff: true, canEnrollFaces: true, liteModeAllowed: true, manualFallbackAllowed: false, canExportReports: true, selfCheckInEnabled: false },
         teacher: { enabled: true, canScanStudents: true, canScanTeachers: false, canScanStaff: false, canEnrollFaces: true, liteModeAllowed: true, manualFallbackAllowed: false, canExportReports: true, selfCheckInEnabled: false },
@@ -715,6 +732,7 @@ test('School Business: Multi-Category Face Verification Attendance (Student, Tea
   assert.equal(savePolicyRes.status, 200);
   const { policy: savedPolicy } = await savePolicyRes.json();
   assert.equal(savedPolicy.verificationMode, 'lite');
+  assert.equal(savedPolicy.scheduledStartTime, '08:00');
   assert.equal(savedPolicy.roleAccess.student.selfCheckInEnabled, true);
 
   // 3. Separate face profile registration for student, teacher, staff, principal
@@ -751,7 +769,7 @@ test('School Business: Multi-Category Face Verification Attendance (Student, Tea
   const enrolledPri = priListAfter.find((p) => p.id === createdPrincipal.id);
   assert.equal(enrolledPri?.faceEnrolled, true, 'Enrolling principal face profile should mark faceEnrolled = true');
 
-  // 4. Category-separated face verification attendance logs (now including allowed student self-check-in)
+  // 4. Category-separated face verification attendance logs + late arrival duration tracking
   const stuCheckIn = await fetch(`${baseUrl}/api/school/attendance`, {
     method: 'POST',
     headers: studentHeaders,
@@ -764,10 +782,27 @@ test('School Business: Multi-Category Face Verification Attendance (Student, Tea
       verificationMode: 'face_camera_lite',
       confidenceScore: 89.4,
       verifiedBy: 'Self Student Camera',
-      status: 'Present'
+      checkInTime: '08:42',
+      scheduledStartTime: '08:00',
+      punchType: 'IN',
+      status: 'Late',
+      remarks: 'Traffic delay'
     })
   });
   assert.equal(stuCheckIn.status, 200);
+  const stuCheckInJson = await stuCheckIn.json();
+  assert.equal(stuCheckInJson.record.lateMinutes, 42);
+  assert.equal(stuCheckInJson.record.lateByLabel, '+42m late');
+  assert.equal(stuCheckInJson.record.scheduledStartTime, '08:00');
+  assert.equal(stuCheckInJson.record.checkInTime, '08:42');
+
+  const stuAttRes = await fetch(`${baseUrl}/api/school/attendance?category=student`, { headers: ownerHeaders });
+  assert.equal(stuAttRes.status, 200);
+  const stuAttList = (await stuAttRes.json()).attendance;
+  const lateStuLog = stuAttList.find((row) => row.studentId === 'STD-SELF-1');
+  assert.equal(lateStuLog?.lateMinutes, 42);
+  assert.equal(lateStuLog?.lateByLabel, '+42m late');
+  assert.equal(lateStuLog?.remarks, 'Traffic delay');
 
   const tchCheckIn = await fetch(`${baseUrl}/api/school/attendance`, {
     method: 'POST',
@@ -781,10 +816,16 @@ test('School Business: Multi-Category Face Verification Attendance (Student, Tea
       verificationMode: 'face_camera',
       confidenceScore: 94.2,
       verifiedBy: 'Principal Terminal',
+      checkInTime: '07:54',
+      scheduledStartTime: '08:00',
+      punchType: 'IN',
       status: 'Present'
     })
   });
   assert.equal(tchCheckIn.status, 200);
+  const tchCheckInJson = await tchCheckIn.json();
+  assert.equal(tchCheckInJson.record.lateMinutes, -6);
+  assert.equal(tchCheckInJson.record.lateByLabel, 'Early 6m');
 
   const stfCheckIn = await fetch(`${baseUrl}/api/school/attendance`, {
     method: 'POST',
