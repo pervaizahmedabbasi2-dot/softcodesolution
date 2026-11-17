@@ -367,6 +367,42 @@ function ensureColumnMigrations(sqliteDb) {
         policy_json TEXT NOT NULL,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       );
+      CREATE TABLE IF NOT EXISTS local_school_table_schemas (
+        tenant_id TEXT NOT NULL,
+        table_id TEXT NOT NULL,
+        custom_title TEXT,
+        hidden_columns_json TEXT DEFAULT '[]',
+        hidden_column_labels_json TEXT DEFAULT '[]',
+        renamed_headers_json TEXT DEFAULT '{}',
+        renamed_headers_by_label_json TEXT DEFAULT '{}',
+        custom_columns_json TEXT DEFAULT '[]',
+        updated_by TEXT,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (tenant_id, table_id)
+      );
+      CREATE TABLE IF NOT EXISTS local_school_table_rows (
+        tenant_id TEXT NOT NULL,
+        table_id TEXT NOT NULL,
+        row_key TEXT NOT NULL,
+        row_label TEXT,
+        values_json TEXT NOT NULL DEFAULT '{}',
+        submitted_by_name TEXT,
+        submitted_by_role TEXT DEFAULT 'owner',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (tenant_id, table_id, row_key)
+      );
+      CREATE TABLE IF NOT EXISTS local_school_table_cells (
+        tenant_id TEXT NOT NULL,
+        table_id TEXT NOT NULL,
+        row_key TEXT NOT NULL,
+        col_id TEXT NOT NULL,
+        cell_value TEXT DEFAULT '',
+        submitted_by_name TEXT,
+        submitted_by_role TEXT DEFAULT 'owner',
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (tenant_id, table_id, row_key, col_id)
+      );
     `);
   } catch {}
 }
@@ -381,6 +417,20 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
   const resolveUserRole = (req) =>
     String(req?.headers?.['x-user-role'] || req?.user?.role || '').trim().toLowerCase();
+
+  const OWNER_ROLES = new Set(['owner', 'super_admin', 'client_admin', 'admin']);
+
+  const requireOwnerRole = (req, res, next) => {
+    const role = resolveUserRole(req);
+    if (!role || !OWNER_ROLES.has(role)) {
+      return res.status(403).json({
+        ok: false,
+        error: 'OWNER_ONLY_FORBIDDEN',
+        message: 'Only School Business Owner can customize table schemas, form fields, or edit/delete submitted table records.'
+      });
+    }
+    next();
+  };
 
   const rejectRestrictedRole = (blockedRoles = ['student', 'parent']) => (req, res, next) => {
     const role = resolveUserRole(req);
@@ -2757,6 +2807,15 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     res.json({ ok: true, id: req.params.id, status });
   });
 
+  router.delete('/lesson-plans/:id', requireOwnerRole, (req, res) => {
+    const tid = resolveTenantId(req);
+    if (!sqliteDb) return res.status(503).json({ ok: false });
+    const info = sqliteDb.prepare('DELETE FROM local_school_lesson_plans WHERE id = ? AND tenant_id = ?')
+      .run(req.params.id, tid);
+    if (!info.changes) return res.status(404).json({ ok: false, message: 'Lesson plan not found' });
+    res.json({ ok: true, id: req.params.id });
+  });
+
   router.get('/substitutions', (req, res) => {
     const tid = resolveTenantId(req);
     const rows = sqliteDb ? sqliteDb.prepare('SELECT * FROM local_school_substitutions WHERE tenant_id = ? ORDER BY created_at DESC').all(tid) : [];
@@ -3324,6 +3383,534 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     });
   });
 
+  // =========================================================================
+  // DYNAMIC TABLE SCHEMAS, CUSTOM FORM FIELDS & CROSS-PORTAL DATA CRUD
+  // =========================================================================
+  const TABLE_FAMILY_MAP = {
+    // Students master
+    owner_students_roster: 'students_master',
+    owner_overview_students: 'students_master',
+    owner_stage_wise: 'students_master',
+    principal_master_students: 'students_master',
+    principal_stage_wise: 'students_master',
+    // Teachers master
+    owner_teachers_faculty: 'teachers_master',
+    owner_overview_teachers: 'teachers_master',
+    principal_master_teachers: 'teachers_master',
+    // Parents directory
+    owner_overview_parents: 'parents_master',
+    principal_master_parents: 'parents_master',
+    // Fee receipts & cashiering
+    owner_overview_fee_cashiering: 'fee_receipts_cashiering',
+    owner_overview_recent_payments: 'fee_receipts_cashiering',
+    owner_payment_gateway: 'fee_receipts_cashiering',
+    principal_master_cashiering: 'fee_receipts_cashiering',
+    accountant_recent_receipts: 'fee_receipts_cashiering',
+    accountant_posted_receipts: 'fee_receipts_cashiering',
+    // Fee defaulters
+    owner_fee_defaulters: 'fee_defaulters',
+    owner_overview_defaulters: 'fee_defaulters',
+    accountant_defaulters: 'fee_defaulters',
+    // Challans & invoices
+    owner_invoices: 'fee_challans_invoices',
+    accountant_challans: 'fee_challans_invoices',
+    // Petty cash vouchers
+    owner_petty_vouchers: 'petty_vouchers',
+    accountant_petty_vouchers: 'petty_vouchers',
+    // Daily closing & reconciliation
+    owner_daily_closing: 'daily_closing_reconciliation',
+    owner_audit_reconciliation: 'daily_closing_reconciliation',
+    accountant_closings: 'daily_closing_reconciliation',
+    // Campus notices & feed
+    owner_feed_table: 'campus_notices_feed',
+    teacher_feed_table: 'campus_notices_feed',
+    student_feed_table: 'campus_notices_feed',
+    parent_feed_table: 'campus_notices_feed',
+    // SLC
+    owner_audit_slc: 'slc_certificates',
+    principal_slc: 'slc_certificates',
+    // Library circulation
+    owner_library_circulation: 'library_circulation',
+    student_library_loans: 'library_circulation',
+    // Academics & gradebook
+    owner_marks_entry: 'academics_gradebook_results',
+    owner_class_results: 'academics_gradebook_results',
+    teacher_gradebook: 'academics_gradebook_results',
+    student_academics: 'academics_gradebook_results',
+    parent_academics: 'academics_gradebook_results',
+    // Attendance & gate logs
+    student_attendance_log: 'attendance_gate_logs',
+    parent_gate_logs: 'attendance_gate_logs'
+  };
+
+  const resolveCanonicalTableId = (tableId) => {
+    const clean = String(tableId || '').trim();
+    return TABLE_FAMILY_MAP[clean] || clean;
+  };
+
+  const safeJsonParse = (raw, fallback) => {
+    try {
+      return raw ? JSON.parse(raw) : fallback;
+    } catch {
+      return fallback;
+    }
+  };
+
+  const loadTenantTableSchemas = (tid) => {
+    const result = {};
+    if (!sqliteDb) return result;
+    try {
+      const schemaRows = sqliteDb
+        .prepare('SELECT * FROM local_school_table_schemas WHERE tenant_id = ?')
+        .all(tid);
+      for (const r of schemaRows) {
+        const canonical = resolveCanonicalTableId(r.table_id);
+        result[canonical] = {
+          tableId: canonical,
+          customTitle: r.custom_title || '',
+          hiddenColumns: safeJsonParse(r.hidden_columns_json, []),
+          hiddenColumnLabels: safeJsonParse(r.hidden_column_labels_json, []),
+          renamedHeaders: safeJsonParse(r.renamed_headers_json, {}),
+          renamedHeadersByLabel: safeJsonParse(r.renamed_headers_by_label_json, {}),
+          customColumns: safeJsonParse(r.custom_columns_json, []),
+          customRows: [],
+          customCells: {},
+          cellMeta: {}
+        };
+      }
+
+      const customRowRecords = sqliteDb
+        .prepare('SELECT * FROM local_school_table_rows WHERE tenant_id = ? ORDER BY created_at DESC')
+        .all(tid);
+      for (const rr of customRowRecords) {
+        const canonical = resolveCanonicalTableId(rr.table_id);
+        if (!result[canonical]) {
+          result[canonical] = {
+            tableId: canonical,
+            customTitle: '',
+            hiddenColumns: [],
+            hiddenColumnLabels: [],
+            renamedHeaders: {},
+            renamedHeadersByLabel: {},
+            customColumns: [],
+            customRows: [],
+            customCells: {},
+            cellMeta: {}
+          };
+        }
+        const values = safeJsonParse(rr.values_json, {});
+        result[canonical].customRows.push({
+          rowKey: rr.row_key,
+          rowLabel: rr.row_label || '',
+          values,
+          submittedByName: rr.submitted_by_name || '',
+          submittedByRole: rr.submitted_by_role || 'owner',
+          createdAt: rr.created_at || new Date().toISOString()
+        });
+      }
+
+      const cellRows = sqliteDb
+        .prepare('SELECT * FROM local_school_table_cells WHERE tenant_id = ?')
+        .all(tid);
+      for (const cr of cellRows) {
+        const canonical = resolveCanonicalTableId(cr.table_id);
+        if (!result[canonical]) {
+          result[canonical] = {
+            tableId: canonical,
+            customTitle: '',
+            hiddenColumns: [],
+            hiddenColumnLabels: [],
+            renamedHeaders: {},
+            renamedHeadersByLabel: {},
+            customColumns: [],
+            customRows: [],
+            customCells: {},
+            cellMeta: {}
+          };
+        }
+        if (!result[canonical].customCells[cr.row_key]) {
+          result[canonical].customCells[cr.row_key] = {};
+        }
+        result[canonical].customCells[cr.row_key][cr.col_id] = cr.cell_value ?? '';
+        if (!result[canonical].cellMeta[cr.row_key]) {
+          result[canonical].cellMeta[cr.row_key] = {};
+        }
+        result[canonical].cellMeta[cr.row_key][cr.col_id] = {
+          submittedByName: cr.submitted_by_name || '',
+          submittedByRole: cr.submitted_by_role || 'owner',
+          updatedAt: cr.updated_at || ''
+        };
+      }
+    } catch {}
+    return result;
+  };
+
+  const syncTableSchemasToFirestore = async (tid, schemasMap) => {
+    if (!db) return;
+    const ref = doc(db, 'school_workspaces', tid);
+    const now = new Date().toISOString();
+    try {
+      await updateDoc(ref, {
+        tableSchemas: schemasMap,
+        tenant_id: tid,
+        updatedAt: now
+      });
+    } catch {
+      try {
+        await setDoc(ref, {
+          tableSchemas: schemasMap,
+          tenant_id: tid,
+          updatedAt: now
+        }, { merge: true });
+      } catch {}
+    }
+  };
+
+  const ensureSchemaRowExists = (tid, canonicalTableId, actorName = 'School Owner') => {
+    if (!sqliteDb) return;
+    const existing = sqliteDb
+      .prepare('SELECT table_id FROM local_school_table_schemas WHERE tenant_id = ? AND table_id = ?')
+      .get(tid, canonicalTableId);
+    if (!existing) {
+      sqliteDb.prepare(`
+        INSERT INTO local_school_table_schemas
+        (tenant_id, table_id, custom_title, hidden_columns_json, hidden_column_labels_json, renamed_headers_json, renamed_headers_by_label_json, custom_columns_json, updated_by, updated_at)
+        VALUES (?, ?, '', '[]', '[]', '{}', '{}', '[]', ?, ?)
+      `).run(tid, canonicalTableId, actorName, new Date().toISOString());
+    }
+  };
+
+  // GET all table schemas + custom rows + custom cells (all roles read-only mirror)
+  router.get('/table-schemas', (req, res) => {
+    const tid = resolveTenantId(req);
+    const schemas = loadTenantTableSchemas(tid);
+    res.json({ ok: true, tenantId: tid, schemas });
+  });
+
+  // PUT full schema update for a table (School Owner ONLY)
+  router.put('/table-schemas/:tableId', requireOwnerRole, async (req, res) => {
+    const tid = resolveTenantId(req);
+    const canonical = resolveCanonicalTableId(req.params.tableId);
+    const body = req.body || {};
+    const actorName = String(req.headers['x-user-name'] || body.updatedBy || 'School Business Owner');
+    const now = new Date().toISOString();
+
+    const customTitle = String(body.customTitle || '').trim();
+    const hiddenColumns = Array.isArray(body.hiddenColumns)
+      ? body.hiddenColumns.map((n) => Number(n)).filter((n) => Number.isInteger(n) && n >= 0)
+      : [];
+    const hiddenColumnLabels = Array.isArray(body.hiddenColumnLabels)
+      ? body.hiddenColumnLabels.map((s) => String(s)).filter(Boolean)
+      : [];
+    const renamedHeaders = body.renamedHeaders && typeof body.renamedHeaders === 'object' ? body.renamedHeaders : {};
+    const renamedHeadersByLabel = body.renamedHeadersByLabel && typeof body.renamedHeadersByLabel === 'object' ? body.renamedHeadersByLabel : {};
+    const customColumns = Array.isArray(body.customColumns)
+      ? body.customColumns
+          .filter((c) => c && c.id && c.label)
+          .map((c) => ({
+            id: String(c.id),
+            label: String(c.label).trim(),
+            type: ['text', 'number', 'date', 'badge', 'select'].includes(c.type) ? c.type : 'text',
+            defaultValue: String(c.defaultValue ?? ''),
+            options: Array.isArray(c.options) ? c.options.map((o) => String(o)).filter(Boolean) : undefined,
+            required: Boolean(c.required)
+          }))
+      : [];
+
+    if (sqliteDb) {
+      sqliteDb.prepare(`
+        INSERT OR REPLACE INTO local_school_table_schemas
+        (tenant_id, table_id, custom_title, hidden_columns_json, hidden_column_labels_json, renamed_headers_json, renamed_headers_by_label_json, custom_columns_json, updated_by, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        tid,
+        canonical,
+        customTitle,
+        JSON.stringify(hiddenColumns),
+        JSON.stringify(hiddenColumnLabels),
+        JSON.stringify(renamedHeaders),
+        JSON.stringify(renamedHeadersByLabel),
+        JSON.stringify(customColumns),
+        actorName,
+        now
+      );
+
+      // Remove any orphan cell entries for columns that are no longer in customColumns
+      const validColIds = new Set(customColumns.map((c) => c.id));
+      const existingCells = sqliteDb
+        .prepare('SELECT row_key, col_id FROM local_school_table_cells WHERE tenant_id = ? AND table_id = ?')
+        .all(tid, canonical);
+      const delCellStmt = sqliteDb.prepare(
+        'DELETE FROM local_school_table_cells WHERE tenant_id = ? AND table_id = ? AND row_key = ? AND col_id = ?'
+      );
+      for (const ec of existingCells) {
+        if (!validColIds.has(ec.col_id)) {
+          delCellStmt.run(tid, canonical, ec.row_key, ec.col_id);
+        }
+      }
+
+      // Sync customCells if passed in payload
+      if (body.customCells && typeof body.customCells === 'object') {
+        const upsertCell = sqliteDb.prepare(`
+          INSERT OR REPLACE INTO local_school_table_cells
+          (tenant_id, table_id, row_key, col_id, cell_value, submitted_by_name, submitted_by_role, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `);
+        for (const [rk, rowMap] of Object.entries(body.customCells)) {
+          if (!rowMap || typeof rowMap !== 'object') continue;
+          for (const [cid, val] of Object.entries(rowMap)) {
+            if (validColIds.has(cid)) {
+              upsertCell.run(tid, canonical, rk, cid, String(val ?? ''), actorName, 'owner', now);
+            }
+          }
+        }
+      }
+
+      // Sync customRows if passed in payload
+      if (Array.isArray(body.customRows)) {
+        const existingRows = sqliteDb
+          .prepare('SELECT row_key FROM local_school_table_rows WHERE tenant_id = ? AND table_id = ?')
+          .all(tid, canonical);
+        const keepRowKeys = new Set(body.customRows.map((r) => String(r?.rowKey || '')).filter(Boolean));
+        const delRow = sqliteDb.prepare('DELETE FROM local_school_table_rows WHERE tenant_id = ? AND table_id = ? AND row_key = ?');
+        for (const er of existingRows) {
+          if (!keepRowKeys.has(er.row_key)) delRow.run(tid, canonical, er.row_key);
+        }
+        const upsertRow = sqliteDb.prepare(`
+          INSERT OR REPLACE INTO local_school_table_rows
+          (tenant_id, table_id, row_key, row_label, values_json, submitted_by_name, submitted_by_role, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `);
+        for (const r of body.customRows) {
+          if (!r?.rowKey) continue;
+          upsertRow.run(
+            tid,
+            canonical,
+            String(r.rowKey),
+            String(r.rowLabel || ''),
+            JSON.stringify(r.values && typeof r.values === 'object' ? r.values : {}),
+            String(r.submittedByName || actorName),
+            String(r.submittedByRole || 'owner'),
+            String(r.createdAt || now),
+            now
+          );
+        }
+      }
+    }
+
+    const allSchemas = loadTenantTableSchemas(tid);
+    await syncTableSchemasToFirestore(tid, allSchemas);
+    res.json({ ok: true, tenantId: tid, tableId: canonical, schema: allSchemas[canonical] || null, schemas: allSchemas });
+  });
+
+  // DELETE a single custom column + purge all its cell/row values in SQLite + Firestore (School Owner ONLY)
+  router.delete('/table-schemas/:tableId/columns/:colId', requireOwnerRole, async (req, res) => {
+    const tid = resolveTenantId(req);
+    const canonical = resolveCanonicalTableId(req.params.tableId);
+    const colId = String(req.params.colId || '').trim();
+    const now = new Date().toISOString();
+
+    if (sqliteDb && colId) {
+      const schemaRow = sqliteDb
+        .prepare('SELECT * FROM local_school_table_schemas WHERE tenant_id = ? AND table_id = ?')
+        .get(tid, canonical);
+      if (schemaRow) {
+        const cols = safeJsonParse(schemaRow.custom_columns_json, []).filter((c) => c.id !== colId);
+        sqliteDb.prepare(`
+          UPDATE local_school_table_schemas
+          SET custom_columns_json = ?, updated_at = ?
+          WHERE tenant_id = ? AND table_id = ?
+        `).run(JSON.stringify(cols), now, tid, canonical);
+      }
+
+      sqliteDb.prepare(
+        'DELETE FROM local_school_table_cells WHERE tenant_id = ? AND table_id = ? AND col_id = ?'
+      ).run(tid, canonical, colId);
+
+      // Strip deleted column key from any stored custom rows
+      const rowRecords = sqliteDb
+        .prepare('SELECT row_key, values_json FROM local_school_table_rows WHERE tenant_id = ? AND table_id = ?')
+        .all(tid, canonical);
+      const updRow = sqliteDb.prepare(
+        'UPDATE local_school_table_rows SET values_json = ?, updated_at = ? WHERE tenant_id = ? AND table_id = ? AND row_key = ?'
+      );
+      for (const rr of rowRecords) {
+        const vals = safeJsonParse(rr.values_json, {});
+        if (colId in vals) {
+          delete vals[colId];
+          updRow.run(JSON.stringify(vals), now, tid, canonical, rr.row_key);
+        }
+      }
+    }
+
+    const allSchemas = loadTenantTableSchemas(tid);
+    await syncTableSchemasToFirestore(tid, allSchemas);
+    res.json({ ok: true, tenantId: tid, tableId: canonical, deletedColId: colId, schema: allSchemas[canonical] || null, schemas: allSchemas });
+  });
+
+  // DELETE entire table schema customization + custom rows/cells (School Owner ONLY)
+  router.delete('/table-schemas/:tableId', requireOwnerRole, async (req, res) => {
+    const tid = resolveTenantId(req);
+    const canonical = resolveCanonicalTableId(req.params.tableId);
+
+    if (sqliteDb) {
+      sqliteDb.prepare('DELETE FROM local_school_table_schemas WHERE tenant_id = ? AND table_id = ?').run(tid, canonical);
+      sqliteDb.prepare('DELETE FROM local_school_table_rows WHERE tenant_id = ? AND table_id = ?').run(tid, canonical);
+      sqliteDb.prepare('DELETE FROM local_school_table_cells WHERE tenant_id = ? AND table_id = ?').run(tid, canonical);
+    }
+
+    const allSchemas = loadTenantTableSchemas(tid);
+    await syncTableSchemasToFirestore(tid, allSchemas);
+    res.json({ ok: true, tenantId: tid, resetTableId: canonical, schemas: allSchemas });
+  });
+
+  // POST submit custom row OR form custom field values (All Authorized Portal Roles can submit their work input!)
+  router.post('/table-schemas/:tableId/rows', async (req, res) => {
+    const tid = resolveTenantId(req);
+    const canonical = resolveCanonicalTableId(req.params.tableId);
+    const body = req.body || {};
+    const callerRole = resolveUserRole(req) || String(body.submittedByRole || 'owner').toLowerCase();
+    const callerName = String(req.headers['x-user-name'] || body.submittedByName || callerRole || 'Portal User').trim();
+    const now = new Date().toISOString();
+
+    const rowsToSave = Array.isArray(body.rows)
+      ? body.rows
+      : [{
+          rowKey: body.rowKey || (`row_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`),
+          rowLabel: body.rowLabel || '',
+          values: body.values || {},
+          isStandaloneRow: body.isStandaloneRow !== false && !body.cellsOnly
+        }];
+
+    if (sqliteDb) {
+      ensureSchemaRowExists(tid, canonical, callerName);
+      const upsertRow = sqliteDb.prepare(`
+        INSERT OR REPLACE INTO local_school_table_rows
+        (tenant_id, table_id, row_key, row_label, values_json, submitted_by_name, submitted_by_role, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+      const upsertCell = sqliteDb.prepare(`
+        INSERT OR REPLACE INTO local_school_table_cells
+        (tenant_id, table_id, row_key, col_id, cell_value, submitted_by_name, submitted_by_role, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+
+      for (const r of rowsToSave) {
+        const rk = String(r.rowKey || (`row_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`)).trim();
+        const vals = r.values && typeof r.values === 'object' ? r.values : {};
+        if (r.isStandaloneRow !== false && !body.cellsOnly) {
+          upsertRow.run(tid, canonical, rk, String(r.rowLabel || ''), JSON.stringify(vals), callerName, callerRole, now, now);
+        }
+        for (const [key, val] of Object.entries(vals)) {
+          if (String(key).startsWith('col_') && val !== undefined && val !== null) {
+            upsertCell.run(tid, canonical, rk, key, String(val), callerName, callerRole, now);
+          }
+        }
+      }
+    }
+
+    const allSchemas = loadTenantTableSchemas(tid);
+    await syncTableSchemasToFirestore(tid, allSchemas);
+    res.status(201).json({ ok: true, tenantId: tid, tableId: canonical, schema: allSchemas[canonical] || null, schemas: allSchemas });
+  });
+
+  // PUT update a custom row or its custom cell values (School Owner ONLY)
+  router.put('/table-schemas/:tableId/rows/:rowKey', requireOwnerRole, async (req, res) => {
+    const tid = resolveTenantId(req);
+    const canonical = resolveCanonicalTableId(req.params.tableId);
+    const rowKey = String(req.params.rowKey || '').trim();
+    const body = req.body || {};
+    const callerName = String(req.headers['x-user-name'] || body.updatedBy || 'School Business Owner');
+    const now = new Date().toISOString();
+
+    if (sqliteDb && rowKey) {
+      ensureSchemaRowExists(tid, canonical, callerName);
+      const existing = sqliteDb
+        .prepare('SELECT * FROM local_school_table_rows WHERE tenant_id = ? AND table_id = ? AND row_key = ?')
+        .get(tid, canonical, rowKey);
+      const nextValues = body.values && typeof body.values === 'object' ? body.values : safeJsonParse(existing?.values_json, {});
+      if (existing || body.upsertRow) {
+        sqliteDb.prepare(`
+          INSERT OR REPLACE INTO local_school_table_rows
+          (tenant_id, table_id, row_key, row_label, values_json, submitted_by_name, submitted_by_role, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).run(
+          tid,
+          canonical,
+          rowKey,
+          String(body.rowLabel ?? existing?.row_label ?? ''),
+          JSON.stringify(nextValues),
+          String(existing?.submitted_by_name || callerName),
+          String(existing?.submitted_by_role || 'owner'),
+          String(existing?.created_at || now),
+          now
+        );
+      }
+      const upsertCell = sqliteDb.prepare(`
+        INSERT OR REPLACE INTO local_school_table_cells
+        (tenant_id, table_id, row_key, col_id, cell_value, submitted_by_name, submitted_by_role, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+      for (const [cid, val] of Object.entries(nextValues)) {
+        if (String(cid).startsWith('col_')) {
+          upsertCell.run(tid, canonical, rowKey, cid, String(val ?? ''), callerName, 'owner', now);
+        }
+      }
+    }
+
+    const allSchemas = loadTenantTableSchemas(tid);
+    await syncTableSchemasToFirestore(tid, allSchemas);
+    res.json({ ok: true, tenantId: tid, tableId: canonical, rowKey, schema: allSchemas[canonical] || null, schemas: allSchemas });
+  });
+
+  // DELETE a custom row and/or all custom cells for that rowKey (School Owner ONLY)
+  router.delete('/table-schemas/:tableId/rows/:rowKey', requireOwnerRole, async (req, res) => {
+    const tid = resolveTenantId(req);
+    const canonical = resolveCanonicalTableId(req.params.tableId);
+    const rowKey = String(req.params.rowKey || '').trim();
+
+    if (sqliteDb && rowKey) {
+      sqliteDb.prepare('DELETE FROM local_school_table_rows WHERE tenant_id = ? AND table_id = ? AND row_key = ?').run(tid, canonical, rowKey);
+      sqliteDb.prepare('DELETE FROM local_school_table_cells WHERE tenant_id = ? AND table_id = ? AND row_key = ?').run(tid, canonical, rowKey);
+    }
+
+    const allSchemas = loadTenantTableSchemas(tid);
+    await syncTableSchemasToFirestore(tid, allSchemas);
+    res.json({ ok: true, tenantId: tid, tableId: canonical, deletedRowKey: rowKey, schema: allSchemas[canonical] || null, schemas: allSchemas });
+  });
+
+  // DELETE a single custom cell value (School Owner ONLY)
+  router.delete('/table-schemas/:tableId/cells/:rowKey/:colId', requireOwnerRole, async (req, res) => {
+    const tid = resolveTenantId(req);
+    const canonical = resolveCanonicalTableId(req.params.tableId);
+    const rowKey = String(req.params.rowKey || '').trim();
+    const colId = String(req.params.colId || '').trim();
+    const now = new Date().toISOString();
+
+    if (sqliteDb && rowKey && colId) {
+      sqliteDb.prepare(
+        'DELETE FROM local_school_table_cells WHERE tenant_id = ? AND table_id = ? AND row_key = ? AND col_id = ?'
+      ).run(tid, canonical, rowKey, colId);
+
+      const rr = sqliteDb
+        .prepare('SELECT values_json FROM local_school_table_rows WHERE tenant_id = ? AND table_id = ? AND row_key = ?')
+        .get(tid, canonical, rowKey);
+      if (rr) {
+        const vals = safeJsonParse(rr.values_json, {});
+        if (colId in vals) {
+          delete vals[colId];
+          sqliteDb.prepare(
+            'UPDATE local_school_table_rows SET values_json = ?, updated_at = ? WHERE tenant_id = ? AND table_id = ? AND row_key = ?'
+          ).run(JSON.stringify(vals), now, tid, canonical, rowKey);
+        }
+      }
+    }
+
+    const allSchemas = loadTenantTableSchemas(tid);
+    await syncTableSchemasToFirestore(tid, allSchemas);
+    res.json({ ok: true, tenantId: tid, tableId: canonical, rowKey, deletedColId: colId, schema: allSchemas[canonical] || null, schemas: allSchemas });
+  });
+
   // Per-tenant Workspace State Snapshot (settings, notices, classes, timetable, calendar, etc.)
   router.get('/workspace', (req, res) => {
     const tid = resolveTenantId(req);
@@ -3341,6 +3928,12 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
         }
       } catch {}
     }
+    const tableSchemas = loadTenantTableSchemas(tid);
+    if (workspace) {
+      workspace.tableSchemas = tableSchemas;
+    } else if (Object.keys(tableSchemas).length > 0) {
+      workspace = { tenantId: tid, tableSchemas };
+    }
     res.json({ ok: true, tenantId: tid, workspace });
   });
 
@@ -3357,11 +3950,30 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     }
     if (db) {
       try {
-        await setDoc(doc(db, 'school_workspaces', tid), {
-          ...body,
-          tenant_id: tid,
-          updatedAt: new Date().toISOString()
-        }, { merge: true });
+        const ref = doc(db, 'school_workspaces', tid);
+        const now = new Date().toISOString();
+        if (body.tableSchemas && typeof body.tableSchemas === 'object') {
+          try {
+            await updateDoc(ref, {
+              ...body,
+              tableSchemas: body.tableSchemas,
+              tenant_id: tid,
+              updatedAt: now
+            });
+          } catch {
+            await setDoc(ref, {
+              ...body,
+              tenant_id: tid,
+              updatedAt: now
+            }, { merge: true });
+          }
+        } else {
+          await setDoc(ref, {
+            ...body,
+            tenant_id: tid,
+            updatedAt: now
+          }, { merge: true });
+        }
       } catch {}
     }
     res.json({ ok: true, tenantId: tid });

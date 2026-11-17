@@ -946,7 +946,7 @@
                   </thead>
                   <tbody class="divide-y divide-slate-100 font-bold bg-white text-slate-800">
                     @for (s of getPaginatedPrincipalStudents(); track s.id) {
-                      <tr class="hover:bg-indigo-50/30 transition-colors">
+                      <tr [attr.data-row-key]="s.id" class="hover:bg-indigo-50/30 transition-colors">
                         <td class="py-3 px-4 font-mono font-black text-indigo-700">#{{ s.rollNo }}</td>
                         <td class="py-3 px-4">
                           <div class="flex items-center gap-2.5">
@@ -1044,7 +1044,7 @@
                   </thead>
                   <tbody class="divide-y divide-slate-100 font-bold bg-white text-slate-800">
                     @for (t of getPaginatedPrincipalTeachers(); track t.id) {
-                      <tr class="hover:bg-emerald-50/30 transition-colors">
+                      <tr [attr.data-row-key]="t.id" class="hover:bg-emerald-50/30 transition-colors">
                         <td class="py-3 px-4 font-mono font-black text-emerald-700">{{ t.id }}</td>
                         <td class="py-3 px-4">
                           <div class="flex items-center gap-2.5">
@@ -1135,7 +1135,7 @@
                   </thead>
                   <tbody class="divide-y divide-slate-100 font-bold bg-white text-slate-800">
                     @for (p of getPaginatedPrincipalParents(); track p.id) {
-                      <tr class="hover:bg-purple-50/30 transition-colors">
+                      <tr [attr.data-row-key]="p.id" class="hover:bg-purple-50/30 transition-colors">
                         <td class="py-3 px-4">
                           <p class="font-black text-slate-900 text-xs">{{ p.guardianName }}</p>
                           <p class="text-[10px] text-purple-700 font-bold uppercase">{{ p.guardianRelation }}</p>
@@ -1226,7 +1226,7 @@
                   </thead>
                   <tbody class="divide-y divide-slate-100 font-bold bg-white text-slate-800">
                     @for (rec of getPaginatedPrincipalFees(); track rec.id) {
-                      <tr class="hover:bg-amber-50/30 transition-colors">
+                      <tr [attr.data-row-key]="rec.id" class="hover:bg-amber-50/30 transition-colors">
                         <td class="py-3 px-4 font-mono font-black text-amber-700">{{ rec.receiptNo }}</td>
                         <td class="py-3 px-4 text-slate-500 font-mono text-[11px]">{{ rec.timestamp }}</td>
                         <td class="py-3 px-4">
@@ -1796,7 +1796,7 @@
                   </thead>
                   <tbody class="divide-y divide-slate-100 font-medium bg-white text-slate-800">
                     @for (s of getPaginatedStageStudents(ownerSelectedStage, ownerStagePage); track s.id) {
-                      <tr class="hover:bg-indigo-50/30 transition-colors">
+                      <tr [attr.data-row-key]="s.id" class="hover:bg-indigo-50/30 transition-colors">
                         <td class="py-3 px-3.5 font-mono font-black text-indigo-700">#{{ s.rollNo }}</td>
                         <td class="py-3 px-4">
                           <div class="flex items-center gap-2.5">
@@ -2128,7 +2128,7 @@
                   </thead>
                   <tbody class="divide-y divide-slate-100 font-medium bg-white text-slate-800">
                     @for (student of getPaginatedItems(filteredStudents, 'students'); track student.id) {
-                      <tr (click)="toggleStudentRow(student.id)" class="hover:bg-indigo-50/40 transition-colors duration-150 cursor-pointer"
+                      <tr [attr.data-row-key]="student.id" (click)="toggleStudentRow(student.id)" class="hover:bg-indigo-50/40 transition-colors duration-150 cursor-pointer"
                           [class.bg-emerald-50]="student.id === newlyEnrolledStudentId">
                         <!-- 1. Roll # & ID -->
                         <td class="px-3.5 py-3.5 font-mono">
@@ -2401,7 +2401,7 @@
                   </thead>
                   <tbody class="divide-y divide-slate-100 font-medium">
                     @for (m of getPaginatedItems(filteredStudentMedicalRecords, 'students'); track m.id) {
-                      <tr class="hover:bg-slate-50/70 transition-colors">
+                      <tr [attr.data-row-key]="m.id" class="hover:bg-slate-50/70 transition-colors">
                         <td class="px-4 py-3.5 font-mono font-bold text-slate-700">{{ m.rollNo }}</td>
                         <td class="px-4 py-3.5">
                           <p class="font-black text-slate-900">{{ m.studentName }}</p>
@@ -2534,7 +2534,7 @@
                   </thead>
                   <tbody class="divide-y divide-slate-100 font-medium">
                     @for (d of getPaginatedItems(filteredDisciplinaryIncidents, 'students'); track d.id) {
-                      <tr class="hover:bg-slate-50/70 transition-colors">
+                      <tr [attr.data-row-key]="d.id" class="hover:bg-slate-50/70 transition-colors">
                         <td class="px-4 py-3.5 font-mono font-bold text-slate-700">{{ d.rollNo }}</td>
                         <td class="px-4 py-3.5">
                           <p class="font-black text-slate-900">{{ d.studentName }}</p>
@@ -3025,7 +3025,7 @@
                     </thead>
                     <tbody class="divide-y divide-slate-100 font-medium">
                       @for (t of getPaginatedItems(filteredTeachers, 'teachers'); track t.id) {
-                        <tr [class]="t.id === newlyAddedTeacherId ? 'bg-emerald-50/90 ring-2 ring-emerald-400/60 shadow-sm transition-all' : 'hover:bg-slate-50/70 transition-colors'">
+                        <tr [attr.data-row-key]="t.id" [class]="t.id === newlyAddedTeacherId ? 'bg-emerald-50/90 ring-2 ring-emerald-400/60 shadow-sm transition-all' : 'hover:bg-slate-50/70 transition-colors'">
                           <td class="px-4 py-3 font-mono font-bold text-slate-500">{{ t.id }}</td>
                           <td class="px-4 py-3">
                             <div class="flex items-center gap-2.5">
@@ -3174,7 +3174,7 @@
                   </thead>
                   <tbody class="divide-y divide-slate-100 font-medium">
                     @for (p of getPaginatedItems(filteredStaffPayrolls, 'teachers'); track p.id) {
-                      <tr class="hover:bg-slate-50/70 transition-colors">
+                      <tr [attr.data-row-key]="p.id" class="hover:bg-slate-50/70 transition-colors">
                         <td class="px-4 py-3.5">
                           <p class="font-black text-slate-900">{{ p.staffName }}</p>
                           <p class="text-[10px] text-slate-400 font-mono">{{ p.role }}</p>
@@ -3306,7 +3306,7 @@
                   </thead>
                   <tbody class="divide-y divide-slate-100 font-medium">
                     @for (l of getPaginatedItems(filteredStaffLeaves, 'teachers'); track l.id) {
-                      <tr class="hover:bg-slate-50/70 transition-colors">
+                      <tr [attr.data-row-key]="l.id" class="hover:bg-slate-50/70 transition-colors">
                         <td class="px-4 py-3.5">
                           <p class="font-black text-slate-900">{{ l.staffName }}</p>
                           <p class="text-[10px] text-slate-400 font-mono">{{ l.appliedDate }}</p>
@@ -3821,7 +3821,7 @@
                   </thead>
                   <tbody class="divide-y divide-slate-100 font-medium bg-white text-slate-800">
                     @for (adm of getPaginatedItems(filteredAdmissions, 'admissions'); track adm.id) {
-                      <tr class="hover:bg-slate-50/80 transition-colors duration-150 group">
+                      <tr [attr.data-row-key]="adm.id" class="hover:bg-slate-50/80 transition-colors duration-150 group">
                         <!-- 1. Ref ID & Date -->
                         <td class="px-4 py-3.5 font-mono whitespace-nowrap">
                           <span class="font-bold text-indigo-700 block">#{{ adm.id }}</span>
@@ -4439,7 +4439,7 @@
                         </thead>
                         <tbody class="divide-y divide-slate-100">
                           @for (pv of accountantPettyVouchers.slice(0, 5); track pv.id) {
-                            <tr class="hover:bg-slate-50/70">
+                            <tr [attr.data-row-key]="pv.id" class="hover:bg-slate-50/70">
                               <td class="px-3 py-2 font-mono font-bold text-slate-900 whitespace-nowrap">{{ pv.voucherNo }}</td>
                               <td class="px-3 py-2">
                                 <div class="font-bold text-slate-800">{{ pv.description }}</div>
@@ -4503,7 +4503,7 @@
                     </thead>
                     <tbody class="divide-y divide-slate-100 font-medium bg-white">
                       @for (fin of getPaginatedItems(filteredFinances, 'finance'); track fin.id) {
-                        <tr class="hover:bg-slate-50/70 transition-colors">
+                        <tr [attr.data-row-key]="fin.id" class="hover:bg-slate-50/70 transition-colors">
                           <td class="px-4 py-3 font-mono font-bold text-slate-600">{{ fin.challanNo }}</td>
                           <td class="px-4 py-3 font-black text-slate-900">
                             {{ fin.title }}
@@ -4716,7 +4716,7 @@
                     </thead>
                     <tbody class="divide-y divide-slate-100 font-medium bg-white">
                       @for (d of getPaginatedItems(filteredFeeDefaulters, 'finance'); track d.id) {
-                        <tr class="hover:bg-rose-50/30 transition-colors">
+                        <tr [attr.data-row-key]="d.studentId || d.id" class="hover:bg-rose-50/30 transition-colors">
                           <td class="px-4 py-3.5 font-mono font-black text-slate-900">{{ d.rollNo }}</td>
                           <td class="px-4 py-3.5">
                             <p class="font-black text-slate-900">{{ d.studentName }}</p>
@@ -4836,7 +4836,7 @@
                     </thead>
                     <tbody class="divide-y divide-slate-100 font-medium bg-white">
                       @for (t of teachers; track t.id) {
-                        <tr class="hover:bg-slate-50/70 transition-colors">
+                        <tr [attr.data-row-key]="t.id" class="hover:bg-slate-50/70 transition-colors">
                           <td class="px-4 py-3.5">
                             <div class="flex items-center gap-2.5">
                               <img [src]="safeAvatar(t.image, t.name)" [alt]="t.name" referrerpolicy="no-referrer" class="w-8 h-8 rounded-full object-cover border border-slate-200">
@@ -4920,7 +4920,7 @@
                     </thead>
                     <tbody class="divide-y divide-slate-100 font-medium bg-white">
                       @for (pl of profitLossLedger; track pl.id) {
-                        <tr class="hover:bg-slate-50/70 transition-colors">
+                        <tr [attr.data-row-key]="pl.id" class="hover:bg-slate-50/70 transition-colors">
                           <td class="px-4 py-3.5 font-black text-slate-900">{{ pl.monthYear }}</td>
                           <td class="px-4 py-3.5 font-mono font-bold text-slate-700">PKR {{ formatCurrency(pl.tuitionFeeIncome) }}</td>
                           <td class="px-4 py-3.5 font-mono font-bold text-slate-700">PKR {{ formatCurrency(pl.transportFeeIncome) }}</td>
@@ -5539,7 +5539,7 @@
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-xs font-medium text-slate-800">
                   @for (inv of filteredMasterInvoices; track inv.id) {
-                    <tr class="hover:bg-slate-50/80 transition-colors group">
+                    <tr [attr.data-row-key]="inv.id" class="hover:bg-slate-50/80 transition-colors group">
                       <!-- Reference & Type -->
                       <td class="p-3.5 pl-5">
                         <div class="flex items-center gap-3">
@@ -6317,7 +6317,7 @@
                   </thead>
                   <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
                     @for (rec of filteredCirculations; track rec.id) {
-                      <tr class="hover:bg-slate-50/80 transition-colors">
+                      <tr [attr.data-row-key]="rec.id" class="hover:bg-slate-50/80 transition-colors">
                         <!-- Issue Ref & Date -->
                         <td class="px-4 py-3.5 whitespace-nowrap">
                           <div class="font-mono font-black text-slate-900">{{ rec.issueNo }}</div>
@@ -6509,7 +6509,7 @@
                   </thead>
                   <tbody class="divide-y divide-slate-100 font-medium bg-white">
                     @for (bk of getPaginatedItems(filteredCatalogBooks, 'library'); track bk.id) {
-                      <tr class="hover:bg-slate-50/70 transition-colors">
+                      <tr [attr.data-row-key]="bk.id" class="hover:bg-slate-50/70 transition-colors">
                         <td class="px-4 py-3 font-mono font-bold text-slate-500">{{ bk.isbn }}</td>
                         <td class="px-4 py-3">
                           <div class="font-black text-slate-900">{{ bk.title }}</div>
@@ -6726,7 +6726,7 @@
                   </thead>
                   <tbody class="divide-y divide-slate-100 font-medium bg-white">
                     @for (ex of getPaginatedItems(filteredExams, 'exams'); track ex.id) {
-                      <tr class="hover:bg-slate-50/70 transition-colors">
+                      <tr [attr.data-row-key]="ex.id" class="hover:bg-slate-50/70 transition-colors">
                         <td class="px-4 py-3 text-slate-500 font-mono font-bold">{{ ex.id }}</td>
                         <td class="px-4 py-3">
                           <p class="font-black text-slate-900">{{ ex.examName }}</p>
@@ -7014,7 +7014,7 @@
                   </thead>
                   <tbody class="divide-y divide-slate-100 font-medium bg-white">
                     @for (res of getPaginatedItems(filteredClassResults, 'exams'); track res.student.id) {
-                      <tr class="hover:bg-slate-50/70 transition-colors">
+                      <tr [attr.data-row-key]="res.student.id" class="hover:bg-slate-50/70 transition-colors">
                         <!-- Rank Badge -->
                         <td class="px-4 py-3 text-center">
                           <span class="inline-flex items-center justify-center w-7 h-7 rounded-full font-mono font-black text-xs shadow-2xs"
@@ -7142,7 +7142,7 @@
                   </thead>
                   <tbody class="divide-y divide-slate-100 font-medium bg-white">
                     @for (sub of getPaginatedItems(filteredSubjects, 'exams'); track sub.id) {
-                      <tr class="hover:bg-slate-50/70 transition-colors">
+                      <tr [attr.data-row-key]="sub.id" class="hover:bg-slate-50/70 transition-colors">
                         <td class="px-4 py-3 font-mono font-bold text-indigo-600">{{ sub.code }}</td>
                         <td class="px-4 py-3 font-black text-slate-900">{{ sub.title }}</td>
                         <td class="px-4 py-3">
@@ -7337,7 +7337,7 @@
               </thead>
               <tbody class="divide-y divide-slate-100 font-medium">
                 @for (tt of getPaginatedItems(filteredTimetables, 'timetable'); track tt.id) {
-                  <tr class="hover:bg-slate-50/60 transition-colors">
+                  <tr [attr.data-row-key]="tt.id" class="hover:bg-slate-50/60 transition-colors">
                     <td class="px-4 py-3 font-mono font-bold text-slate-900">{{ tt.period }} ({{ tt.time }})</td>
                     <td class="px-4 py-3"><span class="px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 font-bold">{{ tt.grade }}</span></td>
                     <td class="px-4 py-3 font-bold text-indigo-600">{{ tt.subject }}</td>
@@ -7528,7 +7528,7 @@
                 </thead>
                 <tbody class="divide-y divide-slate-100 font-medium bg-white">
                   @for (f of getPaginatedItems(filteredPaymentGateway, 'payment_gateway'); track f.id) {
-                    <tr class="hover:bg-slate-50/70 transition-colors">
+                    <tr [attr.data-row-key]="f.id" class="hover:bg-slate-50/70 transition-colors">
                       <td class="px-4 py-3.5 font-mono font-bold text-slate-600">{{ f.challanNo }}</td>
                       <td class="px-4 py-3.5">
                         <p class="font-black text-slate-900">{{ f.studentName || 'Enrolled Student' }}</p>
@@ -7847,7 +7847,7 @@
                 </thead>
                 <tbody class="divide-y divide-slate-100 font-medium bg-white">
                   @for (slot of labSchedules; track slot.id) {
-                    <tr class="hover:bg-slate-50/70 transition-colors">
+                    <tr [attr.data-row-key]="slot.id" class="hover:bg-slate-50/70 transition-colors">
                       <td class="px-4 py-3 font-mono font-bold text-slate-600">{{ slot.id }}</td>
                       <td class="px-4 py-3 font-bold text-slate-900">{{ slot.day }} · {{ slot.period }}</td>
                       <td class="px-4 py-3"><span class="px-2 py-0.5 rounded-lg bg-cyan-50 text-cyan-800 font-bold text-[11px]">{{ slot.lab }}</span></td>
@@ -8105,7 +8105,7 @@
                 </thead>
                 <tbody class="divide-y divide-slate-100 font-medium bg-white">
                   @for (post of paginatedNoticeHistory; track post.id) {
-                    <tr class="hover:bg-slate-50/80 transition-colors">
+                    <tr [attr.data-row-key]="post.id" class="hover:bg-slate-50/80 transition-colors">
                       <!-- Ref No -->
                       <td class="px-4 py-3.5 font-mono font-bold text-indigo-700">
                         <span class="bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200/60">{{ post.dispatchRefNo }}</span>
@@ -8777,7 +8777,7 @@
                   </thead>
                   <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
                     @for (log of filteredAuditLogs; track log.id) {
-                      <tr class="hover:bg-slate-50/80 transition-colors">
+                      <tr [attr.data-row-key]="log.id" class="hover:bg-slate-50/80 transition-colors">
                         <td class="p-3 whitespace-nowrap">
                           <div class="font-mono font-bold text-slate-900">{{ log.id }}</div>
                           <div class="text-[10px] text-slate-400">{{ log.timestamp }}</div>
@@ -8871,7 +8871,7 @@
                     </thead>
                     <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
                       @for (rec of filteredFeeReconciliations; track rec.id) {
-                        <tr class="hover:bg-slate-50/80 transition-colors">
+                        <tr [attr.data-row-key]="rec.id" class="hover:bg-slate-50/80 transition-colors">
                           <td class="p-3 whitespace-nowrap font-bold text-slate-900 font-mono">{{ rec.date }}</td>
                           <td class="p-3 whitespace-nowrap font-mono">PKR {{ formatCurrency(rec.counterCashReceived) }}</td>
                           <td class="p-3 whitespace-nowrap font-mono text-emerald-700">PKR {{ formatCurrency(rec.bankDepositedMeezan) }}</td>
@@ -8949,7 +8949,7 @@
                   </thead>
                   <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
                     @for (w of auditWaiversList; track w.id) {
-                      <tr class="hover:bg-slate-50">
+                      <tr [attr.data-row-key]="w.id" class="hover:bg-slate-50">
                         <td class="p-3 font-bold text-slate-900">{{ w.studentName }}</td>
                         <td class="p-3 font-mono">{{ w.grade }}</td>
                         <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">{{ w.category }}</span></td>
@@ -9051,7 +9051,7 @@
                   </thead>
                   <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
                     @for (slc of studentLeavingCertificates; track slc.id) {
-                      <tr class="hover:bg-slate-50/80 transition-colors">
+                      <tr [attr.data-row-key]="slc.id" class="hover:bg-slate-50/80 transition-colors">
                         <td class="p-3 whitespace-nowrap">
                           <div class="font-mono font-black text-slate-900">{{ slc.certificateNo }}</div>
                           <div class="text-[9px] font-mono text-purple-600">{{ slc.securityHash }}</div>
@@ -9134,7 +9134,7 @@
                   </thead>
                   <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
                     @for (comp of complianceAuditList; track comp.id) {
-                      <tr class="hover:bg-slate-50/80 transition-colors">
+                      <tr [attr.data-row-key]="comp.id" class="hover:bg-slate-50/80 transition-colors">
                         <td class="p-3 whitespace-nowrap font-bold text-slate-900">{{ comp.area }}</td>
                         <td class="p-3 font-semibold text-slate-800">{{ comp.title }}</td>
                         <td class="p-3 font-mono text-[11px] text-slate-500">{{ comp.standard }}</td>
@@ -10625,7 +10625,7 @@
                   </thead>
                   <tbody class="divide-y divide-slate-100 font-medium bg-white text-slate-800">
                     @for (s of getPaginatedStageStudents(principalSelectedStage, principalStagePage); track s.id) {
-                      <tr class="hover:bg-indigo-50/30 transition-colors">
+                      <tr [attr.data-row-key]="s.id" class="hover:bg-indigo-50/30 transition-colors">
                         <td class="py-3 px-3.5 font-mono font-black text-indigo-700">#{{ s.rollNo }}</td>
                         <td class="py-3 px-4">
                           <div class="flex items-center gap-2.5">
@@ -10872,7 +10872,7 @@
                   </thead>
                   <tbody class="divide-y divide-slate-100 font-bold bg-white text-slate-800">
                     @for (s of getPaginatedPrincipalStudents(); track s.id) {
-                      <tr class="hover:bg-indigo-50/30 transition-colors">
+                      <tr [attr.data-row-key]="s.id" class="hover:bg-indigo-50/30 transition-colors">
                         <td class="py-3 px-4 font-mono font-black text-indigo-700">#{{ s.rollNo }}</td>
                         <td class="py-3 px-4">
                           <div class="flex items-center gap-2.5">
@@ -10947,7 +10947,7 @@
                   </thead>
                   <tbody class="divide-y divide-slate-100 font-bold bg-white text-slate-800">
                     @for (t of getPaginatedPrincipalTeachers(); track t.id) {
-                      <tr class="hover:bg-emerald-50/30 transition-colors">
+                      <tr [attr.data-row-key]="t.id" class="hover:bg-emerald-50/30 transition-colors">
                         <td class="py-3 px-4 font-mono font-black text-emerald-700">{{ t.id }}</td>
                         <td class="py-3 px-4 font-black text-slate-900">{{ t.name }}</td>
                         <td class="py-3 px-4 text-indigo-700 font-bold">{{ t.subject }}</td>
@@ -11007,7 +11007,7 @@
                   </thead>
                   <tbody class="divide-y divide-slate-100 font-bold bg-white text-slate-800">
                     @for (p of getPaginatedPrincipalParents(); track p.id) {
-                      <tr class="hover:bg-purple-50/30 transition-colors">
+                      <tr [attr.data-row-key]="p.id" class="hover:bg-purple-50/30 transition-colors">
                         <td class="py-3 px-4 font-black text-slate-900">{{ p.guardianName }}</td>
                         <td class="py-3 px-4 font-mono text-slate-700">{{ p.guardianCnic }}</td>
                         <td class="py-3 px-4 font-mono font-bold text-indigo-700">{{ p.guardianPhone }}</td>
@@ -11082,7 +11082,7 @@
                   </thead>
                   <tbody class="divide-y divide-slate-100 font-bold bg-white text-slate-800">
                     @for (rec of getPaginatedPrincipalFees(); track rec.id) {
-                      <tr class="hover:bg-amber-50/30 transition-colors">
+                      <tr [attr.data-row-key]="rec.id" class="hover:bg-amber-50/30 transition-colors">
                         <td class="py-3 px-4 font-mono font-black text-amber-700">{{ rec.receiptNo }}</td>
                         <td class="py-3 px-4 text-slate-500 font-mono text-[11px]">{{ rec.timestamp }}</td>
                         <td class="py-3 px-4 font-black text-slate-900">{{ rec.studentName }} (Roll #{{ rec.rollNo }})</td>
@@ -11210,7 +11210,7 @@
               </thead>
               <tbody class="divide-y divide-slate-100 font-medium">
                 @for (plan of getPaginatedLessonPlans(); track plan.id) {
-                  <tr class="hover:bg-slate-50/80 transition-colors">
+                  <tr [attr.data-row-key]="plan.id" class="hover:bg-slate-50/80 transition-colors">
                     <td class="px-4 py-3.5 font-mono font-bold text-slate-500">{{ plan.id }}</td>
                     <td class="px-4 py-3.5 font-black text-slate-900">{{ plan.teacherName || 'Faculty Member' }}</td>
                     <td class="px-4 py-3.5">
@@ -11382,7 +11382,7 @@
               </thead>
               <tbody class="divide-y divide-slate-100 font-medium">
                 @for (s of substituteArrangements; track s.id) {
-                  <tr class="hover:bg-slate-50/70 transition-colors">
+                  <tr [attr.data-row-key]="s.id" class="hover:bg-slate-50/70 transition-colors">
                     <td class="px-4 py-3 font-mono font-bold text-slate-500">{{ s.id }}</td>
                     <td class="px-4 py-3 text-slate-600 font-mono">{{ s.date }}</td>
                     <td class="px-4 py-3 font-bold text-rose-700">{{ s.absentTeacher }}</td>
@@ -12202,7 +12202,7 @@
               </thead>
               <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
                 @for (slc of filteredStudentLeavingCertificates; track slc.id) {
-                  <tr class="hover:bg-slate-50/80 transition-colors">
+                  <tr [attr.data-row-key]="slc.id" class="hover:bg-slate-50/80 transition-colors">
                     <td class="px-4 py-3.5 whitespace-nowrap">
                       <div class="font-mono font-black text-slate-900">{{ slc.certificateNo }}</div>
                       <div class="text-[9px] font-mono text-purple-600 truncate max-w-[140px]">{{ slc.securityHash }}</div>
@@ -13454,7 +13454,7 @@
                 </thead>
                 <tbody class="divide-y divide-slate-100 font-medium bg-white">
                   @for (post of teacherFeedPosts; track post.id) {
-                    <tr class="hover:bg-slate-50/80 transition-colors group">
+                    <tr [attr.data-row-key]="post.id" class="hover:bg-slate-50/80 transition-colors group">
                       <!-- Ref # & Date -->
                       <td class="px-4 py-3.5">
                         <span class="font-mono font-black text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-200/60 block w-max">
@@ -13704,7 +13704,7 @@
               </thead>
               <tbody class="divide-y divide-slate-100 font-medium">
                 @for (evt of paginatedSchoolEvents; track evt.id) {
-                  <tr class="hover:bg-slate-50/70 transition-colors group">
+                  <tr [attr.data-row-key]="evt.id" class="hover:bg-slate-50/70 transition-colors group">
                     <!-- Title & Category -->
                     <td class="px-4 py-3.5">
                       <div class="space-y-1">
@@ -13981,7 +13981,7 @@
               </thead>
               <tbody class="divide-y divide-slate-100 font-medium">
                 @for (student of getPaginatedGradebook(); track student.rollNo) {
-                  <tr class="hover:bg-slate-50/70 transition-colors group">
+                  <tr [attr.data-row-key]="student.studentId || student.rollNo" class="hover:bg-slate-50/70 transition-colors group">
                     <td class="px-4 py-3.5 font-mono font-bold text-slate-700 tabular-nums">{{ student.rollNo }}</td>
                     <td class="px-4 py-3.5">
                       <div class="flex items-center gap-2.5">
@@ -14791,7 +14791,7 @@
               </thead>
               <tbody class="divide-y divide-slate-100 font-medium">
                 @for (sub of studentSubjects; track sub.code) {
-                  <tr class="hover:bg-slate-50/60 transition-colors">
+                  <tr [attr.data-row-key]="sub.code" class="hover:bg-slate-50/60 transition-colors">
                     <td class="px-4 py-3 font-mono font-bold text-slate-500">{{ sub.code }}</td>
                     <td class="px-4 py-3 font-black text-slate-900">{{ sub.name }}</td>
                     <td class="px-4 py-3 text-slate-600">{{ sub.teacher }}</td>
@@ -14854,7 +14854,7 @@
                 </thead>
                 <tbody class="divide-y divide-slate-100 font-medium">
                   @for (log of studentAttendanceLog; track log.date) {
-                    <tr class="hover:bg-slate-50/60 transition-colors">
+                    <tr [attr.data-row-key]="log.date" class="hover:bg-slate-50/60 transition-colors">
                       <td class="px-4 py-3 font-mono font-bold text-slate-900">{{ log.date }}</td>
                       <td class="px-4 py-3 text-slate-600">{{ log.day }}</td>
                       <td class="px-4 py-3 font-mono font-bold text-emerald-600">{{ log.checkIn }}</td>
@@ -15041,7 +15041,7 @@
                 </thead>
                 <tbody class="divide-y divide-slate-100 font-medium text-slate-800">
                   @for (circ of studentLibraryCirculations; track circ.id) {
-                    <tr class="hover:bg-slate-50/80">
+                    <tr [attr.data-row-key]="circ.id" class="hover:bg-slate-50/80">
                       <td class="px-4 py-3 font-bold text-slate-900">{{ circ.bookTitle }} <span class="text-[10px] font-mono text-indigo-600 block">{{ circ.isbn }}</span></td>
                       <td class="px-4 py-3 font-mono font-bold text-slate-700">{{ circ.issueNo }}</td>
                       <td class="px-4 py-3 font-mono text-slate-600">{{ circ.issueDate }}</td>
@@ -15215,7 +15215,7 @@
                 </thead>
                 <tbody class="divide-y divide-slate-100 font-medium bg-white">
                   @for (post of studentFeedPosts; track post.id) {
-                    <tr class="hover:bg-slate-50/80 transition-colors group">
+                    <tr [attr.data-row-key]="post.id" class="hover:bg-slate-50/80 transition-colors group">
                       <td class="px-4 py-3.5">
                         <span class="font-mono font-black text-sky-700 bg-sky-50 px-2 py-0.5 rounded-md border border-sky-200/60 block w-max">
                           {{ post.dispatchRefNo }}
@@ -15909,7 +15909,7 @@
                 </thead>
                 <tbody class="divide-y divide-slate-100 font-medium">
                   @for (log of activeChildAttendanceLog; track log.date) {
-                    <tr>
+                    <tr [attr.data-row-key]="log.date">
                       <td class="px-4 py-3 font-bold text-slate-900">{{ log.date }} ({{ log.day }})</td>
                       <td class="px-4 py-3 font-mono font-bold text-emerald-600">{{ log.checkIn }}</td>
                       <td class="px-4 py-3 font-mono text-slate-500">{{ log.checkOut }}</td>
@@ -16000,7 +16000,7 @@
               </thead>
               <tbody class="divide-y divide-slate-100 font-medium">
                 @for (sub of activeChildSubjects; track sub.code) {
-                  <tr>
+                  <tr [attr.data-row-key]="sub.code">
                     <td class="px-4 py-3 font-black text-slate-900">{{ sub.name }}</td>
                     <td class="px-4 py-3 text-slate-600">{{ sub.teacher }}</td>
                     <td class="px-4 py-3 text-center font-mono font-black text-purple-700">{{ sub.marksObtained }} / {{ sub.maxMarks }}</td>
@@ -16194,7 +16194,7 @@
                 </thead>
                 <tbody class="divide-y divide-slate-100 font-medium bg-white">
                   @for (post of parentFeedPosts; track post.id) {
-                    <tr class="hover:bg-slate-50/80 transition-colors group">
+                    <tr [attr.data-row-key]="post.id" class="hover:bg-slate-50/80 transition-colors group">
                       <td class="px-4 py-3.5">
                         <span class="font-mono font-black text-purple-700 bg-purple-50 px-2 py-0.5 rounded-md border border-purple-200/60 block w-max">
                           {{ post.dispatchRefNo }}
@@ -16700,7 +16700,7 @@
                     </thead>
                     <tbody class="divide-y divide-slate-100 font-medium">
                       @for (r of principalFeeCollections.slice(0, 12); track r.id) {
-                        <tr class="hover:bg-slate-50/70">
+                        <tr [attr.data-row-key]="r.id" class="hover:bg-slate-50/70">
                           <td class="px-3 py-2.5 font-mono font-black text-teal-700">{{ r.receiptNo }}</td>
                           <td class="px-3 py-2.5 font-bold text-slate-900">{{ r.studentName }} ({{ r.grade }})</td>
                           <td class="px-3 py-2.5 text-slate-700">{{ r.paymentResource }}</td>
@@ -16776,6 +16776,11 @@
                         <input type="date" [(ngModel)]="accountantChallanForm.dueDate" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-mono font-bold">
                       </div>
                     </div>
+                    <app-school-custom-form-fields
+                      [tableId]="'fee_challans_invoices'"
+                      [values]="formCustomValues['accountantChallan']"
+                      [defaultTitle]="'Challan & Invoice Custom Fields'"
+                      (valuesChange)="updateFormCustomValues('accountantChallan', $event)" />
                     <div class="flex items-center gap-2 pt-2">
                       <button (click)="generateAccountantChallan(false)" class="px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-black text-xs cursor-pointer flex items-center gap-1.5">
                         <lucide-icon [name]="'plus'" class="w-3.5 h-3.5"></lucide-icon>
@@ -16854,7 +16859,7 @@
                     </thead>
                     <tbody class="divide-y divide-slate-100 font-medium">
                       @for (ch of filteredAccountantChallans; track ch.id) {
-                        <tr class="hover:bg-slate-50/70">
+                        <tr [attr.data-row-key]="ch.id" class="hover:bg-slate-50/70">
                           <td class="px-3 py-2.5 font-mono font-black text-indigo-700">{{ ch.challanNo }}</td>
                           <td class="px-3 py-2.5 font-bold text-slate-900">{{ ch.studentName }} ({{ ch.grade }})</td>
                           <td class="px-3 py-2.5">{{ ch.month }}</td>
@@ -16952,6 +16957,11 @@
                     <label class="block font-bold text-slate-700 mb-1">Counter Remarks</label>
                     <input type="text" [(ngModel)]="accountantCollectForm.notes" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-medium">
                   </div>
+                  <app-school-custom-form-fields
+                    [tableId]="'fee_receipts_cashiering'"
+                    [values]="formCustomValues['accountantCollect']"
+                    [defaultTitle]="'Fee Receipt Custom Fields'"
+                    (valuesChange)="updateFormCustomValues('accountantCollect', $event)" />
                   <button (click)="submitAccountantFeeReceipt()" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white font-black text-xs cursor-pointer flex items-center justify-center gap-2 shadow-md">
                     <lucide-icon [name]="'check-circle-2'" class="w-4 h-4"></lucide-icon>
                     <span>Confirm Receipt &amp; Print Official Voucher</span>
@@ -16975,7 +16985,7 @@
                     </thead>
                     <tbody class="divide-y divide-slate-100 font-medium">
                       @for (r of principalFeeCollections; track r.id) {
-                        <tr class="hover:bg-slate-50/70">
+                        <tr [attr.data-row-key]="r.id" class="hover:bg-slate-50/70">
                           <td class="px-3 py-2.5 font-mono font-black text-teal-700">{{ r.receiptNo }}</td>
                           <td class="px-3 py-2.5 font-bold text-slate-900">{{ r.studentName }}</td>
                           <td class="px-3 py-2.5">
@@ -17037,7 +17047,7 @@
                   </thead>
                   <tbody class="divide-y divide-slate-100 font-medium">
                     @for (d of filteredAccountantDefaulters; track d.studentId) {
-                      <tr class="hover:bg-rose-50/20">
+                      <tr [attr.data-row-key]="d.studentId" class="hover:bg-rose-50/20">
                         <td class="px-3 py-2.5 font-bold text-slate-900">{{ d.studentName }} ({{ d.grade }} · Roll #{{ d.rollNo }})</td>
                         <td class="px-3 py-2.5">
                           <div class="font-bold">{{ d.guardianName }}</div>
@@ -17122,6 +17132,12 @@
                     <textarea [(ngModel)]="accountantDailyClosingForm.notes" rows="2" class="w-full px-3 py-2 rounded-xl bg-slate-50/90 border border-slate-200/70 font-medium"></textarea>
                   </div>
 
+                  <app-school-custom-form-fields
+                    [tableId]="'daily_closing_reconciliation'"
+                    [values]="formCustomValues['accountantDailyClosing']"
+                    [defaultTitle]="'Daily Closing Custom Fields'"
+                    (valuesChange)="updateFormCustomValues('accountantDailyClosing', $event)" />
+
                   <!-- Single Cohesive Highlight Strip -->
                   <div class="rounded-xl p-3.5 bg-gradient-to-r from-teal-50 via-emerald-50/75 to-indigo-50/60 flex items-center justify-between">
                     <span class="text-[11px] font-black text-slate-900">Closing Vault Balance:</span>
@@ -17173,6 +17189,12 @@
                     </div>
                   </div>
 
+                  <app-school-custom-form-fields
+                    [tableId]="'petty_vouchers'"
+                    [values]="formCustomValues['accountantPetty']"
+                    [defaultTitle]="'Petty Cash Voucher Custom Fields'"
+                    (valuesChange)="updateFormCustomValues('accountantPetty', $event)" />
+
                   <div class="overflow-x-auto border border-slate-200 rounded-xl">
                     <table appSchoolTable="accountant_petty_vouchers" tableTitle="Accountant Petty Vouchers" class="w-full text-left text-xs">
                       <thead class="bg-slate-50 text-slate-600 uppercase font-black text-[10px] border-b border-slate-200">
@@ -17188,7 +17210,7 @@
                       </thead>
                       <tbody class="divide-y divide-slate-100 font-medium">
                         @for (pv of accountantPettyVouchers; track pv.id) {
-                          <tr class="hover:bg-slate-50/70">
+                          <tr [attr.data-row-key]="pv.id" class="hover:bg-slate-50/70">
                             <td class="px-3 py-2 font-mono font-bold text-slate-900">{{ pv.voucherNo }}</td>
                             <td class="px-3 py-2 text-slate-600">{{ pv.category }}</td>
                             <td class="px-3 py-2">
@@ -17229,7 +17251,7 @@
                       </thead>
                       <tbody class="divide-y divide-slate-100 font-medium">
                         @for (rec of feeReconciliations; track rec.id) {
-                          <tr class="hover:bg-slate-50/70">
+                          <tr [attr.data-row-key]="rec.id" class="hover:bg-slate-50/70">
                             <td class="px-3 py-2.5">
                               <div class="font-mono font-black text-slate-900">{{ rec.id }}</div>
                               <div class="font-mono text-[10px] text-slate-500">{{ rec.date }} · Slip: {{ rec.bankDepositSlipNo || 'N/A' }}</div>
@@ -17350,6 +17372,11 @@
             <label class="block font-bold text-slate-700 mb-1">Instructions & Problem Set</label>
             <textarea [(ngModel)]="teacherHomeworkForm.description" rows="3" placeholder="Solve exercise 4.1 to 4.4 in homework notebook..." class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-medium focus:bg-white focus:outline-emerald-600"></textarea>
           </div>
+          <app-school-custom-form-fields
+            [tableId]="'owner_homework_log'"
+            [values]="formCustomValues['teacherHomework']"
+            [defaultTitle]="'Homework Assignment Custom Fields'"
+            (valuesChange)="updateFormCustomValues('teacherHomework', $event)" />
         </div>
 
         <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
@@ -17396,6 +17423,11 @@
             <label class="block font-bold text-slate-700 mb-1">Reason for Absence</label>
             <textarea [(ngModel)]="parentLeaveForm.reason" rows="3" placeholder="State illness, urgent family matter, or doctor appointment..." class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-medium"></textarea>
           </div>
+          <app-school-custom-form-fields
+            [tableId]="'owner_student_leaves'"
+            [values]="formCustomValues['parentLeave']"
+            [defaultTitle]="'Student Leave Custom Fields'"
+            (valuesChange)="updateFormCustomValues('parentLeave', $event)" />
         </div>
 
         <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
@@ -17455,6 +17487,12 @@
             </select>
           </div>
         </div>
+
+        <app-school-custom-form-fields
+          [tableId]="'students_master'"
+          [values]="formCustomValues['student']"
+          [defaultTitle]="'Student Directory Custom Fields'"
+          (valuesChange)="updateFormCustomValues('student', $event)" />
 
         <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
           <button (click)="closeStudentModal()" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs cursor-pointer">Cancel</button>
@@ -19569,6 +19607,12 @@
             </div>
           </div>
 
+          <app-school-custom-form-fields
+            [tableId]="'owner_admissions'"
+            [values]="formCustomValues['admission']"
+            [defaultTitle]="'Admission & Student Enrollment Fields'"
+            (valuesChange)="updateFormCustomValues('admission', $event)" />
+
         </div>
 
         <!-- Modal Actions Footer -->
@@ -20193,6 +20237,12 @@
               </div>
             </div>
           </div>
+
+          <app-school-custom-form-fields
+            [tableId]="'teachers_master'"
+            [values]="formCustomValues['teacher']"
+            [defaultTitle]="'Faculty Directory Custom Fields'"
+            (valuesChange)="updateFormCustomValues('teacher', $event)" />
 
         </div>
 
@@ -21191,6 +21241,11 @@
             <label class="block font-bold text-slate-700 mb-1">Optional PDF Attachment URL or Web Reference</label>
             <input type="text" [(ngModel)]="feedForm.attachedFileUrl" placeholder="https://..." class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 font-mono text-slate-900">
           </div>
+          <app-school-custom-form-fields
+            [tableId]="'campus_notices_feed'"
+            [values]="formCustomValues['feed']"
+            [defaultTitle]="'Campus Notice & Feed Custom Fields'"
+            (valuesChange)="updateFormCustomValues('feed', $event)" />
         </div>
 
         <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
@@ -21898,6 +21953,11 @@
             <label class="block font-bold text-slate-700 mb-1">Remarks / Cashier Notes</label>
             <textarea [(ngModel)]="principalFeeCollectForm.notes" rows="2" placeholder="Fee received by Principal Desk. Receipt issued to parent." class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-medium text-slate-900 focus:bg-white focus:outline-emerald-600"></textarea>
           </div>
+          <app-school-custom-form-fields
+            [tableId]="'fee_receipts_cashiering'"
+            [values]="formCustomValues['principalFeeCollect']"
+            [defaultTitle]="'Fee Receipt Custom Fields'"
+            (valuesChange)="updateFormCustomValues('principalFeeCollect', $event)" />
         </div>
 
         <!-- Footer Actions -->
@@ -22176,6 +22236,11 @@
               <option value="Revision Requested">Revision Requested</option>
             </select>
           </div>
+          <app-school-custom-form-fields
+            [tableId]="'principal_lesson_plans'"
+            [values]="formCustomValues['lessonPlan']"
+            [defaultTitle]="'Lesson Plan Custom Fields'"
+            (valuesChange)="updateFormCustomValues('lessonPlan', $event)" />
         </div>
 
         <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
@@ -23959,44 +24024,122 @@
   <!-- ========================================================================= -->
   @if (isOwnerPortal && ownerCrudModal.open) {
     <div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-      <div class="apple-card rounded-3xl max-w-lg w-full p-6 space-y-4 bg-white shadow-2xl border border-slate-200">
+      <div class="apple-card rounded-3xl max-w-2xl w-full p-6 space-y-4 bg-white shadow-2xl border border-slate-200">
         <div class="flex items-center justify-between pb-3 border-b border-slate-100">
           <div>
             <h4 class="font-black text-slate-900 text-base">{{ ownerCrudModal.title }}</h4>
-            <p class="text-xs text-slate-400">School Business Owner Master CRUD</p>
+            <p class="text-xs text-slate-400">
+              School Business Owner Master CRUD · Full Column, Custom Field &amp; Multi-Row Staging
+            </p>
           </div>
           <button (click)="closeOwnerRecordCrudModal()" class="p-1 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer">
             <lucide-icon [name]="'x'" class="w-5 h-5"></lucide-icon>
           </button>
         </div>
-        <div class="space-y-3 text-xs max-h-[60vh] overflow-y-auto custom-scrollbar pr-1">
-          @for (f of ownerCrudModal.fields; track f.key) {
-            <div>
-              <label class="font-bold text-slate-700 block mb-1">{{ f.label }}</label>
-              @if (f.type === 'select') {
-                <select [value]="ownerCrudModal.draft[f.key] ?? ''"
-                        (change)="updateOwnerCrudField(f.key, $any($event.target).value)"
-                        class="w-full px-3 py-2 rounded-xl border border-slate-200 font-bold text-slate-900 focus:outline-indigo-600 cursor-pointer">
-                  @for (opt of f.options || []; track opt) {
-                    <option [value]="opt">{{ opt }}</option>
+
+        <div class="space-y-4 text-xs max-h-[65vh] overflow-y-auto custom-scrollbar pr-1">
+          <!-- Primary Record Row -->
+          <div class="rounded-2xl border border-slate-200/80 bg-slate-50/40 p-4 space-y-3">
+            @if (ownerCrudModal.mode === 'add') {
+              <div class="flex items-center justify-between">
+                <span class="px-2 py-0.5 rounded-md bg-slate-900 text-white text-[10px] font-black uppercase tracking-wider">Row #1</span>
+                <span class="text-[10px] font-semibold text-slate-500">Synced with table columns &amp; all portals</span>
+              </div>
+            }
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              @for (f of ownerCrudModal.fields; track f.key) {
+                <div>
+                  <label class="font-bold text-slate-700 block mb-1">{{ f.label }}</label>
+                  @if (f.type === 'select') {
+                    <select [value]="ownerCrudModal.draft[f.key] ?? ''"
+                            (change)="updateOwnerCrudField(f.key, $any($event.target).value)"
+                            class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold text-slate-900 focus:outline-indigo-600 cursor-pointer">
+                      @for (opt of f.options || []; track opt) {
+                        <option [value]="opt">{{ opt }}</option>
+                      }
+                    </select>
+                  } @else {
+                    <input [type]="f.type === 'number' ? 'number' : (f.type === 'date' ? 'date' : 'text')"
+                           [value]="ownerCrudModal.draft[f.key] ?? ''"
+                           (input)="updateOwnerCrudField(f.key, $any($event.target).value)"
+                           class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold text-slate-900 focus:outline-indigo-600">
                   }
-                </select>
-              } @else {
-                <input [type]="f.type === 'number' ? 'number' : 'text'"
-                       [value]="ownerCrudModal.draft[f.key] ?? ''"
-                       (input)="updateOwnerCrudField(f.key, $any($event.target).value)"
-                       class="w-full px-3 py-2 rounded-xl border border-slate-200 font-bold text-slate-900 focus:outline-indigo-600">
+                </div>
               }
             </div>
+
+            @if (ownerCrudModal.tableId) {
+              <app-school-custom-form-fields
+                [tableId]="ownerCrudModal.tableId"
+                [values]="ownerCrudModal.customValues"
+                [defaultTitle]="ownerCrudModal.title"
+                (valuesChange)="updateOwnerCrudCustomValues($event)" />
+            }
+          </div>
+
+          <!-- Extra Staged Rows (Add Mode Only) -->
+          @if (ownerCrudModal.mode === 'add' && ownerCrudModal.extraRows.length > 0) {
+            @for (er of ownerCrudModal.extraRows; track $index; let i = $index) {
+              <div class="rounded-2xl border border-indigo-200 bg-indigo-50/30 p-4 space-y-3">
+                <div class="flex items-center justify-between">
+                  <span class="px-2 py-0.5 rounded-md bg-indigo-600 text-white text-[10px] font-black uppercase tracking-wider">Row #{{ i + 2 }}</span>
+                  <button type="button" (click)="removeOwnerCrudExtraRow(i)" class="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-[11px] cursor-pointer inline-flex items-center gap-1">
+                    <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">delete</mat-icon>
+                    <span>Remove Row</span>
+                  </button>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  @for (f of ownerCrudModal.fields; track f.key) {
+                    <div>
+                      <label class="font-bold text-slate-700 block mb-1">{{ f.label }}</label>
+                      @if (f.type === 'select') {
+                        <select [value]="er.draft[f.key] ?? ''"
+                                (change)="updateOwnerCrudExtraField(i, f.key, $any($event.target).value)"
+                                class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold text-slate-900 focus:outline-indigo-600 cursor-pointer">
+                          @for (opt of f.options || []; track opt) {
+                            <option [value]="opt">{{ opt }}</option>
+                          }
+                        </select>
+                      } @else {
+                        <input [type]="f.type === 'number' ? 'number' : (f.type === 'date' ? 'date' : 'text')"
+                               [value]="er.draft[f.key] ?? ''"
+                               (input)="updateOwnerCrudExtraField(i, f.key, $any($event.target).value)"
+                               class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold text-slate-900 focus:outline-indigo-600">
+                      }
+                    </div>
+                  }
+                </div>
+
+                @if (ownerCrudModal.tableId) {
+                  <app-school-custom-form-fields
+                    [tableId]="ownerCrudModal.tableId"
+                    [values]="er.customValues"
+                    [allowSchemaEdit]="false"
+                    (valuesChange)="updateOwnerCrudExtraCustomValues(i, $event)" />
+                }
+              </div>
+            }
           }
         </div>
-        <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
-          <button (click)="closeOwnerRecordCrudModal()" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer">
-            Cancel
-          </button>
-          <button (click)="saveOwnerRecordCrudModal()" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs cursor-pointer shadow-xs">
-            Save Record
-          </button>
+
+        <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-2 flex-wrap">
+          <div>
+            @if (ownerCrudModal.mode === 'add') {
+              <button type="button" (click)="addOwnerCrudExtraRow()" class="px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 font-black text-xs cursor-pointer inline-flex items-center gap-1.5">
+                <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">add_circle</mat-icon>
+                <span>+ Add Another Row</span>
+              </button>
+            }
+          </div>
+          <div class="flex items-center gap-2">
+            <button (click)="closeOwnerRecordCrudModal()" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer">
+              Cancel
+            </button>
+            <button (click)="saveOwnerRecordCrudModal()" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs cursor-pointer shadow-xs inline-flex items-center gap-1.5">
+              <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">save</mat-icon>
+              <span>{{ ownerCrudModal.mode === 'add' && ownerCrudModal.extraRows.length > 0 ? 'Save All ' + (ownerCrudModal.extraRows.length + 1) + ' Rows' : 'Save Record' }}</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

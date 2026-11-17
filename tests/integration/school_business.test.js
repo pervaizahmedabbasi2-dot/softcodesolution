@@ -876,3 +876,174 @@ test('School Business: Multi-Category Face Verification Attendance (Student, Tea
   assert.equal(priAtt[0].confidenceScore, 95.3);
 });
 
+test('School Table & Form Customization: Canonical Mirroring, Strict Owner RBAC, Portal Input Submission & Full DB CRUD/Delete', async () => {
+  const tenantId = `tenant-table-schema-${Date.now()}`;
+  const ownerHeaders = { 'Content-Type': 'application/json', 'x-tenant-id': tenantId, 'x-user-role': 'owner', 'x-user-name': 'Owner Executive' };
+  const principalHeaders = { 'Content-Type': 'application/json', 'x-tenant-id': tenantId, 'x-user-role': 'principal', 'x-user-name': 'Dr. Tariq' };
+  const teacherHeaders = { 'Content-Type': 'application/json', 'x-tenant-id': tenantId, 'x-user-role': 'teacher', 'x-user-name': 'Ms. Ayesha' };
+  const accountantHeaders = { 'Content-Type': 'application/json', 'x-tenant-id': tenantId, 'x-user-role': 'accountant', 'x-user-name': 'Mr. Bilal' };
+  const studentHeaders = { 'Content-Type': 'application/json', 'x-tenant-id': tenantId, 'x-user-role': 'student', 'x-user-name': 'Zain Ali' };
+  const parentHeaders = { 'Content-Type': 'application/json', 'x-tenant-id': tenantId, 'x-user-role': 'parent', 'x-user-name': 'Mrs. Ali' };
+
+  // 1. Strict Owner RBAC: non-owner portals MUST be blocked (403) from customizing schema/columns
+  for (const hdr of [principalHeaders, teacherHeaders, accountantHeaders, studentHeaders, parentHeaders]) {
+    const blockedPut = await fetch(`${baseUrl}/api/school/table-schemas/principal_master_students`, {
+      method: 'PUT',
+      headers: hdr,
+      body: JSON.stringify({
+        customTitle: 'Hijacked Title',
+        customColumns: [{ id: 'col_hack', label: 'Hack', type: 'text', defaultValue: '' }]
+      })
+    });
+    assert.equal(blockedPut.status, 403);
+    assert.equal((await blockedPut.json()).error, 'OWNER_ONLY_FORBIDDEN');
+  }
+
+  // 2. Owner adds custom title, custom columns (including an accidental extra column), hidden & renamed columns
+  // Target table alias 'principal_master_students' -> resolves to canonical family 'students_master'
+  const saveSchemaRes = await fetch(`${baseUrl}/api/school/table-schemas/principal_master_students`, {
+    method: 'PUT',
+    headers: ownerHeaders,
+    body: JSON.stringify({
+      customTitle: 'Verified Campus Students & House Allocation',
+      hiddenColumns: [3],
+      hiddenColumnLabels: ['Emergency Contact'],
+      renamedHeaders: { 1: 'Scholar Name & Class' },
+      renamedHeadersByLabel: { 'Student Name & Class': 'Scholar Name & Class' },
+      customColumns: [
+        { id: 'col_house', label: 'Campus House', type: 'select', defaultValue: 'Iqbal', options: ['Iqbal', 'Jinnah', 'Sir Syed'] },
+        { id: 'col_accidental', label: 'Extra Wrong Column', type: 'text', defaultValue: '' }
+      ]
+    })
+  });
+  assert.equal(saveSchemaRes.status, 200);
+  const savedJson = await saveSchemaRes.json();
+  assert.equal(savedJson.tableId, 'students_master');
+  assert.equal(savedJson.schema.customTitle, 'Verified Campus Students & House Allocation');
+  assert.equal(savedJson.schema.customColumns.length, 2);
+
+  // 3. Cross-portal mirroring: Principal, Teacher, Accountant all read the same canonical schema
+  const getSchemasRes = await fetch(`${baseUrl}/api/school/table-schemas`, { headers: principalHeaders });
+  assert.equal(getSchemasRes.status, 200);
+  const { schemas } = await getSchemasRes.json();
+  assert.ok(schemas.students_master, 'Canonical students_master must exist');
+  assert.equal(schemas.students_master.customTitle, 'Verified Campus Students & House Allocation');
+  assert.deepEqual(schemas.students_master.hiddenColumnLabels, ['Emergency Contact']);
+  assert.equal(schemas.students_master.renamedHeadersByLabel['Student Name & Class'], 'Scholar Name & Class');
+
+  // 4. Non-owner portal submits form custom input & row values into synced table (work form submission)
+  const portalSubmitRes = await fetch(`${baseUrl}/api/school/table-schemas/owner_students_roster/rows`, {
+    method: 'POST',
+    headers: teacherHeaders,
+    body: JSON.stringify({
+      rows: [
+        {
+          rowKey: 'STU-9001',
+          rowLabel: 'Hamza Khan',
+          values: { col_house: 'Jinnah', col_accidental: 'temp mistake' }
+        }
+      ],
+      cells: [
+        { rowKey: 'STU-9001', colId: 'col_house', value: 'Jinnah' },
+        { rowKey: 'STU-9001', colId: 'col_accidental', value: 'temp mistake' }
+      ]
+    })
+  });
+  assert.equal(portalSubmitRes.status, 201);
+  const afterPortalSubmit = (await portalSubmitRes.json()).schema;
+  assert.equal(afterPortalSubmit.customCells['STU-9001']?.col_house, 'Jinnah');
+  assert.equal(afterPortalSubmit.cellMeta?.['STU-9001']?.col_house?.submittedByRole, 'teacher');
+
+  // 5. Strict Owner RBAC: Teacher / Accountant / Principal CANNOT edit/delete submitted rows, cells, or columns
+  const teacherEditRow = await fetch(`${baseUrl}/api/school/table-schemas/students_master/rows/STU-9001`, {
+    method: 'PUT',
+    headers: teacherHeaders,
+    body: JSON.stringify({ values: { col_house: 'Sir Syed' } })
+  });
+  assert.equal(teacherEditRow.status, 403);
+
+  const accountantDeleteCol = await fetch(`${baseUrl}/api/school/table-schemas/students_master/columns/col_accidental`, {
+    method: 'DELETE',
+    headers: accountantHeaders
+  });
+  assert.equal(accountantDeleteCol.status, 403);
+
+  // 6. Owner edits submitted row values & deletes accidental column -> purges column + cell values from SQLite
+  const ownerEditRowRes = await fetch(`${baseUrl}/api/school/table-schemas/students_master/rows/STU-9001`, {
+    method: 'PUT',
+    headers: ownerHeaders,
+    body: JSON.stringify({ rowLabel: 'Hamza Khan (Updated)', values: { col_house: 'Sir Syed', col_accidental: 'temp mistake' } })
+  });
+  assert.equal(ownerEditRowRes.status, 200);
+  assert.equal((await ownerEditRowRes.json()).schema.customCells['STU-9001']?.col_house, 'Sir Syed');
+
+  const delColRes = await fetch(`${baseUrl}/api/school/table-schemas/students_master/columns/col_accidental`, {
+    method: 'DELETE',
+    headers: ownerHeaders
+  });
+  assert.equal(delColRes.status, 200);
+  const afterDelCol = (await delColRes.json()).schema;
+  assert.equal(afterDelCol.customColumns.some((c) => c.id === 'col_accidental'), false);
+  assert.equal(afterDelCol.customCells['STU-9001']?.col_accidental, undefined);
+
+  // Verify SQLite cell deletion directly
+  const remainingWrongCell = runtime.sqliteDb
+    .prepare('SELECT * FROM local_school_table_cells WHERE tenant_id = ? AND table_id = ? AND col_id = ?')
+    .get(tenantId, 'students_master', 'col_accidental');
+  assert.equal(remainingWrongCell, undefined, 'Deleted column cells must be purged from SQLite');
+
+  // 7. Owner deletes individual cell value & deletes custom row
+  const delCellRes = await fetch(`${baseUrl}/api/school/table-schemas/students_master/cells/STU-9001/col_house`, {
+    method: 'DELETE',
+    headers: ownerHeaders
+  });
+  assert.equal(delCellRes.status, 200);
+  assert.equal((await delCellRes.json()).schema.customCells['STU-9001']?.col_house, undefined);
+
+  const delRowRes = await fetch(`${baseUrl}/api/school/table-schemas/students_master/rows/STU-9001`, {
+    method: 'DELETE',
+    headers: ownerHeaders
+  });
+  assert.equal(delRowRes.status, 200);
+  assert.equal((await delRowRes.json()).schema.customRows.length, 0);
+
+  // 8. Owner deletes custom schema completely -> disappears from SQLite
+  const delSchemaRes = await fetch(`${baseUrl}/api/school/table-schemas/students_master`, {
+    method: 'DELETE',
+    headers: ownerHeaders
+  });
+  assert.equal(delSchemaRes.status, 200);
+  const finalSchemasRes = await fetch(`${baseUrl}/api/school/table-schemas`, { headers: ownerHeaders });
+  assert.equal((await finalSchemasRes.json()).schemas.students_master, undefined);
+
+  // 9. Lesson plan deletion enforces Owner-only RBAC and deletes from SQLite
+  const createPlanRes = await fetch(`${baseUrl}/api/school/lesson-plans`, {
+    method: 'POST',
+    headers: teacherHeaders,
+    body: JSON.stringify({
+      teacherName: 'Ms. Ayesha',
+      subject: 'Mathematics',
+      grade: 'Grade 9',
+      topic: 'Quadratic Equations',
+      objectives: 'Solve by factoring',
+      weekStart: '2026-11-16'
+    })
+  });
+  assert.equal(createPlanRes.status, 201);
+  const createdPlan = (await createPlanRes.json()).lessonPlan;
+  assert.ok(createdPlan?.id);
+
+  const teacherDelPlan = await fetch(`${baseUrl}/api/school/lesson-plans/${createdPlan.id}`, {
+    method: 'DELETE',
+    headers: teacherHeaders
+  });
+  assert.equal(teacherDelPlan.status, 403);
+
+  const ownerDelPlan = await fetch(`${baseUrl}/api/school/lesson-plans/${createdPlan.id}`, {
+    method: 'DELETE',
+    headers: ownerHeaders
+  });
+  assert.equal(ownerDelPlan.status, 200);
+});
+
+

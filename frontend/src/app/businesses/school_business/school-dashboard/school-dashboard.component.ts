@@ -79,6 +79,7 @@ import {
 } from '../models/school-attendance.models';
 import { SchoolTableDirective } from '../directives/school-table.directive';
 import { SchoolTableColumnModalComponent } from '../components/school-table-column-modal/school-table-column-modal.component';
+import { SchoolCustomFormFieldsComponent } from '../components/school-custom-form-fields/school-custom-form-fields.component';
 import { SchoolTableSchemaService } from '../services/school-table-schema.service';
 
 export type SchoolDashboardTab = 'overview' | 'stage_wise' | 'feed' | 'events' | 'students' | 'teachers' | 'admissions' | 'attendance' | 'finance' | 'invoices' | 'expenses' | 'payment_gateway' | 'transport' | 'library' | 'exams' | 'timetable' | 'hostel' | 'labs' | 'alumni' | 'portals' | 'reports' | 'settings' | 'audit' | 'lesson_plans' | 'appraisals' | 'inspections' | 'exam_moderation' | 'parent_complaints' | 'substitutions' | 'syllabus' | 'safeguarding' | 'directives';
@@ -787,7 +788,7 @@ export interface PrincipalFeeCollectionRecord {
 @Component({
   selector: 'app-school-dashboard',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule, FormsModule, MatIconModule, DataTableComponent, AuditReconciliationTrendsComponent, AnalyticsDashboardComponent, SchoolAttendanceHubComponent, SchoolTableDirective, SchoolTableColumnModalComponent],
+  imports: [CommonModule, LucideAngularModule, FormsModule, MatIconModule, DataTableComponent, AuditReconciliationTrendsComponent, AnalyticsDashboardComponent, SchoolAttendanceHubComponent, SchoolTableDirective, SchoolTableColumnModalComponent, SchoolCustomFormFieldsComponent],
   templateUrl: './school-dashboard.component.html',
   styles: [`
     .glass-surface {
@@ -2537,6 +2538,7 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
         attachedFileUrl: ''
       };
     }
+    this.formCustomValues['feed'] = {};
     this.isFeedModalOpen = true;
   }
 
@@ -2601,6 +2603,19 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
     };
 
     this.campusFeedPosts.unshift(newPost);
+
+    this.tableSchemaService.submitFormCustomInputs(
+      'campus_notices_feed',
+      [newPost.id, newPost.dispatchRefNo],
+      this.formCustomValues['feed'],
+      {
+        rowLabel: newPost.title,
+        submittedByName: newPost.authorName,
+        submittedByRole: this.currentPortalRole
+      }
+    );
+    this.formCustomValues['feed'] = {};
+    this.saveStateToStorage();
 
     // Create automatic Targeted In-App Notification
     let targetRole: 'all' | 'student' | 'parent' | 'teacher' = 'all';
@@ -3325,6 +3340,26 @@ INSTRUCTIONS:
     status: 'Verified',
     challanNo: ''
   };
+
+  // Dynamic Custom Form Field Drafts (synced with SchoolTableSchemaService)
+  formCustomValues: Record<string, Record<string, string>> = {
+    student: {},
+    admission: {},
+    teacher: {},
+    feed: {},
+    lessonPlan: {},
+    teacherHomework: {},
+    parentLeave: {},
+    principalFeeCollect: {},
+    accountantCollect: {},
+    accountantChallan: {},
+    accountantPetty: {},
+    accountantDailyClosing: {}
+  };
+
+  updateFormCustomValues(formKey: string, nextVals: Record<string, string>): void {
+    this.formCustomValues[formKey] = { ...(nextVals || {}) };
+  }
 
   // Form Models
   studentForm: Partial<StudentRecord> = {
@@ -4883,6 +4918,7 @@ INSTRUCTIONS:
       status: 'Planned',
       teacherName: this.currentPortalRole === 'teacher' ? 'Prof. Tariq Mehmood' : 'Dr. Tahir Malik (Principal)'
     };
+    this.formCustomValues['lessonPlan'] = {};
     this.isLessonPlanModalOpen = true;
     this.cdr.detectChanges();
   }
@@ -4902,6 +4938,8 @@ INSTRUCTIONS:
       status: plan.status || 'Planned',
       teacherName: plan.teacherName || 'Faculty Member'
     };
+    const existingCells = this.tableSchemaService.getSchema('principal_lesson_plans').customCells[plan.id] || {};
+    this.formCustomValues['lessonPlan'] = { ...existingCells };
     this.isLessonPlanModalOpen = true;
     this.cdr.detectChanges();
   }
@@ -4917,6 +4955,10 @@ INSTRUCTIONS:
       this.showToast('Please enter lesson plan topic and learning objectives', 'warning');
       return;
     }
+
+    let targetPlanId = this.editingLessonPlan?.id || '';
+    const targetTopic = this.lessonPlanForm.topic;
+    const targetAuthor = this.lessonPlanForm.teacherName || 'Prof. Tariq Mehmood';
 
     if (this.editingLessonPlan) {
       this.editingLessonPlan.topic = this.lessonPlanForm.topic;
@@ -4944,12 +4986,25 @@ INSTRUCTIONS:
         teachingAids: this.lessonPlanForm.teachingAids,
         homeworkAssigned: this.lessonPlanForm.homeworkAssigned,
         status: this.lessonPlanForm.status,
-        teacherName: this.lessonPlanForm.teacherName || 'Prof. Tariq Mehmood'
+        teacherName: targetAuthor
       };
+      targetPlanId = newPlan.id;
       this.teacherLessonPlans.unshift(newPlan);
       this.showToast(`📚 New Lesson Plan [${newPlan.id}] created and published!`, 'success');
     }
 
+    this.tableSchemaService.submitFormCustomInputs(
+      'principal_lesson_plans',
+      [targetPlanId, targetTopic],
+      this.formCustomValues['lessonPlan'],
+      {
+        rowLabel: targetTopic,
+        submittedByName: targetAuthor,
+        submittedByRole: this.currentPortalRole
+      }
+    );
+    this.formCustomValues['lessonPlan'] = {};
+    this.saveStateToStorage();
     this.closeLessonPlanModal();
   }
 
@@ -4964,6 +5019,9 @@ INSTRUCTIONS:
     const idx = this.teacherLessonPlans.findIndex(p => p.id === plan.id);
     if (idx !== -1) {
       this.teacherLessonPlans.splice(idx, 1);
+      void this.backend.deleteSchoolLessonPlan(plan.id);
+      this.tableSchemaService.clearRowCustomData('principal_lesson_plans', [plan.id, plan.topic]);
+      this.saveStateToStorage();
       this.showToast(`🗑️ Lesson Plan [${plan.id}] deleted by School Owner.`, 'info');
     }
   }
@@ -5107,6 +5165,7 @@ INSTRUCTIONS:
       month: 'October 2026',
       notes: 'Collected directly at Principal Office Counter.'
     };
+    this.formCustomValues['principalFeeCollect'] = {};
     this.isPrincipalFeeCollectModalOpen = true;
     this.cdr.detectChanges();
   }
@@ -5232,6 +5291,18 @@ INSTRUCTIONS:
       isUnread: true,
       linkTab: 'finance'
     });
+
+    this.tableSchemaService.submitFormCustomInputs(
+      'fee_receipts_cashiering',
+      [newRecord.id, newRecord.receiptNo],
+      this.formCustomValues['principalFeeCollect'],
+      {
+        rowLabel: `${newRecord.receiptNo} - ${newRecord.studentName}`,
+        submittedByName: collectorLabel,
+        submittedByRole: this.currentPortalRole
+      }
+    );
+    this.formCustomValues['principalFeeCollect'] = {};
 
     this.saveStateToStorage();
     this.closePrincipalFeeCollectModal();
@@ -6866,7 +6937,8 @@ INSTRUCTIONS:
         this.backend.getSchoolPrincipals().catch(() => null),
         this.backend.getSchoolAttendancePolicy().catch(() => null),
         this.backend.getSchoolFaceProfiles().catch(() => null),
-        this.backend.getSchoolAttendance().catch(() => null)
+        this.backend.getSchoolAttendance().catch(() => null),
+        this.tableSchemaService.loadFromBackend().catch(() => null)
       ]);
 
       if (wsRes?.ok && wsRes.workspace && typeof wsRes.workspace === 'object') {
@@ -9279,6 +9351,7 @@ INSTRUCTIONS:
       dueDate: 'Oct 22, 2026',
       description: ''
     };
+    this.formCustomValues['teacherHomework'] = {};
     this.isTeacherHomeworkModalOpen = true;
     this.cdr.detectChanges();
   }
@@ -9306,6 +9379,17 @@ INSTRUCTIONS:
     };
     this.teacherHomeworks.unshift(newHw);
     void this.backend.saveSchoolHomework({ ...newHw, teacherId: this.currentTeacherProfile.id });
+    this.tableSchemaService.submitFormCustomInputs(
+      'owner_homework_log',
+      [newHw.id, newHw.title],
+      this.formCustomValues['teacherHomework'],
+      {
+        rowLabel: newHw.title,
+        submittedByName: this.currentTeacherProfile.name,
+        submittedByRole: this.currentPortalRole
+      }
+    );
+    this.formCustomValues['teacherHomework'] = {};
     this.saveStateToStorage();
     this.closeTeacherHomeworkModal();
     this.showToast(`Posted assignment to ${newHw.grade} student portals!`, 'success');
@@ -9319,6 +9403,7 @@ INSTRUCTIONS:
       toDate: 'Oct 21, 2026',
       reason: ''
     };
+    this.formCustomValues['parentLeave'] = {};
     this.isParentLeaveModalOpen = true;
     this.cdr.detectChanges();
   }
@@ -9346,6 +9431,17 @@ INSTRUCTIONS:
     };
     this.parentLeaveRequests.unshift(newLeave);
     void this.backend.saveSchoolLeave({ ...newLeave, guardianName: this.currentGuardianProfile.name });
+    this.tableSchemaService.submitFormCustomInputs(
+      'owner_student_leaves',
+      [newLeave.id],
+      this.formCustomValues['parentLeave'],
+      {
+        rowLabel: `${newLeave.childName} (${newLeave.fromDate})`,
+        submittedByName: this.currentGuardianProfile.name,
+        submittedByRole: this.currentPortalRole
+      }
+    );
+    this.formCustomValues['parentLeave'] = {};
     this.saveStateToStorage();
     this.closeParentLeaveModal();
     this.showToast('Official leave application submitted for review!', 'success');
@@ -10264,6 +10360,8 @@ INSTRUCTIONS:
   openEditStudentModal(student: StudentRecord) {
     this.activeStudentForEdit = student;
     this.studentForm = { ...student };
+    const existingCells = this.tableSchemaService.getSchema('students_master').customCells[student.id] || {};
+    this.formCustomValues['student'] = { ...existingCells };
     this.isStudentModalOpen = true;
     this.cdr.detectChanges();
   }
@@ -10279,8 +10377,12 @@ INSTRUCTIONS:
       this.showToast('Please enter Student Name and Guardian information.', 'warning');
       return;
     }
+    let targetId = '';
+    let targetRoll = '';
     if (this.activeStudentForEdit) {
       Object.assign(this.activeStudentForEdit, this.studentForm);
+      targetId = this.activeStudentForEdit.id;
+      targetRoll = this.activeStudentForEdit.rollNo || '';
       void this.backend.updateSchoolStudent(this.activeStudentForEdit.id, this.activeStudentForEdit);
       this.showToast(`Updated student profile for ${this.studentForm.name}`, 'success');
     } else {
@@ -10299,6 +10401,8 @@ INSTRUCTIONS:
         rollNo: Math.floor(1000 + Math.random() * 9000).toString(),
         admissionDate: new Date().toISOString().slice(0, 10)
       };
+      targetId = newStudent.id;
+      targetRoll = newStudent.rollNo;
       this.activeStudents.unshift(newStudent);
       this.studentsSortColumn = '';
       this.currentPage['students'] = 1;
@@ -10334,6 +10438,17 @@ INSTRUCTIONS:
 
       this.showToast(`Enrolled new student: ${newStudent.name} (Roll #${newStudent.rollNo}) at Row 1!`, 'success');
     }
+    this.tableSchemaService.submitFormCustomInputs(
+      'students_master',
+      [targetId, targetRoll].filter(Boolean),
+      this.formCustomValues['student'],
+      {
+        rowLabel: this.studentForm.name || targetId,
+        submittedByName: 'School Owner',
+        submittedByRole: this.currentPortalRole
+      }
+    );
+    this.formCustomValues['student'] = {};
     this.saveStateToStorage();
     this.closeStudentModal();
   }
@@ -10344,6 +10459,7 @@ INSTRUCTIONS:
       return;
     }
     this.activeStudents = this.activeStudents.filter(s => s.id !== student.id);
+    this.tableSchemaService.clearRowCustomData('students_master', [student.id, student.rollNo].filter(Boolean));
     this.saveStateToStorage();
     void this.backend.deleteSchoolStudent(student.id);
     this.showToast(`Removed student record for ${student.name}`, 'info');
@@ -10443,6 +10559,7 @@ INSTRUCTIONS:
       salaryStatus: 'Processing',
       rating: 4.9
     };
+    this.formCustomValues['teacher'] = {};
     this.isTeacherModalOpen = true;
     this.cdr.detectChanges();
   }
@@ -10453,6 +10570,8 @@ INSTRUCTIONS:
       ...teacher,
       role: teacher.role || teacher.designation || 'Senior Faculty Teacher'
     };
+    const existingCells = this.tableSchemaService.getSchema('teachers_master').customCells[teacher.id] || {};
+    this.formCustomValues['teacher'] = { ...existingCells };
     this.isTeacherModalOpen = true;
     this.cdr.detectChanges();
   }
@@ -10481,6 +10600,7 @@ INSTRUCTIONS:
       ? this.teacherForm.customInchargeInput.trim()
       : (this.teacherForm.inchargeClass || 'None');
 
+    let targetTeacherId = '';
     if (this.activeTeacherForEdit) {
       Object.assign(this.activeTeacherForEdit, this.teacherForm, {
         role: finalRole,
@@ -10488,6 +10608,7 @@ INSTRUCTIONS:
         assignedGrade: finalGrade,
         inchargeClass: finalIncharge
       });
+      targetTeacherId = this.activeTeacherForEdit.id;
       void this.backend.updateSchoolTeacher(this.activeTeacherForEdit.id, this.activeTeacherForEdit);
       this.showToast(`Updated faculty profile for ${this.teacherForm.name}`, 'success');
     } else {
@@ -10521,6 +10642,7 @@ INSTRUCTIONS:
         appointmentDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
         tenureDuration: 'Newly Appointed'
       };
+      targetTeacherId = newTeacher.id;
       this.teachers.unshift(newTeacher);
       this.teachersSearchQuery = '';
       this.currentPage['teachers'] = 1;
@@ -10551,6 +10673,17 @@ INSTRUCTIONS:
 
       this.showToast(`Faculty Member Appointed: ${newTeacher.name} (${finalRole}) added at Row #1!`, 'success');
     }
+    this.tableSchemaService.submitFormCustomInputs(
+      'teachers_master',
+      [targetTeacherId],
+      this.formCustomValues['teacher'],
+      {
+        rowLabel: this.teacherForm.name || targetTeacherId,
+        submittedByName: 'School Owner',
+        submittedByRole: this.currentPortalRole
+      }
+    );
+    this.formCustomValues['teacher'] = {};
     this.saveStateToStorage();
     this.closeTeacherModal();
   }
@@ -10561,6 +10694,7 @@ INSTRUCTIONS:
       return;
     }
     this.teachers = this.teachers.filter(t => t.id !== teacher.id);
+    this.tableSchemaService.clearRowCustomData('teachers_master', [teacher.id]);
     this.saveStateToStorage();
     void this.backend.deleteSchoolTeacher(teacher.id);
     this.showToast(`Removed faculty member ${teacher.name}`, 'info');
@@ -10595,6 +10729,7 @@ INSTRUCTIONS:
       score: '88% Entrance Assessment',
       status: 'Approved'
     };
+    this.formCustomValues['admission'] = {};
     this.isAdmissionModalOpen = true;
     this.cdr.detectChanges();
   }
@@ -10835,6 +10970,27 @@ INSTRUCTIONS:
 
     void this.backend.saveSchoolAdmission(newAdm);
     void this.backend.admitStudent(newStudent);
+    this.tableSchemaService.submitFormCustomInputs(
+      'owner_admissions',
+      [newAdm.id, newAdm.applicant],
+      this.formCustomValues['admission'],
+      {
+        rowLabel: newAdm.applicant,
+        submittedByName: 'Admissions Office',
+        submittedByRole: this.currentPortalRole
+      }
+    );
+    this.tableSchemaService.submitFormCustomInputs(
+      'students_master',
+      [newStudent.id, newStudent.rollNo],
+      this.formCustomValues['admission'],
+      {
+        rowLabel: newStudent.name,
+        submittedByName: 'Admissions Office',
+        submittedByRole: this.currentPortalRole
+      }
+    );
+    this.formCustomValues['admission'] = {};
     this.saveStateToStorage();
     this.syncToCloud(false);
     this.closeAdmissionModal();
@@ -15793,6 +15949,17 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     this.accountantPettyForm.description = '';
     this.accountantPettyForm.amount = 0;
     this.accountantPettyForm.paidTo = '';
+    this.tableSchemaService.submitFormCustomInputs(
+      'petty_vouchers',
+      [saved.id, saved.voucherNo],
+      this.formCustomValues['accountantPetty'],
+      {
+        rowLabel: `${saved.voucherNo} - ${saved.description}`,
+        submittedByName: saved.recordedBy || 'Accountant',
+        submittedByRole: this.currentPortalRole
+      }
+    );
+    this.formCustomValues['accountantPetty'] = {};
     this.saveStateToStorage();
     this.showToast(`Petty Voucher ${saved.voucherNo} (PKR ${this.formatCurrency(saved.amount)}) added to Rooznama.`, 'success');
     this.cdr.detectChanges();
@@ -15807,6 +15974,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     this.accountantPettyVouchers = this.accountantPettyVouchers.filter(v => v.id !== voucher.id);
     this.syncClosingPettyExpensesFromVouchers();
     await this.backend.deleteSchoolPettyVoucher(voucher.id);
+    this.tableSchemaService.clearRowCustomData('petty_vouchers', [voucher.id, voucher.voucherNo].filter(Boolean));
     this.saveStateToStorage();
     this.showToast(`Removed petty voucher ${voucher.voucherNo}.`, 'info');
     this.cdr.detectChanges();
@@ -16284,6 +16452,18 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       } as any);
     }
 
+    this.tableSchemaService.submitFormCustomInputs(
+      'fee_challans_invoices',
+      [saved.id, saved.challanNo],
+      this.formCustomValues['accountantChallan'],
+      {
+        rowLabel: `${saved.challanNo} - ${saved.studentName}`,
+        submittedByName: 'Accountant Desk',
+        submittedByRole: this.currentPortalRole
+      }
+    );
+    this.formCustomValues['accountantChallan'] = {};
+
     this.saveStateToStorage();
     this.showToast(`Challan #${saved.challanNo} generated for ${saved.studentName} (PKR ${this.formatCurrency(saved.total)}).`, 'success');
     this.cdr.detectChanges();
@@ -16464,6 +16644,18 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       linkTab: 'finance'
     });
 
+    this.tableSchemaService.submitFormCustomInputs(
+      'fee_receipts_cashiering',
+      [newRecord.id, newRecord.receiptNo],
+      this.formCustomValues['accountantCollect'],
+      {
+        rowLabel: `${newRecord.receiptNo} - ${newRecord.studentName}`,
+        submittedByName: newRecord.collectedBy,
+        submittedByRole: this.currentPortalRole
+      }
+    );
+    this.formCustomValues['accountantCollect'] = {};
+
     this.saveStateToStorage();
     void this.refreshOwnerFinancialMonitoring();
     this.showToast(`Receipt #${newRecord.receiptNo} recorded (PKR ${this.formatCurrency(amount)}) & synced to Owner dashboard.`, 'success');
@@ -16567,6 +16759,18 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       isUnread: true,
       linkTab: 'finance'
     });
+
+    this.tableSchemaService.submitFormCustomInputs(
+      'daily_closing_reconciliation',
+      [saved.id, saved.date],
+      this.formCustomValues['accountantDailyClosing'],
+      {
+        rowLabel: `${saved.id} (${saved.date})`,
+        submittedByName: saved.cashierName,
+        submittedByRole: this.currentPortalRole
+      }
+    );
+    this.formCustomValues['accountantDailyClosing'] = {};
 
     this.saveStateToStorage();
     void this.refreshOwnerFinancialMonitoring();
@@ -16742,7 +16946,9 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
         }
         if (cloudData.tableSchemas && typeof cloudData.tableSchemas === 'object') {
           const currentLocal = this.tableSchemaService.exportSchemas();
-          this.tableSchemaService.importSchemas({ ...cloudData.tableSchemas, ...currentLocal });
+          if (Object.keys(currentLocal).length === 0) {
+            this.tableSchemaService.importSchemas(cloudData.tableSchemas, true);
+          }
         }
         this.lastCloudSyncTimestamp = 'Synced Just now';
         this.cdr.detectChanges();
@@ -16758,27 +16964,35 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
   ownerCrudModal: {
     open: boolean;
     entity: string;
+    tableId: string;
     mode: 'add' | 'edit';
     title: string;
     fields: Array<{ key: string; label: string; type: 'text' | 'number' | 'date' | 'select'; options?: string[] }>;
     draft: Record<string, any>;
+    customValues: Record<string, string>;
+    extraRows: Array<{ draft: Record<string, any>; customValues: Record<string, string> }>;
     targetRef: any;
   } = {
     open: false,
     entity: '',
+    tableId: '',
     mode: 'edit',
     title: '',
     fields: [],
     draft: {},
+    customValues: {},
+    extraRows: [],
     targetRef: null
   };
 
   private readonly ownerCrudEntitySpecs: Record<string, {
     title: string;
+    tableId: string;
     fields: Array<{ key: string; label: string; type: 'text' | 'number' | 'date' | 'select'; options?: string[] }>;
   }> = {
     medical: {
       title: 'Student Medical & Health Record',
+      tableId: 'owner_medical',
       fields: [
         { key: 'rollNo', label: 'Roll #', type: 'text' },
         { key: 'studentName', label: 'Student Name', type: 'text' },
@@ -16793,6 +17007,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     },
     discipline: {
       title: 'Disciplinary & Conduct Incident',
+      tableId: 'owner_discipline',
       fields: [
         { key: 'rollNo', label: 'Roll #', type: 'text' },
         { key: 'studentName', label: 'Student Name', type: 'text' },
@@ -16807,6 +17022,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     },
     payroll: {
       title: 'Staff Payroll & Salary Voucher',
+      tableId: 'owner_payroll',
       fields: [
         { key: 'staffName', label: 'Staff / Faculty Name', type: 'text' },
         { key: 'role', label: 'Designation / Role', type: 'text' },
@@ -16819,6 +17035,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     },
     staff_leave: {
       title: 'Staff Leave Application',
+      tableId: 'owner_staff_leaves',
       fields: [
         { key: 'staffName', label: 'Staff Member', type: 'text' },
         { key: 'leaveType', label: 'Leave Type', type: 'select', options: ['Sick Leave', 'Casual Leave', 'Annual Leave', 'Maternity/Emergency'] },
@@ -16831,6 +17048,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     },
     finance: {
       title: 'Finance Ledger / Payment Entry',
+      tableId: 'owner_finance_ledger',
       fields: [
         { key: 'challanNo', label: 'Ref / Voucher #', type: 'text' },
         { key: 'title', label: 'Particulars / Description', type: 'text' },
@@ -16846,6 +17064,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     },
     invoice: {
       title: 'Master Invoice Record',
+      tableId: 'owner_invoices',
       fields: [
         { key: 'invoiceNo', label: 'Invoice #', type: 'text' },
         { key: 'type', label: 'Invoice Type', type: 'select', options: ['Student Fee', 'Staff Payroll', 'Vendor Expense', 'Transcript/Certificate', 'Custom Billing'] },
@@ -16860,6 +17079,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     },
     circulation: {
       title: 'Library Book Circulation Record',
+      tableId: 'owner_library_circulation',
       fields: [
         { key: 'issueNo', label: 'Issue Ref #', type: 'text' },
         { key: 'bookTitle', label: 'Book Title', type: 'text' },
@@ -16874,6 +17094,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     },
     library_book: {
       title: 'Library Catalog Title',
+      tableId: 'owner_library_catalog',
       fields: [
         { key: 'isbn', label: 'ISBN', type: 'text' },
         { key: 'title', label: 'Book Title', type: 'text' },
@@ -16888,6 +17109,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     },
     exam: {
       title: 'Examination Schedule',
+      tableId: 'owner_exams',
       fields: [
         { key: 'examName', label: 'Examination Title', type: 'text' },
         { key: 'class', label: 'Assigned Class / Grade', type: 'text' },
@@ -16898,6 +17120,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     },
     subject: {
       title: 'Academic Subject Record',
+      tableId: 'owner_subjects',
       fields: [
         { key: 'code', label: 'Subject Code', type: 'text' },
         { key: 'title', label: 'Subject Name', type: 'text' },
@@ -16910,6 +17133,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     },
     timetable: {
       title: 'Class Timetable Slot',
+      tableId: 'owner_timetable',
       fields: [
         { key: 'period', label: 'Period', type: 'text' },
         { key: 'time', label: 'Time Slot', type: 'text' },
@@ -16921,6 +17145,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     },
     lab_schedule: {
       title: 'Laboratory Practical Slot',
+      tableId: 'owner_labs_schedule',
       fields: [
         { key: 'day', label: 'Day', type: 'text' },
         { key: 'period', label: 'Period', type: 'text' },
@@ -16933,6 +17158,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     },
     waiver: {
       title: 'Fee Waiver & Concession Grant',
+      tableId: 'owner_audit_waivers',
       fields: [
         { key: 'studentName', label: 'Student Name & Roll #', type: 'text' },
         { key: 'grade', label: 'Class / Section', type: 'text' },
@@ -16946,6 +17172,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     },
     compliance: {
       title: 'Regulatory Compliance Audit Item',
+      tableId: 'owner_audit_compliance',
       fields: [
         { key: 'area', label: 'Audit Area', type: 'text' },
         { key: 'title', label: 'Compliance Title', type: 'text' },
@@ -16959,6 +17186,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     },
     slc: {
       title: 'Student Leaving Certificate (SLC)',
+      tableId: 'owner_audit_slc',
       fields: [
         { key: 'certificateNo', label: 'Certificate No.', type: 'text' },
         { key: 'studentName', label: 'Student Name', type: 'text' },
@@ -16972,6 +17200,14 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     }
   };
 
+  private buildBlankDraft(fields: Array<{ key: string; label: string; type: 'text' | 'number' | 'date' | 'select'; options?: string[] }>): Record<string, any> {
+    const draft: Record<string, any> = {};
+    for (const f of fields) {
+      draft[f.key] = f.type === 'number' ? 0 : (f.options?.[0] ?? '');
+    }
+    return draft;
+  }
+
   openOwnerRecordCrudModal(entity: string, mode: 'add' | 'edit', item?: any): void {
     if (!this.isOwnerPortal) {
       this.showToast('Access Restricted: Only School Business Owner can create or edit records.', 'warning');
@@ -16983,13 +17219,19 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     for (const f of spec.fields) {
       draft[f.key] = item && item[f.key] !== undefined ? item[f.key] : (f.type === 'number' ? 0 : (f.options?.[0] ?? ''));
     }
+    const existingCells = (mode === 'edit' && item?.id)
+      ? { ...(this.tableSchemaService.getSchema(spec.tableId).customCells[item.id] || {}) }
+      : {};
     this.ownerCrudModal = {
       open: true,
       entity,
+      tableId: spec.tableId,
       mode,
       title: `${mode === 'add' ? 'Add' : 'Edit'} ${spec.title}`,
       fields: spec.fields,
       draft,
+      customValues: existingCells,
+      extraRows: [],
       targetRef: item || null
     };
     this.cdr.detectChanges();
@@ -17002,36 +17244,65 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     };
   }
 
-  closeOwnerRecordCrudModal(): void {
-    this.ownerCrudModal = { ...this.ownerCrudModal, open: false, targetRef: null };
+  updateOwnerCrudCustomValues(nextVals: Record<string, string>): void {
+    this.ownerCrudModal.customValues = { ...(nextVals || {}) };
+  }
+
+  addOwnerCrudExtraRow(): void {
+    if (!this.isOwnerPortal || this.ownerCrudModal.mode !== 'add') return;
+    const nextRow = {
+      draft: this.buildBlankDraft(this.ownerCrudModal.fields),
+      customValues: {}
+    };
+    this.ownerCrudModal.extraRows = [...this.ownerCrudModal.extraRows, nextRow];
     this.cdr.detectChanges();
   }
 
-  saveOwnerRecordCrudModal(): void {
-    if (!this.isOwnerPortal) return;
-    const { entity, mode, draft, targetRef } = this.ownerCrudModal;
-    const coerced: Record<string, any> = { ...draft };
+  removeOwnerCrudExtraRow(index: number): void {
+    if (!this.isOwnerPortal || this.ownerCrudModal.mode !== 'add') return;
+    this.ownerCrudModal.extraRows = this.ownerCrudModal.extraRows.filter((_, i) => i !== index);
+    this.cdr.detectChanges();
+  }
+
+  updateOwnerCrudExtraField(index: number, key: string, value: any): void {
+    const nextRows = [...this.ownerCrudModal.extraRows];
+    if (!nextRows[index]) return;
+    nextRows[index] = {
+      ...nextRows[index],
+      draft: { ...nextRows[index].draft, [key]: value }
+    };
+    this.ownerCrudModal.extraRows = nextRows;
+  }
+
+  updateOwnerCrudExtraCustomValues(index: number, nextVals: Record<string, string>): void {
+    const nextRows = [...this.ownerCrudModal.extraRows];
+    if (!nextRows[index]) return;
+    nextRows[index] = {
+      ...nextRows[index],
+      customValues: { ...(nextVals || {}) }
+    };
+    this.ownerCrudModal.extraRows = nextRows;
+  }
+
+  closeOwnerRecordCrudModal(): void {
+    this.ownerCrudModal = { ...this.ownerCrudModal, open: false, extraRows: [], customValues: {}, targetRef: null };
+    this.cdr.detectChanges();
+  }
+
+  private insertOwnerCrudEntityRow(entity: string, tableId: string, draftRow: Record<string, any>, customValues: Record<string, string>, idxOffset: number): void {
+    const coerced: Record<string, any> = { ...draftRow };
     for (const f of this.ownerCrudModal.fields) {
       if (f.type === 'number') coerced[f.key] = Number(coerced[f.key]) || 0;
     }
+    const uid = `${entity.slice(0, 3).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}-${idxOffset + 1}`;
+    const candidateKeys: string[] = [uid];
+    if (coerced['challanNo']) candidateKeys.push(String(coerced['challanNo']));
+    if (coerced['invoiceNo']) candidateKeys.push(String(coerced['invoiceNo']));
+    if (coerced['issueNo']) candidateKeys.push(String(coerced['issueNo']));
+    if (coerced['certificateNo']) candidateKeys.push(String(coerced['certificateNo']));
+    if (coerced['rollNo']) candidateKeys.push(String(coerced['rollNo']));
+    if (coerced['title']) candidateKeys.push(String(coerced['title']));
 
-    if (mode === 'edit' && targetRef) {
-      Object.assign(targetRef, coerced);
-      if (entity === 'payroll') {
-        targetRef.netPayable = (Number(targetRef.baseSalary) || 0) + (Number(targetRef.allowances) || 0) - (Number(targetRef.deductions) || 0);
-      }
-      if (entity === 'invoice') {
-        targetRef.netPayable = Math.max(0, (Number(targetRef.amount) || 0) - (Number(targetRef.discount) || 0) + (Number(targetRef.tax) || 0));
-        this.saveMasterInvoicesToStorage();
-      }
-      this.saveStateToStorage();
-      this.showToast(`${this.ownerCrudEntitySpecs[entity]?.title || 'Record'} updated.`, 'success');
-      this.closeOwnerRecordCrudModal();
-      return;
-    }
-
-    // Mode === 'add'
-    const uid = `${entity.slice(0, 3).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`;
     if (entity === 'medical') {
       this.studentMedicalRecords.unshift({ id: uid, studentId: uid, lastCheckupDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }), medicalAlert: false, ...coerced } as any);
     } else if (entity === 'discipline') {
@@ -17066,8 +17337,63 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     } else if (entity === 'slc') {
       this.studentLeavingCertificates.unshift({ id: uid, securityHash: 'sha256:sealed', studentId: uid, rollNo: uid, admissionDate: '2023-08-15', academicAchievement: 'Good Standing', accountsClearance: true, libraryClearance: true, labClearance: true, sportsClearance: true, issuedBy: 'School Business Owner', ...coerced } as any);
     }
+
+    if (tableId) {
+      this.tableSchemaService.submitFormCustomInputs(
+        tableId,
+        candidateKeys,
+        customValues,
+        {
+          rowLabel: String(coerced['studentName'] || coerced['title'] || coerced['staffName'] || uid),
+          submittedByName: 'School Business Owner',
+          submittedByRole: this.currentPortalRole
+        }
+      );
+    }
+  }
+
+  saveOwnerRecordCrudModal(): void {
+    if (!this.isOwnerPortal) return;
+    const { entity, tableId, mode, draft, customValues, extraRows, targetRef } = this.ownerCrudModal;
+
+    if (mode === 'edit' && targetRef) {
+      const coerced: Record<string, any> = { ...draft };
+      for (const f of this.ownerCrudModal.fields) {
+        if (f.type === 'number') coerced[f.key] = Number(coerced[f.key]) || 0;
+      }
+      Object.assign(targetRef, coerced);
+      if (entity === 'payroll') {
+        targetRef.netPayable = (Number(targetRef.baseSalary) || 0) + (Number(targetRef.allowances) || 0) - (Number(targetRef.deductions) || 0);
+      }
+      if (entity === 'invoice') {
+        targetRef.netPayable = Math.max(0, (Number(targetRef.amount) || 0) - (Number(targetRef.discount) || 0) + (Number(targetRef.tax) || 0));
+        this.saveMasterInvoicesToStorage();
+      }
+      if (tableId && targetRef.id) {
+        this.tableSchemaService.submitFormCustomInputs(
+          tableId,
+          [targetRef.id, targetRef.challanNo, targetRef.invoiceNo, targetRef.certificateNo].filter(Boolean),
+          customValues,
+          {
+            rowLabel: String(targetRef.studentName || targetRef.title || targetRef.staffName || targetRef.id),
+            submittedByName: 'School Business Owner',
+            submittedByRole: this.currentPortalRole
+          }
+        );
+      }
+      this.saveStateToStorage();
+      this.showToast(`${this.ownerCrudEntitySpecs[entity]?.title || 'Record'} updated.`, 'success');
+      this.closeOwnerRecordCrudModal();
+      return;
+    }
+
+    // Mode === 'add' (supports 1 primary row + N staged extraRows)
+    const allRows = [{ draft, customValues }, ...(extraRows || [])];
+    allRows.forEach((rowItem, idx) => {
+      this.insertOwnerCrudEntityRow(entity, tableId, rowItem.draft, rowItem.customValues, idx);
+    });
     this.saveStateToStorage();
-    this.showToast(`Added new ${this.ownerCrudEntitySpecs[entity]?.title || 'Record'}.`, 'success');
+    this.showToast(`Added ${allRows.length} ${allRows.length === 1 ? 'new' : ''} ${this.ownerCrudEntitySpecs[entity]?.title || 'Record'}${allRows.length > 1 ? 's' : ''}.`, 'success');
     this.closeOwnerRecordCrudModal();
   }
 
@@ -17089,6 +17415,13 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       this.complianceAuditList = this.complianceAuditList.filter(x => x.id !== item.id);
     } else if (entity === 'slc') {
       this.studentLeavingCertificates = this.studentLeavingCertificates.filter(x => x.id !== item.id);
+    }
+    const specTableId = this.ownerCrudEntitySpecs[entity]?.tableId;
+    if (specTableId && item.id) {
+      this.tableSchemaService.clearRowCustomData(
+        specTableId,
+        [item.id, item.challanNo, item.invoiceNo, item.certificateNo].filter(Boolean)
+      );
     }
     this.saveStateToStorage();
     this.showToast('Record deleted by School Business Owner.', 'info');

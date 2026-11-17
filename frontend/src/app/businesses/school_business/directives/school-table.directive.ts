@@ -11,6 +11,8 @@ import {
 import {
   DetectedBuiltInHeader,
   SchoolCustomColumn,
+  SchoolCustomRow,
+  SchoolTableSchema,
   SchoolTableSchemaService
 } from '../services/school-table-schema.service';
 
@@ -32,6 +34,7 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
   private isApplying = false;
   private rafScheduled = false;
   private toolbarEl: HTMLElement | null = null;
+  private titleBannerEl: HTMLElement | null = null;
   private registeredId = '';
 
   constructor() {
@@ -82,6 +85,10 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
       this.toolbarEl.parentElement.removeChild(this.toolbarEl);
       this.toolbarEl = null;
     }
+    if (this.titleBannerEl && this.titleBannerEl.parentElement) {
+      this.titleBannerEl.parentElement.removeChild(this.titleBannerEl);
+      this.titleBannerEl = null;
+    }
     if (this.registeredId) {
       this.schemaService.unregisterTableElement(this.registeredId);
     }
@@ -116,9 +123,12 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
       const schema = this.schemaService.getSchema(tableId);
       const isOwner = this.schemaService.isOwner();
 
+      // Sync custom title banner for ALL portals when Owner sets a custom title
+      this.syncTitleBanner(tableEl, tableId, schema, isOwner);
+
       const headerRow = tableEl.querySelector('thead tr');
       if (!headerRow) {
-        this.syncToolbar(tableEl, tableId, [], schema.customColumns.length, 0, isOwner);
+        this.syncToolbar(tableEl, tableId, [], schema, 0, isOwner);
         return;
       }
 
@@ -142,7 +152,7 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
         const lower = origLabel.toLowerCase();
         if (
           idx === builtInThs.length - 1 &&
-          (lower === 'actions' || lower === 'action' || lower === 'quick actions')
+          (lower === 'actions' || lower === 'action' || lower === 'quick actions' || lower === 'remove')
         ) {
           actionsColIndex = idx;
         } else {
@@ -150,19 +160,40 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
         }
       });
 
-      const hiddenSet = new Set(
-        schema.hiddenColumns.filter((i) => i >= 0 && i < builtInThs.length && i !== actionsColIndex)
+      this.schemaService.updateRegisteredHeaders(tableId, detectedHeaders);
+
+      const hiddenLabelSet = new Set((schema.hiddenColumnLabels || []).map((l) => l.toLowerCase()));
+      const isCanonicalMatch = schema.tableId === tableId;
+      const hiddenIndexSet = new Set(
+        isCanonicalMatch
+          ? schema.hiddenColumns.filter((i) => i >= 0 && i < builtInThs.length && i !== actionsColIndex)
+          : []
       );
+
+      // Combine index-based and label-based visibility for cross-portal sibling consistency
+      const effectiveHiddenSet = new Set<number>();
+      builtInThs.forEach((th, idx) => {
+        if (idx === actionsColIndex) return;
+        const origLabel = (th.getAttribute('data-scs-orig-label') || '').trim().toLowerCase();
+        if (hiddenIndexSet.has(idx) || (origLabel && hiddenLabelSet.has(origLabel))) {
+          effectiveHiddenSet.add(idx);
+        } else if (!isCanonicalMatch && schema.hiddenColumns.includes(idx) && schema.hiddenColumnLabels.length === 0) {
+          effectiveHiddenSet.add(idx);
+        }
+      });
 
       // Apply visibility & header rename on built-in <th>
       let visibleBuiltInCount = 0;
       builtInThs.forEach((th, idx) => {
-        const isHidden = hiddenSet.has(idx);
+        const isHidden = effectiveHiddenSet.has(idx);
         th.style.display = isHidden ? 'none' : '';
         if (!isHidden) visibleBuiltInCount++;
 
         const origLabel = th.getAttribute('data-scs-orig-label') || '';
-        const renamed = schema.renamedHeaders[idx];
+        const origKey = origLabel.trim().toLowerCase();
+        const renamed =
+          schema.renamedHeadersByLabel?.[origKey] ??
+          (isCanonicalMatch ? schema.renamedHeaders[idx] : undefined);
         const hasInteractive = Boolean(th.querySelector('input, select, button'));
         if (!hasInteractive && idx !== actionsColIndex) {
           const targetText = renamed && renamed.trim() ? renamed.trim() : origLabel;
@@ -177,7 +208,7 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
       schema.customColumns.forEach((col) => {
         const th = document.createElement('th');
         th.setAttribute('data-scs-custom-col', col.id);
-        th.className = 'px-3.5 py-3 whitespace-nowrap text-indigo-700 bg-indigo-50/50';
+        th.className = 'px-3.5 py-3 whitespace-nowrap text-indigo-700 bg-indigo-50/50 font-black text-[10px] uppercase';
         th.textContent = col.label;
         if (actionsTh) {
           headerRow.insertBefore(th, actionsTh);
@@ -188,7 +219,14 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
 
       // Update tbody rows
       const tbodies = Array.from(tableEl.querySelectorAll('tbody'));
-      tbodies.forEach((tbody) => {
+      tbodies.forEach((tbody, tbodyIdx) => {
+        // Remove previously injected standalone custom rows
+        Array.from(tbody.children).forEach((child) => {
+          if ((child as HTMLElement).hasAttribute('data-scs-custom-row')) {
+            tbody.removeChild(child);
+          }
+        });
+
         const rows = Array.from(tbody.children).filter(
           (el) => el.tagName === 'TR'
         ) as HTMLTableRowElement[];
@@ -215,13 +253,15 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
             return;
           }
 
-          // Compute stable row key BEFORE hiding cells
-          const rowKey = this.computeRowKey(tr, builtInTds, actionsColIndex, rowIdx);
+          // Compute stable row key(s) BEFORE hiding cells
+          const explicitKey = (tr.getAttribute('data-row-key') || '').trim();
+          const contentKey = this.computeContentRowKey(builtInTds, actionsColIndex, rowIdx);
+          const rowKey = explicitKey || contentKey;
           const rowLabel = this.computeRowLabel(builtInTds, actionsColIndex, rowKey);
 
           // Apply visibility on built-in <td>
           builtInTds.forEach((td, idx) => {
-            td.style.display = hiddenSet.has(idx) ? 'none' : '';
+            td.style.display = effectiveHiddenSet.has(idx) ? 'none' : '';
           });
 
           // Inject custom <td> cells right before Actions cell (or at end)
@@ -231,12 +271,19 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
               : null;
 
           schema.customColumns.forEach((col) => {
+            const savedVal =
+              (explicitKey ? schema.customCells[explicitKey]?.[col.id] : undefined) ??
+              schema.customCells[contentKey]?.[col.id];
+            const effectiveRowKey = explicitKey && schema.customCells[explicitKey]?.[col.id] !== undefined
+              ? explicitKey
+              : (schema.customCells[contentKey]?.[col.id] !== undefined ? contentKey : rowKey);
+
             const td = this.createCustomCell(
               tableId,
               col,
-              rowKey,
+              effectiveRowKey,
               rowLabel,
-              schema.customCells[rowKey]?.[col.id],
+              savedVal,
               isOwner
             );
             if (actionsTd) {
@@ -246,14 +293,36 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
             }
           });
         });
+
+        // Inject standalone custom rows at the top of the first tbody (visible across ALL portals)
+        if (tbodyIdx === 0 && (schema.customRows || []).length > 0) {
+          const customRowsReversed = [...schema.customRows].reverse();
+          const firstExisting = tbody.firstChild;
+          customRowsReversed.forEach((crow) => {
+            const tr = this.createStandaloneCustomRow(
+              tableId,
+              crow,
+              detectedHeaders,
+              effectiveHiddenSet,
+              actionsColIndex,
+              schema,
+              isOwner
+            );
+            if (firstExisting) {
+              tbody.insertBefore(tr, firstExisting);
+            } else {
+              tbody.appendChild(tr);
+            }
+          });
+        }
       });
 
       this.syncToolbar(
         tableEl,
         tableId,
         detectedHeaders,
-        schema.customColumns.length,
-        hiddenSet.size,
+        schema,
+        effectiveHiddenSet.size,
         isOwner
       );
     } finally {
@@ -267,15 +336,162 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
     }
   }
 
-  private computeRowKey(
-    tr: HTMLTableRowElement,
+  private syncTitleBanner(
+    tableEl: HTMLTableElement,
+    tableId: string,
+    schema: SchoolTableSchema,
+    isOwner: boolean
+  ): void {
+    const parent = tableEl.parentElement;
+    if (!parent) return;
+
+    const customTitle = (schema.customTitle || '').trim();
+    if (!customTitle) {
+      if (this.titleBannerEl && this.titleBannerEl.parentElement) {
+        this.titleBannerEl.parentElement.removeChild(this.titleBannerEl);
+        this.titleBannerEl = null;
+      }
+      return;
+    }
+
+    if (!this.titleBannerEl) {
+      this.titleBannerEl = document.createElement('div');
+      this.titleBannerEl.setAttribute('data-scs-custom-title-banner', tableId);
+      this.titleBannerEl.className =
+        'px-3.5 py-2 bg-indigo-50/75 border-b border-indigo-200/70 flex items-center justify-between gap-2 text-xs';
+      parent.insertBefore(this.titleBannerEl, tableEl);
+    }
+
+    while (this.titleBannerEl.firstChild) {
+      this.titleBannerEl.removeChild(this.titleBannerEl.firstChild);
+    }
+
+    const left = document.createElement('div');
+    left.className = 'flex items-center gap-2 min-w-0';
+
+    const titleEl = document.createElement('span');
+    titleEl.className = 'font-black text-slate-900 truncate';
+    titleEl.textContent = customTitle;
+    left.appendChild(titleEl);
+
+    if (isOwner) {
+      const badge = document.createElement('span');
+      badge.className = 'px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-700 text-[10px] font-bold shrink-0';
+      badge.textContent = 'Custom Title';
+      left.appendChild(badge);
+    }
+
+    this.titleBannerEl.appendChild(left);
+
+    if (isOwner) {
+      const removeTitleBtn = document.createElement('button');
+      removeTitleBtn.type = 'button';
+      removeTitleBtn.className =
+        'px-2 py-0.5 rounded-md bg-white hover:bg-rose-50 border border-slate-200 hover:border-rose-300 text-rose-700 text-[10px] font-bold cursor-pointer shrink-0';
+      removeTitleBtn.textContent = 'Remove Title';
+      removeTitleBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.schemaService.updateTableTitle(tableId, '');
+      });
+      this.titleBannerEl.appendChild(removeTitleBtn);
+    }
+  }
+
+  private createStandaloneCustomRow(
+    tableId: string,
+    crow: SchoolCustomRow,
+    detectedHeaders: DetectedBuiltInHeader[],
+    effectiveHiddenSet: Set<number>,
+    actionsColIndex: number,
+    schema: SchoolTableSchema,
+    isOwner: boolean
+  ): HTMLTableRowElement {
+    const tr = document.createElement('tr');
+    tr.setAttribute('data-scs-custom-row', crow.rowKey);
+    tr.setAttribute('data-row-key', crow.rowKey);
+    tr.className = 'bg-emerald-50/35 hover:bg-emerald-50/70 transition-colors';
+
+    detectedHeaders.forEach((h) => {
+      const td = document.createElement('td');
+      td.className = 'px-3.5 py-2.5 text-xs font-semibold text-slate-800 whitespace-nowrap';
+      td.style.display = effectiveHiddenSet.has(h.index) ? 'none' : '';
+      const val =
+        crow.values[`built_${h.index}`] ??
+        crow.values[h.originalLabel] ??
+        '—';
+      td.textContent = val || '—';
+      tr.appendChild(td);
+    });
+
+    schema.customColumns.forEach((col) => {
+      const savedVal =
+        crow.values[col.id] ??
+        schema.customCells[crow.rowKey]?.[col.id] ??
+        col.defaultValue ??
+        '';
+      const td = this.createCustomCell(
+        tableId,
+        col,
+        crow.rowKey,
+        crow.rowLabel || 'Custom Row',
+        savedVal,
+        isOwner
+      );
+      tr.appendChild(td);
+    });
+
+    if (actionsColIndex >= 0) {
+      const actTd = document.createElement('td');
+      actTd.className = 'px-3.5 py-2.5 text-right whitespace-nowrap';
+      if (isOwner) {
+        const wrap = document.createElement('div');
+        wrap.className = 'inline-flex items-center gap-1';
+
+        const editBtn = document.createElement('button');
+        editBtn.type = 'button';
+        editBtn.className =
+          'px-2 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-[10px] cursor-pointer';
+        editBtn.textContent = 'Edit';
+        editBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.schemaService.openColumnManager(
+            tableId,
+            schema.customTitle || this.tableTitle() || tableId,
+            detectedHeaders,
+            'rows'
+          );
+        });
+        wrap.appendChild(editBtn);
+
+        const delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.className =
+          'px-2 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-[10px] cursor-pointer';
+        delBtn.textContent = 'Remove';
+        delBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.schemaService.deleteCustomRow(tableId, crow.rowKey);
+        });
+        wrap.appendChild(delBtn);
+
+        actTd.appendChild(wrap);
+      } else {
+        const badge = document.createElement('span');
+        badge.className = 'text-[10px] font-semibold text-slate-400';
+        badge.textContent = crow.submittedByRole ? `Via ${crow.submittedByRole}` : 'Synced';
+        actTd.appendChild(badge);
+      }
+      tr.appendChild(actTd);
+    }
+
+    return tr;
+  }
+
+  private computeContentRowKey(
     builtInTds: HTMLTableCellElement[],
     actionsColIndex: number,
     rowIdx: number
   ): string {
-    const explicit = tr.getAttribute('data-row-key');
-    if (explicit && explicit.trim()) return explicit.trim();
-
     const parts: string[] = [];
     for (let i = 0; i < builtInTds.length && parts.length < 2; i++) {
       if (i === actionsColIndex) continue;
@@ -319,7 +535,7 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
 
     const val = savedVal !== undefined && savedVal !== '' ? savedVal : col.defaultValue || '—';
 
-    if (col.type === 'badge' && val !== '—') {
+    if ((col.type === 'badge' || col.type === 'select') && val !== '—') {
       const badge = document.createElement('span');
       badge.className =
         'inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/80';
@@ -339,7 +555,7 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
 
     if (isOwner) {
       td.className += ' cursor-pointer hover:bg-indigo-50/70 transition-colors group';
-      td.title = `Click to edit "${col.label}"`;
+      td.title = `Click to edit or remove "${col.label}"`;
       const hint = document.createElement('span');
       hint.className =
         'ml-1.5 inline-block text-[9px] font-bold text-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity';
@@ -350,12 +566,13 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
         ev.stopPropagation();
         this.schemaService.openCellEditor({
           tableId,
-          tableTitle: this.tableTitle() || tableId,
+          tableTitle: this.schemaService.getSchema(tableId).customTitle || this.tableTitle() || tableId,
           rowKey,
           rowLabel,
           colId: col.id,
           colLabel: col.label,
           colType: col.type,
+          colOptions: col.options,
           value: savedVal ?? col.defaultValue ?? ''
         });
       });
@@ -368,7 +585,7 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
     tableEl: HTMLTableElement,
     tableId: string,
     detectedHeaders: DetectedBuiltInHeader[],
-    customCount: number,
+    schema: SchoolTableSchema,
     hiddenCount: number,
     isOwner: boolean
   ): void {
@@ -388,13 +605,16 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
       this.toolbarEl.setAttribute('data-scs-table-toolbar', tableId);
       this.toolbarEl.className =
         'sticky left-0 z-10 flex flex-wrap items-center justify-between gap-2 px-3.5 py-2 bg-slate-50/95 border-b border-slate-200/80 text-[11px]';
-      parent.insertBefore(this.toolbarEl, tableEl);
+      const anchor = this.titleBannerEl || tableEl;
+      parent.insertBefore(this.toolbarEl, anchor);
     }
 
-    const title = this.tableTitle() || tableId.replace(/_/g, ' ');
+    const title = schema.customTitle || this.tableTitle() || tableId.replace(/_/g, ' ');
     const visibleCount = Math.max(0, detectedHeaders.length - hiddenCount);
+    const portalsLabel = this.schemaService.getPortalTargetsLabel(tableId);
+    const customCount = schema.customColumns.length;
+    const customRowCount = (schema.customRows || []).length;
 
-    // Clear and rebuild toolbar controls safely without innerHTML
     while (this.toolbarEl.firstChild) {
       this.toolbarEl.removeChild(this.toolbarEl.firstChild);
     }
@@ -409,7 +629,7 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
     left.appendChild(ownerBadge);
 
     const titleSpan = document.createElement('span');
-    titleSpan.className = 'font-bold text-slate-700 capitalize';
+    titleSpan.className = 'font-bold text-slate-800';
     titleSpan.textContent = title;
     left.appendChild(titleSpan);
 
@@ -417,7 +637,8 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
     statsSpan.className = 'text-[10px] font-semibold text-slate-500 tabular-nums';
     const customPart = customCount > 0 ? ` · +${customCount} custom` : '';
     const hiddenPart = hiddenCount > 0 ? ` · ${hiddenCount} hidden` : '';
-    statsSpan.textContent = `${visibleCount}/${detectedHeaders.length} cols${customPart}${hiddenPart}`;
+    const rowPart = customRowCount > 0 ? ` · +${customRowCount} custom rows` : '';
+    statsSpan.textContent = `${visibleCount}/${detectedHeaders.length} cols${customPart}${hiddenPart}${rowPart} · Syncs: ${portalsLabel}`;
     left.appendChild(statsSpan);
 
     const right = document.createElement('div');
@@ -427,12 +648,23 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
     colBtn.type = 'button';
     colBtn.className =
       'px-2.5 py-1 rounded-lg bg-white hover:bg-indigo-50 border border-slate-200 hover:border-indigo-300 text-slate-700 hover:text-indigo-700 font-bold text-[11px] cursor-pointer transition-colors shadow-2xs';
-    colBtn.textContent = 'Columns (CRUD)';
+    colBtn.textContent = 'Columns & Form (CRUD)';
     colBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      this.schemaService.openColumnManager(tableId, title, detectedHeaders);
+      this.schemaService.openColumnManager(tableId, title, detectedHeaders, 'columns');
     });
     right.appendChild(colBtn);
+
+    const multiRowBtn = document.createElement('button');
+    multiRowBtn.type = 'button';
+    multiRowBtn.className =
+      'px-2.5 py-1 rounded-lg bg-white hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 text-slate-700 hover:text-emerald-700 font-bold text-[11px] cursor-pointer transition-colors shadow-2xs';
+    multiRowBtn.textContent = '+ Multi-Row Form';
+    multiRowBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.schemaService.openRowFormModal(tableId, title, detectedHeaders);
+    });
+    right.appendChild(multiRowBtn);
 
     const csvBtn = document.createElement('button');
     csvBtn.type = 'button';

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getFirestore, getDocFromServer, doc, getDoc, setDoc, Firestore } from 'firebase/firestore';
+import { getFirestore, getDocFromServer, doc, getDoc, setDoc, updateDoc, Firestore } from 'firebase/firestore';
 
 const firebaseConfig = {
   projectId: "gen-lang-client-0477585150",
@@ -84,10 +84,24 @@ export class FirebaseDbService {
     const path = `school_workspaces/${resolvedTenant}`;
     try {
       const schoolDocRef = doc(this.db, 'school_workspaces', resolvedTenant);
+      const now = new Date().toISOString();
+      if (data && typeof data === 'object' && 'tableSchemas' in data) {
+        try {
+          await updateDoc(schoolDocRef, {
+            ...data,
+            tableSchemas: data.tableSchemas || {},
+            tenant_id: resolvedTenant,
+            updatedAt: now
+          });
+          return true;
+        } catch {
+          // Document might not exist yet; create it cleanly
+        }
+      }
       await setDoc(schoolDocRef, {
         ...data,
         tenant_id: resolvedTenant,
-        updatedAt: new Date().toISOString()
+        updatedAt: now
       }, { merge: true });
       return true;
     } catch (err) {

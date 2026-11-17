@@ -446,3 +446,46 @@ CREATE TABLE IF NOT EXISTS local_school_petty_vouchers (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Owner-Configured Dynamic Table Schemas & Form Fields (Mirrored across portals)
+CREATE TABLE IF NOT EXISTS local_school_table_schemas (
+  tenant_id TEXT NOT NULL,
+  table_id TEXT NOT NULL,
+  custom_title TEXT,
+  hidden_columns_json TEXT DEFAULT '[]',
+  hidden_column_labels_json TEXT DEFAULT '[]',
+  renamed_headers_json TEXT DEFAULT '{}',
+  renamed_headers_by_label_json TEXT DEFAULT '{}',
+  custom_columns_json TEXT DEFAULT '[]',
+  updated_by TEXT,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (tenant_id, table_id)
+);
+
+-- Dynamic Custom Table Rows & Form Submission Entries
+CREATE TABLE IF NOT EXISTS local_school_table_rows (
+  tenant_id TEXT NOT NULL,
+  table_id TEXT NOT NULL,
+  row_key TEXT NOT NULL,
+  row_label TEXT,
+  values_json TEXT NOT NULL DEFAULT '{}',
+  submitted_by_name TEXT,
+  submitted_by_role TEXT DEFAULT 'owner',
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (tenant_id, table_id, row_key)
+);
+
+-- Dynamic Custom Cell Values (Including Portal Form Custom Inputs)
+CREATE TABLE IF NOT EXISTS local_school_table_cells (
+  tenant_id TEXT NOT NULL,
+  table_id TEXT NOT NULL,
+  row_key TEXT NOT NULL,
+  col_id TEXT NOT NULL,
+  cell_value TEXT DEFAULT '',
+  submitted_by_name TEXT,
+  submitted_by_role TEXT DEFAULT 'owner',
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (tenant_id, table_id, row_key, col_id)
+);
+
+

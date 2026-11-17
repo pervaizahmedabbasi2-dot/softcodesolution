@@ -533,6 +533,9 @@ export class BackendService {
           userRole = activeRole;
         }
       }
+      if (!userRole) {
+        userRole = 'owner';
+      }
       const portalUserRaw = typeof localStorage !== 'undefined' ? localStorage.getItem('activeSchoolPortalUser') : null;
       if (portalUserRaw) {
         const pu = JSON.parse(portalUserRaw);
@@ -1073,6 +1076,17 @@ export class BackendService {
     } catch { return { ok: false }; }
   }
 
+  async deleteSchoolLessonPlan(id: string) {
+    try {
+      const res = await fetch(`/api/school/lesson-plans/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        headers: this.getSchoolHeaders(false),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
   async getSchoolSubstitutions() {
     try {
       const res = await fetch('/api/school/substitutions', { headers: this.getSchoolHeaders(false), credentials: 'include' });
@@ -1211,6 +1225,109 @@ export class BackendService {
       });
       return await res.json().catch(() => ({ ok: false, summary: null }));
     } catch { return { ok: false, summary: null }; }
+  }
+
+  // --- DYNAMIC TABLE SCHEMAS, CUSTOM FORM FIELDS & CROSS-PORTAL DATA CRUD ---
+  async getSchoolTableSchemas() {
+    try {
+      const res = await fetch('/api/school/table-schemas', {
+        headers: this.getSchoolHeaders(false),
+        credentials: 'include'
+      });
+      return await res.json().catch(() => ({ ok: false, schemas: {} }));
+    } catch { return { ok: false, schemas: {} }; }
+  }
+
+  async saveSchoolTableSchema(tableId: string, schema: any) {
+    try {
+      const res = await fetch(`/api/school/table-schemas/${encodeURIComponent(tableId)}`, {
+        method: 'PUT',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify(schema),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async deleteSchoolTableSchema(tableId: string) {
+    try {
+      const res = await fetch(`/api/school/table-schemas/${encodeURIComponent(tableId)}`, {
+        method: 'DELETE',
+        headers: this.getSchoolHeaders(false),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async deleteSchoolTableColumn(tableId: string, colId: string) {
+    try {
+      const res = await fetch(
+        `/api/school/table-schemas/${encodeURIComponent(tableId)}/columns/${encodeURIComponent(colId)}`,
+        {
+          method: 'DELETE',
+          headers: this.getSchoolHeaders(false),
+          credentials: 'include'
+        }
+      );
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async submitSchoolTableRows(tableId: string, payload: any) {
+    try {
+      const res = await fetch(`/api/school/table-schemas/${encodeURIComponent(tableId)}/rows`, {
+        method: 'POST',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async updateSchoolTableRow(tableId: string, rowKey: string, payload: any) {
+    try {
+      const res = await fetch(
+        `/api/school/table-schemas/${encodeURIComponent(tableId)}/rows/${encodeURIComponent(rowKey)}`,
+        {
+          method: 'PUT',
+          headers: this.getSchoolHeaders(),
+          body: JSON.stringify(payload),
+          credentials: 'include'
+        }
+      );
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async deleteSchoolTableRow(tableId: string, rowKey: string) {
+    try {
+      const res = await fetch(
+        `/api/school/table-schemas/${encodeURIComponent(tableId)}/rows/${encodeURIComponent(rowKey)}`,
+        {
+          method: 'DELETE',
+          headers: this.getSchoolHeaders(false),
+          credentials: 'include'
+        }
+      );
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async deleteSchoolTableCell(tableId: string, rowKey: string, colId: string) {
+    try {
+      const res = await fetch(
+        `/api/school/table-schemas/${encodeURIComponent(tableId)}/cells/${encodeURIComponent(rowKey)}/${encodeURIComponent(colId)}`,
+        {
+          method: 'DELETE',
+          headers: this.getSchoolHeaders(false),
+          credentials: 'include'
+        }
+      );
+      return await res.json();
+    } catch { return { ok: false }; }
   }
 
   // --- PROPERTY & REAL ESTATE ---
