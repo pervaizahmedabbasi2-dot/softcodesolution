@@ -3498,10 +3498,14 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
             cellMeta: {}
           };
         }
-        const values = safeJsonParse(rr.values_json, {});
+        const rawValues = safeJsonParse(rr.values_json, {});
+        const insertAfterRowKey = typeof rawValues?.__insertAfterRowKey === 'string' ? rawValues.__insertAfterRowKey.trim() : '';
+        const values = { ...(rawValues && typeof rawValues === 'object' ? rawValues : {}) };
+        delete values.__insertAfterRowKey;
         result[canonical].customRows.push({
           rowKey: rr.row_key,
           rowLabel: rr.row_label || '',
+          ...(insertAfterRowKey ? { insertAfterRowKey } : {}),
           values,
           submittedByName: rr.submitted_by_name || '',
           submittedByRole: rr.submitted_by_role || 'owner',
@@ -3613,7 +3617,9 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
             type: ['text', 'number', 'date', 'badge', 'select'].includes(c.type) ? c.type : 'text',
             defaultValue: String(c.defaultValue ?? ''),
             options: Array.isArray(c.options) ? c.options.map((o) => String(o)).filter(Boolean) : undefined,
-            required: Boolean(c.required)
+            required: Boolean(c.required),
+            ...(c.insertAfterColumn ? { insertAfterColumn: String(c.insertAfterColumn).trim() } : {}),
+            ...(c.insertAfterFormField ? { insertAfterFormField: String(c.insertAfterFormField).trim() } : {})
           }))
       : [];
 
@@ -3683,12 +3689,16 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
         `);
         for (const r of body.customRows) {
           if (!r?.rowKey) continue;
+          const storedValues = { ...(r.values && typeof r.values === 'object' ? r.values : {}) };
+          if (r.insertAfterRowKey) {
+            storedValues.__insertAfterRowKey = String(r.insertAfterRowKey).trim();
+          }
           upsertRow.run(
             tid,
             canonical,
             String(r.rowKey),
             String(r.rowLabel || ''),
-            JSON.stringify(r.values && typeof r.values === 'object' ? r.values : {}),
+            JSON.stringify(storedValues),
             String(r.submittedByName || actorName),
             String(r.submittedByRole || 'owner'),
             String(r.createdAt || now),
@@ -3778,6 +3788,7 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       : [{
           rowKey: body.rowKey || (`row_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`),
           rowLabel: body.rowLabel || '',
+          insertAfterRowKey: body.insertAfterRowKey || '',
           values: body.values || {},
           isStandaloneRow: body.isStandaloneRow !== false && !body.cellsOnly
         }];
@@ -3799,7 +3810,10 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
         const rk = String(r.rowKey || (`row_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`)).trim();
         const vals = r.values && typeof r.values === 'object' ? r.values : {};
         if (r.isStandaloneRow !== false && !body.cellsOnly) {
-          upsertRow.run(tid, canonical, rk, String(r.rowLabel || ''), JSON.stringify(vals), callerName, callerRole, now, now);
+          const storedVals = { ...vals };
+          const rowPos = String(r.insertAfterRowKey || body.insertAfterRowKey || '').trim();
+          if (rowPos) storedVals.__insertAfterRowKey = rowPos;
+          upsertRow.run(tid, canonical, rk, String(r.rowLabel || ''), JSON.stringify(storedVals), callerName, callerRole, now, now);
         }
         for (const [key, val] of Object.entries(vals)) {
           if (String(key).startsWith('col_') && val !== undefined && val !== null) {
@@ -3828,8 +3842,14 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       const existing = sqliteDb
         .prepare('SELECT * FROM local_school_table_rows WHERE tenant_id = ? AND table_id = ? AND row_key = ?')
         .get(tid, canonical, rowKey);
-      const nextValues = body.values && typeof body.values === 'object' ? body.values : safeJsonParse(existing?.values_json, {});
+      const existingRawValues = safeJsonParse(existing?.values_json, {});
+      const nextValues = body.values && typeof body.values === 'object' ? body.values : existingRawValues;
       if (existing || body.upsertRow) {
+        const storedValues = { ...nextValues };
+        const pos = body.insertAfterRowKey !== undefined
+          ? String(body.insertAfterRowKey || '').trim()
+          : String(existingRawValues?.__insertAfterRowKey || '').trim();
+        if (pos) storedValues.__insertAfterRowKey = pos;
         sqliteDb.prepare(`
           INSERT OR REPLACE INTO local_school_table_rows
           (tenant_id, table_id, row_key, row_label, values_json, submitted_by_name, submitted_by_role, created_at, updated_at)
@@ -3839,7 +3859,7 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
           canonical,
           rowKey,
           String(body.rowLabel ?? existing?.row_label ?? ''),
-          JSON.stringify(nextValues),
+          JSON.stringify(storedValues),
           String(existing?.submitted_by_name || callerName),
           String(existing?.submitted_by_role || 'owner'),
           String(existing?.created_at || now),

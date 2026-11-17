@@ -80,7 +80,7 @@ import {
 import { SchoolTableDirective } from '../directives/school-table.directive';
 import { SchoolTableColumnModalComponent } from '../components/school-table-column-modal/school-table-column-modal.component';
 import { SchoolCustomFormFieldsComponent } from '../components/school-custom-form-fields/school-custom-form-fields.component';
-import { SchoolTableSchemaService } from '../services/school-table-schema.service';
+import { SchoolTableSchemaService, TableColumnPositionOption } from '../services/school-table-schema.service';
 
 export type SchoolDashboardTab = 'overview' | 'stage_wise' | 'feed' | 'events' | 'students' | 'teachers' | 'admissions' | 'attendance' | 'finance' | 'invoices' | 'expenses' | 'payment_gateway' | 'transport' | 'library' | 'exams' | 'timetable' | 'hostel' | 'labs' | 'alumni' | 'portals' | 'reports' | 'settings' | 'audit' | 'lesson_plans' | 'appraisals' | 'inspections' | 'exam_moderation' | 'parent_complaints' | 'substitutions' | 'syllabus' | 'safeguarding' | 'directives';
 export type SchoolPortalRole = 'owner' | 'principal' | 'teacher' | 'student' | 'parent' | 'accountant';
@@ -16958,6 +16958,12 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     }
   }
 
+  hasCustomFieldsAtSlot(tableId: string, slotAnchor: string): boolean {
+    if (!tableId) return false;
+    this.tableSchemaService.schemaRevision();
+    return this.tableSchemaService.hasCustomColumnsAtSlot(tableId, slotAnchor);
+  }
+
   // =========================================================================
   // UNIVERSAL SCHOOL BUSINESS OWNER TABLE ROW CRUD ENGINE
   // =========================================================================
@@ -16967,6 +16973,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     tableId: string;
     mode: 'add' | 'edit';
     title: string;
+    insertAfterRowKey: string;
     fields: Array<{ key: string; label: string; type: 'text' | 'number' | 'date' | 'select'; options?: string[] }>;
     draft: Record<string, any>;
     customValues: Record<string, string>;
@@ -16978,6 +16985,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     tableId: '',
     mode: 'edit',
     title: '',
+    insertAfterRowKey: '__first__',
     fields: [],
     draft: {},
     customValues: {},
@@ -17208,6 +17216,94 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     return draft;
   }
 
+  private getOwnerCrudEntityArray(entity: string): any[] | null {
+    switch (entity) {
+      case 'medical': return this.studentMedicalRecords;
+      case 'discipline': return this.disciplinaryIncidents;
+      case 'payroll': return this.staffPayrolls;
+      case 'staff_leave': return this.staffLeaveRequests;
+      case 'finance': return this.finances;
+      case 'invoice': return this.masterInvoices;
+      case 'circulation': return this.libraryCirculations;
+      case 'library_book': return this.libraryBooks;
+      case 'exam': return this.examsList;
+      case 'subject': return this.schoolSubjectsList;
+      case 'timetable': return this.timetables;
+      case 'lab_schedule': return this.labSchedules;
+      case 'waiver': return this.auditWaiversList;
+      case 'compliance': return this.complianceAuditList;
+      case 'slc': return this.studentLeavingCertificates;
+      default: return null;
+    }
+  }
+
+  getOwnerCrudRowPositionOptions(): TableColumnPositionOption[] {
+    const options: TableColumnPositionOption[] = [
+      { value: '__first__', label: 'At Top (First Row / Row #1)' },
+      { value: '__last__', label: 'At Bottom (Last Row of Table)' }
+    ];
+    const seen = new Set<string>();
+    const arr = this.getOwnerCrudEntityArray(this.ownerCrudModal.entity) || [];
+    for (const item of arr) {
+      const key = String(item?.id || item?.challanNo || item?.invoiceNo || item?.issueNo || item?.certificateNo || '').trim();
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      const label = String(
+        item?.studentName ||
+        item?.staffName ||
+        item?.title ||
+        item?.examName ||
+        item?.bookTitle ||
+        item?.borrowerName ||
+        item?.recipientName ||
+        item?.experimentTopic ||
+        item?.subject ||
+        item?.certificateNo ||
+        key
+      ).trim().slice(0, 48);
+      options.push({ value: `after:${key}`, label: `After Row: ${label}` });
+    }
+    const tableOpts = this.tableSchemaService.getRowPositionOptions(this.ownerCrudModal.tableId);
+    for (const opt of tableOpts) {
+      if (opt.value.startsWith('after:')) {
+        const key = opt.value.slice(6);
+        if (!seen.has(key)) {
+          seen.add(key);
+          options.push(opt);
+        }
+      }
+    }
+    return options;
+  }
+
+  updateOwnerCrudRowPosition(pos: string): void {
+    this.ownerCrudModal.insertAfterRowKey = (pos || '__first__').trim() || '__first__';
+  }
+
+  private insertItemAtPosition(arr: any[], item: any, insertAfterRowKey: string, seqOffset: number): void {
+    const pos = (insertAfterRowKey || '__first__').trim();
+    if (pos === '__last__') {
+      arr.push(item);
+      return;
+    }
+    if (pos.startsWith('after:')) {
+      const targetKey = pos.slice(6).trim();
+      const targetIdx = arr.findIndex((r) =>
+        String(r?.id || '') === targetKey ||
+        String(r?.challanNo || '') === targetKey ||
+        String(r?.invoiceNo || '') === targetKey ||
+        String(r?.issueNo || '') === targetKey ||
+        String(r?.certificateNo || '') === targetKey ||
+        String(r?.rollNo || '') === targetKey
+      );
+      if (targetIdx >= 0) {
+        arr.splice(Math.min(targetIdx + 1 + seqOffset, arr.length), 0, item);
+        return;
+      }
+    }
+    arr.splice(Math.min(seqOffset, arr.length), 0, item);
+  }
+
   openOwnerRecordCrudModal(entity: string, mode: 'add' | 'edit', item?: any): void {
     if (!this.isOwnerPortal) {
       this.showToast('Access Restricted: Only School Business Owner can create or edit records.', 'warning');
@@ -17228,6 +17324,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       tableId: spec.tableId,
       mode,
       title: `${mode === 'add' ? 'Add' : 'Edit'} ${spec.title}`,
+      insertAfterRowKey: '__first__',
       fields: spec.fields,
       draft,
       customValues: existingCells,
@@ -17303,39 +17400,41 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     if (coerced['rollNo']) candidateKeys.push(String(coerced['rollNo']));
     if (coerced['title']) candidateKeys.push(String(coerced['title']));
 
+    const rowPos = this.ownerCrudModal.insertAfterRowKey || '__first__';
+
     if (entity === 'medical') {
-      this.studentMedicalRecords.unshift({ id: uid, studentId: uid, lastCheckupDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }), medicalAlert: false, ...coerced } as any);
+      this.insertItemAtPosition(this.studentMedicalRecords, { id: uid, studentId: uid, lastCheckupDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }), medicalAlert: false, ...coerced } as any, rowPos, idxOffset);
     } else if (entity === 'discipline') {
-      this.disciplinaryIncidents.unshift({ id: uid, studentId: uid, date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }), parentNotified: true, ...coerced } as any);
+      this.insertItemAtPosition(this.disciplinaryIncidents, { id: uid, studentId: uid, date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }), parentNotified: true, ...coerced } as any, rowPos, idxOffset);
     } else if (entity === 'payroll') {
       const netPayable = (Number(coerced['baseSalary']) || 0) + (Number(coerced['allowances']) || 0) - (Number(coerced['deductions']) || 0);
-      this.staffPayrolls.unshift({ id: uid, staffId: uid, paymentMethod: 'Bank Transfer', disbursedDate: 'Today', netPayable, ...coerced } as any);
+      this.insertItemAtPosition(this.staffPayrolls, { id: uid, staffId: uid, paymentMethod: 'Bank Transfer', disbursedDate: 'Today', netPayable, ...coerced } as any, rowPos, idxOffset);
     } else if (entity === 'staff_leave') {
-      this.staffLeaveRequests.unshift({ id: uid, staffId: uid, appliedDate: 'Today', ...coerced } as any);
+      this.insertItemAtPosition(this.staffLeaveRequests, { id: uid, staffId: uid, appliedDate: 'Today', ...coerced } as any, rowPos, idxOffset);
     } else if (entity === 'finance') {
-      this.finances.unshift({ id: uid, ...coerced } as any);
+      this.insertItemAtPosition(this.finances, { id: uid, ...coerced } as any, rowPos, idxOffset);
     } else if (entity === 'invoice') {
       const netPayable = Math.max(0, (Number(coerced['amount']) || 0) - (Number(coerced['discount']) || 0));
-      this.masterInvoices.unshift({ id: uid, recipientRole: 'Student', tax: 0, netPayable, lineItems: [], ...coerced } as any);
+      this.insertItemAtPosition(this.masterInvoices, { id: uid, recipientRole: 'Student', tax: 0, netPayable, lineItems: [], ...coerced } as any, rowPos, idxOffset);
       this.saveMasterInvoicesToStorage();
     } else if (entity === 'circulation') {
-      this.libraryCirculations.unshift({ id: uid, issueDate: new Date().toISOString().slice(0, 10), overdueDays: 0, ...coerced } as any);
+      this.insertItemAtPosition(this.libraryCirculations, { id: uid, issueDate: new Date().toISOString().slice(0, 10), overdueDays: 0, ...coerced } as any, rowPos, idxOffset);
     } else if (entity === 'library_book') {
-      this.libraryBooks.unshift({ id: uid, tags: ['Catalog'], ...coerced } as any);
+      this.insertItemAtPosition(this.libraryBooks, { id: uid, tags: ['Catalog'], ...coerced } as any, rowPos, idxOffset);
     } else if (entity === 'exam') {
-      this.examsList.unshift({ id: uid, ...coerced } as any);
+      this.insertItemAtPosition(this.examsList, { id: uid, ...coerced } as any, rowPos, idxOffset);
     } else if (entity === 'subject') {
-      this.schoolSubjectsList.unshift({ id: uid, type: 'Core', ...coerced } as any);
+      this.insertItemAtPosition(this.schoolSubjectsList, { id: uid, type: 'Core', ...coerced } as any, rowPos, idxOffset);
     } else if (entity === 'timetable') {
-      this.timetables.unshift({ id: uid, ...coerced } as any);
+      this.insertItemAtPosition(this.timetables, { id: uid, ...coerced } as any, rowPos, idxOffset);
     } else if (entity === 'lab_schedule') {
-      this.labSchedules.unshift({ id: uid, ...coerced } as any);
+      this.insertItemAtPosition(this.labSchedules, { id: uid, ...coerced } as any, rowPos, idxOffset);
     } else if (entity === 'waiver') {
-      this.auditWaiversList.unshift({ id: uid, ...coerced } as any);
+      this.insertItemAtPosition(this.auditWaiversList, { id: uid, ...coerced } as any, rowPos, idxOffset);
     } else if (entity === 'compliance') {
-      this.complianceAuditList.unshift({ id: uid, ...coerced } as any);
+      this.insertItemAtPosition(this.complianceAuditList, { id: uid, ...coerced } as any, rowPos, idxOffset);
     } else if (entity === 'slc') {
-      this.studentLeavingCertificates.unshift({ id: uid, securityHash: 'sha256:sealed', studentId: uid, rollNo: uid, admissionDate: '2023-08-15', academicAchievement: 'Good Standing', accountsClearance: true, libraryClearance: true, labClearance: true, sportsClearance: true, issuedBy: 'School Business Owner', ...coerced } as any);
+      this.insertItemAtPosition(this.studentLeavingCertificates, { id: uid, securityHash: 'sha256:sealed', studentId: uid, rollNo: uid, admissionDate: '2023-08-15', academicAchievement: 'Good Standing', accountsClearance: true, libraryClearance: true, labClearance: true, sportsClearance: true, issuedBy: 'School Business Owner', ...coerced } as any, rowPos, idxOffset);
     }
 
     if (tableId) {

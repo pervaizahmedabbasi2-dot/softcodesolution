@@ -10,6 +10,8 @@ import {
 } from '@angular/core';
 import {
   DetectedBuiltInHeader,
+  DetectedTableRow,
+  OrderedTableColumn,
   SchoolCustomColumn,
   SchoolCustomRow,
   SchoolTableSchema,
@@ -203,15 +205,34 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
         }
       });
 
-      // Inject custom <th> elements right before Actions (or at end)
+      // Resolve exact column order (First / After Specific Column / End before Actions)
+      const orderedColumns = this.schemaService.resolveOrderedColumns(
+        tableId,
+        detectedHeaders,
+        schema,
+        effectiveHiddenSet
+      );
+
+      // Inject custom <th> elements in exact resolved positions
       const actionsTh = actionsColIndex >= 0 ? builtInThs[actionsColIndex] : null;
-      schema.customColumns.forEach((col) => {
+      orderedColumns.forEach((item, oIdx) => {
+        if (item.kind !== 'custom') return;
+        const col = item.col;
         const th = document.createElement('th');
         th.setAttribute('data-scs-custom-col', col.id);
         th.className = 'px-3.5 py-3 whitespace-nowrap text-indigo-700 bg-indigo-50/50 font-black text-[10px] uppercase';
         th.textContent = col.label;
-        if (actionsTh) {
-          headerRow.insertBefore(th, actionsTh);
+
+        let refTh: HTMLElement | null = actionsTh;
+        for (let k = oIdx + 1; k < orderedColumns.length; k++) {
+          const nextItem = orderedColumns[k];
+          if (nextItem.kind === 'builtin' && nextItem.header.index < builtInThs.length) {
+            refTh = builtInThs[nextItem.header.index];
+            break;
+          }
+        }
+        if (refTh) {
+          headerRow.insertBefore(th, refTh);
         } else {
           headerRow.appendChild(th);
         }
@@ -230,6 +251,10 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
         const rows = Array.from(tbody.children).filter(
           (el) => el.tagName === 'TR'
         ) as HTMLTableRowElement[];
+
+        const detectedRows: DetectedTableRow[] = [];
+        const rowElMap = new Map<string, HTMLTableRowElement>();
+        let firstBuiltInTr: HTMLTableRowElement | null = null;
 
         rows.forEach((tr, rowIdx) => {
           // Remove previously injected custom <td> cells
@@ -253,24 +278,35 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
             return;
           }
 
+          if (!firstBuiltInTr) firstBuiltInTr = tr;
+
           // Compute stable row key(s) BEFORE hiding cells
           const explicitKey = (tr.getAttribute('data-row-key') || '').trim();
           const contentKey = this.computeContentRowKey(builtInTds, actionsColIndex, rowIdx);
           const rowKey = explicitKey || contentKey;
           const rowLabel = this.computeRowLabel(builtInTds, actionsColIndex, rowKey);
 
+          if (tbodyIdx === 0) {
+            detectedRows.push({ rowKey, label: rowLabel });
+            if (explicitKey) rowElMap.set(explicitKey, tr);
+            if (contentKey) rowElMap.set(contentKey, tr);
+            rowElMap.set(rowKey, tr);
+          }
+
           // Apply visibility on built-in <td>
           builtInTds.forEach((td, idx) => {
             td.style.display = effectiveHiddenSet.has(idx) ? 'none' : '';
           });
 
-          // Inject custom <td> cells right before Actions cell (or at end)
+          // Inject custom <td> cells in exact resolved column positions
           const actionsTd =
             actionsColIndex >= 0 && actionsColIndex < builtInTds.length
               ? builtInTds[actionsColIndex]
               : null;
 
-          schema.customColumns.forEach((col) => {
+          orderedColumns.forEach((item, oIdx) => {
+            if (item.kind !== 'custom') return;
+            const col = item.col;
             const savedVal =
               (explicitKey ? schema.customCells[explicitKey]?.[col.id] : undefined) ??
               schema.customCells[contentKey]?.[col.id];
@@ -286,34 +322,107 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
               savedVal,
               isOwner
             );
-            if (actionsTd) {
-              tr.insertBefore(td, actionsTd);
+
+            let refTd: HTMLElement | null = actionsTd;
+            for (let k = oIdx + 1; k < orderedColumns.length; k++) {
+              const nextItem = orderedColumns[k];
+              if (nextItem.kind === 'builtin' && nextItem.header.index < builtInTds.length) {
+                refTd = builtInTds[nextItem.header.index];
+                break;
+              }
+            }
+            if (refTd) {
+              tr.insertBefore(td, refTd);
             } else {
               tr.appendChild(td);
             }
           });
         });
 
-        // Inject standalone custom rows at the top of the first tbody (visible across ALL portals)
+        if (tbodyIdx === 0) {
+          this.schemaService.updateRegisteredRows(tableId, detectedRows);
+        }
+
+        // Inject standalone custom rows at chosen positions (Top / After Specific Row / Bottom)
         if (tbodyIdx === 0 && (schema.customRows || []).length > 0) {
-          const customRowsReversed = [...schema.customRows].reverse();
-          const firstExisting = tbody.firstChild;
-          customRowsReversed.forEach((crow) => {
-            const tr = this.createStandaloneCustomRow(
+          const buildRow = (crow: SchoolCustomRow) =>
+            this.createStandaloneCustomRow(
               tableId,
               crow,
+              orderedColumns,
               detectedHeaders,
-              effectiveHiddenSet,
               actionsColIndex,
               schema,
               isOwner
             );
-            if (firstExisting) {
-              tbody.insertBefore(tr, firstExisting);
+
+          const topRows: SchoolCustomRow[] = [];
+          const bottomRows: SchoolCustomRow[] = [];
+          const targetedRows: SchoolCustomRow[] = [];
+
+          for (const crow of schema.customRows) {
+            const pos = (crow.insertAfterRowKey || '').trim();
+            if (!pos || pos === '__first__') {
+              topRows.push(crow);
+            } else if (pos === '__last__') {
+              bottomRows.push(crow);
+            } else if (pos.startsWith('after:')) {
+              targetedRows.push(crow);
+            } else {
+              topRows.push(crow);
+            }
+          }
+
+          // Top rows (maintain creation/batch order)
+          topRows.forEach((crow) => {
+            const tr = buildRow(crow);
+            rowElMap.set(crow.rowKey, tr);
+            if (firstBuiltInTr) {
+              tbody.insertBefore(tr, firstBuiltInTr);
+            } else if (tbody.firstChild) {
+              tbody.insertBefore(tr, tbody.firstChild);
             } else {
               tbody.appendChild(tr);
             }
           });
+
+          // Bottom rows
+          bottomRows.forEach((crow) => {
+            const tr = buildRow(crow);
+            rowElMap.set(crow.rowKey, tr);
+            tbody.appendChild(tr);
+          });
+
+          // Rows anchored after a specific existing built-in or custom row
+          const afterTailMap = new Map<string, HTMLTableRowElement>();
+          let pending = [...targetedRows];
+          let safety = pending.length + 2;
+          while (pending.length > 0 && safety-- > 0) {
+            const nextPending: SchoolCustomRow[] = [];
+            let progressed = false;
+            for (const crow of pending) {
+              const targetKey = (crow.insertAfterRowKey || '').slice(6).trim();
+              const anchorEl = afterTailMap.get(targetKey) || rowElMap.get(targetKey);
+              if (anchorEl && anchorEl.parentElement === tbody) {
+                const tr = buildRow(crow);
+                tbody.insertBefore(tr, anchorEl.nextSibling);
+                afterTailMap.set(targetKey, tr);
+                rowElMap.set(crow.rowKey, tr);
+                progressed = true;
+              } else {
+                nextPending.push(crow);
+              }
+            }
+            pending = nextPending;
+            if (!progressed) break;
+          }
+
+          // Any targeted rows whose target was filtered/not present fallback cleanly to bottom
+          for (const crow of pending) {
+            const tr = buildRow(crow);
+            rowElMap.set(crow.rowKey, tr);
+            tbody.appendChild(tr);
+          }
         }
       });
 
@@ -400,8 +509,8 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
   private createStandaloneCustomRow(
     tableId: string,
     crow: SchoolCustomRow,
+    orderedColumns: OrderedTableColumn[],
     detectedHeaders: DetectedBuiltInHeader[],
-    effectiveHiddenSet: Set<number>,
     actionsColIndex: number,
     schema: SchoolTableSchema,
     isOwner: boolean
@@ -411,33 +520,35 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
     tr.setAttribute('data-row-key', crow.rowKey);
     tr.className = 'bg-emerald-50/35 hover:bg-emerald-50/70 transition-colors';
 
-    detectedHeaders.forEach((h) => {
-      const td = document.createElement('td');
-      td.className = 'px-3.5 py-2.5 text-xs font-semibold text-slate-800 whitespace-nowrap';
-      td.style.display = effectiveHiddenSet.has(h.index) ? 'none' : '';
-      const val =
-        crow.values[`built_${h.index}`] ??
-        crow.values[h.originalLabel] ??
-        '—';
-      td.textContent = val || '—';
-      tr.appendChild(td);
-    });
-
-    schema.customColumns.forEach((col) => {
-      const savedVal =
-        crow.values[col.id] ??
-        schema.customCells[crow.rowKey]?.[col.id] ??
-        col.defaultValue ??
-        '';
-      const td = this.createCustomCell(
-        tableId,
-        col,
-        crow.rowKey,
-        crow.rowLabel || 'Custom Row',
-        savedVal,
-        isOwner
-      );
-      tr.appendChild(td);
+    orderedColumns.forEach((item) => {
+      if (item.kind === 'builtin') {
+        const h = item.header;
+        const td = document.createElement('td');
+        td.className = 'px-3.5 py-2.5 text-xs font-semibold text-slate-800 whitespace-nowrap';
+        td.style.display = item.hidden ? 'none' : '';
+        const val =
+          crow.values[`built_${h.index}`] ??
+          crow.values[h.originalLabel] ??
+          '—';
+        td.textContent = val || '—';
+        tr.appendChild(td);
+      } else {
+        const col = item.col;
+        const savedVal =
+          crow.values[col.id] ??
+          schema.customCells[crow.rowKey]?.[col.id] ??
+          col.defaultValue ??
+          '';
+        const td = this.createCustomCell(
+          tableId,
+          col,
+          crow.rowKey,
+          crow.rowLabel || 'Custom Row',
+          savedVal,
+          isOwner
+        );
+        tr.appendChild(td);
+      }
     });
 
     if (actionsColIndex >= 0) {

@@ -911,9 +911,24 @@ test('School Table & Form Customization: Canonical Mirroring, Strict Owner RBAC,
       renamedHeaders: { 1: 'Scholar Name & Class' },
       renamedHeadersByLabel: { 'Student Name & Class': 'Scholar Name & Class' },
       customColumns: [
-        { id: 'col_house', label: 'Campus House', type: 'select', defaultValue: 'Iqbal', options: ['Iqbal', 'Jinnah', 'Sir Syed'] },
-        { id: 'col_accidental', label: 'Extra Wrong Column', type: 'text', defaultValue: '' }
-      ]
+      {
+        id: 'col_house',
+        label: 'Campus House',
+        type: 'select',
+        defaultValue: 'Iqbal',
+        options: ['Iqbal', 'Jinnah', 'Sir Syed'],
+        insertAfterColumn: 'built:Guardian',
+        insertAfterFormField: 'stu_identity'
+      },
+      {
+        id: 'col_accidental',
+        label: 'Extra Wrong Column',
+        type: 'text',
+        defaultValue: '',
+        insertAfterColumn: 'custom:col_house',
+        insertAfterFormField: '__first__'
+      }
+    ]
     })
   });
   assert.equal(saveSchemaRes.status, 200);
@@ -921,6 +936,10 @@ test('School Table & Form Customization: Canonical Mirroring, Strict Owner RBAC,
   assert.equal(savedJson.tableId, 'students_master');
   assert.equal(savedJson.schema.customTitle, 'Verified Campus Students & House Allocation');
   assert.equal(savedJson.schema.customColumns.length, 2);
+  assert.equal(savedJson.schema.customColumns[0].insertAfterColumn, 'built:Guardian');
+  assert.equal(savedJson.schema.customColumns[0].insertAfterFormField, 'stu_identity');
+  assert.equal(savedJson.schema.customColumns[1].insertAfterColumn, 'custom:col_house');
+  assert.equal(savedJson.schema.customColumns[1].insertAfterFormField, '__first__');
 
   // 3. Cross-portal mirroring: Principal, Teacher, Accountant all read the same canonical schema
   const getSchemasRes = await fetch(`${baseUrl}/api/school/table-schemas`, { headers: principalHeaders });
@@ -930,6 +949,8 @@ test('School Table & Form Customization: Canonical Mirroring, Strict Owner RBAC,
   assert.equal(schemas.students_master.customTitle, 'Verified Campus Students & House Allocation');
   assert.deepEqual(schemas.students_master.hiddenColumnLabels, ['Emergency Contact']);
   assert.equal(schemas.students_master.renamedHeadersByLabel['Student Name & Class'], 'Scholar Name & Class');
+  assert.equal(schemas.students_master.customColumns[0].insertAfterColumn, 'built:Guardian');
+  assert.equal(schemas.students_master.customColumns[0].insertAfterFormField, 'stu_identity');
 
   // 4. Non-owner portal submits form custom input & row values into synced table (work form submission)
   const portalSubmitRes = await fetch(`${baseUrl}/api/school/table-schemas/owner_students_roster/rows`, {
@@ -940,6 +961,7 @@ test('School Table & Form Customization: Canonical Mirroring, Strict Owner RBAC,
         {
           rowKey: 'STU-9001',
           rowLabel: 'Hamza Khan',
+          insertAfterRowKey: 'after:ADM-101',
           values: { col_house: 'Jinnah', col_accidental: 'temp mistake' }
         }
       ],
@@ -953,6 +975,9 @@ test('School Table & Form Customization: Canonical Mirroring, Strict Owner RBAC,
   const afterPortalSubmit = (await portalSubmitRes.json()).schema;
   assert.equal(afterPortalSubmit.customCells['STU-9001']?.col_house, 'Jinnah');
   assert.equal(afterPortalSubmit.cellMeta?.['STU-9001']?.col_house?.submittedByRole, 'teacher');
+  const submittedRow = afterPortalSubmit.customRows.find((r) => r.rowKey === 'STU-9001');
+  assert.equal(submittedRow?.insertAfterRowKey, 'after:ADM-101');
+  assert.equal(submittedRow?.values?.__insertAfterRowKey, undefined, 'Internal placement marker must not leak into row values');
 
   // 5. Strict Owner RBAC: Teacher / Accountant / Principal CANNOT edit/delete submitted rows, cells, or columns
   const teacherEditRow = await fetch(`${baseUrl}/api/school/table-schemas/students_master/rows/STU-9001`, {
@@ -968,14 +993,29 @@ test('School Table & Form Customization: Canonical Mirroring, Strict Owner RBAC,
   });
   assert.equal(accountantDeleteCol.status, 403);
 
-  // 6. Owner edits submitted row values & deletes accidental column -> purges column + cell values from SQLite
+  // 6. Owner edits submitted row values & placement + deletes accidental column -> purges column + cell values from SQLite
   const ownerEditRowRes = await fetch(`${baseUrl}/api/school/table-schemas/students_master/rows/STU-9001`, {
     method: 'PUT',
     headers: ownerHeaders,
-    body: JSON.stringify({ rowLabel: 'Hamza Khan (Updated)', values: { col_house: 'Sir Syed', col_accidental: 'temp mistake' } })
+    body: JSON.stringify({
+      rowLabel: 'Hamza Khan (Updated)',
+      insertAfterRowKey: '__first__',
+      values: { col_house: 'Sir Syed', col_accidental: 'temp mistake' }
+    })
   });
   assert.equal(ownerEditRowRes.status, 200);
-  assert.equal((await ownerEditRowRes.json()).schema.customCells['STU-9001']?.col_house, 'Sir Syed');
+  const afterOwnerEditRow = (await ownerEditRowRes.json()).schema;
+  assert.equal(afterOwnerEditRow.customCells['STU-9001']?.col_house, 'Sir Syed');
+  const updatedRow = afterOwnerEditRow.customRows.find((r) => r.rowKey === 'STU-9001');
+  assert.equal(updatedRow?.insertAfterRowKey, '__first__');
+  assert.equal(updatedRow?.values?.__insertAfterRowKey, undefined, 'Internal placement marker must not leak after row update');
+
+  // Confirm GET /table-schemas preserves updated insertAfterRowKey without leaking __insertAfterRowKey
+  const getAfterEditRes = await fetch(`${baseUrl}/api/school/table-schemas`, { headers: principalHeaders });
+  assert.equal(getAfterEditRes.status, 200);
+  const fetchedRow = (await getAfterEditRes.json()).schemas.students_master.customRows.find((r) => r.rowKey === 'STU-9001');
+  assert.equal(fetchedRow?.insertAfterRowKey, '__first__');
+  assert.equal(fetchedRow?.values?.__insertAfterRowKey, undefined);
 
   const delColRes = await fetch(`${baseUrl}/api/school/table-schemas/students_master/columns/col_accidental`, {
     method: 'DELETE',

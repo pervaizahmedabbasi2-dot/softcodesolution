@@ -16736,6 +16736,14 @@
                     Generate Individual Student Fee Challan
                   </h3>
                   <div class="space-y-3 text-xs">
+                    @if (hasCustomFieldsAtSlot('fee_challans_invoices', '__first__')) {
+                      <app-school-custom-form-fields
+                        [tableId]="'fee_challans_invoices'"
+                        [slotAnchor]="'__first__'"
+                        [values]="formCustomValues['accountantChallan']"
+                        [allowSchemaEdit]="isOwnerPortal"
+                        (valuesChange)="updateFormCustomValues('accountantChallan', $event)" />
+                    }
                     <div>
                       <label class="block font-bold text-slate-700 mb-1">Select Student</label>
                       <select [(ngModel)]="accountantChallanForm.studentId" (ngModelChange)="onAccountantChallanStudentSelect($event)"
@@ -16758,6 +16766,14 @@
                           class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold">
                       </div>
                     </div>
+                    @if (hasCustomFieldsAtSlot('fee_challans_invoices', 'ch_student')) {
+                      <app-school-custom-form-fields
+                        [tableId]="'fee_challans_invoices'"
+                        [slotAnchor]="'ch_student'"
+                        [values]="formCustomValues['accountantChallan']"
+                        [allowSchemaEdit]="isOwnerPortal"
+                        (valuesChange)="updateFormCustomValues('accountantChallan', $event)" />
+                    }
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                       <div>
                         <label class="block font-bold text-slate-700 mb-1">Month</label>
@@ -16776,6 +16792,14 @@
                         <input type="date" [(ngModel)]="accountantChallanForm.dueDate" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-mono font-bold">
                       </div>
                     </div>
+                    @if (hasCustomFieldsAtSlot('fee_challans_invoices', 'ch_amounts')) {
+                      <app-school-custom-form-fields
+                        [tableId]="'fee_challans_invoices'"
+                        [slotAnchor]="'ch_amounts'"
+                        [values]="formCustomValues['accountantChallan']"
+                        [allowSchemaEdit]="isOwnerPortal"
+                        (valuesChange)="updateFormCustomValues('accountantChallan', $event)" />
+                    }
                     <app-school-custom-form-fields
                       [tableId]="'fee_challans_invoices'"
                       [values]="formCustomValues['accountantChallan']"
@@ -16894,6 +16918,14 @@
                   Receive Cash / Bank Slip at Accountant Counter
                 </h3>
                 <div class="space-y-3 text-xs">
+                  @if (hasCustomFieldsAtSlot('fee_receipts_cashiering', '__first__')) {
+                    <app-school-custom-form-fields
+                      [tableId]="'fee_receipts_cashiering'"
+                      [slotAnchor]="'__first__'"
+                      [values]="formCustomValues['accountantCollect']"
+                      [allowSchemaEdit]="isOwnerPortal"
+                      (valuesChange)="updateFormCustomValues('accountantCollect', $event)" />
+                  }
                   <div>
                     <label class="block font-bold text-slate-700 mb-1">Select Student</label>
                     <select [(ngModel)]="accountantCollectForm.studentId" (ngModelChange)="onAccountantCollectStudentSelect($event)"
@@ -16914,6 +16946,14 @@
                       <input type="text" [(ngModel)]="accountantCollectForm.challanNo" placeholder="CHLN-2026-..." class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-mono font-bold">
                     </div>
                   </div>
+                  @if (hasCustomFieldsAtSlot('fee_receipts_cashiering', 'fee_student')) {
+                    <app-school-custom-form-fields
+                      [tableId]="'fee_receipts_cashiering'"
+                      [slotAnchor]="'fee_student'"
+                      [values]="formCustomValues['accountantCollect']"
+                      [allowSchemaEdit]="isOwnerPortal"
+                      (valuesChange)="updateFormCustomValues('accountantCollect', $event)" />
+                  }
                   <div class="grid grid-cols-2 gap-3">
                     <div>
                       <label class="block font-bold text-slate-700 mb-1">Amount Received (PKR)</label>
@@ -16931,6 +16971,14 @@
                       </select>
                     </div>
                   </div>
+                  @if (hasCustomFieldsAtSlot('fee_receipts_cashiering', 'fee_payment')) {
+                    <app-school-custom-form-fields
+                      [tableId]="'fee_receipts_cashiering'"
+                      [slotAnchor]="'fee_payment'"
+                      [values]="formCustomValues['accountantCollect']"
+                      [allowSchemaEdit]="isOwnerPortal"
+                      (valuesChange)="updateFormCustomValues('accountantCollect', $event)" />
+                  }
                   <div class="rounded-xl p-3 bg-slate-50 border border-slate-200/80 space-y-1.5">
                     <label class="flex items-center justify-between cursor-pointer">
                       <span class="font-bold text-slate-800">Partial / Installment Payment</span>
@@ -16957,6 +17005,14 @@
                     <label class="block font-bold text-slate-700 mb-1">Counter Remarks</label>
                     <input type="text" [(ngModel)]="accountantCollectForm.notes" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-medium">
                   </div>
+                  @if (hasCustomFieldsAtSlot('fee_receipts_cashiering', 'fee_notes')) {
+                    <app-school-custom-form-fields
+                      [tableId]="'fee_receipts_cashiering'"
+                      [slotAnchor]="'fee_notes'"
+                      [values]="formCustomValues['accountantCollect']"
+                      [allowSchemaEdit]="isOwnerPortal"
+                      (valuesChange)="updateFormCustomValues('accountantCollect', $event)" />
+                  }
                   <app-school-custom-form-fields
                     [tableId]="'fee_receipts_cashiering'"
                     [values]="formCustomValues['accountantCollect']"
@@ -17087,6 +17143,14 @@
                 </div>
 
                 <div class="space-y-3 text-xs">
+                  @if (hasCustomFieldsAtSlot('daily_closing_reconciliation', '__first__')) {
+                    <app-school-custom-form-fields
+                      [tableId]="'daily_closing_reconciliation'"
+                      [slotAnchor]="'__first__'"
+                      [values]="formCustomValues['accountantDailyClosing']"
+                      [allowSchemaEdit]="isOwnerPortal"
+                      (valuesChange)="updateFormCustomValues('accountantDailyClosing', $event)" />
+                  }
                   <div class="grid grid-cols-2 gap-3">
                     <div>
                       <label class="block font-bold text-slate-700 mb-1">Closing Date</label>
@@ -17097,6 +17161,14 @@
                       <input type="number" [(ngModel)]="accountantDailyClosingForm.openingVaultCash" class="w-full px-3 py-2 rounded-xl bg-slate-50/90 border border-slate-200/70 font-mono font-bold">
                     </div>
                   </div>
+                  @if (hasCustomFieldsAtSlot('daily_closing_reconciliation', 'dc_date')) {
+                    <app-school-custom-form-fields
+                      [tableId]="'daily_closing_reconciliation'"
+                      [slotAnchor]="'dc_date'"
+                      [values]="formCustomValues['accountantDailyClosing']"
+                      [allowSchemaEdit]="isOwnerPortal"
+                      (valuesChange)="updateFormCustomValues('accountantDailyClosing', $event)" />
+                  }
                   <div class="grid grid-cols-2 gap-3">
                     <div>
                       <label class="block font-bold text-slate-700 mb-1">Counter Cash Received</label>
@@ -17117,6 +17189,14 @@
                       <input type="number" [(ngModel)]="accountantDailyClosingForm.onlineDigitalKuickPay" class="w-full px-3 py-2 rounded-xl bg-slate-50/90 border border-slate-200/70 font-mono font-bold">
                     </div>
                   </div>
+                  @if (hasCustomFieldsAtSlot('daily_closing_reconciliation', 'dc_channels')) {
+                    <app-school-custom-form-fields
+                      [tableId]="'daily_closing_reconciliation'"
+                      [slotAnchor]="'dc_channels'"
+                      [values]="formCustomValues['accountantDailyClosing']"
+                      [allowSchemaEdit]="isOwnerPortal"
+                      (valuesChange)="updateFormCustomValues('accountantDailyClosing', $event)" />
+                  }
                   <div class="grid grid-cols-2 gap-3">
                     <div>
                       <label class="block font-bold text-slate-700 mb-1">Petty Expenses (Vouchers)</label>
@@ -17131,6 +17211,14 @@
                     <label class="block font-bold text-slate-700 mb-1">Cashier Handover Note for School Owner</label>
                     <textarea [(ngModel)]="accountantDailyClosingForm.notes" rows="2" class="w-full px-3 py-2 rounded-xl bg-slate-50/90 border border-slate-200/70 font-medium"></textarea>
                   </div>
+                  @if (hasCustomFieldsAtSlot('daily_closing_reconciliation', 'dc_notes')) {
+                    <app-school-custom-form-fields
+                      [tableId]="'daily_closing_reconciliation'"
+                      [slotAnchor]="'dc_notes'"
+                      [values]="formCustomValues['accountantDailyClosing']"
+                      [allowSchemaEdit]="isOwnerPortal"
+                      (valuesChange)="updateFormCustomValues('accountantDailyClosing', $event)" />
+                  }
 
                   <app-school-custom-form-fields
                     [tableId]="'daily_closing_reconciliation'"
@@ -17171,6 +17259,15 @@
                     <span class="font-mono font-black text-xs text-rose-700 tabular-nums">Total: PKR {{ formatCurrency(totalAccountantPettyVouchers) }}</span>
                   </div>
 
+                  @if (hasCustomFieldsAtSlot('petty_vouchers', '__first__')) {
+                    <app-school-custom-form-fields
+                      [tableId]="'petty_vouchers'"
+                      [slotAnchor]="'__first__'"
+                      [values]="formCustomValues['accountantPetty']"
+                      [allowSchemaEdit]="isOwnerPortal"
+                      (valuesChange)="updateFormCustomValues('accountantPetty', $event)" />
+                  }
+
                   <div class="grid grid-cols-1 sm:grid-cols-4 gap-2.5 text-xs">
                     <select [(ngModel)]="accountantPettyForm.category" class="px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold">
                       <option value="Stationery & Printing">Stationery &amp; Printing</option>
@@ -17188,6 +17285,15 @@
                       </button>
                     </div>
                   </div>
+
+                  @if (hasCustomFieldsAtSlot('petty_vouchers', 'pv_fields')) {
+                    <app-school-custom-form-fields
+                      [tableId]="'petty_vouchers'"
+                      [slotAnchor]="'pv_fields'"
+                      [values]="formCustomValues['accountantPetty']"
+                      [allowSchemaEdit]="isOwnerPortal"
+                      (valuesChange)="updateFormCustomValues('accountantPetty', $event)" />
+                  }
 
                   <app-school-custom-form-fields
                     [tableId]="'petty_vouchers'"
@@ -17354,10 +17460,26 @@
         </div>
 
         <div class="space-y-3 text-xs">
+          @if (hasCustomFieldsAtSlot('owner_homework_log', '__first__')) {
+            <app-school-custom-form-fields
+              [tableId]="'owner_homework_log'"
+              [slotAnchor]="'__first__'"
+              [values]="formCustomValues['teacherHomework']"
+              [allowSchemaEdit]="isOwnerPortal"
+              (valuesChange)="updateFormCustomValues('teacherHomework', $event)" />
+          }
           <div>
             <label class="block font-bold text-slate-700 mb-1">Assignment Title</label>
             <input type="text" [(ngModel)]="teacherHomeworkForm.title" placeholder="e.g. Quadratic Roots Chapter 4" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold focus:bg-white focus:outline-emerald-600">
           </div>
+          @if (hasCustomFieldsAtSlot('owner_homework_log', 'hw_title')) {
+            <app-school-custom-form-fields
+              [tableId]="'owner_homework_log'"
+              [slotAnchor]="'hw_title'"
+              [values]="formCustomValues['teacherHomework']"
+              [allowSchemaEdit]="isOwnerPortal"
+              (valuesChange)="updateFormCustomValues('teacherHomework', $event)" />
+          }
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block font-bold text-slate-700 mb-1">Subject</label>
@@ -17368,10 +17490,26 @@
               <input type="text" [(ngModel)]="teacherHomeworkForm.dueDate" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold">
             </div>
           </div>
+          @if (hasCustomFieldsAtSlot('owner_homework_log', 'hw_meta')) {
+            <app-school-custom-form-fields
+              [tableId]="'owner_homework_log'"
+              [slotAnchor]="'hw_meta'"
+              [values]="formCustomValues['teacherHomework']"
+              [allowSchemaEdit]="isOwnerPortal"
+              (valuesChange)="updateFormCustomValues('teacherHomework', $event)" />
+          }
           <div>
             <label class="block font-bold text-slate-700 mb-1">Instructions & Problem Set</label>
             <textarea [(ngModel)]="teacherHomeworkForm.description" rows="3" placeholder="Solve exercise 4.1 to 4.4 in homework notebook..." class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-medium focus:bg-white focus:outline-emerald-600"></textarea>
           </div>
+          @if (hasCustomFieldsAtSlot('owner_homework_log', 'hw_desc')) {
+            <app-school-custom-form-fields
+              [tableId]="'owner_homework_log'"
+              [slotAnchor]="'hw_desc'"
+              [values]="formCustomValues['teacherHomework']"
+              [allowSchemaEdit]="isOwnerPortal"
+              (valuesChange)="updateFormCustomValues('teacherHomework', $event)" />
+          }
           <app-school-custom-form-fields
             [tableId]="'owner_homework_log'"
             [values]="formCustomValues['teacherHomework']"
@@ -17401,6 +17539,14 @@
         </div>
 
         <div class="space-y-3 text-xs">
+          @if (hasCustomFieldsAtSlot('owner_student_leaves', '__first__')) {
+            <app-school-custom-form-fields
+              [tableId]="'owner_student_leaves'"
+              [slotAnchor]="'__first__'"
+              [values]="formCustomValues['parentLeave']"
+              [allowSchemaEdit]="isOwnerPortal"
+              (valuesChange)="updateFormCustomValues('parentLeave', $event)" />
+          }
           <div>
             <label class="block font-bold text-slate-700 mb-1">Selected Child</label>
             <select [(ngModel)]="parentLeaveForm.childId" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold">
@@ -17409,6 +17555,14 @@
               }
             </select>
           </div>
+          @if (hasCustomFieldsAtSlot('owner_student_leaves', 'lv_child')) {
+            <app-school-custom-form-fields
+              [tableId]="'owner_student_leaves'"
+              [slotAnchor]="'lv_child'"
+              [values]="formCustomValues['parentLeave']"
+              [allowSchemaEdit]="isOwnerPortal"
+              (valuesChange)="updateFormCustomValues('parentLeave', $event)" />
+          }
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block font-bold text-slate-700 mb-1">Date From</label>
@@ -17419,10 +17573,26 @@
               <input type="text" [(ngModel)]="parentLeaveForm.toDate" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold">
             </div>
           </div>
+          @if (hasCustomFieldsAtSlot('owner_student_leaves', 'lv_dates')) {
+            <app-school-custom-form-fields
+              [tableId]="'owner_student_leaves'"
+              [slotAnchor]="'lv_dates'"
+              [values]="formCustomValues['parentLeave']"
+              [allowSchemaEdit]="isOwnerPortal"
+              (valuesChange)="updateFormCustomValues('parentLeave', $event)" />
+          }
           <div>
             <label class="block font-bold text-slate-700 mb-1">Reason for Absence</label>
             <textarea [(ngModel)]="parentLeaveForm.reason" rows="3" placeholder="State illness, urgent family matter, or doctor appointment..." class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-medium"></textarea>
           </div>
+          @if (hasCustomFieldsAtSlot('owner_student_leaves', 'lv_reason')) {
+            <app-school-custom-form-fields
+              [tableId]="'owner_student_leaves'"
+              [slotAnchor]="'lv_reason'"
+              [values]="formCustomValues['parentLeave']"
+              [allowSchemaEdit]="isOwnerPortal"
+              (valuesChange)="updateFormCustomValues('parentLeave', $event)" />
+          }
           <app-school-custom-form-fields
             [tableId]="'owner_student_leaves'"
             [values]="formCustomValues['parentLeave']"
@@ -17453,6 +17623,15 @@
           </button>
         </div>
 
+        @if (hasCustomFieldsAtSlot('students_master', '__first__')) {
+          <app-school-custom-form-fields
+            [tableId]="'students_master'"
+            [slotAnchor]="'__first__'"
+            [values]="formCustomValues['student']"
+            [allowSchemaEdit]="isOwnerPortal"
+            (valuesChange)="updateFormCustomValues('student', $event)" />
+        }
+
         <div class="grid grid-cols-2 gap-3 text-xs">
           <div class="col-span-2">
             <label class="block font-bold text-slate-700 mb-1">Student Full Name</label>
@@ -17466,6 +17645,16 @@
             <label class="block font-bold text-slate-700 mb-1">Section</label>
             <input type="text" [(ngModel)]="studentForm.section" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold">
           </div>
+          @if (hasCustomFieldsAtSlot('students_master', 'stu_identity')) {
+            <div class="col-span-2">
+              <app-school-custom-form-fields
+                [tableId]="'students_master'"
+                [slotAnchor]="'stu_identity'"
+                [values]="formCustomValues['student']"
+                [allowSchemaEdit]="isOwnerPortal"
+                (valuesChange)="updateFormCustomValues('student', $event)" />
+            </div>
+          }
           <div>
             <label class="block font-bold text-slate-700 mb-1">Guardian Name</label>
             <input type="text" [(ngModel)]="studentForm.guardian" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold">
@@ -17474,6 +17663,16 @@
             <label class="block font-bold text-slate-700 mb-1">Guardian Contact Phone</label>
             <input type="text" [(ngModel)]="studentForm.guardianPhone" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold">
           </div>
+          @if (hasCustomFieldsAtSlot('students_master', 'stu_guardian')) {
+            <div class="col-span-2">
+              <app-school-custom-form-fields
+                [tableId]="'students_master'"
+                [slotAnchor]="'stu_guardian'"
+                [values]="formCustomValues['student']"
+                [allowSchemaEdit]="isOwnerPortal"
+                (valuesChange)="updateFormCustomValues('student', $event)" />
+            </div>
+          }
           <div>
             <label class="block font-bold text-slate-700 mb-1">Monthly Tuition Fee (PKR)</label>
             <input type="number" [(ngModel)]="studentForm.feeAmount" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold">
@@ -17486,6 +17685,16 @@
               <option value="Overdue">Overdue</option>
             </select>
           </div>
+          @if (hasCustomFieldsAtSlot('students_master', 'stu_fee')) {
+            <div class="col-span-2">
+              <app-school-custom-form-fields
+                [tableId]="'students_master'"
+                [slotAnchor]="'stu_fee'"
+                [values]="formCustomValues['student']"
+                [allowSchemaEdit]="isOwnerPortal"
+                (valuesChange)="updateFormCustomValues('student', $event)" />
+            </div>
+          }
         </div>
 
         <app-school-custom-form-fields
@@ -19294,6 +19503,15 @@
             </span>
           </div>
 
+          @if (hasCustomFieldsAtSlot('owner_admissions', '__first__')) {
+            <app-school-custom-form-fields
+              [tableId]="'owner_admissions'"
+              [slotAnchor]="'__first__'"
+              [values]="formCustomValues['admission']"
+              [allowSchemaEdit]="isOwnerPortal"
+              (valuesChange)="updateFormCustomValues('admission', $event)" />
+          }
+
           <!-- SECTION 01: CANDIDATE / STUDENT IDENTITY -->
           <div class="space-y-4 bg-slate-50/50 p-4 sm:p-5 rounded-[22px] border border-slate-200/80">
             <div class="flex items-center justify-between pb-2.5 border-b border-slate-200/70">
@@ -19382,6 +19600,15 @@
             </div>
           </div>
 
+          @if (hasCustomFieldsAtSlot('owner_admissions', 'sec_01')) {
+            <app-school-custom-form-fields
+              [tableId]="'owner_admissions'"
+              [slotAnchor]="'sec_01'"
+              [values]="formCustomValues['admission']"
+              [allowSchemaEdit]="isOwnerPortal"
+              (valuesChange)="updateFormCustomValues('admission', $event)" />
+          }
+
           <!-- SECTION 02: CLASS PLACEMENT & ACADEMICS -->
           <div class="space-y-4 bg-slate-50/50 p-4 sm:p-5 rounded-[22px] border border-slate-200/80">
             <div class="flex items-center gap-2.5 pb-2.5 border-b border-slate-200/70">
@@ -19440,6 +19667,15 @@
               </div>
             </div>
           </div>
+
+          @if (hasCustomFieldsAtSlot('owner_admissions', 'sec_02')) {
+            <app-school-custom-form-fields
+              [tableId]="'owner_admissions'"
+              [slotAnchor]="'sec_02'"
+              [values]="formCustomValues['admission']"
+              [allowSchemaEdit]="isOwnerPortal"
+              (valuesChange)="updateFormCustomValues('admission', $event)" />
+          }
 
           <!-- SECTION 03: FATHER & GUARDIAN PARTICULARS -->
           <div class="space-y-4 bg-slate-50/50 p-4 sm:p-5 rounded-[22px] border border-slate-200/80">
@@ -19556,6 +19792,15 @@
             </div>
           </div>
 
+          @if (hasCustomFieldsAtSlot('owner_admissions', 'sec_03')) {
+            <app-school-custom-form-fields
+              [tableId]="'owner_admissions'"
+              [slotAnchor]="'sec_03'"
+              [values]="formCustomValues['admission']"
+              [allowSchemaEdit]="isOwnerPortal"
+              (valuesChange)="updateFormCustomValues('admission', $event)" />
+          }
+
           <!-- SECTION 04: FINANCIAL TUITION & CONCESSION -->
           <div class="space-y-4 bg-slate-50/50 p-4 sm:p-5 rounded-[22px] border border-slate-200/80">
             <div class="flex items-center gap-2.5 pb-2.5 border-b border-slate-200/70">
@@ -19595,6 +19840,15 @@
             </div>
           </div>
 
+          @if (hasCustomFieldsAtSlot('owner_admissions', 'sec_04')) {
+            <app-school-custom-form-fields
+              [tableId]="'owner_admissions'"
+              [slotAnchor]="'sec_04'"
+              [values]="formCustomValues['admission']"
+              [allowSchemaEdit]="isOwnerPortal"
+              (valuesChange)="updateFormCustomValues('admission', $event)" />
+          }
+
           <!-- SECTION 05: HEALTH & MEDICAL NOTES -->
           <div class="space-y-4 bg-slate-50/50 p-4 sm:p-5 rounded-[22px] border border-slate-200/80">
             <div class="flex items-center gap-2.5 pb-2.5 border-b border-slate-200/70">
@@ -19606,6 +19860,15 @@
               <input type="text" [(ngModel)]="admissionForm.medicalNotes" placeholder="e.g. Normal health, No known allergies, Asthmatic inhaler required, Eyeglasses wearer" class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 font-bold text-slate-900 focus:border-amber-600">
             </div>
           </div>
+
+          @if (hasCustomFieldsAtSlot('owner_admissions', 'sec_05')) {
+            <app-school-custom-form-fields
+              [tableId]="'owner_admissions'"
+              [slotAnchor]="'sec_05'"
+              [values]="formCustomValues['admission']"
+              [allowSchemaEdit]="isOwnerPortal"
+              (valuesChange)="updateFormCustomValues('admission', $event)" />
+          }
 
           <app-school-custom-form-fields
             [tableId]="'owner_admissions'"
@@ -20033,6 +20296,15 @@
             </div>
           </div>
 
+          @if (hasCustomFieldsAtSlot('teachers_master', '__first__')) {
+            <app-school-custom-form-fields
+              [tableId]="'teachers_master'"
+              [slotAnchor]="'__first__'"
+              [values]="formCustomValues['teacher']"
+              [allowSchemaEdit]="isOwnerPortal"
+              (valuesChange)="updateFormCustomValues('teacher', $event)" />
+          }
+
           <!-- SECTION 1: PERSONAL & CONTACT INFORMATION -->
           <div class="space-y-3">
             <div class="flex items-center gap-2 pb-1.5 border-b border-slate-100">
@@ -20081,6 +20353,15 @@
             </div>
           </div>
 
+          @if (hasCustomFieldsAtSlot('teachers_master', 't_sec_1')) {
+            <app-school-custom-form-fields
+              [tableId]="'teachers_master'"
+              [slotAnchor]="'t_sec_1'"
+              [values]="formCustomValues['teacher']"
+              [allowSchemaEdit]="isOwnerPortal"
+              (valuesChange)="updateFormCustomValues('teacher', $event)" />
+          }
+
           <!-- SECTION 2: QUALIFICATION & EXPERIENCE -->
           <div class="space-y-3">
             <div class="flex items-center gap-2 pb-1.5 border-b border-slate-100">
@@ -20105,6 +20386,15 @@
               </div>
             </div>
           </div>
+
+          @if (hasCustomFieldsAtSlot('teachers_master', 't_sec_2')) {
+            <app-school-custom-form-fields
+              [tableId]="'teachers_master'"
+              [slotAnchor]="'t_sec_2'"
+              [values]="formCustomValues['teacher']"
+              [allowSchemaEdit]="isOwnerPortal"
+              (valuesChange)="updateFormCustomValues('teacher', $event)" />
+          }
 
           <!-- SECTION 3: ACADEMIC ASSIGNMENT & ROLE -->
           <div class="space-y-3">
@@ -20213,6 +20503,15 @@
             </div>
           </div>
 
+          @if (hasCustomFieldsAtSlot('teachers_master', 't_sec_3')) {
+            <app-school-custom-form-fields
+              [tableId]="'teachers_master'"
+              [slotAnchor]="'t_sec_3'"
+              [values]="formCustomValues['teacher']"
+              [allowSchemaEdit]="isOwnerPortal"
+              (valuesChange)="updateFormCustomValues('teacher', $event)" />
+          }
+
           <!-- SECTION 4: PAYROLL & BANKING DETAILS -->
           <div class="space-y-3">
             <div class="flex items-center gap-2 pb-1.5 border-b border-slate-100">
@@ -20237,6 +20536,15 @@
               </div>
             </div>
           </div>
+
+          @if (hasCustomFieldsAtSlot('teachers_master', 't_sec_4')) {
+            <app-school-custom-form-fields
+              [tableId]="'teachers_master'"
+              [slotAnchor]="'t_sec_4'"
+              [values]="formCustomValues['teacher']"
+              [allowSchemaEdit]="isOwnerPortal"
+              (valuesChange)="updateFormCustomValues('teacher', $event)" />
+          }
 
           <app-school-custom-form-fields
             [tableId]="'teachers_master'"
@@ -21187,6 +21495,15 @@
             </span>
           </div>
 
+          @if (hasCustomFieldsAtSlot('campus_notices_feed', '__first__')) {
+            <app-school-custom-form-fields
+              [tableId]="'campus_notices_feed'"
+              [slotAnchor]="'__first__'"
+              [values]="formCustomValues['feed']"
+              [allowSchemaEdit]="isOwnerPortal"
+              (valuesChange)="updateFormCustomValues('feed', $event)" />
+          }
+
           <!-- Target Class & Recipient Group Selection -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-200/90">
             <div>
@@ -21206,6 +21523,15 @@
               </select>
             </div>
           </div>
+
+          @if (hasCustomFieldsAtSlot('campus_notices_feed', 'feed_target')) {
+            <app-school-custom-form-fields
+              [tableId]="'campus_notices_feed'"
+              [slotAnchor]="'feed_target'"
+              [values]="formCustomValues['feed']"
+              [allowSchemaEdit]="isOwnerPortal"
+              (valuesChange)="updateFormCustomValues('feed', $event)" />
+          }
 
           <!-- Purpose Category & Urgency Priority -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -21227,10 +21553,28 @@
             </div>
           </div>
 
+          @if (hasCustomFieldsAtSlot('campus_notices_feed', 'feed_priority')) {
+            <app-school-custom-form-fields
+              [tableId]="'campus_notices_feed'"
+              [slotAnchor]="'feed_priority'"
+              [values]="formCustomValues['feed']"
+              [allowSchemaEdit]="isOwnerPortal"
+              (valuesChange)="updateFormCustomValues('feed', $event)" />
+          }
+
           <div>
             <label class="block font-bold text-slate-700 mb-1">Notice / Circular Subject Title *</label>
             <input type="text" [(ngModel)]="feedForm.title" placeholder="e.g. Mid-Term Examination Code of Conduct & Official Date Sheet 2026" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold text-slate-900 focus:bg-white focus:outline-indigo-600">
           </div>
+
+          @if (hasCustomFieldsAtSlot('campus_notices_feed', 'feed_title')) {
+            <app-school-custom-form-fields
+              [tableId]="'campus_notices_feed'"
+              [slotAnchor]="'feed_title'"
+              [values]="formCustomValues['feed']"
+              [allowSchemaEdit]="isOwnerPortal"
+              (valuesChange)="updateFormCustomValues('feed', $event)" />
+          }
 
           <div>
             <label class="block font-bold text-slate-700 mb-1">Official Instructions / Notice Body *</label>
@@ -21241,6 +21585,15 @@
             <label class="block font-bold text-slate-700 mb-1">Optional PDF Attachment URL or Web Reference</label>
             <input type="text" [(ngModel)]="feedForm.attachedFileUrl" placeholder="https://..." class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 font-mono text-slate-900">
           </div>
+
+          @if (hasCustomFieldsAtSlot('campus_notices_feed', 'feed_body')) {
+            <app-school-custom-form-fields
+              [tableId]="'campus_notices_feed'"
+              [slotAnchor]="'feed_body'"
+              [values]="formCustomValues['feed']"
+              [allowSchemaEdit]="isOwnerPortal"
+              (valuesChange)="updateFormCustomValues('feed', $event)" />
+          }
           <app-school-custom-form-fields
             [tableId]="'campus_notices_feed'"
             [values]="formCustomValues['feed']"
@@ -21886,6 +22239,15 @@
 
         <!-- Form Fields -->
         <div class="space-y-3.5 text-xs">
+          @if (hasCustomFieldsAtSlot('fee_receipts_cashiering', '__first__')) {
+            <app-school-custom-form-fields
+              [tableId]="'fee_receipts_cashiering'"
+              [slotAnchor]="'__first__'"
+              [values]="formCustomValues['principalFeeCollect']"
+              [allowSchemaEdit]="isOwnerPortal"
+              (valuesChange)="updateFormCustomValues('principalFeeCollect', $event)" />
+          }
+
           <!-- Student Selector -->
           <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200/90 space-y-1.5">
             <label class="block font-black text-slate-800">Select Enrolled Student *</label>
@@ -21913,6 +22275,15 @@
               <input type="text" [(ngModel)]="principalFeeCollectForm.guardian" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold text-slate-900">
             </div>
           </div>
+
+          @if (hasCustomFieldsAtSlot('fee_receipts_cashiering', 'fee_student')) {
+            <app-school-custom-form-fields
+              [tableId]="'fee_receipts_cashiering'"
+              [slotAnchor]="'fee_student'"
+              [values]="formCustomValues['principalFeeCollect']"
+              [allowSchemaEdit]="isOwnerPortal"
+              (valuesChange)="updateFormCustomValues('principalFeeCollect', $event)" />
+          }
 
           <!-- Payment Details Grid -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -21948,11 +22319,28 @@
             </div>
           </div>
 
+          @if (hasCustomFieldsAtSlot('fee_receipts_cashiering', 'fee_payment')) {
+            <app-school-custom-form-fields
+              [tableId]="'fee_receipts_cashiering'"
+              [slotAnchor]="'fee_payment'"
+              [values]="formCustomValues['principalFeeCollect']"
+              [allowSchemaEdit]="isOwnerPortal"
+              (valuesChange)="updateFormCustomValues('principalFeeCollect', $event)" />
+          }
+
           <!-- Notes -->
           <div>
             <label class="block font-bold text-slate-700 mb-1">Remarks / Cashier Notes</label>
             <textarea [(ngModel)]="principalFeeCollectForm.notes" rows="2" placeholder="Fee received by Principal Desk. Receipt issued to parent." class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-medium text-slate-900 focus:bg-white focus:outline-emerald-600"></textarea>
           </div>
+          @if (hasCustomFieldsAtSlot('fee_receipts_cashiering', 'fee_notes')) {
+            <app-school-custom-form-fields
+              [tableId]="'fee_receipts_cashiering'"
+              [slotAnchor]="'fee_notes'"
+              [values]="formCustomValues['principalFeeCollect']"
+              [allowSchemaEdit]="isOwnerPortal"
+              (valuesChange)="updateFormCustomValues('principalFeeCollect', $event)" />
+          }
           <app-school-custom-form-fields
             [tableId]="'fee_receipts_cashiering'"
             [values]="formCustomValues['principalFeeCollect']"
@@ -22165,6 +22553,14 @@
         </div>
 
         <div class="space-y-4 text-xs font-bold text-slate-700">
+          @if (hasCustomFieldsAtSlot('principal_lesson_plans', '__first__')) {
+            <app-school-custom-form-fields
+              [tableId]="'principal_lesson_plans'"
+              [slotAnchor]="'__first__'"
+              [values]="formCustomValues['lessonPlan']"
+              [allowSchemaEdit]="isOwnerPortal"
+              (valuesChange)="updateFormCustomValues('lessonPlan', $event)" />
+          }
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label class="block mb-1 text-slate-600">Faculty / Teacher Name</label>
@@ -22186,6 +22582,15 @@
             </div>
           </div>
 
+          @if (hasCustomFieldsAtSlot('principal_lesson_plans', 'lp_teacher')) {
+            <app-school-custom-form-fields
+              [tableId]="'principal_lesson_plans'"
+              [slotAnchor]="'lp_teacher'"
+              [values]="formCustomValues['lessonPlan']"
+              [allowSchemaEdit]="isOwnerPortal"
+              (valuesChange)="updateFormCustomValues('lessonPlan', $event)" />
+          }
+
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label class="block mb-1 text-slate-600">Subject</label>
@@ -22199,6 +22604,15 @@
             </div>
           </div>
 
+          @if (hasCustomFieldsAtSlot('principal_lesson_plans', 'lp_subject')) {
+            <app-school-custom-form-fields
+              [tableId]="'principal_lesson_plans'"
+              [slotAnchor]="'lp_subject'"
+              [values]="formCustomValues['lessonPlan']"
+              [allowSchemaEdit]="isOwnerPortal"
+              (valuesChange)="updateFormCustomValues('lessonPlan', $event)" />
+          }
+
           <div>
             <label class="block mb-1 text-slate-600">Topic Title *</label>
             <input type="text" [(ngModel)]="lessonPlanForm.topic" placeholder="e.g. Quadratic Equations & Factoring Methods"
@@ -22210,6 +22624,15 @@
             <textarea [(ngModel)]="lessonPlanForm.learningObjectives" rows="3" placeholder="Describe key learning outcomes for students during this session..."
                       class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 font-bold focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"></textarea>
           </div>
+
+          @if (hasCustomFieldsAtSlot('principal_lesson_plans', 'lp_topic')) {
+            <app-school-custom-form-fields
+              [tableId]="'principal_lesson_plans'"
+              [slotAnchor]="'lp_topic'"
+              [values]="formCustomValues['lessonPlan']"
+              [allowSchemaEdit]="isOwnerPortal"
+              (valuesChange)="updateFormCustomValues('lessonPlan', $event)" />
+          }
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
@@ -22236,6 +22659,14 @@
               <option value="Revision Requested">Revision Requested</option>
             </select>
           </div>
+          @if (hasCustomFieldsAtSlot('principal_lesson_plans', 'lp_aids')) {
+            <app-school-custom-form-fields
+              [tableId]="'principal_lesson_plans'"
+              [slotAnchor]="'lp_aids'"
+              [values]="formCustomValues['lessonPlan']"
+              [allowSchemaEdit]="isOwnerPortal"
+              (valuesChange)="updateFormCustomValues('lessonPlan', $event)" />
+          }
           <app-school-custom-form-fields
             [tableId]="'principal_lesson_plans'"
             [values]="formCustomValues['lessonPlan']"
@@ -24038,6 +24469,23 @@
         </div>
 
         <div class="space-y-4 text-xs max-h-[65vh] overflow-y-auto custom-scrollbar pr-1">
+          @if (ownerCrudModal.mode === 'add') {
+            <div class="p-3 rounded-2xl bg-indigo-50/40 border border-indigo-200/80 space-y-1">
+              <label class="block text-[10px] font-bold uppercase text-indigo-700">
+                Insert Row(s) Position in Table (First / After Existing Row / Last)
+              </label>
+              <select
+                [value]="ownerCrudModal.insertAfterRowKey"
+                (change)="updateOwnerCrudRowPosition($any($event.target).value)"
+                class="w-full px-3 py-1.5 rounded-xl bg-white border border-indigo-200 text-xs font-semibold text-slate-900 focus:outline-indigo-600 cursor-pointer"
+              >
+                @for (opt of getOwnerCrudRowPositionOptions(); track opt.value) {
+                  <option [value]="opt.value">{{ opt.label }}</option>
+                }
+              </select>
+            </div>
+          }
+
           <!-- Primary Record Row -->
           <div class="rounded-2xl border border-slate-200/80 bg-slate-50/40 p-4 space-y-3">
             @if (ownerCrudModal.mode === 'add') {
@@ -24045,6 +24493,14 @@
                 <span class="px-2 py-0.5 rounded-md bg-slate-900 text-white text-[10px] font-black uppercase tracking-wider">Row #1</span>
                 <span class="text-[10px] font-semibold text-slate-500">Synced with table columns &amp; all portals</span>
               </div>
+            }
+            @if (ownerCrudModal.tableId && hasCustomFieldsAtSlot(ownerCrudModal.tableId, '__first__')) {
+              <app-school-custom-form-fields
+                [tableId]="ownerCrudModal.tableId"
+                [slotAnchor]="'__first__'"
+                [values]="ownerCrudModal.customValues"
+                [allowSchemaEdit]="isOwnerPortal"
+                (valuesChange)="updateOwnerCrudCustomValues($event)" />
             }
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               @for (f of ownerCrudModal.fields; track f.key) {
@@ -24065,6 +24521,16 @@
                            class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold text-slate-900 focus:outline-indigo-600">
                   }
                 </div>
+                @if (ownerCrudModal.tableId && hasCustomFieldsAtSlot(ownerCrudModal.tableId, f.key)) {
+                  <div class="sm:col-span-2">
+                    <app-school-custom-form-fields
+                      [tableId]="ownerCrudModal.tableId"
+                      [slotAnchor]="f.key"
+                      [values]="ownerCrudModal.customValues"
+                      [allowSchemaEdit]="isOwnerPortal"
+                      (valuesChange)="updateOwnerCrudCustomValues($event)" />
+                  </div>
+                }
               }
             </div>
 
@@ -24088,6 +24554,14 @@
                     <span>Remove Row</span>
                   </button>
                 </div>
+                @if (ownerCrudModal.tableId && hasCustomFieldsAtSlot(ownerCrudModal.tableId, '__first__')) {
+                  <app-school-custom-form-fields
+                    [tableId]="ownerCrudModal.tableId"
+                    [slotAnchor]="'__first__'"
+                    [values]="er.customValues"
+                    [allowSchemaEdit]="false"
+                    (valuesChange)="updateOwnerCrudExtraCustomValues(i, $event)" />
+                }
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   @for (f of ownerCrudModal.fields; track f.key) {
                     <div>
@@ -24107,6 +24581,16 @@
                                class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold text-slate-900 focus:outline-indigo-600">
                       }
                     </div>
+                    @if (ownerCrudModal.tableId && hasCustomFieldsAtSlot(ownerCrudModal.tableId, f.key)) {
+                      <div class="sm:col-span-2">
+                        <app-school-custom-form-fields
+                          [tableId]="ownerCrudModal.tableId"
+                          [slotAnchor]="f.key"
+                          [values]="er.customValues"
+                          [allowSchemaEdit]="false"
+                          (valuesChange)="updateOwnerCrudExtraCustomValues(i, $event)" />
+                      </div>
+                    }
                   }
                 </div>
 

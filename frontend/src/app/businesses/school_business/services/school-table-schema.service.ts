@@ -11,16 +11,39 @@ export interface SchoolCustomColumn {
   defaultValue: string;
   options?: string[];
   required?: boolean;
+  insertAfterColumn?: string;
+  insertAfterFormField?: string;
 }
 
 export interface SchoolCustomRow {
   rowKey: string;
   rowLabel?: string;
+  insertAfterRowKey?: string;
   values: Record<string, string>;
   submittedByName?: string;
   submittedByRole?: string;
   createdAt?: string;
 }
+
+export interface DetectedTableRow {
+  rowKey: string;
+  label: string;
+  isCustom?: boolean;
+}
+
+export interface FormFieldAnchorOption {
+  key: string;
+  label: string;
+}
+
+export interface TableColumnPositionOption {
+  value: string;
+  label: string;
+}
+
+export type OrderedTableColumn =
+  | { kind: 'builtin'; header: DetectedBuiltInHeader; displayLabel: string; hidden: boolean }
+  | { kind: 'custom'; col: SchoolCustomColumn };
 
 export interface SchoolCellMeta {
   submittedByName?: string;
@@ -319,6 +342,214 @@ export const SCHOOL_TABLE_CATALOG: TableCatalogItem[] = [
   }
 ];
 
+export const SCHOOL_FORM_FIELD_ANCHORS: Record<string, FormFieldAnchorOption[]> = {
+  owner_admissions: [
+    { key: 'sec_01', label: 'Section 01: Candidate Identity & B-Form' },
+    { key: 'sec_02', label: 'Section 02: Academic Grade, Section & Roll #' },
+    { key: 'sec_03', label: 'Section 03: Guardian Particulars & Address' },
+    { key: 'sec_04', label: 'Section 04: Admission Fee, Tuition & Scholarship' },
+    { key: 'sec_05', label: 'Section 05: Health, Allergies & Medical Notes' }
+  ],
+  students_master: [
+    { key: 'stu_identity', label: 'Student Name, Class & Section' },
+    { key: 'stu_guardian', label: 'Guardian Name & Contact Phone' },
+    { key: 'stu_fee', label: 'Monthly Tuition Fee & Status' }
+  ],
+  teachers_master: [
+    { key: 't_sec_1', label: 'Section 1: Personal & Contact Details' },
+    { key: 't_sec_2', label: 'Section 2: Academic Qualification & Experience' },
+    { key: 't_sec_3', label: 'Section 3: Designation, Subjects & Class In-Charge' },
+    { key: 't_sec_4', label: 'Section 4: Monthly Salary & Bank Account Details' }
+  ],
+  campus_notices_feed: [
+    { key: 'feed_target', label: 'Target Class & Recipient Group' },
+    { key: 'feed_priority', label: 'Purpose Category & Urgency Priority' },
+    { key: 'feed_title', label: 'Notice / Circular Subject Title' },
+    { key: 'feed_body', label: 'Official Instructions & Attachment' }
+  ],
+  principal_lesson_plans: [
+    { key: 'lp_teacher', label: 'Teacher Name & Grade / Section' },
+    { key: 'lp_subject', label: 'Subject & Lecture Period' },
+    { key: 'lp_topic', label: 'Topic Title & Learning Objectives' },
+    { key: 'lp_aids', label: 'Teaching Aids, Homework & Status' }
+  ],
+  fee_receipts_cashiering: [
+    { key: 'fee_student', label: 'Student Selector & Details' },
+    { key: 'fee_payment', label: 'Fee Month, Amount Paid & Payment Channel' },
+    { key: 'fee_notes', label: 'Reference / Slip # & Counter Remarks' }
+  ],
+  fee_challans_invoices: [
+    { key: 'ch_student', label: 'Student Selector, Name & Class' },
+    { key: 'ch_amounts', label: 'Billing Month, Tuition, Lab Fee & Due Date' }
+  ],
+  daily_closing_reconciliation: [
+    { key: 'dc_date', label: 'Closing Date & Opening Vault Cash' },
+    { key: 'dc_channels', label: 'Cash, Meezan/HBL Bank & Digital Deposits' },
+    { key: 'dc_notes', label: 'Petty Expenses, Slip # & Handover Note' }
+  ],
+  petty_vouchers: [
+    { key: 'pv_fields', label: 'Voucher Category, Payee, Description & Amount' }
+  ],
+  owner_homework_log: [
+    { key: 'hw_title', label: 'Assignment Title' },
+    { key: 'hw_meta', label: 'Subject & Due Date' },
+    { key: 'hw_desc', label: 'Instructions & Problem Set' }
+  ],
+  owner_student_leaves: [
+    { key: 'lv_child', label: 'Selected Child' },
+    { key: 'lv_dates', label: 'Date From & Date To' },
+    { key: 'lv_reason', label: 'Reason for Absence' }
+  ],
+  owner_medical: [
+    { key: 'rollNo', label: 'Roll #' },
+    { key: 'studentName', label: 'Student Name' },
+    { key: 'grade', label: 'Class / Grade' },
+    { key: 'bloodGroup', label: 'Blood Group' },
+    { key: 'vaccinationStatus', label: 'Vaccination Status' },
+    { key: 'allergies', label: 'Allergies' },
+    { key: 'chronicConditions', label: 'Chronic Conditions' },
+    { key: 'emergencyContact', label: 'Emergency Contact' },
+    { key: 'doctorName', label: 'Physician Name' }
+  ],
+  owner_discipline: [
+    { key: 'rollNo', label: 'Roll #' },
+    { key: 'studentName', label: 'Student Name' },
+    { key: 'grade', label: 'Grade / Class' },
+    { key: 'category', label: 'Category' },
+    { key: 'severity', label: 'Severity' },
+    { key: 'description', label: 'Violation Description' },
+    { key: 'actionTaken', label: 'Action Taken' },
+    { key: 'fineAmount', label: 'Fine Amount (PKR)' },
+    { key: 'status', label: 'Status' }
+  ],
+  owner_payroll: [
+    { key: 'staffName', label: 'Staff / Faculty Name' },
+    { key: 'role', label: 'Designation / Role' },
+    { key: 'month', label: 'Payroll Month' },
+    { key: 'baseSalary', label: 'Base Salary (PKR)' },
+    { key: 'allowances', label: 'Allowances (PKR)' },
+    { key: 'deductions', label: 'Deductions (PKR)' },
+    { key: 'status', label: 'Disbursement Status' }
+  ],
+  owner_staff_leaves: [
+    { key: 'staffName', label: 'Staff Member' },
+    { key: 'leaveType', label: 'Leave Type' },
+    { key: 'fromDate', label: 'From Date' },
+    { key: 'toDate', label: 'To Date' },
+    { key: 'totalDays', label: 'Total Days' },
+    { key: 'reason', label: 'Reason' },
+    { key: 'status', label: 'Approval Status' }
+  ],
+  owner_finance_ledger: [
+    { key: 'challanNo', label: 'Ref / Voucher #' },
+    { key: 'title', label: 'Particulars / Description' },
+    { key: 'studentName', label: 'Student / Party Name' },
+    { key: 'grade', label: 'Class / Section' },
+    { key: 'category', label: 'Account Head / Gateway' },
+    { key: 'paymentMethod', label: 'Payment Method' },
+    { key: 'type', label: 'Entry Type' },
+    { key: 'amount', label: 'Amount (PKR)' },
+    { key: 'date', label: 'Date' },
+    { key: 'status', label: 'Status' }
+  ],
+  owner_invoices: [
+    { key: 'invoiceNo', label: 'Invoice #' },
+    { key: 'type', label: 'Invoice Type' },
+    { key: 'recipientName', label: 'Recipient Name' },
+    { key: 'title', label: 'Invoice Title' },
+    { key: 'issueDate', label: 'Issue Date' },
+    { key: 'dueDate', label: 'Due Date' },
+    { key: 'amount', label: 'Gross Amount (PKR)' },
+    { key: 'discount', label: 'Discount (PKR)' },
+    { key: 'status', label: 'Status' }
+  ],
+  owner_library_circulation: [
+    { key: 'issueNo', label: 'Issue Ref #' },
+    { key: 'bookTitle', label: 'Book Title' },
+    { key: 'isbn', label: 'ISBN' },
+    { key: 'borrowerName', label: 'Borrower Name' },
+    { key: 'borrowerId', label: 'Borrower ID / Roll #' },
+    { key: 'gradeOrDept', label: 'Class / Department' },
+    { key: 'dueDate', label: 'Due Date' },
+    { key: 'fineAmount', label: 'Fine (PKR)' },
+    { key: 'status', label: 'Status' }
+  ],
+  owner_library_catalog: [
+    { key: 'isbn', label: 'ISBN' },
+    { key: 'title', label: 'Book Title' },
+    { key: 'author', label: 'Author' },
+    { key: 'category', label: 'Subject / Category' },
+    { key: 'genre', label: 'Genre' },
+    { key: 'academicGradeLevel', label: 'Grade Level' },
+    { key: 'rackNo', label: 'Rack Location' },
+    { key: 'totalCopies', label: 'Total Copies' },
+    { key: 'availableCopies', label: 'Available Copies' }
+  ],
+  owner_exams: [
+    { key: 'examName', label: 'Examination Title' },
+    { key: 'class', label: 'Assigned Class / Grade' },
+    { key: 'startDate', label: 'Start Date' },
+    { key: 'averageGPA', label: 'Average GPA' },
+    { key: 'status', label: 'Status' }
+  ],
+  owner_subjects: [
+    { key: 'code', label: 'Subject Code' },
+    { key: 'title', label: 'Subject Name' },
+    { key: 'grade', label: 'Assigned Class' },
+    { key: 'creditHours', label: 'Weekly Periods' },
+    { key: 'teacher', label: 'Lead Teacher' },
+    { key: 'passMarks', label: 'Passing Marks' },
+    { key: 'totalMarks', label: 'Total Marks' }
+  ],
+  owner_timetable: [
+    { key: 'period', label: 'Period' },
+    { key: 'time', label: 'Time Slot' },
+    { key: 'grade', label: 'Class' },
+    { key: 'subject', label: 'Subject' },
+    { key: 'teacher', label: 'Faculty Teacher' },
+    { key: 'room', label: 'Classroom / Lab' }
+  ],
+  owner_labs_schedule: [
+    { key: 'day', label: 'Day' },
+    { key: 'period', label: 'Period' },
+    { key: 'lab', label: 'Laboratory' },
+    { key: 'grade', label: 'Class' },
+    { key: 'subject', label: 'Subject' },
+    { key: 'experimentTopic', label: 'Practical Experiment Topic' },
+    { key: 'teacher', label: 'Supervising Teacher' }
+  ],
+  owner_audit_waivers: [
+    { key: 'studentName', label: 'Student Name & Roll #' },
+    { key: 'grade', label: 'Class / Section' },
+    { key: 'category', label: 'Waiver Category' },
+    { key: 'originalFee', label: 'Original Fee (PKR)' },
+    { key: 'concessionLabel', label: 'Concession % / Net Amount' },
+    { key: 'reason', label: 'Justification / Reason' },
+    { key: 'authorizingBody', label: 'Authorizing Body' },
+    { key: 'approvalDate', label: 'Approval Date' }
+  ],
+  owner_audit_compliance: [
+    { key: 'area', label: 'Audit Area' },
+    { key: 'title', label: 'Compliance Title' },
+    { key: 'standard', label: 'Regulatory Standard' },
+    { key: 'status', label: 'Status' },
+    { key: 'responsiblePerson', label: 'Responsible Officer' },
+    { key: 'lastCheckedDate', label: 'Last Checked' },
+    { key: 'nextRenewalDate', label: 'Next Renewal' },
+    { key: 'notes', label: 'Audit Notes' }
+  ],
+  slc_certificates: [
+    { key: 'certificateNo', label: 'Certificate No.' },
+    { key: 'studentName', label: 'Student Name' },
+    { key: 'fatherName', label: 'Father Name' },
+    { key: 'grade', label: 'Class / Grade' },
+    { key: 'leavingDate', label: 'Leaving Date' },
+    { key: 'reasonForLeaving', label: 'Reason for Leaving' },
+    { key: 'conductRating', label: 'Conduct Rating' },
+    { key: 'status', label: 'Status' }
+  ]
+};
+
 @Injectable({
   providedIn: 'root'
 })
@@ -350,7 +581,12 @@ export class SchoolTableSchemaService {
 
   private activeTenantId = 'tenant-root-platform';
   private persistHook: (() => void) | null = null;
-  private tableRegistry = new Map<string, { tableEl: HTMLTableElement; title: string; detectedHeaders: DetectedBuiltInHeader[] }>();
+  private tableRegistry = new Map<string, {
+    tableEl: HTMLTableElement;
+    title: string;
+    detectedHeaders: DetectedBuiltInHeader[];
+    detectedRows: DetectedTableRow[];
+  }>();
 
   constructor() {
     this.loadFromLocalStorage();
@@ -440,7 +676,8 @@ export class SchoolTableSchemaService {
     this.tableRegistry.set(tableId, {
       tableEl,
       title,
-      detectedHeaders: prev?.detectedHeaders || []
+      detectedHeaders: prev?.detectedHeaders || [],
+      detectedRows: prev?.detectedRows || []
     });
   }
 
@@ -451,8 +688,273 @@ export class SchoolTableSchemaService {
     }
   }
 
+  updateRegisteredRows(tableId: string, rows: DetectedTableRow[]): void {
+    const prev = this.tableRegistry.get(tableId);
+    if (prev) {
+      prev.detectedRows = rows;
+    }
+  }
+
   unregisterTableElement(tableId: string): void {
     this.tableRegistry.delete(tableId);
+  }
+
+  getDetectedRowsForTable(tableId: string): DetectedTableRow[] {
+    const canonical = this.resolveCanonicalTableId(tableId);
+    const seen = new Set<string>();
+    const combined: DetectedTableRow[] = [];
+
+    const direct = this.tableRegistry.get(tableId);
+    if (direct?.detectedRows?.length) {
+      for (const r of direct.detectedRows) {
+        if (r.rowKey && !seen.has(r.rowKey)) {
+          seen.add(r.rowKey);
+          combined.push(r);
+        }
+      }
+    } else {
+      for (const [tid, reg] of this.tableRegistry.entries()) {
+        if (this.resolveCanonicalTableId(tid) === canonical && reg.detectedRows.length > 0) {
+          for (const r of reg.detectedRows) {
+            if (r.rowKey && !seen.has(r.rowKey)) {
+              seen.add(r.rowKey);
+              combined.push(r);
+            }
+          }
+          break;
+        }
+      }
+    }
+
+    const schema = this.getSchema(canonical);
+    for (const cr of schema.customRows || []) {
+      if (cr.rowKey && !seen.has(cr.rowKey)) {
+        seen.add(cr.rowKey);
+        combined.push({ rowKey: cr.rowKey, label: cr.rowLabel || cr.rowKey, isCustom: true });
+      }
+    }
+
+    return combined;
+  }
+
+  getRowPositionOptions(tableId: string): TableColumnPositionOption[] {
+    const rows = this.getDetectedRowsForTable(tableId);
+    const options: TableColumnPositionOption[] = [
+      { value: '__first__', label: 'At Top (First Row / Row #1)' },
+      { value: '__last__', label: 'At Bottom (Last Row of Table)' }
+    ];
+    for (const r of rows) {
+      const cleanLabel = (r.label || r.rowKey).slice(0, 48);
+      options.push({
+        value: `after:${r.rowKey}`,
+        label: `After Row: ${cleanLabel}${r.isCustom ? ' (Custom)' : ''}`
+      });
+    }
+    return options;
+  }
+
+  getTableColumnPositionOptions(tableId: string, excludeColId?: string): TableColumnPositionOption[] {
+    const schema = this.getSchema(tableId);
+    const headers = this.getDetectedHeadersForTable(tableId);
+    const hiddenLabels = new Set((schema.hiddenColumnLabels || []).map((l) => l.trim().toLowerCase()));
+    const hiddenIndices = new Set(schema.hiddenColumns || []);
+
+    const options: TableColumnPositionOption[] = [
+      { value: '__last__', label: 'At End (Before Actions Column)' },
+      { value: '__first__', label: 'At Start (First Column)' }
+    ];
+
+    for (const h of headers) {
+      const orig = (h.originalLabel || '').trim();
+      const origLower = orig.toLowerCase();
+      const renamed = schema.renamedHeadersByLabel?.[origLower] ?? schema.renamedHeaders[h.index] ?? orig;
+      const isHidden = hiddenIndices.has(h.index) || (origLower ? hiddenLabels.has(origLower) : false);
+      options.push({
+        value: `built:${orig}`,
+        label: `After Column: ${renamed}${isHidden ? ' (Hidden)' : ''}`
+      });
+    }
+
+    for (const c of schema.customColumns || []) {
+      if (excludeColId && c.id === excludeColId) continue;
+      options.push({
+        value: `custom:${c.id}`,
+        label: `After Custom Column: ${c.label}`
+      });
+    }
+
+    return options;
+  }
+
+  getFormAnchorOptions(tableId: string): FormFieldAnchorOption[] {
+    const canonical = this.resolveCanonicalTableId(tableId);
+    const anchors = SCHOOL_FORM_FIELD_ANCHORS[canonical] || SCHOOL_FORM_FIELD_ANCHORS[tableId] || [];
+    const options: FormFieldAnchorOption[] = [
+      { key: '__last__', label: 'At Bottom (Additional Table Fields Section)' },
+      { key: '__first__', label: 'At Top (Before First Form Section / Field)' }
+    ];
+    for (const a of anchors) {
+      options.push({ key: a.key, label: `After: ${a.label}` });
+    }
+    return options;
+  }
+
+  hasCustomColumnsAtSlot(tableId: string, slotAnchor: string): boolean {
+    const schema = this.getSchema(tableId);
+    const cols = schema.customColumns || [];
+    if (cols.length === 0) return false;
+    return this.getCustomColumnsForSlot(tableId, slotAnchor).length > 0;
+  }
+
+  getCustomColumnsForSlot(tableId: string, slotAnchor: string): SchoolCustomColumn[] {
+    const canonical = this.resolveCanonicalTableId(tableId);
+    const cols = this.getSchema(canonical).customColumns || [];
+    const anchorSet = new Set(
+      (SCHOOL_FORM_FIELD_ANCHORS[canonical] || SCHOOL_FORM_FIELD_ANCHORS[tableId] || []).map((a) => a.key)
+    );
+    const target = (slotAnchor || '__bottom__').trim();
+
+    if (target === '__bottom__' || target === '__last__') {
+      // Render anything set to '__last__', empty/unset, or targeting a nonexistent anchor on this form
+      return cols.filter((c) => {
+        const pos = (c.insertAfterFormField || '').trim();
+        if (!pos || pos === '__last__' || pos === '__bottom__') return true;
+        if (pos === '__first__') return false;
+        return !anchorSet.has(pos);
+      });
+    }
+    return cols.filter((c) => (c.insertAfterFormField || '').trim() === target);
+  }
+
+  describeColumnTablePosition(tableId: string, col: SchoolCustomColumn): string {
+    const raw = (col.insertAfterColumn || '').trim();
+    if (!raw || raw === '__last__') return 'Table: End (Before Actions)';
+    if (raw === '__first__') return 'Table: First Column';
+    if (raw.startsWith('built:')) return `Table: After ${raw.slice(6)}`;
+    if (raw.startsWith('custom:')) {
+      const refId = raw.slice(7);
+      const target = (this.getSchema(tableId).customColumns || []).find((c) => c.id === refId);
+      return `Table: After ${target?.label || 'Custom Column'}`;
+    }
+    return `Table: After ${raw}`;
+  }
+
+  describeColumnFormPosition(tableId: string, col: SchoolCustomColumn): string {
+    const raw = (col.insertAfterFormField || '').trim();
+    if (!raw || raw === '__last__' || raw === '__bottom__') return 'Form: Bottom';
+    if (raw === '__first__') return 'Form: Top (First)';
+    const canonical = this.resolveCanonicalTableId(tableId);
+    const anchor = (SCHOOL_FORM_FIELD_ANCHORS[canonical] || SCHOOL_FORM_FIELD_ANCHORS[tableId] || []).find((a) => a.key === raw);
+    return `Form: After ${anchor?.label || raw}`;
+  }
+
+  resolveOrderedColumns(
+    tableId: string,
+    detectedHeaders: DetectedBuiltInHeader[],
+    schema?: SchoolTableSchema,
+    effectiveHiddenSet?: Set<number>
+  ): OrderedTableColumn[] {
+    const s = schema || this.getSchema(tableId);
+    const isCanonicalMatch = s.tableId === tableId;
+    const hiddenLabels = new Set((s.hiddenColumnLabels || []).map((l) => l.trim().toLowerCase()));
+    const hiddenIndices = new Set(s.hiddenColumns || []);
+
+    const ordered: OrderedTableColumn[] = detectedHeaders.map((h) => {
+      const orig = (h.originalLabel || '').trim();
+      const origLower = orig.toLowerCase();
+      const renamed = s.renamedHeadersByLabel?.[origLower] ?? (isCanonicalMatch ? s.renamedHeaders[h.index] : undefined);
+      const displayLabel = renamed && renamed.trim() ? renamed.trim() : orig;
+      const hidden = effectiveHiddenSet
+        ? effectiveHiddenSet.has(h.index)
+        : (hiddenIndices.has(h.index) || (origLower ? hiddenLabels.has(origLower) : false));
+      return { kind: 'builtin', header: h, displayLabel, hidden };
+    });
+
+    const customCols = [...(s.customColumns || [])];
+    if (customCols.length === 0) return ordered;
+
+    const anchorTailCount = new Map<string, number>();
+
+    const matchesBuiltIn = (item: OrderedTableColumn, targetRaw: string): boolean => {
+      if (item.kind !== 'builtin') return false;
+      const clean = targetRaw.replace(/^built:/i, '').trim().toLowerCase();
+      if (!clean) return false;
+      const orig = item.header.originalLabel.trim().toLowerCase();
+      const disp = item.displayLabel.trim().toLowerCase();
+      return orig === clean || disp === clean;
+    };
+
+    const insertAtAnchor = (col: SchoolCustomColumn, posRaw: string): boolean => {
+      const pos = (posRaw || '').trim();
+      if (!pos || pos === '__last__') {
+        ordered.push({ kind: 'custom', col });
+        return true;
+      }
+      if (pos === '__first__') {
+        const offset = anchorTailCount.get('__first__') || 0;
+        ordered.splice(Math.min(offset, ordered.length), 0, { kind: 'custom', col });
+        anchorTailCount.set('__first__', offset + 1);
+        return true;
+      }
+      if (pos.startsWith('custom:')) {
+        const refId = pos.slice(7).trim();
+        const targetIdx = ordered.findIndex((item) => item.kind === 'custom' && item.col.id === refId);
+        if (targetIdx >= 0) {
+          const offset = anchorTailCount.get(pos) || 0;
+          ordered.splice(Math.min(targetIdx + 1 + offset, ordered.length), 0, { kind: 'custom', col });
+          anchorTailCount.set(pos, offset + 1);
+          return true;
+        }
+        return false;
+      }
+      const builtTarget = pos.startsWith('built:') ? pos.slice(6) : pos;
+      const bIdx = ordered.findIndex((item) => matchesBuiltIn(item, builtTarget));
+      if (bIdx >= 0) {
+        const normKey = `built:${builtTarget.trim().toLowerCase()}`;
+        const offset = anchorTailCount.get(normKey) || 0;
+        ordered.splice(Math.min(bIdx + 1 + offset, ordered.length), 0, { kind: 'custom', col });
+        anchorTailCount.set(normKey, offset + 1);
+        return true;
+      }
+      return false;
+    };
+
+    // Pass 1: Insert built-in-anchored, '__first__', and '__last__' columns
+    let deferred: SchoolCustomColumn[] = [];
+    for (const col of customCols) {
+      const pos = (col.insertAfterColumn || '').trim();
+      if (pos.startsWith('custom:')) {
+        deferred.push(col);
+      } else {
+        const placed = insertAtAnchor(col, pos || '__last__');
+        if (!placed) {
+          ordered.push({ kind: 'custom', col });
+        }
+      }
+    }
+
+    // Pass 2+: Resolve chained 'custom:<id>' columns cleanly with cycle safety
+    let safety = deferred.length + 2;
+    while (deferred.length > 0 && safety-- > 0) {
+      const nextDeferred: SchoolCustomColumn[] = [];
+      let progressed = false;
+      for (const col of deferred) {
+        if (insertAtAnchor(col, col.insertAfterColumn || '__last__')) {
+          progressed = true;
+        } else {
+          nextDeferred.push(col);
+        }
+      }
+      deferred = nextDeferred;
+      if (!progressed) break;
+    }
+
+    // Any remaining unresolved (e.g. deleted anchor target) append at end before Actions
+    for (const col of deferred) {
+      ordered.push({ kind: 'custom', col });
+    }
+
+    return ordered;
   }
 
   getSchema(tableId: string): SchoolTableSchema {
@@ -530,7 +1032,9 @@ export class SchoolTableSchemaService {
               type: (['text', 'number', 'date', 'badge', 'select'].includes(c.type) ? c.type : 'text') as CustomColumnType,
               defaultValue: String(c.defaultValue ?? ''),
               options: Array.isArray(c.options) ? c.options.map((o: any) => String(o)).filter(Boolean) : undefined,
-              required: Boolean(c.required)
+              required: Boolean(c.required),
+              ...(c.insertAfterColumn ? { insertAfterColumn: String(c.insertAfterColumn).trim() } : {}),
+              ...(c.insertAfterFormField ? { insertAfterFormField: String(c.insertAfterFormField).trim() } : {})
             }))
         : [],
       customRows: Array.isArray(v.customRows)
@@ -539,6 +1043,7 @@ export class SchoolTableSchemaService {
             .map((r: any) => ({
               rowKey: String(r.rowKey),
               rowLabel: String(r.rowLabel || ''),
+              ...(r.insertAfterRowKey ? { insertAfterRowKey: String(r.insertAfterRowKey).trim() } : {}),
               values: r.values && typeof r.values === 'object' ? { ...r.values } : {},
               submittedByName: String(r.submittedByName || ''),
               submittedByRole: String(r.submittedByRole || 'owner'),
@@ -691,7 +1196,9 @@ export class SchoolTableSchemaService {
     type: CustomColumnType = 'text',
     defaultValue: string = '',
     optionsRaw?: string[] | string,
-    required: boolean = false
+    required: boolean = false,
+    insertAfterColumn: string = '__last__',
+    insertAfterFormField: string = '__last__'
   ): SchoolCustomColumn | null {
     if (!this.isOwner()) return null;
     const cleanLabel = (label || '').trim();
@@ -701,13 +1208,17 @@ export class SchoolTableSchemaService {
       : typeof optionsRaw === 'string'
         ? optionsRaw.split(',').map((s) => s.trim()).filter(Boolean)
         : undefined;
+    const cleanColPos = (insertAfterColumn || '__last__').trim() || '__last__';
+    const cleanFormPos = (insertAfterFormField || '__last__').trim() || '__last__';
     const col: SchoolCustomColumn = {
       id: `col_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
       label: cleanLabel,
       type,
       defaultValue: String(defaultValue ?? ''),
       ...(parsedOptions && parsedOptions.length > 0 ? { options: parsedOptions } : {}),
-      ...(required ? { required: true } : {})
+      ...(required ? { required: true } : {}),
+      insertAfterColumn: cleanColPos,
+      insertAfterFormField: cleanFormPos
     };
     const canonical = this.mutateSchema(tableId, (schema) => ({
       ...schema,
@@ -720,7 +1231,15 @@ export class SchoolTableSchemaService {
   updateCustomColumn(
     tableId: string,
     colId: string,
-    updates: { label?: string; type?: CustomColumnType; defaultValue?: string; options?: string[]; required?: boolean }
+    updates: {
+      label?: string;
+      type?: CustomColumnType;
+      defaultValue?: string;
+      options?: string[];
+      required?: boolean;
+      insertAfterColumn?: string;
+      insertAfterFormField?: string;
+    }
   ): boolean {
     if (!this.isOwner()) return false;
     const canonical = this.mutateSchema(tableId, (schema) => ({
@@ -733,7 +1252,13 @@ export class SchoolTableSchemaService {
               type: updates.type ?? col.type,
               defaultValue: updates.defaultValue !== undefined ? updates.defaultValue : col.defaultValue,
               options: updates.options !== undefined ? updates.options : col.options,
-              required: updates.required !== undefined ? updates.required : col.required
+              required: updates.required !== undefined ? updates.required : col.required,
+              insertAfterColumn: updates.insertAfterColumn !== undefined
+                ? (updates.insertAfterColumn.trim() || '__last__')
+                : (col.insertAfterColumn || '__last__'),
+              insertAfterFormField: updates.insertAfterFormField !== undefined
+                ? (updates.insertAfterFormField.trim() || '__last__')
+                : (col.insertAfterFormField || '__last__')
             }
           : col
       )
@@ -898,12 +1423,14 @@ export class SchoolTableSchemaService {
    */
   addCustomRowsBatch(
     tableId: string,
-    draftRows: Array<{ values: Record<string, string>; rowLabel?: string }>,
-    actorName = 'School Business Owner'
+    draftRows: Array<{ values: Record<string, string>; rowLabel?: string; insertAfterRowKey?: string }>,
+    actorName = 'School Business Owner',
+    defaultInsertAfterRowKey = '__first__'
   ): number {
     if (!this.isOwner() || !Array.isArray(draftRows) || draftRows.length === 0) return 0;
     const canonical = this.resolveCanonicalTableId(tableId);
     const now = new Date().toISOString();
+    const fallbackPos = (defaultInsertAfterRowKey || '__first__').trim() || '__first__';
 
     const prepared: SchoolCustomRow[] = draftRows
       .map((d, idx) => {
@@ -913,9 +1440,11 @@ export class SchoolTableSchemaService {
         }
         const firstNonEmpty = Object.values(cleanVals).find((v) => v.length > 0) || `Custom Row ${idx + 1}`;
         const rowKey = `crow_${Date.now()}_${idx}_${Math.random().toString(36).slice(2, 5)}`;
+        const rowPos = (d.insertAfterRowKey || fallbackPos).trim() || '__first__';
         return {
           rowKey,
           rowLabel: d.rowLabel || firstNonEmpty,
+          insertAfterRowKey: rowPos,
           values: cleanVals,
           submittedByName: actorName,
           submittedByRole: 'owner',
@@ -950,6 +1479,7 @@ export class SchoolTableSchemaService {
       rows: prepared.map((r) => ({
         rowKey: r.rowKey,
         rowLabel: r.rowLabel,
+        insertAfterRowKey: r.insertAfterRowKey,
         values: r.values,
         isStandaloneRow: true
       }))
@@ -958,7 +1488,13 @@ export class SchoolTableSchemaService {
     return prepared.length;
   }
 
-  updateCustomRow(tableId: string, rowKey: string, values: Record<string, string>, rowLabel?: string): void {
+  updateCustomRow(
+    tableId: string,
+    rowKey: string,
+    values: Record<string, string>,
+    rowLabel?: string,
+    insertAfterRowKey?: string
+  ): void {
     if (!this.isOwner() || !rowKey) return;
     const canonical = this.mutateSchema(tableId, (schema) => {
       const nextRows = (schema.customRows || []).map((r) =>
@@ -966,6 +1502,7 @@ export class SchoolTableSchemaService {
           ? {
               ...r,
               rowLabel: rowLabel ?? r.rowLabel,
+              insertAfterRowKey: insertAfterRowKey !== undefined ? (insertAfterRowKey.trim() || '__first__') : r.insertAfterRowKey,
               values: { ...values }
             }
           : r
@@ -978,7 +1515,12 @@ export class SchoolTableSchemaService {
       if (Object.keys(colCells).length > 0) nextCells[rowKey] = colCells;
       return { ...schema, customRows: nextRows, customCells: nextCells };
     });
-    void this.backend.updateSchoolTableRow(canonical, rowKey, { values, rowLabel, upsertRow: true });
+    void this.backend.updateSchoolTableRow(canonical, rowKey, {
+      values,
+      rowLabel,
+      ...(insertAfterRowKey !== undefined ? { insertAfterRowKey: insertAfterRowKey.trim() || '__first__' } : {}),
+      upsertRow: true
+    });
   }
 
   deleteCustomRow(tableId: string, rowKey: string): void {

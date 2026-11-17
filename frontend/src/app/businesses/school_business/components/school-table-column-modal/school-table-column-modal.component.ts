@@ -220,6 +220,37 @@ interface DraftFormRow {
                   </div>
                 </div>
 
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div>
+                    <label class="block text-[10px] font-bold uppercase text-indigo-700 mb-1">
+                      Table Column Position (Insert After Column)
+                    </label>
+                    <select
+                      [value]="colTablePos()"
+                      (change)="colTablePos.set($any($event.target).value)"
+                      class="w-full px-3 py-2 rounded-xl bg-indigo-50/50 border border-indigo-200 text-xs font-semibold text-slate-900 focus:bg-white focus:border-indigo-500 focus:outline-none cursor-pointer"
+                    >
+                      @for (opt of studioTablePositionOptions(); track opt.value) {
+                        <option [value]="opt.value">{{ opt.label }}</option>
+                      }
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-[10px] font-bold uppercase text-indigo-700 mb-1">
+                      Form Field Position (After Section / Field)
+                    </label>
+                    <select
+                      [value]="colFormPos()"
+                      (change)="colFormPos.set($any($event.target).value)"
+                      class="w-full px-3 py-2 rounded-xl bg-indigo-50/50 border border-indigo-200 text-xs font-semibold text-slate-900 focus:bg-white focus:border-indigo-500 focus:outline-none cursor-pointer"
+                    >
+                      @for (opt of studioFormPositionOptions(); track opt.key) {
+                        <option [value]="opt.key">{{ opt.label }}</option>
+                      }
+                    </select>
+                  </div>
+                </div>
+
                 <div class="flex items-center justify-end gap-2">
                   <button
                     type="button"
@@ -251,6 +282,12 @@ interface DraftFormRow {
                             } @else if (c.defaultValue) {
                               <span class="text-[11px] text-slate-400 truncate">(Default: {{ c.defaultValue }})</span>
                             }
+                            <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 text-[9px] font-semibold">
+                              {{ schemaService.describeColumnTablePosition(canonicalTableId(), c) }}
+                            </span>
+                            <span class="px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 text-[9px] font-semibold">
+                              {{ schemaService.describeColumnFormPosition(canonicalTableId(), c) }}
+                            </span>
                           </div>
                           <div class="flex items-center gap-1 shrink-0">
                             <button
@@ -352,6 +389,21 @@ interface DraftFormRow {
                   </button>
                 </div>
 
+                <div>
+                  <label class="block text-[10px] font-bold uppercase text-indigo-700 mb-1">
+                    Insert Row(s) Position (First / After Specific Existing Row / Last)
+                  </label>
+                  <select
+                    [value]="studioRowPos()"
+                    (change)="studioRowPos.set($any($event.target).value)"
+                    class="w-full px-3 py-2 rounded-xl bg-white border border-indigo-200 text-xs font-semibold text-slate-900 focus:border-indigo-500 focus:outline-none cursor-pointer"
+                  >
+                    @for (opt of studioRowPositionOptions(); track opt.value) {
+                      <option [value]="opt.value">{{ opt.label }}</option>
+                    }
+                  </select>
+                </div>
+
                 <div class="space-y-2.5">
                   @for (row of studioDraftRows(); track row.tempId; let rIdx = $index) {
                     <div class="p-3 rounded-xl bg-white border border-slate-200/90 space-y-2.5">
@@ -369,44 +421,47 @@ interface DraftFormRow {
                         }
                       </div>
                       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-                        @for (h of visibleHeaders(); track h.index) {
-                          <div>
-                            <label class="block text-[10px] font-bold text-slate-600 mb-0.5 truncate">
-                              {{ getHeaderValue(h.index, h.originalLabel) }}
-                            </label>
-                            <input
-                              type="text"
-                              [value]="row.values['built_' + h.index] ?? ''"
-                              (input)="updateStudioDraftCell(row.tempId, 'built_' + h.index, $any($event.target).value)"
-                              [placeholder]="getHeaderValue(h.index, h.originalLabel)"
-                              class="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:bg-white focus:border-indigo-500 focus:outline-none"
-                            />
-                          </div>
-                        }
-                        @for (col of activeSchema().customColumns; track col.id) {
-                          <div>
-                            <label class="block text-[10px] font-bold text-indigo-700 mb-0.5 truncate">{{ col.label }}</label>
-                            @if (col.type === 'select' && col.options && col.options.length > 0) {
-                              <select
-                                [value]="row.values[col.id] ?? col.defaultValue ?? ''"
-                                (change)="updateStudioDraftCell(row.tempId, col.id, $any($event.target).value)"
-                                class="w-full px-2.5 py-1.5 rounded-lg bg-indigo-50/40 border border-indigo-200 text-xs font-bold text-slate-900 focus:bg-white focus:outline-none"
-                              >
-                                <option value="">-- Select --</option>
-                                @for (opt of col.options; track opt) {
-                                  <option [value]="opt">{{ opt }}</option>
-                                }
-                              </select>
-                            } @else {
-                              <input
-                                [type]="col.type === 'number' ? 'number' : (col.type === 'date' ? 'date' : 'text')"
-                                [value]="row.values[col.id] ?? col.defaultValue ?? ''"
-                                (input)="updateStudioDraftCell(row.tempId, col.id, $any($event.target).value)"
-                                [placeholder]="col.label"
-                                class="w-full px-2.5 py-1.5 rounded-lg bg-indigo-50/40 border border-indigo-200 text-xs font-semibold text-slate-900 focus:bg-white focus:border-indigo-500 focus:outline-none"
-                              />
+                        @for (item of studioOrderedColumns(); track $index) {
+                          @if (item.kind === 'builtin') {
+                            @if (!item.hidden) {
+                              <div>
+                                <label class="block text-[10px] font-bold text-slate-600 mb-0.5 truncate">
+                                  {{ item.displayLabel }}
+                                </label>
+                                <input
+                                  type="text"
+                                  [value]="row.values['built_' + item.header.index] ?? ''"
+                                  (input)="updateStudioDraftCell(row.tempId, 'built_' + item.header.index, $any($event.target).value)"
+                                  [placeholder]="item.displayLabel"
+                                  class="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:bg-white focus:border-indigo-500 focus:outline-none"
+                                />
+                              </div>
                             }
-                          </div>
+                          } @else {
+                            <div>
+                              <label class="block text-[10px] font-bold text-indigo-700 mb-0.5 truncate">{{ item.col.label }}</label>
+                              @if (item.col.type === 'select' && item.col.options && item.col.options.length > 0) {
+                                <select
+                                  [value]="row.values[item.col.id] ?? item.col.defaultValue ?? ''"
+                                  (change)="updateStudioDraftCell(row.tempId, item.col.id, $any($event.target).value)"
+                                  class="w-full px-2.5 py-1.5 rounded-lg bg-indigo-50/40 border border-indigo-200 text-xs font-bold text-slate-900 focus:bg-white focus:outline-none"
+                                >
+                                  <option value="">-- Select --</option>
+                                  @for (opt of item.col.options; track opt) {
+                                    <option [value]="opt">{{ opt }}</option>
+                                  }
+                                </select>
+                              } @else {
+                                <input
+                                  [type]="item.col.type === 'number' ? 'number' : (item.col.type === 'date' ? 'date' : 'text')"
+                                  [value]="row.values[item.col.id] ?? item.col.defaultValue ?? ''"
+                                  (input)="updateStudioDraftCell(row.tempId, item.col.id, $any($event.target).value)"
+                                  [placeholder]="item.col.label"
+                                  class="w-full px-2.5 py-1.5 rounded-lg bg-indigo-50/40 border border-indigo-200 text-xs font-semibold text-slate-900 focus:bg-white focus:border-indigo-500 focus:outline-none"
+                                />
+                              }
+                            </div>
+                          }
                         }
                       </div>
                     </div>
@@ -486,29 +541,48 @@ interface DraftFormRow {
                         </div>
 
                         @if (editingRowKey() === crow.rowKey) {
-                          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-slate-100">
-                            @for (h of visibleHeaders(); track h.index) {
-                              <div>
-                                <label class="block text-[10px] font-bold text-slate-500 mb-0.5">{{ getHeaderValue(h.index, h.originalLabel) }}</label>
-                                <input
-                                  type="text"
-                                  [value]="editRowValues()['built_' + h.index] ?? ''"
-                                  (input)="updateEditRowField('built_' + h.index, $any($event.target).value)"
-                                  class="w-full px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900"
-                                />
-                              </div>
-                            }
-                            @for (col of activeSchema().customColumns; track col.id) {
-                              <div>
-                                <label class="block text-[10px] font-bold text-indigo-700 mb-0.5">{{ col.label }}</label>
-                                <input
-                                  type="text"
-                                  [value]="editRowValues()[col.id] ?? ''"
-                                  (input)="updateEditRowField(col.id, $any($event.target).value)"
-                                  class="w-full px-2.5 py-1 rounded-lg bg-indigo-50/40 border border-indigo-200 text-xs font-semibold text-slate-900"
-                                />
-                              </div>
-                            }
+                          <div class="pt-2 border-t border-slate-100 space-y-2">
+                            <div>
+                              <label class="block text-[10px] font-bold uppercase text-indigo-700 mb-0.5">Row Placement</label>
+                              <select
+                                [value]="editRowPos()"
+                                (change)="editRowPos.set($any($event.target).value)"
+                                class="w-full px-2.5 py-1.5 rounded-lg bg-indigo-50/40 border border-indigo-200 text-xs font-semibold text-slate-900 cursor-pointer"
+                              >
+                                @for (opt of studioRowPositionOptions(); track opt.value) {
+                                  @if (opt.value !== 'after:' + crow.rowKey) {
+                                    <option [value]="opt.value">{{ opt.label }}</option>
+                                  }
+                                }
+                              </select>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              @for (item of studioOrderedColumns(); track $index) {
+                                @if (item.kind === 'builtin') {
+                                  @if (!item.hidden) {
+                                    <div>
+                                      <label class="block text-[10px] font-bold text-slate-500 mb-0.5">{{ item.displayLabel }}</label>
+                                      <input
+                                        type="text"
+                                        [value]="editRowValues()['built_' + item.header.index] ?? ''"
+                                        (input)="updateEditRowField('built_' + item.header.index, $any($event.target).value)"
+                                        class="w-full px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900"
+                                      />
+                                    </div>
+                                  }
+                                } @else {
+                                  <div>
+                                    <label class="block text-[10px] font-bold text-indigo-700 mb-0.5">{{ item.col.label }}</label>
+                                    <input
+                                      type="text"
+                                      [value]="editRowValues()[item.col.id] ?? ''"
+                                      (input)="updateEditRowField(item.col.id, $any($event.target).value)"
+                                      class="w-full px-2.5 py-1 rounded-lg bg-indigo-50/40 border border-indigo-200 text-xs font-semibold text-slate-900"
+                                    />
+                                  </div>
+                                }
+                              }
+                            </div>
                           </div>
                         } @else {
                           <div class="flex flex-wrap gap-2 text-[11px] text-slate-600">
@@ -701,6 +775,28 @@ interface DraftFormRow {
                   + Add Column to Form &amp; Table
                 </button>
               </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <select
+                  [value]="quickFieldColPos()"
+                  (change)="quickFieldColPos.set($any($event.target).value)"
+                  class="px-2.5 py-1.5 rounded-lg bg-white border border-indigo-200 text-[11px] font-semibold text-slate-800 cursor-pointer"
+                  title="Table column position"
+                >
+                  @for (opt of modalTablePositionOptions(); track opt.value) {
+                    <option [value]="opt.value">{{ opt.label }}</option>
+                  }
+                </select>
+                <select
+                  [value]="quickFieldFormPos()"
+                  (change)="quickFieldFormPos.set($any($event.target).value)"
+                  class="px-2.5 py-1.5 rounded-lg bg-white border border-indigo-200 text-[11px] font-semibold text-slate-800 cursor-pointer"
+                  title="Form field position"
+                >
+                  @for (opt of modalFormPositionOptions(); track opt.key) {
+                    <option [value]="opt.key">{{ opt.label }}</option>
+                  }
+                </select>
+              </div>
               @if (rowFormSchema().customColumns.length > 0) {
                 <div class="flex flex-wrap gap-1.5 pt-1">
                   @for (cc of rowFormSchema().customColumns; track cc.id) {
@@ -718,6 +814,22 @@ interface DraftFormRow {
                   }
                 </div>
               }
+            </div>
+
+            <!-- Row Insertion Placement Selector -->
+            <div class="px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1">
+              <label class="block text-[10px] font-bold uppercase text-indigo-700">
+                Insert Row(s) Position (First / After Specific Existing Row / Last)
+              </label>
+              <select
+                [value]="modalRowPos()"
+                (change)="modalRowPos.set($any($event.target).value)"
+                class="w-full px-3 py-1.5 rounded-xl bg-white border border-indigo-200 text-xs font-semibold text-slate-900 focus:border-indigo-500 focus:outline-none cursor-pointer"
+              >
+                @for (opt of modalRowPositionOptions(); track opt.value) {
+                  <option [value]="opt.value">{{ opt.label }}</option>
+                }
+              </select>
             </div>
 
             <!-- Staged Rows -->
@@ -738,31 +850,47 @@ interface DraftFormRow {
                     }
                   </div>
                   <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
-                    @for (h of rowFormVisibleHeaders(); track h.index) {
-                      <div>
-                        <label class="block text-[10px] font-bold text-slate-600 mb-0.5 truncate">
-                          {{ getRowFormHeaderLabel(h) }}
-                        </label>
-                        <input
-                          type="text"
-                          [value]="row.values['built_' + h.index] ?? ''"
-                          (input)="updateModalDraftCell(row.tempId, 'built_' + h.index, $any($event.target).value)"
-                          [placeholder]="getRowFormHeaderLabel(h)"
-                          class="w-full px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-semibold text-slate-900"
-                        />
-                      </div>
-                    }
-                    @for (cc of rowFormSchema().customColumns; track cc.id) {
-                      <div>
-                        <label class="block text-[10px] font-bold text-indigo-700 mb-0.5 truncate">{{ cc.label }}</label>
-                        <input
-                          [type]="cc.type === 'number' ? 'number' : (cc.type === 'date' ? 'date' : 'text')"
-                          [value]="row.values[cc.id] ?? cc.defaultValue ?? ''"
-                          (input)="updateModalDraftCell(row.tempId, cc.id, $any($event.target).value)"
-                          [placeholder]="cc.label"
-                          class="w-full px-2.5 py-1.5 rounded-lg bg-white border border-indigo-200 text-xs font-semibold text-slate-900"
-                        />
-                      </div>
+                    @for (item of modalOrderedColumns(); track $index) {
+                      @if (item.kind === 'builtin') {
+                        @if (!item.hidden) {
+                          <div>
+                            <label class="block text-[10px] font-bold text-slate-600 mb-0.5 truncate">
+                              {{ item.displayLabel }}
+                            </label>
+                            <input
+                              type="text"
+                              [value]="row.values['built_' + item.header.index] ?? ''"
+                              (input)="updateModalDraftCell(row.tempId, 'built_' + item.header.index, $any($event.target).value)"
+                              [placeholder]="item.displayLabel"
+                              class="w-full px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-semibold text-slate-900"
+                            />
+                          </div>
+                        }
+                      } @else {
+                        <div>
+                          <label class="block text-[10px] font-bold text-indigo-700 mb-0.5 truncate">{{ item.col.label }}</label>
+                          @if (item.col.type === 'select' && item.col.options && item.col.options.length > 0) {
+                            <select
+                              [value]="row.values[item.col.id] ?? item.col.defaultValue ?? ''"
+                              (change)="updateModalDraftCell(row.tempId, item.col.id, $any($event.target).value)"
+                              class="w-full px-2.5 py-1.5 rounded-lg bg-white border border-indigo-200 text-xs font-bold text-slate-900"
+                            >
+                              <option value="">-- Select --</option>
+                              @for (opt of item.col.options; track opt) {
+                                <option [value]="opt">{{ opt }}</option>
+                              }
+                            </select>
+                          } @else {
+                            <input
+                              [type]="item.col.type === 'number' ? 'number' : (item.col.type === 'date' ? 'date' : 'text')"
+                              [value]="row.values[item.col.id] ?? item.col.defaultValue ?? ''"
+                              (input)="updateModalDraftCell(row.tempId, item.col.id, $any($event.target).value)"
+                              [placeholder]="item.col.label"
+                              class="w-full px-2.5 py-1.5 rounded-lg bg-white border border-indigo-200 text-xs font-semibold text-slate-900"
+                            />
+                          }
+                        </div>
+                      }
                     }
                   </div>
                 </div>
@@ -886,16 +1014,23 @@ export class SchoolTableColumnModalComponent {
   readonly colType = signal<CustomColumnType>('text');
   readonly colDefault = signal<string>('');
   readonly colOptions = signal<string>('');
+  readonly colTablePos = signal<string>('__last__');
+  readonly colFormPos = signal<string>('__last__');
   readonly editingColId = signal<string>('');
   readonly cellDraft = signal<string>('');
 
   readonly studioDraftRows = signal<DraftFormRow[]>([this.createBlankDraftRow()]);
+  readonly studioRowPos = signal<string>('__first__');
   readonly editingRowKey = signal<string>('');
+  readonly editRowPos = signal<string>('__first__');
   readonly editRowValues = signal<Record<string, string>>({});
 
   readonly modalDraftRows = signal<DraftFormRow[]>([this.createBlankDraftRow()]);
+  readonly modalRowPos = signal<string>('__first__');
   readonly quickFieldLabel = signal<string>('');
   readonly quickFieldType = signal<CustomColumnType>('text');
+  readonly quickFieldColPos = signal<string>('__last__');
+  readonly quickFieldFormPos = signal<string>('__last__');
 
   readonly canonicalTableId = computed(() =>
     this.schemaService.resolveCanonicalTableId(this.managerState().tableId || '')
@@ -918,6 +1053,31 @@ export class SchoolTableColumnModalComponent {
   readonly portalsLabel = computed(() =>
     this.schemaService.getPortalTargetsLabel(this.managerState().tableId || '')
   );
+
+  readonly studioTablePositionOptions = computed(() => {
+    this.schemaService.schemaRevision();
+    return this.schemaService.getTableColumnPositionOptions(
+      this.managerState().tableId || '',
+      this.editingColId() || undefined
+    );
+  });
+
+  readonly studioFormPositionOptions = computed(() => {
+    this.schemaService.schemaRevision();
+    return this.schemaService.getFormAnchorOptions(this.managerState().tableId || '');
+  });
+
+  readonly studioRowPositionOptions = computed(() => {
+    this.schemaService.schemaRevision();
+    return this.schemaService.getRowPositionOptions(this.managerState().tableId || '');
+  });
+
+  readonly studioOrderedColumns = computed(() => {
+    this.schemaService.schemaRevision();
+    const tid = this.managerState().tableId || '';
+    const headers = this.managerState().detectedHeaders || [];
+    return this.schemaService.resolveOrderedColumns(tid, headers, this.activeSchema());
+  });
 
   readonly visibleBuiltInCount = computed(() => {
     const headers = this.managerState().detectedHeaders;
@@ -971,6 +1131,28 @@ export class SchoolTableColumnModalComponent {
     return this.rowFormSchema().customTitle || this.rowFormState().tableTitle || this.rowFormState().tableId;
   });
 
+  readonly modalTablePositionOptions = computed(() => {
+    this.schemaService.schemaRevision();
+    return this.schemaService.getTableColumnPositionOptions(this.rowFormState().tableId || '');
+  });
+
+  readonly modalFormPositionOptions = computed(() => {
+    this.schemaService.schemaRevision();
+    return this.schemaService.getFormAnchorOptions(this.rowFormState().tableId || '');
+  });
+
+  readonly modalRowPositionOptions = computed(() => {
+    this.schemaService.schemaRevision();
+    return this.schemaService.getRowPositionOptions(this.rowFormState().tableId || '');
+  });
+
+  readonly modalOrderedColumns = computed(() => {
+    this.schemaService.schemaRevision();
+    const tid = this.rowFormState().tableId || '';
+    const headers = this.rowFormState().detectedHeaders || [];
+    return this.schemaService.resolveOrderedColumns(tid, headers, this.rowFormSchema());
+  });
+
   readonly rowFormVisibleHeaders = computed(() => {
     const schema = this.rowFormSchema();
     const hiddenLabels = new Set((schema.hiddenColumnLabels || []).map((l) => l.toLowerCase()));
@@ -986,6 +1168,7 @@ export class SchoolTableColumnModalComponent {
       if (m.open) {
         const s = this.schemaService.getSchema(m.tableId);
         this.titleDraft.set(s.customTitle || '');
+        this.studioRowPos.set('__first__');
         if (m.initialTab) {
           this.activeTab.set(m.initialTab);
         }
@@ -995,7 +1178,10 @@ export class SchoolTableColumnModalComponent {
       const rf = this.rowFormState();
       if (rf.open) {
         this.modalDraftRows.set([this.createBlankDraftRow()]);
+        this.modalRowPos.set('__first__');
         this.quickFieldLabel.set('');
+        this.quickFieldColPos.set('__last__');
+        this.quickFieldFormPos.set('__last__');
       }
     });
     effect(() => {
@@ -1083,7 +1269,9 @@ export class SchoolTableColumnModalComponent {
         label: this.colLabel(),
         type,
         defaultValue: type === 'select' ? '' : this.colDefault(),
-        options: opts
+        options: opts,
+        insertAfterColumn: this.colTablePos() || '__last__',
+        insertAfterFormField: this.colFormPos() || '__last__'
       });
     } else {
       this.schemaService.addCustomColumn(
@@ -1091,7 +1279,10 @@ export class SchoolTableColumnModalComponent {
         this.colLabel(),
         type,
         type === 'select' ? '' : this.colDefault(),
-        opts
+        opts,
+        false,
+        this.colTablePos() || '__last__',
+        this.colFormPos() || '__last__'
       );
     }
     this.cancelEditCustom();
@@ -1103,6 +1294,8 @@ export class SchoolTableColumnModalComponent {
     this.colType.set(col.type);
     this.colDefault.set(col.defaultValue || '');
     this.colOptions.set((col.options || []).join(', '));
+    this.colTablePos.set(col.insertAfterColumn || '__last__');
+    this.colFormPos.set(col.insertAfterFormField || '__last__');
   }
 
   cancelEditCustom(): void {
@@ -1111,6 +1304,8 @@ export class SchoolTableColumnModalComponent {
     this.colType.set('text');
     this.colDefault.set('');
     this.colOptions.set('');
+    this.colTablePos.set('__last__');
+    this.colFormPos.set('__last__');
   }
 
   deleteCustom(colId: string): void {
@@ -1147,7 +1342,12 @@ export class SchoolTableColumnModalComponent {
   submitStudioDraftRows(): void {
     const tableId = this.managerState().tableId;
     if (!tableId) return;
-    const count = this.schemaService.addCustomRowsBatch(tableId, this.studioDraftRows());
+    const count = this.schemaService.addCustomRowsBatch(
+      tableId,
+      this.studioDraftRows(),
+      'School Business Owner',
+      this.studioRowPos() || '__first__'
+    );
     if (count > 0) {
       this.studioDraftRows.set([this.createBlankDraftRow()]);
     }
@@ -1155,6 +1355,7 @@ export class SchoolTableColumnModalComponent {
 
   startEditRow(crow: SchoolCustomRow): void {
     this.editingRowKey.set(crow.rowKey);
+    this.editRowPos.set(crow.insertAfterRowKey || '__first__');
     this.editRowValues.set({ ...(crow.values || {}) });
   }
 
@@ -1165,7 +1366,13 @@ export class SchoolTableColumnModalComponent {
   saveEditedRow(crow: SchoolCustomRow): void {
     const tableId = this.managerState().tableId;
     if (!tableId) return;
-    this.schemaService.updateCustomRow(tableId, crow.rowKey, this.editRowValues(), crow.rowLabel);
+    this.schemaService.updateCustomRow(
+      tableId,
+      crow.rowKey,
+      this.editRowValues(),
+      crow.rowLabel,
+      this.editRowPos() || '__first__'
+    );
     this.editingRowKey.set('');
   }
 
@@ -1225,7 +1432,16 @@ export class SchoolTableColumnModalComponent {
   addQuickField(): void {
     const tableId = this.rowFormState().tableId;
     if (!tableId || !this.quickFieldLabel().trim()) return;
-    this.schemaService.addCustomColumn(tableId, this.quickFieldLabel(), this.quickFieldType(), '');
+    this.schemaService.addCustomColumn(
+      tableId,
+      this.quickFieldLabel(),
+      this.quickFieldType(),
+      '',
+      undefined,
+      false,
+      this.quickFieldColPos() || '__last__',
+      this.quickFieldFormPos() || '__last__'
+    );
     this.quickFieldLabel.set('');
   }
 
@@ -1252,7 +1468,12 @@ export class SchoolTableColumnModalComponent {
   submitModalDraftRows(): void {
     const tableId = this.rowFormState().tableId;
     if (!tableId) return;
-    const count = this.schemaService.addCustomRowsBatch(tableId, this.modalDraftRows());
+    const count = this.schemaService.addCustomRowsBatch(
+      tableId,
+      this.modalDraftRows(),
+      'School Business Owner',
+      this.modalRowPos() || '__first__'
+    );
     if (count > 0) {
       this.schemaService.closeRowFormModal();
     }
