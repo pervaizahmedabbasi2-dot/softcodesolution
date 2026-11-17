@@ -200,7 +200,7 @@
           </div>
           <!-- Mobile Transactions Cards (Mobile View) -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 md:hidden">
-            <div *ngFor="let tx of transactions" class="apple-card rounded-2xl border border-slate-200/90 p-4 bg-white shadow-2xs space-y-3">
+            <div *ngFor="let tx of paginatedTransactions" class="apple-card rounded-2xl border border-slate-200/90 p-4 bg-white shadow-2xs space-y-3">
               <div class="flex items-center justify-between gap-2">
                 <span class="font-mono text-xs font-black text-slate-900 bg-slate-100 px-2.5 py-0.5 rounded-md">{{ tx.invoiceNumber }}</span>
                 <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider"
@@ -253,7 +253,7 @@
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100">
-                <tr *ngFor="let tx of transactions" class="hover:bg-slate-50/60 transition-colors">
+                <tr *ngFor="let tx of paginatedTransactions" class="hover:bg-slate-50/60 transition-colors">
                   <td class="px-4 py-3 font-mono font-bold text-slate-900">{{ tx.invoiceNumber }}</td>
                   <td class="px-4 py-3 font-medium text-slate-900">{{ tx.customerName }}<br><span class="text-[10px] text-slate-400 font-normal">{{ tx.customerEmail }}</span></td>
                   <td class="px-4 py-3 text-slate-800">{{ tx.softwareTitle }}</td>
@@ -273,6 +273,14 @@
               </tbody>
             </table>
           </div>
+          <app-pagination-bar
+            *ngIf="transactions.length > 0"
+            [page]="txPage"
+            [pageSize]="pageSize"
+            [totalItems]="transactions.length"
+            itemLabel="transactions"
+            (pageChange)="txPage = $event">
+          </app-pagination-bar>
         </div>
       </div>
 
@@ -444,7 +452,7 @@
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100">
-                <tr *ngFor="let log of notificationLogs" class="hover:bg-slate-50/60 transition-colors">
+                <tr *ngFor="let log of paginatedNotificationLogs" class="hover:bg-slate-50/60 transition-colors">
                   <td class="px-4 py-3 whitespace-nowrap">
                     <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-bold"
                           [class.bg-emerald-100]="log.channel === 'WHATSAPP'"
@@ -491,44 +499,62 @@
               </tbody>
             </table>
           </div>
+          <app-pagination-bar
+            *ngIf="notificationLogs.length > 0"
+            [page]="notifPage"
+            [pageSize]="pageSize"
+            [totalItems]="notificationLogs.length"
+            itemLabel="messages"
+            (pageChange)="notifPage = $event">
+          </app-pagination-bar>
         </div>
       </div>
-      <div *ngIf="!isLoading && activeTab === 'invoices'" class="overflow-x-auto">
+      <div *ngIf="!isLoading && activeTab === 'invoices'">
         <div *ngIf="invoices.length === 0" class="p-12 text-center text-slate-400">
           <p class="font-medium text-sm">No invoices found in database.</p>
         </div>
-        <table *ngIf="invoices.length > 0" class="w-full text-left text-sm whitespace-nowrap">
-          <thead class="bg-slate-50/50 text-xs font-bold uppercase tracking-wider text-slate-400">
-            <tr>
-              <th class="px-6 py-4">Invoice No</th>
-              <th class="px-6 py-4">Tenant</th>
-              <th class="px-6 py-4">Status</th>
-              <th class="px-6 py-4">Amount</th>
-              <th class="px-6 py-4">Date</th>
-              <th class="px-6 py-4 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
-            <tr *ngFor="let inv of invoices" class="hover:bg-slate-50/50 transition-colors">
-              <td class="px-6 py-4 text-slate-900 font-bold">{{ inv.invoice_number }}</td>
-              <td class="px-6 py-4">{{ inv.tenant_id }}</td>
-              <td class="px-6 py-4">
-                <span class="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-600">{{ inv.status }}</span>
-              </td>
-              <td class="px-6 py-4 font-bold text-slate-900">{{ inv.currency }} {{ inv.total }}</td>
-              <td class="px-6 py-4 text-slate-500">{{ inv.created_at | date }}</td>
-              <td class="px-6 py-4 text-right">
-                <button (click)="openInvoiceModal(inv)" class="px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold transition-all inline-flex items-center gap-1.5">
-                  <lucide-icon [img]="myIcons.Receipt" [size]="14"></lucide-icon> Tax Invoice
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div *ngIf="invoices.length > 0" class="overflow-x-auto">
+          <table class="w-full text-left text-sm whitespace-nowrap">
+            <thead class="bg-slate-50/50 text-xs font-bold uppercase tracking-wider text-slate-400">
+              <tr>
+                <th class="px-6 py-4">Invoice No</th>
+                <th class="px-6 py-4">Tenant</th>
+                <th class="px-6 py-4">Status</th>
+                <th class="px-6 py-4">Amount</th>
+                <th class="px-6 py-4">Date</th>
+                <th class="px-6 py-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
+              <tr *ngFor="let inv of paginatedInvoices" class="hover:bg-slate-50/50 transition-colors">
+                <td class="px-6 py-4 text-slate-900 font-bold">{{ inv.invoice_number }}</td>
+                <td class="px-6 py-4">{{ inv.tenant_id }}</td>
+                <td class="px-6 py-4">
+                  <span class="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-600">{{ inv.status }}</span>
+                </td>
+                <td class="px-6 py-4 font-bold text-slate-900">{{ inv.currency }} {{ inv.total }}</td>
+                <td class="px-6 py-4 text-slate-500">{{ inv.created_at | date }}</td>
+                <td class="px-6 py-4 text-right">
+                  <button (click)="openInvoiceModal(inv)" class="px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold transition-all inline-flex items-center gap-1.5">
+                    <lucide-icon [img]="myIcons.Receipt" [size]="14"></lucide-icon> Tax Invoice
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <app-pagination-bar
+          *ngIf="invoices.length > 0"
+          [page]="invoicesPage"
+          [pageSize]="pageSize"
+          [totalItems]="invoices.length"
+          itemLabel="invoices"
+          (pageChange)="invoicesPage = $event">
+        </app-pagination-bar>
       </div>
 
       <!-- APPROVALS TAB -->
-      <div *ngIf="!isLoading && activeTab === 'approvals'" class="overflow-x-auto">
+      <div *ngIf="!isLoading && activeTab === 'approvals'">
         <div *ngIf="pendingApprovals.length === 0" class="p-12 text-center text-slate-400">
           <div class="mx-auto w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
             <lucide-icon [img]="myIcons.Shield" [size]="24"></lucide-icon>
@@ -536,34 +562,44 @@
           <p class="font-bold text-slate-900 mb-1">No Pending Approvals</p>
           <p class="text-sm">All manual payments have been processed.</p>
         </div>
-        <table *ngIf="pendingApprovals.length > 0" class="w-full text-left text-sm whitespace-nowrap">
-          <thead class="bg-slate-50/50 text-xs font-bold uppercase tracking-wider text-slate-400">
-            <tr>
-              <th class="px-6 py-4">Tenant / Invoice</th>
-              <th class="px-6 py-4">Method</th>
-              <th class="px-6 py-4">Amount</th>
-              <th class="px-6 py-4">Agent Notes</th>
-              <th class="px-6 py-4 text-right">Action</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
-            <tr *ngFor="let txn of pendingApprovals" class="hover:bg-slate-50/50 transition-colors">
-              <td class="px-6 py-4">
-                <p class="font-bold text-slate-900">{{ txn.company_name || txn.tenant_id }}</p>
-                <p class="text-xs text-slate-500">{{ txn.invoice_id || 'Wallet Deposit' }}</p>
-              </td>
-              <td class="px-6 py-4">
-                <span class="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-600 uppercase">{{ txn.method }}</span>
-              </td>
-              <td class="px-6 py-4 font-bold text-slate-900">{{ txn.currency }} {{ txn.amount }}</td>
-              <td class="px-6 py-4 text-slate-500 truncate max-w-[200px]">{{ txn.proof_note }}</td>
-              <td class="px-6 py-4 text-right">
-                <button (click)="approvePayment(txn.id)" class="bg-emerald-50 text-emerald-600 hover:bg-emerald-100 px-4 py-2 rounded-lg font-bold text-xs mr-2 transition-colors">Approve</button>
-                <button class="bg-red-50 text-red-600 hover:bg-red-100 px-4 py-2 rounded-lg font-bold text-xs transition-colors">Reject</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div *ngIf="pendingApprovals.length > 0" class="overflow-x-auto">
+          <table class="w-full text-left text-sm whitespace-nowrap">
+            <thead class="bg-slate-50/50 text-xs font-bold uppercase tracking-wider text-slate-400">
+              <tr>
+                <th class="px-6 py-4">Tenant / Invoice</th>
+                <th class="px-6 py-4">Method</th>
+                <th class="px-6 py-4">Amount</th>
+                <th class="px-6 py-4">Agent Notes</th>
+                <th class="px-6 py-4 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
+              <tr *ngFor="let txn of paginatedApprovals" class="hover:bg-slate-50/50 transition-colors">
+                <td class="px-6 py-4">
+                  <p class="font-bold text-slate-900">{{ txn.company_name || txn.tenant_id }}</p>
+                  <p class="text-xs text-slate-500">{{ txn.invoice_id || 'Wallet Deposit' }}</p>
+                </td>
+                <td class="px-6 py-4">
+                  <span class="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-600 uppercase">{{ txn.method }}</span>
+                </td>
+                <td class="px-6 py-4 font-bold text-slate-900">{{ txn.currency }} {{ txn.amount }}</td>
+                <td class="px-6 py-4 text-slate-500 truncate max-w-[200px]">{{ txn.proof_note }}</td>
+                <td class="px-6 py-4 text-right">
+                  <button (click)="approvePayment(txn.id)" class="bg-emerald-50 text-emerald-600 hover:bg-emerald-100 px-4 py-2 rounded-lg font-bold text-xs mr-2 transition-colors">Approve</button>
+                  <button class="bg-red-50 text-red-600 hover:bg-red-100 px-4 py-2 rounded-lg font-bold text-xs transition-colors">Reject</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <app-pagination-bar
+          *ngIf="pendingApprovals.length > 0"
+          [page]="approvalsPage"
+          [pageSize]="pageSize"
+          [totalItems]="pendingApprovals.length"
+          itemLabel="approvals"
+          (pageChange)="approvalsPage = $event">
+        </app-pagination-bar>
       </div>
 
       <!-- WALLET TAB -->
@@ -583,7 +619,7 @@
       </div>
 
       <!-- COUPONS TAB -->
-      <div *ngIf="!isLoading && activeTab === 'coupons'" class="overflow-x-auto">
+      <div *ngIf="!isLoading && activeTab === 'coupons'">
         <div class="p-4 border-b border-slate-100 bg-slate-50 flex justify-end">
           <button class="bg-green-500 text-white px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 hover:bg-green-600 transition-colors">
             <lucide-icon [img]="myIcons.Plus" [size]="16"></lucide-icon> Create Coupon
@@ -592,32 +628,42 @@
         <div *ngIf="coupons.length === 0" class="p-12 text-center text-slate-400">
           <p class="font-medium text-sm">No coupons found in database.</p>
         </div>
-        <table *ngIf="coupons.length > 0" class="w-full text-left text-sm whitespace-nowrap">
-          <thead class="bg-slate-50/50 text-xs font-bold uppercase tracking-wider text-slate-400">
-            <tr>
-              <th class="px-6 py-4">Code</th>
-              <th class="px-6 py-4">Type</th>
-              <th class="px-6 py-4">Value</th>
-              <th class="px-6 py-4">Uses</th>
-              <th class="px-6 py-4">Status</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
-            <tr *ngFor="let coupon of coupons">
-              <td class="px-6 py-4 text-slate-900 font-bold tracking-widest">{{ coupon.code }}</td>
-              <td class="px-6 py-4 uppercase text-xs">{{ coupon.type }}</td>
-              <td class="px-6 py-4 font-bold text-green-600">{{ coupon.type === 'percentage' ? coupon.value + '%' : coupon.currency + ' ' + coupon.value }}</td>
-              <td class="px-6 py-4">{{ coupon.current_uses }} / {{ coupon.max_uses || '∞' }}</td>
-              <td class="px-6 py-4">
-                <span [class.bg-emerald-50]="coupon.status === 'active'" [class.text-emerald-600]="coupon.status === 'active'" class="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-600 uppercase">{{ coupon.status }}</span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div *ngIf="coupons.length > 0" class="overflow-x-auto">
+          <table class="w-full text-left text-sm whitespace-nowrap">
+            <thead class="bg-slate-50/50 text-xs font-bold uppercase tracking-wider text-slate-400">
+              <tr>
+                <th class="px-6 py-4">Code</th>
+                <th class="px-6 py-4">Type</th>
+                <th class="px-6 py-4">Value</th>
+                <th class="px-6 py-4">Uses</th>
+                <th class="px-6 py-4">Status</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
+              <tr *ngFor="let coupon of paginatedCoupons">
+                <td class="px-6 py-4 text-slate-900 font-bold tracking-widest">{{ coupon.code }}</td>
+                <td class="px-6 py-4 uppercase text-xs">{{ coupon.type }}</td>
+                <td class="px-6 py-4 font-bold text-green-600">{{ coupon.type === 'percentage' ? coupon.value + '%' : coupon.currency + ' ' + coupon.value }}</td>
+                <td class="px-6 py-4">{{ coupon.current_uses }} / {{ coupon.max_uses || '∞' }}</td>
+                <td class="px-6 py-4">
+                  <span [class.bg-emerald-50]="coupon.status === 'active'" [class.text-emerald-600]="coupon.status === 'active'" class="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-600 uppercase">{{ coupon.status }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <app-pagination-bar
+          *ngIf="coupons.length > 0"
+          [page]="couponsPage"
+          [pageSize]="pageSize"
+          [totalItems]="coupons.length"
+          itemLabel="coupons"
+          (pageChange)="couponsPage = $event">
+        </app-pagination-bar>
       </div>
 
       <!-- TAX RULES TAB -->
-      <div *ngIf="!isLoading && activeTab === 'tax'" class="overflow-x-auto">
+      <div *ngIf="!isLoading && activeTab === 'tax'">
         <div class="p-4 border-b border-slate-100 bg-slate-50 flex justify-end">
           <button class="bg-slate-900 text-white px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 hover:bg-slate-800 transition-colors">
             <lucide-icon [img]="myIcons.Plus" [size]="16"></lucide-icon> Add Tax Rule
@@ -626,26 +672,36 @@
         <div *ngIf="taxRules.length === 0" class="p-12 text-center text-slate-400">
           <p class="font-medium text-sm">No tax rules found in database.</p>
         </div>
-        <table *ngIf="taxRules.length > 0" class="w-full text-left text-sm whitespace-nowrap">
-          <thead class="bg-slate-50/50 text-xs font-bold uppercase tracking-wider text-slate-400">
-            <tr>
-              <th class="px-6 py-4">Country / State</th>
-              <th class="px-6 py-4">Tax Name</th>
-              <th class="px-6 py-4">Rate (%)</th>
-              <th class="px-6 py-4">Status</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
-            <tr *ngFor="let tax of taxRules" class="hover:bg-slate-50/50 transition-colors">
-              <td class="px-6 py-4 text-slate-900 font-bold">{{ tax.country }} <span *ngIf="tax.state" class="text-slate-400 text-xs">({{tax.state}})</span></td>
-              <td class="px-6 py-4">{{ tax.tax_name }}</td>
-              <td class="px-6 py-4 font-black text-slate-900">{{ tax.tax_rate }}%</td>
-              <td class="px-6 py-4">
-                <span class="rounded-lg bg-emerald-50 text-emerald-600 px-2.5 py-1 text-xs font-bold uppercase">{{ tax.status }}</span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div *ngIf="taxRules.length > 0" class="overflow-x-auto">
+          <table class="w-full text-left text-sm whitespace-nowrap">
+            <thead class="bg-slate-50/50 text-xs font-bold uppercase tracking-wider text-slate-400">
+              <tr>
+                <th class="px-6 py-4">Country / State</th>
+                <th class="px-6 py-4">Tax Name</th>
+                <th class="px-6 py-4">Rate (%)</th>
+                <th class="px-6 py-4">Status</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
+              <tr *ngFor="let tax of paginatedTaxRules" class="hover:bg-slate-50/50 transition-colors">
+                <td class="px-6 py-4 text-slate-900 font-bold">{{ tax.country }} <span *ngIf="tax.state" class="text-slate-400 text-xs">({{tax.state}})</span></td>
+                <td class="px-6 py-4">{{ tax.tax_name }}</td>
+                <td class="px-6 py-4 font-black text-slate-900">{{ tax.tax_rate }}%</td>
+                <td class="px-6 py-4">
+                  <span class="rounded-lg bg-emerald-50 text-emerald-600 px-2.5 py-1 text-xs font-bold uppercase">{{ tax.status }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <app-pagination-bar
+          *ngIf="taxRules.length > 0"
+          [page]="taxPage"
+          [pageSize]="pageSize"
+          [totalItems]="taxRules.length"
+          itemLabel="tax rules"
+          (pageChange)="taxPage = $event">
+        </app-pagination-bar>
       </div>
       
     </div>

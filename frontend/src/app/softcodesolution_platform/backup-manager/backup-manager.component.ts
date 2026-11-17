@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { DashboardApiService } from '../../dashboard/services/dashboard-api.service';
+import { PaginationBarComponent } from '../../components/pagination-bar/pagination-bar.component';
 
 interface BackupRecord {
   id?: string;
@@ -28,12 +29,21 @@ interface BackupRecord {
 @Component({
   selector: 'app-dashboard-backup-manager',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PaginationBarComponent],
   templateUrl: './backup-manager.component.html',
   styleUrl: './backup-manager.component.css',
 })
 export class BackupManagerComponent implements OnInit {
   backups: BackupRecord[] = [];
+  backupsPage = 1;
+  readonly backupsPageSize = 5;
+
+  get paginatedBackups(): BackupRecord[] {
+    const totalPages = Math.max(1, Math.ceil(this.backups.length / this.backupsPageSize));
+    const safePage = Math.min(totalPages, Math.max(1, this.backupsPage));
+    const start = (safePage - 1) * this.backupsPageSize;
+    return this.backups.slice(start, start + this.backupsPageSize);
+  }
 
   get latestBackup(): BackupRecord | null {
     if (!this.backups.length) {

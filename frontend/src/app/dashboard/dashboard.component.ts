@@ -42,6 +42,7 @@ import { DashboardLegalHubComponent } from '../businesses/law_firm/legal-hub/leg
 import { DashboardBusinessSuitesComponent } from '../businesses/business-suites/business-suites.component';
 import { SchoolDashboardComponent } from '../businesses/school_business/school-dashboard/school-dashboard.component';
 import { CurrencyLanguageSelectorComponent } from '../components/currency-language-selector/currency-language-selector.component';
+import { PaginationBarComponent } from '../components/pagination-bar/pagination-bar.component';
 import {
   ALL_ENTERPRISE_BUSINESSES,
   BUSINESS_SECTORS,
@@ -321,6 +322,7 @@ interface SuperadminClientsResponse {
   standalone: true,
   imports: [
     CommonModule,
+    PaginationBarComponent,
     LucideAngularModule,
     DashboardOverviewComponent,
     DashboardAnalyticsComponent,
@@ -665,6 +667,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     { id: 'ecommerce_fulfillment', name: 'E-Commerce & Warehouse Fulfillment', category: 'ecommerce_fulfillment', sector: 'COMMERCE', pricingWeight: 1.4, active: true }
   ];
 
+  businessCatalogPage = 1;
+  readonly businessCatalogPageSize = 5;
+
   get filteredBusinessCatalog() {
     let list = this.businessCatalog;
     if (this.businessSettingsSectorFilter !== 'ALL') {
@@ -675,6 +680,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
       list = list.filter(b => b.name.toLowerCase().includes(q) || b.category.toLowerCase().includes(q));
     }
     return list;
+  }
+
+  get paginatedBusinessCatalog() {
+    const list = this.filteredBusinessCatalog;
+    const totalPages = Math.max(1, Math.ceil(list.length / this.businessCatalogPageSize));
+    const safePage = Math.min(totalPages, Math.max(1, this.businessCatalogPage));
+    const start = (safePage - 1) * this.businessCatalogPageSize;
+    return list.slice(start, start + this.businessCatalogPageSize);
   }
 
   settingsForm = {
@@ -730,6 +743,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // --- GENERIC CATEGORY WORKSPACE STATE ---
   genericFilter = 'all';
   genericSearch = '';
+  genericRecordsPage = 1;
+  readonly genericRecordsPageSize = 5;
   genericNewModalOpen = false;
   genericDraftItem: any = { name: '', code: '', description: '', status: 'Active' };
 
@@ -913,6 +928,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
       { id: `${clean.toUpperCase()}-02`, name: `${this.getGenericCategoryTitle(view)} Secondary Worker`, sku: 'REC-002', status: 'Active', category: 'Standard', value: 'Ready', updated: '1 hour ago' },
       { id: `${clean.toUpperCase()}-03`, name: `${this.getGenericCategoryTitle(view)} Configuration Profile`, sku: 'REC-003', status: 'Active', category: 'System', value: 'Default', updated: 'Yesterday' }
     ];
+  }
+
+  getPaginatedGenericRecords(view: string): any[] {
+    const list = this.getGenericRecords(view);
+    const totalPages = Math.max(1, Math.ceil(list.length / this.genericRecordsPageSize));
+    const safePage = Math.min(totalPages, Math.max(1, this.genericRecordsPage));
+    const start = (safePage - 1) * this.genericRecordsPageSize;
+    return list.slice(start, start + this.genericRecordsPageSize);
   }
 
   openGenericNewModal(): void {
@@ -6322,11 +6345,20 @@ export class DashboardComponent implements OnInit, OnDestroy {
   isInvitingUser = false;
   inviteUserEmail = '';
   inviteUserRole = 'Member';
+  clientTeamPage = 1;
+  readonly clientTeamPageSize = 5;
   clientTeamMembers: any[] = [
     { name: 'Sarah Chen', email: 'sarah.lead@client.io', role: 'Tenant Owner', status: 'Active', mfa: true },
     { name: 'Marcus Vance', email: 'marcus.ops@client.io', role: 'DevOps Lead', status: 'Active', mfa: true },
     { name: 'Elena Rostova', email: 'elena.fin@client.io', role: 'Billing Admin', status: 'Active', mfa: false }
   ];
+
+  get paginatedClientTeamMembers(): any[] {
+    const totalPages = Math.max(1, Math.ceil(this.clientTeamMembers.length / this.clientTeamPageSize));
+    const safePage = Math.min(totalPages, Math.max(1, this.clientTeamPage));
+    const start = (safePage - 1) * this.clientTeamPageSize;
+    return this.clientTeamMembers.slice(start, start + this.clientTeamPageSize);
+  }
 
   verifyClientDns(): void {
     this.clientDnsStatus = 'checking';
@@ -6348,6 +6380,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       status: 'Invited (Pending)',
       mfa: false
     });
+    this.clientTeamPage = 1;
     this.clientPopupAuditAdd('User invited', `${this.inviteUserEmail} (${this.inviteUserRole})`);
     this.clientPopupNotice(`Invitation email sent to ${this.inviteUserEmail}`, true);
     this.inviteUserEmail = '';

@@ -295,22 +295,14 @@
             </table>
           </div>
 
-          <div *ngIf="clientTotal > clientLimit" class="px-6 py-4 border-t border-slate-100 bg-slate-50/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
-              Page <span class="font-black text-slate-700">{{ clientPage }}</span> of <span class="font-black text-slate-700">{{ clientTotalPages }}</span> · <span class="font-black text-slate-700">{{ clientTotal }}</span> records
-            </p>
-            <div class="flex items-center gap-2">
-              <button (click)="previousClientPage()" [disabled]="clientPage<=1" class="px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all">Prev</button>
-              <div class="flex gap-1">
-                <button *ngFor="let p of [1,2,3,4,5].filter(p => p <= clientTotalPages)" (click)="clientPage=p; applyClientLocalView()"
-                  class="w-9 h-9 rounded-xl text-[11px] font-black transition-all"
-                  [class.bg-slate-900]="clientPage===p" [class.text-white]="clientPage===p"
-                  [class.bg-white]="clientPage!==p" [class.border]="clientPage!==p" [class.border-slate-200]="clientPage!==p" [class.text-slate-600]="clientPage!==p">{{ p }}</button>
-                <span *ngIf="clientTotalPages > 5" class="w-9 h-9 flex items-center justify-center text-slate-400 text-sm">…</span>
-              </div>
-              <button (click)="nextClientPage()" [disabled]="clientPage>=clientTotalPages" class="px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all">Next</button>
-            </div>
-          </div>
+          <app-pagination-bar
+            *ngIf="clientTotal > 0"
+            [page]="clientPage"
+            [pageSize]="clientLimit"
+            [totalItems]="clientTotal"
+            itemLabel="clients"
+            (pageChange)="onClientPageChange($event)">
+          </app-pagination-bar>
         </div>
 
         <!-- Floating Bulk Action Drawer -->

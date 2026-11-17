@@ -9,11 +9,12 @@ import {
   MessageSquare, Send, Mail, Bell
 } from 'lucide-angular';
 import { BackendService } from '../../services/backend.service';
+import { PaginationBarComponent } from '../../components/pagination-bar/pagination-bar.component';
 
 @Component({
   selector: 'app-dashboard-payments',
   standalone: true,
-  imports: [CommonModule, FormsModule, LucideAngularModule],
+  imports: [CommonModule, FormsModule, LucideAngularModule, PaginationBarComponent],
   templateUrl: './payments.component.html'
 })
 export class DashboardPaymentsComponent implements OnInit {
@@ -35,6 +36,28 @@ export class DashboardPaymentsComponent implements OnInit {
   gateways: any[] = [];
   transactions: any[] = [];
   notificationLogs: any[] = [];
+  readonly pageSize = 5;
+  txPage = 1;
+  notifPage = 1;
+  invoicesPage = 1;
+  approvalsPage = 1;
+  couponsPage = 1;
+  taxPage = 1;
+
+  private paginateList<T>(items: T[], page: number): T[] {
+    const totalPages = Math.max(1, Math.ceil(items.length / this.pageSize));
+    const safePage = Math.min(totalPages, Math.max(1, page));
+    const start = (safePage - 1) * this.pageSize;
+    return items.slice(start, start + this.pageSize);
+  }
+
+  get paginatedTransactions(): any[] { return this.paginateList(this.transactions, this.txPage); }
+  get paginatedNotificationLogs(): any[] { return this.paginateList(this.notificationLogs, this.notifPage); }
+  get paginatedInvoices(): any[] { return this.paginateList(this.invoices, this.invoicesPage); }
+  get paginatedApprovals(): any[] { return this.paginateList(this.pendingApprovals, this.approvalsPage); }
+  get paginatedCoupons(): any[] { return this.paginateList(this.coupons, this.couponsPage); }
+  get paginatedTaxRules(): any[] { return this.paginateList(this.taxRules, this.taxPage); }
+
   isLoading = false;
   selectedInvoiceForModal: any = null;
   editingGateway: any = null;
@@ -62,6 +85,12 @@ export class DashboardPaymentsComponent implements OnInit {
 
   setTab(tab: any) {
     this.activeTab = tab;
+    this.txPage = 1;
+    this.notifPage = 1;
+    this.invoicesPage = 1;
+    this.approvalsPage = 1;
+    this.couponsPage = 1;
+    this.taxPage = 1;
     this.loadDataForTab(tab);
   }
 

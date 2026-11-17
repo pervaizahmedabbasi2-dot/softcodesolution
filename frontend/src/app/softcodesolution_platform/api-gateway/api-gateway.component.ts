@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
 import { BackendService } from '../../services/backend.service';
 import { ApiGatewayService } from '../../dashboard/services/api-gateway.service';
+import { PaginationBarComponent } from '../../components/pagination-bar/pagination-bar.component';
 
 interface ApiEndpoint { method:string; path:string; description:string; status:'live'|'deprecated'|'disabled'; rateLimit:number; avgLatency:number; callsToday:number; auth:string; }
 interface ApiKey { id:string; name:string; keyMasked:string; clientName:string; created:string; lastUsed:string; status:'active'|'revoked'|'expired'; scopes:string[]; }
@@ -22,7 +23,7 @@ interface GatewayRateLimitPolicy {
 
 type GatewayTab = 'endpoints'|'keys'|'rate-limits'|'security'|'logs';
 
-@Component({ selector:'app-dashboard-api-gateway', standalone:true, imports:[CommonModule,FormsModule,LucideAngularModule], templateUrl:'./api-gateway.component.html', styles:[':host{display:block;width:100%;}'] })
+@Component({ selector:'app-dashboard-api-gateway', standalone:true, imports:[CommonModule,FormsModule,LucideAngularModule,PaginationBarComponent], templateUrl:'./api-gateway.component.html', styles:[':host{display:block;width:100%;}'] })
 export class DashboardApiGatewayComponent implements OnInit {
   private readonly apiGateway = inject(ApiGatewayService);
 
@@ -55,8 +56,12 @@ export class DashboardApiGatewayComponent implements OnInit {
     this.selectedEndpoint = null;
   }
 
+  endpointsPage = 1;
+  readonly endpointsPageSize = 5;
+
   clearSearch(): void {
     this.searchQuery = '';
+    this.endpointsPage = 1;
   }
 
   endpoints: ApiEndpoint[] = [
@@ -150,9 +155,10 @@ export class DashboardApiGatewayComponent implements OnInit {
   get avgLatency():number{const l=this.endpoints.filter(e=>e.status==='live');if(!l.length)return 0;return Math.round(l.reduce((s,e)=>s+e.avgLatency,0)/l.length);}
   get totalCallsToday():number{return this.endpoints.reduce((s,e)=>s+e.callsToday,0);}
   get filteredEndpoints():ApiEndpoint[]{const q=this.searchQuery.trim().toLowerCase();if(!q)return this.endpoints;return this.endpoints.filter(e=>e.path.toLowerCase().includes(q)||e.method.toLowerCase().includes(q)||e.description.toLowerCase().includes(q)||e.auth.toLowerCase().includes(q));}
+  get paginatedEndpoints():ApiEndpoint[]{const list=this.filteredEndpoints;const totalPages=Math.max(1,Math.ceil(list.length/this.endpointsPageSize));const safePage=Math.min(totalPages,Math.max(1,this.endpointsPage));const start=(safePage-1)*this.endpointsPageSize;return list.slice(start,start+this.endpointsPageSize);}
 
-  setTab(tab:any):void{this.activeTab=tab;}
-  setSearch(v:string):void{this.searchQuery=v;}
+  setTab(tab:any):void{this.activeTab=tab;this.endpointsPage=1;}
+  setSearch(v:string):void{this.searchQuery=v;this.endpointsPage=1;}
   methodColor(m:string):string{switch(m){case'GET':return'bg-emerald-100 text-emerald-700';case'POST':return'bg-blue-100 text-blue-700';case'PUT':return'bg-amber-100 text-amber-700';case'DELETE':return'bg-rose-100 text-rose-700';default:return'bg-slate-100 text-slate-700';}}
   statusColor(s:number):string{if(s>=200&&s<300)return'text-emerald-600';if(s>=400&&s<500)return'text-amber-600';return'text-rose-600';}
   toggleRule(ruleId: string): void {

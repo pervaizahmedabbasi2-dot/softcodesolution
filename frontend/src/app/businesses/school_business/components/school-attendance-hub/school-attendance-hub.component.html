@@ -280,7 +280,10 @@
                 <div class="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center shadow-2xs">
                   <lucide-icon [name]="'user-plus'" class="w-3.5 h-3.5"></lucide-icon>
                 </div>
-                <h4 class="text-xs font-black text-slate-900 tracking-tight">Quick Selfie Register · Instant SQLite Save</h4>
+                <div>
+                  <h4 class="text-xs font-black text-slate-900 tracking-tight">Quick Selfie Face Link · Existing Member Only</h4>
+                  <p class="text-[10px] font-medium text-slate-500">Attaches camera face to an already-saved school profile — does not create a new admission.</p>
+                </div>
               </div>
               <button type="button" (click)="closeQuickEnrollPanel()"
                 class="p-1.5 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-white cursor-pointer transition-colors">
@@ -310,6 +313,27 @@
                 }
               </select>
             </div>
+
+            @if (quickEnrollSelectedMember(); as qm) {
+              <div class="px-3 py-2 rounded-xl bg-white/90 border border-emerald-200/70 grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
+                <div class="min-w-0">
+                  <span class="text-[10px] font-bold uppercase text-slate-400 block">Saved Name</span>
+                  <span class="font-bold text-slate-900 truncate block">{{ qm.name }}</span>
+                </div>
+                <div class="min-w-0">
+                  <span class="text-[10px] font-bold uppercase text-slate-400 block">ID / Class-Dept</span>
+                  <span class="font-semibold text-slate-700 truncate block">{{ qm.code }} · {{ qm.subLabel }}</span>
+                </div>
+                <div class="min-w-0">
+                  <span class="text-[10px] font-bold uppercase text-slate-400 block">Father / Guardian</span>
+                  <span class="font-semibold text-slate-700 truncate block">{{ qm.fatherName }}</span>
+                </div>
+                <div class="min-w-0">
+                  <span class="text-[10px] font-bold uppercase text-slate-400 block">Phone</span>
+                  <span class="font-mono font-semibold text-slate-700 truncate block">{{ qm.phone || '—' }}</span>
+                </div>
+              </div>
+            }
 
             <div class="flex flex-col sm:flex-row items-center gap-3">
               <div class="w-20 h-20 rounded-2xl bg-slate-900 border border-slate-300 overflow-hidden shrink-0 flex items-center justify-center text-slate-400 shadow-inner">
@@ -733,6 +757,109 @@
         </div>
       </div>
     </div>
+
+    <!-- Marked Attendance Details Table (Strictly inside Attendance Hub, separate from Admissions) -->
+    @if (!kioskFullscreen()) {
+      <div class="apple-card rounded-[24px] p-5 sm:p-6 bg-white space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3.5">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-sm border border-white/30 shrink-0">
+              <lucide-icon [name]="'check-circle-2'" class="w-4 h-4"></lucide-icon>
+            </div>
+            <div>
+              <h4 class="text-sm font-black text-slate-900 tracking-tight">Marked Attendance Details Table</h4>
+              <p class="text-[11px] font-medium text-slate-500">
+                All members whose attendance is marked appear here with their saved school details, face thumbnail, and IN/OUT timestamps.
+              </p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 flex-wrap">
+            <div class="relative min-w-[200px] sm:w-60">
+              <lucide-icon [name]="'search'" class="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></lucide-icon>
+              <input type="text" [value]="searchQuery()" (input)="searchQuery.set($any($event.target).value)"
+                placeholder="Search marked name, roll, phone..."
+                class="w-full pl-8 pr-3 py-2 rounded-xl bg-slate-100/80 border border-slate-200/80 text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-emerald-500 focus:outline-none" />
+            </div>
+            <span class="px-3 py-1.5 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold tabular-nums">
+              {{ markedAttendanceTableRows().length }} Marked
+            </span>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto border border-slate-200/80 rounded-2xl bg-white">
+          <table appSchoolTable="attendance_marked_details" tableTitle="Marked Attendance Details" class="w-full text-left border-collapse text-xs tabular-nums">
+            <thead class="bg-slate-50/95 text-slate-500 uppercase font-bold tracking-wider text-[10px] border-b border-slate-200/80">
+              <tr>
+                <th class="px-3.5 py-3 whitespace-nowrap">Date</th>
+                <th class="px-3.5 py-3 whitespace-nowrap">ID / Roll</th>
+                <th class="px-3.5 py-3 whitespace-nowrap">Member &amp; Face</th>
+                <th class="px-3.5 py-3 whitespace-nowrap">Category</th>
+                <th class="px-3.5 py-3 whitespace-nowrap">Class / Dept</th>
+                <th class="px-3.5 py-3 whitespace-nowrap">Father / Guardian</th>
+                <th class="px-3.5 py-3 whitespace-nowrap">Phone</th>
+                <th class="px-3.5 py-3 whitespace-nowrap">Check-In (IN)</th>
+                <th class="px-3.5 py-3 whitespace-nowrap">Check-Out (OUT)</th>
+                <th class="px-3.5 py-3 whitespace-nowrap">Verification</th>
+                <th class="px-3.5 py-3 whitespace-nowrap">Status</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              @for (row of markedAttendanceTableRows(); track row.key) {
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="px-3.5 py-3 font-mono text-[11px] font-semibold text-slate-600 whitespace-nowrap">{{ row.date }}</td>
+                  <td class="px-3.5 py-3 font-mono font-bold text-slate-700 whitespace-nowrap">{{ row.code }}</td>
+                  <td class="px-3.5 py-3">
+                    <div class="flex items-center gap-2.5 min-w-[165px]">
+                      @if (row.photo) {
+                        <img [src]="row.photo" [alt]="row.name" referrerpolicy="no-referrer"
+                          class="w-9 h-9 rounded-full object-cover ring-2 ring-emerald-500/20 shrink-0" />
+                      } @else {
+                        <div class="w-9 h-9 rounded-full bg-slate-100 border border-slate-200 text-slate-700 font-bold text-[11px] flex items-center justify-center shrink-0">
+                          {{ memberInitials(row.name) }}
+                        </div>
+                      }
+                      <span class="font-bold text-slate-900 truncate">{{ row.name }}</span>
+                    </div>
+                  </td>
+                  <td class="px-3.5 py-3 whitespace-nowrap">
+                    <span class="px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wide border"
+                      [class]="row.category === 'student' ? 'bg-blue-50 text-blue-700 border-blue-200' : (row.category === 'teacher' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : (row.category === 'principal' ? 'bg-violet-50 text-violet-700 border-violet-200' : 'bg-amber-50 text-amber-700 border-amber-200'))">
+                      {{ singleCategoryLabel(row.category) }}
+                    </span>
+                  </td>
+                  <td class="px-3.5 py-3 font-semibold text-slate-700 whitespace-nowrap">{{ row.subLabel }}</td>
+                  <td class="px-3.5 py-3 text-slate-700 whitespace-nowrap">{{ row.fatherName }}</td>
+                  <td class="px-3.5 py-3 font-mono text-[11px] text-slate-700 whitespace-nowrap">{{ row.phone }}</td>
+                  <td class="px-3.5 py-3 font-mono text-[11px] font-bold text-emerald-700 whitespace-nowrap">{{ row.checkInTime }}</td>
+                  <td class="px-3.5 py-3 font-mono text-[11px] font-bold text-sky-700 whitespace-nowrap">{{ row.checkOutTime }}</td>
+                  <td class="px-3.5 py-3 whitespace-nowrap">
+                    <span class="text-[11px] font-semibold text-slate-700 block">{{ row.verifiedBy }}</span>
+                    @if (row.confidenceScore > 0) {
+                      <span class="text-[10px] font-mono text-slate-400">{{ row.confidenceScore }}% match</span>
+                    }
+                  </td>
+                  <td class="px-3.5 py-3 whitespace-nowrap">
+                    <span class="px-2.5 py-1 rounded-lg text-[11px] font-bold border"
+                      [class]="row.status === 'Present' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : (row.status === 'Late' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-rose-50 text-rose-700 border-rose-200')">
+                      {{ row.status }}
+                    </span>
+                  </td>
+                </tr>
+              }
+              @if (markedAttendanceTableRows().length === 0) {
+                <tr>
+                  <td colspan="11" class="px-4 py-10 text-center">
+                    <p class="text-xs font-semibold text-slate-600">No marked attendance records yet</p>
+                    <p class="text-[11px] text-slate-400 mt-1">Once an enrolled user scans at the camera above, their saved details and timestamps will appear in this table.</p>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
   }
 
     <!-- ====================================================================== -->
@@ -778,13 +905,15 @@
             <input type="date" [value]="selectedDate()" (change)="selectedDate.set($any($event.target).value)"
               class="px-3.5 py-2.5 rounded-xl bg-slate-100/80 border border-slate-200/80 text-xs font-bold text-slate-800 tabular-nums focus:bg-white focus:border-emerald-500 focus:outline-none" />
 
-            <!-- Column & Export Selector Toggle -->
-            <button type="button" (click)="columnPickerOpen.set(!columnPickerOpen())"
-              class="h-10 px-3.5 rounded-xl border text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 transition-all whitespace-nowrap tabular-nums"
-              [class]="columnPickerOpen() ? 'bg-indigo-50 border-indigo-300 text-indigo-800 shadow-2xs' : 'bg-white hover:bg-slate-50 border-slate-200/90 text-slate-800'">
-              <lucide-icon [name]="'sliders-horizontal'" class="w-3.5 h-3.5 text-indigo-600"></lucide-icon>
-              <span>Fields ({{ visibleColumns().length }}/{{ columnDefinitions.length }})</span>
-            </button>
+            <!-- Column & Export Selector Toggle (School Business Owner Only) -->
+            @if (isOwner()) {
+              <button type="button" (click)="columnPickerOpen.set(!columnPickerOpen())"
+                class="h-10 px-3.5 rounded-xl border text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 transition-all whitespace-nowrap tabular-nums"
+                [class]="columnPickerOpen() ? 'bg-indigo-50 border-indigo-300 text-indigo-800 shadow-2xs' : 'bg-white hover:bg-slate-50 border-slate-200/90 text-slate-800'">
+                <lucide-icon [name]="'sliders-horizontal'" class="w-3.5 h-3.5 text-indigo-600"></lucide-icon>
+                <span>Fields ({{ visibleColumns().length }}/{{ columnDefinitions.length }})</span>
+              </button>
+            }
 
             @if (canExportCurrentPortal()) {
               <button type="button" (click)="exportCurrentCategoryPDF()"
@@ -816,8 +945,8 @@
           </div>
         </div>
 
-        <!-- Customizable Fields & Dynamic PDF / CSV Export Selector Panel -->
-        @if (columnPickerOpen()) {
+        <!-- Customizable Fields & Dynamic PDF / CSV Export Selector Panel (Owner Only) -->
+        @if (isOwner() && columnPickerOpen()) {
           <div class="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-slate-50/95 via-white to-indigo-50/40 border border-indigo-200/75 shadow-inner space-y-4">
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-200/70 pb-3">
               <div class="flex items-center gap-2.5">
@@ -1129,7 +1258,7 @@
 
         <!-- Full Dynamic Local + International Compliance & Punctuality Roster Table -->
         <div class="overflow-x-auto border border-slate-200/80 rounded-2xl bg-white">
-          <table class="w-full text-left border-collapse text-xs tabular-nums">
+          <table [appSchoolTable]="'attendance_roster_' + activeSubTab()" [tableTitle]="activeSubTab() + ' Attendance Roster'" class="w-full text-left border-collapse text-xs tabular-nums">
             <thead class="bg-slate-50/95 text-slate-500 uppercase font-bold tracking-wider text-[10px] border-b border-slate-200/80">
               <tr>
                 @if (isColVisible('code')) { <th class="px-3.5 py-3.5 whitespace-nowrap">ID / Roll</th> }
@@ -1463,8 +1592,8 @@
                 <lucide-icon [name]="'user-plus'" class="w-5 h-5"></lucide-icon>
               </div>
               <div>
-                <h3 class="text-sm sm:text-base font-black text-slate-900 tracking-tight">Camera Face Enrollment</h3>
-                <p class="text-[11px] font-medium text-slate-500">Capture a clear front-facing photo to register biometric facial vectors.</p>
+                <h3 class="text-sm sm:text-base font-black text-slate-900 tracking-tight">Camera Face Enrollment (Existing Member Link)</h3>
+                <p class="text-[11px] font-medium text-slate-500">Links a camera face signature to an already-saved member — details load automatically, no duplicate admission created.</p>
               </div>
             </div>
             <div class="inline-flex p-1 rounded-2xl bg-slate-100/90 border border-slate-200/70 gap-1 flex-wrap">
@@ -1478,15 +1607,42 @@
             </div>
           </div>
 
-          <div>
-            <label class="block text-[11px] font-bold text-slate-600 mb-1.5">Select {{ categoryLabel(enrollCategory()) }} Member</label>
-            <select [value]="enrollTargetMemberId()" (change)="enrollTargetMemberId.set($any($event.target).value)"
-              class="w-full px-3.5 py-2.5 rounded-xl bg-slate-100/80 border border-slate-200/80 text-xs font-bold text-slate-900 focus:bg-white focus:border-emerald-500 focus:outline-none">
-              <option value="">-- Select Member --</option>
-              @for (m of enrollCategoryMembers(); track m.id) {
-                <option [value]="m.id">{{ m.name }} ({{ m.code }} · {{ m.subLabel }}) {{ m.isEnrolled ? '— Enrolled' : '' }}</option>
-              }
-            </select>
+          <div class="space-y-2.5">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-600 mb-1.5">Select Existing {{ categoryLabel(enrollCategory()) }} Member</label>
+              <select [value]="enrollTargetMemberId()" (change)="enrollTargetMemberId.set($any($event.target).value)"
+                class="w-full px-3.5 py-2.5 rounded-xl bg-slate-100/80 border border-slate-200/80 text-xs font-bold text-slate-900 focus:bg-white focus:border-emerald-500 focus:outline-none">
+                <option value="">-- Select Member --</option>
+                @for (m of enrollCategoryMembers(); track m.id) {
+                  <option [value]="m.id">{{ m.name }} ({{ m.code }} · {{ m.subLabel }}) {{ m.isEnrolled ? '— Enrolled' : '' }}</option>
+                }
+              </select>
+            </div>
+
+            @if (enrollSelectedMember(); as em) {
+              <div class="p-3 rounded-2xl bg-emerald-50/70 border border-emerald-200/80 grid grid-cols-2 sm:grid-cols-5 gap-2.5 text-[11px]">
+                <div class="min-w-0">
+                  <span class="text-[10px] font-bold uppercase text-slate-500 block">Full Name</span>
+                  <span class="font-bold text-slate-900 truncate block">{{ em.name }}</span>
+                </div>
+                <div class="min-w-0">
+                  <span class="text-[10px] font-bold uppercase text-slate-500 block">ID / Roll</span>
+                  <span class="font-mono font-bold text-slate-800 truncate block">{{ em.code }}</span>
+                </div>
+                <div class="min-w-0">
+                  <span class="text-[10px] font-bold uppercase text-slate-500 block">Class / Dept</span>
+                  <span class="font-semibold text-slate-800 truncate block">{{ em.subLabel }}</span>
+                </div>
+                <div class="min-w-0">
+                  <span class="text-[10px] font-bold uppercase text-slate-500 block">Father / Guardian</span>
+                  <span class="font-semibold text-slate-800 truncate block">{{ em.fatherName }}</span>
+                </div>
+                <div class="min-w-0">
+                  <span class="text-[10px] font-bold uppercase text-slate-500 block">Phone</span>
+                  <span class="font-mono font-semibold text-slate-800 truncate block">{{ em.phone || '—' }}</span>
+                </div>
+              </div>
+            }
           </div>
 
           <div class="relative w-full h-72 sm:h-80 rounded-[22px] bg-slate-950 overflow-hidden ring-1 ring-slate-900/10 shadow-inner" [class]="fillLightFrameClass()">

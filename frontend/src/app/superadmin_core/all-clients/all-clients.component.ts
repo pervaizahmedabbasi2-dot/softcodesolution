@@ -9,6 +9,7 @@ import { CommonModule } from '@angular/common';
 import {
   LucideAngularModule
 } from 'lucide-angular';
+import { PaginationBarComponent } from '../../components/pagination-bar/pagination-bar.component';
 
 type ClientStatusTab =
   | 'pending'
@@ -21,7 +22,8 @@ type ClientStatusTab =
   standalone: true,
   imports: [
     CommonModule,
-    LucideAngularModule
+    LucideAngularModule,
+    PaginationBarComponent
   ],
   templateUrl: './all-clients.component.html',
   styles: [':host{display:block;width:100%;}'],
@@ -256,5 +258,15 @@ export class DashboardAllClientsComponent {
     this.pageSelect.emit(
       Number(this.clientPage || 1)
     );
+  }
+
+  onClientPageChange(page: number): void {
+    if (page < this.clientPage) {
+      this.previousClientPage();
+    } else if (page > this.clientPage) {
+      this.nextClientPage();
+    } else {
+      this.pageSelect.emit(page);
+    }
   }
 }

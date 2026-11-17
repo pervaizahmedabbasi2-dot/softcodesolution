@@ -932,7 +932,7 @@
             <!-- TABLE VIEW 1: STUDENTS MASTER REGISTRY -->
             @if (principalMasterTab === 'students') {
               <div class="overflow-x-auto rounded-2xl border border-slate-200">
-                <table class="w-full text-left text-xs">
+                <table appSchoolTable="owner_overview_students" tableTitle="Students Master Registry" [canAddRow]="true" addRowLabel="Enroll Student" class="w-full text-left text-xs">
                   <thead class="bg-slate-900 text-white font-black uppercase text-[10px] tracking-wider">
                     <tr>
                       <th class="py-3 px-4">Roll #</th>
@@ -1030,7 +1030,7 @@
             <!-- TABLE VIEW 2: TEACHERS & FACULTY MASTER REGISTRY -->
             @if (principalMasterTab === 'teachers') {
               <div class="overflow-x-auto rounded-2xl border border-slate-200">
-                <table class="w-full text-left text-xs">
+                <table appSchoolTable="owner_overview_teachers" tableTitle="Teachers & Faculty Master Registry" [canAddRow]="true" addRowLabel="Add Teacher" class="w-full text-left text-xs">
                   <thead class="bg-slate-900 text-white font-black uppercase text-[10px] tracking-wider">
                     <tr>
                       <th class="py-3 px-4">Staff ID</th>
@@ -1121,7 +1121,7 @@
             <!-- TABLE VIEW 3: PARENTS & GUARDIANS DIRECTORY -->
             @if (principalMasterTab === 'parents') {
               <div class="overflow-x-auto rounded-2xl border border-slate-200">
-                <table class="w-full text-left text-xs">
+                <table appSchoolTable="owner_overview_parents" tableTitle="Parents & Guardians Directory" class="w-full text-left text-xs">
                   <thead class="bg-slate-900 text-white font-black uppercase text-[10px] tracking-wider">
                     <tr>
                       <th class="py-3 px-4">Guardian Name & Relation</th>
@@ -1211,7 +1211,7 @@
             <!-- TABLE VIEW 4: PRINCIPAL FEE CASHIERING REGISTER -->
             @if (principalMasterTab === 'fee_cashiering') {
               <div class="overflow-x-auto rounded-2xl border border-slate-200">
-                <table class="w-full text-left text-xs">
+                <table appSchoolTable="owner_overview_fee_cashiering" tableTitle="Principal Fee Cashiering Register" class="w-full text-left text-xs">
                   <thead class="bg-slate-900 text-white font-black uppercase text-[10px] tracking-wider">
                     <tr>
                       <th class="py-3 px-4">Receipt #</th>
@@ -1359,7 +1359,7 @@
               </div>
 
               <div class="overflow-x-auto">
-                <table class="w-full text-left text-xs">
+                <table appSchoolTable="owner_overview_defaulters" tableTitle="Top Fee Defaulters" class="w-full text-left text-xs">
                   <thead>
                     <tr class="text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100">
                       <th class="pb-2">STUDENT</th>
@@ -1400,7 +1400,7 @@
               </div>
 
               <div class="overflow-x-auto">
-                <table class="w-full text-left text-xs">
+                <table appSchoolTable="owner_overview_recent_payments" tableTitle="Recent Payments" class="w-full text-left text-xs">
                   <thead>
                     <tr class="text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100">
                       <th class="pb-2">RECEIPT</th>
@@ -1781,7 +1781,7 @@
 
               <!-- High-Performance Stage Students Table -->
               <div class="overflow-x-auto custom-scrollbar rounded-2xl border border-slate-200/90 shadow-2xs bg-white">
-                <table class="w-full min-w-[950px] text-left text-xs border-collapse">
+                <table appSchoolTable="owner_stage_wise" tableTitle="Stage-Wise Students Registry" [canAddRow]="true" addRowLabel="Add Student" class="w-full min-w-[950px] text-left text-xs border-collapse">
                   <thead class="bg-slate-900 text-white font-black uppercase text-[10px] tracking-wider border-b border-slate-800">
                     <tr>
                       <th class="py-3 px-3.5">Roll #</th>
@@ -2113,7 +2113,7 @@
                   </div>
                 </div>
 
-                <table class="w-full text-left border-collapse text-xs tabular-nums">
+                <table appSchoolTable="owner_students_roster" tableTitle="Enrolled Student Body Directory" [canAddRow]="true" addRowLabel="Enroll Student" class="w-full text-left border-collapse text-xs tabular-nums">
                   <thead class="bg-slate-100 text-slate-700 uppercase font-black tracking-wider text-[10px] border-b border-slate-200 select-none">
                     <tr>
                       <th class="px-3.5 py-3.5 whitespace-nowrap">Roll & ID</th>
@@ -2182,6 +2182,9 @@
                         <!-- 8. Actions -->
                         <td class="px-4 py-3.5 text-right whitespace-nowrap bg-white">
                           <div class="flex items-center justify-end gap-1" (click)="$event.stopPropagation()">
+                            <button (click)="openEditStudentModal(student); $event.stopPropagation()" title="Edit Student Profile" class="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer">
+                              <lucide-icon [name]="'pencil'" class="w-3.5 h-3.5 text-indigo-600"></lucide-icon>
+                            </button>
                             <button (click)="openStudentDossierModal(student); $event.stopPropagation()" title="View Full 20-Field Student Dossier" class="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-black text-[10px] cursor-pointer flex items-center gap-1">
                               <lucide-icon [name]="'file-text'" class="w-3 h-3"></lucide-icon>
                               <span>Dossier</span>
@@ -2384,7 +2387,7 @@
 
               <!-- Medical Table -->
               <div class="overflow-x-auto custom-scrollbar border border-slate-200/90 rounded-[20px] shadow-xs bg-white">
-                <table class="w-full text-left border-collapse text-xs tabular-nums">
+                <table appSchoolTable="owner_medical" tableTitle="Student Health & Medical Records" [canAddRow]="true" addRowLabel="Record Health Entry" class="w-full text-left border-collapse text-xs tabular-nums">
                   <thead class="bg-rose-50/70 text-slate-700 uppercase font-black tracking-wider text-[10px] border-b border-slate-200 select-none">
                     <tr>
                       <th class="px-4 py-3.5">Roll #</th>
@@ -2427,9 +2430,14 @@
                           </button>
                         </td>
                         <td class="px-4 py-3.5 text-right">
-                          <button (click)="deleteMedicalRecord(m)" class="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 cursor-pointer">
-                            <lucide-icon [name]="'trash-2'" class="w-3.5 h-3.5"></lucide-icon>
-                          </button>
+                          <div class="flex items-center justify-end gap-1.5">
+                            <button (click)="openOwnerRecordCrudModal('medical', 'edit', m)" title="Edit Medical Record" class="p-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 cursor-pointer">
+                              <lucide-icon [name]="'pencil'" class="w-3.5 h-3.5"></lucide-icon>
+                            </button>
+                            <button (click)="deleteMedicalRecord(m)" class="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 cursor-pointer">
+                              <lucide-icon [name]="'trash-2'" class="w-3.5 h-3.5"></lucide-icon>
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     }
@@ -2512,7 +2520,7 @@
 
               <!-- Disciplinary Table -->
               <div class="overflow-x-auto custom-scrollbar border border-slate-200/90 rounded-[20px] shadow-xs bg-white">
-                <table class="w-full text-left border-collapse text-xs tabular-nums">
+                <table appSchoolTable="owner_discipline" tableTitle="Disciplinary & Behavior Incident Log" [canAddRow]="true" addRowLabel="Log Incident" class="w-full text-left border-collapse text-xs tabular-nums">
                   <thead class="bg-amber-50/70 text-slate-700 uppercase font-black tracking-wider text-[10px] border-b border-slate-200 select-none">
                     <tr>
                       <th class="px-4 py-3.5">Roll #</th>
@@ -2555,6 +2563,9 @@
                         </td>
                         <td class="px-4 py-3.5 text-right">
                           <div class="flex items-center justify-end gap-1.5">
+                            <button (click)="openOwnerRecordCrudModal('discipline', 'edit', d)" title="Edit Incident Record" class="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer">
+                              <lucide-icon [name]="'pencil'" class="w-3.5 h-3.5 text-indigo-600"></lucide-icon>
+                            </button>
                             <button (click)="sendParentWarningSms(d)" title="Dispatch Guardian SMS Warning" class="p-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 cursor-pointer">
                               <lucide-icon [name]="'send'" class="w-3.5 h-3.5"></lucide-icon>
                             </button>
@@ -2675,7 +2686,7 @@
             </div>
 
             <div class="overflow-x-auto custom-scrollbar border border-slate-200 rounded-xl">
-              <table class="w-full text-left border-collapse text-xs">
+              <table appSchoolTable="owner_permission_matrix" tableTitle="Role-Based Access Control Matrix" class="w-full text-left border-collapse text-xs">
                 <thead class="bg-slate-50 text-slate-600 uppercase font-black text-[10px] border-b border-slate-200">
                   <tr>
                     <th class="px-4 py-3">Module / Feature Name</th>
@@ -2771,7 +2782,7 @@
             </div>
 
             <div class="overflow-x-auto custom-scrollbar border border-slate-200 rounded-xl">
-              <table class="w-full text-left border-collapse text-xs">
+              <table appSchoolTable="owner_portal_users" tableTitle="Portal User Accounts & Credentials" [canAddRow]="true" addRowLabel="Add User Account" class="w-full text-left border-collapse text-xs">
                 <thead class="bg-slate-50 text-slate-600 uppercase font-black text-[10px] border-b border-slate-200">
                   <tr>
                     <th class="px-4 py-3">User ID</th>
@@ -3000,7 +3011,7 @@
               <!-- VIEW MODE 2: COMPREHENSIVE FACULTY TABLE -->
               @if (facultyViewMode === 'table') {
                 <div class="overflow-x-auto custom-scrollbar border border-slate-200/90 rounded-[20px] shadow-xs bg-white">
-                  <table class="w-full text-left border-collapse text-xs tabular-nums">
+                  <table appSchoolTable="owner_teachers_faculty" tableTitle="Faculty Directory" [canAddRow]="true" addRowLabel="Add Faculty" class="w-full text-left border-collapse text-xs tabular-nums">
                     <thead class="bg-slate-50 text-slate-700 uppercase font-black tracking-wider text-[10px] border-b border-slate-200 select-none">
                       <tr>
                         <th class="px-4 py-3.5">Emp ID</th>
@@ -3149,7 +3160,7 @@
 
               <!-- Payroll Table -->
               <div class="overflow-x-auto custom-scrollbar border border-slate-200/90 rounded-[20px] shadow-xs bg-white">
-                <table class="w-full text-left border-collapse text-xs tabular-nums">
+                <table appSchoolTable="owner_payroll" tableTitle="Staff Payroll Register" [canAddRow]="true" addRowLabel="Disburse Salary" class="w-full text-left border-collapse text-xs tabular-nums">
                   <thead class="bg-emerald-50/70 text-slate-700 uppercase font-black tracking-wider text-[10px] border-b border-slate-200 select-none">
                     <tr>
                       <th class="px-4 py-3.5">Staff & Role</th>
@@ -3185,6 +3196,9 @@
                         </td>
                         <td class="px-4 py-3.5 text-right">
                           <div class="flex items-center justify-end gap-1.5">
+                            <button (click)="openOwnerRecordCrudModal('payroll', 'edit', p)" title="Edit Payroll Voucher" class="p-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 cursor-pointer">
+                              <lucide-icon [name]="'pencil'" class="w-3.5 h-3.5"></lucide-icon>
+                            </button>
                             @if (p.status !== 'Paid') {
                               <button (click)="disbursePayroll(p)" title="Disburse Salary Now" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px]">
                                 Disburse
@@ -3278,7 +3292,7 @@
 
               <!-- Staff Leaves Table -->
               <div class="overflow-x-auto custom-scrollbar border border-slate-200/90 rounded-[20px] shadow-xs bg-white">
-                <table class="w-full text-left border-collapse text-xs tabular-nums">
+                <table appSchoolTable="owner_staff_leaves" tableTitle="Staff Leave Applications" [canAddRow]="true" addRowLabel="Apply Staff Leave" class="w-full text-left border-collapse text-xs tabular-nums">
                   <thead class="bg-purple-50/70 text-slate-700 uppercase font-black tracking-wider text-[10px] border-b border-slate-200 select-none">
                     <tr>
                       <th class="px-4 py-3.5">Staff Name</th>
@@ -3311,6 +3325,9 @@
                         </td>
                         <td class="px-4 py-3.5 text-right">
                           <div class="flex items-center justify-end gap-1.5">
+                            <button (click)="openOwnerRecordCrudModal('staff_leave', 'edit', l)" title="Edit Leave Record" class="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer">
+                              <lucide-icon [name]="'pencil'" class="w-3.5 h-3.5 text-indigo-600"></lucide-icon>
+                            </button>
                             @if (l.status === 'Pending') {
                               <button (click)="updateStaffLeaveStatus(l, 'Approved')" class="px-2 py-1 rounded bg-emerald-600 text-white font-bold text-[10px]">Approve</button>
                               <button (click)="updateStaffLeaveStatus(l, 'Rejected')" class="px-2 py-1 rounded bg-rose-600 text-white font-bold text-[10px]">Reject</button>
@@ -3790,7 +3807,7 @@
             <!-- Responsive Desktop Admissions Table (Visible md+) -->
             <div class="hidden md:block">
               <div class="overflow-x-auto custom-scrollbar border border-slate-200/80 rounded-2xl bg-white">
-                <table class="w-full text-left border-collapse text-xs tabular-nums">
+                <table appSchoolTable="owner_admissions" tableTitle="Admissions & Enrollment Inquiries" [canAddRow]="true" addRowLabel="Record Application" class="w-full text-left border-collapse text-xs tabular-nums">
                   <thead class="bg-slate-50/90 text-slate-500 uppercase font-bold text-[10px] tracking-wider border-b border-slate-200/80 select-none">
                     <tr>
                       <th class="px-4 py-3.5 whitespace-nowrap">Ref ID &amp; Date</th>
@@ -4412,7 +4429,7 @@
                       <span class="font-mono font-black text-xs text-rose-700 tabular-nums">Total: PKR {{ formatCurrency(totalAccountantPettyVouchers) }}</span>
                     </div>
                     <div class="overflow-x-auto border border-slate-100 rounded-xl">
-                      <table class="w-full text-left text-xs">
+                      <table appSchoolTable="owner_petty_vouchers" tableTitle="Fee Counter Petty Cash Vouchers" class="w-full text-left text-xs">
                         <thead class="bg-slate-50 text-slate-500 uppercase font-black text-[10px]">
                           <tr>
                             <th class="px-3 py-2">Voucher #</th>
@@ -4471,7 +4488,7 @@
                 </div>
 
                 <div class="overflow-x-auto custom-scrollbar border border-slate-200/90 rounded-2xl shadow-2xs">
-                  <table class="w-full text-left border-collapse text-xs tabular-nums">
+                  <table appSchoolTable="owner_finance_ledger" tableTitle="Master Cash Book & Ledger" [canAddRow]="true" addRowLabel="Add Ledger Entry" class="w-full text-left border-collapse text-xs tabular-nums">
                     <thead class="bg-slate-50/90 text-slate-600 uppercase font-black tracking-wider text-[10px] border-b border-slate-200 select-none">
                       <tr>
                         <th class="px-4 py-3.5">Ref / Voucher #</th>
@@ -4513,9 +4530,14 @@
                           </td>
                           <td class="px-4 py-3 text-slate-500 font-bold">{{ fin.date }}</td>
                           <td class="px-4 py-3 text-right">
-                            <button (click)="deleteFinance(fin)" title="Delete Ledger Entry" class="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 cursor-pointer transition-colors">
-                              <lucide-icon [name]="'trash-2'" class="w-3.5 h-3.5"></lucide-icon>
-                            </button>
+                            <div class="flex items-center justify-end gap-1.5">
+                              <button (click)="openOwnerRecordCrudModal('finance', 'edit', fin)" title="Edit Ledger Entry" class="p-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 cursor-pointer">
+                                <lucide-icon [name]="'pencil'" class="w-3.5 h-3.5"></lucide-icon>
+                              </button>
+                              <button (click)="deleteFinance(fin)" title="Delete Ledger Entry" class="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 cursor-pointer transition-colors">
+                                <lucide-icon [name]="'trash-2'" class="w-3.5 h-3.5"></lucide-icon>
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       }
@@ -4679,7 +4701,7 @@
                 </div>
 
                 <div class="overflow-x-auto custom-scrollbar border border-slate-200/90 rounded-2xl shadow-2xs">
-                  <table class="w-full text-left border-collapse text-xs tabular-nums">
+                  <table appSchoolTable="owner_fee_defaulters" tableTitle="Student Fee Defaulters Khata" class="w-full text-left border-collapse text-xs tabular-nums">
                     <thead class="bg-rose-50/70 text-slate-700 uppercase font-black tracking-wider text-[10px] border-b border-slate-200 select-none">
                       <tr>
                         <th class="px-4 py-3.5">Roll #</th>
@@ -4799,7 +4821,7 @@
                 </div>
 
                 <div class="overflow-x-auto custom-scrollbar border border-slate-200/90 rounded-2xl shadow-2xs">
-                  <table class="w-full text-left border-collapse text-xs tabular-nums">
+                  <table appSchoolTable="owner_teacher_arrears" tableTitle="Faculty Salary Arrears & Tenure" class="w-full text-left border-collapse text-xs tabular-nums">
                     <thead class="bg-indigo-50/70 text-slate-700 uppercase font-black tracking-wider text-[10px] border-b border-slate-200 select-none">
                       <tr>
                         <th class="px-4 py-3.5">Teacher Name & Subject</th>
@@ -4882,7 +4904,7 @@
 
                 <!-- Monthly P&L Ledger Table -->
                 <div class="overflow-x-auto custom-scrollbar border border-slate-200/90 rounded-2xl shadow-2xs">
-                  <table class="w-full text-left border-collapse text-xs tabular-nums">
+                  <table appSchoolTable="owner_profit_loss" tableTitle="Profit & Loss Ledger Khata" class="w-full text-left border-collapse text-xs tabular-nums">
                     <thead class="bg-slate-50 text-slate-700 uppercase font-black tracking-wider text-[10px] border-b border-slate-200 select-none">
                       <tr>
                         <th class="px-4 py-3.5">Month & Session</th>
@@ -5004,7 +5026,7 @@
                 </div>
 
                 <div class="overflow-x-auto custom-scrollbar border border-slate-200/90 rounded-2xl shadow-2xs">
-                  <table class="w-full text-left border-collapse text-xs tabular-nums">
+                  <table appSchoolTable="owner_alerts_log" tableTitle="Dispatched WhatsApp & SMS Alerts Log" class="w-full text-left border-collapse text-xs tabular-nums">
                     <thead class="bg-slate-50 text-slate-700 uppercase font-black tracking-wider text-[10px] border-b border-slate-200 select-none">
                       <tr>
                         <th class="px-4 py-3.5">Alert Ref #</th>
@@ -5269,7 +5291,7 @@
                     </div>
 
                     <div class="overflow-x-auto custom-scrollbar">
-                      <table class="w-full text-left border-collapse text-xs">
+                      <table appSchoolTable="owner_daily_closing" tableTitle="Daily Rooznama & Bank Scroll" class="w-full text-left border-collapse text-xs">
                         <thead class="bg-slate-50 text-slate-600 uppercase font-black text-[10px] tracking-wider border-b border-slate-200">
                           <tr>
                             <th class="px-3 py-2.5">Category / Head</th>
@@ -5504,7 +5526,7 @@
           <!-- Master Invoices Data Table -->
           <div class="bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden">
             <div class="overflow-x-auto custom-scrollbar">
-              <table class="w-full text-left border-collapse">
+              <table appSchoolTable="owner_invoices" tableTitle="Master Invoices & Billing Register" [canAddRow]="true" addRowLabel="Generate Invoice" class="w-full text-left border-collapse">
                 <thead>
                   <tr class="bg-slate-50/80 border-b border-slate-200 text-[11px] font-black uppercase tracking-wider text-slate-500">
                     <th class="p-3.5 pl-5">Invoice Reference & Type</th>
@@ -5575,6 +5597,16 @@
                       <!-- Actions -->
                       <td class="p-3.5 pr-5 text-right">
                         <div class="flex items-center justify-end gap-1.5">
+                          <button (click)="openOwnerRecordCrudModal('invoice', 'edit', inv)"
+                                  title="Edit Invoice"
+                                  class="p-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-extrabold text-xs cursor-pointer transition-all active:scale-95">
+                            <lucide-icon [name]="'pencil'" class="w-3.5 h-3.5"></lucide-icon>
+                          </button>
+                          <button (click)="deleteOwnerRecord('invoice', inv)"
+                                  title="Delete Invoice"
+                                  class="p-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-extrabold text-xs cursor-pointer transition-all active:scale-95">
+                            <lucide-icon [name]="'trash-2'" class="w-3.5 h-3.5"></lucide-icon>
+                          </button>
                           <button (click)="openInvoiceViewModal(inv)"
                                   title="View Printable Official Invoice"
                                   class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-extrabold text-xs cursor-pointer transition-all active:scale-95">
@@ -5726,7 +5758,7 @@
 
           <!-- Expenses Table -->
           <div class="overflow-x-auto custom-scrollbar border border-slate-200/90 rounded-[20px] shadow-xs bg-white">
-            <table class="w-full text-left border-collapse text-xs tabular-nums">
+            <table appSchoolTable="owner_expenses" tableTitle="School Expenses & Vendor Bills" [canAddRow]="true" addRowLabel="Add Expense" class="w-full text-left border-collapse text-xs tabular-nums">
               <thead class="bg-slate-50 text-slate-700 uppercase font-black tracking-wider text-[10px] border-b border-slate-200 select-none">
                 <tr>
                   <th class="px-4 py-3.5">RECEIPT #</th>
@@ -6270,7 +6302,7 @@
 
               <!-- Detailed List View Below (Requested table) -->
               <div class="overflow-x-auto custom-scrollbar border border-slate-200/90 rounded-[20px] shadow-xs bg-white">
-                <table class="w-full text-left border-collapse text-xs tabular-nums">
+                <table appSchoolTable="owner_library_circulation" tableTitle="Library Book Circulation & Loans" [canAddRow]="true" addRowLabel="Issue Book" class="w-full text-left border-collapse text-xs tabular-nums">
                   <thead class="bg-indigo-50/70 text-slate-700 uppercase font-black tracking-wider text-[10px] border-b border-indigo-100">
                     <tr>
                       <th class="px-4 py-3.5">Issue Ref & Date</th>
@@ -6384,6 +6416,14 @@
                           <button (click)="openBorrowSlipModal(rec)" title="Print Official Borrow Slip" class="px-2 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs transition-all cursor-pointer">
                             Slip
                           </button>
+                          @if (isOwnerPortal) {
+                            <button (click)="openOwnerRecordCrudModal('circulation', 'edit', rec)" title="Edit Circulation Record" class="px-2 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold text-xs transition-all cursor-pointer">
+                              Edit
+                            </button>
+                            <button (click)="deleteOwnerRecord('circulation', rec)" title="Delete Circulation Record" class="px-2 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs transition-all cursor-pointer">
+                              Delete
+                            </button>
+                          }
                         </td>
                       </tr>
                     }
@@ -6455,7 +6495,7 @@
               </div>
 
               <div class="overflow-x-auto custom-scrollbar border border-slate-200/90 rounded-[20px] shadow-xs bg-white">
-                <table class="w-full text-left border-collapse text-xs tabular-nums">
+                <table appSchoolTable="owner_library_catalog" tableTitle="Library Book Catalog" [canAddRow]="true" addRowLabel="Catalog Book" class="w-full text-left border-collapse text-xs tabular-nums">
                   <thead class="bg-slate-50/90 text-slate-600 uppercase font-black tracking-wider text-[10px] border-b border-slate-200">
                     <tr>
                       <th class="px-4 py-3.5">ISBN</th>
@@ -6499,6 +6539,9 @@
                         </td>
                         <td class="px-4 py-3 text-right">
                           <div class="flex items-center justify-end gap-1.5">
+                            <button (click)="openOwnerRecordCrudModal('library_book', 'edit', bk)" class="p-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all cursor-pointer" title="Edit Book">
+                              <lucide-icon [name]="'pencil'" class="w-3.5 h-3.5 text-indigo-600"></lucide-icon>
+                            </button>
                             <button (click)="openCheckoutModal(bk)" class="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold text-xs transition-all cursor-pointer">
                               Issue Book
                             </button>
@@ -6668,7 +6711,7 @@
 
               <!-- Schedules Table -->
               <div class="overflow-x-auto custom-scrollbar border border-slate-200/90 rounded-[20px] shadow-xs bg-white">
-                <table class="w-full text-left border-collapse text-xs tabular-nums">
+                <table appSchoolTable="owner_exams" tableTitle="Examinations & Datesheets" [canAddRow]="true" addRowLabel="Schedule Exam" class="w-full text-left border-collapse text-xs tabular-nums">
                   <thead class="bg-slate-50 text-slate-700 uppercase font-black tracking-wider text-[10px] border-b border-slate-200 select-none">
                     <tr>
                       <th class="px-4 py-3.5">Exam Ref #</th>
@@ -6707,6 +6750,10 @@
                         </td>
                         <td class="px-4 py-3 text-right">
                           <div class="flex items-center justify-end gap-1.5">
+                            <button (click)="openOwnerRecordCrudModal('exam', 'edit', ex)"
+                              title="Edit Exam Schedule" class="p-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer">
+                              <lucide-icon [name]="'pencil'" class="w-3.5 h-3.5 text-indigo-600"></lucide-icon>
+                            </button>
                             <button (click)="examsSubTab = 'marks_entry'; selectedMarksClass = ex.class; selectedMarksExamId = ex.id"
                               title="Enter Marks for this Exam" class="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-[10px] cursor-pointer">
                               Enter Marks
@@ -6826,7 +6873,7 @@
 
               <!-- Interactive Gradebook Table -->
               <div class="overflow-x-auto custom-scrollbar border border-slate-200/90 rounded-[20px] shadow-xs bg-white">
-                <table class="w-full text-left border-collapse text-xs tabular-nums">
+                <table appSchoolTable="owner_marks_entry" tableTitle="Gradebook Marks Entry" class="w-full text-left border-collapse text-xs tabular-nums">
                   <thead class="bg-indigo-50/70 text-slate-700 uppercase font-black tracking-wider text-[10px] border-b border-slate-200 select-none">
                     <tr>
                       <th class="px-4 py-3.5">Roll #</th>
@@ -6951,7 +6998,7 @@
 
               <!-- Merit List Table -->
               <div class="overflow-x-auto custom-scrollbar border border-slate-200/90 rounded-[20px] shadow-xs bg-white">
-                <table class="w-full text-left border-collapse text-xs tabular-nums">
+                <table appSchoolTable="owner_class_results" tableTitle="Class Results & Merit List" class="w-full text-left border-collapse text-xs tabular-nums">
                   <thead class="bg-amber-50/70 text-slate-700 uppercase font-black tracking-wider text-[10px] border-b border-slate-200 select-none">
                     <tr>
                       <th class="px-4 py-3.5 text-center">Merit Rank</th>
@@ -7081,7 +7128,7 @@
 
               <!-- Subjects Table -->
               <div class="overflow-x-auto custom-scrollbar border border-slate-200/90 rounded-[20px] shadow-xs bg-white">
-                <table class="w-full text-left border-collapse text-xs tabular-nums">
+                <table appSchoolTable="owner_subjects" tableTitle="Subject Catalog & Class Map" [canAddRow]="true" addRowLabel="Add Subject" class="w-full text-left border-collapse text-xs tabular-nums">
                   <thead class="bg-slate-50 text-slate-700 uppercase font-black tracking-wider text-[10px] border-b border-slate-200 select-none">
                     <tr>
                       <th class="px-4 py-3.5">Subject Code</th>
@@ -7105,9 +7152,14 @@
                         <td class="px-4 py-3 text-slate-700 font-bold">{{ sub.teacher }}</td>
                         <td class="px-4 py-3 font-mono font-bold text-slate-800">{{ sub.passMarks }} / {{ sub.totalMarks }}</td>
                         <td class="px-4 py-3 text-right">
-                          <button (click)="deleteSubject(sub)" title="Delete Subject" class="p-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 cursor-pointer">
-                            <lucide-icon [name]="'trash-2'" class="w-3.5 h-3.5"></lucide-icon>
-                          </button>
+                          <div class="flex items-center justify-end gap-1.5">
+                            <button (click)="openOwnerRecordCrudModal('subject', 'edit', sub)" title="Edit Subject" class="p-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer">
+                              <lucide-icon [name]="'pencil'" class="w-3.5 h-3.5 text-indigo-600"></lucide-icon>
+                            </button>
+                            <button (click)="deleteSubject(sub)" title="Delete Subject" class="p-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 cursor-pointer">
+                              <lucide-icon [name]="'trash-2'" class="w-3.5 h-3.5"></lucide-icon>
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     }
@@ -7272,7 +7324,7 @@
           </div>
 
           <div class="overflow-x-auto custom-scrollbar border border-slate-200 rounded-xl">
-            <table class="w-full text-left border-collapse text-xs">
+            <table appSchoolTable="owner_timetable" tableTitle="Class Timetable Roster" [canAddRow]="true" addRowLabel="Add Period" class="w-full text-left border-collapse text-xs">
               <thead class="bg-slate-50 text-slate-600 uppercase font-black text-[10px] border-b border-slate-200">
                 <tr>
                   <th class="px-4 py-3">Period & Time</th>
@@ -7292,9 +7344,14 @@
                     <td class="px-4 py-3 text-slate-800 font-bold">{{ tt.teacher }}</td>
                     <td class="px-4 py-3 text-slate-600">{{ tt.room }}</td>
                     <td class="px-4 py-3 text-right">
-                      <button (click)="deleteTimetable(tt)" title="Delete Timetable Period" class="p-1 rounded bg-rose-50 hover:bg-rose-100 text-rose-700 cursor-pointer">
-                        <lucide-icon [name]="'trash-2'" class="w-3.5 h-3.5"></lucide-icon>
-                      </button>
+                      <div class="flex items-center justify-end gap-1.5">
+                        <button (click)="openOwnerRecordCrudModal('timetable', 'edit', tt)" title="Edit Timetable Period" class="p-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer">
+                          <lucide-icon [name]="'pencil'" class="w-3.5 h-3.5 text-indigo-600"></lucide-icon>
+                        </button>
+                        <button (click)="deleteTimetable(tt)" title="Delete Timetable Period" class="p-1 rounded bg-rose-50 hover:bg-rose-100 text-rose-700 cursor-pointer">
+                          <lucide-icon [name]="'trash-2'" class="w-3.5 h-3.5"></lucide-icon>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 }
@@ -7457,7 +7514,7 @@
 
             <!-- Online Fee Transactions Table -->
             <div class="overflow-x-auto custom-scrollbar border border-slate-200/90 rounded-2xl shadow-2xs bg-white">
-              <table class="w-full text-left border-collapse text-xs tabular-nums">
+              <table appSchoolTable="owner_payment_gateway" tableTitle="Online Fee Collection Stream" [canAddRow]="true" addRowLabel="Collect Online Fee" class="w-full text-left border-collapse text-xs tabular-nums">
                 <thead class="bg-slate-50/90 text-slate-600 uppercase font-black text-[10px] border-b border-slate-200 select-none">
                   <tr>
                     <th class="px-4 py-3.5">Transaction Ref</th>
@@ -7492,6 +7549,9 @@
                       </td>
                       <td class="px-4 py-3.5 text-right">
                         <div class="flex items-center justify-end gap-1.5">
+                          <button (click)="openOwnerRecordCrudModal('finance', 'edit', f)" title="Edit Transaction" class="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer transition-colors">
+                            <lucide-icon [name]="'pencil'" class="w-3.5 h-3.5 text-indigo-600"></lucide-icon>
+                          </button>
                           <button (click)="openFeeChallanVoucher(activeStudents[0] || null)" title="Print Fee Voucher" class="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer transition-colors">
                             <lucide-icon [name]="'printer'" class="w-3.5 h-3.5"></lucide-icon>
                           </button>
@@ -7773,7 +7833,7 @@
           <div class="space-y-2">
             <h4 class="font-black text-slate-900 text-xs uppercase tracking-wider">Weekly Scheduled Practical Slots</h4>
             <div class="overflow-x-auto custom-scrollbar border border-slate-200/90 rounded-2xl shadow-2xs">
-              <table class="w-full text-left border-collapse text-xs">
+              <table appSchoolTable="owner_labs_schedule" tableTitle="Computer & Science Labs Schedule" [canAddRow]="true" addRowLabel="Book Lab Session" class="w-full text-left border-collapse text-xs">
                 <thead class="bg-slate-50 text-slate-600 uppercase font-black tracking-wider text-[10px] border-b border-slate-200">
                   <tr>
                     <th class="px-4 py-3">Slot ID</th>
@@ -7782,6 +7842,7 @@
                     <th class="px-4 py-3">Class</th>
                     <th class="px-4 py-3">Subject & Practical Topic</th>
                     <th class="px-4 py-3">Supervising Teacher</th>
+                    <th class="px-4 py-3 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 font-medium bg-white">
@@ -7796,6 +7857,16 @@
                         <p class="text-[10px] text-slate-400 font-medium">{{ slot.experimentTopic }}</p>
                       </td>
                       <td class="px-4 py-3 font-bold text-slate-700">{{ slot.teacher }}</td>
+                      <td class="px-4 py-3 text-right">
+                        <div class="flex items-center justify-end gap-1.5">
+                          <button (click)="openOwnerRecordCrudModal('lab_schedule', 'edit', slot)" title="Edit Lab Slot" class="p-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer">
+                            <lucide-icon [name]="'pencil'" class="w-3.5 h-3.5 text-indigo-600"></lucide-icon>
+                          </button>
+                          <button (click)="deleteOwnerRecord('lab_schedule', slot)" title="Delete Lab Slot" class="p-1 rounded bg-rose-50 hover:bg-rose-100 text-rose-700 cursor-pointer">
+                            <lucide-icon [name]="'trash-2'" class="w-3.5 h-3.5"></lucide-icon>
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   }
                 </tbody>
@@ -8020,7 +8091,7 @@
           <!-- TABLE VIEW MODE -->
           @if (feedViewMode === 'table') {
             <div class="overflow-x-auto custom-scrollbar border border-slate-200/90 rounded-[20px] shadow-2xs bg-white">
-              <table class="w-full text-left border-collapse text-xs tabular-nums">
+              <table appSchoolTable="owner_feed_table" tableTitle="Campus Notices & Top Feed" [canAddRow]="true" addRowLabel="Publish Notice" class="w-full text-left border-collapse text-xs tabular-nums">
                 <thead class="bg-slate-900 text-white uppercase font-black tracking-wider text-[10px] select-none">
                   <tr>
                     <th class="px-4 py-3.5">Ref No.</th>
@@ -8692,7 +8763,7 @@
 
               <!-- Audit Trail Data Table -->
               <div class="overflow-x-auto border border-slate-100 rounded-xl">
-                <table class="w-full text-left text-xs">
+                <table appSchoolTable="owner_audit_trail" tableTitle="System Audit Trail Log" class="w-full text-left text-xs">
                   <thead class="bg-slate-50 border-b border-slate-200 text-[10px] uppercase font-black text-slate-500 tracking-wider">
                     <tr>
                       <th class="p-3">Audit ID & Time</th>
@@ -8783,7 +8854,7 @@
 
                 <!-- Reconciliation Records Table -->
                 <div class="overflow-x-auto border border-slate-100 rounded-xl mt-4">
-                  <table class="w-full text-left text-xs">
+                  <table appSchoolTable="owner_audit_reconciliation" tableTitle="Cash & Bank Reconciliation" [canAddRow]="true" addRowLabel="New Reconciliation" class="w-full text-left text-xs">
                     <thead class="bg-slate-50 border-b border-slate-200 text-[10px] uppercase font-black text-slate-500 tracking-wider">
                       <tr>
                         <th class="p-3">Closing Date</th>
@@ -8842,7 +8913,7 @@
           <!-- SUBTAB 4: CONCESSION & HARDSHIP WAIVERS -->
           @if (auditSubTab === 'waivers') {
             <div class="apple-card rounded-2xl p-6 bg-white border border-slate-200/80 shadow-sm space-y-4">
-              <div class="flex items-center justify-between">
+              <div class="flex items-center justify-between flex-wrap gap-3">
                 <div>
                   <h3 class="font-black text-slate-900 text-sm flex items-center gap-2">
                     <mat-icon class="text-amber-600">loyalty</mat-icon>
@@ -8850,13 +8921,19 @@
                   </h3>
                   <p class="text-xs text-slate-500 mt-0.5">Formal authorizations approved under Section 14 of Institutional Scholarship & Concession Policy.</p>
                 </div>
-                <span class="px-3 py-1 rounded-lg text-xs font-mono font-black bg-amber-50 text-amber-700 border border-amber-200">
-                  Total Monthly Relief: PKR 48,500
-                </span>
+                <div class="flex items-center gap-2">
+                  <span class="px-3 py-1 rounded-lg text-xs font-mono font-black bg-amber-50 text-amber-700 border border-amber-200">
+                    Total Monthly Relief: PKR 48,500
+                  </span>
+                  <button (click)="openOwnerRecordCrudModal('waiver', 'add')" class="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-black text-xs cursor-pointer flex items-center gap-1 shadow-xs">
+                    <lucide-icon [name]="'plus'" class="w-3.5 h-3.5"></lucide-icon>
+                    <span>+ Grant Waiver</span>
+                  </button>
+                </div>
               </div>
 
               <div class="overflow-x-auto border border-slate-100 rounded-xl">
-                <table class="w-full text-left text-xs">
+                <table appSchoolTable="owner_audit_waivers" tableTitle="Concession & Hardship Waivers" [canAddRow]="true" addRowLabel="Grant Waiver" class="w-full text-left text-xs">
                   <thead class="bg-slate-50 border-b border-slate-200 text-[10px] uppercase font-black text-slate-500 tracking-wider">
                     <tr>
                       <th class="p-3">Student Name</th>
@@ -8867,39 +8944,32 @@
                       <th class="p-3">Reason / Justification</th>
                       <th class="p-3">Authorizing Body</th>
                       <th class="p-3">Approval Date</th>
+                      <th class="p-3 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
-                    <tr class="hover:bg-slate-50">
-                      <td class="p-3 font-bold text-slate-900">Mustafa Ali Shah (Roll #1008)</td>
-                      <td class="p-3 font-mono">Class 10-A</td>
-                      <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">Hardship Waiver</span></td>
-                      <td class="p-3 font-mono">PKR 28,500</td>
-                      <td class="p-3 font-mono font-black text-emerald-600">20% Off (PKR 22,800)</td>
-                      <td class="p-3 max-w-xs text-[11px]">Father deceased; verified affidavit and family income statement on file.</td>
-                      <td class="p-3 text-[11px] font-bold text-slate-800">Board of Governors Scholarship Board</td>
-                      <td class="p-3 font-mono text-[11px] text-slate-500">24 Oct 2026</td>
-                    </tr>
-                    <tr class="hover:bg-slate-50">
-                      <td class="p-3 font-bold text-slate-900">Ayesha Bilal (Roll #1005)</td>
-                      <td class="p-3 font-mono">Class 9-B</td>
-                      <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800">Sibling Concession</span></td>
-                      <td class="p-3 font-mono">PKR 26,000</td>
-                      <td class="p-3 font-mono font-black text-emerald-600">15% Off (PKR 22,100)</td>
-                      <td class="p-3 max-w-xs text-[11px]">Elder brother Hamza Bilal currently enrolled in Class 10-A.</td>
-                      <td class="p-3 text-[11px] font-bold text-slate-800">Principal Directive #DIR-2026-44</td>
-                      <td class="p-3 font-mono text-[11px] text-slate-500">15 Sep 2026</td>
-                    </tr>
-                    <tr class="hover:bg-slate-50">
-                      <td class="p-3 font-bold text-slate-900">Muhammad Usman (Roll #1022)</td>
-                      <td class="p-3 font-mono">Class 8-A</td>
-                      <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800">Academic Merit</span></td>
-                      <td class="p-3 font-mono">PKR 24,000</td>
-                      <td class="p-3 font-mono font-black text-emerald-600">50% Off (PKR 12,000)</td>
-                      <td class="p-3 max-w-xs text-[11px]">Top position holder in Islamabad Regional Science Olympiad.</td>
-                      <td class="p-3 text-[11px] font-bold text-slate-800">Academic Council Resolution</td>
-                      <td class="p-3 font-mono text-[11px] text-slate-500">01 Sep 2026</td>
-                    </tr>
+                    @for (w of auditWaiversList; track w.id) {
+                      <tr class="hover:bg-slate-50">
+                        <td class="p-3 font-bold text-slate-900">{{ w.studentName }}</td>
+                        <td class="p-3 font-mono">{{ w.grade }}</td>
+                        <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">{{ w.category }}</span></td>
+                        <td class="p-3 font-mono">PKR {{ formatCurrency(w.originalFee) }}</td>
+                        <td class="p-3 font-mono font-black text-emerald-600">{{ w.concessionLabel }}</td>
+                        <td class="p-3 max-w-xs text-[11px]">{{ w.reason }}</td>
+                        <td class="p-3 text-[11px] font-bold text-slate-800">{{ w.authorizingBody }}</td>
+                        <td class="p-3 font-mono text-[11px] text-slate-500">{{ w.approvalDate }}</td>
+                        <td class="p-3 text-right">
+                          <div class="flex items-center justify-end gap-1.5">
+                            <button (click)="openOwnerRecordCrudModal('waiver', 'edit', w)" title="Edit Waiver" class="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer">
+                              <lucide-icon [name]="'pencil'" class="w-3.5 h-3.5 text-indigo-600"></lucide-icon>
+                            </button>
+                            <button (click)="deleteOwnerRecord('waiver', w)" title="Delete Waiver" class="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 cursor-pointer">
+                              <lucide-icon [name]="'trash-2'" class="w-3.5 h-3.5"></lucide-icon>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    }
                   </tbody>
                 </table>
               </div>
@@ -8965,7 +9035,7 @@
 
               <!-- SLC Table -->
               <div class="overflow-x-auto border border-slate-100 rounded-xl">
-                <table class="w-full text-left text-xs">
+                <table appSchoolTable="owner_audit_slc" tableTitle="Student Leaving Certificates (SLC)" [canAddRow]="true" addRowLabel="Issue SLC" class="w-full text-left text-xs">
                   <thead class="bg-slate-50 border-b border-slate-200 text-[10px] uppercase font-black text-slate-500 tracking-wider">
                     <tr>
                       <th class="p-3">Certificate No.</th>
@@ -9009,11 +9079,17 @@
                           </span>
                         </td>
                         <td class="p-3 whitespace-nowrap text-right space-x-1">
+                          <button (click)="openOwnerRecordCrudModal('slc', 'edit', slc)" title="Edit SLC Record" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer">
+                            <lucide-icon [name]="'pencil'" class="w-3.5 h-3.5 text-indigo-600 inline"></lucide-icon>
+                          </button>
                           <button (click)="openSLCViewModal(slc)" class="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs cursor-pointer">
                             View / Print
                           </button>
                           <button (click)="downloadSLCPDF(slc)" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer" title="Download Text Certificate">
                             <mat-icon class="text-xs">download</mat-icon>
+                          </button>
+                          <button (click)="deleteOwnerRecord('slc', slc)" title="Delete SLC" class="p-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs cursor-pointer">
+                            <lucide-icon [name]="'trash-2'" class="w-3.5 h-3.5 inline"></lucide-icon>
                           </button>
                         </td>
                       </tr>
@@ -9027,16 +9103,22 @@
           <!-- SUBTAB 7: REGULATORY COMPLIANCE -->
           @if (auditSubTab === 'compliance') {
             <div class="apple-card rounded-2xl p-6 bg-white border border-slate-200/80 shadow-sm space-y-4">
-              <div>
-                <h3 class="font-black text-slate-900 text-sm flex items-center gap-2">
-                  <mat-icon class="text-blue-600">policy</mat-icon>
-                  Statutory & Institutional Compliance Audit Registry
-                </h3>
-                <p class="text-xs text-slate-500 mt-0.5">Mandatory audits for FBISE/Cambridge Board affiliation, fire & life safety, vehicle fitness, and student civil registration.</p>
+              <div class="flex items-center justify-between flex-wrap gap-3">
+                <div>
+                  <h3 class="font-black text-slate-900 text-sm flex items-center gap-2">
+                    <mat-icon class="text-blue-600">policy</mat-icon>
+                    Statutory & Institutional Compliance Audit Registry
+                  </h3>
+                  <p class="text-xs text-slate-500 mt-0.5">Mandatory audits for FBISE/Cambridge Board affiliation, fire & life safety, vehicle fitness, and student civil registration.</p>
+                </div>
+                <button (click)="openOwnerRecordCrudModal('compliance', 'add')" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs cursor-pointer flex items-center gap-1.5 shadow-xs">
+                  <lucide-icon [name]="'plus'" class="w-3.5 h-3.5"></lucide-icon>
+                  <span>+ Add Compliance Audit</span>
+                </button>
               </div>
 
               <div class="overflow-x-auto border border-slate-100 rounded-xl">
-                <table class="w-full text-left text-xs">
+                <table appSchoolTable="owner_audit_compliance" tableTitle="Regulatory & Compliance Audits" [canAddRow]="true" addRowLabel="Add Compliance Audit" class="w-full text-left text-xs">
                   <thead class="bg-slate-50 border-b border-slate-200 text-[10px] uppercase font-black text-slate-500 tracking-wider">
                     <tr>
                       <th class="p-3">Audit Area</th>
@@ -9047,6 +9129,7 @@
                       <th class="p-3">Last Checked</th>
                       <th class="p-3">Next Renewal</th>
                       <th class="p-3">Audit Inspector Notes</th>
+                      <th class="p-3 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
@@ -9065,6 +9148,16 @@
                         <td class="p-3 whitespace-nowrap font-mono text-[11px] text-slate-600">{{ comp.lastCheckedDate }}</td>
                         <td class="p-3 whitespace-nowrap font-mono text-[11px] text-indigo-600 font-bold">{{ comp.nextRenewalDate }}</td>
                         <td class="p-3 text-[11px] text-slate-600 max-w-xs">{{ comp.notes }}</td>
+                        <td class="p-3 text-right">
+                          <div class="flex items-center justify-end gap-1.5">
+                            <button (click)="openOwnerRecordCrudModal('compliance', 'edit', comp)" title="Edit Audit Item" class="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer">
+                              <lucide-icon [name]="'pencil'" class="w-3.5 h-3.5 text-indigo-600"></lucide-icon>
+                            </button>
+                            <button (click)="deleteOwnerRecord('compliance', comp)" title="Delete Audit Item" class="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 cursor-pointer">
+                              <lucide-icon [name]="'trash-2'" class="w-3.5 h-3.5"></lucide-icon>
+                            </button>
+                          </div>
+                        </td>
                       </tr>
                     }
                   </tbody>
@@ -10517,7 +10610,7 @@
 
               <!-- High-Performance Stage Students Table -->
               <div class="overflow-x-auto custom-scrollbar rounded-2xl border border-slate-200/90 shadow-2xs bg-white">
-                <table class="w-full min-w-[950px] text-left text-xs border-collapse">
+                <table appSchoolTable="principal_stage_wise" tableTitle="Principal Stage-Wise Roster" class="w-full min-w-[950px] text-left text-xs border-collapse">
                   <thead class="bg-slate-900 text-white font-black uppercase text-[10px] tracking-wider border-b border-slate-800">
                     <tr>
                       <th class="py-3 px-3.5">Roll #</th>
@@ -10594,9 +10687,11 @@
                             <button (click)="openFeeChallanVoucher(s)" title="Print 3-Part Bank Challan" class="p-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 cursor-pointer">
                               <lucide-icon [name]="'file-text'" class="w-3.5 h-3.5 text-indigo-600"></lucide-icon>
                             </button>
-                            <button (click)="deleteStudentFromStage(s)" title="Remove Student" class="p-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 cursor-pointer">
-                              <lucide-icon [name]="'trash-2'" class="w-3.5 h-3.5 text-rose-600"></lucide-icon>
-                            </button>
+                            @if (isOwnerPortal) {
+                              <button (click)="deleteStudentFromStage(s)" title="Remove Student (Owner Only)" class="p-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 cursor-pointer">
+                                <lucide-icon [name]="'trash-2'" class="w-3.5 h-3.5 text-rose-600"></lucide-icon>
+                              </button>
+                            }
                           </div>
                         </td>
                       </tr>
@@ -10763,7 +10858,7 @@
             <!-- TABLE VIEW 1: STUDENTS -->
             @if (principalMasterTab === 'students') {
               <div class="overflow-x-auto rounded-2xl border border-slate-200">
-                <table class="w-full text-left text-xs">
+                <table appSchoolTable="principal_master_students" tableTitle="Principal Master Students" class="w-full text-left text-xs">
                   <thead class="bg-slate-900 text-white font-black uppercase text-[10px] tracking-wider">
                     <tr>
                       <th class="py-3 px-4">Roll #</th>
@@ -10838,7 +10933,7 @@
             <!-- TABLE VIEW 2: TEACHERS -->
             @if (principalMasterTab === 'teachers') {
               <div class="overflow-x-auto rounded-2xl border border-slate-200">
-                <table class="w-full text-left text-xs">
+                <table appSchoolTable="principal_master_teachers" tableTitle="Principal Master Teachers" class="w-full text-left text-xs">
                   <thead class="bg-slate-900 text-white font-black uppercase text-[10px] tracking-wider">
                     <tr>
                       <th class="py-3 px-4">Staff ID</th>
@@ -10900,7 +10995,7 @@
             <!-- TABLE VIEW 3: PARENTS -->
             @if (principalMasterTab === 'parents') {
               <div class="overflow-x-auto rounded-2xl border border-slate-200">
-                <table class="w-full text-left text-xs">
+                <table appSchoolTable="principal_master_parents" tableTitle="Principal Master Parents" class="w-full text-left text-xs">
                   <thead class="bg-slate-900 text-white font-black uppercase text-[10px] tracking-wider">
                     <tr>
                       <th class="py-3 px-4">Guardian Name</th>
@@ -10973,7 +11068,7 @@
                 </div>
               </div>
               <div class="overflow-x-auto rounded-2xl border border-slate-200">
-                <table class="w-full text-left text-xs">
+                <table appSchoolTable="principal_master_cashiering" tableTitle="Principal Fee Cashiering" class="w-full text-left text-xs">
                   <thead class="bg-slate-900 text-white font-black uppercase text-[10px] tracking-wider">
                     <tr>
                       <th class="py-3 px-4">Receipt #</th>
@@ -11101,7 +11196,7 @@
 
           <!-- Lesson Plans Data Table -->
           <div class="overflow-x-auto custom-scrollbar border border-slate-200 rounded-2xl bg-white">
-            <table class="w-full text-left border-collapse text-xs">
+            <table appSchoolTable="principal_lesson_plans" tableTitle="Principal Lesson Plans" class="w-full text-left border-collapse text-xs">
               <thead class="bg-slate-50 text-slate-700 uppercase font-black text-[10px] border-b border-slate-200">
                 <tr>
                   <th class="px-4 py-3.5">Plan Ref #</th>
@@ -11272,7 +11367,7 @@
 
           <!-- Substitutions table -->
           <div class="overflow-x-auto custom-scrollbar border border-slate-200 rounded-2xl bg-white">
-            <table class="w-full text-left border-collapse text-xs">
+            <table appSchoolTable="principal_substitutions" tableTitle="Principal Substitutions" class="w-full text-left border-collapse text-xs">
               <thead class="bg-slate-50 text-slate-700 uppercase font-black text-[10px] border-b border-slate-200">
                 <tr>
                   <th class="px-4 py-3.5">Ref #</th>
@@ -11305,9 +11400,11 @@
                           <lucide-icon [name]="'message-square'" class="w-3 h-3"></lucide-icon>
                           <span>WhatsApp</span>
                         </button>
-                        <button (click)="deleteSubstituteRecord(s.id)" title="Remove Record" class="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 cursor-pointer">
-                          <lucide-icon [name]="'trash-2'" class="w-3.5 h-3.5"></lucide-icon>
-                        </button>
+                        @if (isOwnerPortal) {
+                          <button (click)="deleteSubstituteRecord(s.id)" title="Remove Record (Owner Only)" class="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 cursor-pointer">
+                            <lucide-icon [name]="'trash-2'" class="w-3.5 h-3.5"></lucide-icon>
+                          </button>
+                        }
                       </div>
                     </td>
                   </tr>
@@ -11440,7 +11537,7 @@
 
           <!-- Inspection Logs Table -->
           <div class="overflow-x-auto custom-scrollbar border border-slate-200 rounded-2xl bg-white">
-            <table class="w-full text-left border-collapse text-xs">
+            <table appSchoolTable="principal_inspections" tableTitle="Principal Campus Inspections" class="w-full text-left border-collapse text-xs">
               <thead class="bg-slate-50 text-slate-700 uppercase font-black text-[10px] border-b border-slate-200">
                 <tr>
                   <th class="px-4 py-3.5">Log #</th>
@@ -11468,9 +11565,11 @@
                       <span class="text-[10px] text-slate-400 font-bold block">Action: {{ log.actionRequired }}</span>
                     </td>
                     <td class="px-4 py-3 text-right">
-                      <button (click)="deleteInspectionRecord(log.id)" title="Delete Inspection Log" class="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 cursor-pointer">
-                        <lucide-icon [name]="'trash-2'" class="w-3.5 h-3.5"></lucide-icon>
-                      </button>
+                      @if (isOwnerPortal) {
+                        <button (click)="deleteInspectionRecord(log.id)" title="Delete Inspection Log (Owner Only)" class="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 cursor-pointer">
+                          <lucide-icon [name]="'trash-2'" class="w-3.5 h-3.5"></lucide-icon>
+                        </button>
+                      }
                     </td>
                   </tr>
                 }
@@ -11650,7 +11749,7 @@
 
           <!-- Appraisal List Table -->
           <div class="overflow-x-auto custom-scrollbar border border-slate-200 rounded-2xl bg-white">
-            <table class="w-full text-left border-collapse text-xs">
+            <table appSchoolTable="principal_appraisals" tableTitle="Principal Faculty Appraisals" class="w-full text-left border-collapse text-xs">
               <thead class="bg-slate-50 text-slate-700 uppercase font-black text-[10px] border-b border-slate-200">
                 <tr>
                   <th class="px-4 py-3.5">Appraisal #</th>
@@ -11897,7 +11996,7 @@
 
           <!-- Tasks Table -->
           <div class="overflow-x-auto custom-scrollbar border border-slate-200 rounded-2xl bg-white">
-            <table class="w-full text-left border-collapse text-xs">
+            <table appSchoolTable="principal_faculty_tasks" tableTitle="Principal Faculty Tasks" class="w-full text-left border-collapse text-xs">
               <thead class="bg-slate-50 text-slate-700 uppercase font-black text-[10px] border-b border-slate-200">
                 <tr>
                   <th class="px-4 py-3.5">Task #</th>
@@ -12087,7 +12186,7 @@
 
           <!-- Official SLC Register Table -->
           <div class="overflow-x-auto custom-scrollbar border border-slate-200/90 rounded-[20px] shadow-xs bg-white">
-            <table class="w-full text-left border-collapse text-xs tabular-nums">
+            <table appSchoolTable="principal_slc" tableTitle="Principal SLC Certificates" class="w-full text-left border-collapse text-xs tabular-nums">
               <thead class="bg-purple-50/70 text-slate-700 uppercase font-black tracking-wider text-[10px] border-b border-purple-100">
                 <tr>
                   <th class="px-4 py-3.5">Certificate No & Hash</th>
@@ -13343,7 +13442,7 @@
           <!-- TABLE VIEW MODE -->
           @if (feedViewMode === 'table') {
             <div class="overflow-x-auto custom-scrollbar border border-slate-200/90 rounded-[20px] shadow-2xs bg-white">
-              <table class="w-full text-left border-collapse text-xs tabular-nums">
+              <table appSchoolTable="teacher_feed_table" tableTitle="Teacher Campus Notice Feed" class="w-full text-left border-collapse text-xs tabular-nums">
                 <thead class="bg-slate-50/90 text-slate-600 uppercase font-black tracking-wider text-[10px] border-b border-slate-200 select-none">
                   <tr>
                     <th class="px-4 py-3.5">REF # & DATE</th>
@@ -13593,7 +13692,7 @@
 
           <!-- Standardized Data Table -->
           <div class="overflow-x-auto custom-scrollbar border border-slate-200/80 rounded-[16px] overflow-hidden">
-            <table class="w-full text-left border-collapse text-xs">
+            <table appSchoolTable="teacher_events" tableTitle="Teacher School Events" class="w-full text-left border-collapse text-xs">
               <thead class="bg-slate-50/90 text-slate-600 uppercase font-black tracking-wider text-[10px] border-b border-slate-200 select-none">
                 <tr>
                   <th class="px-4 py-3.5">Event Title & Category</th>
@@ -13842,7 +13941,7 @@
 
           <!-- High-Fidelity Data Table -->
           <div class="overflow-x-auto custom-scrollbar border border-slate-200/80 rounded-[16px] overflow-hidden">
-            <table class="w-full text-left border-collapse text-xs">
+            <table appSchoolTable="teacher_gradebook" tableTitle="Teacher Class Gradebook" class="w-full text-left border-collapse text-xs">
               <thead class="bg-slate-50/90 text-slate-600 uppercase font-black tracking-wider text-[10px] border-b border-slate-200 select-none">
                 <tr>
                   <th (click)="sortGradebook('rollNo')" class="px-4 py-3.5 cursor-pointer hover:bg-slate-100 transition-colors">
@@ -14678,7 +14777,7 @@
           </div>
 
           <div class="overflow-x-auto custom-scrollbar border border-slate-200 rounded-xl">
-            <table class="w-full text-left border-collapse text-xs">
+            <table appSchoolTable="student_academics" tableTitle="Student Academic Report" class="w-full text-left border-collapse text-xs">
               <thead class="bg-slate-50 text-slate-600 uppercase font-black text-[10px] border-b border-slate-200">
                 <tr>
                   <th class="px-4 py-3">Course Code</th>
@@ -14742,7 +14841,7 @@
             </div>
 
             <div class="overflow-x-auto custom-scrollbar border border-slate-200 rounded-xl">
-              <table class="w-full text-left border-collapse text-xs">
+              <table appSchoolTable="student_attendance_log" tableTitle="Student Attendance Log" class="w-full text-left border-collapse text-xs">
                 <thead class="bg-slate-50 text-slate-600 uppercase font-black text-[10px] border-b border-slate-200">
                   <tr>
                     <th class="px-4 py-3">Date</th>
@@ -14928,7 +15027,7 @@
               <span class="text-xs text-slate-500 font-bold">Standard 14-Day Institutional Loan Period</span>
             </h3>
             <div class="overflow-x-auto custom-scrollbar border border-slate-200/80 rounded-2xl">
-              <table class="w-full text-left text-xs tabular-nums">
+              <table appSchoolTable="student_library_loans" tableTitle="Student Library Loans" class="w-full text-left text-xs tabular-nums">
                 <thead class="bg-indigo-50/70 text-slate-700 uppercase font-black tracking-wider text-[10px] border-b border-indigo-100">
                   <tr>
                     <th class="px-4 py-3">Book Title & ISBN</th>
@@ -15105,7 +15204,7 @@
           <!-- TABLE VIEW MODE -->
           @if (feedViewMode === 'table') {
             <div class="overflow-x-auto custom-scrollbar border border-slate-200/90 rounded-[20px] shadow-2xs bg-white">
-              <table class="w-full text-left border-collapse text-xs tabular-nums">
+              <table appSchoolTable="student_feed_table" tableTitle="Student Campus Feed" class="w-full text-left border-collapse text-xs tabular-nums">
                 <thead class="bg-slate-50/90 text-slate-600 uppercase font-black tracking-wider text-[10px] border-b border-slate-200 select-none">
                   <tr>
                     <th class="px-4 py-3.5">REF # & DATE</th>
@@ -15798,7 +15897,7 @@
               <span class="text-xs font-bold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg">RFID Card: {{ selectedParentChild?.rfidCard }}</span>
             </div>
             <div class="overflow-x-auto custom-scrollbar border border-slate-200 rounded-xl">
-              <table class="w-full text-left border-collapse text-xs">
+              <table appSchoolTable="parent_gate_logs" tableTitle="Parent Child Gate Logs" class="w-full text-left border-collapse text-xs">
                 <thead class="bg-slate-50 text-slate-600 uppercase font-black text-[10px] border-b border-slate-200">
                   <tr>
                     <th class="px-4 py-3">Date</th>
@@ -15889,7 +15988,7 @@
           </div>
 
           <div class="overflow-x-auto custom-scrollbar border border-slate-200 rounded-xl">
-            <table class="w-full text-left border-collapse text-xs">
+            <table appSchoolTable="parent_academics" tableTitle="Parent Terminal Report Card" class="w-full text-left border-collapse text-xs">
               <thead class="bg-slate-50 text-slate-600 uppercase font-black text-[10px] border-b border-slate-200">
                 <tr>
                   <th class="px-4 py-3">Subject Name</th>
@@ -16084,7 +16183,7 @@
           <!-- TABLE VIEW MODE -->
           @if (feedViewMode === 'table') {
             <div class="overflow-x-auto custom-scrollbar border border-slate-200/90 rounded-[20px] shadow-2xs bg-white">
-              <table class="w-full text-left border-collapse text-xs tabular-nums">
+              <table appSchoolTable="parent_feed_table" tableTitle="Parent Notice Board" class="w-full text-left border-collapse text-xs tabular-nums">
                 <thead class="bg-slate-50/90 text-slate-600 uppercase font-black tracking-wider text-[10px] border-b border-slate-200 select-none">
                   <tr>
                     <th class="px-4 py-3.5">REF # & DATE</th>
@@ -16588,7 +16687,7 @@
                   </div>
                 </div>
                 <div class="overflow-x-auto border border-slate-200 rounded-xl">
-                  <table class="w-full text-left text-xs">
+                  <table appSchoolTable="accountant_recent_receipts" tableTitle="Accountant Recent Receipts" class="w-full text-left text-xs">
                     <thead class="bg-slate-50 text-slate-600 uppercase font-black text-[10px] border-b border-slate-200">
                       <tr>
                         <th class="px-3 py-2.5">Receipt #</th>
@@ -16741,7 +16840,7 @@
                   </div>
                 </div>
                 <div class="overflow-x-auto border border-slate-200 rounded-xl">
-                  <table class="w-full text-left text-xs">
+                  <table appSchoolTable="accountant_challans" tableTitle="Accountant Challans Register" class="w-full text-left text-xs">
                     <thead class="bg-slate-50 text-slate-600 uppercase font-black text-[10px] border-b border-slate-200">
                       <tr>
                         <th class="px-3 py-2.5">Challan #</th>
@@ -16863,7 +16962,7 @@
               <div class="lg:col-span-3 apple-card rounded-2xl p-5 space-y-4">
                 <h3 class="font-black text-slate-900 text-sm">Posted Counter Receipts Ledger</h3>
                 <div class="overflow-x-auto border border-slate-200 rounded-xl">
-                  <table class="w-full text-left text-xs">
+                  <table appSchoolTable="accountant_posted_receipts" tableTitle="Accountant Posted Receipts" class="w-full text-left text-xs">
                     <thead class="bg-slate-50 text-slate-600 uppercase font-black text-[10px] border-b border-slate-200">
                       <tr>
                         <th class="px-3 py-2.5">Receipt #</th>
@@ -16926,7 +17025,7 @@
               </div>
 
               <div class="overflow-x-auto border border-slate-200 rounded-xl">
-                <table class="w-full text-left text-xs">
+                <table appSchoolTable="accountant_defaulters" tableTitle="Accountant Fee Defaulters" class="w-full text-left text-xs">
                   <thead class="bg-slate-50 text-slate-600 uppercase font-black text-[10px] border-b border-slate-200">
                     <tr>
                       <th class="px-3 py-2.5">Student &amp; Roll #</th>
@@ -17075,14 +17174,16 @@
                   </div>
 
                   <div class="overflow-x-auto border border-slate-200 rounded-xl">
-                    <table class="w-full text-left text-xs">
+                    <table appSchoolTable="accountant_petty_vouchers" tableTitle="Accountant Petty Vouchers" class="w-full text-left text-xs">
                       <thead class="bg-slate-50 text-slate-600 uppercase font-black text-[10px] border-b border-slate-200">
                         <tr>
                           <th class="px-3 py-2">Voucher #</th>
                           <th class="px-3 py-2">Category</th>
                           <th class="px-3 py-2">Description &amp; Payee</th>
                           <th class="px-3 py-2 text-right">Amount</th>
-                          <th class="px-3 py-2 text-right">Remove</th>
+                          @if (isOwnerPortal) {
+                            <th class="px-3 py-2 text-right">Remove</th>
+                          }
                         </tr>
                       </thead>
                       <tbody class="divide-y divide-slate-100 font-medium">
@@ -17095,11 +17196,13 @@
                               <div class="text-[10px] text-slate-500">{{ pv.date }} · Paid to {{ pv.paidTo }}</div>
                             </td>
                             <td class="px-3 py-2 text-right font-mono font-black text-rose-700 tabular-nums">PKR {{ formatCurrency(pv.amount) }}</td>
-                            <td class="px-3 py-2 text-right">
-                              <button (click)="deleteAccountantPettyVoucher(pv)" class="p-1 rounded-lg text-slate-400 hover:text-rose-600 cursor-pointer">
-                                <lucide-icon [name]="'trash-2'" class="w-3.5 h-3.5"></lucide-icon>
-                              </button>
-                            </td>
+                            @if (isOwnerPortal) {
+                              <td class="px-3 py-2 text-right">
+                                <button (click)="deleteAccountantPettyVoucher(pv)" class="p-1 rounded-lg text-slate-400 hover:text-rose-600 cursor-pointer">
+                                  <lucide-icon [name]="'trash-2'" class="w-3.5 h-3.5"></lucide-icon>
+                                </button>
+                              </td>
+                            }
                           </tr>
                         }
                       </tbody>
@@ -17114,7 +17217,7 @@
                     <p class="text-xs text-slate-500">Only School Owner can verify, approve, or flag submitted Daily Closings (dual-control security).</p>
                   </div>
                   <div class="overflow-x-auto border border-slate-200 rounded-xl">
-                    <table class="w-full text-left text-xs">
+                    <table appSchoolTable="accountant_closings" tableTitle="Accountant Day-End Closings" class="w-full text-left text-xs">
                       <thead class="bg-slate-50 text-slate-600 uppercase font-black text-[10px] border-b border-slate-200">
                         <tr>
                           <th class="px-3 py-2.5">Closing ID &amp; Date</th>
@@ -23850,3 +23953,55 @@
       </div>
     </div>
   }
+
+  <!-- ========================================================================= -->
+  <!-- UNIVERSAL SCHOOL BUSINESS OWNER RECORD CRUD MODAL                         -->
+  <!-- ========================================================================= -->
+  @if (isOwnerPortal && ownerCrudModal.open) {
+    <div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+      <div class="apple-card rounded-3xl max-w-lg w-full p-6 space-y-4 bg-white shadow-2xl border border-slate-200">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div>
+            <h4 class="font-black text-slate-900 text-base">{{ ownerCrudModal.title }}</h4>
+            <p class="text-xs text-slate-400">School Business Owner Master CRUD</p>
+          </div>
+          <button (click)="closeOwnerRecordCrudModal()" class="p-1 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer">
+            <lucide-icon [name]="'x'" class="w-5 h-5"></lucide-icon>
+          </button>
+        </div>
+        <div class="space-y-3 text-xs max-h-[60vh] overflow-y-auto custom-scrollbar pr-1">
+          @for (f of ownerCrudModal.fields; track f.key) {
+            <div>
+              <label class="font-bold text-slate-700 block mb-1">{{ f.label }}</label>
+              @if (f.type === 'select') {
+                <select [value]="ownerCrudModal.draft[f.key] ?? ''"
+                        (change)="updateOwnerCrudField(f.key, $any($event.target).value)"
+                        class="w-full px-3 py-2 rounded-xl border border-slate-200 font-bold text-slate-900 focus:outline-indigo-600 cursor-pointer">
+                  @for (opt of f.options || []; track opt) {
+                    <option [value]="opt">{{ opt }}</option>
+                  }
+                </select>
+              } @else {
+                <input [type]="f.type === 'number' ? 'number' : 'text'"
+                       [value]="ownerCrudModal.draft[f.key] ?? ''"
+                       (input)="updateOwnerCrudField(f.key, $any($event.target).value)"
+                       class="w-full px-3 py-2 rounded-xl border border-slate-200 font-bold text-slate-900 focus:outline-indigo-600">
+              }
+            </div>
+          }
+        </div>
+        <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+          <button (click)="closeOwnerRecordCrudModal()" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer">
+            Cancel
+          </button>
+          <button (click)="saveOwnerRecordCrudModal()" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs cursor-pointer shadow-xs">
+            Save Record
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- School Business Owner Column Schema & Custom Cell Value Editor Modal -->
+  <app-school-table-column-modal />
+

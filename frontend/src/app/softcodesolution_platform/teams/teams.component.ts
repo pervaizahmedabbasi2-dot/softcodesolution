@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule, Users, UserPlus, Shield, CheckCircle2, AlertTriangle, Trash2, Mail, RefreshCcw, Search, Key, MoreVertical, X } from 'lucide-angular';
 import { BackendService, TeamMember } from '../../services/backend.service';
+import { PaginationBarComponent } from '../../components/pagination-bar/pagination-bar.component';
 
 @Component({
   selector: 'app-dashboard-teams',
   standalone: true,
-  imports: [CommonModule, FormsModule, LucideAngularModule],
+  imports: [CommonModule, FormsModule, LucideAngularModule, PaginationBarComponent],
   templateUrl: './teams.component.html'
 })
 export class DashboardTeamsComponent implements OnInit {
@@ -30,6 +31,8 @@ export class DashboardTeamsComponent implements OnInit {
 
   members: TeamMember[] = [];
   filteredMembers: TeamMember[] = [];
+  membersPage = 1;
+  readonly membersPageSize = 5;
   isLoading = false;
   searchQuery = '';
   selectedDepartment = 'all';
@@ -67,6 +70,14 @@ export class DashboardTeamsComponent implements OnInit {
       list = list.filter(m => m.department.toLowerCase() === this.selectedDepartment.toLowerCase());
     }
     this.filteredMembers = list;
+    this.membersPage = 1;
+  }
+
+  get paginatedMembers(): TeamMember[] {
+    const totalPages = Math.max(1, Math.ceil(this.filteredMembers.length / this.membersPageSize));
+    const safePage = Math.min(totalPages, Math.max(1, this.membersPage));
+    const start = (safePage - 1) * this.membersPageSize;
+    return this.filteredMembers.slice(start, start + this.membersPageSize);
   }
 
   openInviteModal(): void {

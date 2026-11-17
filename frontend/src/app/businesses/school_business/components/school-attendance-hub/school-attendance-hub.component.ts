@@ -38,13 +38,14 @@ import {
   FaceExtractionResult,
   FaceVerificationService
 } from '../../../../services/face-verification.service';
+import { SchoolTableDirective } from '../../directives/school-table.directive';
 
 export type AttendanceSubTab = 'terminal' | 'students' | 'teachers' | 'staff' | 'principals' | 'enrollment' | 'setup';
 export type ScannerCategoryFilter = 'all' | AttendanceMemberCategory;
 
 @Component({
   selector: 'app-school-attendance-hub',
-  imports: [CommonModule, LucideAngularModule],
+  imports: [CommonModule, LucideAngularModule, SchoolTableDirective],
   templateUrl: './school-attendance-hub.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -323,8 +324,11 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       if (ctx === 'student' && this.currentStudentId()) {
         this.selectedTargetMemberId.set(this.currentStudentId());
       }
-      if (ctx !== 'owner' && this.activeSubTab() === 'setup') {
-        this.activeSubTab.set('terminal');
+      if (ctx !== 'owner') {
+        this.columnPickerOpen.set(false);
+        if (this.activeSubTab() === 'setup') {
+          this.activeSubTab.set('terminal');
+        }
       }
     });
 
@@ -453,9 +457,78 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     return p.confidenceThreshold;
   });
 
+  private isMaskedValue(val: unknown): boolean {
+    const s = String(val || '').trim();
+    return !s || s === '[ENCRYPTED_PROTECTED]' || s === '[LOCKED_VIP_VAULT]';
+  }
+
+  private readonly rawMemberLookup = computed(() => {
+    const map = new Map<string, { name: string; code: string; subLabel: string; fatherName: string; phone: string }>();
+    for (const s of this.students() || []) {
+      const id = String(s.id || '').trim();
+      if (!id) continue;
+      const entry = {
+        name: String(s.name || s.fullName || 'Student'),
+        code: String(s.rollNo || id),
+        subLabel: `${s.grade || 'Class'} ${s.section ? '- ' + s.section : ''}`.trim(),
+        fatherName: String(s.guardian || s.guardianName || s.fatherName || '—'),
+        phone: String(s.guardianPhone || s.phone || '—')
+      };
+      map.set(`student:${id}`, entry);
+      if (s.rollNo) map.set(`student:${String(s.rollNo).trim()}`, entry);
+    }
+    for (const t of this.teachers() || []) {
+      const id = String(t.id || '').trim();
+      if (!id) continue;
+      map.set(`teacher:${id}`, {
+        name: String(t.name || 'Faculty'),
+        code: String(t.empCode || id),
+        subLabel: String(t.designation || t.subject || 'Faculty'),
+        fatherName: String(t.fatherName || '—'),
+        phone: String(t.phone || '—')
+      });
+    }
+    for (const st of this.staff() || []) {
+      const id = String(st.id || '').trim();
+      if (!id) continue;
+      map.set(`staff:${id}`, {
+        name: String(st.name || 'Staff Member'),
+        code: String(st.empCode || id),
+        subLabel: String(st.roleTitle || 'Staff'),
+        fatherName: String(st.fatherName || '—'),
+        phone: String(st.phone || '—')
+      });
+    }
+    for (const pr of this.principals() || []) {
+      const id = String(pr.id || '').trim();
+      if (!id) continue;
+      map.set(`principal:${id}`, {
+        name: String(pr.name || 'Principal'),
+        code: String(pr.empCode || id),
+        subLabel: String(pr.roleTitle || 'Principal'),
+        fatherName: String(pr.fatherName || '—'),
+        phone: String(pr.phone || '—')
+      });
+    }
+    return map;
+  });
+
+  readonly cleanFaceProfiles = computed<FaceProfileRecord[]>(() => {
+    const lookup = this.rawMemberLookup();
+    return (this.faceProfiles() || []).map((fp) => {
+      const raw = lookup.get(`${fp.memberCategory}:${fp.memberId}`);
+      return {
+        ...fp,
+        memberName: this.isMaskedValue(fp.memberName) ? (raw?.name || fp.memberCode || 'Campus Member') : fp.memberName,
+        memberCode: this.isMaskedValue(fp.memberCode) ? (raw?.code || fp.memberId) : fp.memberCode,
+        gradeOrDept: this.isMaskedValue(fp.gradeOrDept) ? (raw?.subLabel || 'Campus') : fp.gradeOrDept
+      };
+    });
+  });
+
   readonly profileByMemberKey = computed(() => {
     const map = new Map<string, FaceProfileRecord>();
-    for (const fp of this.faceProfiles()) {
+    for (const fp of this.cleanFaceProfiles()) {
       map.set(`${fp.memberCategory}:${fp.memberId}`, fp);
     }
     return map;
@@ -750,7 +823,7 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
 
   readonly activeFaceProfiles = computed<FaceProfileRecord[]>(() => {
     const cat = this.activeCategory();
-    const all = this.faceProfiles() || [];
+    const all = this.cleanFaceProfiles();
     if (cat === 'all') return all;
     return all.filter((fp) => fp.memberCategory === cat);
   });
@@ -761,6 +834,12 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     if (cat === 'staff') return this.staffMembers();
     if (cat === 'principal') return this.principalMembers();
     return this.studentMembers();
+  });
+
+  readonly enrollSelectedMember = computed<AttendanceMemberView | null>(() => {
+    const id = this.enrollTargetMemberId();
+    if (!id) return null;
+    return this.enrollCategoryMembers().find((m) => m.id === id) || null;
   });
 
   readonly quickEnrollFilteredMembers = computed<AttendanceMemberView[]>(() => {
@@ -778,6 +857,12 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     return base.filter(
       (m) => m.name.toLowerCase().includes(q) || m.code.toLowerCase().includes(q) || m.subLabel.toLowerCase().includes(q)
     );
+  });
+
+  readonly quickEnrollSelectedMember = computed<AttendanceMemberView | null>(() => {
+    const id = this.quickEnrollMemberId();
+    if (!id) return null;
+    return this.quickEnrollFilteredMembers().find((m) => m.id === id) || null;
   });
 
   readonly studentGrades = computed<string[]>(() => {
@@ -854,16 +939,123 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     };
   });
 
-  readonly totalEnrolledCount = computed(() => (this.faceProfiles() || []).length);
+  readonly totalEnrolledCount = computed(() => this.cleanFaceProfiles().length);
 
   readonly activeLogs = computed(() => {
     const cat = this.activeCategory();
     const tab = this.activeSubTab();
-    const logs = this.verificationLogs() || [];
+    const lookup = this.rawMemberLookup();
+    const logs = (this.verificationLogs() || []).map((l) => {
+      if (!this.isMaskedValue(l.memberName)) return l;
+      const raw = lookup.get(`${l.memberCategory}:${l.memberId}`);
+      return {
+        ...l,
+        memberName: raw?.name || l.memberCode || 'Campus Member',
+        memberCode: this.isMaskedValue(l.memberCode) ? (raw?.code || l.memberId) : l.memberCode,
+        gradeOrDept: this.isMaskedValue(l.gradeOrDept) ? (raw?.subLabel || 'Campus') : l.gradeOrDept
+      };
+    });
     if (tab === 'terminal' && cat !== 'all') {
       return logs.filter((l) => l.memberCategory === cat).slice(0, 14);
     }
     return logs.slice(0, 16);
+  });
+
+  readonly markedAttendanceTableRows = computed(() => {
+    this.punchRevision();
+    const cat = this.activeCategory();
+    const q = this.searchQuery().trim().toLowerCase();
+    const membersMap = new Map<string, AttendanceMemberView>();
+    for (const m of this.allCampusMembers()) {
+      membersMap.set(`${m.category}:${m.id}`, m);
+    }
+    const profileMap = this.profileByMemberKey();
+    const lookup = this.rawMemberLookup();
+
+    const rowsMap = new Map<
+      string,
+      {
+        key: string;
+        date: string;
+        memberId: string;
+        category: AttendanceMemberCategory;
+        code: string;
+        name: string;
+        subLabel: string;
+        fatherName: string;
+        phone: string;
+        photo: string;
+        checkInTime: string;
+        checkOutTime: string;
+        lateByLabel: string;
+        lateSeverity: LateSeverityKind;
+        status: string;
+        confidenceScore: number;
+        verifiedBy: string;
+      }
+    >();
+
+    for (const l of this.verificationLogs() || []) {
+      if (l.status === 'Rejected') continue;
+      if (cat !== 'all' && l.memberCategory !== cat) continue;
+      const memberKey = `${l.memberCategory}:${l.memberId}`;
+      const member = membersMap.get(memberKey);
+      const raw = lookup.get(memberKey);
+      const fp = profileMap.get(memberKey);
+      const rowKey = `${l.date}:${memberKey}`;
+      const isOut = l.punchType === 'OUT' || String(l.verifiedBy || '').includes('· OUT');
+      const ts = this.formatTimeShort(l.timestamp) || l.timestamp || '—';
+
+      const cleanName = !this.isMaskedValue(l.memberName)
+        ? l.memberName
+        : (member?.name || raw?.name || l.memberCode || 'Campus Member');
+      const cleanCode = member?.code || raw?.code || l.memberCode || l.memberId;
+      const cleanSub = member?.subLabel || raw?.subLabel || (!this.isMaskedValue(l.gradeOrDept) ? l.gradeOrDept : 'Campus');
+
+      const existing = rowsMap.get(rowKey);
+      if (!existing) {
+        rowsMap.set(rowKey, {
+          key: rowKey,
+          date: l.date,
+          memberId: l.memberId,
+          category: l.memberCategory,
+          code: cleanCode,
+          name: cleanName,
+          subLabel: cleanSub,
+          fatherName: member?.fatherName || raw?.fatherName || '—',
+          phone: member?.phone || raw?.phone || '—',
+          photo: fp?.facePhotoData || l.snapshotData || member?.image || '',
+          checkInTime: isOut ? '—' : ts,
+          checkOutTime: isOut ? ts : '—',
+          lateByLabel: l.lateByLabel || (l.status === 'Late' ? 'Late Arrival' : 'On Time'),
+          lateSeverity: l.status === 'Late' ? 'late' : 'on_time',
+          status: l.status,
+          confidenceScore: Math.round(Number(l.confidenceScore || 0)),
+          verifiedBy: l.verifiedBy || 'Face Camera'
+        });
+      } else {
+        if (isOut && existing.checkOutTime === '—') {
+          existing.checkOutTime = ts;
+        } else if (!isOut && existing.checkInTime === '—') {
+          existing.checkInTime = ts;
+        }
+        if (l.lateByLabel) existing.lateByLabel = l.lateByLabel;
+        if (Number(l.confidenceScore || 0) > existing.confidenceScore) {
+          existing.confidenceScore = Math.round(Number(l.confidenceScore || 0));
+        }
+      }
+    }
+
+    const list = Array.from(rowsMap.values());
+    if (!q) return list;
+    return list.filter(
+      (r) =>
+        r.name.toLowerCase().includes(q) ||
+        r.code.toLowerCase().includes(q) ||
+        r.subLabel.toLowerCase().includes(q) ||
+        r.fatherName.toLowerCase().includes(q) ||
+        r.phone.toLowerCase().includes(q)
+    );
   });
 
   readonly fillLightFrameClass = computed(() => {
@@ -2317,6 +2509,10 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   }
 
   toggleColumn(key: AttendanceColumnKey): void {
+    if (!this.isOwner()) {
+      this.emitToast('Only School Business Owner can modify table columns.', 'warning');
+      return;
+    }
     const cur = this.selectedColumns();
     const activeCount = Object.values(cur).filter(Boolean).length;
     if (cur[key] && activeCount <= 1) {
@@ -2330,6 +2526,10 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   }
 
   applyColumnPreset(preset: AttendanceColumnPresetKey): void {
+    if (!this.isOwner()) {
+      this.emitToast('Only School Business Owner can change column presets.', 'warning');
+      return;
+    }
     const next = createDefaultColumnSelection(preset);
     this.selectedColumns.set(next);
     this.activeColumnPreset.set(preset);

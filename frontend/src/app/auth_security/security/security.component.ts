@@ -1,6 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LucideAngularModule, ShieldCheck, AlertTriangle, Activity, ShieldAlert, Plus, X, Trash2, Download, CheckCircle2, Lock, Unlock, Globe, RefreshCcw, Camera, UserX, KeyRound, Eye } from 'lucide-angular';
+import { PaginationBarComponent } from '../../components/pagination-bar/pagination-bar.component';
 
 export interface IpRule {
   id: string;
@@ -45,7 +46,7 @@ export interface IntruderLog {
 @Component({
   selector: 'app-dashboard-security',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule],
+  imports: [CommonModule, LucideAngularModule, PaginationBarComponent],
   templateUrl: './security.component.html'
 })
 export class SecurityComponent implements OnInit {
@@ -79,8 +80,22 @@ export class SecurityComponent implements OnInit {
   isIntruderDetailModalOpen = false;
 
   intruderLogs: IntruderLog[] = [];
+  intruderPage = 1;
+  readonly intruderPageSize = 5;
   totalLockedAccounts = 0;
   isLoadingIntruders = false;
+
+  get paginatedIntruderLogs(): IntruderLog[] {
+    const totalPages = Math.max(1, Math.ceil(this.intruderLogs.length / this.intruderPageSize));
+    const safePage = Math.min(totalPages, Math.max(1, this.intruderPage));
+    const start = (safePage - 1) * this.intruderPageSize;
+    return this.intruderLogs.slice(start, start + this.intruderPageSize);
+  }
+
+  setIntruderPage(page: number): void {
+    this.intruderPage = page;
+    this.cdr.detectChanges();
+  }
 
   ngOnInit(): void {
     this.loadIntruders();

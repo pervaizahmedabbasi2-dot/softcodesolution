@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Input, Output, EventEmitter, inject, ChangeDetectorRef, importProvidersFrom } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, Output, EventEmitter, inject, ChangeDetectorRef, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { dashboardIcons } from '../../../dashboard/dashboard.component';
@@ -77,6 +77,9 @@ import {
   StaffMemberRecord,
   createDefaultOwnerAttendancePolicy
 } from '../models/school-attendance.models';
+import { SchoolTableDirective } from '../directives/school-table.directive';
+import { SchoolTableColumnModalComponent } from '../components/school-table-column-modal/school-table-column-modal.component';
+import { SchoolTableSchemaService } from '../services/school-table-schema.service';
 
 export type SchoolDashboardTab = 'overview' | 'stage_wise' | 'feed' | 'events' | 'students' | 'teachers' | 'admissions' | 'attendance' | 'finance' | 'invoices' | 'expenses' | 'payment_gateway' | 'transport' | 'library' | 'exams' | 'timetable' | 'hostel' | 'labs' | 'alumni' | 'portals' | 'reports' | 'settings' | 'audit' | 'lesson_plans' | 'appraisals' | 'inspections' | 'exam_moderation' | 'parent_complaints' | 'substitutions' | 'syllabus' | 'safeguarding' | 'directives';
 export type SchoolPortalRole = 'owner' | 'principal' | 'teacher' | 'student' | 'parent' | 'accountant';
@@ -784,7 +787,7 @@ export interface PrincipalFeeCollectionRecord {
 @Component({
   selector: 'app-school-dashboard',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule, FormsModule, MatIconModule, DataTableComponent, AuditReconciliationTrendsComponent, AnalyticsDashboardComponent, SchoolAttendanceHubComponent],
+  imports: [CommonModule, LucideAngularModule, FormsModule, MatIconModule, DataTableComponent, AuditReconciliationTrendsComponent, AnalyticsDashboardComponent, SchoolAttendanceHubComponent, SchoolTableDirective, SchoolTableColumnModalComponent],
   templateUrl: './school-dashboard.component.html',
   styles: [`
     .glass-surface {
@@ -847,9 +850,20 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
   private backend = inject(BackendService);
   private sanitizer = inject(DomSanitizer);
+  readonly tableSchemaService = inject(SchoolTableSchemaService);
   private avatarCache = new Map<string, SafeUrl>();
   readonly Math = Math;
   icons = dashboardIcons;
+
+  constructor() {
+    this.tableSchemaService.registerPersistHook(() => this.saveStateToStorage());
+    effect(() => {
+      const req = this.tableSchemaService.addRowRequest();
+      if (req && req.tableId && this.isOwnerPortal) {
+        this.handleTableAddRow(req.tableId);
+      }
+    });
+  }
 
   isStudentDossierModalOpen: boolean = false;
   selectedStudentForDossier: StudentRecord | null = null;
@@ -999,7 +1013,18 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
     };
   }
 
-  currentPortalRole: SchoolPortalRole = 'owner';
+  private _currentPortalRole: SchoolPortalRole = 'owner';
+  get currentPortalRole(): SchoolPortalRole {
+    return this._currentPortalRole;
+  }
+  set currentPortalRole(val: SchoolPortalRole) {
+    const next: SchoolPortalRole = val || 'owner';
+    this._currentPortalRole = next;
+    this.tableSchemaService.setPortalRole(next);
+  }
+  get isOwnerPortal(): boolean {
+    return this._currentPortalRole === 'owner';
+  }
   currentTab: SchoolDashboardTab = 'overview';
   principalTab: 'overview' | 'stage_wise' | 'master_registries' | 'supervision' | 'substitutions' | 'syllabus' | 'inspections' | 'discipline' | 'directives' | 'appraisals' | 'exam_moderation' | 'academic_reports' | 'faculty_tasks' | 'teacher_leaves' | 'student_certificates' | 'ptm_interventions' | 'admissions_review' | 'fee_oversight' | 'parent_complaints' | 'safeguarding' | 'facilities_transport' | 'library' | 'biometric_attendance' = 'overview';
   teacherTab: 'schedule' | 'feed' | 'events' | 'attendance' | 'marks' | 'lessons' | 'homework' | 'students' | 'communication' | 'library' = 'schedule';
@@ -3710,6 +3735,52 @@ INSTRUCTIONS:
     { id: 'CMP-5', area: 'Transport Fleet', title: 'School Bus Fitness & Speed Governor Inspection', standard: 'Motorway Police & Traffic Safety Rules', status: 'Compliant & Verified', responsiblePerson: 'Transport Supervisor', lastCheckedDate: '2026-10-15', nextRenewalDate: '2026-11-15', notes: 'All 8 buses equipped with active GPS and first-aid kits.' }
   ];
 
+  auditWaiversList: Array<{
+    id: string;
+    studentName: string;
+    grade: string;
+    category: string;
+    originalFee: number;
+    concessionLabel: string;
+    reason: string;
+    authorizingBody: string;
+    approvalDate: string;
+  }> = [
+    {
+      id: 'WVR-1',
+      studentName: 'Mustafa Ali Shah (Roll #1008)',
+      grade: 'Class 10-A',
+      category: 'Hardship Waiver',
+      originalFee: 28500,
+      concessionLabel: '20% Off (PKR 22,800)',
+      reason: 'Father deceased; verified affidavit and family income statement on file.',
+      authorizingBody: 'Board of Governors Scholarship Board',
+      approvalDate: '24 Oct 2026'
+    },
+    {
+      id: 'WVR-2',
+      studentName: 'Ayesha Bilal (Roll #1005)',
+      grade: 'Class 9-B',
+      category: 'Sibling Concession',
+      originalFee: 26000,
+      concessionLabel: '15% Off (PKR 22,100)',
+      reason: 'Elder brother Hamza Bilal currently enrolled in Class 10-A.',
+      authorizingBody: 'Principal Directive #DIR-2026-44',
+      approvalDate: '15 Sep 2026'
+    },
+    {
+      id: 'WVR-3',
+      studentName: 'Muhammad Usman (Roll #1022)',
+      grade: 'Class 8-A',
+      category: 'Academic Merit',
+      originalFee: 24000,
+      concessionLabel: '50% Off (PKR 12,000)',
+      reason: 'Top position holder in Islamabad Regional Science Olympiad.',
+      authorizingBody: 'Academic Council Resolution',
+      approvalDate: '01 Sep 2026'
+    }
+  ];
+
   // SLC Modal & Form State
   isSLCCertificateModalOpen: boolean = false;
   selectedSLCForView: StudentLeavingCertificateRecord | null = null;
@@ -5874,6 +5945,8 @@ INSTRUCTIONS:
   };
 
   ngOnInit(): void {
+    this.tableSchemaService.setTenantId(this.activeTenantId);
+    this.tableSchemaService.setPortalRole(this.currentPortalRole);
     this.loadStateFromStorage();
     this.loadOfflineQueue();
     void this.loadStateFromBackend();
@@ -6360,7 +6433,13 @@ INSTRUCTIONS:
         try {
           const parsed = JSON.parse(savedStudents);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            this.activeStudents = parsed;
+            this.activeStudents = parsed.map((s: any) => ({
+              ...s,
+              name: String(s?.name || s?.fullName || 'Student').trim(),
+              guardian: String(s?.guardian || s?.guardianName || 'Guardian').trim(),
+              guardianPhone: String(s?.guardianPhone || s?.phone || '').trim() || '—',
+              attendance: String(s?.attendance || s?.attendanceRate || '96%').trim()
+            }));
           } else {
             this.activeStudents = this.getInitialStudents();
           }
@@ -6446,10 +6525,17 @@ INSTRUCTIONS:
 
       if (savedPerms) {
         const parsedPerms = JSON.parse(savedPerms);
-        this.rolePermissions = (Array.isArray(parsedPerms) ? parsedPerms : this.getInitialRolePermissions()).map((p: any) => ({
+        const mapped = (Array.isArray(parsedPerms) ? parsedPerms : this.getInitialRolePermissions()).map((p: any) => ({
           ...p,
           accountant: p.accountant !== undefined ? Boolean(p.accountant) : (p.id === 'perm_fee_ledger' || p.id === 'perm_fee_voucher')
         }));
+        const defaults = this.getInitialRolePermissions();
+        for (const def of defaults) {
+          if (!mapped.some((m: any) => m.id === def.id)) {
+            mapped.push(def);
+          }
+        }
+        this.rolePermissions = mapped;
       } else {
         this.rolePermissions = this.getInitialRolePermissions();
       }
@@ -6708,6 +6794,22 @@ INSTRUCTIONS:
         } catch {}
       }
 
+      const savedWaivers = this.getScopedItem('scs_school_audit_waivers_v1');
+      if (savedWaivers) {
+        try {
+          const parsedWaivers = JSON.parse(savedWaivers);
+          if (Array.isArray(parsedWaivers) && parsedWaivers.length > 0) this.auditWaiversList = parsedWaivers;
+        } catch {}
+      }
+
+      const savedTableSchemas = this.getScopedItem('scs_school_table_schemas_v1');
+      if (savedTableSchemas) {
+        try {
+          this.tableSchemaService.importSchemas(JSON.parse(savedTableSchemas));
+        } catch {}
+      }
+
+      this.syncBiometricFlagsFromFaceProfiles();
       this.recalculateDefaulters();
       this.checkAndUpdateOverdueBooks();
     } catch {
@@ -6778,17 +6880,38 @@ INSTRUCTIONS:
       }
 
       if (stuRes?.ok && Array.isArray(stuRes.students) && stuRes.students.length > 0) {
+        const attendancePhotoSet = new Set(
+          (this.schoolFaceProfiles || []).map((fp) => String(fp?.facePhotoData || '').trim()).filter(Boolean)
+        );
+        const normalizeFeeStatus = (raw: any): 'Paid' | 'Pending' | 'Overdue' => {
+          const upper = String(raw || '').trim().toUpperCase();
+          if (upper === 'PAID') return 'Paid';
+          if (upper === 'OVERDUE') return 'Overdue';
+          return 'Pending';
+        };
+        const normalizeAttStatus = (raw: any): 'Present' | 'Absent' | 'Late' => {
+          const upper = String(raw || '').trim().toUpperCase();
+          if (upper === 'LATE') return 'Late';
+          if (upper === 'ABSENT') return 'Absent';
+          return 'Present';
+        };
         const mapById = new Map<string, any>();
         for (const s of stuRes.students) {
+          const existingLocal = (this.activeStudents || []).find((l) => l.id === s.id);
+          const rawImg = String(s.image || existingLocal?.image || '').trim();
+          const cleanImg = attendancePhotoSet.has(rawImg) ? '' : rawImg;
           mapById.set(s.id, {
+            ...(existingLocal || {}),
             ...s,
-            guardian: s.guardian || s.guardianName || 'Guardian',
-            guardianPhone: s.guardianPhone || '+92 300 0000000',
-            feeStatus: s.feeStatus || 'Pending',
-            feeAmount: Number(s.feeAmount ?? 25000) || 0,
-            dueBakaya: Number(s.dueBakaya ?? 0) || 0,
-            attendance: s.attendance || '96%',
-            status: s.status || 'Present'
+            name: String(s.name || s.fullName || existingLocal?.name || 'Student').trim(),
+            guardian: String(s.guardian || s.guardianName || existingLocal?.guardian || 'Guardian').trim(),
+            guardianPhone: String(s.guardianPhone || s.phone || existingLocal?.guardianPhone || '').trim() || '—',
+            feeStatus: normalizeFeeStatus(s.feeStatus || existingLocal?.feeStatus),
+            feeAmount: Number(s.feeAmount ?? existingLocal?.feeAmount ?? 18000) || 0,
+            dueBakaya: Number(s.dueBakaya ?? existingLocal?.dueBakaya ?? 0) || 0,
+            attendance: String(s.attendance || s.attendanceRate || existingLocal?.attendance || '96%').trim(),
+            status: normalizeAttStatus(s.status || existingLocal?.status),
+            image: cleanImg
           });
         }
         for (const local of this.activeStudents) {
@@ -7030,11 +7153,17 @@ INSTRUCTIONS:
         const logs: FaceVerificationLogRecord[] = [];
         for (const row of attRes.attendance) {
           const cat: AttendanceMemberCategory = (row.memberCategory || 'student') as AttendanceMemberCategory;
+          const mId = row.studentId || row.memberId || '';
+          const rawLogName = String(row.studentName || row.memberName || '').trim();
+          const resolvedName =
+            !rawLogName || rawLogName === '[ENCRYPTED_PROTECTED]' || rawLogName === '[LOCKED_VIP_VAULT]'
+              ? this.resolveCleanMemberName(cat, mId, row.rollNo || row.memberCode || 'Member')
+              : rawLogName;
           logs.push({
             id: row.id || `ATT-${Math.random().toString(36).slice(2, 7)}`,
             memberCategory: cat,
-            memberId: row.studentId || row.memberId || '',
-            memberName: row.studentName || row.memberName || 'Member',
+            memberId: mId,
+            memberName: resolvedName,
             memberCode: row.rollNo || row.memberCode || '',
             gradeOrDept: row.grade || row.gradeOrDept || 'Campus',
             status: row.status || 'Present',
@@ -7128,6 +7257,8 @@ INSTRUCTIONS:
       this.setScopedItem('scs_school_face_profiles_v1', JSON.stringify(this.schoolFaceProfiles));
       this.setScopedItem('scs_school_owner_attendance_policy_v1', JSON.stringify(this.ownerAttendancePolicy));
       this.setScopedItem('scs_school_face_verification_logs_v1', JSON.stringify(this.faceVerificationLogs));
+      this.setScopedItem('scs_school_audit_waivers_v1', JSON.stringify(this.auditWaiversList));
+      this.setScopedItem('scs_school_table_schemas_v1', JSON.stringify(this.tableSchemaService.exportSchemas()));
       void this.backend.saveSchoolWorkspace({
         schoolName: this.schoolName,
         settingsForm: this.settingsForm,
@@ -8595,7 +8726,9 @@ INSTRUCTIONS:
       { id: 'perm_directory', name: 'Class Roster & Guardian Directory', description: 'Access emergency contacts and student roster', teacher: true, student: false, parent: false, accountant: false },
       { id: 'perm_leave', name: 'Online Leave Application', description: 'Submit official sickness or family leave request', teacher: false, student: true, parent: true, accountant: false },
       { id: 'perm_chat', name: 'Direct Teacher-Parent Message Center', description: 'Private encrypted messaging channel with faculty', teacher: true, student: false, parent: true, accountant: false },
-      { id: 'perm_rfid', name: 'Live RFID Gate & Bus Telemetry', description: 'Real-time entry/exit alerts and commute status', teacher: false, student: true, parent: true, accountant: false }
+      { id: 'perm_rfid', name: 'Live RFID Gate & Bus Telemetry', description: 'Real-time entry/exit alerts and commute status', teacher: false, student: true, parent: true, accountant: false },
+      { id: 'perm_table_schema_crud', name: 'Table Column & Schema CRUD (Owner Only)', description: 'Add, edit, rename, show/hide, and delete custom columns across all school tables (Locked to School Business Owner)', teacher: false, student: false, parent: false, accountant: false },
+      { id: 'perm_master_delete', name: 'Master Record Deletion & Ledger Control (Owner Only)', description: 'Permitted only on School Business Owner portal; Principal/Teacher/Accountant/Student/Parent cannot delete master records', teacher: false, student: false, parent: false, accountant: false }
     ];
   }
 
@@ -9098,6 +9231,10 @@ INSTRUCTIONS:
   }
 
   deletePortalUser(user: PortalUserRecord) {
+    if (!this.isOwnerPortal) {
+      this.showToast('Access Restricted: Only School Business Owner can delete portal accounts.', 'warning');
+      return;
+    }
     this.portalUsers = this.portalUsers.filter(u => u.id !== user.id);
     this.saveStateToStorage();
     this.showToast(`Removed portal access for ${user.name}`, 'info');
@@ -9752,7 +9889,12 @@ INSTRUCTIONS:
   }
 
   deleteSubject(sub: any) {
+    if (!this.isOwnerPortal) {
+      this.showToast('Access Restricted: Only School Business Owner can delete subjects.', 'warning');
+      return;
+    }
     this.schoolSubjectsList = this.schoolSubjectsList.filter(s => s.id !== sub.id);
+    this.saveStateToStorage();
     this.showToast(`Subject ${sub.title} removed`, 'info');
   }
 
@@ -10092,6 +10234,10 @@ INSTRUCTIONS:
   }
 
   deletePaymentRecord(record: FinanceRecord) {
+    if (!this.isOwnerPortal) {
+      this.showToast('Access Restricted: Only School Business Owner can delete payment records.', 'warning');
+      return;
+    }
     this.finances = this.finances.filter(f => f.id !== record.id);
     this.saveStateToStorage();
     void this.backend.deleteSchoolFee(record.id);
@@ -10193,6 +10339,10 @@ INSTRUCTIONS:
   }
 
   deleteStudent(student: StudentRecord) {
+    if (!this.isOwnerPortal) {
+      this.showToast('Access Restricted: Only School Business Owner can delete student master records.', 'warning');
+      return;
+    }
     this.activeStudents = this.activeStudents.filter(s => s.id !== student.id);
     this.saveStateToStorage();
     void this.backend.deleteSchoolStudent(student.id);
@@ -10406,6 +10556,10 @@ INSTRUCTIONS:
   }
 
   deleteTeacher(teacher: TeacherRecord) {
+    if (!this.isOwnerPortal) {
+      this.showToast('Access Restricted: Only School Business Owner can delete faculty records.', 'warning');
+      return;
+    }
     this.teachers = this.teachers.filter(t => t.id !== teacher.id);
     this.saveStateToStorage();
     void this.backend.deleteSchoolTeacher(teacher.id);
@@ -10906,6 +11060,10 @@ INSTRUCTIONS:
   }
 
   deleteFinance(fin: FinanceRecord) {
+    if (!this.isOwnerPortal) {
+      this.showToast('Access Restricted: Only School Business Owner can delete ledger entries.', 'warning');
+      return;
+    }
     this.finances = this.finances.filter(x => x.id !== fin.id);
     this.saveStateToStorage();
     this.showToast('Ledger entry removed.', 'info');
@@ -10949,6 +11107,10 @@ INSTRUCTIONS:
   }
 
   deleteExam(ex: ExamRecord) {
+    if (!this.isOwnerPortal) {
+      this.showToast('Access Restricted: Only School Business Owner can delete exam schedules.', 'warning');
+      return;
+    }
     this.examsList = this.examsList.filter(x => x.id !== ex.id);
     this.saveStateToStorage();
     this.showToast('Examination record removed.', 'info');
@@ -10994,6 +11156,10 @@ INSTRUCTIONS:
   }
 
   deleteTimetable(tt: TimetableRecord) {
+    if (!this.isOwnerPortal) {
+      this.showToast('Access Restricted: Only School Business Owner can delete timetable periods.', 'warning');
+      return;
+    }
     this.timetables = this.timetables.filter(x => x.id !== tt.id);
     this.saveStateToStorage();
     this.showToast('Timetable period removed.', 'info');
@@ -11087,11 +11253,13 @@ INSTRUCTIONS:
   }
 
   deleteTransport(tr: TransportRouteRecord) {
-    if (confirm(`Are you sure you want to remove route ${tr.routeName}?`)) {
-      this.transportRoutes = this.transportRoutes.filter(r => r.id !== tr.id);
-      this.saveStateToStorage();
-      this.showToast(`Removed transport route ${tr.routeName}`, 'warning');
+    if (!this.isOwnerPortal) {
+      this.showToast('Access Restricted: Only School Business Owner can delete transport routes.', 'warning');
+      return;
     }
+    this.transportRoutes = this.transportRoutes.filter(r => r.id !== tr.id);
+    this.saveStateToStorage();
+    this.showToast(`Removed transport route ${tr.routeName}`, 'warning');
   }
 
   // --- LIBRARY CRUD & FINE SETTINGS ---
@@ -11177,15 +11345,13 @@ INSTRUCTIONS:
   }
 
   deleteLibrary(bk: LibraryBookRecord) {
-    if (this.activeLibraryStaffRole === 'Assistant Librarian') {
-      this.showToast('Permission Restricted: Assistant Librarians cannot delete catalog records.', 'warning');
+    if (!this.isOwnerPortal) {
+      this.showToast('Access Restricted: Only School Business Owner can delete catalog books.', 'warning');
       return;
     }
-    if (confirm(`Are you sure you want to remove "${bk.title}" from library catalog?`)) {
-      this.libraryBooks = this.libraryBooks.filter(b => b.id !== bk.id);
-      this.saveStateToStorage();
-      this.showToast(`Removed book "${bk.title}"`, 'warning');
-    }
+    this.libraryBooks = this.libraryBooks.filter(b => b.id !== bk.id);
+    this.saveStateToStorage();
+    this.showToast(`Removed book "${bk.title}"`, 'warning');
   }
 
   get filteredCatalogBooks(): LibraryBookRecord[] {
@@ -11924,47 +12090,89 @@ INSTRUCTIONS:
     ];
   }
 
+  private resolveCleanMemberName(
+    category: AttendanceMemberCategory,
+    memberId: string,
+    fallback: string = 'Campus Member'
+  ): string {
+    const id = String(memberId || '').trim();
+    if (category === 'student') {
+      const st = (this.activeStudents || []).find((s) => s.id === id || s.rollNo === id);
+      if (st?.name) return st.name;
+    } else if (category === 'teacher') {
+      const tch = (this.teachers || []).find((t) => t.id === id);
+      if (tch?.name) return tch.name;
+    } else if (category === 'staff') {
+      const sf = (this.schoolStaff || []).find((x) => x.id === id);
+      if (sf?.name) return sf.name;
+    } else if (category === 'principal') {
+      const pr = (this.schoolPrincipals || []).find((x) => x.id === id);
+      if (pr?.name) return pr.name;
+    }
+    return fallback;
+  }
+
   private syncBiometricFlagsFromFaceProfiles(): void {
     const enrolledSet = new Set(this.schoolFaceProfiles.map((fp) => `${fp.memberCategory}:${fp.memberId}`));
-    const photoMap = new Map(this.schoolFaceProfiles.map((fp) => [`${fp.memberCategory}:${fp.memberId}`, fp.facePhotoData]));
+    const attendancePhotoSet = new Set(
+      this.schoolFaceProfiles.map((fp) => String(fp?.facePhotoData || '').trim()).filter(Boolean)
+    );
 
+    // Repair any legacy encrypted/masked names on face profiles using existing member directories
+    this.schoolFaceProfiles = (this.schoolFaceProfiles || []).map((fp) => {
+      const n = String(fp.memberName || '').trim();
+      if (!n || n === '[ENCRYPTED_PROTECTED]' || n === '[LOCKED_VIP_VAULT]') {
+        return {
+          ...fp,
+          memberName: this.resolveCleanMemberName(fp.memberCategory, fp.memberId, fp.memberCode || 'Campus Member')
+        };
+      }
+      return fp;
+    });
+
+    // Only update biometric readiness flags — NEVER copy attendance camera photos onto admission/directory records,
+    // and strip any attendance camera selfie that previously leaked into student/staff directory images.
     this.activeStudents = (this.activeStudents || []).map((st) => {
       const key = `student:${st.id}`;
       const hasProfile = enrolledSet.has(key);
+      const currentImg = String(st.image || '').trim();
       return {
         ...st,
         biometricEnrolled: hasProfile ? true : st.biometricEnrolled,
-        image: photoMap.get(key) || st.image
+        image: attendancePhotoSet.has(currentImg) ? '' : st.image
       };
     });
 
     this.teachers = (this.teachers || []).map((t) => {
       const key = `teacher:${t.id}`;
       const hasProfile = enrolledSet.has(key);
+      const currentImg = String(t.image || '').trim();
       return {
         ...t,
         biometricEnrolled: hasProfile ? true : t.biometricEnrolled,
-        image: photoMap.get(key) || t.image
+        image: attendancePhotoSet.has(currentImg) ? '' : t.image
       };
     });
 
     this.schoolStaff = (this.schoolStaff || []).map((sf) => {
       const key = `staff:${sf.id}`;
       const hasProfile = enrolledSet.has(key);
+      const currentImg = String(sf.image || '').trim();
       return {
         ...sf,
         faceEnrolled: hasProfile ? true : sf.faceEnrolled,
-        image: photoMap.get(key) || sf.image
+        image: attendancePhotoSet.has(currentImg) ? '' : sf.image
       };
     });
 
     this.schoolPrincipals = (this.schoolPrincipals || []).map((pr) => {
       const key = `principal:${pr.id}`;
       const hasProfile = enrolledSet.has(key);
+      const currentImg = String(pr.image || '').trim();
       return {
         ...pr,
         faceEnrolled: hasProfile ? true : pr.faceEnrolled,
-        image: photoMap.get(key) || pr.image
+        image: attendancePhotoSet.has(currentImg) ? '' : pr.image
       };
     });
   }
@@ -12462,76 +12670,8 @@ INSTRUCTIONS:
   }
 
   addNewMemberAndProceedToBiometric(): void {
-    if (!this.newEnrollmentUser.name.trim()) {
-      this.showToast('Please enter full name of student or faculty member.', 'warning');
-      return;
-    }
-    const rollId = this.newEnrollmentUser.rollOrId.trim() || String(Math.floor(10000000 + Math.random() * 90000000));
-    const newId = 'USER-' + Date.now().toString(36) + '-' + Math.floor(Math.random() * 1000);
-
-    if (this.newEnrollmentUser.role === 'Student') {
-      const newStudent: StudentRecord = {
-        id: newId,
-        name: this.newEnrollmentUser.name.trim(),
-        grade: this.newEnrollmentUser.gradeOrRole || 'Class 9',
-        section: this.newEnrollmentUser.section || 'A',
-        status: 'Absent',
-        attendance: '0%',
-        image: '',
-        guardian: this.newEnrollmentUser.fatherName.trim() || 'Parent / Guardian',
-        guardianPhone: '+92 300 0000000',
-        feeStatus: 'Paid',
-        feeAmount: 12500,
-        rollNo: rollId,
-        admissionDate: new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }),
-        biometricEnrolled: false,
-        fingerprintEnrolled: false
-      };
-      this.activeStudents.unshift(newStudent);
-      this.selectedEnrollmentRole = 'Student';
-      this.selectedEnrollmentMemberId = newStudent.id;
-    } else {
-      const newTeacher: TeacherRecord = {
-        id: newId,
-        name: this.newEnrollmentUser.name.trim(),
-        subject: this.newEnrollmentUser.gradeOrRole || 'Senior Faculty',
-        qualification: 'M.Sc / B.Ed',
-        classes: 4,
-        status: 'Active',
-        rating: 4.9,
-        email: `${this.newEnrollmentUser.name.toLowerCase().replace(/\s+/g, '')}@campus.edu`,
-        phone: '+92 311 0000000',
-        image: '',
-        designation: this.newEnrollmentUser.gradeOrRole || 'Teacher',
-        biometricEnrolled: false,
-        fingerprintEnrolled: false,
-        salaryStatus: 'Disbursed',
-        monthlySalary: 45000
-      };
-      this.teachers.unshift(newTeacher);
-      this.selectedEnrollmentRole = 'Teacher';
-      this.selectedEnrollmentMemberId = newTeacher.id;
-    }
-
-    const savedName = this.newEnrollmentUser.name;
-    this.saveStateToStorage();
-    this.enrollmentMode = 'select_existing';
-    this.enrollmentStep = 'camera';
-    this.enrolledCapturedImage = '';
-    this.showToast(`✅ Member "${savedName}" registered in database! Please snap or activate camera to add their eye scan.`, 'success');
-
-    // Reset form
-    this.newEnrollmentUser = {
-      name: '',
-      rollOrId: '',
-      gradeOrRole: 'Class 9',
-      section: 'A',
-      fatherName: '',
-      role: 'Student'
-    };
-
-    this.cdr.detectChanges();
-    this.startCameraScanner('user', 'face-enrollment-video-feed');
+    // Attendance face enrollment only links existing campus members and never creates synthetic admission records.
+    this.openFaceEnrollmentModal();
   }
 
   executeFaceBiometricEnrollment(): void {
@@ -12544,9 +12684,7 @@ INSTRUCTIONS:
       return;
     }
 
-    // Check if camera is active OR a real photo was captured from mobile camera
     if (!this.isCameraActive && !this.enrolledCapturedImage) {
-      // Auto optical viewfinder sensor snapshot fallback so enrollment is 100% operational
       this.enrolledCapturedImage = this.avatarSvgDataUri(this.selectedEnrollmentRole);
       this.showToast('📸 Optical biometric viewfinder captured facial landmarks! Proceeding with registration...', 'info');
     }
@@ -12561,9 +12699,6 @@ INSTRUCTIONS:
         const st = this.activeStudents.find(s => s.id === this.selectedEnrollmentMemberId);
         if (st) {
           st.biometricEnrolled = true;
-          if (this.enrolledCapturedImage) {
-            st.image = this.enrolledCapturedImage;
-          }
           st.faceEmbeddingToken = 'SEC-FACE-256-' + Math.floor(1000 + Math.random() * 8999);
           st.irisScanCode = 'IRIS-' + Math.floor(10000 + Math.random() * 89999);
           st.irisEnrolledAt = new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -12576,9 +12711,6 @@ INSTRUCTIONS:
         const tch = this.teachers.find(t => t.id === this.selectedEnrollmentMemberId);
         if (tch) {
           tch.biometricEnrolled = true;
-          if (this.enrolledCapturedImage) {
-            tch.image = this.enrolledCapturedImage;
-          }
           tch.faceEmbeddingToken = 'SEC-FACE-256-' + Math.floor(1000 + Math.random() * 8999);
           tch.irisScanCode = 'IRIS-' + Math.floor(10000 + Math.random() * 89999);
           tch.irisEnrolledAt = new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -12865,6 +12997,10 @@ INSTRUCTIONS:
   }
 
   deleteAdmission(adm: AdmissionRecord) {
+    if (!this.isOwnerPortal) {
+      this.showToast('Access Restricted: Only School Business Owner can delete admission applications.', 'warning');
+      return;
+    }
     this.admissionsList = this.admissionsList.filter(a => a.id !== adm.id);
     this.saveStateToStorage();
     this.showToast(`Removed admission application for ${adm.applicant}`, 'info');
@@ -13008,11 +13144,13 @@ INSTRUCTIONS:
   }
 
   deleteMedicalRecord(m: StudentMedicalRecord) {
-    if (confirm(`Delete medical record for ${m.studentName}?`)) {
-      this.studentMedicalRecords = this.studentMedicalRecords.filter((item: StudentMedicalRecord) => item.id !== m.id);
-      this.saveStateToStorage();
-      this.showToast(`Deleted health record for ${m.studentName}`, 'warning');
+    if (!this.isOwnerPortal) {
+      this.showToast('Access Restricted: Only School Business Owner can delete medical records.', 'warning');
+      return;
     }
+    this.studentMedicalRecords = this.studentMedicalRecords.filter((item: StudentMedicalRecord) => item.id !== m.id);
+    this.saveStateToStorage();
+    this.showToast(`Deleted health record for ${m.studentName}`, 'warning');
   }
 
   // --- DISCIPLINARY LOG CRUD ---
@@ -13075,11 +13213,13 @@ INSTRUCTIONS:
   }
 
   deleteDisciplinaryIncident(d: DisciplinaryIncidentRecord) {
-    if (confirm(`Delete disciplinary record #${d.id}?`)) {
-      this.disciplinaryIncidents = this.disciplinaryIncidents.filter((item: DisciplinaryIncidentRecord) => item.id !== d.id);
-      this.saveStateToStorage();
-      this.showToast(`Removed disciplinary incident #${d.id}`, 'warning');
+    if (!this.isOwnerPortal) {
+      this.showToast('Access Restricted: Only School Business Owner can delete disciplinary incidents.', 'warning');
+      return;
     }
+    this.disciplinaryIncidents = this.disciplinaryIncidents.filter((item: DisciplinaryIncidentRecord) => item.id !== d.id);
+    this.saveStateToStorage();
+    this.showToast(`Removed disciplinary incident #${d.id}`, 'warning');
   }
 
   // --- SCHOOL ASSETS & INVENTORY CRUD ---
@@ -13132,11 +13272,13 @@ INSTRUCTIONS:
   }
 
   deleteAsset(a: SchoolAssetRecord) {
-    if (confirm(`Delete asset '${a.name}' from inventory?`)) {
-      this.schoolAssets = this.schoolAssets.filter((item: SchoolAssetRecord) => item.id !== a.id);
-      this.saveStateToStorage();
-      this.showToast(`Removed asset '${a.name}' from inventory`, 'warning');
+    if (!this.isOwnerPortal) {
+      this.showToast('Access Restricted: Only School Business Owner can delete assets.', 'warning');
+      return;
     }
+    this.schoolAssets = this.schoolAssets.filter((item: SchoolAssetRecord) => item.id !== a.id);
+    this.saveStateToStorage();
+    this.showToast(`Removed asset '${a.name}' from inventory`, 'warning');
   }
 
   // --- STAFF PAYROLL & SALARY SLIPS CRUD ---
@@ -13311,12 +13453,14 @@ INSTRUCTIONS:
     );
   }
 
-    deleteStaffPayroll(p: StaffPayrollRecord) {
-    if (confirm(`Delete payroll voucher for ${p.staffName}?`)) {
-      this.staffPayrolls = this.staffPayrolls.filter((item: StaffPayrollRecord) => item.id !== p.id);
-      this.saveStateToStorage();
-      this.showToast(`Removed payroll entry for ${p.staffName}`, 'warning');
+  deleteStaffPayroll(p: StaffPayrollRecord) {
+    if (!this.isOwnerPortal) {
+      this.showToast('Access Restricted: Only School Business Owner can delete payroll entries.', 'warning');
+      return;
     }
+    this.staffPayrolls = this.staffPayrolls.filter((item: StaffPayrollRecord) => item.id !== p.id);
+    this.saveStateToStorage();
+    this.showToast(`Removed payroll entry for ${p.staffName}`, 'warning');
   }
 
   // --- STAFF LEAVE REQUESTS CRUD ---
@@ -13368,11 +13512,13 @@ INSTRUCTIONS:
   }
 
   deleteStaffLeave(l: StaffLeaveRecord) {
-    if (confirm(`Delete leave application for ${l.staffName}?`)) {
-      this.staffLeaveRequests = this.staffLeaveRequests.filter((item: StaffLeaveRecord) => item.id !== l.id);
-      this.saveStateToStorage();
-      this.showToast(`Removed leave request for ${l.staffName}`, 'warning');
+    if (!this.isOwnerPortal) {
+      this.showToast('Access Restricted: Only School Business Owner can delete leave records.', 'warning');
+      return;
     }
+    this.staffLeaveRequests = this.staffLeaveRequests.filter((item: StaffLeaveRecord) => item.id !== l.id);
+    this.saveStateToStorage();
+    this.showToast(`Removed leave request for ${l.staffName}`, 'warning');
   }
 
   // --- USER PROFILE EDIT MODAL (TEACHER, STUDENT, PARENT) ---
@@ -14627,12 +14773,20 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
   }
 
   deleteSubstituteRecord(subId: string) {
+    if (!this.isOwnerPortal) {
+      this.showToast('Access Restricted: Only School Business Owner can delete substitution records.', 'warning');
+      return;
+    }
     this.substituteArrangements = this.substituteArrangements.filter(s => s.id !== subId);
     this.saveStateToStorage();
     this.showToast(`Substitution record #${subId} removed.`, 'info');
   }
 
   deleteInspectionRecord(logId: string) {
+    if (!this.isOwnerPortal) {
+      this.showToast('Access Restricted: Only School Business Owner can delete inspection logs.', 'warning');
+      return;
+    }
     this.dailyInspectionLogs = this.dailyInspectionLogs.filter(l => l.id !== logId);
     this.saveStateToStorage();
     this.showToast(`Inspection log #${logId} deleted.`, 'info');
@@ -15196,13 +15350,15 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
 
   deleteStudentFromStage(student: StudentRecord): void {
     if (!student) return;
-    const ok = typeof window !== 'undefined' ? window.confirm(`Remove student "${student.name}" (Roll #${student.rollNo}) from school records?`) : true;
-    if (ok) {
-      this.activeStudents = (this.activeStudents || []).filter(s => s.id !== student.id);
-      this.saveStateToStorage();
-      this.showToast(`Student ${student.name} removed from registry.`, 'info');
-      this.cdr.detectChanges();
+    if (!this.isOwnerPortal) {
+      this.showToast('Access Restricted: Only School Business Owner can delete student records.', 'warning');
+      return;
     }
+    this.activeStudents = (this.activeStudents || []).filter(s => s.id !== student.id);
+    this.saveStateToStorage();
+    void this.backend.deleteSchoolStudent(student.id);
+    this.showToast(`Student ${student.name} removed from registry.`, 'info');
+    this.cdr.detectChanges();
   }
 
   exportStageStudentsCSV(stage: string): void {
@@ -15643,6 +15799,10 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
   }
 
   async deleteAccountantPettyVoucher(voucher: any): Promise<void> {
+    if (!this.isOwnerPortal) {
+      this.showToast('Access Restricted: Only School Business Owner can delete petty cash vouchers.', 'warning');
+      return;
+    }
     if (!voucher) return;
     this.accountantPettyVouchers = this.accountantPettyVouchers.filter(v => v.id !== voucher.id);
     this.syncClosingPettyExpensesFromVouchers();
@@ -16488,7 +16648,9 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
         schoolPrincipals: this.schoolPrincipals,
         schoolFaceProfiles: this.schoolFaceProfiles,
         ownerAttendancePolicy: this.ownerAttendancePolicy,
-        faceVerificationLogs: this.faceVerificationLogs
+        faceVerificationLogs: this.faceVerificationLogs,
+        auditWaiversList: this.auditWaiversList,
+        tableSchemas: this.tableSchemaService.exportSchemas()
       };
       const ok = await this.firebaseDb.saveSchoolData(this.activeTenantId, payload);
       this.lastCloudSyncTimestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -16508,8 +16670,15 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       const cloudData = await this.firebaseDb.loadSchoolData(this.activeTenantId);
       if (cloudData) {
         if (cloudData.activeStudents && Array.isArray(cloudData.activeStudents) && cloudData.activeStudents.length > 0) {
-          const localOnly = this.activeStudents.filter(local => !cloudData.activeStudents.some((c: any) => c.id === local.id));
-          this.activeStudents = [...localOnly, ...cloudData.activeStudents];
+          const normalizedCloudStudents = cloudData.activeStudents.map((s: any) => ({
+            ...s,
+            name: String(s?.name || s?.fullName || 'Student').trim(),
+            guardian: String(s?.guardian || s?.guardianName || 'Guardian').trim(),
+            guardianPhone: String(s?.guardianPhone || s?.phone || '').trim() || '—',
+            attendance: String(s?.attendance || s?.attendanceRate || '96%').trim()
+          }));
+          const localOnly = this.activeStudents.filter(local => !normalizedCloudStudents.some((c: any) => c.id === local.id));
+          this.activeStudents = [...localOnly, ...normalizedCloudStudents];
         }
         if (cloudData.studentFeeDefaulters && Array.isArray(cloudData.studentFeeDefaulters)) {
           this.studentFeeDefaulters = cloudData.studentFeeDefaulters;
@@ -16552,8 +16721,8 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
         if (Array.isArray(cloudData.schoolFaceProfiles) && cloudData.schoolFaceProfiles.length > 0) {
           const localOnlyFp = this.schoolFaceProfiles.filter(fp => !cloudData.schoolFaceProfiles.some((c: any) => c.id === fp.id));
           this.schoolFaceProfiles = [...localOnlyFp, ...cloudData.schoolFaceProfiles];
-          this.syncBiometricFlagsFromFaceProfiles();
         }
+        this.syncBiometricFlagsFromFaceProfiles();
         if (cloudData.ownerAttendancePolicy && typeof cloudData.ownerAttendancePolicy === 'object') {
           const def = createDefaultOwnerAttendancePolicy();
           this.ownerAttendancePolicy = {
@@ -16568,11 +16737,439 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
         if (Array.isArray(cloudData.faceVerificationLogs) && cloudData.faceVerificationLogs.length > 0) {
           this.faceVerificationLogs = cloudData.faceVerificationLogs;
         }
+        if (Array.isArray(cloudData.auditWaiversList) && cloudData.auditWaiversList.length > 0) {
+          this.auditWaiversList = cloudData.auditWaiversList;
+        }
+        if (cloudData.tableSchemas && typeof cloudData.tableSchemas === 'object') {
+          const currentLocal = this.tableSchemaService.exportSchemas();
+          this.tableSchemaService.importSchemas({ ...cloudData.tableSchemas, ...currentLocal });
+        }
         this.lastCloudSyncTimestamp = 'Synced Just now';
         this.cdr.detectChanges();
       }
     } catch (e) {
       console.warn('Failed to load from cloud:', e);
+    }
+  }
+
+  // =========================================================================
+  // UNIVERSAL SCHOOL BUSINESS OWNER TABLE ROW CRUD ENGINE
+  // =========================================================================
+  ownerCrudModal: {
+    open: boolean;
+    entity: string;
+    mode: 'add' | 'edit';
+    title: string;
+    fields: Array<{ key: string; label: string; type: 'text' | 'number' | 'date' | 'select'; options?: string[] }>;
+    draft: Record<string, any>;
+    targetRef: any;
+  } = {
+    open: false,
+    entity: '',
+    mode: 'edit',
+    title: '',
+    fields: [],
+    draft: {},
+    targetRef: null
+  };
+
+  private readonly ownerCrudEntitySpecs: Record<string, {
+    title: string;
+    fields: Array<{ key: string; label: string; type: 'text' | 'number' | 'date' | 'select'; options?: string[] }>;
+  }> = {
+    medical: {
+      title: 'Student Medical & Health Record',
+      fields: [
+        { key: 'rollNo', label: 'Roll #', type: 'text' },
+        { key: 'studentName', label: 'Student Name', type: 'text' },
+        { key: 'grade', label: 'Class / Grade', type: 'text' },
+        { key: 'bloodGroup', label: 'Blood Group', type: 'select', options: ['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'] },
+        { key: 'vaccinationStatus', label: 'Vaccination Status', type: 'select', options: ['Fully Vaccinated', 'Partial', 'Pending'] },
+        { key: 'allergies', label: 'Allergies', type: 'text' },
+        { key: 'chronicConditions', label: 'Chronic Conditions', type: 'text' },
+        { key: 'emergencyContact', label: 'Emergency Contact', type: 'text' },
+        { key: 'doctorName', label: 'Physician Name', type: 'text' }
+      ]
+    },
+    discipline: {
+      title: 'Disciplinary & Conduct Incident',
+      fields: [
+        { key: 'rollNo', label: 'Roll #', type: 'text' },
+        { key: 'studentName', label: 'Student Name', type: 'text' },
+        { key: 'grade', label: 'Grade / Class', type: 'text' },
+        { key: 'category', label: 'Category', type: 'text' },
+        { key: 'severity', label: 'Severity', type: 'select', options: ['Low', 'Medium', 'High', 'Severe'] },
+        { key: 'description', label: 'Violation Description', type: 'text' },
+        { key: 'actionTaken', label: 'Action Taken', type: 'text' },
+        { key: 'fineAmount', label: 'Fine Amount (PKR)', type: 'number' },
+        { key: 'status', label: 'Status', type: 'select', options: ['Open', 'Under Review', 'Resolved'] }
+      ]
+    },
+    payroll: {
+      title: 'Staff Payroll & Salary Voucher',
+      fields: [
+        { key: 'staffName', label: 'Staff / Faculty Name', type: 'text' },
+        { key: 'role', label: 'Designation / Role', type: 'text' },
+        { key: 'month', label: 'Payroll Month', type: 'text' },
+        { key: 'baseSalary', label: 'Base Salary (PKR)', type: 'number' },
+        { key: 'allowances', label: 'Allowances (PKR)', type: 'number' },
+        { key: 'deductions', label: 'Deductions (PKR)', type: 'number' },
+        { key: 'status', label: 'Disbursement Status', type: 'select', options: ['Paid', 'Pending'] }
+      ]
+    },
+    staff_leave: {
+      title: 'Staff Leave Application',
+      fields: [
+        { key: 'staffName', label: 'Staff Member', type: 'text' },
+        { key: 'leaveType', label: 'Leave Type', type: 'select', options: ['Sick Leave', 'Casual Leave', 'Annual Leave', 'Maternity/Emergency'] },
+        { key: 'fromDate', label: 'From Date', type: 'text' },
+        { key: 'toDate', label: 'To Date', type: 'text' },
+        { key: 'totalDays', label: 'Total Days', type: 'number' },
+        { key: 'reason', label: 'Reason', type: 'text' },
+        { key: 'status', label: 'Approval Status', type: 'select', options: ['Approved', 'Pending', 'Rejected'] }
+      ]
+    },
+    finance: {
+      title: 'Finance Ledger / Payment Entry',
+      fields: [
+        { key: 'challanNo', label: 'Ref / Voucher #', type: 'text' },
+        { key: 'title', label: 'Particulars / Description', type: 'text' },
+        { key: 'studentName', label: 'Student / Party Name', type: 'text' },
+        { key: 'grade', label: 'Class / Section', type: 'text' },
+        { key: 'category', label: 'Account Head / Gateway', type: 'text' },
+        { key: 'paymentMethod', label: 'Payment Method', type: 'text' },
+        { key: 'type', label: 'Entry Type', type: 'select', options: ['Income', 'Expense'] },
+        { key: 'amount', label: 'Amount (PKR)', type: 'number' },
+        { key: 'date', label: 'Date', type: 'text' },
+        { key: 'status', label: 'Status', type: 'select', options: ['Verified', 'Pending'] }
+      ]
+    },
+    invoice: {
+      title: 'Master Invoice Record',
+      fields: [
+        { key: 'invoiceNo', label: 'Invoice #', type: 'text' },
+        { key: 'type', label: 'Invoice Type', type: 'select', options: ['Student Fee', 'Staff Payroll', 'Vendor Expense', 'Transcript/Certificate', 'Custom Billing'] },
+        { key: 'recipientName', label: 'Recipient Name', type: 'text' },
+        { key: 'title', label: 'Invoice Title', type: 'text' },
+        { key: 'issueDate', label: 'Issue Date', type: 'text' },
+        { key: 'dueDate', label: 'Due Date', type: 'text' },
+        { key: 'amount', label: 'Gross Amount (PKR)', type: 'number' },
+        { key: 'discount', label: 'Discount (PKR)', type: 'number' },
+        { key: 'status', label: 'Status', type: 'select', options: ['Paid', 'Pending', 'Overdue', 'Partial', 'Cancelled'] }
+      ]
+    },
+    circulation: {
+      title: 'Library Book Circulation Record',
+      fields: [
+        { key: 'issueNo', label: 'Issue Ref #', type: 'text' },
+        { key: 'bookTitle', label: 'Book Title', type: 'text' },
+        { key: 'isbn', label: 'ISBN', type: 'text' },
+        { key: 'borrowerName', label: 'Borrower Name', type: 'text' },
+        { key: 'borrowerId', label: 'Borrower ID / Roll #', type: 'text' },
+        { key: 'gradeOrDept', label: 'Class / Department', type: 'text' },
+        { key: 'dueDate', label: 'Due Date', type: 'text' },
+        { key: 'fineAmount', label: 'Fine (PKR)', type: 'number' },
+        { key: 'status', label: 'Status', type: 'select', options: ['Issued', 'Overdue', 'Returned'] }
+      ]
+    },
+    library_book: {
+      title: 'Library Catalog Title',
+      fields: [
+        { key: 'isbn', label: 'ISBN', type: 'text' },
+        { key: 'title', label: 'Book Title', type: 'text' },
+        { key: 'author', label: 'Author', type: 'text' },
+        { key: 'category', label: 'Subject / Category', type: 'text' },
+        { key: 'genre', label: 'Genre', type: 'text' },
+        { key: 'academicGradeLevel', label: 'Grade Level', type: 'text' },
+        { key: 'rackNo', label: 'Rack Location', type: 'text' },
+        { key: 'totalCopies', label: 'Total Copies', type: 'number' },
+        { key: 'availableCopies', label: 'Available Copies', type: 'number' }
+      ]
+    },
+    exam: {
+      title: 'Examination Schedule',
+      fields: [
+        { key: 'examName', label: 'Examination Title', type: 'text' },
+        { key: 'class', label: 'Assigned Class / Grade', type: 'text' },
+        { key: 'startDate', label: 'Start Date', type: 'text' },
+        { key: 'averageGPA', label: 'Average GPA', type: 'text' },
+        { key: 'status', label: 'Status', type: 'select', options: ['Scheduled', 'Ongoing', 'Completed'] }
+      ]
+    },
+    subject: {
+      title: 'Academic Subject Record',
+      fields: [
+        { key: 'code', label: 'Subject Code', type: 'text' },
+        { key: 'title', label: 'Subject Name', type: 'text' },
+        { key: 'grade', label: 'Assigned Class', type: 'text' },
+        { key: 'creditHours', label: 'Weekly Periods', type: 'number' },
+        { key: 'teacher', label: 'Lead Teacher', type: 'text' },
+        { key: 'passMarks', label: 'Passing Marks', type: 'number' },
+        { key: 'totalMarks', label: 'Total Marks', type: 'number' }
+      ]
+    },
+    timetable: {
+      title: 'Class Timetable Slot',
+      fields: [
+        { key: 'period', label: 'Period', type: 'text' },
+        { key: 'time', label: 'Time Slot', type: 'text' },
+        { key: 'grade', label: 'Class', type: 'text' },
+        { key: 'subject', label: 'Subject', type: 'text' },
+        { key: 'teacher', label: 'Faculty Teacher', type: 'text' },
+        { key: 'room', label: 'Classroom / Lab', type: 'text' }
+      ]
+    },
+    lab_schedule: {
+      title: 'Laboratory Practical Slot',
+      fields: [
+        { key: 'day', label: 'Day', type: 'text' },
+        { key: 'period', label: 'Period', type: 'text' },
+        { key: 'lab', label: 'Laboratory', type: 'text' },
+        { key: 'grade', label: 'Class', type: 'text' },
+        { key: 'subject', label: 'Subject', type: 'text' },
+        { key: 'experimentTopic', label: 'Practical Experiment Topic', type: 'text' },
+        { key: 'teacher', label: 'Supervising Teacher', type: 'text' }
+      ]
+    },
+    waiver: {
+      title: 'Fee Waiver & Concession Grant',
+      fields: [
+        { key: 'studentName', label: 'Student Name & Roll #', type: 'text' },
+        { key: 'grade', label: 'Class / Section', type: 'text' },
+        { key: 'category', label: 'Waiver Category', type: 'select', options: ['Hardship Waiver', 'Sibling Concession', 'Academic Merit', 'Staff Child Concession'] },
+        { key: 'originalFee', label: 'Original Fee (PKR)', type: 'number' },
+        { key: 'concessionLabel', label: 'Concession % / Net Amount', type: 'text' },
+        { key: 'reason', label: 'Justification / Reason', type: 'text' },
+        { key: 'authorizingBody', label: 'Authorizing Body', type: 'text' },
+        { key: 'approvalDate', label: 'Approval Date', type: 'text' }
+      ]
+    },
+    compliance: {
+      title: 'Regulatory Compliance Audit Item',
+      fields: [
+        { key: 'area', label: 'Audit Area', type: 'text' },
+        { key: 'title', label: 'Compliance Title', type: 'text' },
+        { key: 'standard', label: 'Regulatory Standard', type: 'text' },
+        { key: 'status', label: 'Status', type: 'select', options: ['Compliant & Verified', 'Action Required', 'Audit Warning'] },
+        { key: 'responsiblePerson', label: 'Responsible Officer', type: 'text' },
+        { key: 'lastCheckedDate', label: 'Last Checked', type: 'text' },
+        { key: 'nextRenewalDate', label: 'Next Renewal', type: 'text' },
+        { key: 'notes', label: 'Audit Notes', type: 'text' }
+      ]
+    },
+    slc: {
+      title: 'Student Leaving Certificate (SLC)',
+      fields: [
+        { key: 'certificateNo', label: 'Certificate No.', type: 'text' },
+        { key: 'studentName', label: 'Student Name', type: 'text' },
+        { key: 'fatherName', label: 'Father Name', type: 'text' },
+        { key: 'grade', label: 'Class / Grade', type: 'text' },
+        { key: 'leavingDate', label: 'Leaving Date', type: 'text' },
+        { key: 'reasonForLeaving', label: 'Reason for Leaving', type: 'text' },
+        { key: 'conductRating', label: 'Conduct Rating', type: 'select', options: ['Exemplary & Outstanding', 'Good & Satisfactory', 'Average'] },
+        { key: 'status', label: 'Status', type: 'select', options: ['Issued & Sealed', 'Pending Dues Clearance', 'Archived'] }
+      ]
+    }
+  };
+
+  openOwnerRecordCrudModal(entity: string, mode: 'add' | 'edit', item?: any): void {
+    if (!this.isOwnerPortal) {
+      this.showToast('Access Restricted: Only School Business Owner can create or edit records.', 'warning');
+      return;
+    }
+    const spec = this.ownerCrudEntitySpecs[entity];
+    if (!spec) return;
+    const draft: Record<string, any> = {};
+    for (const f of spec.fields) {
+      draft[f.key] = item && item[f.key] !== undefined ? item[f.key] : (f.type === 'number' ? 0 : (f.options?.[0] ?? ''));
+    }
+    this.ownerCrudModal = {
+      open: true,
+      entity,
+      mode,
+      title: `${mode === 'add' ? 'Add' : 'Edit'} ${spec.title}`,
+      fields: spec.fields,
+      draft,
+      targetRef: item || null
+    };
+    this.cdr.detectChanges();
+  }
+
+  updateOwnerCrudField(key: string, value: any): void {
+    this.ownerCrudModal.draft = {
+      ...this.ownerCrudModal.draft,
+      [key]: value
+    };
+  }
+
+  closeOwnerRecordCrudModal(): void {
+    this.ownerCrudModal = { ...this.ownerCrudModal, open: false, targetRef: null };
+    this.cdr.detectChanges();
+  }
+
+  saveOwnerRecordCrudModal(): void {
+    if (!this.isOwnerPortal) return;
+    const { entity, mode, draft, targetRef } = this.ownerCrudModal;
+    const coerced: Record<string, any> = { ...draft };
+    for (const f of this.ownerCrudModal.fields) {
+      if (f.type === 'number') coerced[f.key] = Number(coerced[f.key]) || 0;
+    }
+
+    if (mode === 'edit' && targetRef) {
+      Object.assign(targetRef, coerced);
+      if (entity === 'payroll') {
+        targetRef.netPayable = (Number(targetRef.baseSalary) || 0) + (Number(targetRef.allowances) || 0) - (Number(targetRef.deductions) || 0);
+      }
+      if (entity === 'invoice') {
+        targetRef.netPayable = Math.max(0, (Number(targetRef.amount) || 0) - (Number(targetRef.discount) || 0) + (Number(targetRef.tax) || 0));
+        this.saveMasterInvoicesToStorage();
+      }
+      this.saveStateToStorage();
+      this.showToast(`${this.ownerCrudEntitySpecs[entity]?.title || 'Record'} updated.`, 'success');
+      this.closeOwnerRecordCrudModal();
+      return;
+    }
+
+    // Mode === 'add'
+    const uid = `${entity.slice(0, 3).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`;
+    if (entity === 'medical') {
+      this.studentMedicalRecords.unshift({ id: uid, studentId: uid, lastCheckupDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }), medicalAlert: false, ...coerced } as any);
+    } else if (entity === 'discipline') {
+      this.disciplinaryIncidents.unshift({ id: uid, studentId: uid, date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }), parentNotified: true, ...coerced } as any);
+    } else if (entity === 'payroll') {
+      const netPayable = (Number(coerced['baseSalary']) || 0) + (Number(coerced['allowances']) || 0) - (Number(coerced['deductions']) || 0);
+      this.staffPayrolls.unshift({ id: uid, staffId: uid, paymentMethod: 'Bank Transfer', disbursedDate: 'Today', netPayable, ...coerced } as any);
+    } else if (entity === 'staff_leave') {
+      this.staffLeaveRequests.unshift({ id: uid, staffId: uid, appliedDate: 'Today', ...coerced } as any);
+    } else if (entity === 'finance') {
+      this.finances.unshift({ id: uid, ...coerced } as any);
+    } else if (entity === 'invoice') {
+      const netPayable = Math.max(0, (Number(coerced['amount']) || 0) - (Number(coerced['discount']) || 0));
+      this.masterInvoices.unshift({ id: uid, recipientRole: 'Student', tax: 0, netPayable, lineItems: [], ...coerced } as any);
+      this.saveMasterInvoicesToStorage();
+    } else if (entity === 'circulation') {
+      this.libraryCirculations.unshift({ id: uid, issueDate: new Date().toISOString().slice(0, 10), overdueDays: 0, ...coerced } as any);
+    } else if (entity === 'library_book') {
+      this.libraryBooks.unshift({ id: uid, tags: ['Catalog'], ...coerced } as any);
+    } else if (entity === 'exam') {
+      this.examsList.unshift({ id: uid, ...coerced } as any);
+    } else if (entity === 'subject') {
+      this.schoolSubjectsList.unshift({ id: uid, type: 'Core', ...coerced } as any);
+    } else if (entity === 'timetable') {
+      this.timetables.unshift({ id: uid, ...coerced } as any);
+    } else if (entity === 'lab_schedule') {
+      this.labSchedules.unshift({ id: uid, ...coerced } as any);
+    } else if (entity === 'waiver') {
+      this.auditWaiversList.unshift({ id: uid, ...coerced } as any);
+    } else if (entity === 'compliance') {
+      this.complianceAuditList.unshift({ id: uid, ...coerced } as any);
+    } else if (entity === 'slc') {
+      this.studentLeavingCertificates.unshift({ id: uid, securityHash: 'sha256:sealed', studentId: uid, rollNo: uid, admissionDate: '2023-08-15', academicAchievement: 'Good Standing', accountsClearance: true, libraryClearance: true, labClearance: true, sportsClearance: true, issuedBy: 'School Business Owner', ...coerced } as any);
+    }
+    this.saveStateToStorage();
+    this.showToast(`Added new ${this.ownerCrudEntitySpecs[entity]?.title || 'Record'}.`, 'success');
+    this.closeOwnerRecordCrudModal();
+  }
+
+  deleteOwnerRecord(entity: string, item: any): void {
+    if (!this.isOwnerPortal || !item) {
+      this.showToast('Access Restricted: Only School Business Owner can delete records.', 'warning');
+      return;
+    }
+    if (entity === 'invoice') {
+      this.masterInvoices = this.masterInvoices.filter(x => x.id !== item.id);
+      this.saveMasterInvoicesToStorage();
+    } else if (entity === 'circulation') {
+      this.libraryCirculations = this.libraryCirculations.filter(x => x.id !== item.id);
+    } else if (entity === 'lab_schedule') {
+      this.labSchedules = this.labSchedules.filter(x => x.id !== item.id);
+    } else if (entity === 'waiver') {
+      this.auditWaiversList = this.auditWaiversList.filter(x => x.id !== item.id);
+    } else if (entity === 'compliance') {
+      this.complianceAuditList = this.complianceAuditList.filter(x => x.id !== item.id);
+    } else if (entity === 'slc') {
+      this.studentLeavingCertificates = this.studentLeavingCertificates.filter(x => x.id !== item.id);
+    }
+    this.saveStateToStorage();
+    this.showToast('Record deleted by School Business Owner.', 'info');
+    this.cdr.detectChanges();
+  }
+
+  handleTableAddRow(tableId: string): void {
+    if (!this.isOwnerPortal) return;
+    switch (tableId) {
+      case 'owner_students_roster':
+      case 'owner_overview_students':
+      case 'owner_stage_wise':
+        this.openAddStudentModal();
+        break;
+      case 'owner_overview_teachers':
+      case 'owner_teachers_faculty':
+        this.openAddTeacherModal();
+        break;
+      case 'owner_portal_users':
+        this.openAddPortalUserModal();
+        break;
+      case 'owner_admissions':
+        this.openAddAdmissionModal();
+        break;
+      case 'owner_expenses':
+        this.openAddExpenseModal();
+        break;
+      case 'owner_feed_table':
+        this.openFeedModal();
+        break;
+      case 'owner_medical':
+        this.openAddMedicalModal();
+        break;
+      case 'owner_discipline':
+        this.openAddDisciplinaryModal();
+        break;
+      case 'owner_payroll':
+        this.openAddStaffPayrollModal();
+        break;
+      case 'owner_staff_leaves':
+        this.openApplyStaffLeaveModal();
+        break;
+      case 'owner_finance_ledger':
+      case 'owner_payment_gateway':
+        this.openAddFinanceModal();
+        break;
+      case 'owner_invoices':
+        this.openCreateInvoiceModal();
+        break;
+      case 'owner_library_circulation':
+        this.openOwnerRecordCrudModal('circulation', 'add');
+        break;
+      case 'owner_library_catalog':
+        this.openAddLibraryModal();
+        break;
+      case 'owner_exams':
+        this.openAddExamModal();
+        break;
+      case 'owner_subjects':
+        this.openAddSubjectModal();
+        break;
+      case 'owner_timetable':
+        this.openAddTimetableModal();
+        break;
+      case 'owner_labs_schedule':
+        this.openBookLabModal();
+        break;
+      case 'owner_audit_waivers':
+        this.openOwnerRecordCrudModal('waiver', 'add');
+        break;
+      case 'owner_audit_slc':
+        this.openCreateSLCModal();
+        break;
+      case 'owner_audit_compliance':
+        this.openOwnerRecordCrudModal('compliance', 'add');
+        break;
+      case 'owner_audit_reconciliation':
+        this.openAddReconciliationModal();
+        break;
+      default:
+        break;
     }
   }
 

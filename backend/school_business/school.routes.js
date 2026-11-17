@@ -1914,6 +1914,58 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     res.json({ ok: true, tenantId: tid, policy: merged });
   });
 
+  const isMaskedField = (v) => {
+    const s = String(v || '').trim();
+    return !s || s === '[ENCRYPTED_PROTECTED]' || s === '[LOCKED_VIP_VAULT]';
+  };
+
+  const buildMemberNameResolver = async (tid) => {
+    const map = new Map();
+    const put = (cat, id, name) => {
+      const clean = String(name || '').trim();
+      if (id && !isMaskedField(clean)) map.set(`${cat}:${id}`, clean);
+    };
+    if (sqliteDb) {
+      try {
+        for (const r of sqliteDb.prepare('SELECT id, full_name FROM local_school_students WHERE tenant_id = ?').all(tid)) {
+          put('student', r.id, dec(tid, r.full_name));
+        }
+        for (const r of sqliteDb.prepare('SELECT id, name FROM local_school_teachers WHERE tenant_id = ?').all(tid)) {
+          put('teacher', r.id, dec(tid, r.name));
+        }
+        for (const r of sqliteDb.prepare('SELECT id, name FROM local_school_staff WHERE tenant_id = ?').all(tid)) {
+          put('staff', r.id, dec(tid, r.name));
+        }
+        for (const r of sqliteDb.prepare('SELECT id, name FROM local_school_principals WHERE tenant_id = ?').all(tid)) {
+          put('principal', r.id, dec(tid, r.name));
+        }
+      } catch {}
+    }
+    if (getCollectionDocs) {
+      try {
+        const cloudStu = await getCollectionDocs('school_students', defaultStudentsSeed);
+        for (const s of cloudStu || []) {
+          if (!s.tenant_id || s.tenant_id === tid) {
+            put('student', s.id, dec(s.tenant_id || tid, s.fullName || s.name || ''));
+          }
+        }
+      } catch {}
+      try {
+        const cloudTch = await getCollectionDocs('school_teachers', defaultTeachersSeed);
+        for (const t of cloudTch || []) {
+          if (!t.tenant_id || t.tenant_id === tid) {
+            put('teacher', t.id, dec(t.tenant_id || tid, t.name || ''));
+          }
+        }
+      } catch {}
+    }
+    for (const s of defaultStudentsSeed || []) put('student', s.id, s.fullName || s.name);
+    for (const t of defaultTeachersSeed || []) put('teacher', t.id, t.name);
+    for (const st of SCHOOL_STAFF || []) put('staff', st.id, st.name);
+    for (const pr of SCHOOL_PRINCIPALS || []) put('principal', pr.id, pr.name);
+    return map;
+  };
+
   router.get('/attendance/face-profiles', async (req, res) => {
     const tid = resolveTenantId(req);
     const category = String(req.query?.category || '').trim().toLowerCase();
@@ -1953,6 +2005,14 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
             isSynced: true
           }));
       } catch {}
+    }
+    if (profiles.some((p) => isMaskedField(p.memberName))) {
+      const resolver = await buildMemberNameResolver(tid);
+      profiles = profiles.map((p) => {
+        if (!isMaskedField(p.memberName)) return p;
+        const resolved = resolver.get(`${p.memberCategory}:${p.memberId}`);
+        return { ...p, memberName: resolved || p.memberCode || p.memberId || 'Campus Member' };
+      });
     }
     res.json({ ok: true, tenantId: tid, profiles });
   });
@@ -2095,7 +2155,7 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     return { scheduledStartTime: scheduledStartStr || '08:00', lateMinutes: diff, lateByLabel: `+${formatDelayDuration(diff)} late` };
   };
 
-  router.get('/attendance', (req, res) => {
+  router.get('/attendance', async (req, res) => {
     const tid = resolveTenantId(req);
     const categoryFilter = String(req.query?.category || '').trim().toLowerCase();
     const policy = loadTenantAttendancePolicy(tid);
@@ -2143,6 +2203,27 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
           };
         });
       } catch {}
+    }
+    if (list.length === 0 && getCollectionDocs) {
+      try {
+        const cloudAtt = await getCollectionDocs('school_attendance', []);
+        list = (cloudAtt || [])
+          .filter((r) => (!r.tenant_id || r.tenant_id === tid) && (!categoryFilter || String(r.memberCategory || 'student').toLowerCase() === categoryFilter))
+          .map((r) => ({
+            ...r,
+            studentName: dec(r.tenant_id || tid, r.studentName || ''),
+            memberCategory: r.memberCategory || 'student',
+            isSynced: true
+          }));
+      } catch {}
+    }
+    if (list.some((r) => isMaskedField(r.studentName))) {
+      const resolver = await buildMemberNameResolver(tid);
+      list = list.map((r) => {
+        if (!isMaskedField(r.studentName)) return r;
+        const resolved = resolver.get(`${r.memberCategory || 'student'}:${r.studentId}`);
+        return { ...r, studentName: resolved || r.rollNo || r.studentId || 'Member' };
+      });
     }
     res.json({ ok: true, tenantId: tid, attendance: list });
   });

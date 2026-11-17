@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Input, Output, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LucideAngularModule, Copy, MoreVertical, Key, CheckCircle2, Clock, XCircle, Search, Plus, Download, Check, X, Shield } from 'lucide-angular';
+import { PaginationBarComponent } from '../../components/pagination-bar/pagination-bar.component';
 
 interface License {
   id: string;
@@ -17,7 +18,7 @@ interface License {
 @Component({
   selector: 'app-dashboard-license',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule],
+  imports: [CommonModule, LucideAngularModule, PaginationBarComponent],
   templateUrl: './license.component.html',
   styles: [':host { display: block; width: 100%; }'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -47,6 +48,20 @@ export class DashboardLicenseComponent implements OnInit {
   ];
 
   filteredLicenses: License[] = [];
+  licensesPage = 1;
+  readonly licensesPageSize = 5;
+
+  get paginatedLicenses(): License[] {
+    const totalPages = Math.max(1, Math.ceil(this.filteredLicenses.length / this.licensesPageSize));
+    const safePage = Math.min(totalPages, Math.max(1, this.licensesPage));
+    const start = (safePage - 1) * this.licensesPageSize;
+    return this.filteredLicenses.slice(start, start + this.licensesPageSize);
+  }
+
+  setLicensesPage(page: number): void {
+    this.licensesPage = page;
+    this.cdr.markForCheck();
+  }
 
   constructor(private cdr: ChangeDetectorRef) {}
 
@@ -89,6 +104,7 @@ export class DashboardLicenseComponent implements OnInit {
     };
 
     this.licenses.unshift(newLic);
+    this.licensesPage = 1;
     this.updateFilteredLicenses();
     this.generatedKey = key;
     this.generatedNotice = `License ${nextId} provisioned for ${newLic.client}.`;
@@ -142,11 +158,13 @@ Do not distribute this private license key file.`;
 
   setSearch(v: string): void {
     this.searchQuery = v;
+    this.licensesPage = 1;
     this.updateFilteredLicenses();
   }
 
   setFilter(v: string): void {
     this.filterStatus = v;
+    this.licensesPage = 1;
     this.updateFilteredLicenses();
   }
 

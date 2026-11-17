@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LucideAngularModule, Plus, Network, Send, CheckCircle2, XCircle, RefreshCcw, Copy, ExternalLink, X, Clock, ShieldCheck, AlertTriangle } from 'lucide-angular';
+import { PaginationBarComponent } from '../../components/pagination-bar/pagination-bar.component';
 
 export interface WebhookEndpoint {
   id: string;
@@ -30,7 +31,7 @@ export interface WebhookDeliveryLog {
 @Component({
   selector: 'app-dashboard-webhooks',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule],
+  imports: [CommonModule, LucideAngularModule, PaginationBarComponent],
   templateUrl: './webhooks.component.html'
 })
 export class WebhooksComponent {
@@ -124,6 +125,16 @@ export class WebhooksComponent {
       response: '{\n  "status": "received",\n  "zap_id": "z_11209"\n}'
     }
   ];
+
+  deliveriesPage = 1;
+  readonly deliveriesPageSize = 5;
+
+  get paginatedDeliveryLogs(): WebhookDeliveryLog[] {
+    const totalPages = Math.max(1, Math.ceil(this.deliveryLogs.length / this.deliveriesPageSize));
+    const safePage = Math.min(totalPages, Math.max(1, this.deliveriesPage));
+    const start = (safePage - 1) * this.deliveriesPageSize;
+    return this.deliveryLogs.slice(start, start + this.deliveriesPageSize);
+  }
 
   // Modals state
   isCreateModalOpen = false;
@@ -249,6 +260,7 @@ export class WebhooksComponent {
           ? '502 Bad Gateway: Connection refused on port 443'
           : '{\n  "received": true,\n  "status": "ack"\n}'
       });
+      this.deliveriesPage = 1;
     }, 600);
   }
 

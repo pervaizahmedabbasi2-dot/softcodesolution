@@ -1598,7 +1598,7 @@
               <p class="text-xs text-slate-500 mt-0.5">Control pricing weights, sector classification, and dedicated console access across all {{ businessCatalog.length }} active business types.</p>
             </div>
             <div class="flex items-center gap-2">
-              <input type="text" [(ngModel)]="businessSettingsSearch" placeholder="Search businesses..." class="px-3 py-2 text-xs rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:outline-none w-52 bg-slate-50">
+              <input type="text" [(ngModel)]="businessSettingsSearch" (ngModelChange)="businessCatalogPage = 1" placeholder="Search businesses..." class="px-3 py-2 text-xs rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:outline-none w-52 bg-slate-50">
               <button (click)="navigateTo('business-suites')" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer">
                 Open Suites Console &rarr;
               </button>
@@ -1608,7 +1608,7 @@
           <!-- Sector Filter Bar -->
           <div class="flex items-center gap-2 overflow-x-auto pb-1">
             <button *ngFor="let sec of ['ALL', 'COMMERCE', 'HEALTHCARE', 'EDUCATION', 'HOSPITALITY', 'INDUSTRIAL', 'PROFESSIONAL', 'SERVICES']"
-                    (click)="businessSettingsSectorFilter = sec"
+                    (click)="businessSettingsSectorFilter = sec; businessCatalogPage = 1"
                     class="px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all cursor-pointer"
                     [class.bg-indigo-600]="businessSettingsSectorFilter === sec"
                     [class.text-white]="businessSettingsSectorFilter === sec"
@@ -1620,10 +1620,10 @@
 
           <!-- 35 Businesses Catalog: Mobile Cards (Mobile) & Desktop Table (Desktop) -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 md:hidden">
-            <div *ngFor="let b of filteredBusinessCatalog; let idx = index" class="apple-card rounded-2xl border border-slate-200/90 p-4 bg-white shadow-2xs space-y-3">
+            <div *ngFor="let b of paginatedBusinessCatalog; let idx = index" class="apple-card rounded-2xl border border-slate-200/90 p-4 bg-white shadow-2xs space-y-3">
               <div class="flex items-center justify-between gap-2">
                 <div class="flex items-center gap-2 min-w-0">
-                  <span class="font-mono text-[11px] font-bold text-slate-400">#{{ idx + 1 }}</span>
+                  <span class="font-mono text-[11px] font-bold text-slate-400">#{{ (businessCatalogPage - 1) * businessCatalogPageSize + idx + 1 }}</span>
                   <h3 class="font-black text-slate-900 text-sm truncate">{{ b.name }}</h3>
                 </div>
                 <span class="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-slate-100 text-slate-700 shrink-0">
@@ -1671,8 +1671,8 @@
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100 font-medium">
-                <tr *ngFor="let b of filteredBusinessCatalog; let idx = index" class="hover:bg-slate-50/80 transition-colors">
-                  <td class="px-4 py-3 font-mono text-slate-400">#{{ idx + 1 }}</td>
+                <tr *ngFor="let b of paginatedBusinessCatalog; let idx = index" class="hover:bg-slate-50/80 transition-colors">
+                  <td class="px-4 py-3 font-mono text-slate-400">#{{ (businessCatalogPage - 1) * businessCatalogPageSize + idx + 1 }}</td>
                   <td class="px-4 py-3">
                     <p class="font-bold text-slate-900">{{ b.name }}</p>
                     <p class="font-mono text-[10px] text-slate-400">{{ b.id }}</p>
@@ -1708,6 +1708,15 @@
               </tbody>
             </table>
           </div>
+          <app-pagination-bar
+            *ngIf="filteredBusinessCatalog.length > 0"
+            [page]="businessCatalogPage"
+            [pageSize]="businessCatalogPageSize"
+            [totalItems]="filteredBusinessCatalog.length"
+            itemLabel="businesses"
+            containerClass="pt-2"
+            (pageChange)="businessCatalogPage = $event">
+          </app-pagination-bar>
         </div>
 
         <!-- Floating Green Confirmation Toast -->
@@ -1788,7 +1797,7 @@
 
           <!-- Mobile Records Cards (Mobile) -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 md:hidden">
-            <div *ngFor="let item of getGenericRecords(activeView)" class="apple-card rounded-2xl border border-slate-200/90 p-4 bg-white shadow-2xs space-y-3">
+            <div *ngFor="let item of getPaginatedGenericRecords(activeView)" class="apple-card rounded-2xl border border-slate-200/90 p-4 bg-white shadow-2xs space-y-3">
               <div class="flex items-center justify-between gap-2">
                 <span class="font-mono text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-lg border border-indigo-100/80">{{ item.id }}</span>
                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider"
@@ -1823,7 +1832,7 @@
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100 text-xs">
-                <tr *ngFor="let item of getGenericRecords(activeView)" class="hover:bg-slate-50/70 transition-colors">
+                <tr *ngFor="let item of getPaginatedGenericRecords(activeView)" class="hover:bg-slate-50/70 transition-colors">
                   <td class="p-4 font-mono font-bold text-slate-500">{{ item.id }}</td>
                   <td class="p-4 font-bold text-slate-900">{{ item.name }}</td>
                   <td class="p-4 text-slate-600">{{ item.category }}</td>
@@ -1843,6 +1852,14 @@
               </tbody>
             </table>
           </div>
+          <app-pagination-bar
+            *ngIf="getGenericRecords(activeView).length > 0"
+            [page]="genericRecordsPage"
+            [pageSize]="genericRecordsPageSize"
+            [totalItems]="getGenericRecords(activeView).length"
+            itemLabel="records"
+            (pageChange)="genericRecordsPage = $event">
+          </app-pagination-bar>
         </div>
 
         <!-- Create Record Modal -->
@@ -2455,7 +2472,7 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
-              <tr *ngFor="let m of clientTeamMembers" class="hover:bg-slate-50/80 transition-colors">
+              <tr *ngFor="let m of paginatedClientTeamMembers" class="hover:bg-slate-50/80 transition-colors">
                 <td class="py-3.5 px-3">
                   <p class="font-bold text-slate-900">{{ m.name }}</p>
                   <p class="text-[11px] text-slate-500 font-mono">{{ m.email }}</p>
@@ -2476,6 +2493,15 @@
             </tbody>
           </table>
         </div>
+        <app-pagination-bar
+          *ngIf="clientTeamMembers.length > 0"
+          [page]="clientTeamPage"
+          [pageSize]="clientTeamPageSize"
+          [totalItems]="clientTeamMembers.length"
+          itemLabel="team members"
+          containerClass="pt-3 border-t border-slate-100"
+          (pageChange)="clientTeamPage = $event">
+        </app-pagination-bar>
       </section>
 
       <!-- TAB 5: CUSTOM DOMAIN & SSL -->

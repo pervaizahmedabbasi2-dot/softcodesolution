@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LucideAngularModule, Search, Plus, Sparkles, CreditCard, ShieldCheck, Zap, X, Sliders, CheckCircle2, Clock } from 'lucide-angular';
+import { PaginationBarComponent } from '../../components/pagination-bar/pagination-bar.component';
 
 export interface FeatureFlag {
   id: string;
@@ -17,7 +18,7 @@ export interface FeatureFlag {
 @Component({
   selector: 'app-dashboard-feature-flags',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule],
+  imports: [CommonModule, LucideAngularModule, PaginationBarComponent],
   templateUrl: './feature-flags.component.html'
 })
 export class FeatureFlagsComponent {
@@ -35,6 +36,8 @@ export class FeatureFlagsComponent {
   };
 
   searchQuery = '';
+  flagsPage = 1;
+  readonly flagsPageSize = 5;
   isCreateModalOpen = false;
 
   newFlag = {
@@ -103,6 +106,19 @@ export class FeatureFlagsComponent {
     );
   }
 
+  get paginatedFlags(): FeatureFlag[] {
+    const list = this.filteredFlags;
+    const totalPages = Math.max(1, Math.ceil(list.length / this.flagsPageSize));
+    const safePage = Math.min(totalPages, Math.max(1, this.flagsPage));
+    const start = (safePage - 1) * this.flagsPageSize;
+    return list.slice(start, start + this.flagsPageSize);
+  }
+
+  setSearchQuery(value: string): void {
+    this.searchQuery = value;
+    this.flagsPage = 1;
+  }
+
   toggleFlag(flag: FeatureFlag) {
     flag.enabled = !flag.enabled;
     flag.updatedAt = 'Just now';
@@ -161,6 +177,7 @@ export class FeatureFlagsComponent {
       updatedAt: 'Just now'
     };
     this.flags.unshift(created);
+    this.flagsPage = 1;
     this.closeCreateModal();
   }
 }

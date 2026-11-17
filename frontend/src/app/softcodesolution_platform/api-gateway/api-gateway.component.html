@@ -107,7 +107,7 @@
         *ngIf="hasSearchResults"
         class="overflow-hidden rounded-[2rem] bg-white shadow-sm ring-1 ring-slate-200"><div class="overflow-x-auto"><table class="w-full text-left"><thead><tr class="border-b border-slate-200 bg-slate-50"><th class="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Method</th><th class="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Endpoint</th><th class="hidden px-5 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 lg:table-cell">Auth</th><th class="hidden px-5 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 md:table-cell">Rate</th><th class="hidden px-5 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 xl:table-cell">Latency</th><th class="hidden px-5 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 xl:table-cell">Calls</th><th class="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Status</th></tr></thead><tbody class="divide-y divide-slate-100">
         <tr
-          *ngFor="let ep of filteredEndpoints"
+          *ngFor="let ep of paginatedEndpoints"
           class="cursor-pointer transition hover:bg-slate-50 focus-within:bg-slate-50"
           tabindex="0"
           role="button"
@@ -115,7 +115,15 @@
           (keydown.enter)="selectEndpoint(ep)"
           (keydown.space)="selectEndpoint(ep)"
           [attr.aria-label]="'View details for ' + ep.method + ' ' + ep.path"><td class="px-5 py-4"><span class="inline-block rounded-lg px-2.5 py-1 text-[10px] font-black uppercase tracking-widest" [ngClass]="methodColor(ep.method)">{{ ep.method }}</span></td><td class="px-5 py-4"><p class="text-sm font-black text-slate-900 font-mono">{{ ep.path }}</p><p class="mt-1 text-xs font-medium text-slate-400">{{ ep.description }}</p></td><td class="hidden px-5 py-4 lg:table-cell"><span class="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-slate-500">{{ ep.auth }}</span></td><td class="hidden px-5 py-4 text-sm font-black text-slate-700 md:table-cell">{{ ep.rateLimit }}/min</td><td class="hidden px-5 py-4 text-sm font-black text-slate-700 xl:table-cell">{{ ep.avgLatency }}ms</td><td class="hidden px-5 py-4 text-sm font-black text-slate-700 xl:table-cell">{{ ep.callsToday }}</td><td class="px-5 py-4"><span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest" [class.bg-emerald-100]="ep.status === 'live'" [class.text-emerald-700]="ep.status === 'live'" [class.bg-amber-100]="ep.status === 'deprecated'" [class.text-amber-700]="ep.status === 'deprecated'" [class.bg-slate-100]="ep.status === 'disabled'" [class.text-slate-500]="ep.status === 'disabled'"><span class="h-1.5 w-1.5 rounded-full" [class.bg-emerald-500]="ep.status === 'live'" [class.animate-pulse]="ep.status === 'live'" [class.bg-amber-500]="ep.status === 'deprecated'" [class.bg-slate-400]="ep.status === 'disabled'"></span>{{ ep.status }}</span></td></tr>
-      </tbody></table></div></div>
+      </tbody></table></div>
+      <app-pagination-bar
+        [page]="endpointsPage"
+        [pageSize]="endpointsPageSize"
+        [totalItems]="filteredEndpoints.length"
+        itemLabel="endpoints"
+        (pageChange)="endpointsPage = $event">
+      </app-pagination-bar>
+      </div>
       <div class="rounded-[1.5rem] bg-slate-50 p-4 text-center ring-1 ring-slate-200"><p class="text-xs font-black uppercase tracking-widest text-slate-400">Total Calls Today: {{ totalCallsToday | number }}</p></div>
     </div>
     <div *ngIf="activeTab === 'keys'" class="space-y-4"><div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">

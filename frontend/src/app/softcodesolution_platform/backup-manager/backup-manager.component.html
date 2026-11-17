@@ -511,7 +511,7 @@
       </thead>
 
       <tbody>
-        <tr *ngFor="let backup of backups">
+        <tr *ngFor="let backup of paginatedBackups">
           <td>
             {{ backup.created_at ? (backup.created_at | date: 'medium') : '—' }}
           </td>
@@ -557,6 +557,16 @@
       </tbody>
     </table>
   </div>
+
+  <app-pagination-bar
+    *ngIf="!loading && backups.length > 0"
+    [page]="backupsPage"
+    [pageSize]="backupsPageSize"
+    [totalItems]="backups.length"
+    itemLabel="backups"
+    containerClass="pt-4"
+    (pageChange)="backupsPage = $event">
+  </app-pagination-bar>
 
   <div *ngIf="showRestoreConfirm && selectedBackup" class="restore-overlay">
     <div class="restore-dialog">

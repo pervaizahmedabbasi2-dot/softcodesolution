@@ -103,7 +103,7 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-100 text-xs font-medium">
-          <tr *ngFor="let log of intruderLogs" class="hover:bg-rose-50/30 transition-colors">
+          <tr *ngFor="let log of paginatedIntruderLogs" class="hover:bg-rose-50/30 transition-colors">
             <!-- Camera Snapshot Column -->
             <td class="p-3">
               <div class="relative w-12 h-12 rounded-xl bg-slate-900 border border-slate-300 overflow-hidden group cursor-pointer" (click)="viewIntruderDetails(log)">
@@ -172,6 +172,15 @@
         </tbody>
       </table>
     </div>
+    <app-pagination-bar
+      *ngIf="intruderLogs.length > 0"
+      [page]="intruderPage"
+      [pageSize]="intruderPageSize"
+      [totalItems]="intruderLogs.length"
+      itemLabel="logs"
+      containerClass="pt-4 border-t border-slate-100"
+      (pageChange)="setIntruderPage($event)">
+    </app-pagination-bar>
   </div>
 
   <!-- Intruder Evidence Detail Modal -->
