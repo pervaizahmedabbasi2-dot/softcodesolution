@@ -1001,17 +1001,27 @@
               </div>
 
               <!-- Pagination Controls for Students -->
-              <div class="flex items-center justify-between pt-2 text-xs font-bold text-slate-600">
-                <span>Showing {{ min(getFilteredPrincipalStudents().length, (principalStudentsPage - 1) * principalMasterPageSize + 1) }} - {{ min(getFilteredPrincipalStudents().length, principalStudentsPage * principalMasterPageSize) }} of {{ getFilteredPrincipalStudents().length }} Students</span>
-                <div class="flex items-center gap-1">
-                  <button (click)="principalStudentsPage = Math.max(1, principalStudentsPage - 1)" [disabled]="principalStudentsPage === 1"
-                    class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 cursor-pointer">
-                    ← Previous
+              <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 text-xs text-slate-600">
+                <span class="font-medium tabular-nums">Showing <span class="font-bold text-slate-900">{{ min(getFilteredPrincipalStudents().length, (principalStudentsPage - 1) * principalMasterPageSize + 1) }}</span> - <span class="font-bold text-slate-900">{{ min(getFilteredPrincipalStudents().length, principalStudentsPage * principalMasterPageSize) }}</span> of <span class="font-bold text-slate-900">{{ getFilteredPrincipalStudents().length }}</span> Students</span>
+                <div class="flex items-center gap-4 sm:gap-6 select-none">
+                  <button
+                    type="button"
+                    (click)="principalStudentsPage = Math.max(1, principalStudentsPage - 1)"
+                    [disabled]="principalStudentsPage === 1"
+                    aria-label="Previous page"
+                    class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                    <mat-icon>chevron_left</mat-icon>
                   </button>
-                  <span class="px-3 py-1.5 font-black text-slate-900 bg-slate-100 rounded-lg">Page {{ principalStudentsPage }}</span>
-                  <button (click)="principalStudentsPage = principalStudentsPage + 1" [disabled]="principalStudentsPage * principalMasterPageSize >= getFilteredPrincipalStudents().length"
-                    class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 cursor-pointer">
-                    Next →
+                  <span class="font-semibold text-slate-500 text-sm tabular-nums whitespace-nowrap">
+                    Page <span class="text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200 mx-1 font-bold">{{ principalStudentsPage }}</span> of {{ getTotalPages(getFilteredPrincipalStudents().length, principalMasterPageSize) }}
+                  </span>
+                  <button
+                    type="button"
+                    (click)="principalStudentsPage = Math.min(getTotalPages(getFilteredPrincipalStudents().length, principalMasterPageSize), principalStudentsPage + 1)"
+                    [disabled]="principalStudentsPage >= getTotalPages(getFilteredPrincipalStudents().length, principalMasterPageSize)"
+                    aria-label="Next page"
+                    class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                    <mat-icon>chevron_right</mat-icon>
                   </button>
                 </div>
               </div>
@@ -1082,17 +1092,27 @@
               </div>
 
               <!-- Pagination Controls for Teachers -->
-              <div class="flex items-center justify-between pt-2 text-xs font-bold text-slate-600">
-                <span>Showing {{ min(getFilteredPrincipalTeachers().length, (principalTeachersPage - 1) * principalMasterPageSize + 1) }} - {{ min(getFilteredPrincipalTeachers().length, principalTeachersPage * principalMasterPageSize) }} of {{ getFilteredPrincipalTeachers().length }} Faculty Staff</span>
-                <div class="flex items-center gap-1">
-                  <button (click)="principalTeachersPage = Math.max(1, principalTeachersPage - 1)" [disabled]="principalTeachersPage === 1"
-                    class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 cursor-pointer">
-                    ← Previous
+              <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 text-xs text-slate-600">
+                <span class="font-medium tabular-nums">Showing <span class="font-bold text-slate-900">{{ min(getFilteredPrincipalTeachers().length, (principalTeachersPage - 1) * principalMasterPageSize + 1) }}</span> - <span class="font-bold text-slate-900">{{ min(getFilteredPrincipalTeachers().length, principalTeachersPage * principalMasterPageSize) }}</span> of <span class="font-bold text-slate-900">{{ getFilteredPrincipalTeachers().length }}</span> Faculty Staff</span>
+                <div class="flex items-center gap-4 sm:gap-6 select-none">
+                  <button
+                    type="button"
+                    (click)="principalTeachersPage = Math.max(1, principalTeachersPage - 1)"
+                    [disabled]="principalTeachersPage === 1"
+                    aria-label="Previous page"
+                    class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                    <mat-icon>chevron_left</mat-icon>
                   </button>
-                  <span class="px-3 py-1.5 font-black text-slate-900 bg-slate-100 rounded-lg">Page {{ principalTeachersPage }}</span>
-                  <button (click)="principalTeachersPage = principalTeachersPage + 1" [disabled]="principalTeachersPage * principalMasterPageSize >= getFilteredPrincipalTeachers().length"
-                    class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 cursor-pointer">
-                    Next →
+                  <span class="font-semibold text-slate-500 text-sm tabular-nums whitespace-nowrap">
+                    Page <span class="text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200 mx-1 font-bold">{{ principalTeachersPage }}</span> of {{ getTotalPages(getFilteredPrincipalTeachers().length, principalMasterPageSize) }}
+                  </span>
+                  <button
+                    type="button"
+                    (click)="principalTeachersPage = Math.min(getTotalPages(getFilteredPrincipalTeachers().length, principalMasterPageSize), principalTeachersPage + 1)"
+                    [disabled]="principalTeachersPage >= getTotalPages(getFilteredPrincipalTeachers().length, principalMasterPageSize)"
+                    aria-label="Next page"
+                    class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                    <mat-icon>chevron_right</mat-icon>
                   </button>
                 </div>
               </div>
@@ -1162,17 +1182,27 @@
               </div>
 
               <!-- Pagination Controls for Parents -->
-              <div class="flex items-center justify-between pt-2 text-xs font-bold text-slate-600">
-                <span>Showing {{ min(getFilteredPrincipalParents().length, (principalParentsPage - 1) * principalMasterPageSize + 1) }} - {{ min(getFilteredPrincipalParents().length, principalParentsPage * principalMasterPageSize) }} of {{ getFilteredPrincipalParents().length }} Families</span>
-                <div class="flex items-center gap-1">
-                  <button (click)="principalParentsPage = Math.max(1, principalParentsPage - 1)" [disabled]="principalParentsPage === 1"
-                    class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 cursor-pointer">
-                    ← Previous
+              <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 text-xs text-slate-600">
+                <span class="font-medium tabular-nums">Showing <span class="font-bold text-slate-900">{{ min(getFilteredPrincipalParents().length, (principalParentsPage - 1) * principalMasterPageSize + 1) }}</span> - <span class="font-bold text-slate-900">{{ min(getFilteredPrincipalParents().length, principalParentsPage * principalMasterPageSize) }}</span> of <span class="font-bold text-slate-900">{{ getFilteredPrincipalParents().length }}</span> Families</span>
+                <div class="flex items-center gap-4 sm:gap-6 select-none">
+                  <button
+                    type="button"
+                    (click)="principalParentsPage = Math.max(1, principalParentsPage - 1)"
+                    [disabled]="principalParentsPage === 1"
+                    aria-label="Previous page"
+                    class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                    <mat-icon>chevron_left</mat-icon>
                   </button>
-                  <span class="px-3 py-1.5 font-black text-slate-900 bg-slate-100 rounded-lg">Page {{ principalParentsPage }}</span>
-                  <button (click)="principalParentsPage = principalParentsPage + 1" [disabled]="principalParentsPage * principalMasterPageSize >= getFilteredPrincipalParents().length"
-                    class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 cursor-pointer">
-                    Next →
+                  <span class="font-semibold text-slate-500 text-sm tabular-nums whitespace-nowrap">
+                    Page <span class="text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200 mx-1 font-bold">{{ principalParentsPage }}</span> of {{ getTotalPages(getFilteredPrincipalParents().length, principalMasterPageSize) }}
+                  </span>
+                  <button
+                    type="button"
+                    (click)="principalParentsPage = Math.min(getTotalPages(getFilteredPrincipalParents().length, principalMasterPageSize), principalParentsPage + 1)"
+                    [disabled]="principalParentsPage >= getTotalPages(getFilteredPrincipalParents().length, principalMasterPageSize)"
+                    aria-label="Next page"
+                    class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                    <mat-icon>chevron_right</mat-icon>
                   </button>
                 </div>
               </div>
@@ -1233,17 +1263,27 @@
               </div>
 
               <!-- Pagination Controls for Cashiering -->
-              <div class="flex items-center justify-between pt-2 text-xs font-bold text-slate-600">
-                <span>Showing {{ min(getFilteredPrincipalFees().length, (principalFeesPage - 1) * principalMasterPageSize + 1) }} - {{ min(getFilteredPrincipalFees().length, principalFeesPage * principalMasterPageSize) }} of {{ getFilteredPrincipalFees().length }} Verified Receipts</span>
-                <div class="flex items-center gap-1">
-                  <button (click)="principalFeesPage = Math.max(1, principalFeesPage - 1)" [disabled]="principalFeesPage === 1"
-                    class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 cursor-pointer">
-                    ← Previous
+              <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 text-xs text-slate-600">
+                <span class="font-medium tabular-nums">Showing <span class="font-bold text-slate-900">{{ min(getFilteredPrincipalFees().length, (principalFeesPage - 1) * principalMasterPageSize + 1) }}</span> - <span class="font-bold text-slate-900">{{ min(getFilteredPrincipalFees().length, principalFeesPage * principalMasterPageSize) }}</span> of <span class="font-bold text-slate-900">{{ getFilteredPrincipalFees().length }}</span> Verified Receipts</span>
+                <div class="flex items-center gap-4 sm:gap-6 select-none">
+                  <button
+                    type="button"
+                    (click)="principalFeesPage = Math.max(1, principalFeesPage - 1)"
+                    [disabled]="principalFeesPage === 1"
+                    aria-label="Previous page"
+                    class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                    <mat-icon>chevron_left</mat-icon>
                   </button>
-                  <span class="px-3 py-1.5 font-black text-slate-900 bg-slate-100 rounded-lg">Page {{ principalFeesPage }}</span>
-                  <button (click)="principalFeesPage = principalFeesPage + 1" [disabled]="principalFeesPage * principalMasterPageSize >= getFilteredPrincipalFees().length"
-                    class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 cursor-pointer">
-                    Next →
+                  <span class="font-semibold text-slate-500 text-sm tabular-nums whitespace-nowrap">
+                    Page <span class="text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200 mx-1 font-bold">{{ principalFeesPage }}</span> of {{ getTotalPages(getFilteredPrincipalFees().length, principalMasterPageSize) }}
+                  </span>
+                  <button
+                    type="button"
+                    (click)="principalFeesPage = Math.min(getTotalPages(getFilteredPrincipalFees().length, principalMasterPageSize), principalFeesPage + 1)"
+                    [disabled]="principalFeesPage >= getTotalPages(getFilteredPrincipalFees().length, principalMasterPageSize)"
+                    aria-label="Next page"
+                    class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                    <mat-icon>chevron_right</mat-icon>
                   </button>
                 </div>
               </div>
@@ -1845,25 +1885,25 @@
                   Showing <span class="font-bold text-slate-900">{{ min(getFilteredStageStudents(ownerSelectedStage).length, (ownerStagePage - 1) * stagePageSize + 1) }}</span> - <span class="font-bold text-slate-900">{{ min(getFilteredStageStudents(ownerSelectedStage).length, ownerStagePage * stagePageSize) }}</span> of <span class="font-bold text-slate-900">{{ getFilteredStageStudents(ownerSelectedStage).length }}</span> Students
                 </span>
 
-                <div class="flex items-center gap-1.5 select-none">
-                  <button (click)="ownerStagePage = Math.max(1, ownerStagePage - 1)" [disabled]="ownerStagePage === 1"
-                    class="px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 active:scale-95">
-                    <lucide-icon [name]="'chevron-left'" class="w-3.5 h-3.5"></lucide-icon>
-                    <span class="hidden sm:inline">Previous</span>
+                <div class="flex items-center gap-4 sm:gap-6 select-none">
+                  <button
+                    type="button"
+                    (click)="ownerStagePage = Math.max(1, ownerStagePage - 1)"
+                    [disabled]="ownerStagePage === 1"
+                    aria-label="Previous page"
+                    class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                    <mat-icon>chevron_left</mat-icon>
                   </button>
-
-                  @for (p of getStagePageNumbers(ownerSelectedStage); track p) {
-                    <button (click)="ownerStagePage = p"
-                      class="w-7 h-7 rounded-lg font-bold text-xs cursor-pointer transition-all tabular-nums"
-                      [class]="ownerStagePage === p ? 'bg-indigo-600 text-white shadow-xs font-black' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'">
-                      {{ p }}
-                    </button>
-                  }
-
-                  <button (click)="ownerStagePage = ownerStagePage + 1" [disabled]="ownerStagePage * stagePageSize >= getFilteredStageStudents(ownerSelectedStage).length"
-                    class="px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 active:scale-95">
-                    <span class="hidden sm:inline">Next</span>
-                    <lucide-icon [name]="'chevron-right'" class="w-3.5 h-3.5"></lucide-icon>
+                  <span class="font-semibold text-slate-500 text-sm tabular-nums whitespace-nowrap">
+                    Page <span class="text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200 mx-1 font-bold">{{ ownerStagePage }}</span> of {{ getStageTotalPages(ownerSelectedStage) }}
+                  </span>
+                  <button
+                    type="button"
+                    (click)="ownerStagePage = Math.min(getStageTotalPages(ownerSelectedStage), ownerStagePage + 1)"
+                    [disabled]="ownerStagePage >= getStageTotalPages(ownerSelectedStage)"
+                    aria-label="Next page"
+                    class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                    <mat-icon>chevron_right</mat-icon>
                   </button>
                 </div>
               </div>
@@ -2281,25 +2321,25 @@
                 <span class="text-slate-500 font-medium tabular-nums">
                   Showing <span class="font-bold text-slate-900">{{ min(filteredStudents.length, (currentPage['students'] - 1) * pageSize + 1) }}</span> - <span class="font-bold text-slate-900">{{ min(filteredStudents.length, currentPage['students'] * pageSize) }}</span> of <span class="font-bold text-slate-900">{{ filteredStudents.length }}</span> students
                 </span>
-                <div class="flex items-center gap-1.5 select-none">
-                  <button (click)="prevPageTab('students')" [disabled]="currentPage['students'] === 1"
-                    class="px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 active:scale-95">
-                    <lucide-icon [name]="'chevron-left'" class="w-3.5 h-3.5"></lucide-icon>
-                    <span class="hidden sm:inline">Previous</span>
+                <div class="flex items-center gap-4 sm:gap-6 select-none">
+                  <button
+                    type="button"
+                    (click)="prevPageTab('students')"
+                    [disabled]="currentPage['students'] === 1"
+                    aria-label="Previous page"
+                    class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                    <mat-icon>chevron_left</mat-icon>
                   </button>
-
-                  @for (p of getPageNumbers(filteredStudents.length); track p) {
-                    <button (click)="setPage('students', p)"
-                      class="w-7 h-7 rounded-lg font-bold text-xs cursor-pointer transition-all tabular-nums"
-                      [class]="currentPage['students'] === p ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'">
-                      {{ p }}
-                    </button>
-                  }
-
-                  <button (click)="nextPageTab('students', filteredStudents.length)" [disabled]="currentPage['students'] * pageSize >= filteredStudents.length"
-                    class="px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 active:scale-95">
-                    <span class="hidden sm:inline">Next</span>
-                    <lucide-icon [name]="'chevron-right'" class="w-3.5 h-3.5"></lucide-icon>
+                  <span class="font-semibold text-slate-500 text-sm tabular-nums whitespace-nowrap">
+                    Page <span class="text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200 mx-1 font-bold">{{ currentPage['students'] }}</span> of {{ getTotalPages(filteredStudents.length) }}
+                  </span>
+                  <button
+                    type="button"
+                    (click)="nextPageTab('students', filteredStudents.length)"
+                    [disabled]="currentPage['students'] >= getTotalPages(filteredStudents.length)"
+                    aria-label="Next page"
+                    class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                    <mat-icon>chevron_right</mat-icon>
                   </button>
                 </div>
               </div>
@@ -2409,23 +2449,25 @@
                 <span class="text-slate-500 font-medium tabular-nums">
                   Showing <span class="font-bold text-slate-900">{{ min(filteredStudentMedicalRecords.length, (currentPage['students'] - 1) * pageSize + 1) }}</span> - <span class="font-bold text-slate-900">{{ min(filteredStudentMedicalRecords.length, currentPage['students'] * pageSize) }}</span> of <span class="font-bold text-slate-900">{{ filteredStudentMedicalRecords.length }}</span> health records
                 </span>
-                <div class="flex items-center gap-1.5 select-none">
-                  <button (click)="prevPageTab('students')" [disabled]="currentPage['students'] === 1"
-                    class="px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50">
-                    <lucide-icon [name]="'chevron-left'" class="w-3.5 h-3.5"></lucide-icon>
-                    <span>Previous</span>
+                <div class="flex items-center gap-4 sm:gap-6 select-none">
+                  <button
+                    type="button"
+                    (click)="prevPageTab('students')"
+                    [disabled]="currentPage['students'] === 1"
+                    aria-label="Previous page"
+                    class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                    <mat-icon>chevron_left</mat-icon>
                   </button>
-                  @for (p of getPageNumbers(filteredStudentMedicalRecords.length); track p) {
-                    <button (click)="setPage('students', p)"
-                      class="w-7 h-7 rounded-lg font-bold text-xs cursor-pointer transition-all tabular-nums"
-                      [class]="currentPage['students'] === p ? 'bg-indigo-600 text-white font-black' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'">
-                      {{ p }}
-                    </button>
-                  }
-                  <button (click)="nextPageTab('students', filteredStudentMedicalRecords.length)" [disabled]="currentPage['students'] * pageSize >= filteredStudentMedicalRecords.length"
-                    class="px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50">
-                    <span>Next</span>
-                    <lucide-icon [name]="'chevron-right'" class="w-3.5 h-3.5"></lucide-icon>
+                  <span class="font-semibold text-slate-500 text-sm tabular-nums whitespace-nowrap">
+                    Page <span class="text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200 mx-1 font-bold">{{ currentPage['students'] }}</span> of {{ getTotalPages(filteredStudentMedicalRecords.length) }}
+                  </span>
+                  <button
+                    type="button"
+                    (click)="nextPageTab('students', filteredStudentMedicalRecords.length)"
+                    [disabled]="currentPage['students'] >= getTotalPages(filteredStudentMedicalRecords.length)"
+                    aria-label="Next page"
+                    class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                    <mat-icon>chevron_right</mat-icon>
                   </button>
                 </div>
               </div>
@@ -2539,23 +2581,25 @@
                 <span class="text-slate-500 font-medium tabular-nums">
                   Showing <span class="font-bold text-slate-900">{{ min(filteredDisciplinaryIncidents.length, (currentPage['students'] - 1) * pageSize + 1) }}</span> - <span class="font-bold text-slate-900">{{ min(filteredDisciplinaryIncidents.length, currentPage['students'] * pageSize) }}</span> of <span class="font-bold text-slate-900">{{ filteredDisciplinaryIncidents.length }}</span> incidents
                 </span>
-                <div class="flex items-center gap-1.5 select-none">
-                  <button (click)="prevPageTab('students')" [disabled]="currentPage['students'] === 1"
-                    class="px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50">
-                    <lucide-icon [name]="'chevron-left'" class="w-3.5 h-3.5"></lucide-icon>
-                    <span>Previous</span>
+                <div class="flex items-center gap-4 sm:gap-6 select-none">
+                  <button
+                    type="button"
+                    (click)="prevPageTab('students')"
+                    [disabled]="currentPage['students'] === 1"
+                    aria-label="Previous page"
+                    class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                    <mat-icon>chevron_left</mat-icon>
                   </button>
-                  @for (p of getPageNumbers(filteredDisciplinaryIncidents.length); track p) {
-                    <button (click)="setPage('students', p)"
-                      class="w-7 h-7 rounded-lg font-bold text-xs cursor-pointer transition-all tabular-nums"
-                      [class]="currentPage['students'] === p ? 'bg-indigo-600 text-white font-black' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'">
-                      {{ p }}
-                    </button>
-                  }
-                  <button (click)="nextPageTab('students', filteredDisciplinaryIncidents.length)" [disabled]="currentPage['students'] * pageSize >= filteredDisciplinaryIncidents.length"
-                    class="px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50">
-                    <span>Next</span>
-                    <lucide-icon [name]="'chevron-right'" class="w-3.5 h-3.5"></lucide-icon>
+                  <span class="font-semibold text-slate-500 text-sm tabular-nums whitespace-nowrap">
+                    Page <span class="text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200 mx-1 font-bold">{{ currentPage['students'] }}</span> of {{ getTotalPages(filteredDisciplinaryIncidents.length) }}
+                  </span>
+                  <button
+                    type="button"
+                    (click)="nextPageTab('students', filteredDisciplinaryIncidents.length)"
+                    [disabled]="currentPage['students'] >= getTotalPages(filteredDisciplinaryIncidents.length)"
+                    aria-label="Next page"
+                    class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                    <mat-icon>chevron_right</mat-icon>
                   </button>
                 </div>
               </div>
@@ -2797,25 +2841,25 @@
               <span class="text-slate-500 font-medium tabular-nums">
                 Showing <span class="font-bold text-slate-900">{{ min(filteredPortalUsers.length, (currentPage['portals'] - 1) * pageSize + 1) }}</span> - <span class="font-bold text-slate-900">{{ min(filteredPortalUsers.length, currentPage['portals'] * pageSize) }}</span> of <span class="font-bold text-slate-900">{{ filteredPortalUsers.length }}</span> portal user accounts
               </span>
-              <div class="flex items-center gap-1.5 select-none">
-                <button (click)="prevPageTab('portals')" [disabled]="currentPage['portals'] === 1"
-                  class="px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 active:scale-95">
-                  <lucide-icon [name]="'chevron-left'" class="w-3.5 h-3.5"></lucide-icon>
-                  <span class="hidden sm:inline">Previous</span>
+              <div class="flex items-center gap-4 sm:gap-6 select-none">
+                <button
+                  type="button"
+                  (click)="prevPageTab('portals')"
+                  [disabled]="currentPage['portals'] === 1"
+                  aria-label="Previous page"
+                  class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                  <mat-icon>chevron_left</mat-icon>
                 </button>
-
-                @for (p of getPageNumbers(filteredPortalUsers.length); track p) {
-                  <button (click)="setPage('portals', p)"
-                    class="w-7 h-7 rounded-lg font-bold text-xs cursor-pointer transition-all tabular-nums"
-                    [class]="currentPage['portals'] === p ? 'bg-indigo-600 text-white shadow-xs font-black' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'">
-                    {{ p }}
-                  </button>
-                }
-
-                <button (click)="nextPageTab('portals', filteredPortalUsers.length)" [disabled]="currentPage['portals'] * pageSize >= filteredPortalUsers.length"
-                  class="px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 active:scale-95">
-                  <span class="hidden sm:inline">Next</span>
-                  <lucide-icon [name]="'chevron-right'" class="w-3.5 h-3.5"></lucide-icon>
+                <span class="font-semibold text-slate-500 text-sm tabular-nums whitespace-nowrap">
+                  Page <span class="text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200 mx-1 font-bold">{{ currentPage['portals'] }}</span> of {{ getTotalPages(filteredPortalUsers.length) }}
+                </span>
+                <button
+                  type="button"
+                  (click)="nextPageTab('portals', filteredPortalUsers.length)"
+                  [disabled]="currentPage['portals'] >= getTotalPages(filteredPortalUsers.length)"
+                  aria-label="Next page"
+                  class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                  <mat-icon>chevron_right</mat-icon>
                 </button>
               </div>
             </div>
@@ -3043,25 +3087,25 @@
                 <span class="text-slate-500 font-medium tabular-nums">
                   Showing <span class="font-bold text-slate-900">{{ min(filteredTeachers.length, (currentPage['teachers'] - 1) * pageSize + 1) }}</span> - <span class="font-bold text-slate-900">{{ min(filteredTeachers.length, currentPage['teachers'] * pageSize) }}</span> of <span class="font-bold text-slate-900">{{ filteredTeachers.length }}</span> faculty members
                 </span>
-                <div class="flex items-center gap-1.5 select-none">
-                  <button (click)="prevPageTab('teachers')" [disabled]="currentPage['teachers'] === 1"
-                    class="px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 active:scale-95">
-                    <lucide-icon [name]="'chevron-left'" class="w-3.5 h-3.5"></lucide-icon>
-                    <span class="hidden sm:inline">Previous</span>
+                <div class="flex items-center gap-4 sm:gap-6 select-none">
+                  <button
+                    type="button"
+                    (click)="prevPageTab('teachers')"
+                    [disabled]="currentPage['teachers'] === 1"
+                    aria-label="Previous page"
+                    class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                    <mat-icon>chevron_left</mat-icon>
                   </button>
-
-                  @for (p of getPageNumbers(filteredTeachers.length); track p) {
-                    <button (click)="setPage('teachers', p)"
-                      class="w-7 h-7 rounded-lg font-bold text-xs cursor-pointer transition-all tabular-nums"
-                      [class]="currentPage['teachers'] === p ? 'bg-indigo-600 text-white shadow-xs font-black' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'">
-                      {{ p }}
-                    </button>
-                  }
-
-                  <button (click)="nextPageTab('teachers', filteredTeachers.length)" [disabled]="currentPage['teachers'] * pageSize >= filteredTeachers.length"
-                    class="px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 active:scale-95">
-                    <span class="hidden sm:inline">Next</span>
-                    <lucide-icon [name]="'chevron-right'" class="w-3.5 h-3.5"></lucide-icon>
+                  <span class="font-semibold text-slate-500 text-sm tabular-nums whitespace-nowrap">
+                    Page <span class="text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200 mx-1 font-bold">{{ currentPage['teachers'] }}</span> of {{ getTotalPages(filteredTeachers.length) }}
+                  </span>
+                  <button
+                    type="button"
+                    (click)="nextPageTab('teachers', filteredTeachers.length)"
+                    [disabled]="currentPage['teachers'] >= getTotalPages(filteredTeachers.length)"
+                    aria-label="Next page"
+                    class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                    <mat-icon>chevron_right</mat-icon>
                   </button>
                 </div>
               </div>
@@ -3172,23 +3216,25 @@
                 <span class="text-slate-500 font-medium tabular-nums">
                   Showing <span class="font-bold text-slate-900">{{ min(filteredStaffPayrolls.length, (currentPage['teachers'] - 1) * pageSize + 1) }}</span> - <span class="font-bold text-slate-900">{{ min(filteredStaffPayrolls.length, currentPage['teachers'] * pageSize) }}</span> of <span class="font-bold text-slate-900">{{ filteredStaffPayrolls.length }}</span> payroll vouchers
                 </span>
-                <div class="flex items-center gap-1.5 select-none">
-                  <button (click)="prevPageTab('teachers')" [disabled]="currentPage['teachers'] === 1"
-                    class="px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40 hover:bg-slate-50">
-                    <lucide-icon [name]="'chevron-left'" class="w-3.5 h-3.5"></lucide-icon>
-                    <span>Previous</span>
+                <div class="flex items-center gap-4 sm:gap-6 select-none">
+                  <button
+                    type="button"
+                    (click)="prevPageTab('teachers')"
+                    [disabled]="currentPage['teachers'] === 1"
+                    aria-label="Previous page"
+                    class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                    <mat-icon>chevron_left</mat-icon>
                   </button>
-                  @for (p of getPageNumbers(filteredStaffPayrolls.length); track p) {
-                    <button (click)="setPage('teachers', p)"
-                      class="w-7 h-7 rounded-lg font-bold text-xs cursor-pointer transition-all tabular-nums"
-                      [class]="currentPage['teachers'] === p ? 'bg-indigo-600 text-white font-black' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'">
-                      {{ p }}
-                    </button>
-                  }
-                  <button (click)="nextPageTab('teachers', filteredStaffPayrolls.length)" [disabled]="currentPage['teachers'] * pageSize >= filteredStaffPayrolls.length"
-                    class="px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40 hover:bg-slate-50">
-                    <span>Next</span>
-                    <lucide-icon [name]="'chevron-right'" class="w-3.5 h-3.5"></lucide-icon>
+                  <span class="font-semibold text-slate-500 text-sm tabular-nums whitespace-nowrap">
+                    Page <span class="text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200 mx-1 font-bold">{{ currentPage['teachers'] }}</span> of {{ getTotalPages(filteredStaffPayrolls.length) }}
+                  </span>
+                  <button
+                    type="button"
+                    (click)="nextPageTab('teachers', filteredStaffPayrolls.length)"
+                    [disabled]="currentPage['teachers'] >= getTotalPages(filteredStaffPayrolls.length)"
+                    aria-label="Next page"
+                    class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                    <mat-icon>chevron_right</mat-icon>
                   </button>
                 </div>
               </div>
@@ -3292,23 +3338,25 @@
                 <span class="text-slate-500 font-medium tabular-nums">
                   Showing <span class="font-bold text-slate-900">{{ min(filteredStaffLeaves.length, (currentPage['teachers'] - 1) * pageSize + 1) }}</span> - <span class="font-bold text-slate-900">{{ min(filteredStaffLeaves.length, currentPage['teachers'] * pageSize) }}</span> of <span class="font-bold text-slate-900">{{ filteredStaffLeaves.length }}</span> leave applications
                 </span>
-                <div class="flex items-center gap-1.5 select-none">
-                  <button (click)="prevPageTab('teachers')" [disabled]="currentPage['teachers'] === 1"
-                    class="px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40 hover:bg-slate-50">
-                    <lucide-icon [name]="'chevron-left'" class="w-3.5 h-3.5"></lucide-icon>
-                    <span>Previous</span>
+                <div class="flex items-center gap-4 sm:gap-6 select-none">
+                  <button
+                    type="button"
+                    (click)="prevPageTab('teachers')"
+                    [disabled]="currentPage['teachers'] === 1"
+                    aria-label="Previous page"
+                    class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                    <mat-icon>chevron_left</mat-icon>
                   </button>
-                  @for (p of getPageNumbers(filteredStaffLeaves.length); track p) {
-                    <button (click)="setPage('teachers', p)"
-                      class="w-7 h-7 rounded-lg font-bold text-xs cursor-pointer transition-all tabular-nums"
-                      [class]="currentPage['teachers'] === p ? 'bg-indigo-600 text-white font-black' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'">
-                      {{ p }}
-                    </button>
-                  }
-                  <button (click)="nextPageTab('teachers', filteredStaffLeaves.length)" [disabled]="currentPage['teachers'] * pageSize >= filteredStaffLeaves.length"
-                    class="px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40 hover:bg-slate-50">
-                    <span>Next</span>
-                    <lucide-icon [name]="'chevron-right'" class="w-3.5 h-3.5"></lucide-icon>
+                  <span class="font-semibold text-slate-500 text-sm tabular-nums whitespace-nowrap">
+                    Page <span class="text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200 mx-1 font-bold">{{ currentPage['teachers'] }}</span> of {{ getTotalPages(filteredStaffLeaves.length) }}
+                  </span>
+                  <button
+                    type="button"
+                    (click)="nextPageTab('teachers', filteredStaffLeaves.length)"
+                    [disabled]="currentPage['teachers'] >= getTotalPages(filteredStaffLeaves.length)"
+                    aria-label="Next page"
+                    class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                    <mat-icon>chevron_right</mat-icon>
                   </button>
                 </div>
               </div>
@@ -3862,25 +3910,25 @@
               <span class="text-slate-500 font-semibold tabular-nums">
                 Showing <span class="font-bold text-slate-900">{{ min(filteredAdmissions.length, (currentPage['admissions'] - 1) * pageSize + 1) }}</span> - <span class="font-bold text-slate-900">{{ min(filteredAdmissions.length, currentPage['admissions'] * pageSize) }}</span> of <span class="font-bold text-slate-900">{{ filteredAdmissions.length }}</span> applications
               </span>
-              <div class="flex items-center gap-1.5 select-none">
-                <button type="button" (click)="prevPageTab('admissions')" [disabled]="currentPage['admissions'] === 1"
-                  class="px-3 py-1.5 rounded-xl border border-slate-200 bg-white font-bold text-xs inline-flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 active:scale-95">
-                  <lucide-icon [name]="'chevron-left'" class="w-3.5 h-3.5"></lucide-icon>
-                  <span class="hidden sm:inline">Previous</span>
+              <div class="flex items-center gap-4 sm:gap-6 select-none">
+                <button
+                  type="button"
+                  (click)="prevPageTab('admissions')"
+                  [disabled]="currentPage['admissions'] === 1"
+                  aria-label="Previous page"
+                  class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                  <mat-icon>chevron_left</mat-icon>
                 </button>
-
-                @for (p of getPageNumbers(filteredAdmissions.length); track p) {
-                  <button type="button" (click)="setPage('admissions', p)"
-                    class="w-8 h-8 rounded-xl font-bold text-xs cursor-pointer transition-all tabular-nums"
-                    [class]="currentPage['admissions'] === p ? 'bg-indigo-600 text-white shadow-xs font-black' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'">
-                    {{ p }}
-                  </button>
-                }
-
-                <button type="button" (click)="nextPageTab('admissions', filteredAdmissions.length)" [disabled]="currentPage['admissions'] * pageSize >= filteredAdmissions.length"
-                  class="px-3 py-1.5 rounded-xl border border-slate-200 bg-white font-bold text-xs inline-flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 active:scale-95">
-                  <span class="hidden sm:inline">Next</span>
-                  <lucide-icon [name]="'chevron-right'" class="w-3.5 h-3.5"></lucide-icon>
+                <span class="font-semibold text-slate-500 text-sm tabular-nums whitespace-nowrap">
+                  Page <span class="text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200 mx-1 font-bold">{{ currentPage['admissions'] }}</span> of {{ getTotalPages(filteredAdmissions.length) }}
+                </span>
+                <button
+                  type="button"
+                  (click)="nextPageTab('admissions', filteredAdmissions.length)"
+                  [disabled]="currentPage['admissions'] >= getTotalPages(filteredAdmissions.length)"
+                  aria-label="Next page"
+                  class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                  <mat-icon>chevron_right</mat-icon>
                 </button>
               </div>
             </div>
@@ -4487,25 +4535,25 @@
                   <span class="text-slate-500 font-medium tabular-nums">
                     Showing <span class="font-bold text-slate-900">{{ min(filteredFinances.length, (currentPage['finance'] - 1) * pageSize + 1) }}</span> - <span class="font-bold text-slate-900">{{ min(filteredFinances.length, currentPage['finance'] * pageSize) }}</span> of <span class="font-bold text-slate-900">{{ filteredFinances.length }}</span> ledger entries
                   </span>
-                  <div class="flex items-center gap-1.5 select-none">
-                    <button (click)="prevPageTab('finance')" [disabled]="currentPage['finance'] === 1"
-                      class="px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 active:scale-95">
-                      <lucide-icon [name]="'chevron-left'" class="w-3.5 h-3.5"></lucide-icon>
-                      <span class="hidden sm:inline">Previous</span>
+                  <div class="flex items-center gap-4 sm:gap-6 select-none">
+                    <button
+                      type="button"
+                      (click)="prevPageTab('finance')"
+                      [disabled]="currentPage['finance'] === 1"
+                      aria-label="Previous page"
+                      class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                      <mat-icon>chevron_left</mat-icon>
                     </button>
-
-                    @for (p of getPageNumbers(filteredFinances.length); track p) {
-                      <button (click)="setPage('finance', p)"
-                        class="w-7 h-7 rounded-lg font-bold text-xs cursor-pointer transition-all tabular-nums"
-                        [class]="currentPage['finance'] === p ? 'bg-indigo-600 text-white shadow-xs font-black' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'">
-                        {{ p }}
-                      </button>
-                    }
-
-                    <button (click)="nextPageTab('finance', filteredFinances.length)" [disabled]="currentPage['finance'] * pageSize >= filteredFinances.length"
-                      class="px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 active:scale-95">
-                      <span class="hidden sm:inline">Next</span>
-                      <lucide-icon [name]="'chevron-right'" class="w-3.5 h-3.5"></lucide-icon>
+                    <span class="font-semibold text-slate-500 text-sm tabular-nums whitespace-nowrap">
+                      Page <span class="text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200 mx-1 font-bold">{{ currentPage['finance'] }}</span> of {{ getTotalPages(filteredFinances.length) }}
+                    </span>
+                    <button
+                      type="button"
+                      (click)="nextPageTab('finance', filteredFinances.length)"
+                      [disabled]="currentPage['finance'] >= getTotalPages(filteredFinances.length)"
+                      aria-label="Next page"
+                      class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                      <mat-icon>chevron_right</mat-icon>
                     </button>
                   </div>
                 </div>
@@ -4705,6 +4753,34 @@
                       }
                     </tbody>
                   </table>
+                </div>
+
+                <!-- Pagination Bar -->
+                <div class="flex flex-col sm:flex-row items-center justify-between text-xs pt-2 gap-3">
+                  <span class="text-slate-500 font-medium tabular-nums">
+                    Showing <span class="font-bold text-slate-900">{{ min(filteredFeeDefaulters.length, (currentPage['finance'] - 1) * pageSize + 1) }}</span> - <span class="font-bold text-slate-900">{{ min(filteredFeeDefaulters.length, currentPage['finance'] * pageSize) }}</span> of <span class="font-bold text-slate-900">{{ filteredFeeDefaulters.length }}</span> defaulters
+                  </span>
+                  <div class="flex items-center gap-4 sm:gap-6 select-none">
+                    <button
+                      type="button"
+                      (click)="prevPageTab('finance')"
+                      [disabled]="currentPage['finance'] === 1"
+                      aria-label="Previous page"
+                      class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                      <mat-icon>chevron_left</mat-icon>
+                    </button>
+                    <span class="font-semibold text-slate-500 text-sm tabular-nums whitespace-nowrap">
+                      Page <span class="text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200 mx-1 font-bold">{{ currentPage['finance'] }}</span> of {{ getTotalPages(filteredFeeDefaulters.length) }}
+                    </span>
+                    <button
+                      type="button"
+                      (click)="nextPageTab('finance', filteredFeeDefaulters.length)"
+                      [disabled]="currentPage['finance'] >= getTotalPages(filteredFeeDefaulters.length)"
+                      aria-label="Next page"
+                      class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                      <mat-icon>chevron_right</mat-icon>
+                    </button>
+                  </div>
                 </div>
               </div>
             }
@@ -5705,25 +5781,25 @@
             <span class="text-slate-500 font-medium tabular-nums">
               Showing <span class="font-bold text-slate-900">{{ min(filteredExpenses.length, (currentPage['expenses'] - 1) * pageSize + 1) }}</span> - <span class="font-bold text-slate-900">{{ min(filteredExpenses.length, currentPage['expenses'] * pageSize) }}</span> of <span class="font-bold text-slate-900">{{ filteredExpenses.length }}</span> expense vouchers
             </span>
-            <div class="flex items-center gap-1.5 select-none">
-              <button (click)="prevPageTab('expenses')" [disabled]="currentPage['expenses'] === 1"
-                class="px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 active:scale-95">
-                <lucide-icon [name]="'chevron-left'" class="w-3.5 h-3.5"></lucide-icon>
-                <span class="hidden sm:inline">Previous</span>
+            <div class="flex items-center gap-4 sm:gap-6 select-none">
+              <button
+                type="button"
+                (click)="prevPageTab('expenses')"
+                [disabled]="currentPage['expenses'] === 1"
+                aria-label="Previous page"
+                class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                <mat-icon>chevron_left</mat-icon>
               </button>
-
-              @for (p of getPageNumbers(filteredExpenses.length); track p) {
-                <button (click)="setPage('expenses', p)"
-                  class="w-7 h-7 rounded-lg font-bold text-xs cursor-pointer transition-all tabular-nums"
-                  [class]="currentPage['expenses'] === p ? 'bg-amber-500 text-white shadow-xs font-black' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'">
-                  {{ p }}
-                </button>
-              }
-
-              <button (click)="nextPageTab('expenses', filteredExpenses.length)" [disabled]="currentPage['expenses'] * pageSize >= filteredExpenses.length"
-                class="px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 active:scale-95">
-                <span class="hidden sm:inline">Next</span>
-                <lucide-icon [name]="'chevron-right'" class="w-3.5 h-3.5"></lucide-icon>
+              <span class="font-semibold text-slate-500 text-sm tabular-nums whitespace-nowrap">
+                Page <span class="text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200 mx-1 font-bold">{{ currentPage['expenses'] }}</span> of {{ getTotalPages(filteredExpenses.length) }}
+              </span>
+              <button
+                type="button"
+                (click)="nextPageTab('expenses', filteredExpenses.length)"
+                [disabled]="currentPage['expenses'] >= getTotalPages(filteredExpenses.length)"
+                aria-label="Next page"
+                class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                <mat-icon>chevron_right</mat-icon>
               </button>
             </div>
           </div>
@@ -5902,25 +5978,25 @@
             <span class="text-slate-500 font-medium tabular-nums">
               Showing <span class="font-bold text-slate-900">{{ min(filteredTransport.length, (currentPage['transport'] - 1) * pageSize + 1) }}</span> - <span class="font-bold text-slate-900">{{ min(filteredTransport.length, currentPage['transport'] * pageSize) }}</span> of <span class="font-bold text-slate-900">{{ filteredTransport.length }}</span> transport routes
             </span>
-            <div class="flex items-center gap-1.5 select-none">
-              <button (click)="prevPageTab('transport')" [disabled]="currentPage['transport'] === 1"
-                class="px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 active:scale-95">
-                <lucide-icon [name]="'chevron-left'" class="w-3.5 h-3.5"></lucide-icon>
-                <span class="hidden sm:inline">Previous</span>
+            <div class="flex items-center gap-4 sm:gap-6 select-none">
+              <button
+                type="button"
+                (click)="prevPageTab('transport')"
+                [disabled]="currentPage['transport'] === 1"
+                aria-label="Previous page"
+                class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                <mat-icon>chevron_left</mat-icon>
               </button>
-
-              @for (p of getPageNumbers(filteredTransport.length); track p) {
-                <button (click)="setPage('transport', p)"
-                  class="w-7 h-7 rounded-lg font-bold text-xs cursor-pointer transition-all tabular-nums"
-                  [class]="currentPage['transport'] === p ? 'bg-indigo-600 text-white shadow-xs font-black' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'">
-                  {{ p }}
-                </button>
-              }
-
-              <button (click)="nextPageTab('transport', filteredTransport.length)" [disabled]="currentPage['transport'] * pageSize >= filteredTransport.length"
-                class="px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 active:scale-95">
-                <span class="hidden sm:inline">Next</span>
-                <lucide-icon [name]="'chevron-right'" class="w-3.5 h-3.5"></lucide-icon>
+              <span class="font-semibold text-slate-500 text-sm tabular-nums whitespace-nowrap">
+                Page <span class="text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200 mx-1 font-bold">{{ currentPage['transport'] }}</span> of {{ getTotalPages(filteredTransport.length) }}
+              </span>
+              <button
+                type="button"
+                (click)="nextPageTab('transport', filteredTransport.length)"
+                [disabled]="currentPage['transport'] >= getTotalPages(filteredTransport.length)"
+                aria-label="Next page"
+                class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                <mat-icon>chevron_right</mat-icon>
               </button>
             </div>
           </div>
@@ -6436,6 +6512,34 @@
                   </tbody>
                 </table>
               </div>
+
+              <!-- Pagination Bar -->
+              <div class="flex flex-col sm:flex-row items-center justify-between text-xs pt-2 gap-3">
+                <span class="text-slate-500 font-medium tabular-nums">
+                  Showing <span class="font-bold text-slate-900">{{ min(filteredCatalogBooks.length, (currentPage['library'] - 1) * pageSize + 1) }}</span> - <span class="font-bold text-slate-900">{{ min(filteredCatalogBooks.length, currentPage['library'] * pageSize) }}</span> of <span class="font-bold text-slate-900">{{ filteredCatalogBooks.length }}</span> books
+                </span>
+                <div class="flex items-center gap-4 sm:gap-6 select-none">
+                  <button
+                    type="button"
+                    (click)="prevPageTab('library')"
+                    [disabled]="currentPage['library'] === 1"
+                    aria-label="Previous page"
+                    class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                    <mat-icon>chevron_left</mat-icon>
+                  </button>
+                  <span class="font-semibold text-slate-500 text-sm tabular-nums whitespace-nowrap">
+                    Page <span class="text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200 mx-1 font-bold">{{ currentPage['library'] }}</span> of {{ getTotalPages(filteredCatalogBooks.length) }}
+                  </span>
+                  <button
+                    type="button"
+                    (click)="nextPageTab('library', filteredCatalogBooks.length)"
+                    [disabled]="currentPage['library'] >= getTotalPages(filteredCatalogBooks.length)"
+                    aria-label="Next page"
+                    class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                    <mat-icon>chevron_right</mat-icon>
+                  </button>
+                </div>
+              </div>
             </div>
           }
 
@@ -6630,25 +6734,25 @@
                 <span class="text-slate-500 font-medium tabular-nums">
                   Showing <span class="font-bold text-slate-900">{{ min(filteredExams.length, (currentPage['exams'] - 1) * pageSize + 1) }}</span> - <span class="font-bold text-slate-900">{{ min(filteredExams.length, currentPage['exams'] * pageSize) }}</span> of <span class="font-bold text-slate-900">{{ filteredExams.length }}</span> examinations
                 </span>
-                <div class="flex items-center gap-1.5 select-none">
-                  <button (click)="prevPageTab('exams')" [disabled]="currentPage['exams'] === 1"
-                    class="px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 active:scale-95">
-                    <lucide-icon [name]="'chevron-left'" class="w-3.5 h-3.5"></lucide-icon>
-                    <span class="hidden sm:inline">Previous</span>
+                <div class="flex items-center gap-4 sm:gap-6 select-none">
+                  <button
+                    type="button"
+                    (click)="prevPageTab('exams')"
+                    [disabled]="currentPage['exams'] === 1"
+                    aria-label="Previous page"
+                    class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                    <mat-icon>chevron_left</mat-icon>
                   </button>
-
-                  @for (p of getPageNumbers(filteredExams.length); track p) {
-                    <button (click)="setPage('exams', p)"
-                      class="w-7 h-7 rounded-lg font-bold text-xs cursor-pointer transition-all tabular-nums"
-                      [class]="currentPage['exams'] === p ? 'bg-indigo-600 text-white shadow-xs font-black' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'">
-                      {{ p }}
-                    </button>
-                  }
-
-                  <button (click)="nextPageTab('exams', filteredExams.length)" [disabled]="currentPage['exams'] * pageSize >= filteredExams.length"
-                    class="px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 active:scale-95">
-                    <span class="hidden sm:inline">Next</span>
-                    <lucide-icon [name]="'chevron-right'" class="w-3.5 h-3.5"></lucide-icon>
+                  <span class="font-semibold text-slate-500 text-sm tabular-nums whitespace-nowrap">
+                    Page <span class="text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200 mx-1 font-bold">{{ currentPage['exams'] }}</span> of {{ getTotalPages(filteredExams.length) }}
+                  </span>
+                  <button
+                    type="button"
+                    (click)="nextPageTab('exams', filteredExams.length)"
+                    [disabled]="currentPage['exams'] >= getTotalPages(filteredExams.length)"
+                    aria-label="Next page"
+                    class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                    <mat-icon>chevron_right</mat-icon>
                   </button>
                 </div>
               </div>
@@ -6792,25 +6896,25 @@
                 <span class="text-slate-500 font-medium tabular-nums">
                   Showing <span class="font-bold text-slate-900">{{ min(filteredMarksStudents.length, (currentPage['exams'] - 1) * pageSize + 1) }}</span> - <span class="font-bold text-slate-900">{{ min(filteredMarksStudents.length, currentPage['exams'] * pageSize) }}</span> of <span class="font-bold text-slate-900">{{ filteredMarksStudents.length }}</span> students in {{ selectedMarksClass }}
                 </span>
-                <div class="flex items-center gap-1.5 select-none">
-                  <button (click)="prevPageTab('exams')" [disabled]="currentPage['exams'] === 1"
-                    class="px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 active:scale-95">
-                    <lucide-icon [name]="'chevron-left'" class="w-3.5 h-3.5"></lucide-icon>
-                    <span class="hidden sm:inline">Previous</span>
+                <div class="flex items-center gap-4 sm:gap-6 select-none">
+                  <button
+                    type="button"
+                    (click)="prevPageTab('exams')"
+                    [disabled]="currentPage['exams'] === 1"
+                    aria-label="Previous page"
+                    class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                    <mat-icon>chevron_left</mat-icon>
                   </button>
-
-                  @for (p of getPageNumbers(filteredMarksStudents.length); track p) {
-                    <button (click)="setPage('exams', p)"
-                      class="w-7 h-7 rounded-lg font-bold text-xs cursor-pointer transition-all tabular-nums"
-                      [class]="currentPage['exams'] === p ? 'bg-indigo-600 text-white shadow-xs font-black' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'">
-                      {{ p }}
-                    </button>
-                  }
-
-                  <button (click)="nextPageTab('exams', filteredMarksStudents.length)" [disabled]="currentPage['exams'] * pageSize >= filteredMarksStudents.length"
-                    class="px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 active:scale-95">
-                    <span class="hidden sm:inline">Next</span>
-                    <lucide-icon [name]="'chevron-right'" class="w-3.5 h-3.5"></lucide-icon>
+                  <span class="font-semibold text-slate-500 text-sm tabular-nums whitespace-nowrap">
+                    Page <span class="text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200 mx-1 font-bold">{{ currentPage['exams'] }}</span> of {{ getTotalPages(filteredMarksStudents.length) }}
+                  </span>
+                  <button
+                    type="button"
+                    (click)="nextPageTab('exams', filteredMarksStudents.length)"
+                    [disabled]="currentPage['exams'] >= getTotalPages(filteredMarksStudents.length)"
+                    aria-label="Next page"
+                    class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                    <mat-icon>chevron_right</mat-icon>
                   </button>
                 </div>
               </div>
@@ -6917,25 +7021,25 @@
                 <span class="text-slate-500 font-medium tabular-nums">
                   Showing <span class="font-bold text-slate-900">{{ min(filteredClassResults.length, (currentPage['exams'] - 1) * pageSize + 1) }}</span> - <span class="font-bold text-slate-900">{{ min(filteredClassResults.length, currentPage['exams'] * pageSize) }}</span> of <span class="font-bold text-slate-900">{{ filteredClassResults.length }}</span> ranked students
                 </span>
-                <div class="flex items-center gap-1.5 select-none">
-                  <button (click)="prevPageTab('exams')" [disabled]="currentPage['exams'] === 1"
-                    class="px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 active:scale-95">
-                    <lucide-icon [name]="'chevron-left'" class="w-3.5 h-3.5"></lucide-icon>
-                    <span class="hidden sm:inline">Previous</span>
+                <div class="flex items-center gap-4 sm:gap-6 select-none">
+                  <button
+                    type="button"
+                    (click)="prevPageTab('exams')"
+                    [disabled]="currentPage['exams'] === 1"
+                    aria-label="Previous page"
+                    class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                    <mat-icon>chevron_left</mat-icon>
                   </button>
-
-                  @for (p of getPageNumbers(filteredClassResults.length); track p) {
-                    <button (click)="setPage('exams', p)"
-                      class="w-7 h-7 rounded-lg font-bold text-xs cursor-pointer transition-all tabular-nums"
-                      [class]="currentPage['exams'] === p ? 'bg-indigo-600 text-white shadow-xs font-black' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'">
-                      {{ p }}
-                    </button>
-                  }
-
-                  <button (click)="nextPageTab('exams', filteredClassResults.length)" [disabled]="currentPage['exams'] * pageSize >= filteredClassResults.length"
-                    class="px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 active:scale-95">
-                    <span class="hidden sm:inline">Next</span>
-                    <lucide-icon [name]="'chevron-right'" class="w-3.5 h-3.5"></lucide-icon>
+                  <span class="font-semibold text-slate-500 text-sm tabular-nums whitespace-nowrap">
+                    Page <span class="text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200 mx-1 font-bold">{{ currentPage['exams'] }}</span> of {{ getTotalPages(filteredClassResults.length) }}
+                  </span>
+                  <button
+                    type="button"
+                    (click)="nextPageTab('exams', filteredClassResults.length)"
+                    [disabled]="currentPage['exams'] >= getTotalPages(filteredClassResults.length)"
+                    aria-label="Next page"
+                    class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                    <mat-icon>chevron_right</mat-icon>
                   </button>
                 </div>
               </div>
@@ -7023,25 +7127,25 @@
                 <span class="text-slate-500 font-medium tabular-nums">
                   Showing <span class="font-bold text-slate-900">{{ min(filteredSubjects.length, (currentPage['exams'] - 1) * pageSize + 1) }}</span> - <span class="font-bold text-slate-900">{{ min(filteredSubjects.length, currentPage['exams'] * pageSize) }}</span> of <span class="font-bold text-slate-900">{{ filteredSubjects.length }}</span> subjects
                 </span>
-                <div class="flex items-center gap-1.5 select-none">
-                  <button (click)="prevPageTab('exams')" [disabled]="currentPage['exams'] === 1"
-                    class="px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 active:scale-95">
-                    <lucide-icon [name]="'chevron-left'" class="w-3.5 h-3.5"></lucide-icon>
-                    <span class="hidden sm:inline">Previous</span>
+                <div class="flex items-center gap-4 sm:gap-6 select-none">
+                  <button
+                    type="button"
+                    (click)="prevPageTab('exams')"
+                    [disabled]="currentPage['exams'] === 1"
+                    aria-label="Previous page"
+                    class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                    <mat-icon>chevron_left</mat-icon>
                   </button>
-
-                  @for (p of getPageNumbers(filteredSubjects.length); track p) {
-                    <button (click)="setPage('exams', p)"
-                      class="w-7 h-7 rounded-lg font-bold text-xs cursor-pointer transition-all tabular-nums"
-                      [class]="currentPage['exams'] === p ? 'bg-indigo-600 text-white shadow-xs font-black' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'">
-                      {{ p }}
-                    </button>
-                  }
-
-                  <button (click)="nextPageTab('exams', filteredSubjects.length)" [disabled]="currentPage['exams'] * pageSize >= filteredSubjects.length"
-                    class="px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 active:scale-95">
-                    <span class="hidden sm:inline">Next</span>
-                    <lucide-icon [name]="'chevron-right'" class="w-3.5 h-3.5"></lucide-icon>
+                  <span class="font-semibold text-slate-500 text-sm tabular-nums whitespace-nowrap">
+                    Page <span class="text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200 mx-1 font-bold">{{ currentPage['exams'] }}</span> of {{ getTotalPages(filteredSubjects.length) }}
+                  </span>
+                  <button
+                    type="button"
+                    (click)="nextPageTab('exams', filteredSubjects.length)"
+                    [disabled]="currentPage['exams'] >= getTotalPages(filteredSubjects.length)"
+                    aria-label="Next page"
+                    class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                    <mat-icon>chevron_right</mat-icon>
                   </button>
                 </div>
               </div>
@@ -7210,25 +7314,25 @@
             <span class="text-slate-500 font-medium tabular-nums">
               Showing <span class="font-bold text-slate-900">{{ min(filteredTimetables.length, (currentPage['timetable'] - 1) * pageSize + 1) }}</span> - <span class="font-bold text-slate-900">{{ min(filteredTimetables.length, currentPage['timetable'] * pageSize) }}</span> of <span class="font-bold text-slate-900">{{ filteredTimetables.length }}</span> periods
             </span>
-            <div class="flex items-center gap-1.5 select-none">
-              <button (click)="prevPageTab('timetable')" [disabled]="currentPage['timetable'] === 1"
-                class="px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 active:scale-95">
-                <lucide-icon [name]="'chevron-left'" class="w-3.5 h-3.5"></lucide-icon>
-                <span class="hidden sm:inline">Previous</span>
+            <div class="flex items-center gap-4 sm:gap-6 select-none">
+              <button
+                type="button"
+                (click)="prevPageTab('timetable')"
+                [disabled]="currentPage['timetable'] === 1"
+                aria-label="Previous page"
+                class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                <mat-icon>chevron_left</mat-icon>
               </button>
-
-              @for (p of getPageNumbers(filteredTimetables.length); track p) {
-                <button (click)="setPage('timetable', p)"
-                  class="w-7 h-7 rounded-lg font-bold text-xs cursor-pointer transition-all tabular-nums"
-                  [class]="currentPage['timetable'] === p ? 'bg-indigo-600 text-white shadow-xs font-black' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'">
-                  {{ p }}
-                </button>
-              }
-
-              <button (click)="nextPageTab('timetable', filteredTimetables.length)" [disabled]="currentPage['timetable'] * pageSize >= filteredTimetables.length"
-                class="px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 active:scale-95">
-                <span class="hidden sm:inline">Next</span>
-                <lucide-icon [name]="'chevron-right'" class="w-3.5 h-3.5"></lucide-icon>
+              <span class="font-semibold text-slate-500 text-sm tabular-nums whitespace-nowrap">
+                Page <span class="text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200 mx-1 font-bold">{{ currentPage['timetable'] }}</span> of {{ getTotalPages(filteredTimetables.length) }}
+              </span>
+              <button
+                type="button"
+                (click)="nextPageTab('timetable', filteredTimetables.length)"
+                [disabled]="currentPage['timetable'] >= getTotalPages(filteredTimetables.length)"
+                aria-label="Next page"
+                class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                <mat-icon>chevron_right</mat-icon>
               </button>
             </div>
           </div>
@@ -7414,25 +7518,25 @@
               <span class="text-slate-500 font-medium tabular-nums">
                 Showing <span class="font-bold text-slate-900">{{ min(filteredPaymentGateway.length, (currentPage['payment_gateway'] - 1) * pageSize + 1) }}</span> - <span class="font-bold text-slate-900">{{ min(filteredPaymentGateway.length, currentPage['payment_gateway'] * pageSize) }}</span> of <span class="font-bold text-slate-900">{{ filteredPaymentGateway.length }}</span> transactions
               </span>
-              <div class="flex items-center gap-1.5 select-none">
-                <button (click)="prevPageTab('payment_gateway')" [disabled]="currentPage['payment_gateway'] === 1"
-                  class="px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 active:scale-95">
-                  <lucide-icon [name]="'chevron-left'" class="w-3.5 h-3.5"></lucide-icon>
-                  <span class="hidden sm:inline">Previous</span>
+              <div class="flex items-center gap-4 sm:gap-6 select-none">
+                <button
+                  type="button"
+                  (click)="prevPageTab('payment_gateway')"
+                  [disabled]="currentPage['payment_gateway'] === 1"
+                  aria-label="Previous page"
+                  class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                  <mat-icon>chevron_left</mat-icon>
                 </button>
-
-                @for (p of getPageNumbers(filteredPaymentGateway.length); track p) {
-                  <button (click)="setPage('payment_gateway', p)"
-                    class="w-7 h-7 rounded-lg font-bold text-xs cursor-pointer transition-all tabular-nums"
-                    [class]="currentPage['payment_gateway'] === p ? 'bg-indigo-600 text-white shadow-xs font-black' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'">
-                    {{ p }}
-                  </button>
-                }
-
-                <button (click)="nextPageTab('payment_gateway', filteredPaymentGateway.length)" [disabled]="currentPage['payment_gateway'] * pageSize >= filteredPaymentGateway.length"
-                  class="px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 active:scale-95">
-                  <span class="hidden sm:inline">Next</span>
-                  <lucide-icon [name]="'chevron-right'" class="w-3.5 h-3.5"></lucide-icon>
+                <span class="font-semibold text-slate-500 text-sm tabular-nums whitespace-nowrap">
+                  Page <span class="text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200 mx-1 font-bold">{{ currentPage['payment_gateway'] }}</span> of {{ getTotalPages(filteredPaymentGateway.length) }}
+                </span>
+                <button
+                  type="button"
+                  (click)="nextPageTab('payment_gateway', filteredPaymentGateway.length)"
+                  [disabled]="currentPage['payment_gateway'] >= getTotalPages(filteredPaymentGateway.length)"
+                  aria-label="Next page"
+                  class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                  <mat-icon>chevron_right</mat-icon>
                 </button>
               </div>
             </div>
@@ -8095,25 +8199,25 @@
             <span class="text-slate-500 font-medium tabular-nums">
               Showing <span class="font-bold text-slate-900">{{ min(filteredNoticeHistory.length, (feedCurrentPage - 1) * feedPageSize + 1) }}</span> - <span class="font-bold text-slate-900">{{ min(filteredNoticeHistory.length, feedCurrentPage * feedPageSize) }}</span> of <span class="font-bold text-slate-900">{{ filteredNoticeHistory.length }}</span> official notices
             </span>
-            <div class="flex items-center gap-1.5 select-none">
-              <button (click)="setFeedPage(feedCurrentPage - 1)" [disabled]="feedCurrentPage === 1"
-                class="px-3 py-1.5 rounded-xl border border-slate-200 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 active:scale-95">
-                <lucide-icon [name]="'chevron-left'" class="w-3.5 h-3.5"></lucide-icon>
-                <span class="hidden sm:inline">Previous</span>
+            <div class="flex items-center gap-4 sm:gap-6 select-none">
+              <button
+                type="button"
+                (click)="setFeedPage(feedCurrentPage - 1)"
+                [disabled]="feedCurrentPage === 1"
+                aria-label="Previous page"
+                class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                <mat-icon>chevron_left</mat-icon>
               </button>
-
-              @for (p of feedPageNumbers; track p) {
-                <button (click)="setFeedPage(p)"
-                  class="w-8 h-8 rounded-xl font-bold text-xs cursor-pointer transition-all tabular-nums"
-                  [class]="feedCurrentPage === p ? 'bg-indigo-600 text-white shadow-sm font-black' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'">
-                  {{ p }}
-                </button>
-              }
-
-              <button (click)="setFeedPage(feedCurrentPage + 1)" [disabled]="feedCurrentPage >= totalFeedPages"
-                class="px-3 py-1.5 rounded-xl border border-slate-200 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 active:scale-95">
-                <span class="hidden sm:inline">Next</span>
-                <lucide-icon [name]="'chevron-right'" class="w-3.5 h-3.5"></lucide-icon>
+              <span class="font-semibold text-slate-500 text-sm tabular-nums whitespace-nowrap">
+                Page <span class="text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200 mx-1 font-bold">{{ feedCurrentPage }}</span> of {{ totalFeedPages }}
+              </span>
+              <button
+                type="button"
+                (click)="setFeedPage(feedCurrentPage + 1)"
+                [disabled]="feedCurrentPage >= totalFeedPages"
+                aria-label="Next page"
+                class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                <mat-icon>chevron_right</mat-icon>
               </button>
             </div>
           </div>
@@ -10517,25 +10621,25 @@
                   Showing <span class="font-bold text-slate-900">{{ min(getFilteredStageStudents(principalSelectedStage).length, (principalStagePage - 1) * stagePageSize + 1) }}</span> - <span class="font-bold text-slate-900">{{ min(getFilteredStageStudents(principalSelectedStage).length, principalStagePage * stagePageSize) }}</span> of <span class="font-bold text-slate-900">{{ getFilteredStageStudents(principalSelectedStage).length }}</span> Students
                 </span>
 
-                <div class="flex items-center gap-1.5 select-none">
-                  <button (click)="principalStagePage = Math.max(1, principalStagePage - 1)" [disabled]="principalStagePage === 1"
-                    class="px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 active:scale-95">
-                    <lucide-icon [name]="'chevron-left'" class="w-3.5 h-3.5"></lucide-icon>
-                    <span class="hidden sm:inline">Previous</span>
+                <div class="flex items-center gap-4 sm:gap-6 select-none">
+                  <button
+                    type="button"
+                    (click)="principalStagePage = Math.max(1, principalStagePage - 1)"
+                    [disabled]="principalStagePage === 1"
+                    aria-label="Previous page"
+                    class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                    <mat-icon>chevron_left</mat-icon>
                   </button>
-
-                  @for (p of getStagePageNumbers(principalSelectedStage); track p) {
-                    <button (click)="principalStagePage = p"
-                      class="w-7 h-7 rounded-lg font-bold text-xs cursor-pointer transition-all tabular-nums"
-                      [class]="principalStagePage === p ? 'bg-indigo-600 text-white shadow-xs font-black' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'">
-                      {{ p }}
-                    </button>
-                  }
-
-                  <button (click)="principalStagePage = principalStagePage + 1" [disabled]="principalStagePage * stagePageSize >= getFilteredStageStudents(principalSelectedStage).length"
-                    class="px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 active:scale-95">
-                    <span class="hidden sm:inline">Next</span>
-                    <lucide-icon [name]="'chevron-right'" class="w-3.5 h-3.5"></lucide-icon>
+                  <span class="font-semibold text-slate-500 text-sm tabular-nums whitespace-nowrap">
+                    Page <span class="text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200 mx-1 font-bold">{{ principalStagePage }}</span> of {{ getStageTotalPages(principalSelectedStage) }}
+                  </span>
+                  <button
+                    type="button"
+                    (click)="principalStagePage = Math.min(getStageTotalPages(principalSelectedStage), principalStagePage + 1)"
+                    [disabled]="principalStagePage >= getStageTotalPages(principalSelectedStage)"
+                    aria-label="Next page"
+                    class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                    <mat-icon>chevron_right</mat-icon>
                   </button>
                 </div>
               </div>
@@ -10703,6 +10807,32 @@
                   </tbody>
                 </table>
               </div>
+
+              <!-- Pagination Controls for Students -->
+              <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 text-xs text-slate-600">
+                <span class="font-medium tabular-nums">Showing <span class="font-bold text-slate-900">{{ min(getFilteredPrincipalStudents().length, (principalStudentsPage - 1) * principalMasterPageSize + 1) }}</span> - <span class="font-bold text-slate-900">{{ min(getFilteredPrincipalStudents().length, principalStudentsPage * principalMasterPageSize) }}</span> of <span class="font-bold text-slate-900">{{ getFilteredPrincipalStudents().length }}</span> Students</span>
+                <div class="flex items-center gap-4 sm:gap-6 select-none">
+                  <button
+                    type="button"
+                    (click)="principalStudentsPage = Math.max(1, principalStudentsPage - 1)"
+                    [disabled]="principalStudentsPage === 1"
+                    aria-label="Previous page"
+                    class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                    <mat-icon>chevron_left</mat-icon>
+                  </button>
+                  <span class="font-semibold text-slate-500 text-sm tabular-nums whitespace-nowrap">
+                    Page <span class="text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200 mx-1 font-bold">{{ principalStudentsPage }}</span> of {{ getTotalPages(getFilteredPrincipalStudents().length, principalMasterPageSize) }}
+                  </span>
+                  <button
+                    type="button"
+                    (click)="principalStudentsPage = Math.min(getTotalPages(getFilteredPrincipalStudents().length, principalMasterPageSize), principalStudentsPage + 1)"
+                    [disabled]="principalStudentsPage >= getTotalPages(getFilteredPrincipalStudents().length, principalMasterPageSize)"
+                    aria-label="Next page"
+                    class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                    <mat-icon>chevron_right</mat-icon>
+                  </button>
+                </div>
+              </div>
             }
 
             <!-- TABLE VIEW 2: TEACHERS -->
@@ -10739,6 +10869,32 @@
                   </tbody>
                 </table>
               </div>
+
+              <!-- Pagination Controls for Teachers -->
+              <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 text-xs text-slate-600">
+                <span class="font-medium tabular-nums">Showing <span class="font-bold text-slate-900">{{ min(getFilteredPrincipalTeachers().length, (principalTeachersPage - 1) * principalMasterPageSize + 1) }}</span> - <span class="font-bold text-slate-900">{{ min(getFilteredPrincipalTeachers().length, principalTeachersPage * principalMasterPageSize) }}</span> of <span class="font-bold text-slate-900">{{ getFilteredPrincipalTeachers().length }}</span> Faculty Staff</span>
+                <div class="flex items-center gap-4 sm:gap-6 select-none">
+                  <button
+                    type="button"
+                    (click)="principalTeachersPage = Math.max(1, principalTeachersPage - 1)"
+                    [disabled]="principalTeachersPage === 1"
+                    aria-label="Previous page"
+                    class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                    <mat-icon>chevron_left</mat-icon>
+                  </button>
+                  <span class="font-semibold text-slate-500 text-sm tabular-nums whitespace-nowrap">
+                    Page <span class="text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200 mx-1 font-bold">{{ principalTeachersPage }}</span> of {{ getTotalPages(getFilteredPrincipalTeachers().length, principalMasterPageSize) }}
+                  </span>
+                  <button
+                    type="button"
+                    (click)="principalTeachersPage = Math.min(getTotalPages(getFilteredPrincipalTeachers().length, principalMasterPageSize), principalTeachersPage + 1)"
+                    [disabled]="principalTeachersPage >= getTotalPages(getFilteredPrincipalTeachers().length, principalMasterPageSize)"
+                    aria-label="Next page"
+                    class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                    <mat-icon>chevron_right</mat-icon>
+                  </button>
+                </div>
+              </div>
             }
 
             <!-- TABLE VIEW 3: PARENTS -->
@@ -10772,6 +10928,32 @@
                     }
                   </tbody>
                 </table>
+              </div>
+
+              <!-- Pagination Controls for Parents -->
+              <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 text-xs text-slate-600">
+                <span class="font-medium tabular-nums">Showing <span class="font-bold text-slate-900">{{ min(getFilteredPrincipalParents().length, (principalParentsPage - 1) * principalMasterPageSize + 1) }}</span> - <span class="font-bold text-slate-900">{{ min(getFilteredPrincipalParents().length, principalParentsPage * principalMasterPageSize) }}</span> of <span class="font-bold text-slate-900">{{ getFilteredPrincipalParents().length }}</span> Families</span>
+                <div class="flex items-center gap-4 sm:gap-6 select-none">
+                  <button
+                    type="button"
+                    (click)="principalParentsPage = Math.max(1, principalParentsPage - 1)"
+                    [disabled]="principalParentsPage === 1"
+                    aria-label="Previous page"
+                    class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                    <mat-icon>chevron_left</mat-icon>
+                  </button>
+                  <span class="font-semibold text-slate-500 text-sm tabular-nums whitespace-nowrap">
+                    Page <span class="text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200 mx-1 font-bold">{{ principalParentsPage }}</span> of {{ getTotalPages(getFilteredPrincipalParents().length, principalMasterPageSize) }}
+                  </span>
+                  <button
+                    type="button"
+                    (click)="principalParentsPage = Math.min(getTotalPages(getFilteredPrincipalParents().length, principalMasterPageSize), principalParentsPage + 1)"
+                    [disabled]="principalParentsPage >= getTotalPages(getFilteredPrincipalParents().length, principalMasterPageSize)"
+                    aria-label="Next page"
+                    class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                    <mat-icon>chevron_right</mat-icon>
+                  </button>
+                </div>
               </div>
             }
 
@@ -10823,6 +11005,32 @@
                     }
                   </tbody>
                 </table>
+              </div>
+
+              <!-- Pagination Controls for Cashiering -->
+              <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 text-xs text-slate-600">
+                <span class="font-medium tabular-nums">Showing <span class="font-bold text-slate-900">{{ min(getFilteredPrincipalFees().length, (principalFeesPage - 1) * principalMasterPageSize + 1) }}</span> - <span class="font-bold text-slate-900">{{ min(getFilteredPrincipalFees().length, principalFeesPage * principalMasterPageSize) }}</span> of <span class="font-bold text-slate-900">{{ getFilteredPrincipalFees().length }}</span> Verified Receipts</span>
+                <div class="flex items-center gap-4 sm:gap-6 select-none">
+                  <button
+                    type="button"
+                    (click)="principalFeesPage = Math.max(1, principalFeesPage - 1)"
+                    [disabled]="principalFeesPage === 1"
+                    aria-label="Previous page"
+                    class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                    <mat-icon>chevron_left</mat-icon>
+                  </button>
+                  <span class="font-semibold text-slate-500 text-sm tabular-nums whitespace-nowrap">
+                    Page <span class="text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200 mx-1 font-bold">{{ principalFeesPage }}</span> of {{ getTotalPages(getFilteredPrincipalFees().length, principalMasterPageSize) }}
+                  </span>
+                  <button
+                    type="button"
+                    (click)="principalFeesPage = Math.min(getTotalPages(getFilteredPrincipalFees().length, principalMasterPageSize), principalFeesPage + 1)"
+                    [disabled]="principalFeesPage >= getTotalPages(getFilteredPrincipalFees().length, principalMasterPageSize)"
+                    aria-label="Next page"
+                    class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                    <mat-icon>chevron_right</mat-icon>
+                  </button>
+                </div>
               </div>
             }
           </div>
@@ -10970,23 +11178,25 @@
               Showing <span class="font-bold text-slate-900">{{ (lessonPlanPage - 1) * lessonPlanPageSize + 1 }}</span> to <span class="font-bold text-slate-900">{{ min(lessonPlanPage * lessonPlanPageSize, getFilteredLessonPlans().length) }}</span> of <span class="font-bold text-slate-900">{{ getFilteredLessonPlans().length }}</span> lesson plans
             </div>
 
-            <div class="flex items-center gap-2 select-none">
-              <!-- Previous Button -->
-              <button (click)="prevLessonPlanPage()" [disabled]="lessonPlanPage === 1"
-                      class="px-3 py-1.5 rounded-xl border border-slate-200 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 active:scale-95">
-                <lucide-icon [name]="'chevron-left'" class="w-3.5 h-3.5"></lucide-icon>
-                <span>Previous</span>
+            <div class="flex items-center gap-4 sm:gap-6 select-none">
+              <button
+                type="button"
+                (click)="prevLessonPlanPage()"
+                [disabled]="lessonPlanPage === 1"
+                aria-label="Previous page"
+                class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                <mat-icon>chevron_left</mat-icon>
               </button>
-
-              <span class="px-3 py-1.5 rounded-xl bg-indigo-600 text-white font-black text-xs shadow-xs">
-                Page {{ lessonPlanPage }} of {{ getLessonPlanTotalPages() }}
+              <span class="font-semibold text-slate-500 text-sm tabular-nums whitespace-nowrap">
+                Page <span class="text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200 mx-1 font-bold">{{ lessonPlanPage }}</span> of {{ getLessonPlanTotalPages() }}
               </span>
-
-              <!-- Next Button -->
-              <button (click)="nextLessonPlanPage()" [disabled]="lessonPlanPage === getLessonPlanTotalPages()"
-                      class="px-3 py-1.5 rounded-xl border border-slate-200 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 active:scale-95">
-                <span>Next</span>
-                <lucide-icon [name]="'chevron-right'" class="w-3.5 h-3.5"></lucide-icon>
+              <button
+                type="button"
+                (click)="nextLessonPlanPage()"
+                [disabled]="lessonPlanPage === getLessonPlanTotalPages()"
+                aria-label="Next page"
+                class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                <mat-icon>chevron_right</mat-icon>
               </button>
             </div>
           </div>
@@ -13316,25 +13526,25 @@
               Showing <span class="font-bold text-slate-900">{{ min(filteredNoticeHistory.length, (feedCurrentPage - 1) * feedPageSize + 1) }}</span> - <span class="font-bold text-slate-900">{{ min(filteredNoticeHistory.length, feedCurrentPage * feedPageSize) }}</span> of <span class="font-bold text-slate-900">{{ filteredNoticeHistory.length }}</span> circular records
             </span>
 
-            <div class="flex items-center gap-1.5 select-none">
-              <button (click)="setFeedPage(feedCurrentPage - 1)" [disabled]="feedCurrentPage === 1"
-                      class="px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 active:scale-95">
-                <lucide-icon [name]="'chevron-left'" class="w-3.5 h-3.5"></lucide-icon>
-                <span class="hidden sm:inline">Previous</span>
+            <div class="flex items-center gap-4 sm:gap-6 select-none">
+              <button
+                type="button"
+                (click)="setFeedPage(feedCurrentPage - 1)"
+                [disabled]="feedCurrentPage === 1"
+                aria-label="Previous page"
+                class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                <mat-icon>chevron_left</mat-icon>
               </button>
-
-              @for (p of feedPageNumbers; track p) {
-                <button (click)="setFeedPage(p)"
-                        class="w-7 h-7 rounded-lg font-bold text-xs cursor-pointer transition-all tabular-nums"
-                        [class]="feedCurrentPage === p ? 'bg-indigo-600 text-white shadow-xs font-black' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'">
-                  {{ p }}
-                </button>
-              }
-
-              <button (click)="setFeedPage(feedCurrentPage + 1)" [disabled]="feedCurrentPage >= totalFeedPages"
-                      class="px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 active:scale-95">
-                <span class="hidden sm:inline">Next</span>
-                <lucide-icon [name]="'chevron-right'" class="w-3.5 h-3.5"></lucide-icon>
+              <span class="font-semibold text-slate-500 text-sm tabular-nums whitespace-nowrap">
+                Page <span class="text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200 mx-1 font-bold">{{ feedCurrentPage }}</span> of {{ totalFeedPages }}
+              </span>
+              <button
+                type="button"
+                (click)="setFeedPage(feedCurrentPage + 1)"
+                [disabled]="feedCurrentPage >= totalFeedPages"
+                aria-label="Next page"
+                class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                <mat-icon>chevron_right</mat-icon>
               </button>
             </div>
           </div>
@@ -13500,32 +13710,25 @@
               Showing <span class="font-bold text-slate-900">{{ (eventsCurrentPage - 1) * eventsPageSize + 1 }}</span> to <span class="font-bold text-slate-900">{{ min(eventsCurrentPage * eventsPageSize, filteredSchoolEvents.length) }}</span> of <span class="font-bold text-slate-900">{{ filteredSchoolEvents.length }}</span> events
             </div>
 
-            <div class="flex items-center gap-1.5 select-none">
-              <!-- Previous Button -->
+            <div class="flex items-center gap-4 sm:gap-6 select-none">
               <button
+                type="button"
                 (click)="setEventsPage(eventsCurrentPage - 1)"
                 [disabled]="eventsCurrentPage === 1"
-                class="px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 active:scale-95">
-                <lucide-icon [name]="'chevron-left'" class="w-3.5 h-3.5"></lucide-icon>
-                <span class="hidden sm:inline">Previous</span>
+                aria-label="Previous page"
+                class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                <mat-icon>chevron_left</mat-icon>
               </button>
-
-              <!-- Numbered Page Buttons -->
-              @for (pageNum of eventsPageNumbers; track pageNum) {
-                <button
-                  (click)="setEventsPage(pageNum)"
-                  [class]="pageNum === eventsCurrentPage ? 'px-3 py-1.5 rounded-lg bg-amber-600 text-white font-black text-xs tabular-nums shadow-xs' : 'px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 font-bold text-xs tabular-nums text-slate-700'">
-                  {{ pageNum }}
-                </button>
-              }
-
-              <!-- Next Button -->
+              <span class="font-semibold text-slate-500 text-sm tabular-nums whitespace-nowrap">
+                Page <span class="text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200 mx-1 font-bold">{{ eventsCurrentPage }}</span> of {{ eventsTotalPages }}
+              </span>
               <button
+                type="button"
                 (click)="setEventsPage(eventsCurrentPage + 1)"
                 [disabled]="eventsCurrentPage === eventsTotalPages"
-                class="px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 active:scale-95">
-                <span class="hidden sm:inline">Next</span>
-                <lucide-icon [name]="'chevron-right'" class="w-3.5 h-3.5"></lucide-icon>
+                aria-label="Next page"
+                class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                <mat-icon>chevron_right</mat-icon>
               </button>
             </div>
           </div>
@@ -13737,28 +13940,25 @@
               Showing <span class="font-bold text-slate-900">{{ (gradebookPage - 1) * gradebookPageSize + 1 }}</span> to <span class="font-bold text-slate-900">{{ min(gradebookPage * gradebookPageSize, getFilteredGradebook().length) }}</span> of <span class="font-bold text-slate-900">{{ getFilteredGradebook().length }}</span> students
             </div>
 
-            <div class="flex items-center gap-1.5 select-none">
-              <!-- Previous Button -->
+            <div class="flex items-center gap-4 sm:gap-6 select-none">
               <button
+                type="button"
                 (click)="prevGradebookPage()"
                 [disabled]="gradebookPage === 1"
-                class="px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 active:scale-95">
-                <lucide-icon [name]="'chevron-left'" class="w-3.5 h-3.5"></lucide-icon>
-                <span class="hidden sm:inline">Previous</span>
+                aria-label="Previous page"
+                class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                <mat-icon>chevron_left</mat-icon>
               </button>
-
-              <!-- Page Number Indicator -->
-              <span class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-bold text-xs tabular-nums shadow-xs">
-                Page {{ gradebookPage }} of {{ getGradebookTotalPages() }}
+              <span class="font-semibold text-slate-500 text-sm tabular-nums whitespace-nowrap">
+                Page <span class="text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200 mx-1 font-bold">{{ gradebookPage }}</span> of {{ getGradebookTotalPages() }}
               </span>
-
-              <!-- Next Button -->
               <button
+                type="button"
                 (click)="nextGradebookPage()"
                 [disabled]="gradebookPage === getGradebookTotalPages()"
-                class="px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 active:scale-95">
-                <span class="hidden sm:inline">Next</span>
-                <lucide-icon [name]="'chevron-right'" class="w-3.5 h-3.5"></lucide-icon>
+                aria-label="Next page"
+                class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                <mat-icon>chevron_right</mat-icon>
               </button>
             </div>
           </div>
@@ -15030,25 +15230,25 @@
               Showing <span class="font-bold text-slate-900">{{ min(filteredNoticeHistory.length, (feedCurrentPage - 1) * feedPageSize + 1) }}</span> - <span class="font-bold text-slate-900">{{ min(filteredNoticeHistory.length, feedCurrentPage * feedPageSize) }}</span> of <span class="font-bold text-slate-900">{{ filteredNoticeHistory.length }}</span> circular records
             </span>
 
-            <div class="flex items-center gap-1.5 select-none">
-              <button (click)="setFeedPage(feedCurrentPage - 1)" [disabled]="feedCurrentPage === 1"
-                      class="px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 active:scale-95">
-                <lucide-icon [name]="'chevron-left'" class="w-3.5 h-3.5"></lucide-icon>
-                <span class="hidden sm:inline">Previous</span>
+            <div class="flex items-center gap-4 sm:gap-6 select-none">
+              <button
+                type="button"
+                (click)="setFeedPage(feedCurrentPage - 1)"
+                [disabled]="feedCurrentPage === 1"
+                aria-label="Previous page"
+                class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                <mat-icon>chevron_left</mat-icon>
               </button>
-
-              @for (p of feedPageNumbers; track p) {
-                <button (click)="setFeedPage(p)"
-                        class="w-7 h-7 rounded-lg font-bold text-xs cursor-pointer transition-all tabular-nums"
-                        [class]="feedCurrentPage === p ? 'bg-sky-600 text-white shadow-xs font-black' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'">
-                  {{ p }}
-                </button>
-              }
-
-              <button (click)="setFeedPage(feedCurrentPage + 1)" [disabled]="feedCurrentPage >= totalFeedPages"
-                      class="px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 active:scale-95">
-                <span class="hidden sm:inline">Next</span>
-                <lucide-icon [name]="'chevron-right'" class="w-3.5 h-3.5"></lucide-icon>
+              <span class="font-semibold text-slate-500 text-sm tabular-nums whitespace-nowrap">
+                Page <span class="text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200 mx-1 font-bold">{{ feedCurrentPage }}</span> of {{ totalFeedPages }}
+              </span>
+              <button
+                type="button"
+                (click)="setFeedPage(feedCurrentPage + 1)"
+                [disabled]="feedCurrentPage >= totalFeedPages"
+                aria-label="Next page"
+                class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                <mat-icon>chevron_right</mat-icon>
               </button>
             </div>
           </div>
@@ -16009,25 +16209,25 @@
               Showing <span class="font-bold text-slate-900">{{ min(filteredNoticeHistory.length, (feedCurrentPage - 1) * feedPageSize + 1) }}</span> - <span class="font-bold text-slate-900">{{ min(filteredNoticeHistory.length, feedCurrentPage * feedPageSize) }}</span> of <span class="font-bold text-slate-900">{{ filteredNoticeHistory.length }}</span> circular records
             </span>
 
-            <div class="flex items-center gap-1.5 select-none">
-              <button (click)="setFeedPage(feedCurrentPage - 1)" [disabled]="feedCurrentPage === 1"
-                      class="px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 active:scale-95">
-                <lucide-icon [name]="'chevron-left'" class="w-3.5 h-3.5"></lucide-icon>
-                <span class="hidden sm:inline">Previous</span>
+            <div class="flex items-center gap-4 sm:gap-6 select-none">
+              <button
+                type="button"
+                (click)="setFeedPage(feedCurrentPage - 1)"
+                [disabled]="feedCurrentPage === 1"
+                aria-label="Previous page"
+                class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                <mat-icon>chevron_left</mat-icon>
               </button>
-
-              @for (p of feedPageNumbers; track p) {
-                <button (click)="setFeedPage(p)"
-                        class="w-7 h-7 rounded-lg font-bold text-xs cursor-pointer transition-all tabular-nums"
-                        [class]="feedCurrentPage === p ? 'bg-purple-600 text-white shadow-xs font-black' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'">
-                  {{ p }}
-                </button>
-              }
-
-              <button (click)="setFeedPage(feedCurrentPage + 1)" [disabled]="feedCurrentPage >= totalFeedPages"
-                      class="px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 active:scale-95">
-                <span class="hidden sm:inline">Next</span>
-                <lucide-icon [name]="'chevron-right'" class="w-3.5 h-3.5"></lucide-icon>
+              <span class="font-semibold text-slate-500 text-sm tabular-nums whitespace-nowrap">
+                Page <span class="text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200 mx-1 font-bold">{{ feedCurrentPage }}</span> of {{ totalFeedPages }}
+              </span>
+              <button
+                type="button"
+                (click)="setFeedPage(feedCurrentPage + 1)"
+                [disabled]="feedCurrentPage >= totalFeedPages"
+                aria-label="Next page"
+                class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
+                <mat-icon>chevron_right</mat-icon>
               </button>
             </div>
           </div>

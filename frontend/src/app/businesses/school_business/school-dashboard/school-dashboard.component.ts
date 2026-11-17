@@ -9274,6 +9274,11 @@ INSTRUCTIONS:
     return Array.from({ length: totalPages }, (_, i) => i + 1);
   }
 
+  getTotalPages(totalItems: number, customPageSize?: number): number {
+    const size = customPageSize && customPageSize > 0 ? customPageSize : this.pageSize;
+    return Math.max(1, Math.ceil((totalItems || 0) / size));
+  }
+
   toggleStudentRow(studentId: string, event?: MouseEvent): void {
     if (event) {
       const target = event.target as HTMLElement;
