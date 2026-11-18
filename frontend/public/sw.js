@@ -1,8 +1,9 @@
-// SoftCode Enterprise Service Worker - Network First with Offline Shell & Face AI Model Resilience
-const CACHE_NAME = 'scs-multi-tenant-cloud-v9';
+// SoftCode Enterprise Service Worker - Network First with Offline Shell, I18N Packs & Face AI Model Resilience
+const CACHE_NAME = 'scs-multi-tenant-cloud-v11';
 const FACE_MODEL_ASSETS = [
   '/',
   '/manifest.json',
+  '/i18n-core-packs.json',
   '/face-models/tiny_face_detector_model-weights_manifest.json',
   '/face-models/tiny_face_detector_model.bin',
   '/face-models/face_landmark_68_tiny_model-weights_manifest.json',
@@ -29,11 +30,14 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
+  const isOfflineI18nPack =
+    event.request.method === 'GET' &&
+    (url.pathname.startsWith('/api/i18n/pack/') || url.pathname === '/api/i18n/packs/summary');
 
-  // Bypass service worker for camera video stream blobs, API calls, and WebSockets
+  // Bypass service worker for camera video stream blobs, mutable API calls, and WebSockets
   if (
     event.request.url.startsWith('blob:') ||
-    url.pathname.startsWith('/api') ||
+    (url.pathname.startsWith('/api') && !isOfflineI18nPack) ||
     event.request.url.startsWith('ws://') ||
     event.request.url.startsWith('wss://')
   ) {
@@ -44,7 +48,7 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     fetch(event.request)
       .then((networkResponse) => {
-        if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+        if (networkResponse && networkResponse.status === 200 && (networkResponse.type === 'basic' || isOfflineI18nPack)) {
           const responseToCache = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, responseToCache);
@@ -56,6 +60,11 @@ self.addEventListener('fetch', (event) => {
         return caches.match(event.request).then((cachedResponse) => {
           if (cachedResponse) {
             return cachedResponse;
+          }
+          if (isOfflineI18nPack) {
+            return new Response(JSON.stringify({ ok: false, offline: true, translations: {} }), {
+              headers: { 'Content-Type': 'application/json' }
+            });
           }
           return caches.match('/index.html').then((idx) => idx || caches.match('/'));
         });

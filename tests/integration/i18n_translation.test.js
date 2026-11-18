@@ -99,13 +99,13 @@ test('I18N API supports English identity pass-through and regional/global picker
   assert.equal(enBody.ok, true);
   assert.equal(enBody.translations['Submit Ticket'], 'Submit Ticket');
 
-  for (const lang of ['sd', 'pa', 'ps', 'bal', 'skr', 'ks', 'ar', 'hi', 'es', 'fr']) {
+  for (const lang of ['sd', 'pa', 'ps', 'bal', 'skr', 'ks', 'ar', 'fa', 'hi', 'bn', 'ko', 'th', 'vi', 'ms', 'pl', 'uk', 'he', 'ta', 'sw', 'es', 'fr']) {
     const res = await fetch(`${baseUrl}/api/i18n/translate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         targetLang: lang,
-        texts: ['Enterprise Support', 'Manage your SoftCodeSolution business workspace']
+        texts: ['Enterprise Support', 'Founder & CEO', 'Connected to SoftCode Ops Desk', 'Manage your SoftCodeSolution business workspace']
       })
     });
     assert.equal(res.status, 200);
@@ -113,7 +113,42 @@ test('I18N API supports English identity pass-through and regional/global picker
     assert.equal(body.ok, true);
     assert.ok(typeof body.translations['Enterprise Support'] === 'string');
     assert.ok(body.translations['Enterprise Support'].length > 0);
+    assert.ok(typeof body.translations['Founder & CEO'] === 'string' && body.translations['Founder & CEO'].length > 0, `Expected Founder & CEO translation for ${lang}`);
+    assert.ok(typeof body.translations['Connected to SoftCode Ops Desk'] === 'string' && body.translations['Connected to SoftCode Ops Desk'].length > 0, `Expected Ops Desk translation for ${lang}`);
     const sentence = body.translations['Manage your SoftCodeSolution business workspace'];
     assert.ok(typeof sentence === 'string' && sentence.length > 0, `Expected non-empty translation for ${lang}`);
   }
+});
+
+test('I18N API exposes hybrid offline pack summary, pack download, and pack import endpoints', async () => {
+  // Import custom offline phrase into SQLite pack
+  const importRes = await fetch(`${baseUrl}/api/i18n/pack/import`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      targetLang: 'ar',
+      translations: { 'Offline Sync Verification': 'التحقق من المزامنة دون اتصال' }
+    })
+  });
+  assert.equal(importRes.status, 200);
+  const importBody = await importRes.json();
+  assert.equal(importBody.ok, true);
+  assert.ok(importBody.imported >= 1);
+
+  // Download full offline pack for ur & ar
+  const packRes = await fetch(`${baseUrl}/api/i18n/pack/ar`);
+  assert.equal(packRes.status, 200);
+  const packBody = await packRes.json();
+  assert.equal(packBody.ok, true);
+  assert.equal(packBody.targetLang, 'ar');
+  assert.equal(packBody.translations['Offline Sync Verification'], 'التحقق من المزامنة دون اتصال');
+  assert.ok(packBody.count >= 1);
+
+  // Verify summary reports downloaded counts per language
+  const summaryRes = await fetch(`${baseUrl}/api/i18n/packs/summary`);
+  assert.equal(summaryRes.status, 200);
+  const summaryBody = await summaryRes.json();
+  assert.equal(summaryBody.ok, true);
+  assert.ok(summaryBody.packs.ar?.count >= 1);
+  assert.ok(summaryBody.packs.ur?.count >= 1);
 });
