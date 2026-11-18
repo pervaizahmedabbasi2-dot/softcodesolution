@@ -1984,4 +1984,278 @@ export class BackendService {
       return await res.json();
     } catch { return { ok: false }; }
   }
+
+  // --- TECHNICAL SUPPORT, LIVE CHAT, AUTO-BOT, EMAIL CAMPAIGNS & SMTP ---
+  async submitSupportTicket(payload: {
+    name: string;
+    email: string;
+    phone?: string;
+    companyName?: string;
+    subject: string;
+    subjectTitle?: string;
+    priority?: string;
+    message: string;
+    sourceChannel?: string;
+    tenantId?: string;
+  }) {
+    try {
+      const res = await fetch('/api/support/tickets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      return await res.json().catch(() => ({ ok: false, message: 'Invalid response from support server.' }));
+    } catch {
+      return { ok: false, message: 'Network error while submitting support ticket.' };
+    }
+  }
+
+  async sendSupportChat(payload: {
+    ticketId?: string;
+    name?: string;
+    email?: string;
+    phone?: string;
+    companyName?: string;
+    message?: string;
+    subjectCategory?: string;
+    escalateToHuman?: boolean;
+    tenantId?: string;
+  }) {
+    try {
+      const res = await fetch('/api/support/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      return await res.json().catch(() => ({ ok: false, message: 'Chat service unavailable.' }));
+    } catch {
+      return { ok: false, message: 'Network error contacting support chat.' };
+    }
+  }
+
+  async trackSupportTicket(ticketNo: string, email: string) {
+    try {
+      const params = new URLSearchParams({
+        ticketNo: ticketNo.trim(),
+        email: email.trim().toLowerCase()
+      });
+      const res = await fetch(`/api/support/tickets/track?${params.toString()}`, {
+        credentials: 'include'
+      });
+      return await res.json().catch(() => ({ ok: false, message: 'Failed to inspect ticket.' }));
+    } catch {
+      return { ok: false, message: 'Network error while tracking ticket.' };
+    }
+  }
+
+  async replyPublicSupportTicket(payload: { ticketNo: string; email: string; message: string }) {
+    try {
+      const res = await fetch('/api/support/tickets/public-reply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      return await res.json().catch(() => ({ ok: false, message: 'Failed to send reply.' }));
+    } catch {
+      return { ok: false, message: 'Network error while sending reply.' };
+    }
+  }
+
+  async getClientSupportTickets(email: string, tenantId: string) {
+    try {
+      const params = new URLSearchParams({
+        email: email || '',
+        tenantId: tenantId || ''
+      });
+      const res = await fetch(`/api/support/client-tickets?${params.toString()}&_t=${Date.now()}`, {
+        credentials: 'include',
+        cache: 'no-store'
+      });
+      return await res.json().catch(() => ({ ok: false, tickets: [] }));
+    } catch {
+      return { ok: false, tickets: [] };
+    }
+  }
+
+  async getAdminSupportTickets(params?: { status?: string; channel?: string; q?: string }) {
+    try {
+      const qs = new URLSearchParams();
+      if (params?.status) qs.set('status', params.status);
+      if (params?.channel) qs.set('channel', params.channel);
+      if (params?.q) qs.set('q', params.q);
+      qs.set('_t', String(Date.now()));
+      const res = await fetch(`/api/support/tickets?${qs.toString()}`, {
+        credentials: 'include',
+        cache: 'no-store'
+      });
+      return await res.json().catch(() => ({ ok: false, tickets: [], stats: {} }));
+    } catch {
+      return { ok: false, tickets: [], stats: {} };
+    }
+  }
+
+  async getAdminSupportTicketDetail(id: string) {
+    try {
+      const res = await fetch(`/api/support/tickets/${encodeURIComponent(id)}?_t=${Date.now()}`, {
+        credentials: 'include',
+        cache: 'no-store'
+      });
+      return await res.json().catch(() => ({ ok: false, ticket: null, messages: [] }));
+    } catch {
+      return { ok: false, ticket: null, messages: [] };
+    }
+  }
+
+  async replyAdminSupportTicket(
+    id: string,
+    payload: {
+      message: string;
+      responderType: 'SUPER_ADMIN' | 'TEAM_MEMBER' | 'AUTO_BOT';
+      responderName?: string;
+      responderRole?: string;
+      responderEmail?: string;
+      teamMemberId?: string;
+      sendEmail?: boolean;
+      internalNote?: boolean;
+      updateStatus?: string;
+    }
+  ) {
+    try {
+      const res = await fetch(`/api/support/tickets/${encodeURIComponent(id)}/reply`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      return await res.json().catch(() => ({ ok: false, message: 'Reply failed.' }));
+    } catch {
+      return { ok: false, message: 'Network error while dispatching reply.' };
+    }
+  }
+
+  async updateSupportTicketStatus(
+    id: string,
+    payload: {
+      status?: string;
+      priority?: string;
+      assignedTeamId?: string;
+      assignedTeamName?: string;
+      assignedTeamRole?: string;
+    }
+  ) {
+    try {
+      const res = await fetch(`/api/support/tickets/${encodeURIComponent(id)}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      return await res.json().catch(() => ({ ok: false }));
+    } catch {
+      return { ok: false };
+    }
+  }
+
+  async getSupportBotConfig() {
+    try {
+      const res = await fetch('/api/support/bot-config', { credentials: 'include' });
+      return await res.json().catch(() => ({ ok: false, config: null }));
+    } catch {
+      return { ok: false, config: null };
+    }
+  }
+
+  async saveSupportBotConfig(config: any) {
+    try {
+      const res = await fetch('/api/support/bot-config', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(config),
+        credentials: 'include'
+      });
+      return await res.json().catch(() => ({ ok: false }));
+    } catch {
+      return { ok: false };
+    }
+  }
+
+  async getEmailCampaigns() {
+    try {
+      const res = await fetch(`/api/support/campaigns?_t=${Date.now()}`, {
+        credentials: 'include',
+        cache: 'no-store'
+      });
+      return await res.json().catch(() => ({ ok: false, campaigns: [], smtpConfigured: false }));
+    } catch {
+      return { ok: false, campaigns: [], smtpConfigured: false };
+    }
+  }
+
+  async sendEmailCampaign(payload: {
+    campaignType: 'DIRECT_EMAIL' | 'PROMO_CAMPAIGN';
+    audienceSegment: 'INDIVIDUAL' | 'ALL_CLIENTS' | 'APPROVED_CLIENTS' | 'PENDING_LEADS' | 'SPECIFIC_VERTICAL';
+    templateKey?: string;
+    directEmail?: string;
+    directName?: string;
+    verticalFilter?: string;
+    subject: string;
+    bodyText: string;
+    senderType: 'SUPER_ADMIN' | 'TEAM_MEMBER';
+    senderName: string;
+    senderEmail?: string;
+    ctaLabel?: string;
+    ctaUrl?: string;
+  }) {
+    try {
+      const res = await fetch('/api/support/campaigns/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      return await res.json().catch(() => ({ ok: false, message: 'Failed to dispatch campaign.' }));
+    } catch {
+      return { ok: false, message: 'Network error dispatching email campaign.' };
+    }
+  }
+
+  async getSmtpSettings() {
+    try {
+      const res = await fetch('/api/support/smtp-settings', { credentials: 'include' });
+      return await res.json().catch(() => ({ ok: false, settings: null }));
+    } catch {
+      return { ok: false, settings: null };
+    }
+  }
+
+  async saveSmtpSettings(payload: any) {
+    try {
+      const res = await fetch('/api/support/smtp-settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      return await res.json().catch(() => ({ ok: false }));
+    } catch {
+      return { ok: false };
+    }
+  }
+
+  async testSmtpSettings(toEmail: string) {
+    try {
+      const res = await fetch('/api/support/smtp-test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ toEmail }),
+        credentials: 'include'
+      });
+      return await res.json().catch(() => ({ ok: false }));
+    } catch {
+      return { ok: false };
+    }
+  }
 }

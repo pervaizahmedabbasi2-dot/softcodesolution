@@ -1,117 +1,454 @@
-<section class="py-24 bg-slate-50 relative overflow-hidden">
-    <!-- Soft Background Accents -->
-    <div class="absolute top-0 left-0 w-full h-full -z-10 pointer-events-none">
-        <div class="absolute top-[10%] left-[5%] w-96 h-96 bg-indigo-100/40 rounded-full blur-[120px]"></div>
-        <div class="absolute bottom-[20%] right-[10%] w-[500px] h-[500px] bg-emerald-100/30 rounded-full blur-[150px]"></div>
-    </div>
-    
-    <div class="container mx-auto px-6 lg:px-10 max-w-7xl relative z-10">
-        <div class="flex flex-col lg:flex-row gap-16 lg:gap-24 items-center">
-            <div class="w-full lg:w-5/12 space-y-10">
-                <div>
-                    <div class="inline-flex items-center px-4 py-2 text-xs font-bold text-indigo-600 bg-indigo-50 border border-indigo-100/50 rounded-full mb-6 uppercase tracking-widest">
-                        Technical Support
-                    </div>
-                    <h2 class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight leading-[1.1]">
-                        How Can We <br class="hidden lg:block">
-                        <span class="text-indigo-600">Assist You?</span>
-                    </h2>
-                    <p class="mt-6 text-lg text-slate-500 font-medium leading-relaxed max-w-xl">
-                        Whether you need a custom enterprise platform, assistance with our SaaS products, or hardware integration, our engineering team is on standby 24/7/366.
-                    </p>
-                </div>
-                
-                <div class="space-y-6">
-                    <div class="group bg-slate-50/80 backdrop-blur-sm border border-slate-200/60 p-6 sm:p-8 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgb(79,70,229,0.08)] flex flex-col sm:flex-row sm:items-center gap-5 sm:gap-6">
-                        <div class="w-16 h-16 shrink-0 rounded-[1.25rem] bg-indigo-50 flex items-center justify-center text-indigo-600 group-hover:scale-110 transition-transform duration-500">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <rect width="20" height="16" x="2" y="4" rx="2" />
-                                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-                            </svg>
-                        </div>
-                        <div class="min-w-0">
-                            <p class="text-xs text-slate-400 font-bold uppercase tracking-widest mb-1.5">Email Us</p>
-                            <p class="text-slate-900 font-bold text-lg sm:text-xl tracking-tight truncate">support@softcodesolution.com</p>
-                        </div>
-                    </div>
-                    
-                    <div class="group bg-slate-50/80 backdrop-blur-sm border border-slate-200/60 p-6 sm:p-8 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgb(79,70,229,0.08)] flex flex-col sm:flex-row sm:items-center gap-5 sm:gap-6">
-                        <div class="w-16 h-16 shrink-0 rounded-[1.25rem] bg-slate-50 flex items-center justify-center text-slate-700 group-hover:scale-110 transition-transform duration-500">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="12" cy="12" r="10" />
-                                <polyline points="12 6 12 12 16 14" />
-                            </svg>
-                        </div>
-                        <div class="min-w-0">
-                            <p class="text-xs text-slate-400 font-bold uppercase tracking-widest mb-1.5">Response Time</p>
-                            <p class="text-slate-900 font-bold text-lg sm:text-xl tracking-tight">Under 30 Minutes (24/7/366)</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="w-full lg:w-7/12">
-                <div class="bg-slate-50/80 backdrop-blur-sm border border-slate-200/60 rounded-[3rem] p-10 md:p-14 shadow-[0_20px_50px_rgba(8,_112,_184,_0.07)] relative">
-                    <div *ngIf="isSubmitted" class="text-center py-16 space-y-6">
-                        <div class="w-24 h-24 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto shadow-sm">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="20 6 9 17 4 12" />
-                            </svg>
-                        </div>
-                        <h3 class="text-3xl font-extrabold text-slate-900 tracking-tight">Message Transmitted!</h3>
-                        <p class="text-slate-500 font-medium max-w-sm mx-auto text-lg">Thank you, our Native Engine has routed your ticket to our technical core team. We will get back to you shortly.</p>
-                        <button (click)="resetForm()" class="mt-8 px-8 py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition-all">
-                            Send Another Message
-                        </button>
-                    </div>
-                    
-                    <form *ngIf="!isSubmitted" [formGroup]="supportForm" (ngSubmit)="onSubmit()" class="space-y-6">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                            <div class="space-y-2">
-                                <label class="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Your Name</label>
-                                <input type="text" formControlName="name" placeholder="John Doe" class="w-full px-6 py-4 bg-white/90 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:bg-white focus:border-indigo-500 transition-all text-slate-900 shadow-sm">
-                                <span *ngIf="supportForm.get('name')?.touched && supportForm.get('name')?.invalid" class="text-xs text-red-500 font-medium block px-1 mt-1">Name is required.</span>
-                            </div>
-                            <div class="space-y-2">
-                                <label class="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Email Address</label>
-                                <input type="email" formControlName="email" placeholder="john@company.com" class="w-full px-6 py-4 bg-white/90 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:bg-white focus:border-indigo-500 transition-all text-slate-900 shadow-sm">
-                                <span *ngIf="supportForm.get('email')?.touched && supportForm.get('email')?.invalid" class="text-xs text-red-500 font-medium block px-1 mt-1">Please enter a valid email.</span>
-                            </div>
-                        </div>
-                        
-                        <div class="space-y-2">
-                            <label class="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Subject / Inquiry Type</label>
-                            <div class="relative">
-                                <select formControlName="subject" class="w-full px-6 py-4 bg-white/90 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:bg-white focus:border-indigo-500 transition-all text-slate-900 cursor-pointer appearance-none shadow-sm">
-                                    <option value="saas-rental">SCS Software Rentals</option>
-                                    <option value="custom-dev">Custom Platform Development</option>
-                                    <option value="hardware-pos">Hardware & Drivers Setup</option>
-                                    <option value="billing">Billing / Account Inquiry</option>
-                                    <option value="deposit">Deposit Issues</option>
-                                    <option value="other">Other Inquiry</option>
-                                </select>
-                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-6 text-slate-400">
-                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="space-y-2">
-                            <label class="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Message</label>
-                            <textarea formControlName="message" rows="5" placeholder="Describe your technical requirements..." class="w-full px-6 py-4 bg-white/90 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:bg-white focus:border-indigo-500 transition-all text-slate-900 resize-none shadow-sm"></textarea>
-                            <span *ngIf="supportForm.get('message')?.touched && supportForm.get('message')?.invalid" class="text-xs text-red-500 font-medium block px-1 mt-1">Please write your message (min. 10 characters).</span>
-                        </div>
-                        
-                        <button type="submit" [disabled]="supportForm.invalid" class="w-full py-4 mt-4 bg-indigo-600 disabled:bg-indigo-300 disabled:cursor-not-allowed text-white text-center rounded-2xl font-bold shadow-[0_8px_20px_rgb(79,70,229,0.2)] hover:bg-indigo-700 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                                <line x1="22" y1="2" x2="11" y2="13" />
-                                <polygon points="22 2 15 22 11 13 2 9 22 2" />
-                            </svg>
-                            Transmit Message
-                        </button>
-                    </form>
-                </div>
-            </div>
+<section id="contact-support-section" class="py-16 sm:py-20 lg:py-28 bg-slate-50 border-t border-slate-200/80 overflow-x-hidden">
+  <div class="container mx-auto px-4 sm:px-6 lg:px-10 max-w-7xl">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-start">
+
+      <!-- Left Editorial Column -->
+      <div class="lg:col-span-5 space-y-8 min-w-0 w-full">
+        <div class="space-y-4">
+          <div class="flex items-center gap-3">
+            <span class="h-px w-8 bg-indigo-600"></span>
+            <p class="text-xs font-extrabold uppercase tracking-[0.2em] text-indigo-600">
+              Technical Support
+            </p>
+          </div>
+          <h2 class="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight leading-[1.08]">
+            How Can We <span class="text-indigo-600">Assist You?</span>
+          </h2>
+          <p class="text-base sm:text-lg text-slate-600 leading-relaxed max-w-xl">
+            Every ticket, live chat question, or technical complaint flows straight into our SuperAdmin Operations Desk. Get immediate Auto-Bot triage plus direct replies from our engineering team sent straight to your email and ticket thread.
+          </p>
         </div>
+
+        <!-- Structured Support Desk Specifications -->
+        <div class="bg-white border border-slate-200 rounded-2xl divide-y divide-slate-100 shadow-xs">
+          <div class="p-5 flex items-start gap-4">
+            <div class="w-11 h-11 shrink-0 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+              <lucide-icon [name]="icons.Mail" class="w-5 h-5"></lucide-icon>
+            </div>
+            <div class="min-w-0">
+              <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Direct Email Routing</p>
+              <p class="text-base font-bold text-slate-900 truncate mt-0.5">support&#64;softcodesolution.com</p>
+              <p class="text-xs text-slate-500 mt-1">Replies from SuperAdmin &amp; engineers land directly in your inbox.</p>
+            </div>
+          </div>
+
+          <div class="p-5 flex items-start gap-4">
+            <div class="w-11 h-11 shrink-0 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <lucide-icon [name]="icons.Clock" class="w-5 h-5"></lucide-icon>
+            </div>
+            <div class="min-w-0">
+              <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Guaranteed Response SLA</p>
+              <p class="text-base font-bold text-slate-900 mt-0.5 tabular-nums">Under 30 Minutes · 24/7</p>
+              <p class="text-xs text-slate-500 mt-1">Instant Auto-Bot acknowledgment followed by human team escalation.</p>
+            </div>
+          </div>
+
+          <div class="p-5 flex items-start gap-4">
+            <div class="w-11 h-11 shrink-0 rounded-xl bg-slate-100 text-slate-800 flex items-center justify-center">
+              <lucide-icon [name]="icons.ShieldCheck" class="w-5 h-5"></lucide-icon>
+            </div>
+            <div class="min-w-0">
+              <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Transparent Responder Log</p>
+              <p class="text-base font-bold text-slate-900 mt-0.5">Tracked Ticket ID &amp; Audit Trail</p>
+              <p class="text-xs text-slate-500 mt-1">Know whether SoftCode Care Bot, a specialist, or SuperAdmin replied.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Interactive Support Console -->
+      <div class="lg:col-span-7 min-w-0 w-full">
+        <div class="bg-white border border-slate-200 rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden w-full max-w-full">
+
+          <!-- Console Mode Tabs -->
+          <div class="border-b border-slate-200 bg-slate-50/70 px-4 sm:px-8 pt-4 sm:pt-5 pb-3.5 sm:pb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
+            <div class="grid grid-cols-3 sm:inline-flex w-full sm:w-auto items-center gap-1 bg-slate-200/70 p-1 rounded-xl">
+              <button type="button"
+                      (click)="setMode('ticket')"
+                      class="w-full sm:w-auto justify-center px-1.5 sm:px-3.5 py-2 rounded-lg text-[11px] sm:text-xs font-bold transition-all flex items-center gap-1 sm:gap-2 whitespace-nowrap cursor-pointer min-w-0"
+                      [class.bg-white]="activeMode() === 'ticket'"
+                      [class.text-slate-900]="activeMode() === 'ticket'"
+                      [class.shadow-xs]="activeMode() === 'ticket'"
+                      [class.text-slate-600]="activeMode() !== 'ticket'">
+                <lucide-icon [name]="icons.Send" class="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0"></lucide-icon>
+                <span class="truncate">Submit Ticket</span>
+              </button>
+
+              <button type="button"
+                      (click)="setMode('chat')"
+                      class="w-full sm:w-auto justify-center px-1.5 sm:px-3.5 py-2 rounded-lg text-[11px] sm:text-xs font-bold transition-all flex items-center gap-1 sm:gap-2 whitespace-nowrap cursor-pointer min-w-0"
+                      [class.bg-white]="activeMode() === 'chat'"
+                      [class.text-slate-900]="activeMode() === 'chat'"
+                      [class.shadow-xs]="activeMode() === 'chat'"
+                      [class.text-slate-600]="activeMode() !== 'chat'">
+                <lucide-icon [name]="icons.MessageSquare" class="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0"></lucide-icon>
+                <span class="truncate">Live Chat</span>
+              </button>
+
+              <button type="button"
+                      (click)="setMode('track')"
+                      class="w-full sm:w-auto justify-center px-1.5 sm:px-3.5 py-2 rounded-lg text-[11px] sm:text-xs font-bold transition-all flex items-center gap-1 sm:gap-2 whitespace-nowrap cursor-pointer min-w-0"
+                      [class.bg-white]="activeMode() === 'track'"
+                      [class.text-slate-900]="activeMode() === 'track'"
+                      [class.shadow-xs]="activeMode() === 'track'"
+                      [class.text-slate-600]="activeMode() !== 'track'">
+                <lucide-icon [name]="icons.Search" class="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0"></lucide-icon>
+                <span class="truncate">Track Ticket</span>
+              </button>
+            </div>
+
+            <span class="text-[11px] font-semibold text-slate-500 flex items-center gap-1.5 min-w-0">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+              <span class="truncate">Connected to SoftCode Ops Desk</span>
+            </span>
+          </div>
+
+          <div class="p-4 sm:p-8 lg:p-10">
+
+            <!-- MODE 1: SUBMIT TICKET -->
+            @if (activeMode() === 'ticket') {
+              @if (submittedTicket(); as ticket) {
+                <div class="space-y-6">
+                  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-emerald-50 border border-emerald-200">
+                    <div class="flex items-start gap-3.5">
+                      <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                        <lucide-icon [name]="icons.CheckCircle2" class="w-5 h-5"></lucide-icon>
+                      </div>
+                      <div class="min-w-0">
+                        <p class="text-sm font-extrabold text-emerald-950">Ticket Submitted &amp; Routed to SuperAdmin</p>
+                        <p class="text-xs text-emerald-800 mt-0.5 break-words">
+                          Reference <span class="font-mono font-bold">{{ ticket.ticketNo }}</span> ·
+                          @if (submittedEmailStatus()?.deliveryStatus === 'SENT_SMTP') {
+                            Confirmation email sent to {{ ticket.requesterEmail }}.
+                          } @else {
+                            Logged in SuperAdmin Inbox &amp; Email Outbox for {{ ticket.requesterEmail }}.
+                          }
+                        </p>
+                      </div>
+                    </div>
+
+                    <button type="button"
+                            (click)="copyTicketId(ticket.ticketNo)"
+                            class="px-3.5 py-2 rounded-xl bg-white border border-emerald-200 text-xs font-bold text-emerald-800 hover:bg-emerald-100 flex items-center gap-1.5 whitespace-nowrap cursor-pointer shrink-0">
+                      <lucide-icon [name]="icons.Copy" class="w-3.5 h-3.5"></lucide-icon>
+                      <span>{{ copiedTicketNo() ? 'Copied' : ticket.ticketNo }}</span>
+                    </button>
+                  </div>
+
+                  @if (submittedBotReply(); as botMsg) {
+                    <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2.5">
+                      <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2 text-xs font-extrabold text-indigo-700">
+                          <lucide-icon [name]="icons.Bot" class="w-4 h-4"></lucide-icon>
+                          <span>{{ botMsg.senderName }}</span>
+                          <span class="text-slate-400 font-semibold">· {{ botMsg.senderRole }}</span>
+                        </div>
+                        <span class="text-[11px] font-medium text-slate-400">{{ formatTime(botMsg.createdAt) }}</span>
+                      </div>
+                      <p class="text-sm text-slate-700 leading-relaxed">{{ botMsg.messageBody }}</p>
+                    </div>
+                  }
+
+                  <div class="flex flex-wrap items-center gap-3 pt-2">
+                    <button type="button"
+                            (click)="openSubmittedInTracker()"
+                            class="px-5 py-3 rounded-xl bg-slate-900 hover:bg-indigo-600 text-white text-xs font-bold flex items-center gap-2 transition-colors whitespace-nowrap cursor-pointer">
+                      <span>View Live Ticket Thread</span>
+                      <lucide-icon [name]="icons.ArrowRight" class="w-3.5 h-3.5"></lucide-icon>
+                    </button>
+                    <button type="button"
+                            (click)="resetTicketForm()"
+                            class="px-5 py-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold whitespace-nowrap cursor-pointer">
+                      Submit Another Inquiry
+                    </button>
+                  </div>
+                </div>
+              } @else {
+                <form [formGroup]="supportForm" (ngSubmit)="onSubmitTicket()" class="space-y-5">
+                  @if (submitError()) {
+                    <div class="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-center gap-2">
+                      <lucide-icon [name]="icons.AlertCircle" class="w-4 h-4 shrink-0"></lucide-icon>
+                      <span>{{ submitError() }}</span>
+                    </div>
+                  }
+
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="space-y-1.5">
+                      <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Your Name *</label>
+                      <input type="text" formControlName="name" placeholder="e.g. Tariq Mahmood"
+                             class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20">
+                      @if (supportForm.controls.name.touched && supportForm.controls.name.invalid) {
+                        <p class="text-xs text-rose-600 font-medium">Name must be at least 2 characters.</p>
+                      }
+                    </div>
+
+                    <div class="space-y-1.5">
+                      <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Email Address *</label>
+                      <input type="email" formControlName="email" placeholder="you@company.com"
+                             class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20">
+                      @if (supportForm.controls.email.touched && supportForm.controls.email.invalid) {
+                        <p class="text-xs text-rose-600 font-medium">Enter a valid email to receive replies.</p>
+                      }
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="space-y-1.5">
+                      <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Phone / WhatsApp</label>
+                      <input type="text" formControlName="phone" placeholder="+92 300 0000000"
+                             class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20">
+                    </div>
+
+                    <div class="space-y-1.5">
+                      <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Company / Business Name</label>
+                      <input type="text" formControlName="companyName" placeholder="Al-Madina Traders"
+                             class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20">
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="sm:col-span-2 space-y-1.5">
+                      <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Subject / Category *</label>
+                      <select formControlName="subject"
+                              class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20">
+                        <option value="saas-rental">SCS Software Rentals &amp; Plans</option>
+                        <option value="custom-dev">Custom Platform Development</option>
+                        <option value="hardware-pos">Hardware, Printers &amp; POS Drivers</option>
+                        <option value="billing">Billing &amp; Invoice Support</option>
+                        <option value="deposit">Deposit Verification Issue</option>
+                        <option value="technical-bug">Technical Bug / Dashboard Issue</option>
+                        <option value="other">Other Inquiry</option>
+                      </select>
+                    </div>
+
+                    <div class="space-y-1.5">
+                      <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Priority</label>
+                      <select formControlName="priority"
+                              class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20">
+                        <option value="NORMAL">Normal</option>
+                        <option value="HIGH">High</option>
+                        <option value="URGENT">Urgent</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="space-y-1.5">
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Describe Your Requirement or Issue *</label>
+                    <textarea formControlName="message" rows="4"
+                              placeholder="Tell us what software suite, integration, or technical problem you need solved..."
+                              class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 resize-none focus:outline-none focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"></textarea>
+                    @if (supportForm.controls.message.touched && supportForm.controls.message.invalid) {
+                      <p class="text-xs text-rose-600 font-medium">Please include at least 10 characters describing your inquiry.</p>
+                    }
+                  </div>
+
+                  <button type="submit"
+                          [disabled]="isSubmitting()"
+                          class="w-full py-3.5 px-4 sm:px-6 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 text-white rounded-xl text-sm font-bold transition-colors flex items-center justify-center gap-2 text-center leading-snug sm:whitespace-nowrap cursor-pointer">
+                    <lucide-icon [name]="icons.Send" class="w-4 h-4 shrink-0"></lucide-icon>
+                    <span>{{ isSubmitting() ? 'Routing to SuperAdmin & Bot...' : 'Submit Ticket & Get Instant Response' }}</span>
+                  </button>
+                </form>
+              }
+            }
+
+            <!-- MODE 2: LIVE SUPPORT CHAT -->
+            @if (activeMode() === 'chat') {
+              <div class="space-y-5">
+                @if (!chatTicket()) {
+                  <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                    <div class="flex items-start sm:items-center gap-2.5 text-xs font-extrabold text-slate-900">
+                      <div class="w-7 h-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center shrink-0">
+                        <lucide-icon [name]="icons.Headset" class="w-4 h-4"></lucide-icon>
+                      </div>
+                      <span class="leading-snug">Start a Live Chat Session (Auto-Bot + Direct Engineer Handover)</span>
+                    </div>
+                    <p class="text-xs text-slate-500">Quick-pick an issue or type below. Our Auto-Bot responds immediately and escalates to SuperAdmin when needed.</p>
+                    <div class="flex flex-wrap gap-2">
+                      @for (q of quickChatPrompts; track q) {
+                        <button type="button"
+                                (click)="useQuickChatPrompt(q)"
+                                class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:border-indigo-300 hover:text-indigo-700 text-[11px] font-semibold text-slate-700 text-left transition-colors cursor-pointer">
+                          {{ q }}
+                        </button>
+                      }
+                    </div>
+                  </div>
+                } @else {
+                  @let activeChat = chatTicket()!;
+                  <div class="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-xl bg-slate-900 text-white">
+                    <div class="min-w-0">
+                      <p class="text-xs font-bold">Session <span class="font-mono text-indigo-300">{{ activeChat.ticketNo }}</span></p>
+                      <p class="text-[11px] text-slate-300 break-words">Status: {{ activeChat.status }} · Replies also emailed to {{ activeChat.requesterEmail }}</p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2 shrink-0">
+                      <button type="button"
+                              (click)="refreshChatThread()"
+                              class="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-[11px] font-bold flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
+                        <lucide-icon [name]="icons.RefreshCw" class="w-3 h-3"></lucide-icon>
+                        <span>Refresh</span>
+                      </button>
+                      @if (!chatEscalated()) {
+                        <button type="button"
+                                (click)="escalateChatToHuman()"
+                                [disabled]="chatBusy()"
+                                class="px-3 py-1.5 rounded-lg bg-indigo-500 hover:bg-indigo-400 text-[11px] font-bold whitespace-nowrap cursor-pointer">
+                          Escalate to Team
+                        </button>
+                      }
+                    </div>
+                  </div>
+
+                  <div class="max-h-72 overflow-y-auto space-y-3 p-3.5 sm:p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                    @for (m of chatMessages(); track m.id) {
+                      <div class="p-3.5 rounded-xl border text-sm break-words"
+                           [class.bg-indigo-600]="m.senderType === 'CUSTOMER'"
+                           [class.text-white]="m.senderType === 'CUSTOMER'"
+                           [class.border-indigo-600]="m.senderType === 'CUSTOMER'"
+                           [class.ml-3]="m.senderType === 'CUSTOMER'"
+                           [class.sm:ml-6]="m.senderType === 'CUSTOMER'"
+                           [class.bg-white]="m.senderType !== 'CUSTOMER'"
+                           [class.text-slate-800]="m.senderType !== 'CUSTOMER'"
+                           [class.border-slate-200]="m.senderType !== 'CUSTOMER'"
+                           [class.mr-3]="m.senderType !== 'CUSTOMER'"
+                           [class.sm:mr-6]="m.senderType !== 'CUSTOMER'">
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-1">
+                          <span class="text-[11px] font-extrabold"
+                                [class.text-indigo-100]="m.senderType === 'CUSTOMER'"
+                                [class.text-indigo-700]="m.senderType !== 'CUSTOMER'">
+                            {{ m.senderName }} · {{ senderBadgeText(m) }}
+                          </span>
+                          <span class="text-[10px]"
+                                [class.text-indigo-200]="m.senderType === 'CUSTOMER'"
+                                [class.text-slate-400]="m.senderType !== 'CUSTOMER'">
+                            {{ formatTime(m.createdAt) }}
+                          </span>
+                        </div>
+                        <p class="text-xs sm:text-sm leading-relaxed whitespace-pre-line">{{ m.messageBody }}</p>
+                      </div>
+                    }
+                  </div>
+                }
+
+                <form [formGroup]="chatForm" (ngSubmit)="onSendChat()" class="space-y-4">
+                  @if (chatError()) {
+                    <p class="text-xs text-rose-600 font-semibold">{{ chatError() }}</p>
+                  }
+
+                  @if (!chatTicket()) {
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div class="space-y-1">
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Your Name *</label>
+                        <input type="text" formControlName="name" placeholder="Your name"
+                               class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:bg-white focus:border-indigo-500">
+                      </div>
+                      <div class="space-y-1">
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Email for Replies *</label>
+                        <input type="email" formControlName="email" placeholder="you@company.com"
+                               class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:bg-white focus:border-indigo-500">
+                      </div>
+                    </div>
+                  }
+
+                  <div class="flex flex-col sm:flex-row gap-3">
+                    <input type="text" formControlName="message" placeholder="Type your chat question or issue..."
+                           class="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:bg-white focus:border-indigo-500">
+                    <button type="submit"
+                            [disabled]="chatBusy()"
+                            class="px-5 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer">
+                      <lucide-icon [name]="icons.Send" class="w-4 h-4"></lucide-icon>
+                      <span>{{ chatBusy() ? 'Sending...' : 'Send Chat' }}</span>
+                    </button>
+                  </div>
+                </form>
+              </div>
+            }
+
+            <!-- MODE 3: TRACK TICKET -->
+            @if (activeMode() === 'track') {
+              <div class="space-y-6">
+                <form [formGroup]="trackForm" (ngSubmit)="onTrackTicket()" class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
+                  <div class="sm:col-span-4 space-y-1">
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Ticket ID</label>
+                    <input type="text" formControlName="ticketNo" placeholder="SCS-TKT-2026-1002"
+                           class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono focus:outline-none focus:bg-white focus:border-indigo-500">
+                  </div>
+                  <div class="sm:col-span-5 space-y-1">
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Registered Email</label>
+                    <input type="email" formControlName="email" placeholder="bilal@crescentretail.pk"
+                           class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:bg-white focus:border-indigo-500">
+                  </div>
+                  <div class="sm:col-span-3">
+                    <button type="submit"
+                            [disabled]="trackBusy()"
+                            class="w-full py-2.5 px-4 bg-slate-900 hover:bg-indigo-600 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer">
+                      <lucide-icon [name]="icons.Search" class="w-3.5 h-3.5"></lucide-icon>
+                      <span>{{ trackBusy() ? 'Checking...' : 'Check Status' }}</span>
+                    </button>
+                  </div>
+                </form>
+
+                @if (trackError()) {
+                  <div class="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold">
+                    {{ trackError() }}
+                  </div>
+                }
+
+                @if (trackedTicket(); as tr) {
+                  <div class="border border-slate-200 rounded-2xl overflow-hidden">
+                    <div class="bg-slate-50 px-4 sm:px-5 py-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3">
+                      <div class="min-w-0">
+                        <p class="text-xs font-mono font-bold text-indigo-600">{{ tr.ticketNo }} · {{ tr.status }}</p>
+                        <h4 class="text-sm font-extrabold text-slate-900 mt-0.5 break-words">{{ tr.subjectTitle }}</h4>
+                      </div>
+                      <div class="text-left sm:text-right min-w-0">
+                        <p class="text-[11px] font-bold text-slate-500">Last Reply By</p>
+                        <p class="text-xs font-extrabold text-slate-800">{{ tr.lastRepliedByName || 'Awaiting Agent' }}</p>
+                      </div>
+                    </div>
+
+                    <div class="p-5 space-y-3 max-h-72 overflow-y-auto bg-white">
+                      @for (m of trackedMessages(); track m.id) {
+                        <div class="p-3.5 rounded-xl border"
+                             [class.bg-indigo-50/60]="m.senderType === 'SUPER_ADMIN' || m.senderType === 'TEAM_MEMBER'"
+                             [class.border-indigo-200]="m.senderType === 'SUPER_ADMIN' || m.senderType === 'TEAM_MEMBER'"
+                             [class.bg-slate-50]="m.senderType !== 'SUPER_ADMIN' && m.senderType !== 'TEAM_MEMBER'"
+                             [class.border-slate-200]="m.senderType !== 'SUPER_ADMIN' && m.senderType !== 'TEAM_MEMBER'">
+                          <div class="flex flex-wrap items-center justify-between gap-2 mb-1">
+                            <span class="text-xs font-extrabold text-slate-900">
+                              {{ m.senderName }}
+                              <span class="text-indigo-700 font-semibold">({{ senderBadgeText(m) }})</span>
+                            </span>
+                            <span class="text-[11px] text-slate-400">{{ formatTime(m.createdAt) }}</span>
+                          </div>
+                          <p class="text-xs sm:text-sm text-slate-700 leading-relaxed whitespace-pre-line">{{ m.messageBody }}</p>
+                        </div>
+                      }
+                    </div>
+
+                    <form [formGroup]="followUpForm" (ngSubmit)="onSendFollowUp()" class="p-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row gap-3">
+                      <input type="text" formControlName="message" placeholder="Write a follow-up reply to our team..."
+                             class="flex-1 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500">
+                      <button type="submit"
+                              [disabled]="followUpBusy()"
+                              class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold whitespace-nowrap cursor-pointer">
+                        {{ followUpBusy() ? 'Sending...' : 'Reply on Ticket' }}
+                      </button>
+                    </form>
+                  </div>
+                } @else {
+                  <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-600 space-y-1">
+                    <p class="font-bold text-slate-800">Try a live demo ticket:</p>
+                    <p>Ticket ID: <span class="font-mono font-bold text-indigo-700">SCS-TKT-2026-1002</span> · Email: <span class="font-mono">bilal&#64;crescentretail.pk</span></p>
+                  </div>
+                }
+              </div>
+            }
+
+          </div>
+        </div>
+      </div>
+
     </div>
+  </div>
 </section>

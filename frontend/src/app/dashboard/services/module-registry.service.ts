@@ -286,6 +286,16 @@ export class ModuleRegistryService{
     pinned:true,
     hidden:false
   },
+
+  {
+    code:'support-desk',
+    label:'Support & Comms',
+    route:'support-desk',
+    icon:'MessageSquare',
+    category:'core',
+    pinned:true,
+    hidden:false
+  },
 ];
 
 

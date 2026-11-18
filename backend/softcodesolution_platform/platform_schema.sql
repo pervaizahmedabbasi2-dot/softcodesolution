@@ -231,3 +231,95 @@ CREATE TABLE IF NOT EXISTS platform_subscriptions (
   amount REAL DEFAULT 2990,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
+-- 12. Enterprise Support Tickets, Client Complaints & Live Chat Threads
+CREATE TABLE IF NOT EXISTS platform_support_tickets (
+  id TEXT PRIMARY KEY,
+  ticket_no TEXT UNIQUE NOT NULL,
+  tenant_id TEXT DEFAULT 'public-visitor',
+  company_name TEXT,
+  requester_name TEXT NOT NULL,
+  requester_email TEXT NOT NULL,
+  requester_phone TEXT,
+  subject_category TEXT NOT NULL,
+  subject_title TEXT NOT NULL,
+  source_channel TEXT DEFAULT 'WEB_FORM',
+  priority TEXT DEFAULT 'NORMAL',
+  status TEXT DEFAULT 'OPEN',
+  assigned_team_id TEXT,
+  assigned_team_name TEXT,
+  assigned_team_role TEXT,
+  last_replied_by_type TEXT DEFAULT 'CUSTOMER',
+  last_replied_by_name TEXT,
+  last_reply_at TEXT,
+  unread_by_admin INTEGER DEFAULT 1,
+  is_synced INTEGER DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_support_tickets_status ON platform_support_tickets(status);
+CREATE INDEX IF NOT EXISTS idx_support_tickets_email ON platform_support_tickets(requester_email);
+
+CREATE TABLE IF NOT EXISTS platform_support_messages (
+  id TEXT PRIMARY KEY,
+  ticket_id TEXT NOT NULL,
+  sender_type TEXT NOT NULL,
+  sender_name TEXT NOT NULL,
+  sender_email TEXT,
+  sender_role TEXT,
+  team_member_id TEXT,
+  message_body TEXT NOT NULL,
+  delivery_channel TEXT DEFAULT 'EMAIL_AND_PORTAL',
+  email_delivery_status TEXT DEFAULT 'NONE',
+  email_message_id TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_support_messages_ticket ON platform_support_messages(ticket_id);
+
+-- 13. Support Auto-Bot Rules & SLA Configuration
+CREATE TABLE IF NOT EXISTS platform_support_bot_config (
+  id TEXT PRIMARY KEY,
+  bot_enabled INTEGER DEFAULT 1,
+  auto_ack_email INTEGER DEFAULT 1,
+  auto_reply_chat INTEGER DEFAULT 1,
+  bot_name TEXT DEFAULT 'SoftCode Care Bot',
+  bot_signature TEXT,
+  sla_minutes INTEGER DEFAULT 30,
+  rules_json TEXT,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 14. Promotional & Direct Email Dispatch Campaigns
+CREATE TABLE IF NOT EXISTS platform_email_campaigns (
+  id TEXT PRIMARY KEY,
+  campaign_type TEXT NOT NULL,
+  audience_segment TEXT NOT NULL,
+  template_key TEXT,
+  subject TEXT NOT NULL,
+  body_html TEXT NOT NULL,
+  body_text TEXT NOT NULL,
+  sender_type TEXT NOT NULL,
+  sender_name TEXT NOT NULL,
+  sender_email TEXT,
+  recipients_count INTEGER DEFAULT 1,
+  recipients_json TEXT,
+  delivery_mode TEXT DEFAULT 'OUTBOX_SIMULATED',
+  status TEXT DEFAULT 'SENT',
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 15. Persistent SMTP Mailer Settings (Password encrypted via CryptoVault)
+CREATE TABLE IF NOT EXISTS platform_smtp_settings (
+  id TEXT PRIMARY KEY,
+  smtp_host TEXT,
+  smtp_port INTEGER DEFAULT 587,
+  smtp_user TEXT,
+  smtp_pass_enc TEXT,
+  smtp_secure INTEGER DEFAULT 0,
+  from_email TEXT,
+  from_name TEXT,
+  support_email TEXT,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);

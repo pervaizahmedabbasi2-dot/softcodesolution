@@ -56,6 +56,8 @@ import {
 import { Router } from '@angular/router';
 import { DashboardApiService } from './services/dashboard-api.service';
 import { ModuleRegistryService } from './services/module-registry.service';
+import { BackendService } from '../services/backend.service';
+import { SupportCommsComponent } from '../softcodesolution_platform/support-comms/support-comms.component';
 import {
   LucideAngularModule,
   LayoutDashboard,
@@ -364,6 +366,7 @@ interface SuperadminClientsResponse {
     DashboardBusinessSuitesComponent,
     CurrencyLanguageSelectorComponent,
     ModuleManagerComponent,
+    SupportCommsComponent,
     FormsModule,
   ],
   templateUrl: './dashboard.component.html',
@@ -615,6 +618,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
           pinned: true,
           hidden: false,
         },
+        {
+          code: 'support-desk',
+          label: 'Support & Comms',
+          route: 'support-desk',
+          icon: 'MessageSquare',
+          pinned: true,
+          hidden: false,
+        },
       ],
     },
   };
@@ -703,7 +714,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     smtpHost: 'smtp.mailgun.org',
     smtpPort: 587,
     smtpUser: 'postmaster@softcodesolution.com',
-    smtpSecure: true,
+    smtpPass: '',
+    smtpSecure: false,
     fromEmail: 'notifications@softcodesolution.com',
     fromName: 'SoftCode Cloud Ops',
     customDomain: 'app.softcodesolution.com',
@@ -714,30 +726,147 @@ export class DashboardComponent implements OnInit, OnDestroy {
     maxFailedLogins: 5,
   };
 
-  savePlatformSettings(): void {
-    this.settingsSaving = true;
-    setTimeout(() => {
-      this.settingsSaving = false;
-      this.settingsSavedToast = true;
+  supportUnreadCount = 0;
+  clientSupportDrawerOpen = false;
+  clientSupportLoading = false;
+  clientSupportSubmitting = false;
+  clientSupportBanner = '';
+  clientSupportTickets: any[] = [];
+  clientTicketDraft = {
+    subject: 'technical-bug',
+    priority: 'HIGH',
+    subjectTitle: '',
+    message: ''
+  };
+
+  async loadSupportUnreadCount(): Promise<void> {
+    if (this.backendRole !== 'super_admin') return;
+    try {
+      const res = await this.backendService.getAdminSupportTickets();
+      if (res?.ok && res?.stats) {
+        this.supportUnreadCount = Number(res.stats.unread || res.stats.open || 0);
+        try { this.cdr.detectChanges(); } catch {}
+      }
+    } catch {}
+  }
+
+  onSupportUnreadChanged(count: number): void {
+    this.supportUnreadCount = Number(count || 0);
+    try { this.cdr.detectChanges(); } catch {}
+  }
+
+  async loadSmtpSettingsIntoForm(): Promise<void> {
+    if (this.backendRole !== 'super_admin') return;
+    try {
+      const res = await this.backendService.getSmtpSettings();
+      const s = res?.settings;
+      if (s) {
+        this.settingsForm.smtpHost = s.smtpHost || this.settingsForm.smtpHost;
+        this.settingsForm.smtpPort = Number(s.smtpPort || this.settingsForm.smtpPort);
+        this.settingsForm.smtpUser = s.smtpUser || this.settingsForm.smtpUser;
+        this.settingsForm.smtpSecure = Boolean(s.smtpSecure);
+        this.settingsForm.fromEmail = s.fromEmail || this.settingsForm.fromEmail;
+        this.settingsForm.fromName = s.fromName || this.settingsForm.fromName;
+        this.settingsForm.supportEmail = s.supportEmail || this.settingsForm.supportEmail;
+        try { this.cdr.detectChanges(); } catch {}
+      }
+    } catch {}
+  }
+
+  async openClientSupportDrawer(): Promise<void> {
+    this.clientSupportDrawerOpen = true;
+    this.clientSupportBanner = '';
+    await this.loadClientSupportTickets();
+    try { this.cdr.detectChanges(); } catch {}
+  }
+
+  closeClientSupportDrawer(): void {
+    this.clientSupportDrawerOpen = false;
+    try { this.cdr.detectChanges(); } catch {}
+  }
+
+  async loadClientSupportTickets(): Promise<void> {
+    this.clientSupportLoading = true;
+    try {
+      const res = await this.backendService.getClientSupportTickets(this.userEmail, this.tenantId);
+      this.clientSupportTickets = Array.isArray(res?.tickets) ? res.tickets : [];
+    } finally {
+      this.clientSupportLoading = false;
       try { this.cdr.detectChanges(); } catch {}
+    }
+  }
+
+  async submitClientPortalTicket(): Promise<void> {
+    if (!this.clientTicketDraft.message || this.clientTicketDraft.message.trim().length < 10) {
+      this.clientSupportBanner = 'Please enter at least 10 characters describing your issue or request.';
+      try { this.cdr.detectChanges(); } catch {}
+      return;
+    }
+    this.clientSupportSubmitting = true;
+    this.clientSupportBanner = '';
+    try {
+      const res = await this.backendService.submitSupportTicket({
+        name: this.userName || 'Client Admin',
+        email: this.userEmail,
+        companyName: this.companyName,
+        subject: this.clientTicketDraft.subject,
+        subjectTitle: this.clientTicketDraft.subjectTitle || undefined,
+        priority: this.clientTicketDraft.priority,
+        message: this.clientTicketDraft.message.trim(),
+        sourceChannel: 'CLIENT_PORTAL',
+        tenantId: this.tenantId || 'client-portal'
+      });
+      if (!res?.ok) {
+        this.clientSupportBanner = res?.message || 'Unable to submit ticket.';
+        return;
+      }
+      this.clientSupportBanner = `Ticket ${res.ticket?.ticketNo} routed to SuperAdmin & Support Team!`;
+      this.clientTicketDraft = { subject: 'technical-bug', priority: 'HIGH', subjectTitle: '', message: '' };
+      await this.loadClientSupportTickets();
+    } finally {
+      this.clientSupportSubmitting = false;
+      try { this.cdr.detectChanges(); } catch {}
+    }
+  }
+
+  async savePlatformSettings(): Promise<void> {
+    this.settingsSaving = true;
+    try {
+      await this.backendService.saveSmtpSettings({
+        smtpHost: this.settingsForm.smtpHost,
+        smtpPort: this.settingsForm.smtpPort,
+        smtpUser: this.settingsForm.smtpUser,
+        smtpPass: this.settingsForm.smtpPass || undefined,
+        smtpSecure: this.settingsForm.smtpSecure,
+        fromEmail: this.settingsForm.fromEmail,
+        fromName: this.settingsForm.fromName,
+        supportEmail: this.settingsForm.supportEmail
+      });
+      this.settingsForm.smtpPass = '';
+      this.settingsSavedToast = true;
       setTimeout(() => {
         this.settingsSavedToast = false;
         try { this.cdr.detectChanges(); } catch {}
       }, 4000);
-    }, 600);
+    } finally {
+      this.settingsSaving = false;
+      try { this.cdr.detectChanges(); } catch {}
+    }
   }
 
-  testSmtpConnection(): void {
+  async testSmtpConnection(): Promise<void> {
     this.smtpTesting = true;
     this.smtpTestResult = null;
-    setTimeout(() => {
-      this.smtpTesting = false;
+    try {
+      const res = await this.backendService.testSmtpSettings(this.settingsForm.supportEmail);
       this.smtpTestResult = {
-        ok: true,
-        message: 'SMTP handshake successful. Test email dispatched to ' + this.settingsForm.supportEmail
+        ok: Boolean(res?.ok),
+        message: res?.message || ('SMTP check completed for ' + this.settingsForm.supportEmail)
       };
+    } finally {
+      this.smtpTesting = false;
       try { this.cdr.detectChanges(); } catch {}
-    }, 1200);
+    }
   }
 
   // --- GENERIC CATEGORY WORKSPACE STATE ---
@@ -782,6 +911,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       'plans-pricing',
       'module-catalog',
       'business-suites',
+      'support-desk',
       'institutional-hub',
       'school-system',
       'school-students',
@@ -3647,6 +3777,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     ExternalLink,
     ChevronRight,
     Phone,
+    Send,
     SlidersHorizontal,
   };
 
@@ -3684,6 +3815,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private router: Router,
     private cdr: ChangeDetectorRef,
     private dashboardApi: DashboardApiService,
+    private backendService: BackendService,
   ) {}
 
   loadDashboardData(): void {
@@ -3921,6 +4053,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
       }
       if (user.role === 'super_admin') {
         await this.loadSuperadminClients(true);
+        void this.loadSupportUnreadCount();
+        void this.loadSmtpSettingsIntoForm();
       } else {
         await this.loadClientAllowedModules();
       }
@@ -5471,7 +5605,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const superAdminOnlyViews = [
       'all-tenants', 'tenants', 'analytics', 'rbac', 'system-health', 'admins-list',
       'teams-list', 'services-list', 'updater-list', 'license-list', 'plans-pricing',
-      'data-protection', 'backup-manager', 'compliance', 'saas-control', 'global-edge'
+      'data-protection', 'backup-manager', 'compliance', 'saas-control', 'global-edge',
+      'support-desk'
     ];
     if (this.userRole !== 'SUPER_ADMIN' && superAdminOnlyViews.includes(target)) {
       this.showDynamicIsland('Access restricted: Only Super Administrator can access Super Admin platform controls.', false);
@@ -5479,6 +5614,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
 
     this.activeView = target;
+
+    if (target === 'support-desk') {
+      void this.loadSupportUnreadCount();
+    }
 
     if (target === 'backup-manager') {
       await this.loadBackupManager();
@@ -6638,6 +6777,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
     // All Business Suites
     if (key === 'business-suites') {
       return 'bg-gradient-to-tr from-indigo-600 via-indigo-600 to-purple-600 text-white border border-white/30 shadow-md shadow-indigo-600/30 group-hover:scale-105';
+    }
+    // Support & Comms Desk
+    if (key === 'support-desk' || key.includes('support')) {
+      return 'bg-gradient-to-tr from-indigo-600 via-blue-600 to-emerald-500 text-white border border-white/30 shadow-md shadow-indigo-600/30 group-hover:scale-105';
     }
 
     // --- BUSINESS HUBS ---

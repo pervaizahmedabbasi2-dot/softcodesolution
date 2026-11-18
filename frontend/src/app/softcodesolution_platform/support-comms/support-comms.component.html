@@ -1,0 +1,725 @@
+<div class="px-6 sm:px-8 py-8 max-w-7xl mx-auto space-y-6">
+
+  <!-- Page Header & Tab Bar -->
+  <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 border-b border-slate-200">
+    <div>
+      <div class="flex items-center gap-2.5">
+        <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Support &amp; Email Communications Desk</h1>
+        <span class="px-2.5 py-0.5 rounded-lg text-[11px] font-bold border whitespace-nowrap"
+              [class.bg-emerald-50]="smtpConfigured()"
+              [class.text-emerald-700]="smtpConfigured()"
+              [class.border-emerald-200]="smtpConfigured()"
+              [class.bg-amber-50]="!smtpConfigured()"
+              [class.text-amber-800]="!smtpConfigured()"
+              [class.border-amber-200]="!smtpConfigured()">
+          {{ smtpConfigured() ? 'SMTP Live Ready' : 'Outbox Mode (Configure SMTP)' }}
+        </span>
+      </div>
+      <p class="text-sm text-slate-500 mt-1">
+        Manage website support tickets, live chat escalations, Auto-Bot replies, team attribution, and promotional email campaigns from one workspace.
+      </p>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200/80">
+      <button type="button" (click)="setTab('inbox')"
+              class="px-3.5 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer"
+              [class.bg-white]="activeTab() === 'inbox'"
+              [class.text-slate-900]="activeTab() === 'inbox'"
+              [class.shadow-xs]="activeTab() === 'inbox'"
+              [class.text-slate-600]="activeTab() !== 'inbox'">
+        <lucide-icon [name]="icons.Inbox" class="w-3.5 h-3.5"></lucide-icon>
+        <span>Support Inbox</span>
+        @if (stats().unread > 0) {
+          <span class="px-1.5 py-0.2 rounded bg-indigo-600 text-white text-[10px] font-bold tabular-nums">{{ stats().unread }}</span>
+        }
+      </button>
+
+      <button type="button" (click)="setTab('chats')"
+              class="px-3.5 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer"
+              [class.bg-white]="activeTab() === 'chats'"
+              [class.text-slate-900]="activeTab() === 'chats'"
+              [class.shadow-xs]="activeTab() === 'chats'"
+              [class.text-slate-600]="activeTab() !== 'chats'">
+        <lucide-icon [name]="icons.MessageSquare" class="w-3.5 h-3.5"></lucide-icon>
+        <span>Live Chat &amp; Portal</span>
+        <span class="text-[10px] font-bold text-slate-500 tabular-nums">{{ stats().chats }}</span>
+      </button>
+
+      <button type="button" (click)="setTab('campaigns')"
+              class="px-3.5 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer"
+              [class.bg-white]="activeTab() === 'campaigns'"
+              [class.text-slate-900]="activeTab() === 'campaigns'"
+              [class.shadow-xs]="activeTab() === 'campaigns'"
+              [class.text-slate-600]="activeTab() !== 'campaigns'">
+        <lucide-icon [name]="icons.Megaphone" class="w-3.5 h-3.5"></lucide-icon>
+        <span>Promo &amp; Direct Email</span>
+      </button>
+
+      <button type="button" (click)="setTab('bot-smtp')"
+              class="px-3.5 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer"
+              [class.bg-white]="activeTab() === 'bot-smtp'"
+              [class.text-slate-900]="activeTab() === 'bot-smtp'"
+              [class.shadow-xs]="activeTab() === 'bot-smtp'"
+              [class.text-slate-600]="activeTab() !== 'bot-smtp'">
+        <lucide-icon [name]="icons.Bot" class="w-3.5 h-3.5"></lucide-icon>
+        <span>Auto-Bot &amp; SMTP</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Summary Metrics Strip -->
+  <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+    <div class="bg-white border border-slate-200 rounded-2xl p-4">
+      <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Total Tickets</p>
+      <p class="text-2xl font-extrabold text-slate-900 mt-1 tabular-nums">{{ stats().total }}</p>
+    </div>
+    <div class="bg-white border border-slate-200 rounded-2xl p-4">
+      <p class="text-[11px] font-bold uppercase tracking-wider text-amber-600">Open Queue</p>
+      <p class="text-2xl font-extrabold text-slate-900 mt-1 tabular-nums">{{ stats().open }}</p>
+    </div>
+    <div class="bg-white border border-slate-200 rounded-2xl p-4">
+      <p class="text-[11px] font-bold uppercase tracking-wider text-indigo-600">Bot Handled</p>
+      <p class="text-2xl font-extrabold text-slate-900 mt-1 tabular-nums">{{ stats().botReplied }}</p>
+    </div>
+    <div class="bg-white border border-slate-200 rounded-2xl p-4">
+      <p class="text-[11px] font-bold uppercase tracking-wider text-sky-600">Team Active</p>
+      <p class="text-2xl font-extrabold text-slate-900 mt-1 tabular-nums">{{ stats().inProgress }}</p>
+    </div>
+    <div class="bg-white border border-slate-200 rounded-2xl p-4">
+      <p class="text-[11px] font-bold uppercase tracking-wider text-emerald-600">Emails Dispatched</p>
+      <p class="text-2xl font-extrabold text-slate-900 mt-1 tabular-nums">{{ campaigns().length }}</p>
+    </div>
+  </div>
+
+  <!-- TAB 1 & TAB 2: SUPPORT INBOX + LIVE CHAT ISSUES -->
+  @if (activeTab() === 'inbox' || activeTab() === 'chats') {
+    <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
+      <!-- Filter Toolbar -->
+      <form [formGroup]="filterForm" (ngSubmit)="loadTickets()" class="p-4 border-b border-slate-200 bg-slate-50/70 flex flex-wrap items-center gap-3">
+        <div class="relative flex-1 min-w-[200px]">
+          <lucide-icon [name]="icons.Search" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></lucide-icon>
+          <input type="text" formControlName="q" placeholder="Search ticket ID, customer, email, or agent..."
+                 class="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-indigo-500">
+        </div>
+
+        <select formControlName="status" (change)="loadTickets()"
+                class="px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none">
+          <option value="ALL">All Statuses</option>
+          <option value="OPEN">Open</option>
+          <option value="BOT_REPLIED">Bot Replied</option>
+          <option value="IN_PROGRESS">In Progress</option>
+          <option value="RESOLVED">Resolved</option>
+        </select>
+
+        @if (activeTab() === 'inbox') {
+          <select formControlName="channel" (change)="loadTickets()"
+                  class="px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none">
+            <option value="ALL">All Channels</option>
+            <option value="WEB_FORM">Landing Web Form</option>
+            <option value="CHAT_WIDGET">Live Chat</option>
+            <option value="CLIENT_PORTAL">Client Portal</option>
+          </select>
+        }
+
+        <button type="submit"
+                class="px-4 py-2 bg-slate-900 hover:bg-indigo-600 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
+          <lucide-icon [name]="icons.RefreshCw" class="w-3.5 h-3.5"></lucide-icon>
+          <span>{{ ticketsLoading() ? 'Syncing...' : 'Refresh' }}</span>
+        </button>
+      </form>
+
+      <!-- Split Master-Detail -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 min-h-[540px]">
+
+        <!-- Ticket Queue List -->
+        <div class="lg:col-span-5 border-b lg:border-b-0 lg:border-r border-slate-200 divide-y divide-slate-100 max-h-[680px] overflow-y-auto">
+          @if (visibleTickets().length === 0) {
+            <div class="p-10 text-center text-sm text-slate-500">
+              No tickets match the current filter.
+            </div>
+          } @else {
+            @for (t of visibleTickets(); track t.id) {
+              <button type="button"
+                      (click)="selectTicket(t)"
+                      class="w-full text-left p-4 hover:bg-slate-50 transition-colors cursor-pointer space-y-2 border-l-4"
+                      [class.bg-indigo-50/50]="selectedTicket()?.id === t.id"
+                      [class.border-l-indigo-600]="selectedTicket()?.id === t.id"
+                      [class.border-l-transparent]="selectedTicket()?.id !== t.id">
+                <div class="flex items-center justify-between gap-2">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="font-mono text-xs font-bold text-indigo-700 truncate">{{ t.ticketNo }}</span>
+                    @if (t.unreadByAdmin) {
+                      <span class="px-1.5 py-0.2 rounded bg-rose-100 text-rose-700 text-[10px] font-bold">NEW</span>
+                    }
+                  </div>
+                  <span class="px-2 py-0.5 rounded-md text-[10px] font-bold border whitespace-nowrap"
+                        [class]="statusLabelClass(t.status)">
+                    {{ t.status }}
+                  </span>
+                </div>
+
+                <div>
+                  <p class="text-sm font-bold text-slate-900 line-clamp-1">{{ t.subjectTitle }}</p>
+                  <p class="text-xs text-slate-500 truncate mt-0.5">
+                    {{ t.requesterName }} · {{ t.requesterEmail }}
+                  </p>
+                </div>
+
+                <div class="flex items-center justify-between gap-2 text-[11px] text-slate-500 pt-1">
+                  <span class="font-semibold">{{ channelLabel(t.sourceChannel) }} · {{ t.priority }}</span>
+                  <span class="truncate">
+                    Last by: <strong class="text-slate-700">{{ t.lastRepliedByName || 'Customer' }}</strong>
+                  </span>
+                </div>
+              </button>
+            }
+          }
+        </div>
+
+        <!-- Selected Ticket Thread + Reply Studio -->
+        <div class="lg:col-span-7 flex flex-col bg-slate-50/40">
+          @if (selectedTicket(); as active) {
+            <!-- Ticket Meta Header -->
+            <div class="p-5 bg-white border-b border-slate-200 space-y-4">
+              <div class="flex flex-wrap items-start justify-between gap-3">
+                <div class="min-w-0">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span class="font-mono text-xs font-bold text-indigo-700">{{ active.ticketNo }}</span>
+                    <span class="text-xs text-slate-400">·</span>
+                    <span class="text-xs font-semibold text-slate-600">{{ channelLabel(active.sourceChannel) }}</span>
+                  </div>
+                  <h2 class="text-base font-extrabold text-slate-900 mt-1">{{ active.subjectTitle }}</h2>
+                  <p class="text-xs text-slate-500 mt-0.5">
+                    {{ active.requesterName }} ({{ active.requesterEmail }})
+                    @if (active.companyName) { · {{ active.companyName }} }
+                    @if (active.requesterPhone) { · {{ active.requesterPhone }} }
+                  </p>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2">
+                  <select [value]="active.status"
+                          (change)="changeTicketMeta({ status: $any($event.target).value })"
+                          class="px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-700">
+                    <option value="OPEN">OPEN</option>
+                    <option value="BOT_REPLIED">BOT_REPLIED</option>
+                    <option value="IN_PROGRESS">IN_PROGRESS</option>
+                    <option value="WAITING_CLIENT">WAITING_CLIENT</option>
+                    <option value="RESOLVED">RESOLVED</option>
+                    <option value="CLOSED">CLOSED</option>
+                  </select>
+
+                  <select [value]="active.priority"
+                          (change)="changeTicketMeta({ priority: $any($event.target).value })"
+                          class="px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-700">
+                    <option value="LOW">LOW</option>
+                    <option value="NORMAL">NORMAL</option>
+                    <option value="HIGH">HIGH</option>
+                    <option value="URGENT">URGENT</option>
+                  </select>
+
+                  <select [value]="active.assignedTeamId"
+                          (change)="changeTicketMeta({ teamMemberId: $any($event.target).value })"
+                          class="px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-700">
+                    <option value="">Unassigned</option>
+                    @for (tm of teamMembers(); track tm.id) {
+                      <option [value]="tm.id">{{ tm.name }} ({{ tm.role }})</option>
+                    }
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Messages Timeline -->
+            <div class="flex-1 p-5 space-y-3 max-h-[340px] overflow-y-auto">
+              @if (threadLoading()) {
+                <p class="text-xs text-slate-500">Loading conversation history...</p>
+              } @else {
+                @for (m of threadMessages(); track m.id) {
+                  <div class="p-4 rounded-2xl border"
+                       [class.bg-amber-50]="m.deliveryChannel === 'INTERNAL_NOTE'"
+                       [class.border-amber-200]="m.deliveryChannel === 'INTERNAL_NOTE'"
+                       [class.bg-white]="m.deliveryChannel !== 'INTERNAL_NOTE' && m.senderType === 'CUSTOMER'"
+                       [class.border-slate-200]="m.deliveryChannel !== 'INTERNAL_NOTE' && m.senderType === 'CUSTOMER'"
+                       [class.bg-indigo-50/70]="m.deliveryChannel !== 'INTERNAL_NOTE' && m.senderType !== 'CUSTOMER'"
+                       [class.border-indigo-200]="m.deliveryChannel !== 'INTERNAL_NOTE' && m.senderType !== 'CUSTOMER'">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-1.5">
+                      <div class="flex items-center gap-2 text-xs font-extrabold text-slate-900">
+                        <span>{{ m.senderName }}</span>
+                        <span class="px-2 py-0.5 rounded bg-white border border-slate-200 text-[10px] font-bold text-slate-600">
+                          {{ m.senderType === 'AUTO_BOT' ? 'Auto-Bot' : m.senderType === 'TEAM_MEMBER' ? (m.senderRole || 'Team') : m.senderType === 'SUPER_ADMIN' ? 'SuperAdmin' : 'Customer' }}
+                        </span>
+                        @if (m.emailDeliveryStatus === 'SENT_SMTP') {
+                          <span class="text-[10px] font-bold text-emerald-700">· Emailed Live (SMTP)</span>
+                        } @else if (m.emailDeliveryStatus === 'OUTBOX_SAVED') {
+                          <span class="text-[10px] font-bold text-indigo-700">· Logged in Email Outbox</span>
+                        } @else if (m.deliveryChannel === 'INTERNAL_NOTE') {
+                          <span class="text-[10px] font-bold text-amber-800">· Internal Team Note</span>
+                        }
+                      </div>
+                      <span class="text-[11px] text-slate-400">{{ formatDate(m.createdAt) }}</span>
+                    </div>
+                    <p class="text-xs sm:text-sm text-slate-700 leading-relaxed whitespace-pre-line">{{ m.messageBody }}</p>
+                  </div>
+                }
+              }
+            </div>
+
+            <!-- Direct Email & Portal Reply Composer -->
+            <form [formGroup]="replyForm" (ngSubmit)="sendTicketReply(false)" class="p-5 bg-white border-t border-slate-200 space-y-4">
+              @if (replyBanner(); as banner) {
+                <div class="p-3 rounded-xl text-xs font-semibold border"
+                     [class.bg-emerald-50]="banner.ok"
+                     [class.text-emerald-800]="banner.ok"
+                     [class.border-emerald-200]="banner.ok"
+                     [class.bg-rose-50]="!banner.ok"
+                     [class.text-rose-800]="!banner.ok"
+                     [class.border-rose-200]="!banner.ok">
+                  {{ banner.text }}
+                </div>
+              }
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div class="space-y-1">
+                  <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">Reply Attribution (Who Replied)</label>
+                  <select formControlName="responderType"
+                          class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800">
+                    <option value="SUPER_ADMIN">SuperAdmin (Executive Desk)</option>
+                    <option value="TEAM_MEMBER">Specific Team Member</option>
+                    <option value="AUTO_BOT">Auto-Bot Assistant</option>
+                  </select>
+                </div>
+
+                @if (replyForm.controls.responderType.value === 'TEAM_MEMBER') {
+                  <div class="space-y-1">
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">Select Team Member</label>
+                    <select formControlName="teamMemberId"
+                            class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800">
+                      @for (tm of teamMembers(); track tm.id) {
+                        <option [value]="tm.id">{{ tm.name }} — {{ tm.role }}</option>
+                      }
+                    </select>
+                  </div>
+                } @else {
+                  <div class="flex items-end gap-4 pb-1">
+                    <label class="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
+                      <input type="checkbox" formControlName="sendEmail" class="w-4 h-4 accent-indigo-600 rounded">
+                      <span>Email Customer Directly</span>
+                    </label>
+                    <label class="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
+                      <input type="checkbox" formControlName="internalNote" class="w-4 h-4 accent-amber-600 rounded">
+                      <span>Internal Note Only</span>
+                    </label>
+                  </div>
+                }
+              </div>
+
+              @if (replyForm.controls.responderType.value === 'TEAM_MEMBER') {
+                <div class="flex items-center gap-5">
+                  <label class="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
+                    <input type="checkbox" formControlName="sendEmail" class="w-4 h-4 accent-indigo-600 rounded">
+                    <span>Also Send Branded Email to {{ active.requesterEmail }}</span>
+                  </label>
+                  <label class="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
+                    <input type="checkbox" formControlName="internalNote" class="w-4 h-4 accent-amber-600 rounded">
+                    <span>Internal Team Note</span>
+                  </label>
+                </div>
+              }
+
+              <!-- Quick Canned Replies -->
+              <div class="flex flex-wrap items-center gap-1.5">
+                <span class="text-[11px] font-bold text-slate-400 mr-1">Quick Replies:</span>
+                @for (c of cannedReplies; track c.label) {
+                  <button type="button" (click)="useCannedReply(c.text)"
+                          class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-[11px] font-semibold text-slate-700 cursor-pointer">
+                    {{ c.label }}
+                  </button>
+                }
+              </div>
+
+              <textarea formControlName="message" rows="3"
+                        placeholder="Write your reply here — SoftCodeSolution will post to the ticket thread and dispatch email to the client..."
+                        class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:bg-white focus:border-indigo-500 resize-none"></textarea>
+
+              <div class="flex flex-wrap items-center justify-end gap-3">
+                <button type="button"
+                        (click)="sendTicketReply(true)"
+                        [disabled]="replyBusy()"
+                        class="px-4 py-2.5 rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold whitespace-nowrap cursor-pointer">
+                  Send &amp; Mark Resolved
+                </button>
+                <button type="submit"
+                        [disabled]="replyBusy()"
+                        class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 text-white text-xs font-bold flex items-center gap-2 whitespace-nowrap cursor-pointer">
+                  <lucide-icon [name]="icons.Send" class="w-3.5 h-3.5"></lucide-icon>
+                  <span>{{ replyBusy() ? 'Dispatching...' : 'Send Reply & Email' }}</span>
+                </button>
+              </div>
+            </form>
+          } @else {
+            <div class="flex-1 flex flex-col items-center justify-center p-12 text-center text-slate-500">
+              <lucide-icon [name]="icons.MessageSquare" class="w-10 h-10 text-slate-300 mb-3"></lucide-icon>
+              <p class="text-sm font-bold text-slate-700">Select a ticket from the queue</p>
+              <p class="text-xs mt-1">Inspect customer complaints, live chat escalations, and reply directly via portal &amp; email.</p>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- TAB 3: PROMOTIONAL & MANUAL DIRECT EMAIL STUDIO -->
+  @if (activeTab() === 'campaigns') {
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <!-- Composer -->
+      <form [formGroup]="campaignForm" (ngSubmit)="dispatchCampaign()" class="lg:col-span-7 bg-white border border-slate-200 rounded-2xl p-6 space-y-5 shadow-xs">
+        <div class="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-100">
+          <div>
+            <h2 class="text-lg font-extrabold text-slate-900">Manual Direct &amp; Promotional Email Studio</h2>
+            <p class="text-xs text-slate-500">Send individual client emails or launch segmented promotional announcements without leaving SoftCodeSolution.</p>
+          </div>
+        </div>
+
+        @if (campaignBanner(); as cb) {
+          <div class="p-3.5 rounded-xl border text-xs font-semibold"
+               [class.bg-emerald-50]="cb.ok"
+               [class.text-emerald-800]="cb.ok"
+               [class.border-emerald-200]="cb.ok"
+               [class.bg-rose-50]="!cb.ok"
+               [class.text-rose-800]="!cb.ok"
+               [class.border-rose-200]="!cb.ok">
+            {{ cb.text }}
+          </div>
+        }
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="space-y-1">
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Template Preset</label>
+            <select formControlName="templateKey"
+                    (change)="applyPromoTemplate($any($event.target).value)"
+                    class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800">
+              @for (tpl of promoTemplates; track tpl.key) {
+                <option [value]="tpl.key">{{ tpl.label }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="space-y-1">
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Target Audience Segment</label>
+            <select formControlName="audienceSegment"
+                    class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800">
+              <option value="INDIVIDUAL">Manual Single Email Recipient</option>
+              <option value="ALL_CLIENTS">All Registered Tenants &amp; Leads</option>
+              <option value="APPROVED_CLIENTS">Approved Enterprise Clients</option>
+              <option value="PENDING_LEADS">Pending Registration Leads</option>
+              <option value="SPECIFIC_VERTICAL">Specific Business Vertical</option>
+            </select>
+          </div>
+        </div>
+
+        @if (campaignForm.controls.audienceSegment.value === 'INDIVIDUAL') {
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-xl bg-slate-50 border border-slate-200">
+            <div class="space-y-1">
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Recipient Email *</label>
+              <input type="email" formControlName="directEmail" placeholder="client@company.com"
+                     class="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm">
+            </div>
+            <div class="space-y-1">
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Recipient Name</label>
+              <input type="text" formControlName="directName" placeholder="Mr. Tariq"
+                     class="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm">
+            </div>
+          </div>
+        }
+
+        @if (campaignForm.controls.audienceSegment.value === 'SPECIFIC_VERTICAL') {
+          <div class="space-y-1">
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Business Vertical ID</label>
+            <select formControlName="verticalFilter"
+                    class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold">
+              <option value="retail_pos">Retail Store &amp; POS</option>
+              <option value="school_college">School &amp; College ERP</option>
+              <option value="hospital_clinic">Hospital &amp; Clinic Hub</option>
+              <option value="restaurant_cafe">Restaurant &amp; Cafe</option>
+              <option value="real_estate">Real Estate Brokerage</option>
+              <option value="pharmacy_store">Pharmacy &amp; Medical Store</option>
+            </select>
+          </div>
+        }
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="space-y-1">
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Sender Identity</label>
+            <select formControlName="senderType"
+                    class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800">
+              <option value="SUPER_ADMIN">SuperAdmin Executive Desk</option>
+              <option value="TEAM_MEMBER">Team Member Representative</option>
+            </select>
+          </div>
+
+          @if (campaignForm.controls.senderType.value === 'TEAM_MEMBER') {
+            <div class="space-y-1">
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Team Sender</label>
+              <select formControlName="teamMemberId"
+                      class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800">
+                @for (tm of teamMembers(); track tm.id) {
+                  <option [value]="tm.id">{{ tm.name }} ({{ tm.role }})</option>
+                }
+              </select>
+            </div>
+          }
+        </div>
+
+        <div class="space-y-1">
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Email Subject Line *</label>
+          <input type="text" formControlName="subject" placeholder="Enter campaign or direct email subject..."
+                 class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+        </div>
+
+        <div class="space-y-1">
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Message Content *</label>
+          <textarea formControlName="bodyText" rows="6" placeholder="Write your promotional offer or direct reply..."
+                    class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm resize-none"></textarea>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="space-y-1">
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Optional CTA Button Text</label>
+            <input type="text" formControlName="ctaLabel" placeholder="Explore Plans"
+                   class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+          </div>
+          <div class="space-y-1">
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Optional CTA Link URL</label>
+            <input type="text" formControlName="ctaUrl" placeholder="https://softcodesolution.com"
+                   class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+          </div>
+        </div>
+
+        <button type="submit" [disabled]="campaignBusy()"
+                class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer">
+          <lucide-icon [name]="icons.Send" class="w-4 h-4"></lucide-icon>
+          <span>{{ campaignBusy() ? 'Dispatching Email...' : 'Send Branded Email / Campaign' }}</span>
+        </button>
+      </form>
+
+      <!-- Outbox & Campaign Audit Trail -->
+      <div class="lg:col-span-5 bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs flex flex-col">
+        <div class="p-5 border-b border-slate-200 flex items-center justify-between">
+          <div>
+            <h3 class="text-sm font-extrabold text-slate-900">Email &amp; Campaign Outbox Log</h3>
+            <p class="text-xs text-slate-500">Every manual email, bot reply, and promo dispatch.</p>
+          </div>
+          <button type="button" (click)="loadCampaigns()"
+                  class="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 cursor-pointer">
+            Refresh
+          </button>
+        </div>
+
+        <div class="divide-y divide-slate-100 max-h-[620px] overflow-y-auto flex-1">
+          @if (campaigns().length === 0) {
+            <div class="p-8 text-center text-xs text-slate-500">No outbound emails logged yet.</div>
+          } @else {
+            @for (c of campaigns(); track c.id) {
+              <div class="p-4 hover:bg-slate-50 space-y-2">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                    {{ c.campaignType }}
+                  </span>
+                  <span class="text-[11px] text-slate-400">{{ formatDate(c.createdAt) }}</span>
+                </div>
+                <p class="text-xs font-extrabold text-slate-900 line-clamp-1">{{ c.subject }}</p>
+                <div class="flex items-center justify-between text-[11px] text-slate-500">
+                  <span>By: <strong class="text-slate-700">{{ c.senderName }}</strong> · {{ c.recipientsCount }} recipient(s)</span>
+                  <button type="button" (click)="previewCampaign.set(c)"
+                          class="text-indigo-600 hover:text-indigo-800 font-bold flex items-center gap-1 cursor-pointer">
+                    <lucide-icon [name]="icons.Eye" class="w-3.5 h-3.5"></lucide-icon>
+                    <span>Preview</span>
+                  </button>
+                </div>
+              </div>
+            }
+          }
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- TAB 4: AUTO-BOT RULES & SMTP CONFIGURATION -->
+  @if (activeTab() === 'bot-smtp') {
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <!-- Auto-Bot Controls -->
+      <form [formGroup]="botForm" (ngSubmit)="saveBotConfig()" class="lg:col-span-7 bg-white border border-slate-200 rounded-2xl p-6 space-y-5 shadow-xs">
+        <div class="pb-4 border-b border-slate-100">
+          <h2 class="text-lg font-extrabold text-slate-900">Auto-Bot Triage &amp; Automated Reply Engine</h2>
+          <p class="text-xs text-slate-500">Configure instant responses for landing page forms and live website chat before human handover.</p>
+        </div>
+
+        @if (botSaveBanner()) {
+          <div class="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs font-semibold text-emerald-800">
+            {{ botSaveBanner() }}
+          </div>
+        }
+
+        <div class="space-y-3">
+          <label class="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer">
+            <div>
+              <p class="text-xs font-extrabold text-slate-900">Enable Auto-Bot Triage Engine</p>
+              <p class="text-[11px] text-slate-500">Automatically post instant categorized guidance when tickets arrive.</p>
+            </div>
+            <input type="checkbox" formControlName="botEnabled" class="w-4 h-4 accent-indigo-600">
+          </label>
+
+          <label class="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer">
+            <div>
+              <p class="text-xs font-extrabold text-slate-900">Auto-Send Acknowledgment Email to Client</p>
+              <p class="text-[11px] text-slate-500">Dispatch Ticket ID confirmation email immediately after form submit.</p>
+            </div>
+            <input type="checkbox" formControlName="autoAckEmail" class="w-4 h-4 accent-indigo-600">
+          </label>
+
+          <label class="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer">
+            <div>
+              <p class="text-xs font-extrabold text-slate-900">Enable Auto-Bot on Website Live Chat</p>
+              <p class="text-[11px] text-slate-500">Answer common questions live until escalated to SuperAdmin or team.</p>
+            </div>
+            <input type="checkbox" formControlName="autoReplyChat" class="w-4 h-4 accent-indigo-600">
+          </label>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="space-y-1">
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Bot Display Name</label>
+            <input type="text" formControlName="botName" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+          </div>
+          <div class="space-y-1">
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Target SLA (Minutes)</label>
+            <input type="number" formControlName="slaMinutes" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+          </div>
+        </div>
+
+        <div class="space-y-3">
+          <p class="text-xs font-bold text-slate-700 uppercase tracking-wider">Smart Category Auto-Reply Templates</p>
+          @for (rule of botRules(); track rule.id) {
+            <div class="p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 space-y-2">
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-xs font-extrabold text-slate-900">{{ rule.title }}</span>
+                <span class="text-[10px] font-mono text-slate-500">{{ rule.category }} · {{ rule.priority }}</span>
+              </div>
+              <textarea [value]="rule.replyTemplate"
+                        (input)="updateRuleReply(rule.id, $any($event.target).value)"
+                        rows="2"
+                        class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 resize-none"></textarea>
+            </div>
+          }
+        </div>
+
+        <button type="submit" [disabled]="botSaving()"
+                class="px-5 py-3 bg-slate-900 hover:bg-indigo-600 text-white rounded-xl text-xs font-bold whitespace-nowrap cursor-pointer">
+          {{ botSaving() ? 'Saving Rules...' : 'Save Auto-Bot Configuration' }}
+        </button>
+      </form>
+
+      <!-- Live SMTP Mailer Credentials -->
+      <form [formGroup]="smtpForm" (ngSubmit)="saveSmtpConfig()" class="lg:col-span-5 bg-white border border-slate-200 rounded-2xl p-6 space-y-4 shadow-xs h-fit">
+        <div class="pb-4 border-b border-slate-100">
+          <h2 class="text-lg font-extrabold text-slate-900">SMTP Live Email Transport</h2>
+          <p class="text-xs text-slate-500">Encrypt and persist SMTP credentials so ticket replies and promos deliver directly to external inboxes.</p>
+        </div>
+
+        @if (smtpBanner()) {
+          <div class="p-3 rounded-xl bg-indigo-50 border border-indigo-200 text-xs font-semibold text-indigo-800">
+            {{ smtpBanner() }}
+          </div>
+        }
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div class="sm:col-span-2 space-y-1">
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">SMTP Host</label>
+            <input type="text" formControlName="smtpHost" placeholder="smtp.mailgun.org"
+                   class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+          </div>
+          <div class="space-y-1">
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Port</label>
+            <input type="number" formControlName="smtpPort"
+                   class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+          </div>
+        </div>
+
+        <div class="space-y-1">
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">SMTP Username</label>
+          <input type="text" formControlName="smtpUser" placeholder="postmaster@softcodesolution.com"
+                 class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+        </div>
+
+        <div class="space-y-1">
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">SMTP Password / App Key</label>
+          <input type="password" formControlName="smtpPass" placeholder="Leave blank to keep existing password"
+                 class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="space-y-1">
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">From Email</label>
+            <input type="email" formControlName="fromEmail" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+          </div>
+          <div class="space-y-1">
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Support Reply-To</label>
+            <input type="email" formControlName="supportEmail" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+          </div>
+        </div>
+
+        <div class="space-y-1">
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Sender Display Name</label>
+          <input type="text" formControlName="fromName" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+        </div>
+
+        <label class="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
+          <input type="checkbox" formControlName="smtpSecure" class="w-4 h-4 accent-indigo-600">
+          <span>Use TLS / SSL Port 465</span>
+        </label>
+
+        <button type="submit" [disabled]="smtpSaving()"
+                class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold cursor-pointer">
+          {{ smtpSaving() ? 'Encrypting & Saving...' : 'Save SMTP Credentials' }}
+        </button>
+
+        <div class="pt-3 border-t border-slate-100 space-y-2">
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Send Test Email To</label>
+          <div class="flex gap-2">
+            <input type="email" formControlName="testRecipient" class="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+            <button type="button" (click)="runSmtpTest()" [disabled]="smtpTesting()"
+                    class="px-3.5 py-2 border border-slate-300 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-50 whitespace-nowrap cursor-pointer">
+              {{ smtpTesting() ? 'Testing...' : 'Test SMTP' }}
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  }
+
+</div>
+
+<!-- Email Preview Modal -->
+@if (previewCampaign(); as cmp) {
+  <div class="fixed inset-0 z-[130000] bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4" (click)="previewCampaign.set(null)">
+    <div class="bg-white rounded-2xl border border-slate-200 max-w-2xl w-full max-h-[85vh] flex flex-col overflow-hidden shadow-2xl" (click)="$event.stopPropagation()">
+      <div class="p-4 border-b border-slate-200 flex items-center justify-between">
+        <div>
+          <p class="text-xs font-bold text-indigo-600">{{ cmp.campaignType }} · {{ cmp.senderName }}</p>
+          <h3 class="text-sm font-extrabold text-slate-900">{{ cmp.subject }}</h3>
+        </div>
+        <button type="button" (click)="previewCampaign.set(null)" class="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500 cursor-pointer">
+          <lucide-icon [name]="icons.X" class="w-4 h-4"></lucide-icon>
+        </button>
+      </div>
+      <div class="p-4 overflow-y-auto bg-slate-50 text-xs text-slate-700 space-y-3">
+        <div class="bg-white p-4 rounded-xl border border-slate-200 whitespace-pre-line text-sm leading-relaxed">
+          {{ cmp.bodyText }}
+        </div>
+        <p class="text-[11px] text-slate-500">
+          Status: <strong>{{ cmp.status }}</strong> · Delivery Mode: <strong>{{ cmp.deliveryMode }}</strong> · Recipients: <strong>{{ cmp.recipientsCount }}</strong>
+        </p>
+      </div>
+    </div>
+  </div>
+}

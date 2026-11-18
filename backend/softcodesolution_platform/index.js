@@ -6,6 +6,7 @@ import { createRbacRouter } from './rbac.routes.js';
 import { createLicensesRouter } from './licenses.routes.js';
 import { createTeamsRouter } from './teams.routes.js';
 import { createServicesRouter } from './services.routes.js';
+import { createSupportRouter } from './support.routes.js';
 
 import { getCryptoVault } from '../auth_security/crypto_vault.js';
 
@@ -36,6 +37,9 @@ export function mountSoftCodePlatform(app, { sqliteDb, db, sqliteDbPath, getColl
   // 7. Multi-Channel Notification & WhatsApp Dispatch Engine
   app.use('/api', createNotificationsRouter(sqliteDb, db));
 
-  // 8. Business Types, 221-Module Catalog, Plans, Subscriptions & Matrix
+  // 8. Support Helpdesk, Client Complaints, Auto-Bot, Live Chat & Promo Email Engine
+  app.use('/api', createSupportRouter(sqliteDb, db));
+
+  // 9. Business Types, 221-Module Catalog, Plans, Subscriptions & Matrix
   app.use('/api', createCatalogRouter(sqliteDb, db));
 }

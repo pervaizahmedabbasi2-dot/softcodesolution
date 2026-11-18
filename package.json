@@ -44,6 +44,7 @@
     "firebase-admin": "^14.4.0",
     "hash-wasm": "^4.13.0",
     "lucide-angular": "^1.0.0",
+    "nodemailer": "^10.6.0",
     "postcss": "^8.5.3",
     "rxjs": "~7.8.0",
     "tailwindcss": "^4.1.12",
