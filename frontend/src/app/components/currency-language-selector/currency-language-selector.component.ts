@@ -169,7 +169,7 @@ import { LocalizationService, CountryInfo, LanguageInfo } from '../../services/l
                     <span class="text-xs font-bold text-slate-900 truncate">
                       {{ c.name }}
                     </span>
-                    <span class="text-[10px] text-slate-400 font-medium">
+                    <span translate="no" class="notranslate text-[10px] text-slate-400 font-medium">
                       {{ c.nativeName }}
                     </span>
                   </div>
@@ -181,10 +181,10 @@ import { LocalizationService, CountryInfo, LanguageInfo } from '../../services/l
 
               <div class="flex items-center gap-2 shrink-0">
                 <div class="text-right">
-                  <span class="text-xs font-black font-mono text-slate-900 block">
+                  <span translate="no" class="notranslate text-xs font-black font-mono text-slate-900 block">
                     {{ c.currencyCode }}
                   </span>
-                  <span class="text-[11px] font-bold text-indigo-600">
+                  <span translate="no" class="notranslate text-[11px] font-bold text-indigo-600">
                     {{ c.currencySymbol }}
                   </span>
                 </div>
@@ -211,7 +211,7 @@ import { LocalizationService, CountryInfo, LanguageInfo } from '../../services/l
             <input
               type="text"
               [(ngModel)]="searchLangQuery"
-              placeholder="Search English, Urdu, Arabic, Hindi, etc..."
+              placeholder="Search English, Urdu, Sindhi, Punjabi, Pashto, Saraiki, Balochi, Kashmiri..."
               class="w-full pl-9 pr-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 font-medium"
             />
           </div>
@@ -230,12 +230,12 @@ import { LocalizationService, CountryInfo, LanguageInfo } from '../../services/l
             >
               <div class="flex items-center gap-2.5">
                 <span class="text-lg">{{ l.flag }}</span>
-                <div>
+                <div translate="no" class="notranslate" [attr.lang]="l.code">
                   <p class="text-xs font-bold text-slate-900 leading-tight">
                     {{ l.nativeName }}
                   </p>
                   <p class="text-[10px] text-slate-400 font-medium">
-                    {{ l.name }} · {{ l.dir === 'rtl' ? 'Right-to-Left (RTL)' : 'Standard (LTR)' }}
+                    {{ l.name }} · {{ l.code.toUpperCase() }}
                   </p>
                 </div>
               </div>

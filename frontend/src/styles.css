@@ -171,6 +171,296 @@ h1 {
   letter-spacing: -0.03em;
 }
 
+/* ==========================================================================
+   Authentic Regional Book Typography (Provincial & Kashmiri Book Traditions)
+   ========================================================================== */
+
+/* 1. Sindhi (sd): Authentic Sindhi Adabi Naskh Book Typeface (Lateef + Noto Naskh Arabic) */
+html[lang="sd"],
+html[lang="sd"] body {
+  font-family: "Inter", "Lateef", "Noto Naskh Arabic", "MB Lateefi", serif, sans-serif !important;
+  letter-spacing: 0 !important;
+}
+
+html[lang="sd"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre) {
+  font-family: "Inter", "Lateef", "Noto Naskh Arabic", "MB Lateefi", serif, sans-serif;
+  letter-spacing: 0 !important;
+  font-size-adjust: 0.54;
+}
+
+html[lang="sd"] p,
+html[lang="sd"] li,
+html[lang="sd"] blockquote,
+html[lang="sd"] label,
+html[lang="sd"] td,
+html[lang="sd"] th,
+html[lang="sd"] input,
+html[lang="sd"] select,
+html[lang="sd"] textarea {
+  line-height: 1.75;
+  font-weight: 500;
+}
+
+html[lang="sd"] h1,
+html[lang="sd"] h2,
+html[lang="sd"] h3,
+html[lang="sd"] h4,
+html[lang="sd"] h5,
+html[lang="sd"] h6 {
+  line-height: 1.4;
+}
+
+[lang="sd"] {
+  font-family: "Inter", "Lateef", "Noto Naskh Arabic", "MB Lateefi", serif, sans-serif;
+  letter-spacing: 0 !important;
+  font-size-adjust: 0.54;
+}
+
+/* 2. Urdu (ur): Classic Lahori / Noori Nastaliq Printed Book Style (Noto Nastaliq Urdu + Gulzar) */
+html[lang="ur"],
+html[lang="ur"] body {
+  font-family: "Inter", "Noto Nastaliq Urdu", "Gulzar", "Jameel Noori Nastaleeq", "Noto Naskh Arabic", serif, sans-serif !important;
+  letter-spacing: 0 !important;
+}
+
+html[lang="ur"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre) {
+  font-family: "Inter", "Noto Nastaliq Urdu", "Gulzar", "Jameel Noori Nastaleeq", "Noto Naskh Arabic", serif, sans-serif;
+  letter-spacing: 0 !important;
+}
+
+html[lang="ur"] p,
+html[lang="ur"] li,
+html[lang="ur"] blockquote,
+html[lang="ur"] label,
+html[lang="ur"] td,
+html[lang="ur"] th,
+html[lang="ur"] input,
+html[lang="ur"] select,
+html[lang="ur"] textarea {
+  line-height: 2.15;
+  font-weight: 500;
+}
+
+html[lang="ur"] h1,
+html[lang="ur"] h2,
+html[lang="ur"] h3,
+html[lang="ur"] h4,
+html[lang="ur"] h5,
+html[lang="ur"] h6 {
+  line-height: 1.85;
+}
+
+[lang="ur"] {
+  font-family: "Inter", "Noto Nastaliq Urdu", "Gulzar", "Jameel Noori Nastaleeq", "Noto Naskh Arabic", serif, sans-serif;
+  letter-spacing: 0 !important;
+  line-height: 1.9;
+}
+
+/* 3. Punjabi Shahmukhi (pa): Classical Punjab Literary Nastaliq (Gulzar Prose + Noto Nastaliq Urdu Headings) */
+html[lang="pa"],
+html[lang="pa"] body {
+  font-family: "Inter", "Gulzar", "Noto Nastaliq Urdu", "Jameel Noori Nastaleeq", "Noto Naskh Arabic", serif, sans-serif !important;
+  letter-spacing: 0 !important;
+}
+
+html[lang="pa"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre) {
+  font-family: "Inter", "Gulzar", "Noto Nastaliq Urdu", "Jameel Noori Nastaleeq", "Noto Naskh Arabic", serif, sans-serif;
+  letter-spacing: 0 !important;
+}
+
+html[lang="pa"] p,
+html[lang="pa"] li,
+html[lang="pa"] blockquote,
+html[lang="pa"] label,
+html[lang="pa"] td,
+html[lang="pa"] th,
+html[lang="pa"] input,
+html[lang="pa"] select,
+html[lang="pa"] textarea {
+  line-height: 2.05;
+}
+
+html[lang="pa"] h1,
+html[lang="pa"] h2,
+html[lang="pa"] h3,
+html[lang="pa"] h4,
+html[lang="pa"] h5,
+html[lang="pa"] h6,
+html[lang="pa"] strong,
+html[lang="pa"] .font-bold,
+html[lang="pa"] .font-black,
+html[lang="pa"] .font-semibold {
+  font-family: "Inter", "Noto Nastaliq Urdu", "Gulzar", "Noto Naskh Arabic", serif, sans-serif;
+  line-height: 1.8;
+}
+
+[lang="pa"] {
+  font-family: "Inter", "Gulzar", "Noto Nastaliq Urdu", "Jameel Noori Nastaleeq", "Noto Naskh Arabic", serif, sans-serif;
+  letter-spacing: 0 !important;
+  line-height: 1.9;
+}
+
+/* 4. Pashto (ps): Peshawar / Pashto Academy Book Naskh (Scheherazade New + Noto Naskh Arabic) */
+html[lang="ps"],
+html[lang="ps"] body {
+  font-family: "Inter", "Scheherazade New", "Noto Naskh Arabic", "Amiri", serif, sans-serif !important;
+  letter-spacing: 0 !important;
+}
+
+html[lang="ps"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre) {
+  font-family: "Inter", "Scheherazade New", "Noto Naskh Arabic", "Amiri", serif, sans-serif;
+  letter-spacing: 0 !important;
+  font-size-adjust: 0.52;
+}
+
+html[lang="ps"] p,
+html[lang="ps"] li,
+html[lang="ps"] blockquote,
+html[lang="ps"] label,
+html[lang="ps"] td,
+html[lang="ps"] th,
+html[lang="ps"] input,
+html[lang="ps"] select,
+html[lang="ps"] textarea {
+  line-height: 1.85;
+  font-weight: 500;
+}
+
+html[lang="ps"] h1,
+html[lang="ps"] h2,
+html[lang="ps"] h3,
+html[lang="ps"] h4,
+html[lang="ps"] h5,
+html[lang="ps"] h6 {
+  line-height: 1.5;
+}
+
+[lang="ps"] {
+  font-family: "Inter", "Scheherazade New", "Noto Naskh Arabic", "Amiri", serif, sans-serif;
+  letter-spacing: 0 !important;
+  font-size-adjust: 0.52;
+}
+
+/* 5. Saraiki (skr): Multan / Waseb Book Nastaliq & Extended Naskh (Noto Nastaliq Urdu + Lateef) */
+html[lang="skr"],
+html[lang="skr"] body {
+  font-family: "Inter", "Noto Nastaliq Urdu", "Lateef", "Noto Naskh Arabic", serif, sans-serif !important;
+  letter-spacing: 0 !important;
+}
+
+html[lang="skr"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre) {
+  font-family: "Inter", "Noto Nastaliq Urdu", "Lateef", "Noto Naskh Arabic", serif, sans-serif;
+  letter-spacing: 0 !important;
+}
+
+html[lang="skr"] p,
+html[lang="skr"] li,
+html[lang="skr"] blockquote,
+html[lang="skr"] label,
+html[lang="skr"] td,
+html[lang="skr"] th,
+html[lang="skr"] input,
+html[lang="skr"] select,
+html[lang="skr"] textarea {
+  line-height: 2.1;
+  font-weight: 500;
+}
+
+html[lang="skr"] h1,
+html[lang="skr"] h2,
+html[lang="skr"] h3,
+html[lang="skr"] h4,
+html[lang="skr"] h5,
+html[lang="skr"] h6 {
+  line-height: 1.8;
+}
+
+[lang="skr"] {
+  font-family: "Inter", "Noto Nastaliq Urdu", "Lateef", "Noto Naskh Arabic", serif, sans-serif;
+  letter-spacing: 0 !important;
+  line-height: 1.9;
+}
+
+/* 6. Balochi (bal): Balochi Academy Quetta Classical Book Naskh (Amiri + Noto Naskh Arabic) */
+html[lang="bal"],
+html[lang="bal"] body {
+  font-family: "Inter", "Amiri", "Noto Naskh Arabic", "Scheherazade New", serif, sans-serif !important;
+  letter-spacing: 0 !important;
+}
+
+html[lang="bal"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre) {
+  font-family: "Inter", "Amiri", "Noto Naskh Arabic", "Scheherazade New", serif, sans-serif;
+  letter-spacing: 0 !important;
+  font-size-adjust: 0.52;
+}
+
+html[lang="bal"] p,
+html[lang="bal"] li,
+html[lang="bal"] blockquote,
+html[lang="bal"] label,
+html[lang="bal"] td,
+html[lang="bal"] th,
+html[lang="bal"] input,
+html[lang="bal"] select,
+html[lang="bal"] textarea {
+  line-height: 1.85;
+}
+
+html[lang="bal"] h1,
+html[lang="bal"] h2,
+html[lang="bal"] h3,
+html[lang="bal"] h4,
+html[lang="bal"] h5,
+html[lang="bal"] h6 {
+  line-height: 1.45;
+}
+
+[lang="bal"] {
+  font-family: "Inter", "Amiri", "Noto Naskh Arabic", "Scheherazade New", serif, sans-serif;
+  letter-spacing: 0 !important;
+  font-size-adjust: 0.52;
+}
+
+/* 7. Kashmiri (ks): Traditional Kashmiri Book Nastaliq & Extended Script (Noto Nastaliq Urdu + Scheherazade New) */
+html[lang="ks"],
+html[lang="ks"] body {
+  font-family: "Inter", "Noto Nastaliq Urdu", "Scheherazade New", "Noto Naskh Arabic", serif, sans-serif !important;
+  letter-spacing: 0 !important;
+}
+
+html[lang="ks"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre) {
+  font-family: "Inter", "Noto Nastaliq Urdu", "Scheherazade New", "Noto Naskh Arabic", serif, sans-serif;
+  letter-spacing: 0 !important;
+}
+
+html[lang="ks"] p,
+html[lang="ks"] li,
+html[lang="ks"] blockquote,
+html[lang="ks"] label,
+html[lang="ks"] td,
+html[lang="ks"] th,
+html[lang="ks"] input,
+html[lang="ks"] select,
+html[lang="ks"] textarea {
+  line-height: 2.15;
+  font-weight: 500;
+}
+
+html[lang="ks"] h1,
+html[lang="ks"] h2,
+html[lang="ks"] h3,
+html[lang="ks"] h4,
+html[lang="ks"] h5,
+html[lang="ks"] h6 {
+  line-height: 1.85;
+}
+
+[lang="ks"] {
+  font-family: "Inter", "Noto Nastaliq Urdu", "Scheherazade New", "Noto Naskh Arabic", serif, sans-serif;
+  letter-spacing: 0 !important;
+  line-height: 1.9;
+}
+
 /* Tabular figures for numbers, metrics, currency, timestamps */
 .tabular-nums, table, [data-tabular="true"], .font-mono {
   font-variant-numeric: tabular-nums;

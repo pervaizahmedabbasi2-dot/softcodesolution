@@ -7,6 +7,7 @@ import { createLicensesRouter } from './licenses.routes.js';
 import { createTeamsRouter } from './teams.routes.js';
 import { createServicesRouter } from './services.routes.js';
 import { createSupportRouter } from './support.routes.js';
+import { createI18nRouter } from './i18n.routes.js';
 
 import { getCryptoVault } from '../auth_security/crypto_vault.js';
 
@@ -42,4 +43,7 @@ export function mountSoftCodePlatform(app, { sqliteDb, db, sqliteDbPath, getColl
 
   // 9. Business Types, 221-Module Catalog, Plans, Subscriptions & Matrix
   app.use('/api', createCatalogRouter(sqliteDb, db));
+
+  // 10. Multi-Language Real-Time Translation & SQLite Cache
+  app.use('/api', createI18nRouter(sqliteDb));
 }
