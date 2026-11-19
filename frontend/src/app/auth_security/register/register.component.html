@@ -463,9 +463,23 @@
                     <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                   </svg>
                 </div>
-                <input type="password" formControlName="password" (blur)="onPasswordBlur()" placeholder="Create strong enterprise password"
-                  class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-11 pr-4 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-colors"
+                <input [type]="showPassword ? 'text' : 'password'" formControlName="password" (blur)="onPasswordBlur()" placeholder="Create strong enterprise password"
+                  class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-11 pr-11 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-colors"
                   [class.border-red-400]="f['password'].invalid && f['password'].touched">
+                <button type="button" (click)="showPassword = !showPassword" [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'"
+                  class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-indigo-600 transition-colors cursor-pointer">
+                  @if (showPassword) {
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                      <line x1="1" y1="1" x2="23" y2="23"/>
+                    </svg>
+                  } @else {
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  }
+                </button>
               </div>
 
               <!-- Security Password Check (Shows only once user starts typing password) -->
@@ -539,9 +553,23 @@
                     <path d="m9 12 2 2 4-4"/>
                   </svg>
                 </div>
-                <input type="password" formControlName="confirmPassword" placeholder="Re-enter your password"
-                  class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-11 pr-4 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-colors"
+                <input [type]="showConfirmPassword ? 'text' : 'password'" formControlName="confirmPassword" placeholder="Re-enter your password"
+                  class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-11 pr-11 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-colors"
                   [class.border-red-400]="(f['confirmPassword'].invalid && f['confirmPassword'].touched) || (registerForm.hasError('passwordMismatch') && f['confirmPassword'].touched)">
+                <button type="button" (click)="showConfirmPassword = !showConfirmPassword" [attr.aria-label]="showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'"
+                  class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-indigo-600 transition-colors cursor-pointer">
+                  @if (showConfirmPassword) {
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                      <line x1="1" y1="1" x2="23" y2="23"/>
+                    </svg>
+                  } @else {
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  }
+                </button>
               </div>
               <p *ngIf="f['confirmPassword'].touched && f['confirmPassword'].hasError('required')" class="text-red-500 text-xs mt-1 font-medium">Please confirm your password.</p>
               <p *ngIf="f['confirmPassword'].touched && registerForm.hasError('passwordMismatch')" class="text-red-500 text-xs mt-1 font-medium">Passwords do not match.</p>
@@ -583,23 +611,41 @@
               </div>
             </div>
 
-            <!-- Biometric Passkey -->
-            <div class="sm:col-span-2 flex items-center justify-between p-3.5 bg-white rounded-xl border border-slate-200">
-              <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center flex-shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/>
-                  </svg>
+            <!-- Unified Passkey Login -->
+            <div class="sm:col-span-2 p-3.5 bg-white rounded-xl border transition-colors"
+              [class.border-indigo-300]="passkeyEnrolled"
+              [class.border-slate-200]="!passkeyEnrolled">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors"
+                    [class.bg-indigo-600]="passkeyEnrolled"
+                    [class.text-white]="passkeyEnrolled"
+                    [class.bg-indigo-100]="!passkeyEnrolled"
+                    [class.text-indigo-600]="!passkeyEnrolled">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M2 18v3c0 .6.4 1 1 1h4v-3h3v-3h2l1.4-1.4a6.5 6.5 0 1 0-4-4Z"/>
+                      <circle cx="16.5" cy="7.5" r=".5" fill="currentColor"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <h3 class="text-xs font-semibold text-slate-800">Create Passkey</h3>
+                      @if (passkeyEnrolled) {
+                        <span class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">✓ Passkey Ready</span>
+                      } @else if (passkeyEnrolling) {
+                        <span class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">Setting up...</span>
+                      }
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <h3 class="text-xs font-semibold text-slate-800">Biometric / Passkey Login</h3>
-                  <p class="text-[11px] text-slate-500">Enable fingerprint or FaceID for future login</p>
-                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" formControlName="enablePasskey" (change)="onPasskeyToggle($event)" [disabled]="passkeyEnrolling" class="sr-only peer">
+                  <div class="w-10 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                </label>
               </div>
-              <label class="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" formControlName="enablePasskey" class="sr-only peer">
-                <div class="w-10 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
-              </label>
+              @if (passkeyError) {
+                <p class="text-[11px] text-amber-700 font-medium mt-2">{{ passkeyError }}</p>
+              }
             </div>
           </div>
         </div>

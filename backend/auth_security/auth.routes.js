@@ -2,7 +2,7 @@ import express from 'express';
 import crypto from 'crypto';
 import argon2 from 'argon2';
 import bcrypt from 'bcryptjs';
-import { collection, addDoc, getDocs, query, where } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, where, doc, setDoc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { getCryptoVault } from './crypto_vault.js';
 
 export function createAuthRouter(sqliteDb, db) {
@@ -11,12 +11,95 @@ export function createAuthRouter(sqliteDb, db) {
 
   const ARGON2_MEM_COST = Number(process.env.ARGON2_MEMORY_KB) || 131072; // 128 MB per password hash
   const BOT_HMAC_SECRET = process.env.SCS_BOT_SECRET || crypto.randomBytes(32).toString('hex');
+  const SESSION_HMAC_KEY = crypto
+    .createHmac('sha256', String(process.env.SCS_SESSION_SECRET || vault.blindKey || BOT_HMAC_SECRET))
+    .update('scs-session-v1')
+    .digest();
+  const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
   const POW_DIFFICULTY = 3; // Requires SHA-256 hash starting with '000'
   const CHALLENGE_TTL_MS = 5 * 60 * 1000;
   const USED_CHALLENGE_NONCES = new Map();
   const AUTH_IP_RATE = new Map();
+  const PASSKEY_CHALLENGES = new Map();
   const GENERIC_LOGIN_ERROR = 'Invalid credentials. Please verify your details.';
   const BLOCKED_BOT_UA_RE = /(sqlmap|nikto|hydra|burpsuite|gobuster|dirbuster|masscan|nmap|acunetix|nessus|zgrab)/i;
+
+  // Ensure auth_passkeys table & columns exist cleanly on pre-existing SQLite databases
+  if (sqliteDb) {
+    try {
+      sqliteDb.exec(`
+        CREATE TABLE IF NOT EXISTS auth_passkeys (
+          id TEXT PRIMARY KEY,
+          credential_id TEXT UNIQUE NOT NULL,
+          tenant_id TEXT NOT NULL,
+          user_id TEXT NOT NULL,
+          email TEXT NOT NULL,
+          email_blind_idx TEXT,
+          public_key_spki TEXT,
+          device_label TEXT,
+          role TEXT DEFAULT 'client_admin',
+          portal_type TEXT DEFAULT 'platform',
+          is_synced INTEGER DEFAULT 0,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          last_used_at DATETIME
+        );
+        CREATE INDEX IF NOT EXISTS idx_auth_passkeys_cred ON auth_passkeys(credential_id);
+        CREATE INDEX IF NOT EXISTS idx_auth_passkeys_email ON auth_passkeys(email_blind_idx);
+        CREATE INDEX IF NOT EXISTS idx_auth_passkeys_user ON auth_passkeys(user_id);
+      `);
+      const cols = sqliteDb.prepare('PRAGMA table_info(auth_passkeys)').all().map((c) => c.name);
+      if (!cols.includes('role')) sqliteDb.exec("ALTER TABLE auth_passkeys ADD COLUMN role TEXT DEFAULT 'client_admin'");
+      if (!cols.includes('portal_type')) sqliteDb.exec("ALTER TABLE auth_passkeys ADD COLUMN portal_type TEXT DEFAULT 'platform'");
+      if (!cols.includes('is_synced')) sqliteDb.exec('ALTER TABLE auth_passkeys ADD COLUMN is_synced INTEGER DEFAULT 0');
+    } catch (schemaErr) {
+      console.warn('[Passkey Schema Guard] Migration warning:', schemaErr?.message);
+    }
+  }
+
+  const issueSessionToken = (user) => {
+    const payload = {
+      uid: String(user?.id || ''),
+      tid: String(user?.tenant_id || 'tenant-root-platform'),
+      email: String(user?.email || '').toLowerCase().trim(),
+      role: String(user?.role || 'client_admin'),
+      portalType: String(user?.portal_type || (user?.role === 'super_admin' ? 'superadmin' : 'platform')),
+      exp: Date.now() + SESSION_TTL_MS
+    };
+    const payloadB64u = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64url');
+    const sigB64u = crypto.createHmac('sha256', SESSION_HMAC_KEY).update(payloadB64u).digest('base64url');
+    return `scs_v1.${payloadB64u}.${sigB64u}`;
+  };
+
+  const verifySessionRequest = (req) => {
+    const authHeader = String(req.headers.authorization || '');
+    const bearer = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+    const token = bearer || String(req.headers['x-scs-session'] || '').trim();
+    if (!token || !token.startsWith('scs_v1.')) return null;
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const [, payloadB64u, sigB64u] = parts;
+    const expectedSig = crypto.createHmac('sha256', SESSION_HMAC_KEY).update(payloadB64u).digest('base64url');
+    if (sigB64u.length !== expectedSig.length) return null;
+    try {
+      if (!crypto.timingSafeEqual(Buffer.from(sigB64u), Buffer.from(expectedSig))) return null;
+      const decoded = JSON.parse(Buffer.from(payloadB64u, 'base64url').toString('utf8'));
+      if (!decoded || !decoded.email || !decoded.exp || decoded.exp < Date.now()) return null;
+      return decoded;
+    } catch {
+      return null;
+    }
+  };
+
+  const handleFirestoreError = (error, operationType, path) => {
+    const errInfo = {
+      error: error instanceof Error ? error.message : String(error),
+      operationType,
+      path,
+      authInfo: { userId: null, email: null }
+    };
+    console.warn('[Firestore Passkey Sync]', JSON.stringify(errInfo));
+    return errInfo;
+  };
 
   const makeArgon2idHash = async (password) => {
     if (!password) return '';
@@ -117,6 +200,9 @@ export function createAuthRouter(sqliteDb, db) {
     const now = Date.now();
     for (const [nonce, exp] of USED_CHALLENGE_NONCES.entries()) {
       if (exp < now) USED_CHALLENGE_NONCES.delete(nonce);
+    }
+    for (const [pkNonce, meta] of PASSKEY_CHALLENGES.entries()) {
+      if (!meta || meta.expiresAt < now) PASSKEY_CHALLENGES.delete(pkNonce);
     }
     for (const [key, hits] of AUTH_IP_RATE.entries()) {
       const recent = hits.filter((ts) => ts > now - 60000);
@@ -354,6 +440,15 @@ export function createAuthRouter(sqliteDb, db) {
       let sqliteSaved = false;
       let cloudSynced = false;
 
+      const enablePasskeyFlag = (data.enable_passkey === true || data.enablePasskey === true || Boolean(data.passkeyCredential?.credentialId)) ? 1 : 0;
+      let passkeyCredId = sanitizeStr(data.passkeyCredential?.credentialId || '');
+      if (passkeyCredId && data.passkeyCredential?.challengeToken) {
+        const pkCheck = consumePasskeyChallenge(data.passkeyCredential.challengeToken, 'register', data.passkeyCredential.clientDataJSON);
+        if (!pkCheck.ok) {
+          passkeyCredId = '';
+        }
+      }
+
       if (sqliteDb) {
         try {
           const stmt = sqliteDb.prepare(`
@@ -361,8 +456,8 @@ export function createAuthRouter(sqliteDb, db) {
               id, idempotency_key, tenant_id, full_name, email, email_blind_idx, country_code, phone,
               company_name, business_reg_no, business_type, business_size,
               country, city, state, postal_code, address, custom_domain,
-              hear_about_us, password_hash, terms_accepted, is_synced, version, created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+              hear_about_us, password_hash, enable_passkey, biometric_hash, terms_accepted, is_synced, version, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           `);
 
           stmt.run(
@@ -386,6 +481,8 @@ export function createAuthRouter(sqliteDb, db) {
             safeDomain,
             safeReferral,
             passwordHash,
+            enablePasskeyFlag,
+            passkeyCredId || null,
             1,
             0,
             1,
@@ -393,6 +490,43 @@ export function createAuthRouter(sqliteDb, db) {
             nowIso
           );
           sqliteSaved = true;
+
+          if (passkeyCredId) {
+            try {
+              const pkId = 'pk-' + Date.now() + '-' + crypto.randomBytes(3).toString('hex');
+              const spkiBase64 = typeof data.passkeyCredential?.publicKeySpki === 'string'
+                ? data.passkeyCredential.publicKeySpki.slice(0, 4096)
+                : '';
+              const deviceLabel = sanitizeStr(data.passkeyCredential?.deviceLabel || 'Device Passkey') || 'Device Passkey';
+              sqliteDb.prepare(`
+                INSERT OR REPLACE INTO auth_passkeys (id, credential_id, tenant_id, user_id, email, email_blind_idx, public_key_spki, device_label, role, portal_type, is_synced, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'client_admin', 'platform', 0, ?)
+              `).run(pkId, passkeyCredId, tenantId, docId, encEmail, emailBlindIdx, spkiBase64, deviceLabel, nowIso);
+
+              if (db) {
+                setDoc(doc(db, 'passkeys', pkId), {
+                  id: pkId,
+                  credential_id: passkeyCredId,
+                  tenant_id: tenantId,
+                  user_id: docId,
+                  email: encEmail,
+                  email_blind_idx: emailBlindIdx,
+                  public_key_spki: spkiBase64,
+                  device_label: deviceLabel,
+                  role: 'client_admin',
+                  portal_type: 'platform',
+                  vault_encrypted: true,
+                  is_synced: 1,
+                  created_at: nowIso,
+                  synced_at: nowIso
+                }).then(() => {
+                  try {
+                    sqliteDb.prepare('UPDATE auth_passkeys SET is_synced = 1 WHERE id = ?').run(pkId);
+                  } catch {}
+                }).catch((err) => handleFirestoreError(err, 'write', `passkeys/${pkId}`));
+              }
+            } catch {}
+          }
 
           try {
             const authStmt = sqliteDb.prepare(`
@@ -449,7 +583,13 @@ export function createAuthRouter(sqliteDb, db) {
         }
       }
 
-      const registrationToken = 'scs_sec_token_' + crypto.randomBytes(16).toString('hex');
+      const registrationToken = issueSessionToken({
+        id: docId,
+        tenant_id: tenantId,
+        email: cleanEmail,
+        role: 'client_admin',
+        portal_type: 'platform'
+      });
 
       res.json({
         ok: true,
@@ -606,7 +746,7 @@ export function createAuthRouter(sqliteDb, db) {
           ok: true,
           redirect: '/superadmin',
           user: superAdminUser,
-          token: 'scs_sec_token_' + crypto.randomBytes(16).toString('hex')
+          token: issueSessionToken(superAdminUser)
         });
       }
 
@@ -758,7 +898,7 @@ export function createAuthRouter(sqliteDb, db) {
         ok: true,
         redirect: role === 'super_admin' ? '/superadmin' : '/dashboard',
         user: userObj,
-        token: 'scs_sec_token_' + crypto.randomBytes(16).toString('hex')
+        token: issueSessionToken(userObj)
       });
     } catch (error) {
       console.error('[SECURITY ERROR] Login error:', error);
@@ -919,6 +1059,541 @@ export function createAuthRouter(sqliteDb, db) {
     if (!tenantId) return res.status(400).json({ ok: false, message: 'tenantId required.' });
     vault.cryptoShredTenant(tenantId);
     res.json({ ok: true, message: `Tenant ${tenantId} DEK crypto-shredded. Stored encrypted data is now permanently unreadable.` });
+  });
+
+  // =========================================================================
+  // UNIFIED PASSKEY (WEBAUTHN) ENROLLMENT, PROFILE MANAGEMENT & LOGIN
+  // =========================================================================
+  function issuePasskeyChallenge(purpose) {
+    const challengeBytes = crypto.randomBytes(32);
+    const challenge = challengeBytes.toString('base64url');
+    const tokenId = crypto.randomBytes(16).toString('hex');
+    PASSKEY_CHALLENGES.set(tokenId, {
+      challenge,
+      purpose,
+      expiresAt: Date.now() + CHALLENGE_TTL_MS
+    });
+    return { challenge, challengeToken: tokenId };
+  }
+
+  function consumePasskeyChallenge(tokenId, expectedPurpose, clientDataJSONB64, reqOrigin) {
+    if (!tokenId || !PASSKEY_CHALLENGES.has(tokenId)) {
+      return { ok: false, message: 'Passkey challenge expired or invalid. Please try again.' };
+    }
+    const entry = PASSKEY_CHALLENGES.get(tokenId);
+    PASSKEY_CHALLENGES.delete(tokenId);
+    if (!entry || entry.expiresAt < Date.now() || entry.purpose !== expectedPurpose) {
+      return { ok: false, message: 'Passkey challenge expired. Please try again.' };
+    }
+    if (clientDataJSONB64) {
+      try {
+        const parsed = JSON.parse(Buffer.from(clientDataJSONB64, 'base64url').toString('utf8'));
+        const expectedType = expectedPurpose === 'register' ? 'webauthn.create' : 'webauthn.get';
+        if (parsed.type !== expectedType || parsed.challenge !== entry.challenge) {
+          return { ok: false, message: 'Passkey cryptographic challenge mismatch.' };
+        }
+        if (reqOrigin && parsed.origin && parsed.origin !== reqOrigin) {
+          return { ok: false, message: 'Passkey origin mismatch rejected.' };
+        }
+      } catch {
+        return { ok: false, message: 'Invalid passkey client data.' };
+      }
+    }
+    return { ok: true, challenge: entry.challenge };
+  }
+
+  function resolvePasskeyTargetScope(session, rawEmail, rawTenantId) {
+    const cleanTargetEmail = sanitizeStr(rawEmail || session.email || '').toLowerCase();
+    const isAdminScope = session.role === 'super_admin' || session.role === 'client_admin' || session.role === 'owner' || session.role === 'principal';
+    const targetTenantId = isAdminScope && rawTenantId ? sanitizeStr(rawTenantId) : session.tid;
+    if (session.role !== 'super_admin' && targetTenantId !== session.tid) {
+      return { allowed: false, message: 'Tenant boundary violation blocked.' };
+    }
+    if (!isAdminScope && cleanTargetEmail !== session.email) {
+      return { allowed: false, message: 'You can only manage Passkeys for your own account.' };
+    }
+    return {
+      allowed: true,
+      email: cleanTargetEmail || session.email,
+      tenantId: targetTenantId || 'tenant-root-platform'
+    };
+  }
+
+  router.post('/passkey/register-options', (req, res) => {
+    const body = req.body || {};
+    const cleanEmail = sanitizeStr(body.email || '').toLowerCase() || ('user-' + Date.now() + '@softcodesolution.local');
+    const cleanName = sanitizeStr(body.fullName || body.full_name || '') || cleanEmail;
+    const { challenge, challengeToken } = issuePasskeyChallenge('register');
+    const userId = crypto.createHash('sha256').update(cleanEmail).digest().subarray(0, 16).toString('base64url');
+    res.json({
+      ok: true,
+      challenge,
+      challengeToken,
+      rp: { name: 'SoftCodeSolution' },
+      user: {
+        id: userId,
+        name: cleanEmail,
+        displayName: cleanName
+      }
+    });
+  });
+
+  router.get('/passkey/list', async (req, res) => {
+    try {
+      const session = verifySessionRequest(req);
+      if (!session) {
+        return res.status(401).json({ ok: false, code: 'SESSION_REQUIRED', message: 'Signed authentication session required to view Passkeys.' });
+      }
+      const scope = resolvePasskeyTargetScope(session, req.query?.email, req.query?.tenantId);
+      if (!scope.allowed) {
+        return res.status(403).json({ ok: false, code: 'FORBIDDEN', message: scope.message });
+      }
+
+      const emailBlindIdx = vault.blindIndex(scope.email, 'email');
+      let rows = [];
+      if (sqliteDb) {
+        rows = sqliteDb.prepare(`
+          SELECT id, credential_id, tenant_id, user_id, device_label, role, portal_type, is_synced, created_at, last_used_at
+          FROM auth_passkeys
+          WHERE email_blind_idx = ? AND tenant_id = ?
+          ORDER BY created_at DESC
+        `).all(emailBlindIdx, scope.tenantId);
+      }
+
+      if (rows.length === 0 && db) {
+        try {
+          const snap = await getDocs(query(collection(db, 'passkeys'), where('email_blind_idx', '==', emailBlindIdx)));
+          const cloudRows = [];
+          snap.forEach((docSnap) => {
+            const d = docSnap.data();
+            if (!d || (d.tenant_id && d.tenant_id !== scope.tenantId)) return;
+            cloudRows.push({
+              id: d.id || docSnap.id,
+              credential_id: d.credential_id,
+              tenant_id: d.tenant_id || scope.tenantId,
+              user_id: d.user_id || session.uid,
+              device_label: d.device_label || 'Cloud Synced Passkey',
+              role: d.role || 'client_admin',
+              portal_type: d.portal_type || 'platform',
+              is_synced: 1,
+              created_at: d.created_at || new Date().toISOString(),
+              last_used_at: d.last_used_at || null
+            });
+            if (sqliteDb && d.credential_id) {
+              try {
+                sqliteDb.prepare(`
+                  INSERT OR IGNORE INTO auth_passkeys (id, credential_id, tenant_id, user_id, email, email_blind_idx, public_key_spki, device_label, role, portal_type, is_synced, created_at, last_used_at)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
+                `).run(
+                  d.id || docSnap.id,
+                  d.credential_id,
+                  d.tenant_id || scope.tenantId,
+                  d.user_id || session.uid,
+                  d.email || vault.encryptField(scope.tenantId, scope.email),
+                  emailBlindIdx,
+                  d.public_key_spki || '',
+                  d.device_label || 'Cloud Synced Passkey',
+                  d.role || 'client_admin',
+                  d.portal_type || 'platform',
+                  d.created_at || new Date().toISOString(),
+                  d.last_used_at || null
+                );
+              } catch {}
+            }
+          });
+          rows = cloudRows;
+        } catch (err) {
+          handleFirestoreError(err, 'list', 'passkeys');
+        }
+      }
+
+      res.json({
+        ok: true,
+        email: scope.email,
+        tenantId: scope.tenantId,
+        passkeys: rows.map((r) => ({
+          id: r.id,
+          credentialId: r.credential_id,
+          deviceLabel: r.device_label || 'Device Passkey',
+          role: r.role || 'client_admin',
+          portalType: r.portal_type || 'platform',
+          isSynced: Number(r.is_synced) === 1,
+          createdAt: r.created_at,
+          lastUsedAt: r.last_used_at
+        }))
+      });
+    } catch (err) {
+      res.status(500).json({ ok: false, message: 'Unable to load Passkeys.' });
+    }
+  });
+
+  router.post('/passkey/enroll', async (req, res) => {
+    try {
+      const session = verifySessionRequest(req);
+      if (!session) {
+        return res.status(401).json({ ok: false, code: 'SESSION_REQUIRED', message: 'Signed authentication session required to enroll a Passkey.' });
+      }
+      const body = req.body || {};
+      const scope = resolvePasskeyTargetScope(session, body.email, body.tenantId);
+      if (!scope.allowed) {
+        return res.status(403).json({ ok: false, code: 'FORBIDDEN', message: scope.message });
+      }
+
+      const check = consumePasskeyChallenge(body.challengeToken, 'register', body.clientDataJSON, req.headers.origin);
+      if (!check.ok) {
+        return res.status(400).json({ ok: false, code: 'PASSKEY_CHALLENGE_INVALID', message: check.message });
+      }
+
+      const credId = sanitizeStr(body.credentialId || '');
+      const spkiBase64 = typeof body.publicKeySpki === 'string' ? body.publicKeySpki.slice(0, 4096) : '';
+      if (!credId) {
+        return res.status(400).json({ ok: false, code: 'PASSKEY_INVALID', message: 'Credential ID missing from authenticator.' });
+      }
+
+      const pkId = 'pk-' + Date.now() + '-' + crypto.randomBytes(4).toString('hex');
+      const nowIso = new Date().toISOString();
+      const targetUserId = sanitizeStr(body.userId || '') || session.uid || ('usr-' + crypto.randomBytes(4).toString('hex'));
+      const targetRole = sanitizeStr(body.role || '') || session.role || 'client_admin';
+      const targetPortalType = sanitizeStr(body.portalType || body.portal_type || '') || session.portalType || 'platform';
+      const deviceLabel = sanitizeStr(body.deviceLabel || 'Device Passkey') || 'Device Passkey';
+      const emailBlindIdx = vault.blindIndex(scope.email, 'email');
+      vault.ensureTenantKey(scope.tenantId);
+      const encEmail = vault.encryptField(scope.tenantId, scope.email);
+
+      let sqliteSaved = false;
+      if (sqliteDb) {
+        try {
+          sqliteDb.prepare(`
+            INSERT OR REPLACE INTO auth_passkeys (id, credential_id, tenant_id, user_id, email, email_blind_idx, public_key_spki, device_label, role, portal_type, is_synced, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
+          `).run(pkId, credId, scope.tenantId, targetUserId, encEmail, emailBlindIdx, spkiBase64, deviceLabel, targetRole, targetPortalType, nowIso);
+          sqliteDb.prepare('UPDATE local_tenants SET enable_passkey = 1, biometric_hash = COALESCE(biometric_hash, ?) WHERE email_blind_idx = ?').run(credId, emailBlindIdx);
+          sqliteSaved = true;
+        } catch (sqlErr) {
+          console.warn('[Passkey Enroll] SQLite save warning:', sqlErr?.message);
+        }
+      }
+
+      let cloudSynced = false;
+      if (db) {
+        try {
+          await setDoc(doc(db, 'passkeys', pkId), {
+            id: pkId,
+            credential_id: credId,
+            tenant_id: scope.tenantId,
+            user_id: targetUserId,
+            email: encEmail,
+            email_blind_idx: emailBlindIdx,
+            public_key_spki: spkiBase64,
+            device_label: deviceLabel,
+            role: targetRole,
+            portal_type: targetPortalType,
+            vault_encrypted: true,
+            is_synced: 1,
+            created_at: nowIso,
+            synced_at: nowIso
+          });
+          cloudSynced = true;
+          if (sqliteDb && sqliteSaved) {
+            try {
+              sqliteDb.prepare('UPDATE auth_passkeys SET is_synced = 1 WHERE id = ?').run(pkId);
+            } catch {}
+          }
+        } catch (err) {
+          handleFirestoreError(err, 'write', `passkeys/${pkId}`);
+        }
+      }
+
+      res.json({
+        ok: true,
+        message: cloudSynced
+          ? 'Passkey saved offline (SQLite) and synced to Cloud Firestore.'
+          : 'Passkey saved securely offline (SQLite) and queued for Cloud sync.',
+        passkey: {
+          id: pkId,
+          credentialId: credId,
+          deviceLabel,
+          role: targetRole,
+          portalType: targetPortalType,
+          isSynced: cloudSynced,
+          createdAt: nowIso
+        }
+      });
+    } catch (err) {
+      res.status(500).json({ ok: false, message: 'Failed to enroll Passkey.' });
+    }
+  });
+
+  const handleRemovePasskey = async (req, res) => {
+    try {
+      const session = verifySessionRequest(req);
+      if (!session) {
+        return res.status(401).json({ ok: false, code: 'SESSION_REQUIRED', message: 'Signed authentication session required.' });
+      }
+      const pkId = sanitizeStr(req.params?.id || req.body?.id || '');
+      if (!pkId) {
+        return res.status(400).json({ ok: false, message: 'Passkey id is required.' });
+      }
+
+      let existing = null;
+      if (sqliteDb) {
+        existing = sqliteDb.prepare('SELECT * FROM auth_passkeys WHERE id = ? LIMIT 1').get(pkId);
+      }
+      if (!existing && session.role !== 'super_admin') {
+        return res.status(404).json({ ok: false, message: 'Passkey not found.' });
+      }
+
+      if (existing) {
+        const isAdminScope = session.role === 'super_admin' || ((session.role === 'client_admin' || session.role === 'owner' || session.role === 'principal') && existing.tenant_id === session.tid);
+        const isSelf = existing.email_blind_idx === vault.blindIndex(session.email, 'email');
+        if (!isAdminScope && !isSelf) {
+          return res.status(403).json({ ok: false, message: 'Permission denied removing this Passkey.' });
+        }
+        if (sqliteDb) {
+          sqliteDb.prepare('DELETE FROM auth_passkeys WHERE id = ?').run(pkId);
+        }
+      }
+
+      if (db) {
+        try {
+          await deleteDoc(doc(db, 'passkeys', pkId));
+        } catch (err) {
+          handleFirestoreError(err, 'delete', `passkeys/${pkId}`);
+        }
+      }
+
+      res.json({ ok: true, message: 'Passkey removed from device registry and Cloud.' });
+    } catch (err) {
+      res.status(500).json({ ok: false, message: 'Failed to remove Passkey.' });
+    }
+  };
+
+  router.post('/passkey/remove', handleRemovePasskey);
+  router.delete('/passkey/:id', handleRemovePasskey);
+
+  router.post('/passkey/login-options', async (req, res) => {
+    const body = req.body || {};
+    const cleanEmail = sanitizeStr(body.email || '').toLowerCase();
+    const { challenge, challengeToken } = issuePasskeyChallenge('login');
+    const allowCredentials = [];
+    const seen = new Set();
+
+    if (cleanEmail) {
+      const emailBlindIdx = vault.blindIndex(cleanEmail, 'email');
+      if (sqliteDb) {
+        try {
+          const rows = sqliteDb.prepare('SELECT credential_id FROM auth_passkeys WHERE email_blind_idx = ?').all(emailBlindIdx);
+          for (const r of rows) {
+            if (r.credential_id && !seen.has(r.credential_id)) {
+              seen.add(r.credential_id);
+              allowCredentials.push({ type: 'public-key', id: r.credential_id });
+            }
+          }
+        } catch {}
+      }
+      if (allowCredentials.length === 0 && db) {
+        try {
+          const snap = await getDocs(query(collection(db, 'passkeys'), where('email_blind_idx', '==', emailBlindIdx)));
+          snap.forEach((docSnap) => {
+            const d = docSnap.data();
+            if (d?.credential_id && !seen.has(d.credential_id)) {
+              seen.add(d.credential_id);
+              allowCredentials.push({ type: 'public-key', id: d.credential_id });
+            }
+          });
+        } catch (err) {
+          handleFirestoreError(err, 'list', 'passkeys');
+        }
+      }
+    }
+
+    res.json({
+      ok: true,
+      challenge,
+      challengeToken,
+      allowCredentials
+    });
+  });
+
+  router.post('/passkey/login-verify', async (req, res) => {
+    try {
+      const { challengeToken, credentialId, clientDataJSON, authenticatorData, signature } = req.body || {};
+      const check = consumePasskeyChallenge(challengeToken, 'login', clientDataJSON, req.headers.origin);
+      if (!check.ok) {
+        return res.status(401).json({ ok: false, code: 'PASSKEY_CHALLENGE_INVALID', message: check.message });
+      }
+
+      const credId = sanitizeStr(credentialId || '');
+      if (!credId) {
+        return res.status(401).json({ ok: false, code: 'PASSKEY_NOT_FOUND', message: 'No matching Passkey found on this server.' });
+      }
+
+      let passkeyRow = null;
+      if (sqliteDb) {
+        try {
+          passkeyRow = sqliteDb.prepare('SELECT * FROM auth_passkeys WHERE credential_id = ? LIMIT 1').get(credId);
+        } catch {}
+      }
+
+      if (!passkeyRow && db) {
+        try {
+          const snap = await getDocs(query(collection(db, 'passkeys'), where('credential_id', '==', credId)));
+          if (!snap.empty) {
+            const docSnap = snap.docs[0];
+            const d = docSnap.data();
+            passkeyRow = {
+              id: d.id || docSnap.id,
+              credential_id: d.credential_id,
+              tenant_id: d.tenant_id || 'tenant-root-platform',
+              user_id: d.user_id || '',
+              email: d.email || '',
+              email_blind_idx: d.email_blind_idx || '',
+              public_key_spki: d.public_key_spki || '',
+              device_label: d.device_label || 'Cloud Passkey',
+              role: d.role || 'client_admin',
+              portal_type: d.portal_type || 'platform',
+              created_at: d.created_at || new Date().toISOString()
+            };
+            if (sqliteDb) {
+              try {
+                sqliteDb.prepare(`
+                  INSERT OR IGNORE INTO auth_passkeys (id, credential_id, tenant_id, user_id, email, email_blind_idx, public_key_spki, device_label, role, portal_type, is_synced, created_at)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
+                `).run(
+                  passkeyRow.id,
+                  passkeyRow.credential_id,
+                  passkeyRow.tenant_id,
+                  passkeyRow.user_id,
+                  passkeyRow.email,
+                  passkeyRow.email_blind_idx,
+                  passkeyRow.public_key_spki,
+                  passkeyRow.device_label,
+                  passkeyRow.role,
+                  passkeyRow.portal_type,
+                  passkeyRow.created_at
+                );
+              } catch {}
+            }
+          }
+        } catch (err) {
+          handleFirestoreError(err, 'get', 'passkeys');
+        }
+      }
+
+      if (!passkeyRow) {
+        return res.status(401).json({ ok: false, code: 'PASSKEY_NOT_FOUND', message: 'Passkey is not registered to any account yet. Please sign in with password or add a Passkey in Account Settings.' });
+      }
+
+      // Strict WebAuthn Assertion Signature & User-Present Flag Verification
+      if (!authenticatorData || !clientDataJSON || !signature) {
+        return res.status(401).json({ ok: false, code: 'PASSKEY_SIGNATURE_MISSING', message: 'Passkey cryptographic assertion incomplete.' });
+      }
+
+      const authDataBuf = Buffer.from(authenticatorData, 'base64url');
+      if (authDataBuf.length < 37 || (authDataBuf[32] & 0x01) === 0) {
+        return res.status(401).json({ ok: false, code: 'PASSKEY_USER_NOT_PRESENT', message: 'Passkey user presence check failed.' });
+      }
+
+      if (!passkeyRow.public_key_spki) {
+        return res.status(401).json({ ok: false, code: 'PASSKEY_KEY_MISSING', message: 'Passkey public key missing. Please remove and re-add this Passkey in Account Settings.' });
+      }
+
+      try {
+        const spkiDer = Buffer.from(passkeyRow.public_key_spki, 'base64url');
+        const keyObj = crypto.createPublicKey({ key: spkiDer, format: 'der', type: 'spki' });
+        const clientDataHash = crypto.createHash('sha256').update(Buffer.from(clientDataJSON, 'base64url')).digest();
+        const signedPayload = Buffer.concat([authDataBuf, clientDataHash]);
+        const sigBuf = Buffer.from(signature, 'base64url');
+        const verified = crypto.verify('sha256', signedPayload, keyObj, sigBuf);
+        if (!verified) {
+          return res.status(401).json({ ok: false, code: 'PASSKEY_SIGNATURE_INVALID', message: 'Passkey cryptographic signature verification failed.' });
+        }
+      } catch {
+        return res.status(401).json({ ok: false, code: 'PASSKEY_SIGNATURE_INVALID', message: 'Passkey signature verification failed.' });
+      }
+
+      const decryptedEmail = vault.decryptField(passkeyRow.tenant_id, passkeyRow.email) || '';
+      const emailLower = decryptedEmail.toLowerCase().trim();
+      const portalType = passkeyRow.portal_type || 'platform';
+      let role = passkeyRow.role || 'client_admin';
+      let userObj = null;
+
+      if (role === 'super_admin' || portalType === 'superadmin' || emailLower === 'pervaizahmedabbasi786@gmail.com') {
+        role = 'super_admin';
+        userObj = {
+          id: passkeyRow.user_id || 'superadmin-root-01',
+          tenant_id: 'tenant-root-platform',
+          email: emailLower || 'pervaizahmedabbasi786@gmail.com',
+          role: 'super_admin',
+          portal_type: 'superadmin',
+          status: 'ACTIVE',
+          company_name: 'SoftCode Solution',
+          authSource: 'WEBAUTHN_PASSKEY',
+          passkeyVerified: true
+        };
+      }
+
+      if (!userObj && sqliteDb) {
+        try {
+          const tenantRow = sqliteDb.prepare('SELECT * FROM local_tenants WHERE id = ? OR email_blind_idx = ? LIMIT 1').get(passkeyRow.user_id, passkeyRow.email_blind_idx);
+          if (tenantRow) {
+            if (tenantRow.status === 'LOCKED_FAILED_ATTEMPTS' || tenantRow.status === 'LOGIN_DISABLED') {
+              return res.status(423).json({ ok: false, isLocked: true, message: 'Account is locked. Please contact SuperAdmin.' });
+            }
+            const dec = vault.decryptFields(tenantRow.tenant_id, tenantRow, ['full_name', 'email', 'phone', 'address']);
+            const authRow = sqliteDb.prepare('SELECT role FROM auth_users WHERE email_blind_idx = ? LIMIT 1').get(passkeyRow.email_blind_idx);
+            role = passkeyRow.role || authRow?.role || 'client_admin';
+            userObj = {
+              id: dec.id,
+              tenant_id: dec.tenant_id,
+              email: dec.email,
+              full_name: dec.full_name,
+              company_name: dec.company_name,
+              business_type: dec.business_type,
+              role,
+              portal_type: portalType,
+              status: 'ACTIVE',
+              authSource: 'WEBAUTHN_PASSKEY',
+              passkeyVerified: true
+            };
+          }
+        } catch {}
+      }
+
+      if (!userObj) {
+        userObj = {
+          id: passkeyRow.user_id,
+          tenant_id: passkeyRow.tenant_id,
+          email: emailLower,
+          role,
+          portal_type: portalType,
+          status: 'ACTIVE',
+          company_name: 'Enterprise Client',
+          authSource: 'WEBAUTHN_PASSKEY',
+          passkeyVerified: true
+        };
+      }
+
+      const usedAtIso = new Date().toISOString();
+      if (sqliteDb) {
+        try {
+          sqliteDb.prepare('UPDATE auth_passkeys SET last_used_at = ? WHERE id = ?').run(usedAtIso, passkeyRow.id);
+        } catch {}
+      }
+      if (db && passkeyRow.id) {
+        updateDoc(doc(db, 'passkeys', passkeyRow.id), { last_used_at: usedAtIso }).catch(() => {});
+      }
+
+      res.json({
+        ok: true,
+        redirect: role === 'super_admin' ? '/superadmin' : '/dashboard',
+        portalType,
+        user: userObj,
+        token: issueSessionToken(userObj)
+      });
+    } catch (err) {
+      res.status(500).json({ ok: false, message: 'Passkey verification failed. Please sign in with password.' });
+    }
   });
 
   router.post('/register', handleRegister);

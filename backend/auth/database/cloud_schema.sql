@@ -43,3 +43,30 @@ DROP POLICY IF EXISTS isolate_tenant_data ON tenants;
 
 CREATE POLICY isolate_tenant_data ON tenants 
     USING (tenant_id = current_setting('app.current_tenant_id', true));
+
+-- PASSKEYS (WEBAUTHN CREDENTIALS) - CLOUD POSTGRESQL SCHEMA
+CREATE TABLE IF NOT EXISTS auth_passkeys (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    credential_id TEXT UNIQUE NOT NULL,
+    tenant_id VARCHAR(255) NOT NULL,
+    user_id VARCHAR(255) NOT NULL,
+    email VARCHAR(512) NOT NULL,
+    email_blind_idx VARCHAR(255),
+    public_key_spki TEXT,
+    device_label VARCHAR(255),
+    role VARCHAR(64) DEFAULT 'client_admin',
+    portal_type VARCHAR(64) DEFAULT 'platform',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    last_used_at TIMESTAMP WITH TIME ZONE
+);
+
+CREATE INDEX IF NOT EXISTS idx_cloud_passkeys_cred ON auth_passkeys(credential_id);
+CREATE INDEX IF NOT EXISTS idx_cloud_passkeys_email ON auth_passkeys(email_blind_idx);
+CREATE INDEX IF NOT EXISTS idx_cloud_passkeys_user ON auth_passkeys(user_id);
+CREATE INDEX IF NOT EXISTS idx_cloud_passkeys_tenant ON auth_passkeys(tenant_id);
+
+ALTER TABLE auth_passkeys ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS isolate_tenant_passkeys ON auth_passkeys;
+
+CREATE POLICY isolate_tenant_passkeys ON auth_passkeys
+    USING (tenant_id = current_setting('app.current_tenant_id', true));

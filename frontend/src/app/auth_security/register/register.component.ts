@@ -124,7 +124,21 @@ export class RegisterComponent implements OnInit {
 
   passwordStrength = 0;
   passwordStrengthLabel = 'Enter Password';
+  showPassword = false;
+  showConfirmPassword = false;
   autoCorrectedFields: Record<string, string> = {};
+
+  // Unified Passkey Enrollment State
+  passkeyEnrolling = false;
+  passkeyEnrolled = false;
+  passkeyError = '';
+  private passkeyCredentialData: {
+    credentialId: string;
+    challengeToken: string;
+    clientDataJSON: string;
+    publicKeySpki: string;
+    deviceLabel: string;
+  } | null = null;
 
   // Anti-Bot & Anti-Hacker Shield State (Interactive Puzzle)
   private formLoadedAt = Date.now();
@@ -549,6 +563,117 @@ export class RegisterComponent implements OnInit {
     return Math.abs(this.puzzleSliderPos - this.puzzleTargetPos) <= 5;
   }
 
+  private base64UrlToArrayBuffer(b64u: string): ArrayBuffer {
+    const padLen = (4 - (b64u.length % 4)) % 4;
+    const base64 = (b64u + '='.repeat(padLen)).replace(/-/g, '+').replace(/_/g, '/');
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes.buffer;
+  }
+
+  private bufferToBase64Url(buf: ArrayBuffer): string {
+    const bytes = new Uint8Array(buf);
+    let binary = '';
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+
+  async onPasskeyToggle(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const checked = !!input?.checked;
+    this.passkeyError = '';
+
+    if (!checked) {
+      this.passkeyEnrolled = false;
+      this.passkeyCredentialData = null;
+      this.cdr.detectChanges();
+      return;
+    }
+
+    if (typeof window === 'undefined' || !window.PublicKeyCredential || !navigator.credentials?.create) {
+      this.registerForm.get('enablePasskey')?.setValue(false, { emitEvent: false });
+      this.passkeyError = 'Passkey is not supported in this browser.';
+      this.cdr.detectChanges();
+      return;
+    }
+
+    this.passkeyEnrolling = true;
+    this.cdr.detectChanges();
+
+    try {
+      const emailVal = sanitizeInput(this.registerForm.value.email || '');
+      const fullNameVal = sanitizeInput(this.registerForm.value.fullName || '');
+      const optResp = await fetch('/api/auth/passkey/register-options', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: emailVal, fullName: fullNameVal })
+      });
+      const optData = await optResp.json().catch(() => null);
+      if (!optResp.ok || !optData?.ok || !optData?.challenge) {
+        throw new Error('Could not start Passkey enrollment.');
+      }
+
+      const publicKeyOptions: PublicKeyCredentialCreationOptions = {
+        challenge: this.base64UrlToArrayBuffer(optData.challenge),
+        rp: {
+          name: optData.rp?.name || 'SoftCodeSolution',
+          id: window.location.hostname
+        },
+        user: {
+          id: this.base64UrlToArrayBuffer(optData.user.id),
+          name: optData.user.name,
+          displayName: optData.user.displayName
+        },
+        pubKeyCredParams: [
+          { type: 'public-key', alg: -7 },
+          { type: 'public-key', alg: -257 }
+        ],
+        authenticatorSelection: {
+          residentKey: 'preferred',
+          userVerification: 'preferred'
+        },
+        timeout: 60000,
+        attestation: 'none'
+      };
+
+      const cred = (await navigator.credentials.create({ publicKey: publicKeyOptions })) as PublicKeyCredential | null;
+      if (!cred) {
+        throw new Error('Passkey creation cancelled.');
+      }
+
+      const response = cred.response as AuthenticatorAttestationResponse & { getPublicKey?: () => ArrayBuffer | null };
+      const spkiBuf = typeof response.getPublicKey === 'function' ? response.getPublicKey() : null;
+
+      this.passkeyCredentialData = {
+        credentialId: cred.id || this.bufferToBase64Url(cred.rawId),
+        challengeToken: optData.challengeToken,
+        clientDataJSON: this.bufferToBase64Url(response.clientDataJSON),
+        publicKeySpki: spkiBuf ? this.bufferToBase64Url(spkiBuf) : '',
+        deviceLabel: /mobile|android|iphone|ipad/i.test(navigator.userAgent) ? 'Mobile Passkey' : 'Desktop Passkey'
+      };
+      this.passkeyEnrolled = true;
+      this.notification.success('Passkey ready! Complete registration to link it to your account.');
+    } catch (err: any) {
+      this.registerForm.get('enablePasskey')?.setValue(false, { emitEvent: false });
+      this.passkeyEnrolled = false;
+      this.passkeyCredentialData = null;
+      const errName = String(err?.name || '');
+      if (errName === 'NotAllowedError' || errName === 'SecurityError') {
+        this.passkeyError = 'Passkey setup cancelled or blocked in preview iframe. Open in a full browser tab to enroll.';
+      } else {
+        this.passkeyError = err?.message || 'Unable to set up Passkey on this device.';
+      }
+    } finally {
+      this.passkeyEnrolling = false;
+      this.cdr.detectChanges();
+    }
+  }
+
   // ✅ SECURE SUBMIT (V16.0 Enhanced: Wails Desktop + IDX/Web API)
   async onSubmit(): Promise<void> {
     this.humanShieldError = false;
@@ -618,8 +743,9 @@ export class RegisterComponent implements OnInit {
         hear_about_us: sanitizeInput(formValue.hearAboutUs),
         hearAboutUs: sanitizeInput(formValue.hearAboutUs),
 
-        enable_passkey: !!formValue.enablePasskey,
-        enablePasskey: !!formValue.enablePasskey,
+        enable_passkey: !!formValue.enablePasskey || !!this.passkeyCredentialData,
+        enablePasskey: !!formValue.enablePasskey || !!this.passkeyCredentialData,
+        passkeyCredential: this.passkeyCredentialData,
 
         terms_accepted: !!formValue.termsAccepted,
         termsAccepted: !!formValue.termsAccepted,
@@ -718,6 +844,9 @@ export class RegisterComponent implements OnInit {
     this.notification.success(result?.message || 'Account created. Proceeding to your selected plan.');
     this.registerForm.reset({ countryCode: '+92', termsAccepted: false, enablePasskey: false, hpWebsite: '' });
     this.autoCorrectedFields = {};
+    this.passkeyEnrolled = false;
+    this.passkeyCredentialData = null;
+    this.passkeyError = '';
     this.humanVerified = false;
     this.botChallengeToken = '';
     this.botPowNonce = 0;

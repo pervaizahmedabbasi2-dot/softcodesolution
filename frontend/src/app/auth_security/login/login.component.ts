@@ -58,6 +58,7 @@ export class LoginComponent implements OnInit {
 
   loginForm!: FormGroup;
   isLoading = false;
+  isPasskeyLoading = false;
   showSuccessPopup = false;
   showLoginError = false;
   loginErrorMessage = 'Invalid credentials. Please verify your details.';
@@ -65,6 +66,7 @@ export class LoginComponent implements OnInit {
   isAccountLocked = false;
   
   rememberMe = true;
+  showPassword = false;
   emailAutoCorrected = false;
   emailAutoCorrectNote = '';
   passwordAutoCorrected = false;
@@ -515,6 +517,143 @@ export class LoginComponent implements OnInit {
       this.cdr.detectChanges();
     } finally {
       this.isLoading = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  private base64UrlToArrayBuffer(b64u: string): ArrayBuffer {
+    const padLen = (4 - (b64u.length % 4)) % 4;
+    const base64 = (b64u + '='.repeat(padLen)).replace(/-/g, '+').replace(/_/g, '/');
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes.buffer;
+  }
+
+  private bufferToBase64Url(buf: ArrayBuffer): string {
+    const bytes = new Uint8Array(buf);
+    let binary = '';
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+
+  async onPasskeyLogin(): Promise<void> {
+    this.showLoginError = false;
+    this.isAccountLocked = false;
+    this.remainingAttempts = null;
+
+    if (typeof window === 'undefined' || !window.PublicKeyCredential || !navigator.credentials?.get) {
+      this.showLoginError = true;
+      this.loginErrorMessage = 'Passkey is not supported in this browser. Please sign in with your password.';
+      this.cdr.detectChanges();
+      return;
+    }
+
+    this.isPasskeyLoading = true;
+    this.cdr.detectChanges();
+
+    try {
+      const emailInput = sanitizeInput(this.loginForm.value.email || '').toLowerCase();
+      const optResp = await fetch('/api/auth/passkey/login-options', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: emailInput })
+      });
+      const optData = await optResp.json().catch(() => null);
+      if (!optResp.ok || !optData?.ok || !optData?.challenge) {
+        throw new Error('Unable to initialize Passkey sign-in.');
+      }
+
+      const allowCredentials: PublicKeyCredentialDescriptor[] = Array.isArray(optData.allowCredentials)
+        ? optData.allowCredentials.map((c: any) => ({
+            type: 'public-key' as const,
+            id: this.base64UrlToArrayBuffer(String(c.id))
+          }))
+        : [];
+
+      const publicKeyRequest: PublicKeyCredentialRequestOptions = {
+        challenge: this.base64UrlToArrayBuffer(optData.challenge),
+        rpId: window.location.hostname,
+        allowCredentials,
+        userVerification: 'preferred',
+        timeout: 60000
+      };
+
+      const assertion = (await navigator.credentials.get({ publicKey: publicKeyRequest })) as PublicKeyCredential | null;
+      if (!assertion) {
+        throw new Error('Passkey sign-in cancelled.');
+      }
+
+      const resp = assertion.response as AuthenticatorAssertionResponse;
+      const verifyResp = await fetch('/api/auth/passkey/login-verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          challengeToken: optData.challengeToken,
+          credentialId: assertion.id || this.bufferToBase64Url(assertion.rawId),
+          clientDataJSON: this.bufferToBase64Url(resp.clientDataJSON),
+          authenticatorData: this.bufferToBase64Url(resp.authenticatorData),
+          signature: this.bufferToBase64Url(resp.signature)
+        })
+      });
+
+      const result = await verifyResp.json().catch(() => null);
+      if (!verifyResp.ok || !result?.ok) {
+        this.showLoginError = true;
+        this.loginErrorMessage = result?.message || 'Passkey verification failed. Please sign in with your password.';
+        this.cdr.detectChanges();
+        return;
+      }
+
+      localStorage.setItem('scs_auth_session', result.token || ('scs_token_' + Date.now()));
+      if (result.user) {
+        localStorage.setItem('user_data', JSON.stringify(result.user));
+        if (result.user.tenant_id) {
+          localStorage.setItem('scs_tenant_id', result.user.tenant_id);
+        }
+        const pkPortal = String(result.portalType || result.user.portal_type || '').toLowerCase();
+        const pkRole = String(result.user.role || '').toLowerCase();
+        if (['principal', 'teacher', 'student', 'parent', 'accountant'].includes(pkRole)) {
+          localStorage.setItem('activeSchoolRole', pkRole);
+          localStorage.setItem('activeSchoolPortal', pkRole + '-portal');
+        } else if (['principal', 'teacher', 'student', 'parent', 'accountant'].includes(pkPortal)) {
+          localStorage.setItem('activeSchoolRole', pkPortal);
+          localStorage.setItem('activeSchoolPortal', pkPortal + '-portal');
+        } else if (pkPortal === 'school_owner') {
+          localStorage.setItem('activeSchoolRole', 'owner');
+          localStorage.setItem('activeSchoolPortal', 'overview');
+        }
+      }
+
+      const isSuperAdminRole = result.user?.role === 'super_admin' || result.redirect === '/superadmin';
+      const targetUrl = isSuperAdminRole ? '/superadmin' : '/dashboard';
+      this.notification.success?.(`Welcome back, ${result.user?.full_name || result.user?.company_name || 'User'}! Passkey verified.`);
+
+      if (this.isCheckoutRedirect && !isSuperAdminRole) {
+        const suiteParam = this.checkoutSuiteParam || this.checkoutPlanParam || 'active';
+        await this.router.navigate(['/'], {
+          queryParams: { checkoutSuite: suiteParam },
+          fragment: 'store'
+        });
+        return;
+      }
+
+      await this.router.navigateByUrl(targetUrl);
+    } catch (err: any) {
+      this.showLoginError = true;
+      const errName = String(err?.name || '');
+      if (errName === 'NotAllowedError' || errName === 'SecurityError') {
+        this.loginErrorMessage = 'Passkey sign-in cancelled or blocked in preview iframe. Open in a full browser tab or use your password.';
+      } else {
+        this.loginErrorMessage = err?.message || 'Passkey sign-in failed. Please use your password.';
+      }
+      this.cdr.detectChanges();
+    } finally {
+      this.isPasskeyLoading = false;
       this.cdr.detectChanges();
     }
   }

@@ -8465,6 +8465,16 @@
             </button>
           </div>
         </div>
+
+        <div class="max-w-4xl mt-6">
+          <app-passkey-manager
+            [email]="activePortalPasskeyIdentity.email"
+            [fullName]="activePortalPasskeyIdentity.fullName"
+            [tenantId]="activePortalPasskeyIdentity.tenantId"
+            [userId]="activePortalPasskeyIdentity.userId"
+            [role]="activePortalPasskeyIdentity.role"
+            [portalType]="activePortalPasskeyIdentity.portalType" />
+        </div>
       }
 
       <!-- TAB 11: INSTITUTIONAL AUDIT & COMPLIANCE HUB -->
@@ -9217,6 +9227,10 @@
               <span>Return to School Owner ERP</span>
             </button>
           }
+          <button (click)="openPasskeyProfileModal()" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 font-extrabold text-xs cursor-pointer shadow-xs flex items-center gap-1.5 active:scale-95 transition-all">
+            <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-indigo-600">fingerprint</mat-icon>
+            <span>Passkey Security</span>
+          </button>
           <button (click)="syncToCloud(true)" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs cursor-pointer shadow-md flex items-center gap-1.5 active:scale-95 transition-all">
             <lucide-icon [name]="'cloud'" class="w-4 h-4"></lucide-icon>
             <span>Cloud Sync State</span>
@@ -12978,6 +12992,12 @@
             <span>Roll Call <strong class="font-black">Marked</strong></span>
           </div>
 
+          <button (click)="openPasskeyProfileModal()"
+            class="flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl bg-white/90 hover:bg-white text-slate-800 border border-slate-200 font-black text-[11px] sm:text-xs cursor-pointer shadow-xs transition-all active:scale-95 whitespace-nowrap">
+            <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-indigo-600">fingerprint</mat-icon>
+            <span>Passkey</span>
+          </button>
+
           <button (click)="openProfileEditModal('teacher')" 
             class="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-b from-emerald-600 via-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-black text-[11px] sm:text-xs cursor-pointer shadow-[0_10px_20px_-5px_rgba(16,185,129,0.4),inset_0_1px_1px_rgba(255,255,255,0.4)] border border-emerald-400/30 transition-all active:scale-95 whitespace-nowrap">
             <lucide-icon [name]="'pencil'" class="w-3.5 h-3.5"></lucide-icon>
@@ -14231,6 +14251,11 @@
             class="px-4 py-2.5 rounded-2xl bg-white/80 hover:bg-white text-slate-800 font-black text-xs cursor-pointer flex items-center gap-2 border border-slate-200/90 shadow-[0_4px_12px_rgba(0,0,0,0.04),inset_0_1px_1px_rgba(255,255,255,0.9)] transition-all active:scale-95 shrink-0 whitespace-nowrap">
             <lucide-icon [name]="'award'" class="w-3.5 h-3.5 text-amber-600"></lucide-icon>
             <span>Exam Roll Slip</span>
+          </button>
+          <button (click)="openPasskeyProfileModal()"
+            class="px-4 py-2.5 rounded-2xl bg-white/90 hover:bg-white text-slate-800 font-black text-xs cursor-pointer flex items-center gap-1.5 border border-slate-200/90 shadow-[0_4px_12px_rgba(0,0,0,0.04),inset_0_1px_1px_rgba(255,255,255,0.9)] transition-all active:scale-95 shrink-0 whitespace-nowrap">
+            <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-indigo-600">fingerprint</mat-icon>
+            <span>Passkey</span>
           </button>
           @if (isOwnerSession) {
             <button (click)="exitToOwner()" 
@@ -15516,6 +15541,11 @@
             <lucide-icon [name]="'award'" class="w-3.5 h-3.5 text-amber-600"></lucide-icon>
             <span>Request Certificate</span>
           </button>
+          <button (click)="openPasskeyProfileModal()"
+            class="px-4 py-2.5 rounded-2xl bg-white/90 hover:bg-white text-slate-800 font-black text-xs cursor-pointer flex items-center gap-1.5 border border-slate-200/90 shadow-[0_4px_12px_rgba(0,0,0,0.04),inset_0_1px_1px_rgba(255,255,255,0.9)] transition-all active:scale-95 shrink-0 whitespace-nowrap">
+            <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-indigo-600">fingerprint</mat-icon>
+            <span>Passkey</span>
+          </button>
           @if (isOwnerSession) {
             <button (click)="exitToOwner()" 
               class="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-black text-xs cursor-pointer flex items-center gap-2 shadow-md shadow-amber-500/25 border border-amber-300/40 transition-all active:scale-95 shrink-0 whitespace-nowrap">
@@ -16530,6 +16560,10 @@
           <button (click)="setAccountantTab('daily_closing')" class="px-4 py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs cursor-pointer flex items-center gap-2 shadow-md active:scale-95">
             <lucide-icon [name]="'shield-check'" class="w-4 h-4 text-emerald-400"></lucide-icon>
             <span>Submit Daily Closing to Owner</span>
+          </button>
+          <button (click)="openPasskeyProfileModal()" class="px-4 py-2.5 rounded-2xl bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 font-black text-xs cursor-pointer flex items-center gap-1.5 shadow-xs active:scale-95">
+            <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-indigo-600">fingerprint</mat-icon>
+            <span>Passkey</span>
           </button>
           @if (isOwnerSession) {
             <button (click)="exitToOwner()" class="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-black text-xs cursor-pointer flex items-center gap-2 shadow-md active:scale-95">
@@ -24640,3 +24674,30 @@
   <!-- School Business Owner Column Schema & Custom Cell Value Editor Modal -->
   <app-school-table-column-modal />
 
+  <!-- School Portal Account Passkey Security Modal -->
+  @if (isPasskeyProfileModalOpen) {
+    <div class="fixed inset-0 z-[9999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4"
+         (click)="closePasskeyProfileModal()">
+      <div class="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-xl w-full max-h-[90vh] overflow-y-auto p-5 sm:p-6 space-y-4"
+           (click)="$event.stopPropagation()">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div>
+            <h3 class="text-base font-black text-slate-900">Portal Passkey &amp; Sign-In Security</h3>
+            <p class="text-xs text-slate-500">{{ activePortalPasskeyIdentity.fullName }} · {{ activePortalPasskeyIdentity.email }}</p>
+          </div>
+          <button (click)="closePasskeyProfileModal()"
+                  class="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer">
+            <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">close</mat-icon>
+          </button>
+        </div>
+
+        <app-passkey-manager
+          [email]="activePortalPasskeyIdentity.email"
+          [fullName]="activePortalPasskeyIdentity.fullName"
+          [tenantId]="activePortalPasskeyIdentity.tenantId"
+          [userId]="activePortalPasskeyIdentity.userId"
+          [role]="activePortalPasskeyIdentity.role"
+          [portalType]="activePortalPasskeyIdentity.portalType" />
+      </div>
+    </div>
+  }

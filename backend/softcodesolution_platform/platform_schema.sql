@@ -77,6 +77,26 @@ CREATE TABLE IF NOT EXISTS auth_users (
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS auth_passkeys (
+  id TEXT PRIMARY KEY,
+  credential_id TEXT UNIQUE NOT NULL,
+  tenant_id TEXT NOT NULL,
+  user_id TEXT NOT NULL,
+  email TEXT NOT NULL,
+  email_blind_idx TEXT,
+  public_key_spki TEXT,
+  device_label TEXT,
+  role TEXT DEFAULT 'client_admin',
+  portal_type TEXT DEFAULT 'platform',
+  is_synced INTEGER DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  last_used_at DATETIME
+);
+CREATE INDEX IF NOT EXISTS idx_auth_passkeys_cred ON auth_passkeys(credential_id);
+CREATE INDEX IF NOT EXISTS idx_auth_passkeys_email ON auth_passkeys(email_blind_idx);
+CREATE INDEX IF NOT EXISTS idx_auth_passkeys_user ON auth_passkeys(user_id);
+CREATE INDEX IF NOT EXISTS idx_auth_passkeys_sync ON auth_passkeys(is_synced) WHERE is_synced = 0;
+
 -- 3B. Per-Tenant Envelope & VIP Zero-Knowledge Encryption Key Registry
 CREATE TABLE IF NOT EXISTS tenant_crypto_keys (
   tenant_id TEXT PRIMARY KEY,

@@ -81,6 +81,7 @@ import { SchoolTableDirective } from '../directives/school-table.directive';
 import { SchoolTableColumnModalComponent } from '../components/school-table-column-modal/school-table-column-modal.component';
 import { SchoolCustomFormFieldsComponent } from '../components/school-custom-form-fields/school-custom-form-fields.component';
 import { SchoolTableSchemaService, TableColumnPositionOption } from '../services/school-table-schema.service';
+import { PasskeyManagerComponent } from '../../../auth_security/passkey-manager/passkey-manager.component';
 
 export type SchoolDashboardTab = 'overview' | 'stage_wise' | 'feed' | 'events' | 'students' | 'teachers' | 'admissions' | 'attendance' | 'finance' | 'invoices' | 'expenses' | 'payment_gateway' | 'transport' | 'library' | 'exams' | 'timetable' | 'hostel' | 'labs' | 'alumni' | 'portals' | 'reports' | 'settings' | 'audit' | 'lesson_plans' | 'appraisals' | 'inspections' | 'exam_moderation' | 'parent_complaints' | 'substitutions' | 'syllabus' | 'safeguarding' | 'directives';
 export type SchoolPortalRole = 'owner' | 'principal' | 'teacher' | 'student' | 'parent' | 'accountant';
@@ -788,7 +789,7 @@ export interface PrincipalFeeCollectionRecord {
 @Component({
   selector: 'app-school-dashboard',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule, FormsModule, MatIconModule, DataTableComponent, AuditReconciliationTrendsComponent, AnalyticsDashboardComponent, SchoolAttendanceHubComponent, SchoolTableDirective, SchoolTableColumnModalComponent, SchoolCustomFormFieldsComponent],
+  imports: [CommonModule, LucideAngularModule, FormsModule, MatIconModule, DataTableComponent, AuditReconciliationTrendsComponent, AnalyticsDashboardComponent, SchoolAttendanceHubComponent, SchoolTableDirective, SchoolTableColumnModalComponent, SchoolCustomFormFieldsComponent, PasskeyManagerComponent],
   templateUrl: './school-dashboard.component.html',
   styles: [`
     .glass-surface {
@@ -13691,6 +13692,108 @@ INSTRUCTIONS:
     subject: '',
     grade: ''
   };
+
+  isPasskeyProfileModalOpen = false;
+
+  get activePortalPasskeyIdentity(): {
+    email: string;
+    fullName: string;
+    userId: string;
+    tenantId: string;
+    role: string;
+    portalType: string;
+  } {
+    let baseTenantId = 'tenant-root-platform';
+    let loggedEmail = '';
+    let loggedName = '';
+    let loggedUserId = '';
+    let loggedRole = 'client_admin';
+    try {
+      const raw = typeof localStorage !== 'undefined' ? localStorage.getItem('user_data') : null;
+      if (raw) {
+        const u = JSON.parse(raw);
+        if (u?.tenant_id) baseTenantId = String(u.tenant_id);
+        if (u?.email) loggedEmail = String(u.email);
+        if (u?.full_name || u?.company_name) loggedName = String(u.full_name || u.company_name);
+        if (u?.id) loggedUserId = String(u.id);
+        if (u?.role) loggedRole = String(u.role);
+      }
+    } catch {}
+
+    const portal = this.currentPortalRole;
+    if (portal === 'principal') {
+      return {
+        email: this.principalPersona?.email || 'principal@campus.edu',
+        fullName: this.principalPersona?.name || 'Campus Principal',
+        userId: 'PRIN-001',
+        tenantId: baseTenantId,
+        role: 'principal',
+        portalType: 'principal'
+      };
+    }
+    if (portal === 'teacher') {
+      const t = this.currentTeacherProfile;
+      return {
+        email: t?.email || 'teacher@campus.edu',
+        fullName: t?.name || 'Faculty Member',
+        userId: t?.id || 'TCH-001',
+        tenantId: baseTenantId,
+        role: 'teacher',
+        portalType: 'teacher'
+      };
+    }
+    if (portal === 'student') {
+      const s = this.currentStudentProfile;
+      const fallbackStudentEmail = `${String(s?.rollNo || s?.id || 'student').toLowerCase().replace(/[^a-z0-9._-]/g, '')}@student.edu`;
+      return {
+        email: s?.email || fallbackStudentEmail,
+        fullName: s?.name || 'Student',
+        userId: s?.id || 'ST-1001',
+        tenantId: baseTenantId,
+        role: 'student',
+        portalType: 'student'
+      };
+    }
+    if (portal === 'parent') {
+      const g = this.currentGuardianProfile;
+      return {
+        email: g?.email || 'guardian@campus.edu',
+        fullName: g?.name || 'Parent / Guardian',
+        userId: g?.id || 'PAR-001',
+        tenantId: baseTenantId,
+        role: 'parent',
+        portalType: 'parent'
+      };
+    }
+    if (portal === 'accountant') {
+      return {
+        email: 'accountant@campus.edu',
+        fullName: this.dailyClosingCashier || 'Muhammad Rizwan (Accountant)',
+        userId: 'ACC-001',
+        tenantId: baseTenantId,
+        role: 'accountant',
+        portalType: 'accountant'
+      };
+    }
+    return {
+      email: loggedEmail || 'owner@campus.edu',
+      fullName: loggedName || this.schoolName || 'School Owner',
+      userId: loggedUserId || 'OWNER-001',
+      tenantId: baseTenantId,
+      role: loggedRole,
+      portalType: loggedRole === 'super_admin' ? 'superadmin' : 'school_owner'
+    };
+  }
+
+  openPasskeyProfileModal(): void {
+    this.isPasskeyProfileModalOpen = true;
+    this.cdr.detectChanges();
+  }
+
+  closePasskeyProfileModal(): void {
+    this.isPasskeyProfileModalOpen = false;
+    this.cdr.detectChanges();
+  }
 
   openProfileEditModal(role: 'teacher' | 'student' | 'parent') {
     this.activeProfileRole = role;

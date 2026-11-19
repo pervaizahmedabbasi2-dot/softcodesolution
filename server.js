@@ -346,6 +346,35 @@ async function runBackgroundAutoSync() {
       }
     } catch {}
 
+    try {
+      const pendingPasskeys = sqliteDb.prepare('SELECT * FROM auth_passkeys WHERE is_synced = 0 LIMIT 25').all();
+      for (const pk of pendingPasskeys) {
+        try {
+          await setDoc(doc(db, 'passkeys', pk.id), {
+            id: pk.id,
+            credential_id: pk.credential_id,
+            tenant_id: pk.tenant_id || 'tenant-root-platform',
+            user_id: pk.user_id,
+            email: pk.email,
+            email_blind_idx: pk.email_blind_idx || '',
+            public_key_spki: pk.public_key_spki || '',
+            device_label: pk.device_label || 'Device Passkey',
+            role: pk.role || 'client_admin',
+            portal_type: pk.portal_type || 'platform',
+            vault_encrypted: String(pk.email || '').startsWith('enc:v1:'),
+            is_synced: 1,
+            created_at: pk.created_at || new Date().toISOString(),
+            last_used_at: pk.last_used_at || null,
+            synced_at: new Date().toISOString()
+          });
+          sqliteDb.prepare('UPDATE auth_passkeys SET is_synced = 1 WHERE id = ?').run(pk.id);
+          syncedThisRun += 1;
+        } catch {
+          break;
+        }
+      }
+    } catch {}
+
     observability.recordSyncRun({ ok: true, syncedCount: syncedThisRun });
   } catch (syncErr) {
     observability.recordSyncRun({ ok: false, error: syncErr });
@@ -377,7 +406,7 @@ app.use((req, res, next) => {
   res.setHeader('X-Frame-Options', 'SAMEORIGIN');
   res.setHeader('X-XSS-Protection', '1; mode=block');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  res.setHeader('Permissions-Policy', 'camera=*, geolocation=(), microphone=(), payment=()');
+  res.setHeader('Permissions-Policy', 'camera=*, publickey-credentials-get=*, publickey-credentials-create=*, geolocation=(), microphone=(), payment=()');
   next();
 });
 

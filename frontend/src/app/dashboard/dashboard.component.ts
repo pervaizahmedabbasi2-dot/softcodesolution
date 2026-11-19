@@ -58,6 +58,7 @@ import { DashboardApiService } from './services/dashboard-api.service';
 import { ModuleRegistryService } from './services/module-registry.service';
 import { BackendService } from '../services/backend.service';
 import { SupportCommsComponent } from '../softcodesolution_platform/support-comms/support-comms.component';
+import { PasskeyManagerComponent } from '../auth_security/passkey-manager/passkey-manager.component';
 import {
   LucideAngularModule,
   LayoutDashboard,
@@ -367,6 +368,7 @@ interface SuperadminClientsResponse {
     CurrencyLanguageSelectorComponent,
     ModuleManagerComponent,
     SupportCommsComponent,
+    PasskeyManagerComponent,
     FormsModule,
   ],
   templateUrl: './dashboard.component.html',
