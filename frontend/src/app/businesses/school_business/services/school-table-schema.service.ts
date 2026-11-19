@@ -13,6 +13,7 @@ export interface SchoolCustomColumn {
   required?: boolean;
   insertAfterColumn?: string;
   insertAfterFormField?: string;
+  scope?: 'table' | 'form' | 'both';
 }
 
 export interface SchoolCustomRow {
@@ -51,11 +52,43 @@ export interface SchoolCellMeta {
   updatedAt?: string;
 }
 
+export interface FormManageableField {
+  value: string;
+  key: string;
+  label: string;
+  kind: 'builtin' | 'custom';
+}
+
+export interface TableManageableColumn {
+  value: string;
+  key: string;
+  label: string;
+  originalLabel: string;
+  index?: number;
+  kind: 'builtin' | 'custom';
+}
+
+export interface HiddenTableColumnOption {
+  index: number;
+  originalLabel: string;
+  displayLabel: string;
+}
+
+export interface SchoolConfirmDialogState {
+  title: string;
+  message: string;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  danger?: boolean;
+  onConfirm: () => void;
+}
+
 export interface SchoolTableSchema {
   tableId: string;
   customTitle?: string;
   hiddenColumns: number[];
   hiddenColumnLabels: string[];
+  hiddenFormFields?: string[];
   renamedHeaders: Record<number, string>;
   renamedHeadersByLabel: Record<string, string>;
   customColumns: SchoolCustomColumn[];
@@ -344,22 +377,59 @@ export const SCHOOL_TABLE_CATALOG: TableCatalogItem[] = [
 
 export const SCHOOL_FORM_FIELD_ANCHORS: Record<string, FormFieldAnchorOption[]> = {
   owner_admissions: [
-    { key: 'sec_01', label: 'Section 01: Candidate Identity & B-Form' },
-    { key: 'sec_02', label: 'Section 02: Academic Grade, Section & Roll #' },
-    { key: 'sec_03', label: 'Section 03: Guardian Particulars & Address' },
-    { key: 'sec_04', label: 'Section 04: Admission Fee, Tuition & Scholarship' },
-    { key: 'sec_05', label: 'Section 05: Health, Allergies & Medical Notes' }
+    { key: 'adm_name', label: 'Student / Applicant Full Name' },
+    { key: 'adm_gender', label: 'Gender' },
+    { key: 'adm_dob', label: 'Date of Birth' },
+    { key: 'adm_bform', label: 'Student B-Form / CNIC' },
+    { key: 'adm_blood', label: 'Blood Group' },
+    { key: 'adm_class', label: 'Admission Class / Grade' },
+    { key: 'adm_section', label: 'Section Assignment' },
+    { key: 'adm_roll', label: 'Assigned Roll No.' },
+    { key: 'adm_prev_school', label: 'Previous School Attended' },
+    { key: 'adm_score', label: 'Entrance / Merit Score' },
+    { key: 'adm_father', label: 'Father / Guardian Name' },
+    { key: 'adm_relation', label: 'Relationship' },
+    { key: 'adm_cnic', label: 'Guardian CNIC' },
+    { key: 'adm_phone', label: 'Mobile & WhatsApp' },
+    { key: 'adm_email', label: 'Guardian Email' },
+    { key: 'adm_occupation', label: 'Guardian Occupation' },
+    { key: 'adm_address', label: 'Permanent Residential Address' },
+    { key: 'adm_emergency', label: 'Emergency Contact' },
+    { key: 'adm_fee', label: 'Admission Fee (PKR)' },
+    { key: 'adm_tuition', label: 'Monthly Tuition Fee (PKR)' },
+    { key: 'adm_discount', label: 'Scholarship / Concession (%)' },
+    { key: 'adm_pay_status', label: 'Payment Status' },
+    { key: 'adm_medical', label: 'Health, Allergies & Medical Notes' }
   ],
   students_master: [
-    { key: 'stu_identity', label: 'Student Name, Class & Section' },
-    { key: 'stu_guardian', label: 'Guardian Name & Contact Phone' },
-    { key: 'stu_fee', label: 'Monthly Tuition Fee & Status' }
+    { key: 'stu_name', label: 'Student Full Name' },
+    { key: 'stu_grade', label: 'Class & Grade' },
+    { key: 'stu_section', label: 'Section' },
+    { key: 'stu_guardian', label: 'Guardian Name' },
+    { key: 'stu_phone', label: 'Guardian Contact Phone' },
+    { key: 'stu_fee_amount', label: 'Monthly Tuition Fee (PKR)' },
+    { key: 'stu_fee_status', label: 'Fee Status' }
   ],
   teachers_master: [
-    { key: 't_sec_1', label: 'Section 1: Personal & Contact Details' },
-    { key: 't_sec_2', label: 'Section 2: Academic Qualification & Experience' },
-    { key: 't_sec_3', label: 'Section 3: Designation, Subjects & Class In-Charge' },
-    { key: 't_sec_4', label: 'Section 4: Monthly Salary & Bank Account Details' }
+    { key: 't_name', label: 'Teacher Full Name' },
+    { key: 't_gender', label: 'Gender' },
+    { key: 't_cnic', label: 'National CNIC Number' },
+    { key: 't_phone', label: 'Mobile & WhatsApp' },
+    { key: 't_email', label: 'Official Email Address' },
+    { key: 't_address', label: 'Permanent Residential Address' },
+    { key: 't_emergency', label: 'Emergency Contact' },
+    { key: 't_qual', label: 'Highest Degree / Qualification' },
+    { key: 't_prev', label: 'Previous School / Institute' },
+    { key: 't_exp', label: 'Teaching Experience (Years)' },
+    { key: 't_role', label: 'Faculty Designation / Role' },
+    { key: 't_subject', label: 'Subjects Taught / Department' },
+    { key: 't_grade', label: 'Assigned Grade / Class Level' },
+    { key: 't_incharge', label: 'Class Teacher In-Charge' },
+    { key: 't_periods', label: 'Weekly Periods Workload' },
+    { key: 't_contract', label: 'Employment Contract Type' },
+    { key: 't_salary', label: 'Monthly Base Salary (PKR)' },
+    { key: 't_bank', label: 'Bank Name' },
+    { key: 't_account', label: 'Account No. / IBAN' }
   ],
   campus_notices_feed: [
     { key: 'feed_target', label: 'Target Class & Recipient Group' },
@@ -578,6 +648,7 @@ export class SchoolTableSchemaService {
 
   readonly cellEditorState = signal<CellEditorState | null>(null);
   readonly addRowRequest = signal<{ tableId: string; tableTitle: string; seq: number } | null>(null);
+  readonly confirmDialogState = signal<SchoolConfirmDialogState | null>(null);
 
   private activeTenantId = 'tenant-root-platform';
   private persistHook: (() => void) | null = null;
@@ -610,6 +681,29 @@ export class SchoolTableSchemaService {
       this.closeColumnManager();
       this.closeCellEditor();
       this.closeRowFormModal();
+      this.cancelConfirm();
+    }
+  }
+
+  openConfirm(opts: SchoolConfirmDialogState): void {
+    if (!this.isOwner()) return;
+    this.confirmDialogState.set({
+      confirmLabel: 'Delete',
+      cancelLabel: 'Cancel',
+      danger: true,
+      ...opts
+    });
+  }
+
+  cancelConfirm(): void {
+    this.confirmDialogState.set(null);
+  }
+
+  acceptConfirm(): void {
+    const cur = this.confirmDialogState();
+    this.confirmDialogState.set(null);
+    if (cur?.onConfirm) {
+      cur.onConfirm();
     }
   }
 
@@ -740,14 +834,14 @@ export class SchoolTableSchemaService {
   getRowPositionOptions(tableId: string): TableColumnPositionOption[] {
     const rows = this.getDetectedRowsForTable(tableId);
     const options: TableColumnPositionOption[] = [
-      { value: '__first__', label: 'At Top (First Row / Row #1)' },
-      { value: '__last__', label: 'At Bottom (Last Row of Table)' }
+      { value: '__first__', label: 'Top of table (First)' },
+      { value: '__last__', label: 'Bottom of table (Last)' }
     ];
     for (const r of rows) {
       const cleanLabel = (r.label || r.rowKey).slice(0, 48);
       options.push({
         value: `after:${r.rowKey}`,
-        label: `After Row: ${cleanLabel}${r.isCustom ? ' (Custom)' : ''}`
+        label: `After: ${cleanLabel}${r.isCustom ? ' (Added)' : ''}`
       });
     }
     return options;
@@ -760,8 +854,8 @@ export class SchoolTableSchemaService {
     const hiddenIndices = new Set(schema.hiddenColumns || []);
 
     const options: TableColumnPositionOption[] = [
-      { value: '__last__', label: 'At End (Before Actions Column)' },
-      { value: '__first__', label: 'At Start (First Column)' }
+      { value: '__last__', label: 'At End (Default)' },
+      { value: '__first__', label: 'At Start (First)' }
     ];
 
     for (const h of headers) {
@@ -769,34 +863,184 @@ export class SchoolTableSchemaService {
       const origLower = orig.toLowerCase();
       const renamed = schema.renamedHeadersByLabel?.[origLower] ?? schema.renamedHeaders[h.index] ?? orig;
       const isHidden = hiddenIndices.has(h.index) || (origLower ? hiddenLabels.has(origLower) : false);
+      if (isHidden) continue;
       options.push({
         value: `built:${orig}`,
-        label: `After Column: ${renamed}${isHidden ? ' (Hidden)' : ''}`
+        label: `After: ${renamed}`
       });
     }
 
     for (const c of schema.customColumns || []) {
+      if (c.scope === 'form') continue;
       if (excludeColId && c.id === excludeColId) continue;
       options.push({
         value: `custom:${c.id}`,
-        label: `After Custom Column: ${c.label}`
+        label: `After: ${c.label}`
       });
     }
 
     return options;
   }
 
-  getFormAnchorOptions(tableId: string): FormFieldAnchorOption[] {
+  getTableManageableColumns(
+    tableId: string,
+    detectedHeaders?: DetectedBuiltInHeader[]
+  ): TableManageableColumn[] {
+    const schema = this.getSchema(tableId);
+    const headers = detectedHeaders && detectedHeaders.length > 0
+      ? detectedHeaders
+      : this.getDetectedHeadersForTable(tableId);
+    const ordered = this.resolveOrderedColumns(tableId, headers, schema);
+    const list: TableManageableColumn[] = [];
+    for (const item of ordered) {
+      if (item.kind === 'builtin') {
+        if (item.hidden) continue;
+        list.push({
+          value: `builtin:${item.header.index}`,
+          key: String(item.header.index),
+          label: item.displayLabel,
+          originalLabel: item.header.originalLabel,
+          index: item.header.index,
+          kind: 'builtin'
+        });
+      } else {
+        list.push({
+          value: `custom:${item.col.id}`,
+          key: item.col.id,
+          label: item.col.label,
+          originalLabel: item.col.label,
+          kind: 'custom'
+        });
+      }
+    }
+    return list;
+  }
+
+  getHiddenTableColumns(
+    tableId: string,
+    detectedHeaders?: DetectedBuiltInHeader[]
+  ): HiddenTableColumnOption[] {
+    const schema = this.getSchema(tableId);
+    const headers = detectedHeaders && detectedHeaders.length > 0
+      ? detectedHeaders
+      : this.getDetectedHeadersForTable(tableId);
+    const hiddenLabels = new Set((schema.hiddenColumnLabels || []).map((l) => l.trim().toLowerCase()));
+    const hiddenIndices = new Set(schema.hiddenColumns || []);
+    const isCanonicalMatch = schema.tableId === tableId;
+    const result: HiddenTableColumnOption[] = [];
+    for (const h of headers) {
+      const orig = (h.originalLabel || '').trim();
+      const origLower = orig.toLowerCase();
+      const isHidden = hiddenIndices.has(h.index) || (origLower ? hiddenLabels.has(origLower) : false);
+      if (!isHidden) continue;
+      const renamed = schema.renamedHeadersByLabel?.[origLower] ?? (isCanonicalMatch ? schema.renamedHeaders[h.index] : undefined);
+      result.push({
+        index: h.index,
+        originalLabel: orig,
+        displayLabel: renamed && renamed.trim() ? renamed.trim() : orig
+      });
+    }
+    return result;
+  }
+
+  getFormAnchorOptions(tableId: string, excludeColId?: string): FormFieldAnchorOption[] {
     const canonical = this.resolveCanonicalTableId(tableId);
-    const anchors = SCHOOL_FORM_FIELD_ANCHORS[canonical] || SCHOOL_FORM_FIELD_ANCHORS[tableId] || [];
+    const schema = this.getSchema(canonical);
+    const hiddenSet = new Set((schema.hiddenFormFields || []).map((k) => k.trim()));
+    const anchors = (SCHOOL_FORM_FIELD_ANCHORS[canonical] || SCHOOL_FORM_FIELD_ANCHORS[tableId] || []).filter(
+      (a) => !hiddenSet.has(a.key)
+    );
     const options: FormFieldAnchorOption[] = [
-      { key: '__last__', label: 'At Bottom (Additional Table Fields Section)' },
-      { key: '__first__', label: 'At Top (Before First Form Section / Field)' }
+      { key: '__last__', label: 'At Bottom (End of Form)' },
+      { key: '__first__', label: 'At Top (First Field)' }
     ];
     for (const a of anchors) {
       options.push({ key: a.key, label: `After: ${a.label}` });
     }
+    const existingCustom = (schema.customColumns || []).filter(
+      (c) => (!c.scope || c.scope === 'form' || c.scope === 'both') && c.id !== excludeColId
+    );
+    for (const c of existingCustom) {
+      options.push({ key: `custom:${c.id}`, label: `After: ${c.label}` });
+    }
     return options;
+  }
+
+  isFormFieldHidden(tableId: string, fieldKey: string): boolean {
+    if (!tableId || !fieldKey) return false;
+    const schema = this.getSchema(tableId);
+    return (schema.hiddenFormFields || []).includes(fieldKey.trim());
+  }
+
+  getFormManageableFields(tableId: string): FormManageableField[] {
+    const canonical = this.resolveCanonicalTableId(tableId);
+    const schema = this.getSchema(canonical);
+    const hiddenSet = new Set((schema.hiddenFormFields || []).map((k) => k.trim()));
+    const anchors = (SCHOOL_FORM_FIELD_ANCHORS[canonical] || SCHOOL_FORM_FIELD_ANCHORS[tableId] || []).filter(
+      (a) => !hiddenSet.has(a.key)
+    );
+    const list: FormManageableField[] = anchors.map((a) => ({
+      value: `builtin:${a.key}`,
+      key: a.key,
+      label: a.label,
+      kind: 'builtin'
+    }));
+    const custom = (schema.customColumns || []).filter(
+      (c) => !c.scope || c.scope === 'form' || c.scope === 'both'
+    );
+    for (const c of custom) {
+      list.push({
+        value: `custom:${c.id}`,
+        key: c.id,
+        label: c.label,
+        kind: 'custom'
+      });
+    }
+    return list;
+  }
+
+  getHiddenFormFields(tableId: string): FormFieldAnchorOption[] {
+    const canonical = this.resolveCanonicalTableId(tableId);
+    const schema = this.getSchema(canonical);
+    const hiddenKeys = schema.hiddenFormFields || [];
+    if (hiddenKeys.length === 0) return [];
+    const anchorMap = new Map<string, string>();
+    for (const a of SCHOOL_FORM_FIELD_ANCHORS[canonical] || SCHOOL_FORM_FIELD_ANCHORS[tableId] || []) {
+      anchorMap.set(a.key, a.label);
+    }
+    return hiddenKeys.map((k) => ({ key: k, label: anchorMap.get(k) || k }));
+  }
+
+  hideFormField(tableId: string, fieldKey: string): void {
+    if (!this.isOwner()) return;
+    const clean = (fieldKey || '').trim();
+    if (!clean) return;
+    const canonical = this.mutateSchema(tableId, (schema) => {
+      const set = new Set(schema.hiddenFormFields || []);
+      set.add(clean);
+      return { ...schema, hiddenFormFields: Array.from(set) };
+    });
+    void this.backend.saveSchoolTableSchema(canonical, this.getSchema(canonical));
+  }
+
+  restoreFormField(tableId: string, fieldKey: string): void {
+    if (!this.isOwner()) return;
+    const clean = (fieldKey || '').trim();
+    if (!clean) return;
+    const canonical = this.mutateSchema(tableId, (schema) => ({
+      ...schema,
+      hiddenFormFields: (schema.hiddenFormFields || []).filter((k) => k !== clean)
+    }));
+    void this.backend.saveSchoolTableSchema(canonical, this.getSchema(canonical));
+  }
+
+  restoreAllFormFields(tableId: string): void {
+    if (!this.isOwner()) return;
+    const canonical = this.mutateSchema(tableId, (schema) => ({
+      ...schema,
+      hiddenFormFields: []
+    }));
+    void this.backend.saveSchoolTableSchema(canonical, this.getSchema(canonical));
   }
 
   hasCustomColumnsAtSlot(tableId: string, slotAnchor: string): boolean {
@@ -806,24 +1050,83 @@ export class SchoolTableSchemaService {
     return this.getCustomColumnsForSlot(tableId, slotAnchor).length > 0;
   }
 
+  private resolveFormRootSlot(
+    col: SchoolCustomColumn,
+    colMap: Map<string, SchoolCustomColumn>,
+    anchorSet: Set<string>
+  ): string {
+    let cur: SchoolCustomColumn | undefined = col;
+    const visited = new Set<string>();
+    while (cur) {
+      const pos = (cur.insertAfterFormField || '').trim();
+      if (!pos || pos === '__last__' || pos === '__bottom__') return '__bottom__';
+      if (pos === '__first__') return '__first__';
+      if (pos.startsWith('custom:')) {
+        const refId = pos.slice(7).trim();
+        if (!refId || visited.has(refId)) return '__bottom__';
+        visited.add(refId);
+        cur = colMap.get(refId);
+        continue;
+      }
+      return anchorSet.has(pos) ? pos : '__bottom__';
+    }
+    return '__bottom__';
+  }
+
   getCustomColumnsForSlot(tableId: string, slotAnchor: string): SchoolCustomColumn[] {
     const canonical = this.resolveCanonicalTableId(tableId);
-    const cols = this.getSchema(canonical).customColumns || [];
-    const anchorSet = new Set(
-      (SCHOOL_FORM_FIELD_ANCHORS[canonical] || SCHOOL_FORM_FIELD_ANCHORS[tableId] || []).map((a) => a.key)
+    const cols = (this.getSchema(canonical).customColumns || []).filter(
+      (c) => !c.scope || c.scope === 'form' || c.scope === 'both'
     );
-    const target = (slotAnchor || '__bottom__').trim();
+    if (cols.length === 0) return [];
 
-    if (target === '__bottom__' || target === '__last__') {
-      // Render anything set to '__last__', empty/unset, or targeting a nonexistent anchor on this form
-      return cols.filter((c) => {
-        const pos = (c.insertAfterFormField || '').trim();
-        if (!pos || pos === '__last__' || pos === '__bottom__') return true;
-        if (pos === '__first__') return false;
-        return !anchorSet.has(pos);
-      });
+    const legacyAnchors = ['sec_01', 'sec_02', 'sec_03', 'sec_04', 'sec_05', 'stu_identity', 'stu_fee', 't_sec_1', 't_sec_2', 't_sec_3', 't_sec_4'];
+    const anchorSet = new Set([
+      ...(SCHOOL_FORM_FIELD_ANCHORS[canonical] || SCHOOL_FORM_FIELD_ANCHORS[tableId] || []).map((a) => a.key),
+      ...legacyAnchors
+    ]);
+
+    const targetRaw = (slotAnchor || '__bottom__').trim();
+    const target = targetRaw === '__last__' ? '__bottom__' : targetRaw;
+
+    const colMap = new Map<string, SchoolCustomColumn>();
+    for (const c of cols) colMap.set(c.id, c);
+
+    const slotCols = cols.filter((c) => this.resolveFormRootSlot(c, colMap, anchorSet) === target);
+    if (slotCols.length <= 1) return slotCols;
+
+    const slotIdSet = new Set(slotCols.map((c) => c.id));
+    const childrenByParent = new Map<string, SchoolCustomColumn[]>();
+    const roots: SchoolCustomColumn[] = [];
+
+    for (const c of slotCols) {
+      const pos = (c.insertAfterFormField || '').trim();
+      if (pos.startsWith('custom:')) {
+        const parentId = pos.slice(7).trim();
+        if (slotIdSet.has(parentId) && parentId !== c.id) {
+          const list = childrenByParent.get(parentId) || [];
+          list.push(c);
+          childrenByParent.set(parentId, list);
+          continue;
+        }
+      }
+      roots.push(c);
     }
-    return cols.filter((c) => (c.insertAfterFormField || '').trim() === target);
+
+    const ordered: SchoolCustomColumn[] = [];
+    const visited = new Set<string>();
+    const visit = (c: SchoolCustomColumn) => {
+      if (visited.has(c.id)) return;
+      visited.add(c.id);
+      ordered.push(c);
+      for (const child of childrenByParent.get(c.id) || []) {
+        visit(child);
+      }
+    };
+
+    for (const r of roots) visit(r);
+    for (const c of slotCols) visit(c);
+    return ordered;
   }
 
   describeColumnTablePosition(tableId: string, col: SchoolCustomColumn): string {
@@ -870,7 +1173,9 @@ export class SchoolTableSchemaService {
       return { kind: 'builtin', header: h, displayLabel, hidden };
     });
 
-    const customCols = [...(s.customColumns || [])];
+    const customCols = [...(s.customColumns || [])].filter(
+      (c) => !c.scope || c.scope === 'table' || c.scope === 'both'
+    );
     if (customCols.length === 0) return ordered;
 
     const anchorTailCount = new Map<string, number>();
@@ -968,6 +1273,7 @@ export class SchoolTableSchemaService {
         customTitle: existing.customTitle || '',
         hiddenColumns: existing.hiddenColumns || [],
         hiddenColumnLabels: existing.hiddenColumnLabels || [],
+        hiddenFormFields: existing.hiddenFormFields || [],
         renamedHeaders: existing.renamedHeaders || {},
         renamedHeadersByLabel: existing.renamedHeadersByLabel || {},
         customColumns: existing.customColumns || [],
@@ -981,6 +1287,7 @@ export class SchoolTableSchemaService {
       customTitle: '',
       hiddenColumns: [],
       hiddenColumnLabels: [],
+      hiddenFormFields: [],
       renamedHeaders: {},
       renamedHeadersByLabel: {},
       customColumns: [],
@@ -1021,6 +1328,9 @@ export class SchoolTableSchemaService {
       hiddenColumnLabels: Array.isArray(v.hiddenColumnLabels)
         ? v.hiddenColumnLabels.map((s: any) => String(s).trim()).filter(Boolean)
         : [],
+      hiddenFormFields: Array.isArray(v.hiddenFormFields)
+        ? v.hiddenFormFields.map((s: any) => String(s).trim()).filter(Boolean)
+        : [],
       renamedHeaders: v.renamedHeaders && typeof v.renamedHeaders === 'object' ? { ...v.renamedHeaders } : {},
       renamedHeadersByLabel: v.renamedHeadersByLabel && typeof v.renamedHeadersByLabel === 'object' ? { ...v.renamedHeadersByLabel } : {},
       customColumns: Array.isArray(v.customColumns)
@@ -1034,7 +1344,8 @@ export class SchoolTableSchemaService {
               options: Array.isArray(c.options) ? c.options.map((o: any) => String(o)).filter(Boolean) : undefined,
               required: Boolean(c.required),
               ...(c.insertAfterColumn ? { insertAfterColumn: String(c.insertAfterColumn).trim() } : {}),
-              ...(c.insertAfterFormField ? { insertAfterFormField: String(c.insertAfterFormField).trim() } : {})
+              ...(c.insertAfterFormField ? { insertAfterFormField: String(c.insertAfterFormField).trim() } : {}),
+              ...(c.scope && ['table', 'form', 'both'].includes(c.scope) ? { scope: c.scope } : {})
             }))
         : [],
       customRows: Array.isArray(v.customRows)
@@ -1106,16 +1417,7 @@ export class SchoolTableSchemaService {
   }
 
   openRowFormModal(tableId: string, tableTitle: string, detectedHeaders?: DetectedBuiltInHeader[]): void {
-    if (!this.isOwner()) return;
-    const headers = detectedHeaders && detectedHeaders.length > 0
-      ? detectedHeaders
-      : this.getDetectedHeadersForTable(tableId);
-    this.rowFormModalState.set({
-      open: true,
-      tableId,
-      tableTitle: tableTitle || tableId,
-      detectedHeaders: headers
-    });
+    this.openColumnManager(tableId, tableTitle, detectedHeaders, 'rows');
   }
 
   closeRowFormModal(): void {
@@ -1155,7 +1457,7 @@ export class SchoolTableSchemaService {
       const set = new Set(schema.hiddenColumns);
       const labelSet = new Set((schema.hiddenColumnLabels || []).map((s) => s.toLowerCase()));
       const origLower = (originalLabel || '').trim().toLowerCase();
-      if (set.has(colIndex)) {
+      if (set.has(colIndex) || (origLower && labelSet.has(origLower))) {
         set.delete(colIndex);
         if (origLower) labelSet.delete(origLower);
       } else {
@@ -1168,6 +1470,50 @@ export class SchoolTableSchemaService {
         hiddenColumnLabels: Array.from(labelSet)
       };
     });
+    void this.backend.saveSchoolTableSchema(canonical, this.getSchema(canonical));
+  }
+
+  hideTableColumn(tableId: string, colIndex: number, originalLabel?: string): void {
+    if (!this.isOwner()) return;
+    const canonical = this.mutateSchema(tableId, (schema) => {
+      const set = new Set(schema.hiddenColumns);
+      const labelSet = new Set((schema.hiddenColumnLabels || []).map((s) => s.toLowerCase()));
+      const origLower = (originalLabel || '').trim().toLowerCase();
+      set.add(colIndex);
+      if (origLower) labelSet.add(origLower);
+      return {
+        ...schema,
+        hiddenColumns: Array.from(set).sort((a, b) => a - b),
+        hiddenColumnLabels: Array.from(labelSet)
+      };
+    });
+    void this.backend.saveSchoolTableSchema(canonical, this.getSchema(canonical));
+  }
+
+  restoreTableColumn(tableId: string, colIndex: number, originalLabel?: string): void {
+    if (!this.isOwner()) return;
+    const canonical = this.mutateSchema(tableId, (schema) => {
+      const set = new Set(schema.hiddenColumns);
+      const labelSet = new Set((schema.hiddenColumnLabels || []).map((s) => s.toLowerCase()));
+      const origLower = (originalLabel || '').trim().toLowerCase();
+      set.delete(colIndex);
+      if (origLower) labelSet.delete(origLower);
+      return {
+        ...schema,
+        hiddenColumns: Array.from(set).sort((a, b) => a - b),
+        hiddenColumnLabels: Array.from(labelSet)
+      };
+    });
+    void this.backend.saveSchoolTableSchema(canonical, this.getSchema(canonical));
+  }
+
+  restoreAllTableColumns(tableId: string): void {
+    if (!this.isOwner()) return;
+    const canonical = this.mutateSchema(tableId, (schema) => ({
+      ...schema,
+      hiddenColumns: [],
+      hiddenColumnLabels: []
+    }));
     void this.backend.saveSchoolTableSchema(canonical, this.getSchema(canonical));
   }
 
@@ -1190,6 +1536,47 @@ export class SchoolTableSchemaService {
     void this.backend.saveSchoolTableSchema(canonical, this.getSchema(canonical));
   }
 
+  mapFormAnchorToTableColumn(tableId: string, anchorKey: string): string {
+    const canonical = this.resolveCanonicalTableId(tableId);
+    const key = (anchorKey || '').trim();
+    if (!key || key === '__last__' || key === '__bottom__') return '__last__';
+    if (key === '__first__') return '__first__';
+    if (key.startsWith('custom:')) return key;
+
+    if (canonical === 'owner_admissions') {
+      if (key === 'adm_roll') return 'built:Roll & ID';
+      if (['adm_name', 'adm_gender', 'adm_dob', 'adm_bform', 'adm_blood'].includes(key)) {
+        return 'built:Student';
+      }
+      if (['adm_class', 'adm_section', 'adm_prev_school', 'adm_score'].includes(key)) {
+        return 'built:Class & Sec';
+      }
+      if (
+        ['adm_father', 'adm_relation', 'adm_cnic', 'adm_phone', 'adm_email', 'adm_occupation', 'adm_address', 'adm_emergency'].includes(key)
+      ) {
+        return 'built:Guardian & Phone';
+      }
+      if (['adm_fee', 'adm_tuition', 'adm_discount'].includes(key)) {
+        return 'built:Monthly Fee';
+      }
+      if (key === 'adm_pay_status') {
+        return 'built:Fee Status';
+      }
+      return '__last__';
+    }
+
+    if (canonical === 'students_master') {
+      if (key === 'stu_name' || key === 'stu_identity') return 'built:Student';
+      if (key === 'stu_grade' || key === 'stu_section') return 'built:Class & Sec';
+      if (key === 'stu_guardian' || key === 'stu_phone') return 'built:Guardian & Phone';
+      if (key === 'stu_fee_amount' || key === 'stu_fee') return 'built:Monthly Fee';
+      if (key === 'stu_fee_status') return 'built:Fee Status';
+      return '__last__';
+    }
+
+    return '__last__';
+  }
+
   addCustomColumn(
     tableId: string,
     label: string,
@@ -1198,7 +1585,8 @@ export class SchoolTableSchemaService {
     optionsRaw?: string[] | string,
     required: boolean = false,
     insertAfterColumn: string = '__last__',
-    insertAfterFormField: string = '__last__'
+    insertAfterFormField: string = '__last__',
+    scope: 'table' | 'form' | 'both' = 'both'
   ): SchoolCustomColumn | null {
     if (!this.isOwner()) return null;
     const cleanLabel = (label || '').trim();
@@ -1218,13 +1606,32 @@ export class SchoolTableSchemaService {
       ...(parsedOptions && parsedOptions.length > 0 ? { options: parsedOptions } : {}),
       ...(required ? { required: true } : {}),
       insertAfterColumn: cleanColPos,
-      insertAfterFormField: cleanFormPos
+      insertAfterFormField: cleanFormPos,
+      scope
     };
     const canonical = this.mutateSchema(tableId, (schema) => ({
       ...schema,
       customColumns: [...schema.customColumns, col]
     }));
     void this.backend.saveSchoolTableSchema(canonical, this.getSchema(canonical));
+
+    // Mirror custom fields added on New Admission Form directly to Students Master schema
+    if (canonical === 'owner_admissions') {
+      const studentCol: SchoolCustomColumn = {
+        ...col,
+        insertAfterColumn: this.mapFormAnchorToTableColumn('owner_admissions', cleanFormPos),
+        scope: 'both'
+      };
+      this.mutateSchema('students_master', (stuSchema) => {
+        if (stuSchema.customColumns.some((c) => c.id === studentCol.id)) return stuSchema;
+        return {
+          ...stuSchema,
+          customColumns: [...stuSchema.customColumns, studentCol]
+        };
+      });
+      void this.backend.saveSchoolTableSchema('students_master', this.getSchema('students_master'));
+    }
+
     return col;
   }
 
@@ -1264,6 +1671,35 @@ export class SchoolTableSchemaService {
       )
     }));
     void this.backend.saveSchoolTableSchema(canonical, this.getSchema(canonical));
+
+    if (canonical === 'owner_admissions') {
+      const stu = this.getSchema('students_master');
+      if (stu.customColumns.some((c) => c.id === colId)) {
+        const mappedColPos = updates.insertAfterFormField !== undefined
+          ? this.mapFormAnchorToTableColumn('owner_admissions', updates.insertAfterFormField)
+          : undefined;
+        this.mutateSchema('students_master', (stuSchema) => ({
+          ...stuSchema,
+          customColumns: stuSchema.customColumns.map((col) =>
+            col.id === colId
+              ? {
+                  ...col,
+                  label: updates.label !== undefined && updates.label.trim() ? updates.label.trim() : col.label,
+                  type: updates.type ?? col.type,
+                  defaultValue: updates.defaultValue !== undefined ? updates.defaultValue : col.defaultValue,
+                  options: updates.options !== undefined ? updates.options : col.options,
+                  ...(mappedColPos ? { insertAfterColumn: mappedColPos } : {}),
+                  ...(updates.insertAfterFormField !== undefined
+                    ? { insertAfterFormField: updates.insertAfterFormField.trim() || '__last__' }
+                    : {})
+                }
+              : col
+          )
+        }));
+        void this.backend.saveSchoolTableSchema('students_master', this.getSchema('students_master'));
+      }
+    }
+
     return true;
   }
 
@@ -1292,28 +1728,60 @@ export class SchoolTableSchemaService {
       };
     });
     void this.backend.deleteSchoolTableColumn(canonical, colId);
+
+    if (canonical === 'owner_admissions') {
+      const stu = this.getSchema('students_master');
+      if (stu.customColumns.some((c) => c.id === colId)) {
+        this.mutateSchema('students_master', (stuSchema) => ({
+          ...stuSchema,
+          customColumns: stuSchema.customColumns.filter((c) => c.id !== colId)
+        }));
+        void this.backend.deleteSchoolTableColumn('students_master', colId);
+      }
+    }
   }
 
-  deleteAllCustomColumns(tableId: string): void {
+  deleteAllCustomColumns(tableId: string, scopeOnly?: 'table' | 'form'): void {
     if (!this.isOwner()) return;
     const cur = this.getSchema(tableId);
-    const colIds = new Set(cur.customColumns.map((c) => c.id));
+    const removedIds = new Set(
+      cur.customColumns
+        .filter((c) => !scopeOnly || !c.scope || c.scope === scopeOnly || c.scope === 'both')
+        .map((c) => c.id)
+    );
     const canonical = this.mutateSchema(tableId, (schema) => {
       const nextRows = (schema.customRows || []).map((r) => {
         const vals: Record<string, string> = {};
         for (const [k, v] of Object.entries(r.values || {})) {
-          if (!colIds.has(k)) vals[k] = v;
+          if (!removedIds.has(k)) vals[k] = v;
         }
         return { ...r, values: vals };
       });
+      const nextCells: Record<string, Record<string, string>> = {};
+      for (const [rk, rowMap] of Object.entries(schema.customCells || {})) {
+        if (!rowMap || typeof rowMap !== 'object') continue;
+        const copy: Record<string, string> = {};
+        for (const [cid, val] of Object.entries(rowMap)) {
+          if (!removedIds.has(cid)) copy[cid] = val;
+        }
+        if (Object.keys(copy).length > 0) nextCells[rk] = copy;
+      }
       return {
         ...schema,
-        customColumns: [],
-        customCells: {},
+        customColumns: schema.customColumns.filter((c) => !removedIds.has(c.id)),
+        customCells: nextCells,
         customRows: nextRows
       };
     });
     void this.backend.saveSchoolTableSchema(canonical, this.getSchema(canonical));
+
+    if (canonical === 'owner_admissions' && removedIds.size > 0) {
+      this.mutateSchema('students_master', (stuSchema) => ({
+        ...stuSchema,
+        customColumns: stuSchema.customColumns.filter((c) => !removedIds.has(c.id))
+      }));
+      void this.backend.saveSchoolTableSchema('students_master', this.getSchema('students_master'));
+    }
   }
 
   setCustomCellValue(tableId: string, rowKey: string, colId: string, value: string): void {
@@ -1620,7 +2088,9 @@ export class SchoolTableSchemaService {
         const th = headerThs[i] as HTMLElement | undefined;
         const thLabel = (th?.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
         if (thLabel === 'actions' || thLabel === 'action' || thLabel === 'quick actions') return;
-        line.push((td.textContent || '').replace(/\s+/g, ' ').trim());
+        const clone = td.cloneNode(true) as HTMLElement;
+        clone.querySelectorAll('[data-scs-ignore-export]').forEach((n) => n.remove());
+        line.push((clone.textContent || '').replace(/\s+/g, ' ').trim());
       });
       if (line.length > 0) rows.push(line);
     });

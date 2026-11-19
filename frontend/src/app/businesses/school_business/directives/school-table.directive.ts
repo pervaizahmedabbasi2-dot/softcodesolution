@@ -213,14 +213,17 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
         effectiveHiddenSet
       );
 
-      // Inject custom <th> elements in exact resolved positions
+      // Inject custom <th> elements in exact resolved positions, matching sibling native headers
+      const nativeThClass =
+        builtInThs.find((el, i) => i !== actionsColIndex && (el.className || '').trim().length > 0)?.className ||
+        'py-3 px-4 whitespace-nowrap';
       const actionsTh = actionsColIndex >= 0 ? builtInThs[actionsColIndex] : null;
       orderedColumns.forEach((item, oIdx) => {
         if (item.kind !== 'custom') return;
         const col = item.col;
         const th = document.createElement('th');
         th.setAttribute('data-scs-custom-col', col.id);
-        th.className = 'px-3.5 py-3 whitespace-nowrap text-indigo-700 bg-indigo-50/50 font-black text-[10px] uppercase';
+        th.className = `${nativeThClass} whitespace-nowrap`;
         th.textContent = col.label;
 
         let refTh: HTMLElement | null = actionsTh;
@@ -500,7 +503,15 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
       removeTitleBtn.textContent = 'Remove Title';
       removeTitleBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        this.schemaService.updateTableTitle(tableId, '');
+        this.schemaService.openConfirm({
+          title: 'Remove Custom Heading?',
+          message: `Are you sure you want to remove the custom heading "${customTitle}"?`,
+          confirmLabel: 'Remove',
+          danger: true,
+          onConfirm: () => {
+            this.schemaService.updateTableTitle(tableId, '');
+          }
+        });
       });
       this.titleBannerEl.appendChild(removeTitleBtn);
     }
@@ -518,7 +529,7 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
     const tr = document.createElement('tr');
     tr.setAttribute('data-scs-custom-row', crow.rowKey);
     tr.setAttribute('data-row-key', crow.rowKey);
-    tr.className = 'bg-emerald-50/35 hover:bg-emerald-50/70 transition-colors';
+    tr.className = 'hover:bg-slate-50/80 transition-colors';
 
     orderedColumns.forEach((item) => {
       if (item.kind === 'builtin') {
@@ -581,7 +592,15 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
         delBtn.textContent = 'Remove';
         delBtn.addEventListener('click', (e) => {
           e.stopPropagation();
-          this.schemaService.deleteCustomRow(tableId, crow.rowKey);
+          this.schemaService.openConfirm({
+            title: 'Delete Table Row?',
+            message: `Are you sure you want to delete "${crow.rowLabel || 'this row'}" from the table?`,
+            confirmLabel: 'Delete',
+            danger: true,
+            onConfirm: () => {
+              this.schemaService.deleteCustomRow(tableId, crow.rowKey);
+            }
+          });
         });
         wrap.appendChild(delBtn);
 
@@ -668,6 +687,7 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
       td.className += ' cursor-pointer hover:bg-indigo-50/70 transition-colors group';
       td.title = `Click to edit or remove "${col.label}"`;
       const hint = document.createElement('span');
+      hint.setAttribute('data-scs-ignore-export', '1');
       hint.className =
         'ml-1.5 inline-block text-[9px] font-bold text-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity';
       hint.textContent = 'Edit';
@@ -722,8 +742,7 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
 
     const title = schema.customTitle || this.tableTitle() || tableId.replace(/_/g, ' ');
     const visibleCount = Math.max(0, detectedHeaders.length - hiddenCount);
-    const portalsLabel = this.schemaService.getPortalTargetsLabel(tableId);
-    const customCount = schema.customColumns.length;
+    const customCount = schema.customColumns.filter((c) => !c.scope || c.scope === 'table' || c.scope === 'both').length;
     const customRowCount = (schema.customRows || []).length;
 
     while (this.toolbarEl.firstChild) {
@@ -732,12 +751,6 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
 
     const left = document.createElement('div');
     left.className = 'flex items-center gap-2 flex-wrap';
-
-    const ownerBadge = document.createElement('span');
-    ownerBadge.className =
-      'inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-900 text-white text-[10px] font-bold tracking-tight';
-    ownerBadge.textContent = 'Owner CRUD';
-    left.appendChild(ownerBadge);
 
     const titleSpan = document.createElement('span');
     titleSpan.className = 'font-bold text-slate-800';
@@ -748,34 +761,23 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
     statsSpan.className = 'text-[10px] font-semibold text-slate-500 tabular-nums';
     const customPart = customCount > 0 ? ` · +${customCount} custom` : '';
     const hiddenPart = hiddenCount > 0 ? ` · ${hiddenCount} hidden` : '';
-    const rowPart = customRowCount > 0 ? ` · +${customRowCount} custom rows` : '';
-    statsSpan.textContent = `${visibleCount}/${detectedHeaders.length} cols${customPart}${hiddenPart}${rowPart} · Syncs: ${portalsLabel}`;
+    const rowPart = customRowCount > 0 ? ` · +${customRowCount} added rows` : '';
+    statsSpan.textContent = `${visibleCount}/${detectedHeaders.length} cols${customPart}${hiddenPart}${rowPart}`;
     left.appendChild(statsSpan);
 
     const right = document.createElement('div');
     right.className = 'flex items-center gap-1.5 flex-wrap';
 
-    const colBtn = document.createElement('button');
-    colBtn.type = 'button';
-    colBtn.className =
+    const manageBtn = document.createElement('button');
+    manageBtn.type = 'button';
+    manageBtn.className =
       'px-2.5 py-1 rounded-lg bg-white hover:bg-indigo-50 border border-slate-200 hover:border-indigo-300 text-slate-700 hover:text-indigo-700 font-bold text-[11px] cursor-pointer transition-colors shadow-2xs';
-    colBtn.textContent = 'Columns & Form (CRUD)';
-    colBtn.addEventListener('click', (e) => {
+    manageBtn.textContent = 'Edit Table';
+    manageBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       this.schemaService.openColumnManager(tableId, title, detectedHeaders, 'columns');
     });
-    right.appendChild(colBtn);
-
-    const multiRowBtn = document.createElement('button');
-    multiRowBtn.type = 'button';
-    multiRowBtn.className =
-      'px-2.5 py-1 rounded-lg bg-white hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 text-slate-700 hover:text-emerald-700 font-bold text-[11px] cursor-pointer transition-colors shadow-2xs';
-    multiRowBtn.textContent = '+ Multi-Row Form';
-    multiRowBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      this.schemaService.openRowFormModal(tableId, title, detectedHeaders);
-    });
-    right.appendChild(multiRowBtn);
+    right.appendChild(manageBtn);
 
     const csvBtn = document.createElement('button');
     csvBtn.type = 'button';

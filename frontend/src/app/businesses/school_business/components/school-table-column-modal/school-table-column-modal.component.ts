@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import {
   CustomColumnType,
-  DetectedBuiltInHeader,
+  HiddenTableColumnOption,
   SchoolCustomColumn,
   SchoolCustomRow,
   SchoolTableSchemaService,
-  TableCatalogItem
+  TableCatalogItem,
+  TableManageableColumn
 } from '../../services/school-table-schema.service';
 
 interface DraftFormRow {
@@ -21,29 +22,29 @@ interface DraftFormRow {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <!-- ======================================================================= -->
-    <!-- OWNER TABLE & FORM SCHEMA STUDIO MODAL (COLUMNS, ROWS & PORTAL CRUD)    -->
+    <!-- TABLE EDITOR MODAL (CLEAN FORM-MANAGER PARITY DESIGN)                   -->
     <!-- ======================================================================= -->
     @if (schemaService.isOwner() && managerState().open) {
       <div
-        class="fixed inset-0 z-[120] bg-slate-950/55 backdrop-blur-xs flex items-center justify-center p-4"
+        class="fixed inset-0 z-[120] bg-slate-950/55 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4"
         (click)="closeManager()"
       >
         <div
-          class="bg-white rounded-2xl shadow-xl border border-slate-200/80 w-full max-w-3xl max-h-[92vh] flex flex-col overflow-hidden"
+          class="bg-white rounded-2xl shadow-xl border border-slate-200/80 w-full max-w-2xl max-h-[92vh] flex flex-col overflow-hidden"
           (click)="$event.stopPropagation()"
         >
           <!-- Header -->
-          <div class="px-5 py-4 border-b border-slate-200/80 bg-slate-50/95 flex items-center justify-between gap-3">
-            <div class="flex items-center gap-3 min-w-0">
-              <div class="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center shrink-0">
-                <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">view_column</mat-icon>
+          <div class="px-4 sm:px-5 py-3.5 border-b border-slate-200/80 bg-slate-50/95 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <div class="w-8 h-8 rounded-xl bg-slate-900 text-white flex items-center justify-center shrink-0">
+                <mat-icon class="!text-[17px] !w-[17px] !h-[17px]">table_chart</mat-icon>
               </div>
               <div class="min-w-0">
                 <h3 class="text-sm font-black text-slate-900 truncate">
-                  Table &amp; Form Studio (Owner CRUD) — {{ activeDisplayTitle() }}
+                  Edit Table — {{ activeDisplayTitle() }}
                 </h3>
                 <p class="text-[11px] font-medium text-slate-500 truncate">
-                  School Owner Only · Syncs automatically to: <strong class="text-indigo-700">{{ portalsLabel() }}</strong>
+                  Only changes this Table (columns &amp; rows). Popup forms stay separate.
                 </p>
               </div>
             </div>
@@ -56,347 +57,366 @@ interface DraftFormRow {
             </button>
           </div>
 
-          <!-- Table Switcher & Tabs -->
-          <div class="px-5 py-3 border-b border-slate-200/70 bg-white space-y-3">
-            <div class="flex flex-col sm:flex-row sm:items-center gap-2.5">
-              <div class="flex-1 min-w-0">
-                <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Switch Table / Portal Register</label>
-                <select
-                  [value]="canonicalTableId()"
-                  (change)="onSwitchTable($any($event.target).value)"
-                  class="w-full px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:border-indigo-500 focus:outline-none cursor-pointer"
-                >
-                  @for (cat of catalogTables(); track cat.canonicalId) {
-                    <option [value]="cat.canonicalId">{{ cat.title }} ({{ cat.portals }})</option>
-                  }
-                </select>
-              </div>
-              <div class="flex items-center gap-1.5 pt-1 sm:pt-4 shrink-0">
-                <button
-                  type="button"
-                  (click)="activeTab.set('columns')"
-                  class="px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-colors"
-                  [class]="activeTab() === 'columns' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
-                >
-                  Columns &amp; Form ({{ activeSchema().customColumns.length }})
-                </button>
-                <button
-                  type="button"
-                  (click)="activeTab.set('rows')"
-                  class="px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-colors"
-                  [class]="activeTab() === 'rows' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
-                >
-                  Rows &amp; Portal Data ({{ totalCustomEntriesCount() }})
-                </button>
-                <button
-                  type="button"
-                  (click)="activeTab.set('reset')"
-                  class="px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-colors"
-                  [class]="activeTab() === 'reset' ? 'bg-rose-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-rose-50 hover:text-rose-700'"
-                >
-                  Reset
-                </button>
-              </div>
+          <!-- Table Switcher + Clean 2-Tab Navigation -->
+          <div class="px-4 sm:px-5 py-3 border-b border-slate-200/70 bg-white space-y-2.5">
+            <div>
+              <select
+                [value]="canonicalTableId()"
+                (change)="onSwitchTable($any($event.target).value)"
+                class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-800 focus:bg-white focus:border-slate-400 focus:outline-none cursor-pointer"
+                aria-label="Select Table"
+              >
+                @for (cat of catalogTables(); track cat.canonicalId) {
+                  <option [value]="cat.canonicalId">{{ cat.title }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                (click)="activeTab.set('columns')"
+                class="px-3 py-2 rounded-xl text-xs font-bold cursor-pointer transition-colors inline-flex items-center justify-center gap-1.5"
+                [class]="activeTab() === 'columns' ? 'bg-slate-900 text-white shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
+              >
+                <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">view_column</mat-icon>
+                <span>Table Columns</span>
+              </button>
+              <button
+                type="button"
+                (click)="activeTab.set('rows')"
+                class="px-3 py-2 rounded-xl text-xs font-bold cursor-pointer transition-colors inline-flex items-center justify-center gap-1.5"
+                [class]="activeTab() === 'rows' ? 'bg-slate-900 text-white shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
+              >
+                <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">playlist_add</mat-icon>
+                <span>Table Rows ({{ totalCustomEntriesCount() }})</span>
+              </button>
             </div>
           </div>
 
           <!-- Body -->
-          <div class="p-5 overflow-y-auto space-y-5 flex-1">
-            <!-- TAB 1: COLUMNS & FORM FIELDS -->
+          <div class="p-4 sm:p-5 overflow-y-auto space-y-4 flex-1 bg-slate-50/50">
+            <!-- =============================================================== -->
+            <!-- TAB 1: TABLE COLUMNS (MATCHES CLEAN FORM FIELD MANAGER UX)      -->
+            <!-- =============================================================== -->
             @if (activeTab() === 'columns') {
-              <!-- Section 0: Custom Title Control -->
-              <div class="p-3.5 rounded-2xl bg-indigo-50/50 border border-indigo-200/80 space-y-2">
-                <div class="flex items-center justify-between gap-2">
-                  <label class="text-[11px] font-black uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
-                    <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-indigo-600">title</mat-icon>
-                    <span>Custom Form &amp; Table Title</span>
-                  </label>
-                  @if (activeSchema().customTitle) {
-                    <button
-                      type="button"
-                      (click)="clearTableTitle()"
-                      class="px-2 py-0.5 rounded-lg bg-white hover:bg-rose-50 border border-rose-200 text-rose-700 text-[10px] font-bold cursor-pointer inline-flex items-center gap-1"
-                    >
-                      <mat-icon class="!text-[13px] !w-[13px] !h-[13px]">delete_outline</mat-icon>
-                      <span>Remove Custom Title</span>
-                    </button>
-                  }
-                </div>
-                <div class="flex items-center gap-2">
-                  <input
-                    type="text"
-                    [value]="titleDraft()"
-                    (input)="titleDraft.set($any($event.target).value)"
-                    [placeholder]="managerState().tableTitle || 'Set custom title shown on table & synced form...'"
-                    class="flex-1 px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:border-indigo-500 focus:outline-none"
-                  />
+              <div class="rounded-2xl bg-white border border-slate-200 p-4 space-y-3.5 shadow-2xs">
+                <!-- Mode Sub-Tabs: Add Column | Delete / Manage Columns -->
+                <div class="flex items-center gap-1.5 border-b border-slate-100 pb-3">
                   <button
                     type="button"
-                    (click)="saveTableTitle()"
-                    class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold cursor-pointer shrink-0"
+                    (click)="setColMode('add')"
+                    class="px-3.5 py-1.5 rounded-lg text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 transition-colors"
+                    [class]="colMode() === 'add' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
                   >
-                    Apply Title
+                    <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">add</mat-icon>
+                    <span>Add Column</span>
                   </button>
-                </div>
-              </div>
-
-              <!-- Section 1: Add / Edit Custom Column & Form Field -->
-              <div class="p-4 rounded-2xl bg-slate-50/90 border border-slate-200/80 space-y-3.5">
-                <div class="flex items-center justify-between gap-2 flex-wrap">
-                  <h4 class="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
-                    <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-emerald-600">add_circle_outline</mat-icon>
-                    <span>{{ editingColId() ? 'Edit Custom Column & Form Field' : 'Add Custom Column & Form Field' }}</span>
-                  </h4>
-                  <div class="flex items-center gap-2">
-                    @if (editingColId()) {
-                      <button
-                        type="button"
-                        (click)="cancelEditCustom()"
-                        class="text-[11px] font-bold text-slate-500 hover:text-slate-900 cursor-pointer"
-                      >
-                        Cancel Edit
-                      </button>
-                    }
-                    @if (activeSchema().customColumns.length > 0) {
-                      <button
-                        type="button"
-                        (click)="deleteAllCustomColumns()"
-                        class="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 text-[10px] font-bold cursor-pointer inline-flex items-center gap-1"
-                        title="Remove all extra custom columns from form, table & database"
-                      >
-                        <mat-icon class="!text-[13px] !w-[13px] !h-[13px]">delete_sweep</mat-icon>
-                        <span>Remove All Custom</span>
-                      </button>
-                    }
-                  </div>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
-                  <div class="sm:col-span-5">
-                    <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Column / Form Field Label *</label>
-                    <input
-                      type="text"
-                      [value]="colLabel()"
-                      (input)="colLabel.set($any($event.target).value)"
-                      placeholder="e.g. Scholarship %, Bus Route, Remarks"
-                      class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:border-emerald-500 focus:outline-none"
-                    />
-                  </div>
-                  <div class="sm:col-span-3">
-                    <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Field Type</label>
-                    <select
-                      [value]="colType()"
-                      (change)="colType.set($any($event.target).value)"
-                      class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:border-emerald-500 focus:outline-none"
-                    >
-                      <option value="text">Text</option>
-                      <option value="number">Number</option>
-                      <option value="date">Date</option>
-                      <option value="badge">Badge</option>
-                      <option value="select">Dropdown List</option>
-                    </select>
-                  </div>
-                  <div class="sm:col-span-4">
-                    <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">
-                      {{ colType() === 'select' ? 'Dropdown Options (comma separated)' : 'Default Value' }}
-                    </label>
-                    @if (colType() === 'select') {
-                      <input
-                        type="text"
-                        [value]="colOptions()"
-                        (input)="colOptions.set($any($event.target).value)"
-                        placeholder="e.g. Approved, Pending, Rejected"
-                        class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:border-emerald-500 focus:outline-none"
-                      />
-                    } @else {
-                      <input
-                        type="text"
-                        [value]="colDefault()"
-                        (input)="colDefault.set($any($event.target).value)"
-                        placeholder="Optional default"
-                        class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:border-emerald-500 focus:outline-none"
-                      />
-                    }
-                  </div>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  <div>
-                    <label class="block text-[10px] font-bold uppercase text-indigo-700 mb-1">
-                      Table Column Position (Insert After Column)
-                    </label>
-                    <select
-                      [value]="colTablePos()"
-                      (change)="colTablePos.set($any($event.target).value)"
-                      class="w-full px-3 py-2 rounded-xl bg-indigo-50/50 border border-indigo-200 text-xs font-semibold text-slate-900 focus:bg-white focus:border-indigo-500 focus:outline-none cursor-pointer"
-                    >
-                      @for (opt of studioTablePositionOptions(); track opt.value) {
-                        <option [value]="opt.value">{{ opt.label }}</option>
-                      }
-                    </select>
-                  </div>
-                  <div>
-                    <label class="block text-[10px] font-bold uppercase text-indigo-700 mb-1">
-                      Form Field Position (After Section / Field)
-                    </label>
-                    <select
-                      [value]="colFormPos()"
-                      (change)="colFormPos.set($any($event.target).value)"
-                      class="w-full px-3 py-2 rounded-xl bg-indigo-50/50 border border-indigo-200 text-xs font-semibold text-slate-900 focus:bg-white focus:border-indigo-500 focus:outline-none cursor-pointer"
-                    >
-                      @for (opt of studioFormPositionOptions(); track opt.key) {
-                        <option [value]="opt.key">{{ opt.label }}</option>
-                      }
-                    </select>
-                  </div>
-                </div>
-
-                <div class="flex items-center justify-end gap-2">
                   <button
                     type="button"
-                    (click)="saveCustomColumn()"
-                    [disabled]="!colLabel().trim()"
-                    class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 transition-colors shadow-xs"
+                    (click)="setColMode('delete')"
+                    class="px-3.5 py-1.5 rounded-lg text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 transition-colors"
+                    [class]="colMode() === 'delete' ? 'bg-rose-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
                   >
-                    <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">{{ editingColId() ? 'save' : 'add' }}</mat-icon>
-                    <span>{{ editingColId() ? 'Update Column & Form Field' : 'Add to Form & Table' }}</span>
+                    <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">delete_outline</mat-icon>
+                    <span>Delete / Manage Columns</span>
                   </button>
                 </div>
 
-                <!-- Existing Custom Columns List -->
-                @if (activeSchema().customColumns.length > 0) {
-                  <div class="pt-2 border-t border-slate-200/70 space-y-2">
-                    <p class="text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                      Active Custom Columns &amp; Form Fields ({{ activeSchema().customColumns.length }})
-                    </p>
-                    <div class="space-y-1.5">
-                      @for (c of activeSchema().customColumns; track c.id) {
-                        <div class="flex items-center justify-between gap-3 px-3 py-2 rounded-xl bg-white border border-slate-200/80 text-xs">
-                          <div class="flex items-center gap-2 min-w-0 flex-wrap">
-                            <span class="px-2 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200/70 text-[10px] font-bold uppercase">
-                              {{ c.type }}
-                            </span>
-                            <span class="font-bold text-slate-900 truncate">{{ c.label }}</span>
-                            @if (c.options && c.options.length > 0) {
-                              <span class="text-[10px] text-slate-500 truncate">[{{ c.options.join(', ') }}]</span>
-                            } @else if (c.defaultValue) {
-                              <span class="text-[11px] text-slate-400 truncate">(Default: {{ c.defaultValue }})</span>
-                            }
-                            <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 text-[9px] font-semibold">
-                              {{ schemaService.describeColumnTablePosition(canonicalTableId(), c) }}
-                            </span>
-                            <span class="px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 text-[9px] font-semibold">
-                              {{ schemaService.describeColumnFormPosition(canonicalTableId(), c) }}
-                            </span>
-                          </div>
-                          <div class="flex items-center gap-1 shrink-0">
-                            <button
-                              type="button"
-                              (click)="startEditCustom(c)"
-                              class="p-1.5 rounded-lg text-slate-500 hover:text-indigo-700 hover:bg-indigo-50 cursor-pointer"
-                              title="Edit Column"
-                            >
-                              <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">edit</mat-icon>
-                            </button>
-                            <button
-                              type="button"
-                              (click)="deleteCustom(c.id)"
-                              class="p-1.5 rounded-lg text-slate-500 hover:text-rose-700 hover:bg-rose-50 cursor-pointer"
-                              title="Delete Column from Form, Table & Database"
-                            >
-                              <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">delete</mat-icon>
-                            </button>
-                          </div>
+                @if (colMode() === 'add') {
+                  <!-- ADD COLUMN FORM -->
+                  <div class="space-y-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label class="block text-[11px] font-bold text-slate-700 mb-1">Column Name *</label>
+                        <input
+                          type="text"
+                          [value]="newColLabel()"
+                          (input)="newColLabel.set($any($event.target).value)"
+                          placeholder="e.g. Bus Route, Remarks, Fee Note"
+                          class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label class="block text-[11px] font-bold text-slate-700 mb-1">Column Type</label>
+                        <select
+                          [value]="newColType()"
+                          (change)="newColType.set($any($event.target).value)"
+                          class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none cursor-pointer"
+                        >
+                          <option value="text">Text</option>
+                          <option value="number">Number</option>
+                          <option value="date">Date</option>
+                          <option value="select">Dropdown List</option>
+                          <option value="badge">Badge</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label class="block text-[11px] font-bold text-slate-700 mb-1">Place After</label>
+                        <select
+                          [value]="newColTablePos()"
+                          (change)="newColTablePos.set($any($event.target).value)"
+                          class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none cursor-pointer"
+                        >
+                          @for (opt of addPositionOptions(); track opt.value) {
+                            <option [value]="opt.value">{{ opt.label }}</option>
+                          }
+                        </select>
+                      </div>
+
+                      @if (newColType() === 'select') {
+                        <div>
+                          <label class="block text-[11px] font-bold text-slate-700 mb-1">Dropdown Choices (comma separated)</label>
+                          <input
+                            type="text"
+                            [value]="newColOptions()"
+                            (input)="newColOptions.set($any($event.target).value)"
+                            placeholder="e.g. Paid, Pending, Exempt"
+                            class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none"
+                          />
+                        </div>
+                      } @else {
+                        <div>
+                          <label class="block text-[11px] font-bold text-slate-700 mb-1">Default Value (Optional)</label>
+                          <input
+                            type="text"
+                            [value]="newColDefault()"
+                            (input)="newColDefault.set($any($event.target).value)"
+                            placeholder="Optional default cell text"
+                            class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none"
+                          />
                         </div>
                       }
                     </div>
+
+                    <div class="flex justify-end pt-1">
+                      <button
+                        type="button"
+                        (click)="addTableColumn()"
+                        [disabled]="!newColLabel().trim()"
+                        class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 transition-colors"
+                      >
+                        <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">add</mat-icon>
+                        <span>Add Column</span>
+                      </button>
+                    </div>
                   </div>
-                }
-              </div>
-
-              <!-- Section 2: Built-In Columns (Show/Hide & Rename) -->
-              <div class="space-y-3">
-                <div class="flex items-center justify-between">
-                  <h4 class="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
-                    <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-slate-600">tune</mat-icon>
-                    <span>Built-in Columns (Show / Cut &amp; Rename Across Portals)</span>
-                  </h4>
-                  <span class="text-[11px] font-semibold text-slate-500 tabular-nums">
-                    {{ visibleBuiltInCount() }}/{{ managerState().detectedHeaders.length }} visible
-                  </span>
-                </div>
-
-                @if (managerState().detectedHeaders.length === 0) {
-                  <p class="text-xs text-slate-500 py-4 text-center bg-slate-50 rounded-xl border border-slate-200/70">
-                    Open the portal tab containing this table once to auto-detect built-in headers, or add custom columns above.
-                  </p>
                 } @else {
-                  <div class="space-y-2">
-                    @for (h of managerState().detectedHeaders; track h.index) {
-                      <div class="flex items-center gap-3 px-3 py-2 rounded-xl border border-slate-200/80 bg-white">
-                        <label class="inline-flex items-center gap-2 cursor-pointer shrink-0">
-                          <input
-                            type="checkbox"
-                            [checked]="!isHidden(h.index, h.originalLabel)"
-                            (change)="toggleVisibility(h.index, h.originalLabel)"
-                            class="w-4 h-4 accent-emerald-600 rounded cursor-pointer"
-                          />
-                          <span class="text-[11px] font-bold w-12"
-                            [class]="isHidden(h.index, h.originalLabel) ? 'text-rose-600' : 'text-emerald-700'">
-                            {{ isHidden(h.index, h.originalLabel) ? 'Removed' : 'Shown' }}
-                          </span>
-                        </label>
-                        <div class="flex-1 min-w-0">
-                          <input
-                            type="text"
-                            [value]="getHeaderValue(h.index, h.originalLabel)"
-                            (change)="renameHeader(h.index, $any($event.target).value, h.originalLabel)"
-                            [placeholder]="h.originalLabel"
-                            class="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200/90 text-xs font-semibold text-slate-900 focus:bg-white focus:border-indigo-500 focus:outline-none"
-                          />
+                  <!-- DELETE / MANAGE COLUMNS -->
+                  <div class="space-y-3.5">
+                    @if (manageableColumns().length > 0) {
+                      <div class="space-y-2">
+                        <label class="block text-[11px] font-bold text-slate-700">Select Any Column to Delete or Edit</label>
+                        <div class="flex flex-col sm:flex-row gap-2">
+                          <select
+                            [value]="effectiveSelectedManageValue()"
+                            (change)="onSelectManageColumn($any($event.target).value)"
+                            class="flex-1 min-w-0 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none cursor-pointer"
+                          >
+                            @for (mc of manageableColumns(); track mc.value) {
+                              <option [value]="mc.value">{{ mc.label }}</option>
+                            }
+                          </select>
+                          <button
+                            type="button"
+                            (click)="deleteSelectedManageColumn()"
+                            [disabled]="manageableColumns().length <= 1"
+                            class="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 disabled:opacity-40 text-white text-xs font-bold cursor-pointer inline-flex items-center justify-center gap-1 shrink-0 transition-colors"
+                          >
+                            <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">delete</mat-icon>
+                            <span>Delete Column</span>
+                          </button>
                         </div>
-                        <span class="text-[10px] text-slate-400 hidden sm:inline truncate max-w-[130px]" [title]="h.originalLabel">
-                          Orig: {{ h.originalLabel }}
-                        </span>
                       </div>
+
+                      <!-- Edit Selected Column Name / Position -->
+                      @if (selectedCustomColumn(); as selCol) {
+                        <div class="pt-3 border-t border-slate-100 space-y-2.5">
+                          <p class="text-[11px] font-bold text-slate-600">Edit Column Name or Move Position</p>
+                          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                            <input
+                              type="text"
+                              [value]="editColLabel()"
+                              (input)="editColLabel.set($any($event.target).value)"
+                              placeholder="Column name"
+                              class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none"
+                            />
+                            <select
+                              [value]="editColTablePos()"
+                              (change)="editColTablePos.set($any($event.target).value)"
+                              class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none cursor-pointer"
+                            >
+                              @for (opt of editPositionOptionsFor(selCol.id); track opt.value) {
+                                <option [value]="opt.value">{{ opt.label }}</option>
+                              }
+                            </select>
+                          </div>
+                          @if (selCol.type === 'select') {
+                            <div>
+                              <input
+                                type="text"
+                                [value]="editColOptions()"
+                                (input)="editColOptions.set($any($event.target).value)"
+                                placeholder="Dropdown choices (comma separated)"
+                                class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none"
+                              />
+                            </div>
+                          }
+                          <div class="flex justify-end">
+                            <button
+                              type="button"
+                              (click)="saveSelectedCustomEdit(selCol)"
+                              [disabled]="!editColLabel().trim()"
+                              class="px-3.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 disabled:opacity-40 text-white text-[11px] font-bold cursor-pointer inline-flex items-center gap-1"
+                            >
+                              <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">check</mat-icon>
+                              <span>Save Changes</span>
+                            </button>
+                          </div>
+                        </div>
+                      } @else if (selectedBuiltInColumn(); as selBuilt) {
+                        <div class="pt-3 border-t border-slate-100 space-y-2">
+                          <p class="text-[11px] font-bold text-slate-600">Edit Column Name</p>
+                          <div class="flex flex-col sm:flex-row gap-2">
+                            <input
+                              type="text"
+                              [value]="editColLabel()"
+                              (input)="editColLabel.set($any($event.target).value)"
+                              [placeholder]="selBuilt.originalLabel"
+                              class="flex-1 min-w-0 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none"
+                            />
+                            <button
+                              type="button"
+                              (click)="saveSelectedBuiltInRename(selBuilt)"
+                              [disabled]="!editColLabel().trim()"
+                              class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 disabled:opacity-40 text-white text-xs font-bold cursor-pointer inline-flex items-center justify-center gap-1 shrink-0"
+                            >
+                              <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">check</mat-icon>
+                              <span>Save Name</span>
+                            </button>
+                          </div>
+                        </div>
+                      }
+                    } @else {
+                      <p class="text-xs font-semibold text-slate-500 py-2">
+                        No active columns left to edit. Restore a deleted column below or switch to Add Column.
+                      </p>
                     }
+
+                    <!-- Deleted Built-in Columns Restore Strip + Bulk / Reset Actions -->
+                    <div class="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
+                      @if (hiddenBuiltInColumns().length > 0) {
+                        <div class="flex flex-wrap items-center gap-1.5">
+                          <span class="text-[11px] font-bold text-slate-500">Deleted:</span>
+                          @for (hc of hiddenBuiltInColumns(); track hc.index) {
+                            <button
+                              type="button"
+                              (click)="restoreColumn(hc)"
+                              class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-700 text-[11px] font-bold cursor-pointer inline-flex items-center gap-1"
+                              title="Restore column to table"
+                            >
+                              <span>{{ hc.displayLabel }}</span>
+                              <mat-icon class="!text-[13px] !w-[13px] !h-[13px]">restore</mat-icon>
+                            </button>
+                          }
+                          <button
+                            type="button"
+                            (click)="restoreAllBuiltInColumns()"
+                            class="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[11px] font-bold cursor-pointer"
+                          >
+                            Restore All
+                          </button>
+                        </div>
+                      }
+
+                      <div class="flex flex-wrap items-center gap-2 ml-auto">
+                        @if (tableCustomColumns().length > 0) {
+                          <button
+                            type="button"
+                            (click)="deleteAllTableColumns()"
+                            class="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-[11px] font-bold cursor-pointer inline-flex items-center gap-1"
+                          >
+                            <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">delete_sweep</mat-icon>
+                            <span>Delete All Added Columns</span>
+                          </button>
+                        }
+                        <button
+                          type="button"
+                          (click)="resetTable()"
+                          class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-700 text-[11px] font-bold cursor-pointer inline-flex items-center gap-1"
+                        >
+                          <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">restart_alt</mat-icon>
+                          <span>Reset Table</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Optional Table Heading Card (Kept Secondary & Clean) -->
+                  <div class="mt-3 pt-3 border-t border-slate-100 space-y-2">
+                    <div class="flex items-center justify-between gap-2">
+                      <label class="text-[11px] font-bold text-slate-600">Table Heading (Optional)</label>
+                      @if (activeSchema().customTitle) {
+                        <button
+                          type="button"
+                          (click)="clearTableTitle()"
+                          class="text-[11px] font-bold text-rose-600 hover:text-rose-800 cursor-pointer"
+                        >
+                          Remove Heading
+                        </button>
+                      }
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <input
+                        type="text"
+                        [value]="titleDraft()"
+                        (input)="titleDraft.set($any($event.target).value)"
+                        [placeholder]="managerState().tableTitle || 'Custom table heading...'"
+                        class="flex-1 min-w-0 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        (click)="saveTableTitle()"
+                        class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold cursor-pointer shrink-0"
+                      >
+                        Save
+                      </button>
+                    </div>
                   </div>
                 }
               </div>
             }
 
-            <!-- TAB 2: ROWS & PORTAL INPUT DATA CRUD -->
+            <!-- =============================================================== -->
+            <!-- TAB 2: TABLE ROWS                                               -->
+            <!-- =============================================================== -->
             @if (activeTab() === 'rows') {
-              <!-- Multi-Row Staging Form -->
-              <div class="p-4 rounded-2xl bg-slate-50/90 border border-slate-200/80 space-y-3">
+              <div class="p-4 rounded-2xl bg-white border border-slate-200 space-y-3 shadow-2xs">
                 <div class="flex items-center justify-between gap-2 flex-wrap">
                   <div>
-                    <h4 class="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
-                      <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-emerald-600">playlist_add</mat-icon>
-                      <span>Multi-Row Form Submission</span>
-                    </h4>
-                    <p class="text-[11px] text-slate-500">
-                      Add or remove multiple rows here, then submit all at once to table &amp; database.
-                    </p>
+                    <h4 class="text-xs font-black text-slate-900">Add Rows Directly to This Table</h4>
+                    <p class="text-[11px] text-slate-500">Enter values for the table columns below.</p>
                   </div>
                   <button
                     type="button"
                     (click)="addStudioDraftRow()"
-                    class="px-3 py-1.5 rounded-xl bg-white hover:bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold cursor-pointer inline-flex items-center gap-1"
+                    class="px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-200 text-slate-800 hover:text-emerald-700 text-[11px] font-bold cursor-pointer inline-flex items-center gap-1"
                   >
                     <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">add</mat-icon>
-                    <span>+ Add Another Row</span>
+                    <span>Add Another Row</span>
                   </button>
                 </div>
 
-                <div>
-                  <label class="block text-[10px] font-bold uppercase text-indigo-700 mb-1">
-                    Insert Row(s) Position (First / After Specific Existing Row / Last)
-                  </label>
+                <!-- Compact Row Placement -->
+                <div class="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-3">
+                  <label class="text-[11px] font-bold text-slate-600 shrink-0">Place row at:</label>
                   <select
                     [value]="studioRowPos()"
                     (change)="studioRowPos.set($any($event.target).value)"
-                    class="w-full px-3 py-2 rounded-xl bg-white border border-indigo-200 text-xs font-semibold text-slate-900 focus:border-indigo-500 focus:outline-none cursor-pointer"
+                    class="flex-1 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none cursor-pointer"
                   >
                     @for (opt of studioRowPositionOptions(); track opt.value) {
                       <option [value]="opt.value">{{ opt.label }}</option>
@@ -404,11 +424,12 @@ interface DraftFormRow {
                   </select>
                 </div>
 
+                <!-- Draft Rows -->
                 <div class="space-y-2.5">
                   @for (row of studioDraftRows(); track row.tempId; let rIdx = $index) {
-                    <div class="p-3 rounded-xl bg-white border border-slate-200/90 space-y-2.5">
+                    <div class="p-3.5 rounded-xl bg-slate-50/70 border border-slate-200 space-y-2.5">
                       <div class="flex items-center justify-between">
-                        <span class="text-[10px] font-black uppercase text-slate-500">Draft Row #{{ rIdx + 1 }}</span>
+                        <span class="text-[11px] font-black text-slate-700">Row #{{ rIdx + 1 }}</span>
                         @if (studioDraftRows().length > 1) {
                           <button
                             type="button"
@@ -416,16 +437,17 @@ interface DraftFormRow {
                             class="px-2 py-0.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-[10px] font-bold cursor-pointer inline-flex items-center gap-1"
                           >
                             <mat-icon class="!text-[13px] !w-[13px] !h-[13px]">close</mat-icon>
-                            <span>Remove Row</span>
+                            <span>Remove</span>
                           </button>
                         }
                       </div>
-                      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+
+                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                         @for (item of studioOrderedColumns(); track $index) {
                           @if (item.kind === 'builtin') {
                             @if (!item.hidden) {
                               <div>
-                                <label class="block text-[10px] font-bold text-slate-600 mb-0.5 truncate">
+                                <label class="block text-[11px] font-bold text-slate-700 mb-1 truncate">
                                   {{ item.displayLabel }}
                                 </label>
                                 <input
@@ -433,18 +455,18 @@ interface DraftFormRow {
                                   [value]="row.values['built_' + item.header.index] ?? ''"
                                   (input)="updateStudioDraftCell(row.tempId, 'built_' + item.header.index, $any($event.target).value)"
                                   [placeholder]="item.displayLabel"
-                                  class="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:bg-white focus:border-indigo-500 focus:outline-none"
+                                  class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-900 focus:border-slate-400 focus:outline-none"
                                 />
                               </div>
                             }
                           } @else {
                             <div>
-                              <label class="block text-[10px] font-bold text-indigo-700 mb-0.5 truncate">{{ item.col.label }}</label>
+                              <label class="block text-[11px] font-bold text-slate-700 mb-1 truncate">{{ item.col.label }}</label>
                               @if (item.col.type === 'select' && item.col.options && item.col.options.length > 0) {
                                 <select
                                   [value]="row.values[item.col.id] ?? item.col.defaultValue ?? ''"
                                   (change)="updateStudioDraftCell(row.tempId, item.col.id, $any($event.target).value)"
-                                  class="w-full px-2.5 py-1.5 rounded-lg bg-indigo-50/40 border border-indigo-200 text-xs font-bold text-slate-900 focus:bg-white focus:outline-none"
+                                  class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-900 focus:border-slate-400 focus:outline-none cursor-pointer"
                                 >
                                   <option value="">-- Select --</option>
                                   @for (opt of item.col.options; track opt) {
@@ -457,7 +479,7 @@ interface DraftFormRow {
                                   [value]="row.values[item.col.id] ?? item.col.defaultValue ?? ''"
                                   (input)="updateStudioDraftCell(row.tempId, item.col.id, $any($event.target).value)"
                                   [placeholder]="item.col.label"
-                                  class="w-full px-2.5 py-1.5 rounded-lg bg-indigo-50/40 border border-indigo-200 text-xs font-semibold text-slate-900 focus:bg-white focus:border-indigo-500 focus:outline-none"
+                                  class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-900 focus:border-slate-400 focus:outline-none"
                                 />
                               }
                             </div>
@@ -472,37 +494,26 @@ interface DraftFormRow {
                   <button
                     type="button"
                     (click)="submitStudioDraftRows()"
-                    class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 shadow-xs"
+                    class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold cursor-pointer inline-flex items-center justify-center gap-1.5 shadow-2xs"
                   >
-                    <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">save</mat-icon>
-                    <span>Submit {{ studioDraftRows().length }} Row(s) to Table &amp; Database</span>
+                    <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">check_circle</mat-icon>
+                    <span>{{ studioDraftRows().length === 1 ? 'Save Row to Table' : 'Save ' + studioDraftRows().length + ' Rows to Table' }}</span>
                   </button>
                 </div>
               </div>
 
-              <!-- Existing Custom Rows (Owner CRUD) -->
-              <div class="space-y-2.5">
-                <h4 class="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
-                  <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-indigo-600">table_rows</mat-icon>
-                  <span>Submitted Custom Rows ({{ activeSchema().customRows.length }})</span>
-                </h4>
-                @if (activeSchema().customRows.length === 0) {
-                  <p class="text-xs text-slate-500 py-4 text-center bg-slate-50 rounded-xl border border-slate-200/70">
-                    No standalone custom rows added yet. Use the Multi-Row Form above to add rows.
-                  </p>
-                } @else {
+              <!-- Saved Table Rows -->
+              @if (activeSchema().customRows.length > 0) {
+                <div class="space-y-2">
+                  <h4 class="text-xs font-black text-slate-800 flex items-center gap-1.5">
+                    <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-slate-600">table_rows</mat-icon>
+                    <span>Added Table Rows ({{ activeSchema().customRows.length }})</span>
+                  </h4>
                   <div class="space-y-2">
                     @for (crow of activeSchema().customRows; track crow.rowKey) {
-                      <div class="p-3 rounded-xl border border-slate-200/90 bg-white space-y-2">
+                      <div class="p-3 rounded-xl border border-slate-200 bg-white space-y-2">
                         <div class="flex items-center justify-between gap-2">
-                          <div class="flex items-center gap-2 min-w-0">
-                            <span class="font-bold text-xs text-slate-900 truncate">{{ crow.rowLabel || crow.rowKey }}</span>
-                            @if (crow.submittedByRole) {
-                              <span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 text-[10px] font-bold uppercase">
-                                {{ crow.submittedByRole }}
-                              </span>
-                            }
-                          </div>
+                          <span class="font-bold text-xs text-slate-900 truncate">{{ crow.rowLabel || crow.rowKey }}</span>
                           <div class="flex items-center gap-1 shrink-0">
                             @if (editingRowKey() === crow.rowKey) {
                               <button
@@ -523,16 +534,16 @@ interface DraftFormRow {
                               <button
                                 type="button"
                                 (click)="startEditRow(crow)"
-                                class="p-1.5 rounded-lg text-slate-500 hover:text-indigo-700 hover:bg-indigo-50 cursor-pointer"
-                                title="Edit Row Values"
+                                class="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 cursor-pointer"
+                                title="Edit Row"
                               >
                                 <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">edit</mat-icon>
                               </button>
                               <button
                                 type="button"
-                                (click)="deleteCustomRow(crow.rowKey)"
+                                (click)="deleteCustomRow(crow)"
                                 class="p-1.5 rounded-lg text-slate-500 hover:text-rose-700 hover:bg-rose-50 cursor-pointer"
-                                title="Delete Row from Table & Database"
+                                title="Delete Row"
                               >
                                 <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">delete</mat-icon>
                               </button>
@@ -543,11 +554,11 @@ interface DraftFormRow {
                         @if (editingRowKey() === crow.rowKey) {
                           <div class="pt-2 border-t border-slate-100 space-y-2">
                             <div>
-                              <label class="block text-[10px] font-bold uppercase text-indigo-700 mb-0.5">Row Placement</label>
+                              <label class="block text-[11px] font-bold text-slate-600 mb-0.5">Row Position</label>
                               <select
                                 [value]="editRowPos()"
                                 (change)="editRowPos.set($any($event.target).value)"
-                                class="w-full px-2.5 py-1.5 rounded-lg bg-indigo-50/40 border border-indigo-200 text-xs font-semibold text-slate-900 cursor-pointer"
+                                class="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 cursor-pointer"
                               >
                                 @for (opt of studioRowPositionOptions(); track opt.value) {
                                   @if (opt.value !== 'after:' + crow.rowKey) {
@@ -561,23 +572,23 @@ interface DraftFormRow {
                                 @if (item.kind === 'builtin') {
                                   @if (!item.hidden) {
                                     <div>
-                                      <label class="block text-[10px] font-bold text-slate-500 mb-0.5">{{ item.displayLabel }}</label>
+                                      <label class="block text-[10px] font-bold text-slate-600 mb-0.5">{{ item.displayLabel }}</label>
                                       <input
                                         type="text"
                                         [value]="editRowValues()['built_' + item.header.index] ?? ''"
                                         (input)="updateEditRowField('built_' + item.header.index, $any($event.target).value)"
-                                        class="w-full px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900"
+                                        class="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900"
                                       />
                                     </div>
                                   }
                                 } @else {
                                   <div>
-                                    <label class="block text-[10px] font-bold text-indigo-700 mb-0.5">{{ item.col.label }}</label>
+                                    <label class="block text-[10px] font-bold text-slate-600 mb-0.5">{{ item.col.label }}</label>
                                     <input
                                       type="text"
                                       [value]="editRowValues()[item.col.id] ?? ''"
                                       (input)="updateEditRowField(item.col.id, $any($event.target).value)"
-                                      class="w-full px-2.5 py-1 rounded-lg bg-indigo-50/40 border border-indigo-200 text-xs font-semibold text-slate-900"
+                                      class="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900"
                                     />
                                   </div>
                                 }
@@ -585,7 +596,7 @@ interface DraftFormRow {
                             </div>
                           </div>
                         } @else {
-                          <div class="flex flex-wrap gap-2 text-[11px] text-slate-600">
+                          <div class="flex flex-wrap gap-1.5 text-[11px] text-slate-600">
                             @for (h of visibleHeaders(); track h.index) {
                               @if (crow.values['built_' + h.index]) {
                                 <span class="px-2 py-0.5 rounded-md bg-slate-50 border border-slate-200/80">
@@ -593,9 +604,9 @@ interface DraftFormRow {
                                 </span>
                               }
                             }
-                            @for (col of activeSchema().customColumns; track col.id) {
+                            @for (col of tableCustomColumns(); track col.id) {
                               @if (crow.values[col.id]) {
-                                <span class="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-800 border border-indigo-200/70">
+                                <span class="px-2 py-0.5 rounded-md bg-slate-50 border border-slate-200/80">
                                   <strong>{{ col.label }}:</strong> {{ crow.values[col.id] }}
                                 </span>
                               }
@@ -605,45 +616,36 @@ interface DraftFormRow {
                       </div>
                     }
                   </div>
-                }
-              </div>
+                </div>
+              }
 
-              <!-- Portal-Submitted Custom Cell Data on Built-in Rows (Owner CRUD) -->
+              <!-- Saved Table Custom Cell Values -->
               @if (submittedCellEntries().length > 0) {
-                <div class="space-y-2.5">
-                  <h4 class="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
+                <div class="space-y-2">
+                  <h4 class="text-xs font-black text-slate-800 flex items-center gap-1.5">
                     <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-emerald-600">fact_check</mat-icon>
-                    <span>Portal-Submitted Custom Field Data ({{ submittedCellEntries().length }} records)</span>
+                    <span>Saved Cell Values ({{ submittedCellEntries().length }})</span>
                   </h4>
                   <div class="space-y-2">
                     @for (entry of submittedCellEntries(); track entry.rowKey) {
-                      <div class="p-3 rounded-xl border border-slate-200/90 bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                      <div class="p-3 rounded-xl border border-slate-200 bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <div class="space-y-1 min-w-0">
-                          <div class="flex items-center gap-2 flex-wrap">
-                            <span class="font-mono text-[11px] font-bold text-slate-800">{{ entry.rowKey }}</span>
-                            @if (entry.submittedByRole) {
-                              <span class="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold uppercase">
-                                By {{ entry.submittedByRole }}
-                              </span>
-                            }
-                          </div>
+                          <span class="font-mono text-[11px] font-bold text-slate-800">{{ entry.rowKey }}</span>
                           <div class="flex flex-wrap gap-1.5 text-[11px]">
                             @for (cell of entry.cells; track cell.colId) {
-                              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-800 border border-indigo-200/70">
+                              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-800 border border-slate-200/80">
                                 <strong>{{ cell.colLabel }}:</strong> {{ cell.value }}
                                 <button
                                   type="button"
                                   (click)="editSubmittedCell(entry.rowKey, cell.colId, cell.colLabel, cell.colType, cell.value)"
-                                  class="ml-1 text-indigo-600 hover:text-indigo-900 cursor-pointer font-bold"
-                                  title="Edit Cell"
+                                  class="ml-1 text-slate-700 hover:text-slate-950 cursor-pointer font-bold"
                                 >
                                   Edit
                                 </button>
                                 <button
                                   type="button"
-                                  (click)="deleteSubmittedCell(entry.rowKey, cell.colId)"
+                                  (click)="deleteSubmittedCell(entry.rowKey, cell.colId, cell.colLabel)"
                                   class="ml-0.5 text-rose-600 hover:text-rose-900 cursor-pointer font-bold"
-                                  title="Delete Cell Value"
                                 >
                                   ×
                                 </button>
@@ -656,7 +658,7 @@ interface DraftFormRow {
                           (click)="clearRecordCustomCells(entry.rowKey)"
                           class="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-[11px] font-bold cursor-pointer shrink-0 self-start sm:self-center"
                         >
-                          Remove Entry
+                          Remove
                         </button>
                       </div>
                     }
@@ -664,33 +666,12 @@ interface DraftFormRow {
                 </div>
               }
             }
-
-            <!-- TAB 3: RESET SCHEMA -->
-            @if (activeTab() === 'reset') {
-              <div class="p-5 rounded-2xl bg-rose-50/70 border border-rose-200 space-y-3">
-                <h4 class="text-sm font-black text-rose-900">Reset Table &amp; Form Customization</h4>
-                <p class="text-xs text-rose-800 leading-relaxed">
-                  Resetting removes all custom columns, custom title, hidden/renamed headers, custom rows, and submitted custom cell data for
-                  <strong>{{ activeDisplayTitle() }}</strong> from SQLite, Firestore, and all synced role portals.
-                </p>
-                <div class="pt-1">
-                  <button
-                    type="button"
-                    (click)="resetTable()"
-                    class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold cursor-pointer inline-flex items-center gap-1.5"
-                  >
-                    <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">restart_alt</mat-icon>
-                    <span>Confirm Full Reset for This Table</span>
-                  </button>
-                </div>
-              </div>
-            }
           </div>
 
           <!-- Footer -->
-          <div class="px-5 py-3.5 border-t border-slate-200/80 bg-slate-50/90 flex items-center justify-between gap-3">
+          <div class="px-4 sm:px-5 py-3 border-t border-slate-200/80 bg-slate-50/90 flex items-center justify-between gap-3">
             <span class="text-[11px] font-medium text-slate-500">
-              All changes saved to SQLite &amp; Firestore
+              Table changes save automatically
             </span>
             <button
               type="button"
@@ -705,222 +686,7 @@ interface DraftFormRow {
     }
 
     <!-- ======================================================================= -->
-    <!-- UNIVERSAL MULTI-ROW FORM MODAL (ADD / REMOVE ROWS + INLINE FIELDS)      -->
-    <!-- ======================================================================= -->
-    @if (schemaService.isOwner() && rowFormState().open) {
-      <div
-        class="fixed inset-0 z-[125] bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4"
-        (click)="closeRowFormModal()"
-      >
-        <div
-          class="bg-white rounded-2xl shadow-xl border border-slate-200/80 w-full max-w-3xl max-h-[92vh] flex flex-col overflow-hidden"
-          (click)="$event.stopPropagation()"
-        >
-          <div class="px-5 py-4 border-b border-slate-200/80 bg-slate-50/95 flex items-center justify-between gap-3">
-            <div class="min-w-0">
-              <h3 class="text-sm font-black text-slate-900 truncate">
-                Multi-Row Table Form — {{ rowFormTitle() }}
-              </h3>
-              <p class="text-[11px] font-medium text-slate-500">
-                Add or remove rows and custom fields here; submitted rows mirror across synced portals.
-              </p>
-            </div>
-            <button
-              type="button"
-              (click)="closeRowFormModal()"
-              class="p-1.5 rounded-xl text-slate-400 hover:text-slate-800 hover:bg-slate-200/60 cursor-pointer"
-            >
-              <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">close</mat-icon>
-            </button>
-          </div>
-
-          <div class="p-5 overflow-y-auto space-y-4 flex-1">
-            <!-- Quick Inline Field / Title Add & Remove Bar -->
-            <div class="p-3.5 rounded-2xl bg-indigo-50/50 border border-indigo-200/80 space-y-2.5 text-xs">
-              <div class="flex items-center justify-between gap-2 flex-wrap">
-                <span class="font-black text-slate-900">Quick Form &amp; Table Column Controls</span>
-                <button
-                  type="button"
-                  (click)="addModalDraftRow()"
-                  class="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold cursor-pointer inline-flex items-center gap-1"
-                >
-                  <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">add</mat-icon>
-                  <span>+ Add Row</span>
-                </button>
-              </div>
-              <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
-                <input
-                  type="text"
-                  [value]="quickFieldLabel()"
-                  (input)="quickFieldLabel.set($any($event.target).value)"
-                  placeholder="New column/field label..."
-                  class="sm:col-span-5 px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-semibold"
-                />
-                <select
-                  [value]="quickFieldType()"
-                  (change)="quickFieldType.set($any($event.target).value)"
-                  class="sm:col-span-3 px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-semibold"
-                >
-                  <option value="text">Text</option>
-                  <option value="number">Number</option>
-                  <option value="date">Date</option>
-                  <option value="badge">Badge</option>
-                </select>
-                <button
-                  type="button"
-                  (click)="addQuickField()"
-                  [disabled]="!quickFieldLabel().trim()"
-                  class="sm:col-span-4 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white text-xs font-bold cursor-pointer"
-                >
-                  + Add Column to Form &amp; Table
-                </button>
-              </div>
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <select
-                  [value]="quickFieldColPos()"
-                  (change)="quickFieldColPos.set($any($event.target).value)"
-                  class="px-2.5 py-1.5 rounded-lg bg-white border border-indigo-200 text-[11px] font-semibold text-slate-800 cursor-pointer"
-                  title="Table column position"
-                >
-                  @for (opt of modalTablePositionOptions(); track opt.value) {
-                    <option [value]="opt.value">{{ opt.label }}</option>
-                  }
-                </select>
-                <select
-                  [value]="quickFieldFormPos()"
-                  (change)="quickFieldFormPos.set($any($event.target).value)"
-                  class="px-2.5 py-1.5 rounded-lg bg-white border border-indigo-200 text-[11px] font-semibold text-slate-800 cursor-pointer"
-                  title="Form field position"
-                >
-                  @for (opt of modalFormPositionOptions(); track opt.key) {
-                    <option [value]="opt.key">{{ opt.label }}</option>
-                  }
-                </select>
-              </div>
-              @if (rowFormSchema().customColumns.length > 0) {
-                <div class="flex flex-wrap gap-1.5 pt-1">
-                  @for (cc of rowFormSchema().customColumns; track cc.id) {
-                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-white border border-indigo-200 text-[11px] font-bold text-indigo-800">
-                      <span>{{ cc.label }}</span>
-                      <button
-                        type="button"
-                        (click)="removeQuickField(cc.id)"
-                        class="text-rose-600 hover:text-rose-800 cursor-pointer font-black"
-                        title="Delete this column from form, table & DB"
-                      >
-                        ×
-                      </button>
-                    </span>
-                  }
-                </div>
-              }
-            </div>
-
-            <!-- Row Insertion Placement Selector -->
-            <div class="px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1">
-              <label class="block text-[10px] font-bold uppercase text-indigo-700">
-                Insert Row(s) Position (First / After Specific Existing Row / Last)
-              </label>
-              <select
-                [value]="modalRowPos()"
-                (change)="modalRowPos.set($any($event.target).value)"
-                class="w-full px-3 py-1.5 rounded-xl bg-white border border-indigo-200 text-xs font-semibold text-slate-900 focus:border-indigo-500 focus:outline-none cursor-pointer"
-              >
-                @for (opt of modalRowPositionOptions(); track opt.value) {
-                  <option [value]="opt.value">{{ opt.label }}</option>
-                }
-              </select>
-            </div>
-
-            <!-- Staged Rows -->
-            <div class="space-y-3">
-              @for (row of modalDraftRows(); track row.tempId; let idx = $index) {
-                <div class="p-3.5 rounded-2xl border border-slate-200 bg-slate-50/60 space-y-2.5">
-                  <div class="flex items-center justify-between">
-                    <span class="text-[11px] font-black text-slate-700 uppercase">Row #{{ idx + 1 }}</span>
-                    @if (modalDraftRows().length > 1) {
-                      <button
-                        type="button"
-                        (click)="removeModalDraftRow(row.tempId)"
-                        class="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-[11px] font-bold cursor-pointer inline-flex items-center gap-1"
-                      >
-                        <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">delete_outline</mat-icon>
-                        <span>Remove Row</span>
-                      </button>
-                    }
-                  </div>
-                  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
-                    @for (item of modalOrderedColumns(); track $index) {
-                      @if (item.kind === 'builtin') {
-                        @if (!item.hidden) {
-                          <div>
-                            <label class="block text-[10px] font-bold text-slate-600 mb-0.5 truncate">
-                              {{ item.displayLabel }}
-                            </label>
-                            <input
-                              type="text"
-                              [value]="row.values['built_' + item.header.index] ?? ''"
-                              (input)="updateModalDraftCell(row.tempId, 'built_' + item.header.index, $any($event.target).value)"
-                              [placeholder]="item.displayLabel"
-                              class="w-full px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-semibold text-slate-900"
-                            />
-                          </div>
-                        }
-                      } @else {
-                        <div>
-                          <label class="block text-[10px] font-bold text-indigo-700 mb-0.5 truncate">{{ item.col.label }}</label>
-                          @if (item.col.type === 'select' && item.col.options && item.col.options.length > 0) {
-                            <select
-                              [value]="row.values[item.col.id] ?? item.col.defaultValue ?? ''"
-                              (change)="updateModalDraftCell(row.tempId, item.col.id, $any($event.target).value)"
-                              class="w-full px-2.5 py-1.5 rounded-lg bg-white border border-indigo-200 text-xs font-bold text-slate-900"
-                            >
-                              <option value="">-- Select --</option>
-                              @for (opt of item.col.options; track opt) {
-                                <option [value]="opt">{{ opt }}</option>
-                              }
-                            </select>
-                          } @else {
-                            <input
-                              [type]="item.col.type === 'number' ? 'number' : (item.col.type === 'date' ? 'date' : 'text')"
-                              [value]="row.values[item.col.id] ?? item.col.defaultValue ?? ''"
-                              (input)="updateModalDraftCell(row.tempId, item.col.id, $any($event.target).value)"
-                              [placeholder]="item.col.label"
-                              class="w-full px-2.5 py-1.5 rounded-lg bg-white border border-indigo-200 text-xs font-semibold text-slate-900"
-                            />
-                          }
-                        </div>
-                      }
-                    }
-                  </div>
-                </div>
-              }
-            </div>
-          </div>
-
-          <div class="px-5 py-3.5 border-t border-slate-200/80 bg-slate-50/90 flex items-center justify-between gap-2">
-            <button
-              type="button"
-              (click)="closeRowFormModal()"
-              class="px-4 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-100 cursor-pointer"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              (click)="submitModalDraftRows()"
-              class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 shadow-xs"
-            >
-              <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">check_circle</mat-icon>
-              <span>Submit {{ modalDraftRows().length }} Row(s) to Table</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    }
-
-    <!-- ======================================================================= -->
-    <!-- CUSTOM CELL VALUE EDITOR MODAL (OWNER ONLY)                             -->
+    <!-- TABLE CELL EDITOR MODAL (CLICK ON A CUSTOM CELL IN THE TABLE)           -->
     <!-- ======================================================================= -->
     @if (schemaService.isOwner() && cellEditor(); as ce) {
       <div
@@ -933,7 +699,7 @@ interface DraftFormRow {
         >
           <div class="px-5 py-3.5 border-b border-slate-200/80 bg-slate-50/90 flex items-center justify-between">
             <div>
-              <h3 class="text-sm font-black text-slate-900">Edit Custom Cell Value</h3>
+              <h3 class="text-sm font-black text-slate-900">Edit Table Cell</h3>
               <p class="text-[11px] font-medium text-slate-500 truncate max-w-[300px]">
                 {{ ce.tableTitle }} · {{ ce.rowLabel }}
               </p>
@@ -976,7 +742,7 @@ interface DraftFormRow {
               class="px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-xs font-bold text-rose-700 cursor-pointer inline-flex items-center gap-1"
             >
               <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">delete_outline</mat-icon>
-              <span>Delete Value</span>
+              <span>Clear</span>
             </button>
             <div class="flex items-center gap-2">
               <button
@@ -992,9 +758,55 @@ interface DraftFormRow {
                 class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold cursor-pointer inline-flex items-center gap-1.5"
               >
                 <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">save</mat-icon>
-                <span>Save Cell</span>
+                <span>Save</span>
               </button>
             </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- ======================================================================= -->
+    <!-- PREMIUM CONFIRMATION ALERT MODAL (SUPERADMIN ALL-CLIENTS PARITY)        -->
+    <!-- ======================================================================= -->
+    @if (schemaService.isOwner() && confirmDialog(); as cd) {
+      <div
+        class="fixed inset-0 z-[10050] flex items-center justify-center px-4 bg-slate-950/40 backdrop-blur-md animate-fade-in"
+        (click)="cancelConfirm()"
+      >
+        <div
+          class="w-full max-w-sm rounded-2xl overflow-hidden bg-white/95 backdrop-blur-2xl border border-white/80 shadow-[0_24px_64px_-12px_rgba(0,0,0,0.22),0_12px_28px_-6px_rgba(0,0,0,0.12)] p-6 sm:p-7 text-center animate-scale-up"
+          (click)="$event.stopPropagation()"
+        >
+          <div
+            class="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center border shadow-sm"
+            [class]="cd.danger !== false ? 'bg-rose-50 border-rose-100' : 'bg-emerald-50 border-emerald-100'"
+          >
+            <mat-icon
+              class="!text-[28px] !w-[28px] !h-[28px]"
+              [class]="cd.danger !== false ? 'text-rose-600' : 'text-emerald-600'"
+            >
+              {{ cd.danger !== false ? 'warning_amber' : 'info' }}
+            </mat-icon>
+          </div>
+          <h3 class="text-base font-bold text-slate-900 tracking-tight">{{ cd.title }}</h3>
+          <p class="text-xs text-slate-500 mt-2 leading-relaxed max-w-xs mx-auto">{{ cd.message }}</p>
+          <div class="flex gap-3 mt-6">
+            <button
+              type="button"
+              (click)="cancelConfirm()"
+              class="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50 transition-all active:scale-[0.98] cursor-pointer"
+            >
+              {{ cd.cancelLabel || 'Cancel' }}
+            </button>
+            <button
+              type="button"
+              (click)="acceptConfirm()"
+              class="flex-1 py-2.5 rounded-xl text-white text-xs font-semibold transition-all shadow-sm active:scale-[0.98] cursor-pointer"
+              [class]="cd.danger !== false ? 'bg-rose-600 hover:bg-rose-700' : 'bg-[#0071E3] hover:bg-[#0077ED]'"
+            >
+              {{ cd.confirmLabel || 'Delete' }}
+            </button>
           </div>
         </div>
       </div>
@@ -1005,32 +817,35 @@ export class SchoolTableColumnModalComponent {
   readonly schemaService = inject(SchoolTableSchemaService);
 
   readonly managerState = this.schemaService.columnManagerState;
-  readonly rowFormState = this.schemaService.rowFormModalState;
   readonly cellEditor = this.schemaService.cellEditorState;
+  readonly confirmDialog = this.schemaService.confirmDialogState;
 
-  readonly activeTab = signal<'columns' | 'rows' | 'reset'>('columns');
+  readonly activeTab = signal<'columns' | 'rows'>('columns');
+  readonly colMode = signal<'add' | 'delete'>('add');
+
+  // Add Column form state
+  readonly newColLabel = signal<string>('');
+  readonly newColType = signal<CustomColumnType>('text');
+  readonly newColDefault = signal<string>('');
+  readonly newColOptions = signal<string>('');
+  readonly newColTablePos = signal<string>('__last__');
+
+  // Delete / Manage Column state
+  readonly selectedManageValue = signal<string>('');
+  readonly editColLabel = signal<string>('');
+  readonly editColTablePos = signal<string>('__last__');
+  readonly editColOptions = signal<string>('');
   readonly titleDraft = signal<string>('');
-  readonly colLabel = signal<string>('');
-  readonly colType = signal<CustomColumnType>('text');
-  readonly colDefault = signal<string>('');
-  readonly colOptions = signal<string>('');
-  readonly colTablePos = signal<string>('__last__');
-  readonly colFormPos = signal<string>('__last__');
-  readonly editingColId = signal<string>('');
+
+  // Cell editor
   readonly cellDraft = signal<string>('');
 
+  // Table Rows state
   readonly studioDraftRows = signal<DraftFormRow[]>([this.createBlankDraftRow()]);
   readonly studioRowPos = signal<string>('__first__');
   readonly editingRowKey = signal<string>('');
   readonly editRowPos = signal<string>('__first__');
   readonly editRowValues = signal<Record<string, string>>({});
-
-  readonly modalDraftRows = signal<DraftFormRow[]>([this.createBlankDraftRow()]);
-  readonly modalRowPos = signal<string>('__first__');
-  readonly quickFieldLabel = signal<string>('');
-  readonly quickFieldType = signal<CustomColumnType>('text');
-  readonly quickFieldColPos = signal<string>('__last__');
-  readonly quickFieldFormPos = signal<string>('__last__');
 
   readonly canonicalTableId = computed(() =>
     this.schemaService.resolveCanonicalTableId(this.managerState().tableId || '')
@@ -1046,25 +861,51 @@ export class SchoolTableColumnModalComponent {
     return this.schemaService.getSchema(this.managerState().tableId || '');
   });
 
+  readonly tableCustomColumns = computed<SchoolCustomColumn[]>(() =>
+    (this.activeSchema().customColumns || []).filter(
+      (c) => !c.scope || c.scope === 'table' || c.scope === 'both'
+    )
+  );
+
   readonly activeDisplayTitle = computed(() => {
     return this.activeSchema().customTitle || this.managerState().tableTitle || this.canonicalTableId();
   });
 
-  readonly portalsLabel = computed(() =>
-    this.schemaService.getPortalTargetsLabel(this.managerState().tableId || '')
-  );
-
-  readonly studioTablePositionOptions = computed(() => {
+  readonly addPositionOptions = computed(() => {
     this.schemaService.schemaRevision();
-    return this.schemaService.getTableColumnPositionOptions(
-      this.managerState().tableId || '',
-      this.editingColId() || undefined
-    );
+    return this.schemaService.getTableColumnPositionOptions(this.managerState().tableId || '');
   });
 
-  readonly studioFormPositionOptions = computed(() => {
+  readonly manageableColumns = computed<TableManageableColumn[]>(() => {
     this.schemaService.schemaRevision();
-    return this.schemaService.getFormAnchorOptions(this.managerState().tableId || '');
+    const m = this.managerState();
+    return this.schemaService.getTableManageableColumns(m.tableId || '', m.detectedHeaders);
+  });
+
+  readonly hiddenBuiltInColumns = computed<HiddenTableColumnOption[]>(() => {
+    this.schemaService.schemaRevision();
+    const m = this.managerState();
+    return this.schemaService.getHiddenTableColumns(m.tableId || '', m.detectedHeaders);
+  });
+
+  readonly effectiveSelectedManageValue = computed<string>(() => {
+    const list = this.manageableColumns();
+    const cur = this.selectedManageValue();
+    if (cur && list.some((m) => m.value === cur)) return cur;
+    return list[0]?.value || '';
+  });
+
+  readonly selectedCustomColumn = computed<SchoolCustomColumn | null>(() => {
+    const val = this.effectiveSelectedManageValue();
+    if (!val.startsWith('custom:')) return null;
+    const id = val.slice(7);
+    return this.tableCustomColumns().find((c) => c.id === id) || null;
+  });
+
+  readonly selectedBuiltInColumn = computed<TableManageableColumn | null>(() => {
+    const val = this.effectiveSelectedManageValue();
+    if (!val.startsWith('builtin:')) return null;
+    return this.manageableColumns().find((m) => m.value === val) || null;
   });
 
   readonly studioRowPositionOptions = computed(() => {
@@ -1079,11 +920,6 @@ export class SchoolTableColumnModalComponent {
     return this.schemaService.resolveOrderedColumns(tid, headers, this.activeSchema());
   });
 
-  readonly visibleBuiltInCount = computed(() => {
-    const headers = this.managerState().detectedHeaders;
-    return headers.filter((h) => !this.isHidden(h.index, h.originalLabel)).length;
-  });
-
   readonly visibleHeaders = computed(() => {
     const headers = this.managerState().detectedHeaders;
     return headers.filter((h) => !this.isHidden(h.index, h.originalLabel));
@@ -1092,7 +928,7 @@ export class SchoolTableColumnModalComponent {
   readonly submittedCellEntries = computed(() => {
     const schema = this.activeSchema();
     const colMap = new Map<string, SchoolCustomColumn>();
-    for (const c of schema.customColumns) colMap.set(c.id, c);
+    for (const c of this.tableCustomColumns()) colMap.set(c.id, c);
     const customRowKeys = new Set((schema.customRows || []).map((r) => r.rowKey));
     const entries: Array<{
       rowKey: string;
@@ -1122,46 +958,6 @@ export class SchoolTableColumnModalComponent {
     return this.activeSchema().customRows.length + this.submittedCellEntries().length;
   });
 
-  readonly rowFormSchema = computed(() => {
-    this.schemaService.schemaRevision();
-    return this.schemaService.getSchema(this.rowFormState().tableId || '');
-  });
-
-  readonly rowFormTitle = computed(() => {
-    return this.rowFormSchema().customTitle || this.rowFormState().tableTitle || this.rowFormState().tableId;
-  });
-
-  readonly modalTablePositionOptions = computed(() => {
-    this.schemaService.schemaRevision();
-    return this.schemaService.getTableColumnPositionOptions(this.rowFormState().tableId || '');
-  });
-
-  readonly modalFormPositionOptions = computed(() => {
-    this.schemaService.schemaRevision();
-    return this.schemaService.getFormAnchorOptions(this.rowFormState().tableId || '');
-  });
-
-  readonly modalRowPositionOptions = computed(() => {
-    this.schemaService.schemaRevision();
-    return this.schemaService.getRowPositionOptions(this.rowFormState().tableId || '');
-  });
-
-  readonly modalOrderedColumns = computed(() => {
-    this.schemaService.schemaRevision();
-    const tid = this.rowFormState().tableId || '';
-    const headers = this.rowFormState().detectedHeaders || [];
-    return this.schemaService.resolveOrderedColumns(tid, headers, this.rowFormSchema());
-  });
-
-  readonly rowFormVisibleHeaders = computed(() => {
-    const schema = this.rowFormSchema();
-    const hiddenLabels = new Set((schema.hiddenColumnLabels || []).map((l) => l.toLowerCase()));
-    const hiddenIndices = new Set(schema.hiddenColumns || []);
-    return (this.rowFormState().detectedHeaders || []).filter(
-      (h) => !hiddenIndices.has(h.index) && !hiddenLabels.has(h.originalLabel.toLowerCase())
-    );
-  });
-
   constructor() {
     effect(() => {
       const m = this.managerState();
@@ -1169,19 +965,15 @@ export class SchoolTableColumnModalComponent {
         const s = this.schemaService.getSchema(m.tableId);
         this.titleDraft.set(s.customTitle || '');
         this.studioRowPos.set('__first__');
-        if (m.initialTab) {
-          this.activeTab.set(m.initialTab);
+        if (m.initialTab === 'rows') {
+          this.activeTab.set('rows');
+        } else if (m.initialTab === 'reset') {
+          this.activeTab.set('columns');
+          this.colMode.set('delete');
+        } else {
+          this.activeTab.set('columns');
         }
-      }
-    });
-    effect(() => {
-      const rf = this.rowFormState();
-      if (rf.open) {
-        this.modalDraftRows.set([this.createBlankDraftRow()]);
-        this.modalRowPos.set('__first__');
-        this.quickFieldLabel.set('');
-        this.quickFieldColPos.set('__last__');
-        this.quickFieldFormPos.set('__last__');
+        this.syncEditInputsFromSelection(this.effectiveSelectedManageValue());
       }
     });
     effect(() => {
@@ -1199,20 +991,182 @@ export class SchoolTableColumnModalComponent {
     };
   }
 
+  editPositionOptionsFor(excludeColId: string) {
+    this.schemaService.schemaRevision();
+    return this.schemaService.getTableColumnPositionOptions(
+      this.managerState().tableId || '',
+      excludeColId
+    );
+  }
+
+  setColMode(mode: 'add' | 'delete'): void {
+    this.colMode.set(mode);
+    if (mode === 'delete') {
+      this.syncEditInputsFromSelection(this.effectiveSelectedManageValue());
+    }
+  }
+
+  onSelectManageColumn(val: string): void {
+    this.selectedManageValue.set(val);
+    this.syncEditInputsFromSelection(val);
+  }
+
+  private syncEditInputsFromSelection(val: string): void {
+    if (val.startsWith('custom:')) {
+      const id = val.slice(7);
+      const col = this.tableCustomColumns().find((c) => c.id === id);
+      if (col) {
+        this.editColLabel.set(col.label);
+        this.editColTablePos.set(col.insertAfterColumn || '__last__');
+        this.editColOptions.set((col.options || []).join(', '));
+        return;
+      }
+    } else if (val.startsWith('builtin:')) {
+      const mc = this.manageableColumns().find((m) => m.value === val);
+      if (mc) {
+        this.editColLabel.set(mc.label);
+        this.editColTablePos.set('__last__');
+        this.editColOptions.set('');
+        return;
+      }
+    }
+    this.editColLabel.set('');
+    this.editColTablePos.set('__last__');
+    this.editColOptions.set('');
+  }
+
   onSwitchTable(canonicalId: string): void {
     const found = this.catalogTables().find((c) => c.canonicalId === canonicalId);
     if (found) {
-      this.cancelEditCustom();
+      this.selectedManageValue.set('');
       this.editingRowKey.set('');
       this.schemaService.switchManagedTable(found);
       this.titleDraft.set(this.schemaService.getSchema(found.tableId).customTitle || '');
+      this.syncEditInputsFromSelection(this.effectiveSelectedManageValue());
     }
   }
 
   closeManager(): void {
-    this.cancelEditCustom();
     this.editingRowKey.set('');
     this.schemaService.closeColumnManager();
+  }
+
+  // --- Add Column ---
+  addTableColumn(): void {
+    const tableId = this.managerState().tableId;
+    const label = this.newColLabel().trim();
+    if (!tableId || !label) return;
+    const type = this.newColType();
+    const opts = type === 'select'
+      ? this.newColOptions().split(',').map((s) => s.trim()).filter(Boolean)
+      : undefined;
+    this.schemaService.addCustomColumn(
+      tableId,
+      label,
+      type,
+      type === 'select' ? '' : this.newColDefault(),
+      opts,
+      false,
+      this.newColTablePos() || '__last__',
+      '__last__',
+      'table'
+    );
+    this.newColLabel.set('');
+    this.newColType.set('text');
+    this.newColDefault.set('');
+    this.newColOptions.set('');
+  }
+
+  // --- Delete / Edit / Restore Columns ---
+  deleteSelectedManageColumn(): void {
+    const tableId = this.managerState().tableId;
+    const val = this.effectiveSelectedManageValue();
+    if (!tableId || !val || this.manageableColumns().length <= 1) return;
+    const target = this.manageableColumns().find((m) => m.value === val);
+    if (!target) return;
+    this.schemaService.openConfirm({
+      title: 'Delete Table Column?',
+      message: `Are you sure you want to remove "${target.label}" from ${this.activeDisplayTitle()}?`,
+      confirmLabel: 'Delete',
+      danger: true,
+      onConfirm: () => {
+        if (target.kind === 'custom') {
+          this.schemaService.deleteCustomColumn(tableId, target.key);
+        } else if (typeof target.index === 'number') {
+          this.schemaService.hideTableColumn(tableId, target.index, target.originalLabel);
+        }
+        this.selectedManageValue.set('');
+        this.syncEditInputsFromSelection(this.effectiveSelectedManageValue());
+      }
+    });
+  }
+
+  saveSelectedCustomEdit(col: SchoolCustomColumn): void {
+    const tableId = this.managerState().tableId;
+    const label = this.editColLabel().trim();
+    if (!tableId || !label) return;
+    const opts = col.type === 'select'
+      ? this.editColOptions().split(',').map((s) => s.trim()).filter(Boolean)
+      : undefined;
+    this.schemaService.updateCustomColumn(tableId, col.id, {
+      label,
+      insertAfterColumn: this.editColTablePos() || '__last__',
+      ...(col.type === 'select' ? { options: opts } : {})
+    });
+  }
+
+  saveSelectedBuiltInRename(mc: TableManageableColumn): void {
+    const tableId = this.managerState().tableId;
+    const label = this.editColLabel().trim();
+    if (!tableId || typeof mc.index !== 'number' || !label) return;
+    this.schemaService.renameColumn(tableId, mc.index, label, mc.originalLabel);
+  }
+
+  restoreColumn(hc: HiddenTableColumnOption): void {
+    const tableId = this.managerState().tableId;
+    if (!tableId) return;
+    this.schemaService.restoreTableColumn(tableId, hc.index, hc.originalLabel);
+  }
+
+  restoreAllBuiltInColumns(): void {
+    const tableId = this.managerState().tableId;
+    if (!tableId) return;
+    this.schemaService.restoreAllTableColumns(tableId);
+  }
+
+  deleteAllTableColumns(): void {
+    const tableId = this.managerState().tableId;
+    const count = this.tableCustomColumns().length;
+    if (!tableId || count === 0) return;
+    this.schemaService.openConfirm({
+      title: 'Delete All Added Columns?',
+      message: `Are you sure you want to delete all ${count} added column(s) from ${this.activeDisplayTitle()}?`,
+      confirmLabel: 'Delete All',
+      danger: true,
+      onConfirm: () => {
+        this.schemaService.deleteAllCustomColumns(tableId, 'table');
+        this.selectedManageValue.set('');
+        this.syncEditInputsFromSelection(this.effectiveSelectedManageValue());
+      }
+    });
+  }
+
+  resetTable(): void {
+    const tableId = this.managerState().tableId;
+    if (!tableId) return;
+    this.schemaService.openConfirm({
+      title: 'Reset Table to Default?',
+      message: `This will remove all added columns, custom heading, renamed/deleted headers, and added rows for ${this.activeDisplayTitle()}.`,
+      confirmLabel: 'Reset Table',
+      danger: true,
+      onConfirm: () => {
+        this.selectedManageValue.set('');
+        this.editingRowKey.set('');
+        this.titleDraft.set('');
+        this.schemaService.resetTableSchema(tableId);
+        this.syncEditInputsFromSelection(this.effectiveSelectedManageValue());
+      }
+    });
   }
 
   saveTableTitle(): void {
@@ -1224,8 +1178,16 @@ export class SchoolTableColumnModalComponent {
   clearTableTitle(): void {
     const tableId = this.managerState().tableId;
     if (!tableId) return;
-    this.titleDraft.set('');
-    this.schemaService.updateTableTitle(tableId, '');
+    this.schemaService.openConfirm({
+      title: 'Remove Custom Heading?',
+      message: `Are you sure you want to restore the default heading for ${this.activeDisplayTitle()}?`,
+      confirmLabel: 'Remove',
+      danger: true,
+      onConfirm: () => {
+        this.titleDraft.set('');
+        this.schemaService.updateTableTitle(tableId, '');
+      }
+    });
   }
 
   isHidden(colIndex: number, originalLabel: string): boolean {
@@ -1240,91 +1202,7 @@ export class SchoolTableColumnModalComponent {
     return s.renamedHeadersByLabel?.[originalLabel.trim().toLowerCase()] ?? s.renamedHeaders[colIndex] ?? originalLabel;
   }
 
-  toggleVisibility(colIndex: number, originalLabel: string): void {
-    const tableId = this.managerState().tableId;
-    if (!tableId) return;
-    const schema = this.activeSchema();
-    const currentlyHidden = this.isHidden(colIndex, originalLabel);
-    if (!currentlyHidden && this.visibleBuiltInCount() <= 1 && schema.customColumns.length === 0) {
-      return;
-    }
-    this.schemaService.toggleColumnVisibility(tableId, colIndex, originalLabel);
-  }
-
-  renameHeader(colIndex: number, newLabel: string, originalLabel: string): void {
-    const tableId = this.managerState().tableId;
-    if (!tableId) return;
-    this.schemaService.renameColumn(tableId, colIndex, newLabel, originalLabel);
-  }
-
-  saveCustomColumn(): void {
-    const tableId = this.managerState().tableId;
-    if (!tableId || !this.colLabel().trim()) return;
-    const type = this.colType();
-    const opts = type === 'select'
-      ? this.colOptions().split(',').map((s) => s.trim()).filter(Boolean)
-      : undefined;
-    if (this.editingColId()) {
-      this.schemaService.updateCustomColumn(tableId, this.editingColId(), {
-        label: this.colLabel(),
-        type,
-        defaultValue: type === 'select' ? '' : this.colDefault(),
-        options: opts,
-        insertAfterColumn: this.colTablePos() || '__last__',
-        insertAfterFormField: this.colFormPos() || '__last__'
-      });
-    } else {
-      this.schemaService.addCustomColumn(
-        tableId,
-        this.colLabel(),
-        type,
-        type === 'select' ? '' : this.colDefault(),
-        opts,
-        false,
-        this.colTablePos() || '__last__',
-        this.colFormPos() || '__last__'
-      );
-    }
-    this.cancelEditCustom();
-  }
-
-  startEditCustom(col: SchoolCustomColumn): void {
-    this.editingColId.set(col.id);
-    this.colLabel.set(col.label);
-    this.colType.set(col.type);
-    this.colDefault.set(col.defaultValue || '');
-    this.colOptions.set((col.options || []).join(', '));
-    this.colTablePos.set(col.insertAfterColumn || '__last__');
-    this.colFormPos.set(col.insertAfterFormField || '__last__');
-  }
-
-  cancelEditCustom(): void {
-    this.editingColId.set('');
-    this.colLabel.set('');
-    this.colType.set('text');
-    this.colDefault.set('');
-    this.colOptions.set('');
-    this.colTablePos.set('__last__');
-    this.colFormPos.set('__last__');
-  }
-
-  deleteCustom(colId: string): void {
-    const tableId = this.managerState().tableId;
-    if (!tableId) return;
-    if (this.editingColId() === colId) {
-      this.cancelEditCustom();
-    }
-    this.schemaService.deleteCustomColumn(tableId, colId);
-  }
-
-  deleteAllCustomColumns(): void {
-    const tableId = this.managerState().tableId;
-    if (!tableId) return;
-    this.cancelEditCustom();
-    this.schemaService.deleteAllCustomColumns(tableId);
-  }
-
-  // --- Studio Multi-Row & Row CRUD ---
+  // --- Table Multi-Row & Row CRUD ---
   addStudioDraftRow(): void {
     this.studioDraftRows.update((rows) => [...rows, this.createBlankDraftRow()]);
   }
@@ -1376,10 +1254,18 @@ export class SchoolTableColumnModalComponent {
     this.editingRowKey.set('');
   }
 
-  deleteCustomRow(rowKey: string): void {
+  deleteCustomRow(crow: SchoolCustomRow): void {
     const tableId = this.managerState().tableId;
     if (!tableId) return;
-    this.schemaService.deleteCustomRow(tableId, rowKey);
+    this.schemaService.openConfirm({
+      title: 'Delete Table Row?',
+      message: `Are you sure you want to delete "${crow.rowLabel || crow.rowKey}" from this table?`,
+      confirmLabel: 'Delete',
+      danger: true,
+      onConfirm: () => {
+        this.schemaService.deleteCustomRow(tableId, crow.rowKey);
+      }
+    });
   }
 
   editSubmittedCell(rowKey: string, colId: string, colLabel: string, colType: CustomColumnType, value: string): void {
@@ -1397,86 +1283,32 @@ export class SchoolTableColumnModalComponent {
     });
   }
 
-  deleteSubmittedCell(rowKey: string, colId: string): void {
+  deleteSubmittedCell(rowKey: string, colId: string, colLabel: string): void {
     const tableId = this.managerState().tableId;
     if (!tableId) return;
-    this.schemaService.deleteCustomCellValue(tableId, rowKey, colId);
+    this.schemaService.openConfirm({
+      title: 'Delete Cell Value?',
+      message: `Are you sure you want to delete the saved value for "${colLabel}"?`,
+      confirmLabel: 'Delete',
+      danger: true,
+      onConfirm: () => {
+        this.schemaService.deleteCustomCellValue(tableId, rowKey, colId);
+      }
+    });
   }
 
   clearRecordCustomCells(rowKey: string): void {
     const tableId = this.managerState().tableId;
     if (!tableId) return;
-    this.schemaService.clearRowCustomData(tableId, rowKey);
-  }
-
-  resetTable(): void {
-    const tableId = this.managerState().tableId;
-    if (!tableId) return;
-    this.cancelEditCustom();
-    this.editingRowKey.set('');
-    this.titleDraft.set('');
-    this.schemaService.resetTableSchema(tableId);
-    this.activeTab.set('columns');
-  }
-
-  // --- Universal Multi-Row Modal ---
-  closeRowFormModal(): void {
-    this.schemaService.closeRowFormModal();
-  }
-
-  getRowFormHeaderLabel(h: DetectedBuiltInHeader): string {
-    const s = this.rowFormSchema();
-    return s.renamedHeadersByLabel?.[h.originalLabel.trim().toLowerCase()] ?? s.renamedHeaders[h.index] ?? h.originalLabel;
-  }
-
-  addQuickField(): void {
-    const tableId = this.rowFormState().tableId;
-    if (!tableId || !this.quickFieldLabel().trim()) return;
-    this.schemaService.addCustomColumn(
-      tableId,
-      this.quickFieldLabel(),
-      this.quickFieldType(),
-      '',
-      undefined,
-      false,
-      this.quickFieldColPos() || '__last__',
-      this.quickFieldFormPos() || '__last__'
-    );
-    this.quickFieldLabel.set('');
-  }
-
-  removeQuickField(colId: string): void {
-    const tableId = this.rowFormState().tableId;
-    if (!tableId) return;
-    this.schemaService.deleteCustomColumn(tableId, colId);
-  }
-
-  addModalDraftRow(): void {
-    this.modalDraftRows.update((rows) => [...rows, this.createBlankDraftRow()]);
-  }
-
-  removeModalDraftRow(tempId: string): void {
-    this.modalDraftRows.update((rows) => rows.length > 1 ? rows.filter((r) => r.tempId !== tempId) : rows);
-  }
-
-  updateModalDraftCell(tempId: string, key: string, val: string): void {
-    this.modalDraftRows.update((rows) =>
-      rows.map((r) => (r.tempId === tempId ? { ...r, values: { ...r.values, [key]: val } } : r))
-    );
-  }
-
-  submitModalDraftRows(): void {
-    const tableId = this.rowFormState().tableId;
-    if (!tableId) return;
-    const count = this.schemaService.addCustomRowsBatch(
-      tableId,
-      this.modalDraftRows(),
-      'School Business Owner',
-      this.modalRowPos() || '__first__'
-    );
-    if (count > 0) {
-      this.schemaService.closeRowFormModal();
-    }
+    this.schemaService.openConfirm({
+      title: 'Remove Row Values?',
+      message: `Are you sure you want to remove all saved cell values for "${rowKey}"?`,
+      confirmLabel: 'Remove',
+      danger: true,
+      onConfirm: () => {
+        this.schemaService.clearRowCustomData(tableId, rowKey);
+      }
+    });
   }
 
   // --- Cell Value Editor ---
@@ -1494,7 +1326,24 @@ export class SchoolTableColumnModalComponent {
   deleteCellValue(): void {
     const ce = this.schemaService.cellEditorState();
     if (!ce) return;
-    this.schemaService.deleteCustomCellValue(ce.tableId, ce.rowKey, ce.colId);
-    this.schemaService.closeCellEditor();
+    this.schemaService.openConfirm({
+      title: 'Clear Cell Value?',
+      message: `Are you sure you want to clear "${ce.colLabel}" for ${ce.rowLabel}?`,
+      confirmLabel: 'Clear',
+      danger: true,
+      onConfirm: () => {
+        this.schemaService.deleteCustomCellValue(ce.tableId, ce.rowKey, ce.colId);
+        this.schemaService.closeCellEditor();
+      }
+    });
+  }
+
+  // --- Confirm Alert Handlers ---
+  cancelConfirm(): void {
+    this.schemaService.cancelConfirm();
+  }
+
+  acceptConfirm(): void {
+    this.schemaService.acceptConfirm();
   }
 }

@@ -278,16 +278,6 @@ export class ModuleRegistryService{
   },
 
   {
-    code:'school-hub',
-    label:'School Campus LMS',
-    route:'school-hub',
-    icon:'GraduationCap',
-    category:'education',
-    pinned:true,
-    hidden:false
-  },
-
-  {
     code:'support-desk',
     label:'Support & Comms',
     route:'support-desk',

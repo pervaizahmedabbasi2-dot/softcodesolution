@@ -373,6 +373,7 @@ function ensureColumnMigrations(sqliteDb) {
         custom_title TEXT,
         hidden_columns_json TEXT DEFAULT '[]',
         hidden_column_labels_json TEXT DEFAULT '[]',
+        hidden_form_fields_json TEXT DEFAULT '[]',
         renamed_headers_json TEXT DEFAULT '{}',
         renamed_headers_by_label_json TEXT DEFAULT '{}',
         custom_columns_json TEXT DEFAULT '[]',
@@ -404,6 +405,9 @@ function ensureColumnMigrations(sqliteDb) {
         PRIMARY KEY (tenant_id, table_id, row_key, col_id)
       );
     `);
+    try {
+      sqliteDb.exec("ALTER TABLE local_school_table_schemas ADD COLUMN hidden_form_fields_json TEXT DEFAULT '[]'");
+    } catch {}
   } catch {}
 }
 
@@ -3470,6 +3474,7 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
           customTitle: r.custom_title || '',
           hiddenColumns: safeJsonParse(r.hidden_columns_json, []),
           hiddenColumnLabels: safeJsonParse(r.hidden_column_labels_json, []),
+          hiddenFormFields: safeJsonParse(r.hidden_form_fields_json, []),
           renamedHeaders: safeJsonParse(r.renamed_headers_json, {}),
           renamedHeadersByLabel: safeJsonParse(r.renamed_headers_by_label_json, {}),
           customColumns: safeJsonParse(r.custom_columns_json, []),
@@ -3490,6 +3495,7 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
             customTitle: '',
             hiddenColumns: [],
             hiddenColumnLabels: [],
+            hiddenFormFields: [],
             renamedHeaders: {},
             renamedHeadersByLabel: {},
             customColumns: [],
@@ -3524,6 +3530,7 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
             customTitle: '',
             hiddenColumns: [],
             hiddenColumnLabels: [],
+            hiddenFormFields: [],
             renamedHeaders: {},
             renamedHeadersByLabel: {},
             customColumns: [],
@@ -3578,8 +3585,8 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     if (!existing) {
       sqliteDb.prepare(`
         INSERT INTO local_school_table_schemas
-        (tenant_id, table_id, custom_title, hidden_columns_json, hidden_column_labels_json, renamed_headers_json, renamed_headers_by_label_json, custom_columns_json, updated_by, updated_at)
-        VALUES (?, ?, '', '[]', '[]', '{}', '{}', '[]', ?, ?)
+        (tenant_id, table_id, custom_title, hidden_columns_json, hidden_column_labels_json, hidden_form_fields_json, renamed_headers_json, renamed_headers_by_label_json, custom_columns_json, updated_by, updated_at)
+        VALUES (?, ?, '', '[]', '[]', '[]', '{}', '{}', '[]', ?, ?)
       `).run(tid, canonicalTableId, actorName, new Date().toISOString());
     }
   };
@@ -3606,6 +3613,9 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     const hiddenColumnLabels = Array.isArray(body.hiddenColumnLabels)
       ? body.hiddenColumnLabels.map((s) => String(s)).filter(Boolean)
       : [];
+    const hiddenFormFields = Array.isArray(body.hiddenFormFields)
+      ? body.hiddenFormFields.map((s) => String(s).trim()).filter(Boolean)
+      : [];
     const renamedHeaders = body.renamedHeaders && typeof body.renamedHeaders === 'object' ? body.renamedHeaders : {};
     const renamedHeadersByLabel = body.renamedHeadersByLabel && typeof body.renamedHeadersByLabel === 'object' ? body.renamedHeadersByLabel : {};
     const customColumns = Array.isArray(body.customColumns)
@@ -3619,21 +3629,23 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
             options: Array.isArray(c.options) ? c.options.map((o) => String(o)).filter(Boolean) : undefined,
             required: Boolean(c.required),
             ...(c.insertAfterColumn ? { insertAfterColumn: String(c.insertAfterColumn).trim() } : {}),
-            ...(c.insertAfterFormField ? { insertAfterFormField: String(c.insertAfterFormField).trim() } : {})
+            ...(c.insertAfterFormField ? { insertAfterFormField: String(c.insertAfterFormField).trim() } : {}),
+            ...(c.scope && ['table', 'form', 'both'].includes(c.scope) ? { scope: c.scope } : {})
           }))
       : [];
 
     if (sqliteDb) {
       sqliteDb.prepare(`
         INSERT OR REPLACE INTO local_school_table_schemas
-        (tenant_id, table_id, custom_title, hidden_columns_json, hidden_column_labels_json, renamed_headers_json, renamed_headers_by_label_json, custom_columns_json, updated_by, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (tenant_id, table_id, custom_title, hidden_columns_json, hidden_column_labels_json, hidden_form_fields_json, renamed_headers_json, renamed_headers_by_label_json, custom_columns_json, updated_by, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
         tid,
         canonical,
         customTitle,
         JSON.stringify(hiddenColumns),
         JSON.stringify(hiddenColumnLabels),
+        JSON.stringify(hiddenFormFields),
         JSON.stringify(renamedHeaders),
         JSON.stringify(renamedHeadersByLabel),
         JSON.stringify(customColumns),

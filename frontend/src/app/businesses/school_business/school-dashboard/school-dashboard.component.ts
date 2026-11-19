@@ -80,7 +80,8 @@ import {
 import { SchoolTableDirective } from '../directives/school-table.directive';
 import { SchoolTableColumnModalComponent } from '../components/school-table-column-modal/school-table-column-modal.component';
 import { SchoolCustomFormFieldsComponent } from '../components/school-custom-form-fields/school-custom-form-fields.component';
-import { SchoolTableSchemaService, TableColumnPositionOption } from '../services/school-table-schema.service';
+import { SchoolTableSchemaService, SchoolCustomColumn, TableColumnPositionOption } from '../services/school-table-schema.service';
+import { PdfStudentCardEntry, downloadStudentsCardsPdf, downloadStudentsTablePdf } from '../services/school-pdf-export.util';
 import { PasskeyManagerComponent } from '../../../auth_security/passkey-manager/passkey-manager.component';
 
 export type SchoolDashboardTab = 'overview' | 'stage_wise' | 'feed' | 'events' | 'students' | 'teachers' | 'admissions' | 'attendance' | 'finance' | 'invoices' | 'expenses' | 'payment_gateway' | 'transport' | 'library' | 'exams' | 'timetable' | 'hostel' | 'labs' | 'alumni' | 'portals' | 'reports' | 'settings' | 'audit' | 'lesson_plans' | 'appraisals' | 'inspections' | 'exam_moderation' | 'parent_complaints' | 'substitutions' | 'syllabus' | 'safeguarding' | 'directives';
@@ -869,17 +870,309 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
 
   isStudentDossierModalOpen: boolean = false;
   selectedStudentForDossier: StudentRecord | null = null;
+  studentViewMode: 'cards' | 'table' =
+    typeof window !== 'undefined' && window.innerWidth < 768 ? 'cards' : 'table';
+  isStudentExportMenuOpen: boolean = false;
+  isDossierPrintPreview: boolean = false;
+
+  setStudentViewMode(mode: 'cards' | 'table'): void {
+    this.studentViewMode = mode;
+    this.cdr.detectChanges();
+  }
+
+  toggleStudentExportMenu(): void {
+    this.isStudentExportMenuOpen = !this.isStudentExportMenuOpen;
+    this.cdr.detectChanges();
+  }
 
   openStudentDossierModal(student: StudentRecord): void {
     this.selectedStudentForDossier = student;
+    this.isDossierPrintPreview = false;
     this.isStudentDossierModalOpen = true;
     this.cdr.detectChanges();
   }
 
   closeStudentDossierModal(): void {
     this.isStudentDossierModalOpen = false;
+    this.isDossierPrintPreview = false;
     this.selectedStudentForDossier = null;
     this.cdr.detectChanges();
+  }
+
+  getMergedStudentCustomColumns(): SchoolCustomColumn[] {
+    this.tableSchemaService.schemaRevision();
+    const stuCols = this.tableSchemaService.getSchema('students_master').customColumns || [];
+    const admCols = this.tableSchemaService.getSchema('owner_admissions').customColumns || [];
+    const seenIds = new Set<string>();
+    const merged: SchoolCustomColumn[] = [];
+    for (const c of stuCols) {
+      if (!seenIds.has(c.id)) {
+        seenIds.add(c.id);
+        merged.push(c);
+      }
+    }
+    for (const c of admCols) {
+      if (!seenIds.has(c.id)) {
+        seenIds.add(c.id);
+        merged.push(c);
+      }
+    }
+    return merged;
+  }
+
+  private findMatchingAdmissionForStudent(student: StudentRecord): AdmissionRecord | undefined {
+    const cleanName = (student.name || '').trim().toLowerCase();
+    const cleanRoll = (student.rollNo || '').trim().toLowerCase();
+    return (this.admissionsList || []).find((a) => {
+      const aRoll = (a.rollNo || '').trim().toLowerCase();
+      const aName = (a.applicant || '').trim().toLowerCase();
+      return (cleanRoll && aRoll === cleanRoll) || (cleanName && aName === cleanName);
+    });
+  }
+
+  getStudentCustomCellValues(student: StudentRecord): Record<string, string> {
+    this.tableSchemaService.schemaRevision();
+    const admSchema = this.tableSchemaService.getSchema('owner_admissions');
+    const stuSchema = this.tableSchemaService.getSchema('students_master');
+    const matchedAdm = this.findMatchingAdmissionForStudent(student);
+    const admCellsById = matchedAdm ? admSchema.customCells[matchedAdm.id] || {} : {};
+    const admCellsByName =
+      admSchema.customCells[student.name] ||
+      (matchedAdm ? admSchema.customCells[matchedAdm.applicant] || {} : {});
+    const stuCellsByRoll = student.rollNo ? stuSchema.customCells[student.rollNo] || {} : {};
+    const stuCellsById = student.id ? stuSchema.customCells[student.id] || {} : {};
+    return {
+      ...admCellsByName,
+      ...admCellsById,
+      ...stuCellsByRoll,
+      ...stuCellsById
+    };
+  }
+
+  getStudentCardCustomFields(student: StudentRecord): Array<{ id: string; label: string; value: string }> {
+    const cols = this.getMergedStudentCustomColumns();
+    if (cols.length === 0) return [];
+    const vals = this.getStudentCustomCellValues(student);
+    return cols.map((c) => {
+      const raw = vals[c.id];
+      const val = raw !== undefined && String(raw).trim() !== '' ? String(raw).trim() : (c.defaultValue || '—');
+      return { id: c.id, label: c.label, value: val };
+    });
+  }
+
+  getStudentDossierData(student: StudentRecord): {
+    identityFields: Array<{ label: string; value: string; isCustom?: boolean; tone?: string }>;
+    guardianFields: Array<{ label: string; value: string; isCustom?: boolean; tone?: string }>;
+    additionalFields: Array<{ label: string; value: string; isCustom?: boolean }>;
+    totalCount: number;
+  } {
+    const cols = this.getMergedStudentCustomColumns();
+    const vals = this.getStudentCustomCellValues(student);
+    const colValue = (c: SchoolCustomColumn): string => {
+      const raw = vals[c.id];
+      return raw !== undefined && String(raw).trim() !== '' ? String(raw).trim() : (c.defaultValue || '—');
+    };
+
+    const colMap = new Map<string, SchoolCustomColumn>();
+    cols.forEach((c) => colMap.set(c.id, c));
+
+    const resolveRoot = (c: SchoolCustomColumn): string => {
+      let cur: SchoolCustomColumn | undefined = c;
+      const seen = new Set<string>();
+      while (cur) {
+        const pos = (cur.insertAfterFormField || '').trim();
+        if (!pos || pos === '__last__' || pos === '__bottom__') return '__bottom__';
+        if (pos === '__first__') return '__first__';
+        if (pos.startsWith('custom:')) {
+          const refId = pos.slice(7).trim();
+          if (!refId || seen.has(refId)) return '__bottom__';
+          seen.add(refId);
+          cur = colMap.get(refId);
+          continue;
+        }
+        return pos;
+      }
+      return '__bottom__';
+    };
+
+    const customByRoot = new Map<string, SchoolCustomColumn[]>();
+    for (const c of cols) {
+      const root = resolveRoot(c);
+      const list = customByRoot.get(root) || [];
+      list.push(c);
+      customByRoot.set(root, list);
+    }
+
+    const pushCustomForAnchors = (
+      target: Array<{ label: string; value: string; isCustom?: boolean; tone?: string }>,
+      anchors: string[]
+    ) => {
+      for (const a of anchors) {
+        for (const c of customByRoot.get(a) || []) {
+          target.push({ label: c.label, value: colValue(c), isCustom: true });
+        }
+      }
+    };
+
+    const identityFields: Array<{ label: string; value: string; isCustom?: boolean; tone?: string }> = [];
+    pushCustomForAnchors(identityFields, ['__first__', 'adm_name', 'adm_roll', 'adm_class', 'adm_section', 'stu_name', 'stu_grade', 'stu_section', 'stu_identity']);
+
+    if (!this.isFormFieldHidden('owner_admissions', 'adm_gender')) {
+      identityFields.push({ label: 'Gender', value: student.gender || 'Male' });
+    }
+    pushCustomForAnchors(identityFields, ['adm_gender']);
+
+    if (!this.isFormFieldHidden('owner_admissions', 'adm_dob')) {
+      identityFields.push({ label: 'Date of Birth', value: student.dob || 'On file', tone: 'mono' });
+    }
+    pushCustomForAnchors(identityFields, ['adm_dob']);
+
+    if (!this.isFormFieldHidden('owner_admissions', 'adm_bform')) {
+      identityFields.push({ label: 'B-Form / CNIC', value: student.studentBForm || 'Pending', tone: 'mono' });
+    }
+    pushCustomForAnchors(identityFields, ['adm_bform']);
+
+    if (!this.isFormFieldHidden('owner_admissions', 'adm_blood')) {
+      identityFields.push({ label: 'Blood Group', value: student.bloodGroup || 'B+', tone: 'rose' });
+    }
+    pushCustomForAnchors(identityFields, ['adm_blood']);
+
+    if (!this.isFormFieldHidden('owner_admissions', 'adm_prev_school')) {
+      identityFields.push({ label: 'Previous School', value: student.previousSchool || 'Direct Admission' });
+    }
+    pushCustomForAnchors(identityFields, ['adm_prev_school', 'adm_score', 'sec_01', 'sec_02']);
+
+    if (!this.isFormFieldHidden('owner_admissions', 'adm_medical')) {
+      identityFields.push({ label: 'Medical Notes', value: student.medicalConditions || 'Normal health' });
+    }
+    pushCustomForAnchors(identityFields, ['adm_medical', 'sec_05']);
+
+    const guardianFields: Array<{ label: string; value: string; isCustom?: boolean; tone?: string }> = [];
+    if (!this.isFormFieldHidden('owner_admissions', 'adm_father')) {
+      guardianFields.push({
+        label: 'Father / Guardian',
+        value: `${student.guardian} (${student.guardianRelation || 'Father'})`
+      });
+    }
+    pushCustomForAnchors(guardianFields, ['adm_father', 'adm_relation', 'stu_guardian']);
+
+    if (!this.isFormFieldHidden('owner_admissions', 'adm_cnic')) {
+      guardianFields.push({ label: 'Guardian CNIC', value: student.guardianCnic || 'On file', tone: 'mono' });
+    }
+    pushCustomForAnchors(guardianFields, ['adm_cnic']);
+
+    if (!this.isFormFieldHidden('owner_admissions', 'adm_phone')) {
+      guardianFields.push({ label: 'Phone / Emergency', value: student.guardianPhone || 'N/A', tone: 'indigo' });
+    }
+    pushCustomForAnchors(guardianFields, ['adm_phone', 'adm_emergency', 'stu_phone']);
+
+    if (!this.isFormFieldHidden('owner_admissions', 'adm_occupation') || !this.isFormFieldHidden('owner_admissions', 'adm_email')) {
+      guardianFields.push({
+        label: 'Occupation & Email',
+        value: `${student.guardianOccupation || 'N/A'} · ${student.guardianEmail || 'guardian@campus.edu'}`
+      });
+    }
+    pushCustomForAnchors(guardianFields, ['adm_email', 'adm_occupation']);
+
+    if (!this.isFormFieldHidden('owner_admissions', 'adm_address')) {
+      guardianFields.push({ label: 'Address', value: student.address || 'On file' });
+    }
+    pushCustomForAnchors(guardianFields, ['adm_address', 'sec_03']);
+
+    const additionalFields: Array<{ label: string; value: string; isCustom?: boolean }> = [];
+    const consumedAnchors = new Set([
+      '__first__', 'adm_name', 'adm_roll', 'adm_class', 'adm_section', 'stu_name', 'stu_grade', 'stu_section', 'stu_identity',
+      'adm_gender', 'adm_dob', 'adm_bform', 'adm_blood', 'adm_prev_school', 'adm_score', 'sec_01', 'sec_02', 'adm_medical', 'sec_05',
+      'adm_father', 'adm_relation', 'stu_guardian', 'adm_cnic', 'adm_phone', 'adm_emergency', 'stu_phone',
+      'adm_email', 'adm_occupation', 'adm_address', 'sec_03'
+    ]);
+    for (const [root, list] of customByRoot.entries()) {
+      if (consumedAnchors.has(root)) continue;
+      for (const c of list) {
+        additionalFields.push({ label: c.label, value: colValue(c), isCustom: true });
+      }
+    }
+
+    const totalCount = 5 + identityFields.length + guardianFields.length + additionalFields.length;
+    return { identityFields, guardianFields, additionalFields, totalCount };
+  }
+
+  getStudentDossierFieldCount(student: StudentRecord): number {
+    return this.getStudentDossierData(student).totalCount;
+  }
+
+  getAdmissionDossierCustomFields(adm: AdmissionRecord): Array<{ label: string; value: string }> {
+    this.tableSchemaService.schemaRevision();
+    const admSchema = this.tableSchemaService.getSchema('owner_admissions');
+    const cols = admSchema.customColumns || [];
+    if (cols.length === 0) return [];
+    const cells = {
+      ...(admSchema.customCells[adm.applicant] || {}),
+      ...(admSchema.customCells[adm.id] || {})
+    };
+    return cols.map((c) => {
+      const raw = cells[c.id];
+      const val = raw !== undefined && String(raw).trim() !== '' ? String(raw).trim() : (c.defaultValue || '—');
+      return { label: c.label, value: val };
+    });
+  }
+
+  printStudentDossier(student: StudentRecord): void {
+    this.selectedStudentForDossier = student;
+    this.isStudentDossierModalOpen = true;
+    this.isDossierPrintPreview = true;
+    this.cdr.detectChanges();
+    setTimeout(() => {
+      if (typeof window !== 'undefined') window.print();
+      setTimeout(() => {
+        this.isDossierPrintPreview = false;
+        this.cdr.detectChanges();
+      }, 400);
+    }, 200);
+  }
+
+  private buildPdfCardEntryForStudent(student: StudentRecord): PdfStudentCardEntry {
+    const dossier = this.getStudentDossierData(student);
+    const sections: Array<{ title: string; items: Array<{ label: string; value: string }> }> = [
+      {
+        title: '1. Candidate Identity & Academics',
+        items: dossier.identityFields.map((f) => ({ label: f.label, value: f.value }))
+      },
+      {
+        title: '2. Guardian, Contact & Particulars',
+        items: dossier.guardianFields.map((f) => ({ label: f.label, value: f.value }))
+      }
+    ];
+    if (dossier.additionalFields.length > 0) {
+      sections.push({
+        title: '3. Additional Enrollment & Custom Fields',
+        items: dossier.additionalFields.map((f) => ({ label: f.label, value: f.value }))
+      });
+    }
+    return {
+      name: student.name,
+      rollNo: student.rollNo,
+      studentId: student.id,
+      gradeSection: `${student.grade} (Sec ${student.section || 'A'})`,
+      feeStatus: student.feeStatus,
+      feeAmountText: `PKR ${this.formatCurrency(student.feeAmount || 18000)}`,
+      attendanceText: `${student.attendance || '100%'} (${student.status || 'Present'})`,
+      admissionDate: student.admissionDate || 'On file',
+      sections
+    };
+  }
+
+  downloadSingleStudentDossierPdf(student: StudentRecord): void {
+    const safeRoll = String(student.rollNo || student.id).replace(/[^a-zA-Z0-9_-]+/g, '_');
+    const safeName = String(student.name || 'student').toLowerCase().replace(/[^a-z0-9]+/g, '_');
+    downloadStudentsCardsPdf({
+      title: `Official Student Dossier - ${student.name}`,
+      subtitle: `Roll #${student.rollNo} | ${student.id} | ${student.grade} (${student.section || 'A'}) | Complete Record`,
+      cards: [this.buildPdfCardEntryForStudent(student)],
+      filename: `student_dossier_${safeRoll}_${safeName}.pdf`,
+      singleDossierMode: true
+    });
+    this.showToast(`Downloaded complete PDF dossier for ${student.name}`, 'success');
   }
 
   get activeTenantId(): string {
@@ -10361,8 +10654,8 @@ INSTRUCTIONS:
   openEditStudentModal(student: StudentRecord) {
     this.activeStudentForEdit = student;
     this.studentForm = { ...student };
-    const existingCells = this.tableSchemaService.getSchema('students_master').customCells[student.id] || {};
-    this.formCustomValues['student'] = { ...existingCells };
+    const mergedCells = this.getStudentCustomCellValues(student);
+    this.formCustomValues['student'] = { ...mergedCells };
     this.isStudentModalOpen = true;
     this.cdr.detectChanges();
   }
@@ -10374,7 +10667,9 @@ INSTRUCTIONS:
   }
 
   saveStudent() {
-    if (!this.studentForm.name || !this.studentForm.guardian) {
+    const nameHidden = this.isFormFieldHidden('students_master', 'stu_name');
+    const guardianHidden = this.isFormFieldHidden('students_master', 'stu_guardian');
+    if ((!nameHidden && !this.studentForm.name) || (!guardianHidden && !this.studentForm.guardian)) {
       this.showToast('Please enter Student Name and Guardian information.', 'warning');
       return;
     }
@@ -10584,7 +10879,9 @@ INSTRUCTIONS:
   }
 
   saveTeacher() {
-    if (!this.teacherForm.name || !this.teacherForm.subject) {
+    const tNameHidden = this.isFormFieldHidden('teachers_master', 't_name');
+    const tSubHidden = this.isFormFieldHidden('teachers_master', 't_subject');
+    if ((!tNameHidden && !this.teacherForm.name) || (!tSubHidden && !this.teacherForm.subject)) {
       this.showToast('Please enter Faculty Name and Subject.', 'warning');
       return;
     }
@@ -10806,11 +11103,12 @@ INSTRUCTIONS:
   }
 
   get isAdmissionFormValid(): boolean {
-    return this.applicantValidation.valid &&
-           this.fatherNameValidation.valid &&
-           this.phoneValidation.valid &&
-           this.cnicValidation.valid &&
-           this.bformValidation.valid;
+    const nameOk = this.isFormFieldHidden('owner_admissions', 'adm_name') || this.applicantValidation.valid;
+    const fatherOk = this.isFormFieldHidden('owner_admissions', 'adm_father') || this.fatherNameValidation.valid;
+    const phoneOk = this.isFormFieldHidden('owner_admissions', 'adm_phone') || this.phoneValidation.valid;
+    const cnicOk = this.isFormFieldHidden('owner_admissions', 'adm_cnic') || this.cnicValidation.valid;
+    const bformOk = this.isFormFieldHidden('owner_admissions', 'adm_bform') || this.bformValidation.valid;
+    return nameOk && fatherOk && phoneOk && cnicOk && bformOk;
   }
 
   formatCnicInput(field: 'fatherCnic' | 'studentBForm') {
@@ -10833,36 +11131,36 @@ INSTRUCTIONS:
   }
 
   saveAdmission() {
-    if (!this.applicantValidation.valid) {
+    if (!this.isFormFieldHidden('owner_admissions', 'adm_name') && !this.applicantValidation.valid) {
       this.showToast(`⚠️ Student Name Error: ${this.applicantValidation.message}`, 'warning');
       return;
     }
-    if (!this.fatherNameValidation.valid) {
+    if (!this.isFormFieldHidden('owner_admissions', 'adm_father') && !this.fatherNameValidation.valid) {
       this.showToast(`⚠️ Father Name Error: ${this.fatherNameValidation.message}`, 'warning');
       return;
     }
-    if (!this.phoneValidation.valid) {
+    if (!this.isFormFieldHidden('owner_admissions', 'adm_phone') && !this.phoneValidation.valid) {
       this.showToast(`⚠️ Contact Phone Error: ${this.phoneValidation.message}`, 'warning');
       return;
     }
-    if (!this.cnicValidation.valid) {
+    if (!this.isFormFieldHidden('owner_admissions', 'adm_cnic') && !this.cnicValidation.valid) {
       this.showToast(`⚠️ Guardian CNIC Error: ${this.cnicValidation.message}`, 'warning');
       return;
     }
-    if (!this.bformValidation.valid) {
+    if (!this.isFormFieldHidden('owner_admissions', 'adm_bform') && !this.bformValidation.valid) {
       this.showToast(`⚠️ Student B-Form Error: ${this.bformValidation.message}`, 'warning');
       return;
     }
 
-    const father = this.admissionForm.fatherName.trim();
-    const phoneNum = this.admissionForm.phone.trim();
+    const father = (this.admissionForm.fatherName || '').trim() || 'Guardian On File';
+    const phoneNum = (this.admissionForm.phone || '').trim() || 'N/A';
     const roll = this.admissionForm.rollNo || (this.activeStudents.length + 1001).toString();
     const finalMonthlyFee = Math.round(Math.max(0, Number(this.admissionForm.tuitionFee || 18000) * (1 - (Number(this.admissionForm.discount || 0) / 100))));
     const admId = `ADM-2026-${Math.floor(1000 + Math.random() * 9000)}`;
 
     const newStudent: StudentRecord = {
       id: `ST-${roll}`,
-      name: this.admissionForm.applicant.trim(),
+      name: (this.admissionForm.applicant || '').trim() || `Student #${roll}`,
       grade: this.admissionForm.appliedFor || 'Class 9',
       section: this.admissionForm.section || 'A',
       status: 'Present',
@@ -11132,6 +11430,23 @@ INSTRUCTIONS:
         emergencyContact: adm.emergencyContact || adm.phone
       };
       this.activeStudents.unshift(newStudent);
+      const admSchema = this.tableSchemaService.getSchema('owner_admissions');
+      const admCells = {
+        ...(admSchema.customCells[adm.applicant] || {}),
+        ...(admSchema.customCells[adm.id] || {})
+      };
+      if (Object.keys(admCells).length > 0) {
+        this.tableSchemaService.submitFormCustomInputs(
+          'students_master',
+          [newStudent.id, newStudent.rollNo],
+          admCells,
+          {
+            rowLabel: newStudent.name,
+            submittedByName: 'Admissions Directorate',
+            submittedByRole: this.currentPortalRole
+          }
+        );
+      }
     }
 
     this.saveStateToStorage();
@@ -14259,61 +14574,218 @@ INSTRUCTIONS:
 
   downloadClassStudentsCSV() {
     const list = this.filteredStudents;
-    if (list.length === 0) {
+    const stuSchema = this.tableSchemaService.getSchema('students_master');
+    const customRows = stuSchema.customRows || [];
+    if (list.length === 0 && customRows.length === 0) {
       this.showToast('No student records found to export for the selected filter.', 'warning');
       return;
     }
-    const currentClassLabel = this.selectedGradeFilter === 'All' ? 'All_Classes' : this.selectedGradeFilter.replace(/\s+/g, '_');
-    const headers = [
-      'Roll No',
-      'Student ID',
-      'Student Name',
-      'Gender',
-      'Class',
-      'Section',
-      'Attendance Rate',
-      'Today Status',
-      'Father / Guardian Name',
-      'Relation',
-      'Guardian Phone',
-      'Guardian Email',
-      'Father CNIC',
-      'Guardian Occupation',
-      'Fee Status',
-      'Monthly Fee (PKR)',
-      'Remaining Bakaya (PKR)',
-      'Admission Date',
-      'Emergency Contact',
-      'Residential Address'
+
+    const customCols = this.getMergedStudentCustomColumns();
+    const renamedMap = stuSchema.renamedHeadersByLabel || {};
+    const headerName = (orig: string): string => {
+      const hit = renamedMap[orig.trim().toLowerCase()];
+      return hit && hit.trim() ? hit.trim() : orig;
+    };
+
+    const builtInColumns: Array<{
+      key: string;
+      label: string;
+      anchor: string;
+      value: (s: StudentRecord) => string | number;
+    }> = [
+      { key: 'rollNo', label: headerName('Roll & ID'), anchor: 'built:Roll & ID', value: (s) => s.rollNo },
+      { key: 'id', label: 'Student ID', anchor: 'built:Roll & ID', value: (s) => s.id },
+      { key: 'name', label: headerName('Student'), anchor: 'built:Student', value: (s) => s.name || '' },
+      { key: 'gender', label: 'Gender', anchor: 'built:Student', value: (s) => s.gender || 'Male' },
+      { key: 'dob', label: 'Date of Birth', anchor: 'built:Student', value: (s) => s.dob || 'On file' },
+      { key: 'bform', label: 'B-Form / CNIC', anchor: 'built:Student', value: (s) => s.studentBForm || 'Pending' },
+      { key: 'bloodGroup', label: 'Blood Group', anchor: 'built:Student', value: (s) => s.bloodGroup || 'B+' },
+      { key: 'grade', label: headerName('Class & Sec'), anchor: 'built:Class & Sec', value: (s) => s.grade },
+      { key: 'section', label: 'Section', anchor: 'built:Class & Sec', value: (s) => s.section || 'A' },
+      { key: 'attendance', label: headerName('Attendance'), anchor: 'built:Attendance', value: (s) => s.attendance },
+      { key: 'status', label: 'Today Status', anchor: 'built:Attendance', value: (s) => s.status },
+      { key: 'guardian', label: headerName('Guardian & Phone'), anchor: 'built:Guardian & Phone', value: (s) => s.guardian || '' },
+      { key: 'relation', label: 'Relation', anchor: 'built:Guardian & Phone', value: (s) => s.guardianRelation || 'Father' },
+      { key: 'phone', label: 'Guardian Phone', anchor: 'built:Guardian & Phone', value: (s) => s.guardianPhone || '' },
+      { key: 'email', label: 'Guardian Email', anchor: 'built:Guardian & Phone', value: (s) => s.guardianEmail || 'N/A' },
+      { key: 'cnic', label: 'Father CNIC', anchor: 'built:Guardian & Phone', value: (s) => s.guardianCnic || 'N/A' },
+      { key: 'occupation', label: 'Guardian Occupation', anchor: 'built:Guardian & Phone', value: (s) => s.guardianOccupation || 'N/A' },
+      { key: 'feeStatus', label: headerName('Fee Status'), anchor: 'built:Fee Status', value: (s) => s.feeStatus },
+      { key: 'feeAmount', label: headerName('Monthly Fee'), anchor: 'built:Monthly Fee', value: (s) => s.feeAmount || 0 },
+      { key: 'dueBakaya', label: 'Remaining Bakaya (PKR)', anchor: 'built:Monthly Fee', value: (s) => s.dueBakaya || 0 },
+      { key: 'admissionDate', label: 'Admission Date', anchor: 'built:Student', value: (s) => s.admissionDate || '' },
+      { key: 'emergencyContact', label: 'Emergency Contact', anchor: 'built:Guardian & Phone', value: (s) => s.emergencyContact || s.guardianPhone || '' },
+      { key: 'address', label: 'Residential Address', anchor: 'built:Guardian & Phone', value: (s) => s.address || 'Islamabad, Pakistan' }
     ];
 
-    const rows = list.map(s => [
-      `"${s.rollNo}"`,
-      `"${s.id}"`,
-      `"${(s.name || '').replace(/"/g, '""')}"`,
-      `"${s.gender || 'Not Specified'}"`,
-      `"${s.grade}"`,
-      `"${s.section}"`,
-      `"${s.attendance}"`,
-      `"${s.status}"`,
-      `"${(s.guardian || '').replace(/"/g, '""')}"`,
-      `"${s.guardianRelation || 'Father'}"`,
-      `"${s.guardianPhone || ''}"`,
-      `"${s.guardianEmail || 'N/A'}"`,
-      `"${s.guardianCnic || 'N/A'}"`,
-      `"${(s.guardianOccupation || 'N/A').replace(/"/g, '""')}"`,
-      `"${s.feeStatus}"`,
-      s.feeAmount || 0,
-      s.dueBakaya || 0,
-      `"${s.admissionDate || ''}"`,
-      `"${s.emergencyContact || s.guardianPhone || ''}"`,
-      `"${(s.address || 'Islamabad, Pakistan').replace(/"/g, '""')}"`
-    ]);
+    type CsvCol =
+      | { kind: 'builtin'; def: (typeof builtInColumns)[number] }
+      | { kind: 'custom'; col: SchoolCustomColumn };
 
-    const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+    const orderedCsvCols: CsvCol[] = builtInColumns.map((def) => ({ kind: 'builtin', def }));
+
+    // Insert custom columns right after their mapped built-in table column or at start/end
+    const firstBatch: CsvCol[] = [];
+    const endBatch: CsvCol[] = [];
+    for (const col of customCols) {
+      const pos = (col.insertAfterColumn || '').trim();
+      if (pos === '__first__') {
+        firstBatch.push({ kind: 'custom', col });
+      } else if (!pos || pos === '__last__') {
+        endBatch.push({ kind: 'custom', col });
+      } else {
+        let lastMatchIdx = -1;
+        for (let i = 0; i < orderedCsvCols.length; i++) {
+          const item = orderedCsvCols[i];
+          if (item.kind === 'builtin' && item.def.anchor.toLowerCase() === pos.toLowerCase()) {
+            lastMatchIdx = i;
+          } else if (item.kind === 'custom' && `custom:${item.col.id}` === pos) {
+            lastMatchIdx = i;
+          }
+        }
+        if (lastMatchIdx >= 0) {
+          orderedCsvCols.splice(lastMatchIdx + 1, 0, { kind: 'custom', col });
+        } else {
+          endBatch.push({ kind: 'custom', col });
+        }
+      }
+    }
+    const finalCols: CsvCol[] = [...firstBatch, ...orderedCsvCols, ...endBatch];
+
+    const escapeCell = (v: unknown): string => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const headers = finalCols.map((c) => escapeCell(c.kind === 'builtin' ? c.def.label : c.col.label));
+
+    const rows: string[][] = list.map((s) => {
+      const customVals = this.getStudentCustomCellValues(s);
+      return finalCols.map((c) => {
+        if (c.kind === 'builtin') {
+          const val = c.def.value(s);
+          return typeof val === 'number' ? String(val) : escapeCell(val);
+        }
+        const raw = customVals[c.col.id];
+        const val = raw !== undefined && String(raw).trim() !== '' ? String(raw).trim() : (c.col.defaultValue || '');
+        return escapeCell(val);
+      });
+    });
+
+    for (const cr of customRows) {
+      rows.push(
+        finalCols.map((c) => {
+          if (c.kind === 'builtin') {
+            return escapeCell(cr.values[c.def.label] ?? '');
+          }
+          return escapeCell(cr.values[c.col.id] ?? c.col.defaultValue ?? '');
+        })
+      );
+    }
+
+    const currentClassLabel = this.selectedGradeFilter === 'All' ? 'All_Classes' : this.selectedGradeFilter.replace(/\s+/g, '_');
+    const csv = [headers.join(','), ...rows.map((r) => r.join(','))].join('\r\n');
     const dateStamp = new Date().toISOString().slice(0, 10);
     this.downloadCSVFile(csv, `students_${currentClassLabel}_${dateStamp}.csv`);
-    this.showToast(`Downloaded CSV for ${list.length} students (${this.selectedGradeFilter})`, 'success');
+    this.isStudentExportMenuOpen = false;
+    this.showToast(`Downloaded CSV (${finalCols.length} columns) for ${rows.length} student record(s)!`, 'success');
+  }
+
+  exportStudentsRowWisePdf(): void {
+    const list = this.filteredStudents;
+    const stuSchema = this.tableSchemaService.getSchema('students_master');
+    const customRows = stuSchema.customRows || [];
+    if (list.length === 0 && customRows.length === 0) {
+      this.showToast('No student records found to export as PDF.', 'warning');
+      return;
+    }
+
+    const detectedBuiltIns = [
+      { index: 0, originalLabel: 'Roll & ID' },
+      { index: 1, originalLabel: 'Student' },
+      { index: 2, originalLabel: 'Class & Sec' },
+      { index: 3, originalLabel: 'Guardian & Phone' },
+      { index: 4, originalLabel: 'Attendance' },
+      { index: 5, originalLabel: 'Monthly Fee' },
+      { index: 6, originalLabel: 'Fee Status' }
+    ];
+    const resolved = this.tableSchemaService.resolveOrderedColumns('students_master', detectedBuiltIns, stuSchema);
+
+    // Include any owner_admissions custom columns not yet in students_master
+    const existingCustomIds = new Set(
+      resolved.filter((r): r is { kind: 'custom'; col: SchoolCustomColumn } => r.kind === 'custom').map((r) => r.col.id)
+    );
+    const extraAdmCols = this.getMergedStudentCustomColumns().filter((c) => !existingCustomIds.has(c.id));
+    const fullOrder = [
+      ...resolved.filter((r) => r.kind === 'custom' || !r.hidden),
+      ...extraAdmCols.map((col) => ({ kind: 'custom' as const, col }))
+    ];
+
+    const headers = fullOrder.map((item) => (item.kind === 'builtin' ? item.displayLabel : item.col.label));
+
+    const builtInExtractor = (idx: number, s: StudentRecord): string => {
+      switch (idx) {
+        case 0: return `#${s.rollNo} (${s.id})`;
+        case 1: return `${s.name} (${s.gender || 'Male'}, ${s.bloodGroup || 'B+'})`;
+        case 2: return `${s.grade} - Sec ${s.section || 'A'}`;
+        case 3: return `${s.guardian} (${s.guardianPhone})`;
+        case 4: return `${s.attendance} (${s.status})`;
+        case 5: return `PKR ${this.formatCurrency(s.feeAmount || 18000)}`;
+        case 6: return s.feeStatus;
+        default: return '-';
+      }
+    };
+
+    const rows: string[][] = list.map((s) => {
+      const customVals = this.getStudentCustomCellValues(s);
+      return fullOrder.map((item) => {
+        if (item.kind === 'builtin') {
+          return builtInExtractor(item.header.index, s);
+        }
+        const raw = customVals[item.col.id];
+        return raw !== undefined && String(raw).trim() !== '' ? String(raw).trim() : (item.col.defaultValue || '-');
+      });
+    });
+
+    for (const cr of customRows) {
+      rows.push(
+        fullOrder.map((item) => {
+          if (item.kind === 'builtin') {
+            return cr.values[`built_${item.header.index}`] ?? cr.values[item.header.originalLabel] ?? '-';
+          }
+          return cr.values[item.col.id] ?? stuSchema.customCells[cr.rowKey]?.[item.col.id] ?? item.col.defaultValue ?? '-';
+        })
+      );
+    }
+
+    const currentClassLabel = this.selectedGradeFilter === 'All' ? 'All_Classes' : this.selectedGradeFilter.replace(/\s+/g, '_');
+    const dateStamp = new Date().toISOString().slice(0, 10);
+    downloadStudentsTablePdf({
+      title: `Students Master Directory (Row & Column Register)`,
+      subtitle: `Filter: ${this.selectedGradeFilter} | Fee: ${this.selectedFeeFilter} | ${rows.length} Student Records | ${headers.length} Columns`,
+      headers,
+      rows,
+      filename: `students_table_rowwise_${currentClassLabel}_${dateStamp}.pdf`
+    });
+    this.isStudentExportMenuOpen = false;
+    this.showToast(`Downloaded Row-Wise Table PDF for ${rows.length} student record(s)!`, 'success');
+  }
+
+  exportStudentsWidgetCardsPdf(): void {
+    const list = this.filteredStudents;
+    if (list.length === 0) {
+      this.showToast('No student records found to export as Cards PDF.', 'warning');
+      return;
+    }
+    const cards = list.map((s) => this.buildPdfCardEntryForStudent(s));
+    const currentClassLabel = this.selectedGradeFilter === 'All' ? 'All_Classes' : this.selectedGradeFilter.replace(/\s+/g, '_');
+    const dateStamp = new Date().toISOString().slice(0, 10);
+    downloadStudentsCardsPdf({
+      title: `Official Student Profile Cards & Full Particulars`,
+      subtitle: `Filter: ${this.selectedGradeFilter} | Fee: ${this.selectedFeeFilter} | ${cards.length} Complete Student Dossiers`,
+      cards,
+      filename: `students_cards_widgetwise_${currentClassLabel}_${dateStamp}.pdf`,
+      singleDossierMode: false
+    });
+    this.isStudentExportMenuOpen = false;
+    this.showToast(`Downloaded Card / Widget-Wise PDF for ${cards.length} student(s)!`, 'success');
   }
 
   exportStudentsCSV() {
@@ -17065,6 +17537,12 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     if (!tableId) return false;
     this.tableSchemaService.schemaRevision();
     return this.tableSchemaService.hasCustomColumnsAtSlot(tableId, slotAnchor);
+  }
+
+  isFormFieldHidden(tableId: string, fieldKey: string): boolean {
+    if (!tableId || !fieldKey) return false;
+    this.tableSchemaService.schemaRevision();
+    return this.tableSchemaService.isFormFieldHidden(tableId, fieldKey);
   }
 
   // =========================================================================

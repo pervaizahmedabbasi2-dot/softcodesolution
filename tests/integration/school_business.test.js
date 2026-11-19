@@ -1047,6 +1047,35 @@ test('School Table & Form Customization: Canonical Mirroring, Strict Owner RBAC,
   assert.equal(delRowRes.status, 200);
   assert.equal((await delRowRes.json()).schema.customRows.length, 0);
 
+  // 7.5 Owner hides built-in form fields on owner_admissions -> persisted in SQLite and returned in GET /table-schemas
+  const putFormHiddenRes = await fetch(`${baseUrl}/api/school/table-schemas/owner_admissions`, {
+    method: 'PUT',
+    headers: ownerHeaders,
+    body: JSON.stringify({
+      customTitle: 'Admissions & Enrollment Applications',
+      hiddenFormFields: ['adm_blood', 'adm_email'],
+      customColumns: [
+        {
+          id: 'col_transport',
+          label: 'Transport Route',
+          type: 'text',
+          defaultValue: '',
+          insertAfterFormField: 'adm_phone',
+          scope: 'form'
+        }
+      ]
+    })
+  });
+  assert.equal(putFormHiddenRes.status, 200);
+  const savedAdmSchema = (await putFormHiddenRes.json()).schema;
+  assert.deepEqual(savedAdmSchema.hiddenFormFields, ['adm_blood', 'adm_email']);
+
+  const verifyFormHiddenRes = await fetch(`${baseUrl}/api/school/table-schemas`, { headers: principalHeaders });
+  assert.equal(verifyFormHiddenRes.status, 200);
+  const fetchedAdmSchema = (await verifyFormHiddenRes.json()).schemas?.owner_admissions;
+  assert.deepEqual(fetchedAdmSchema?.hiddenFormFields, ['adm_blood', 'adm_email']);
+  assert.equal(fetchedAdmSchema?.customColumns?.[0]?.insertAfterFormField, 'adm_phone');
+
   // 8. Owner deletes custom schema completely -> disappears from SQLite
   const delSchemaRes = await fetch(`${baseUrl}/api/school/table-schemas/students_master`, {
     method: 'DELETE',
