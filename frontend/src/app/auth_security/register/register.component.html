@@ -775,22 +775,14 @@
               class="absolute inset-0 w-full h-full opacity-0 cursor-grab active:cursor-grabbing z-20">
           </div>
 
-          <div class="flex items-center justify-between text-[11px]">
-            <span [class.text-indigo-600]="humanVerified"
-              [class.font-medium]="humanVerified"
-              [class.text-red-600]="!humanVerified && humanShieldError"
-              [class.text-amber-700]="!humanVerified && !humanShieldError && puzzleHint"
-              [class.text-slate-500]="!humanVerified && !humanShieldError && !puzzleHint">
-              @if (humanVerified) {
-                HMAC-SHA256 + Proof-of-Work + Trajectory Lock Verified
-              } @else if (puzzleHint) {
+          @if (!humanVerified && puzzleHint) {
+            <div class="flex items-center justify-between text-[11px]">
+              <span [class.text-red-600]="humanShieldError"
+                [class.text-amber-700]="!humanShieldError">
                 {{ puzzleHint }}
-              } @else {
-                Slide the handle onto the dashed slot to verify human access
-              }
-            </span>
-            <span class="text-slate-400 font-mono">PoW + HMAC</span>
-          </div>
+              </span>
+            </div>
+          }
         </div>
 
         <!-- NORMAL CLEAN SUBMIT BUTTON -->
