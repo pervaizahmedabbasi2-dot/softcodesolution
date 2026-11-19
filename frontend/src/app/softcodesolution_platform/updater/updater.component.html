@@ -1,52 +1,59 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fade-in">
   
-  <!-- Banner -->
-  <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-slate-950 to-emerald-950 p-8 text-white shadow-xl border border-emerald-950/40">
-    <div class="absolute -right-10 -bottom-10 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
-    <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-      <div>
-        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-xs font-semibold uppercase tracking-wider mb-3">
-          <lucide-icon [name]="icons.ArrowUpCircle" class="w-3.5 h-3.5"></lucide-icon>
-          Zero-Downtime OTA Release Pipeline
+  <!-- School-Grade Executive Frosted 3D Hero -->
+  <div class="relative overflow-hidden rounded-[28px] border border-white/80 bg-gradient-to-br from-white/95 via-emerald-50/40 to-slate-50/90 backdrop-blur-2xl p-6 sm:p-8 shadow-[0_20px_50px_-12px_rgba(16,185,129,0.18),0_8px_20px_-6px_rgba(0,0,0,0.06),inset_0_1px_2px_rgba(255,255,255,0.95)]">
+    <div class="absolute inset-0 bg-[radial-gradient(#8080800c_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none"></div>
+    <div class="absolute -right-16 -top-16 w-80 h-80 bg-gradient-to-br from-emerald-200/40 via-teal-100/30 to-transparent rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent"></div>
+    <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+      <div class="flex items-start sm:items-center gap-4">
+        <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-[20px] bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-600 text-white shadow-lg shadow-emerald-500/25 flex items-center justify-center shrink-0">
+          <lucide-icon [name]="icons.ArrowUpCircle" class="w-7 h-7"></lucide-icon>
         </div>
-        <h1 class="text-3xl font-black tracking-tight text-white sm:text-4xl">Continuous Delivery & Version Control</h1>
-        <p class="mt-2 text-slate-300 text-sm max-w-2xl">
-          Automated canary deployments, SHA-256 cryptographic artifact validation, blue-green cluster rollouts, and instant automated rollback safeguards.
-        </p>
+        <div>
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/80 text-emerald-700 text-[10px] font-black uppercase tracking-wider mb-2">
+            <lucide-icon [name]="icons.ArrowUpCircle" class="w-3.5 h-3.5"></lucide-icon>
+            Zero-Downtime OTA Release Pipeline
+          </div>
+          <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">Continuous Delivery & Version Control</h1>
+          <p class="mt-1 text-slate-500 text-xs sm:text-sm max-w-2xl">
+            Automated canary deployments, SHA-256 cryptographic artifact validation, blue-green cluster rollouts, and instant automated rollback safeguards.
+          </p>
+        </div>
       </div>
 
       <button 
         (click)="checkForUpdates()" 
         [disabled]="isChecking"
-        class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-emerald-600/30 shrink-0">
+        class="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-50 text-white text-xs font-extrabold rounded-xl transition-all flex items-center gap-2 shadow-md shadow-emerald-600/25 shrink-0">
         <lucide-icon [name]="icons.RefreshCcw" class="w-4 h-4" [class.animate-spin]="isChecking"></lucide-icon>
         {{ isChecking ? 'Checking Upstream Registry...' : 'Check For Updates' }}
       </button>
     </div>
 
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8 pt-6 border-t border-slate-800">
-      <div>
-        <p class="text-xs font-medium text-slate-400">Current Production Build</p>
-        <p class="text-xl font-black text-emerald-400 mt-1 font-mono">{{ currentVersion }}</p>
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-7 pt-6 border-t border-slate-200/70">
+      <div class="bg-white/90 rounded-2xl border border-slate-200/90 border-t-4 border-t-emerald-500 p-4 shadow-2xs">
+        <p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Current Build</p>
+        <p class="text-lg font-black text-emerald-600 mt-1 font-mono">{{ currentVersion }}</p>
       </div>
-      <div>
-        <p class="text-xs font-medium text-slate-400">Zero-Downtime Guarantee</p>
-        <p class="text-2xl font-black text-white mt-1">100% <span class="text-xs text-emerald-400 font-normal">Active</span></p>
+      <div class="bg-white/90 rounded-2xl border border-slate-200/90 border-t-4 border-t-indigo-600 p-4 shadow-2xs">
+        <p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Zero-Downtime</p>
+        <p class="text-2xl font-black text-slate-900 tabular-nums mt-1">100% <span class="text-xs text-emerald-600 font-bold">Active</span></p>
       </div>
-      <div>
-        <p class="text-xs font-medium text-slate-400">Canary Traffic Split</p>
-        <p class="text-2xl font-black text-cyan-400 mt-1">15% <span class="text-xs text-slate-400 font-normal">Testing</span></p>
+      <div class="bg-white/90 rounded-2xl border border-slate-200/90 border-t-4 border-t-cyan-500 p-4 shadow-2xs">
+        <p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Canary Traffic Split</p>
+        <p class="text-2xl font-black text-cyan-700 tabular-nums mt-1">15% <span class="text-xs text-slate-500 font-semibold">Testing</span></p>
       </div>
-      <div>
-        <p class="text-xs font-medium text-slate-400">Rollback Latency</p>
-        <p class="text-2xl font-black text-indigo-400 mt-1">&lt; 3.2s <span class="text-xs text-slate-400 font-normal">Instant</span></p>
+      <div class="bg-white/90 rounded-2xl border border-slate-200/90 border-t-4 border-t-violet-500 p-4 shadow-2xs">
+        <p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Rollback Latency</p>
+        <p class="text-2xl font-black text-indigo-600 tabular-nums mt-1">&lt; 3.2s <span class="text-xs text-slate-500 font-semibold">Instant</span></p>
       </div>
     </div>
   </div>
 
   <!-- Release Pipeline Cards -->
   <div class="space-y-4">
-    <div *ngFor="let rel of releases" class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-all">
+    <div *ngFor="let rel of releases" class="bg-white rounded-[24px] border border-slate-200/90 border-t-4 border-t-emerald-500 p-6 shadow-xs hover:shadow-md transition-all">
       <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div>
           <div class="flex items-center gap-3">

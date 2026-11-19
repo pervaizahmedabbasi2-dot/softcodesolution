@@ -1,47 +1,90 @@
 <div class="p-6 md:p-8 space-y-8 animate-fade-in pb-24">
-  <!-- Top Bar -->
-  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-    <div>
-      <div class="flex items-center gap-2">
-        <h2 class="text-xl font-bold tracking-tight text-slate-900">Feature Flags & Canary Rollout</h2>
-        <span class="text-xs text-slate-500 font-mono">Dynamic Toggles</span>
+  <!-- School-Grade Executive Frosted 3D Hero -->
+  <div class="relative overflow-hidden rounded-[28px] border border-white/80 bg-gradient-to-br from-white/95 via-emerald-50/40 to-slate-50/90 backdrop-blur-2xl p-6 sm:p-7 shadow-[0_20px_50px_-12px_rgba(16,185,129,0.18),0_8px_20px_-6px_rgba(0,0,0,0.06),inset_0_1px_2px_rgba(255,255,255,0.95)] group">
+    <div class="absolute inset-0 bg-[radial-gradient(#8080800c_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none"></div>
+    <div class="absolute -right-16 -top-16 w-80 h-80 bg-gradient-to-br from-emerald-200/40 via-teal-100/30 to-transparent rounded-full blur-3xl pointer-events-none group-hover:scale-110 transition-transform duration-700"></div>
+    <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent"></div>
+    <div class="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div class="flex items-start sm:items-center gap-4">
+        <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-[20px] bg-gradient-to-br from-indigo-600 via-blue-600 to-violet-600 text-white shadow-lg shadow-indigo-500/30 flex items-center justify-center shrink-0">
+          <lucide-icon [name]="icons.Sliders" class="w-7 h-7"></lucide-icon>
+        </div>
+        <div>
+          <div class="flex flex-wrap items-center gap-2 mb-1">
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-200/80">
+              Canary Rollouts
+            </span>
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-slate-900 text-white">
+              Dynamic Toggles
+            </span>
+          </div>
+          <h2 class="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">Feature Flags & Canary Rollout</h2>
+          <p class="text-xs sm:text-sm text-slate-500 mt-0.5">Gradual percent-based releases, targeted tenant cohorts, and instant production killswitches.</p>
+        </div>
       </div>
-      <p class="text-sm text-slate-500 mt-1">Gradual percent-based releases, targeted tenant cohorts, and instant killswitches.</p>
-    </div>
-    <button (click)="openCreateModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs rounded-lg text-xs font-semibold transition-all flex items-center gap-2">
-      <lucide-icon [name]="icons.Plus" class="w-3.5 h-3.5"></lucide-icon>
-      Create Flag
-    </button>
-  </div>
 
-  <!-- Search & Stats Bar -->
-  <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-    <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
-      <p class="text-xs text-slate-500 font-medium">Total Flags</p>
-      <p class="text-2xl font-black text-slate-900 font-mono mt-1">{{ flags.length }}</p>
-    </div>
-    <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
-      <p class="text-xs text-slate-500 font-medium">Active In Production</p>
-      <p class="text-2xl font-black text-emerald-600 font-mono mt-1">3</p>
-    </div>
-    <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
-      <p class="text-xs text-slate-500 font-medium">Canary Cohorts</p>
-      <p class="text-2xl font-black text-indigo-600 font-mono mt-1">2 Cohorts</p>
-    </div>
-    <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
-      <p class="text-xs text-slate-500 font-medium">Killswitches Ready</p>
-      <p class="text-2xl font-black text-slate-900 font-mono mt-1">100%</p>
+      <button (click)="openCreateModal()" class="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white shadow-md shadow-indigo-600/25 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2 shrink-0">
+        <lucide-icon [name]="icons.Plus" class="w-4 h-4"></lucide-icon>
+        Create Flag
+      </button>
     </div>
   </div>
 
-  <!-- Main Flags Table -->
-  <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-xs">
-    <div class="p-4 border-b border-slate-100 flex items-center justify-between gap-4 bg-slate-50/50">
+  <!-- Chromatic 3D KPI Row -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="bg-white border border-slate-200/90 border-t-4 border-t-indigo-600 rounded-2xl p-5 shadow-xs flex items-center justify-between gap-3">
+      <div>
+        <p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Total Flags</p>
+        <p class="text-3xl font-black text-slate-900 tabular-nums mt-1">{{ flags.length }}</p>
+        <p class="text-[11px] text-indigo-600 font-semibold mt-1">Global feature matrix</p>
+      </div>
+      <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-600 to-blue-600 text-white flex items-center justify-center shadow-sm">
+        <lucide-icon [name]="icons.Sliders" class="w-5 h-5"></lucide-icon>
+      </div>
+    </div>
+
+    <div class="bg-white border border-slate-200/90 border-t-4 border-t-emerald-500 rounded-2xl p-5 shadow-xs flex items-center justify-between gap-3">
+      <div>
+        <p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Active In Production</p>
+        <p class="text-3xl font-black text-emerald-600 tabular-nums mt-1">3</p>
+        <p class="text-[11px] text-emerald-600 font-semibold mt-1">Zero rollout errors</p>
+      </div>
+      <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-sm">
+        <lucide-icon [name]="icons.CheckCircle2" class="w-5 h-5"></lucide-icon>
+      </div>
+    </div>
+
+    <div class="bg-white border border-slate-200/90 border-t-4 border-t-violet-500 rounded-2xl p-5 shadow-xs flex items-center justify-between gap-3">
+      <div>
+        <p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Canary Cohorts</p>
+        <p class="text-3xl font-black text-violet-600 tabular-nums mt-1">2 Cohorts</p>
+        <p class="text-[11px] text-violet-600 font-semibold mt-1">Staged percentage traffic</p>
+      </div>
+      <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 text-white flex items-center justify-center shadow-sm">
+        <lucide-icon [name]="icons.Sparkles" class="w-5 h-5"></lucide-icon>
+      </div>
+    </div>
+
+    <div class="bg-white border border-slate-200/90 border-t-4 border-t-slate-800 rounded-2xl p-5 shadow-xs flex items-center justify-between gap-3">
+      <div>
+        <p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Killswitches Ready</p>
+        <p class="text-3xl font-black text-slate-900 tabular-nums mt-1">100%</p>
+        <p class="text-[11px] text-slate-500 font-semibold mt-1">Sub-second propagation</p>
+      </div>
+      <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-slate-800 to-slate-900 text-white flex items-center justify-center shadow-sm">
+        <lucide-icon [name]="icons.ShieldCheck" class="w-5 h-5"></lucide-icon>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Flags Registry -->
+  <div class="bg-white rounded-[24px] border border-slate-200/90 overflow-hidden shadow-xs">
+    <div class="p-4 sm:p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/60">
       <div class="relative flex-1 max-w-sm">
-        <lucide-icon [name]="icons.Search" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></lucide-icon>
-        <input type="text" [value]="searchQuery" (input)="setSearchQuery($any($event.target).value)" placeholder="Search feature flags by name or key..." class="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-xs focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+        <lucide-icon [name]="icons.Search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></lucide-icon>
+        <input type="text" [value]="searchQuery" (input)="setSearchQuery($any($event.target).value)" placeholder="Search feature flags by name or key..." class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none">
       </div>
-      <span class="text-xs text-slate-500">Showing {{ filteredFlags.length }} flags</span>
+      <span class="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-600 tabular-nums">Showing {{ filteredFlags.length }} flags</span>
     </div>
 
     <!-- Mobile Feature Flags Cards (Mobile View) -->
@@ -87,14 +130,14 @@
     <!-- Desktop Feature Flags Table (Desktop View) -->
     <div class="hidden md:block overflow-x-auto">
       <table class="w-full text-left text-xs border-collapse">
-        <thead>
-          <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold">
-            <th class="py-3 px-4">Feature Name & Key</th>
-            <th class="py-3 px-4">State</th>
-            <th class="py-3 px-4 min-w-[200px]">Rollout Percentage</th>
-            <th class="py-3 px-4">Environment</th>
-            <th class="py-3 px-4">Last Modified</th>
-            <th class="py-3 px-4 text-right">Killswitch</th>
+        <thead class="bg-slate-900 text-white uppercase text-[10px] font-black tracking-wider">
+          <tr>
+            <th class="py-3.5 px-4">Feature Name & Key</th>
+            <th class="py-3.5 px-4">State</th>
+            <th class="py-3.5 px-4 min-w-[200px]">Rollout Percentage</th>
+            <th class="py-3.5 px-4">Environment</th>
+            <th class="py-3.5 px-4">Last Modified</th>
+            <th class="py-3.5 px-4 text-right">Killswitch</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-100">

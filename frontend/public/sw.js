@@ -1,5 +1,5 @@
 // SoftCode Enterprise Service Worker - Network First with Offline Shell, I18N Packs & Face AI Model Resilience
-const CACHE_NAME = 'scs-multi-tenant-cloud-v11';
+const CACHE_NAME = 'scs-multi-tenant-cloud-v12';
 const FACE_MODEL_ASSETS = [
   '/',
   '/manifest.json',

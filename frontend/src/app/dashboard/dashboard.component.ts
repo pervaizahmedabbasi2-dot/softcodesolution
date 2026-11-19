@@ -5929,14 +5929,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
       const result: any = await response.json().catch(() => null);
       if (!response.ok || !result?.ok)
-        throw new Error(result?.message || 'Reset-link backend route next patch me add hoga.');
+        throw new Error(result?.message || 'Password reset link service is currently unavailable.');
 
       this.clientPopupAuditAdd(
         'Password reset link sent',
         this.clientPopup.email || this.clientPopup.id,
       );
       this.clientPopupNotice('Secure password reset link sent.', true);
-      this.showActionPopup('Reset Link Sent ✓', 'Client ko secure reset link send ho gaya.', true);
+      this.showActionPopup('Reset Link Sent ✓', 'A secure password reset link has been sent to the client.', true);
     } catch (error) {
       const msg = error instanceof Error ? error.message : 'Reset link failed.';
       this.clientPopupAuditAdd('Password reset failed', msg);
@@ -5976,7 +5976,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       const result: any = await response.json().catch(() => null);
       if (!response.ok || !result?.ok)
         throw new Error(
-          result?.message || 'Temporary-password backend route next patch me add hoga.',
+          result?.message || 'Temporary password service is currently unavailable.',
         );
 
       this.clientPopupTempPassword = String(result.temp_password || result.password || '');
@@ -5985,7 +5985,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.clientPopup.email || this.clientPopup.id,
       );
       this.clientPopupNotice(
-        'One-time temporary password generated. Client next login par password change karega.',
+        'One-time temporary password generated. Client must change it on next sign-in.',
         true,
       );
     } catch (error) {
@@ -6005,9 +6005,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (!this.clientPopupTempPassword) return;
     try {
       await navigator.clipboard.writeText(this.clientPopupTempPassword);
-      this.clientPopupNotice('Temporary password copied. Isko secure channel se share karo.', true);
+      this.clientPopupNotice('Temporary password copied. Share via a secure channel.', true);
     } catch {
-      this.clientPopupNotice('Copy failed. Manually select karke copy karo.', false);
+      this.clientPopupNotice('Copy failed. Please select and copy manually.', false);
     }
   }
 
@@ -6059,8 +6059,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   clientPopupSecurityComingSoon(action: string): void {
-    this.clientPopupAuditAdd(action, 'Backend route next patch me add hoga.');
-    this.clientPopupNotice(action + ' backend route next patch me add hoga.', false);
+    this.clientPopupAuditAdd(action, 'Endpoint unavailable.');
+    this.clientPopupNotice(action + ' is currently unavailable.', false);
   }
 
   // --- ENTERPRISE SUITE: OMNI-SEARCH, IMPERSONATION, NOTIFICATIONS & DRAWER ---

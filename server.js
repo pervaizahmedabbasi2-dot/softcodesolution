@@ -712,11 +712,26 @@ if (isMainModule) {
   });
 
   const portArgIndex = process.argv.indexOf('--port');
-  const portFromArg = portArgIndex !== -1 && process.argv[portArgIndex + 1] ? process.argv[portArgIndex + 1] : null;
-  const PORT = parseInt(portFromArg || process.env.PORT || '3000', 10);
+  const portEqualsArg = process.argv.find((arg) => arg.startsWith('--port='));
+  const portFromArg = portEqualsArg
+    ? portEqualsArg.slice('--port='.length)
+    : portArgIndex !== -1 && process.argv[portArgIndex + 1]
+      ? process.argv[portArgIndex + 1]
+      : null;
+  const envPort =
+    process.env.PORT && process.env.NGINX_PORT && process.env.PORT === process.env.NGINX_PORT
+      ? process.env.DEFAULT_APP_PORT || '3000'
+      : process.env.PORT;
+  const PORT = parseInt(portFromArg || envPort || process.env.DEFAULT_APP_PORT || '3000', 10);
 
   const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`Enterprise Platform Backend running on 0.0.0.0:${PORT}`);
+  });
+
+  server.on('error', (err) => {
+    console.error(`Failed to bind HTTP server on 0.0.0.0:${PORT}:`, err?.message || err);
+    observability.captureError(err);
+    process.exit(1);
   });
 
   const shutdown = (signal) => {

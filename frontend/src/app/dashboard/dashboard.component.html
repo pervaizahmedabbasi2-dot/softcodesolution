@@ -411,10 +411,13 @@
            <div class="space-y-1">
              <button (click)="navigateTo('home')" 
                      class="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all group cursor-pointer"
-                     [class.bg-indigo-600]="activeView === 'home'"
+                     [class.bg-gradient-to-r]="activeView === 'home'"
+                     [class.from-indigo-600]="activeView === 'home'"
+                     [class.to-blue-600]="activeView === 'home'"
                      [class.text-white]="activeView === 'home'"
                      [class.shadow-md]="activeView === 'home'"
-                     [class.shadow-indigo-200]="activeView === 'home'"
+                     [class.shadow-indigo-600/25]="activeView === 'home'"
+                     [class.font-extrabold]="activeView === 'home'"
                      [class.hover:bg-slate-100]="activeView !== 'home'"
                      [class.text-slate-700]="activeView !== 'home'">
                <div class="flex items-center gap-2.5 truncate">
@@ -424,16 +427,18 @@
                  </div>
                  <span class="truncate">Overview</span>
                </div>
+               <span *ngIf="activeView === 'home'" class="w-1.5 h-1.5 rounded-full bg-white shrink-0"></span>
              </button>
-
-
 
              <button *ngIf="userRole === 'SUPER_ADMIN'" (click)="navigateTo('analytics')" 
                      class="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all group cursor-pointer"
-                     [class.bg-indigo-600]="activeView === 'analytics'"
+                     [class.bg-gradient-to-r]="activeView === 'analytics'"
+                     [class.from-indigo-600]="activeView === 'analytics'"
+                     [class.to-blue-600]="activeView === 'analytics'"
                      [class.text-white]="activeView === 'analytics'"
                      [class.shadow-md]="activeView === 'analytics'"
-                     [class.shadow-indigo-200]="activeView === 'analytics'"
+                     [class.shadow-indigo-600/25]="activeView === 'analytics'"
+                     [class.font-extrabold]="activeView === 'analytics'"
                      [class.hover:bg-slate-100]="activeView !== 'analytics'"
                      [class.text-slate-700]="activeView !== 'analytics'">
                <div class="flex items-center gap-2.5 truncate">
@@ -443,14 +448,18 @@
                  </div>
                  <span class="truncate">Analytics</span>
                </div>
+               <span *ngIf="activeView === 'analytics'" class="w-1.5 h-1.5 rounded-full bg-white shrink-0"></span>
              </button>
 
              <button *ngIf="userRole === 'SUPER_ADMIN'" (click)="navigateTo('system-health')" 
                      class="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all group cursor-pointer"
-                     [class.bg-indigo-600]="activeView === 'system-health'"
+                     [class.bg-gradient-to-r]="activeView === 'system-health'"
+                     [class.from-indigo-600]="activeView === 'system-health'"
+                     [class.to-blue-600]="activeView === 'system-health'"
                      [class.text-white]="activeView === 'system-health'"
                      [class.shadow-md]="activeView === 'system-health'"
-                     [class.shadow-indigo-200]="activeView === 'system-health'"
+                     [class.shadow-indigo-600/25]="activeView === 'system-health'"
+                     [class.font-extrabold]="activeView === 'system-health'"
                      [class.hover:bg-slate-100]="activeView !== 'system-health'"
                      [class.text-slate-700]="activeView !== 'system-health'">
                <div class="flex items-center gap-2.5 truncate">
@@ -460,6 +469,7 @@
                  </div>
                  <span class="truncate">System Health</span>
                </div>
+               <span *ngIf="activeView === 'system-health'" class="w-1.5 h-1.5 rounded-full bg-white shrink-0"></span>
              </button>
            </div>
          </div>
@@ -474,10 +484,13 @@
            <div class="space-y-1">
              <button (click)="navigateTo('business-suites')"
                      class="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all group cursor-pointer"
-                     [class.bg-indigo-600]="activeView === 'business-suites'"
+                     [class.bg-gradient-to-r]="activeView === 'business-suites'"
+                     [class.from-indigo-600]="activeView === 'business-suites'"
+                     [class.to-blue-600]="activeView === 'business-suites'"
                      [class.text-white]="activeView === 'business-suites'"
                      [class.shadow-md]="activeView === 'business-suites'"
-                     [class.shadow-indigo-200]="activeView === 'business-suites'"
+                     [class.shadow-indigo-600/25]="activeView === 'business-suites'"
+                     [class.font-extrabold]="activeView === 'business-suites'"
                      [class.hover:bg-slate-100]="activeView !== 'business-suites'"
                      [class.text-slate-700]="activeView !== 'business-suites'">
                <div class="flex items-center gap-2.5 truncate">
@@ -524,10 +537,13 @@
                 <button *ngFor="let b of allBusinessesCatalog"
                         (click)="launchBusinessWithRole(b, 'owner')"
                         class="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all group cursor-pointer"
-                        [class.bg-indigo-600]="isBusinessActiveInSidebar(b)"
+                        [class.bg-gradient-to-r]="isBusinessActiveInSidebar(b)"
+                        [class.from-indigo-600]="isBusinessActiveInSidebar(b)"
+                        [class.to-blue-600]="isBusinessActiveInSidebar(b)"
                         [class.text-white]="isBusinessActiveInSidebar(b)"
                         [class.shadow-md]="isBusinessActiveInSidebar(b)"
-                        [class.shadow-indigo-200]="isBusinessActiveInSidebar(b)"
+                        [class.shadow-indigo-600/25]="isBusinessActiveInSidebar(b)"
+                        [class.font-extrabold]="isBusinessActiveInSidebar(b)"
                         [class.bg-white/60]="!isBusinessActiveInSidebar(b)"
                         [class.hover:bg-slate-100]="!isBusinessActiveInSidebar(b)"
                         [class.text-slate-700]="!isBusinessActiveInSidebar(b)">
@@ -616,10 +632,13 @@
            <div class="space-y-1">
              <button (click)="navigateTo('security')" 
                      class="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all group cursor-pointer"
-                     [class.bg-indigo-600]="activeView === 'security'"
+                     [class.bg-gradient-to-r]="activeView === 'security'"
+                     [class.from-indigo-600]="activeView === 'security'"
+                     [class.to-blue-600]="activeView === 'security'"
                      [class.text-white]="activeView === 'security'"
                      [class.shadow-md]="activeView === 'security'"
-                     [class.shadow-indigo-200]="activeView === 'security'"
+                     [class.shadow-indigo-600/25]="activeView === 'security'"
+                     [class.font-extrabold]="activeView === 'security'"
                      [class.hover:bg-slate-100]="activeView !== 'security'"
                      [class.text-slate-700]="activeView !== 'security'">
                <div class="flex items-center gap-2.5 truncate">
@@ -629,14 +648,18 @@
                  </div>
                  <span class="truncate">Security & NOC</span>
                </div>
+               <span *ngIf="activeView === 'security'" class="w-1.5 h-1.5 rounded-full bg-white shrink-0"></span>
              </button>
 
              <button (click)="navigateTo('feature-flags')" 
                      class="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all group cursor-pointer"
-                     [class.bg-indigo-600]="activeView === 'feature-flags'"
+                     [class.bg-gradient-to-r]="activeView === 'feature-flags'"
+                     [class.from-indigo-600]="activeView === 'feature-flags'"
+                     [class.to-blue-600]="activeView === 'feature-flags'"
                      [class.text-white]="activeView === 'feature-flags'"
                      [class.shadow-md]="activeView === 'feature-flags'"
-                     [class.shadow-indigo-200]="activeView === 'feature-flags'"
+                     [class.shadow-indigo-600/25]="activeView === 'feature-flags'"
+                     [class.font-extrabold]="activeView === 'feature-flags'"
                      [class.hover:bg-slate-100]="activeView !== 'feature-flags'"
                      [class.text-slate-700]="activeView !== 'feature-flags'">
                <div class="flex items-center gap-2.5 truncate">
@@ -646,14 +669,18 @@
                  </div>
                  <span class="truncate">Feature Flags</span>
                </div>
+               <span *ngIf="activeView === 'feature-flags'" class="w-1.5 h-1.5 rounded-full bg-white shrink-0"></span>
              </button>
 
              <button (click)="navigateTo('compliance')" 
                      class="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all group cursor-pointer"
-                     [class.bg-indigo-600]="activeView === 'compliance'"
+                     [class.bg-gradient-to-r]="activeView === 'compliance'"
+                     [class.from-indigo-600]="activeView === 'compliance'"
+                     [class.to-blue-600]="activeView === 'compliance'"
                      [class.text-white]="activeView === 'compliance'"
                      [class.shadow-md]="activeView === 'compliance'"
-                     [class.shadow-indigo-200]="activeView === 'compliance'"
+                     [class.shadow-indigo-600/25]="activeView === 'compliance'"
+                     [class.font-extrabold]="activeView === 'compliance'"
                      [class.hover:bg-slate-100]="activeView !== 'compliance'"
                      [class.text-slate-700]="activeView !== 'compliance'">
                <div class="flex items-center gap-2.5 truncate">
@@ -663,14 +690,18 @@
                  </div>
                  <span class="truncate">Compliance</span>
                </div>
+               <span *ngIf="activeView === 'compliance'" class="w-1.5 h-1.5 rounded-full bg-white shrink-0"></span>
              </button>
 
              <button (click)="navigateTo('webhooks')" 
                      class="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all group cursor-pointer"
-                     [class.bg-indigo-600]="activeView === 'webhooks'"
+                     [class.bg-gradient-to-r]="activeView === 'webhooks'"
+                     [class.from-indigo-600]="activeView === 'webhooks'"
+                     [class.to-blue-600]="activeView === 'webhooks'"
                      [class.text-white]="activeView === 'webhooks'"
                      [class.shadow-md]="activeView === 'webhooks'"
-                     [class.shadow-indigo-200]="activeView === 'webhooks'"
+                     [class.shadow-indigo-600/25]="activeView === 'webhooks'"
+                     [class.font-extrabold]="activeView === 'webhooks'"
                      [class.hover:bg-slate-100]="activeView !== 'webhooks'"
                      [class.text-slate-700]="activeView !== 'webhooks'">
                <div class="flex items-center gap-2.5 truncate">
@@ -680,14 +711,18 @@
                  </div>
                  <span class="truncate">Developer Hub</span>
                </div>
+               <span *ngIf="activeView === 'webhooks'" class="w-1.5 h-1.5 rounded-full bg-white shrink-0"></span>
              </button>
              
              <button (click)="navigateTo('data-protection')" 
                      class="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all group cursor-pointer"
-                     [class.bg-indigo-600]="activeView === 'data-protection'"
+                     [class.bg-gradient-to-r]="activeView === 'data-protection'"
+                     [class.from-indigo-600]="activeView === 'data-protection'"
+                     [class.to-blue-600]="activeView === 'data-protection'"
                      [class.text-white]="activeView === 'data-protection'"
                      [class.shadow-md]="activeView === 'data-protection'"
-                     [class.shadow-indigo-200]="activeView === 'data-protection'"
+                     [class.shadow-indigo-600/25]="activeView === 'data-protection'"
+                     [class.font-extrabold]="activeView === 'data-protection'"
                      [class.hover:bg-slate-100]="activeView !== 'data-protection'"
                      [class.text-slate-700]="activeView !== 'data-protection'">
                <div class="flex items-center gap-2.5 truncate">
@@ -697,14 +732,18 @@
                  </div>
                  <span class="truncate">Data Protection</span>
                </div>
+               <span *ngIf="activeView === 'data-protection'" class="w-1.5 h-1.5 rounded-full bg-white shrink-0"></span>
              </button>
              
              <button (click)="navigateTo('backup-manager')" 
                      class="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all group cursor-pointer"
-                     [class.bg-indigo-600]="activeView === 'backup-manager'"
+                     [class.bg-gradient-to-r]="activeView === 'backup-manager'"
+                     [class.from-indigo-600]="activeView === 'backup-manager'"
+                     [class.to-blue-600]="activeView === 'backup-manager'"
                      [class.text-white]="activeView === 'backup-manager'"
                      [class.shadow-md]="activeView === 'backup-manager'"
-                     [class.shadow-indigo-200]="activeView === 'backup-manager'"
+                     [class.shadow-indigo-600/25]="activeView === 'backup-manager'"
+                     [class.font-extrabold]="activeView === 'backup-manager'"
                      [class.hover:bg-slate-100]="activeView !== 'backup-manager'"
                      [class.text-slate-700]="activeView !== 'backup-manager'">
                <div class="flex items-center gap-2.5 truncate">
@@ -714,6 +753,7 @@
                  </div>
                  <span class="truncate">Backup Manager</span>
                </div>
+               <span *ngIf="activeView === 'backup-manager'" class="w-1.5 h-1.5 rounded-full bg-white shrink-0"></span>
              </button>
 
            </div>
@@ -730,10 +770,13 @@
              <button *ngFor="let mod of dashboardViewModel.quickActions.modules"
                (click)="navigateTo(mod.route || mod.code)"
                class="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all group cursor-pointer"
-               [class.bg-indigo-600]="activeView === (mod.route || mod.code)"
+               [class.bg-gradient-to-r]="activeView === (mod.route || mod.code)"
+               [class.from-indigo-600]="activeView === (mod.route || mod.code)"
+               [class.to-blue-600]="activeView === (mod.route || mod.code)"
                [class.text-white]="activeView === (mod.route || mod.code)"
                [class.shadow-md]="activeView === (mod.route || mod.code)"
-               [class.shadow-indigo-200]="activeView === (mod.route || mod.code)"
+               [class.shadow-indigo-600/25]="activeView === (mod.route || mod.code)"
+               [class.font-extrabold]="activeView === (mod.route || mod.code)"
                [class.hover:bg-slate-100]="activeView !== (mod.route || mod.code)"
                [class.text-slate-700]="activeView !== (mod.route || mod.code)">
                <div class="flex items-center gap-2.5 truncate">
@@ -1221,26 +1264,40 @@
       <!-- Shared renderer remains locked for other pages -->
       <ng-container *ngIf="activeView !== 'system-health'">
       <ng-container *ngIf="superadminSaasPages[activeView] as saasPage">
-        <div *ngIf="userRole === 'SUPER_ADMIN'" class="px-8 py-7 max-w-[98rem] mx-auto space-y-6">
-          <div class="relative overflow-hidden rounded-[2rem] bg-white border border-slate-200/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
-            <div class="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
-            <div class="absolute -top-16 -right-16 w-80 h-80 rounded-full opacity-10 bg-gradient-to-br from-slate-100 to-transparent"></div>
-            <div class="relative px-8 py-10 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
-              <div>
-                <div class="flex flex-wrap items-center gap-2 mb-4">
-                  <span class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-slate-100/80 border border-slate-200/80 backdrop-blur-sm shadow-sm text-[10px] font-bold text-slate-700 uppercase tracking-wider text-[11px] font-semibold text-slate-600">
-                    {{ saasPage.badge }}
-                  </span>
+        <div *ngIf="userRole === 'SUPER_ADMIN'" class="px-4 sm:px-6 lg:px-8 py-6 max-w-[98rem] mx-auto space-y-6 animate-fade-in">
+          <!-- Executive 3D Frosted SaaS Console Hero -->
+          <div class="rounded-[28px] p-5 sm:p-7 border border-white/80 shadow-[0_20px_50px_-12px_rgba(16,185,129,0.18),0_8px_20px_-6px_rgba(0,0,0,0.06),inset_0_1px_2px_rgba(255,255,255,0.95)] bg-gradient-to-br from-white/95 via-emerald-50/40 to-slate-50/90 backdrop-blur-2xl relative overflow-hidden">
+            <div class="absolute inset-0 bg-[radial-gradient(#8080800c_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none"></div>
+            <div class="absolute -right-16 -top-16 w-80 h-80 bg-gradient-to-br from-emerald-200/40 via-teal-100/30 to-transparent rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent"></div>
+            <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+              <div class="flex items-start gap-4">
+                <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-[20px] bg-gradient-to-br from-indigo-600 via-blue-600 to-violet-600 text-white shadow-xl shadow-indigo-600/30 flex items-center justify-center shrink-0 border border-white/40 ring-1 ring-indigo-500/20">
+                  <lucide-icon [name]="saasPage.icon" class="w-7 h-7 sm:w-8 sm:h-8"></lucide-icon>
                 </div>
-                <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
-                  {{ saasPage.title }}<span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-cyan-500">.</span>
-                </h1>
-                <p class="text-base text-slate-600 font-medium mt-3 max-w-2xl leading-relaxed">
-                  {{ saasPage.subtitle }}
-                </p>
+                <div class="min-w-0">
+                  <div class="flex flex-wrap items-center gap-2 mb-1.5">
+                    <span class="px-2.5 py-0.5 rounded-lg bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest">
+                      {{ saasPage.badge }}
+                    </span>
+                    <span class="px-2.5 py-0.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200/80 text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5">
+                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                      Production Synced
+                    </span>
+                  </div>
+                  <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-tight">
+                    {{ saasPage.title }}
+                  </h1>
+                  <p class="text-xs sm:text-sm text-slate-600 font-medium mt-1 max-w-2xl leading-relaxed">
+                    {{ saasPage.subtitle }}
+                  </p>
+                </div>
               </div>
-              <div class="w-16 h-16 rounded-lg bg-slate-50 flex items-center justify-center border border-slate-100 shadow-sm">
-                <lucide-icon [name]="saasPage.icon" class="w-8 h-8 text-slate-700"></lucide-icon>
+              <div class="flex items-center gap-3 shrink-0">
+                <div class="bg-white/90 px-4 py-2.5 rounded-2xl border border-slate-200/80 shadow-xs text-right">
+                  <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Module Groups</span>
+                  <span class="text-lg font-black text-slate-900 tabular-nums">{{ (saasPage.groups || []).length }} Suites</span>
+                </div>
               </div>
             </div>
           </div>
@@ -1250,9 +1307,9 @@
               type="button"
               *ngFor="let link of saasPage.quickLinks"
               (click)="navigateTo(link.view)"
-              class="px-4 py-2.5 rounded-lg bg-white border border-slate-200 text-slate-700 text-[10px] font-black uppercase tracking-wider text-[11px] font-semibold text-slate-600 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 transition-all"
+              class="px-4 py-2.5 rounded-xl bg-white border border-slate-200/90 text-slate-700 text-xs font-black hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-700 transition-all shadow-2xs cursor-pointer"
             >
-              {{ link.title }}
+              {{ link.title }} &rarr;
             </button>
           </div>
 
@@ -1329,19 +1386,31 @@
           <!-- SCS_PLAN_BUILDER_REAL_END -->
 
           <div *ngIf="activeView !== 'module-catalog' && activeView !== 'saas-control' && activeView !== 'plans-pricing'" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5">
-            <div *ngFor="let group of saasPage.groups" class="bg-white rounded-lg border border-slate-100 shadow-sm overflow-hidden">
-              <div class="px-5 py-4 border-b border-slate-100">
-                <p class="text-[10px] font-black uppercase tracking-[0.25em] text-blue-500">Module Group</p>
-                <h3 class="mt-1 text-sm font-black text-slate-900 uppercase tracking-tight">{{ group.title }}</h3>
+            <div *ngFor="let group of saasPage.groups; let idx = index" class="bg-white rounded-[24px] border border-slate-200/90 shadow-xs hover:shadow-md transition-all overflow-hidden flex flex-col">
+              <div class="px-5 py-4 border-b border-slate-100 bg-slate-50/60 flex items-center justify-between gap-3">
+                <div class="flex items-center gap-3 min-w-0">
+                  <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-600 to-blue-600 text-white font-black text-xs flex items-center justify-center shrink-0 shadow-xs tabular-nums">
+                    0{{ idx + 1 }}
+                  </div>
+                  <div class="min-w-0">
+                    <p class="text-[10px] font-black uppercase tracking-widest text-indigo-600">Capability Group</p>
+                    <h3 class="text-sm font-black text-slate-900 tracking-tight truncate">{{ group.title }}</h3>
+                  </div>
+                </div>
+                <span class="text-[10px] font-black px-2 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200/80 shrink-0 tabular-nums">
+                  {{ (group.items || []).length }} active
+                </span>
               </div>
 
-              <div class="p-3 space-y-1">
-                <div *ngFor="let item of group.items" class="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-slate-50 transition-colors">
-                  <div class="flex items-center gap-2.5">
-                    <div class="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0"></div>
-                    <span class="text-xs font-semibold text-slate-700">{{ item }}</span>
+              <div class="p-3.5 space-y-1.5 flex-1">
+                <div *ngFor="let item of group.items" class="flex items-center justify-between px-3 py-2.5 rounded-xl bg-slate-50/50 border border-transparent hover:border-slate-200 hover:bg-white transition-all">
+                  <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0 shadow-[0_0_6px_rgba(16,185,129,0.5)]"></div>
+                    <span class="text-xs font-bold text-slate-700 truncate">{{ item }}</span>
                   </div>
-                  <span class="text-[9px] font-black uppercase tracking-wider text-[11px] font-semibold text-slate-600 text-slate-300">Soon</span>
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100 text-[10px] font-black uppercase tracking-wider shrink-0">
+                    Active
+                  </span>
                 </div>
               </div>
             </div>
@@ -1443,59 +1512,72 @@
       </app-dashboard-license>
 
       <!-- Global Enterprise Settings Console -->
-      <div *ngIf="activeView === 'settings-list'" class="px-6 sm:px-8 py-8 max-w-7xl mx-auto space-y-8 animate-fade-in">
-        <!-- Settings Header Card -->
-        <div class="relative overflow-hidden rounded-[2rem] bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 p-8 text-white shadow-xl">
-          <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div>
-              <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/10 text-xs font-semibold uppercase tracking-wider text-indigo-200 mb-3">
-                <lucide-icon [name]="icons.Settings" class="w-3.5 h-3.5"></lucide-icon>
-                Enterprise System Configuration
+      <div *ngIf="activeView === 'settings-list'" class="px-4 sm:px-6 lg:px-8 py-6 max-w-[98rem] mx-auto space-y-6 animate-fade-in">
+        <!-- Executive 3D Frosted Settings Hero -->
+        <div class="rounded-[28px] p-5 sm:p-7 border border-white/80 shadow-[0_20px_50px_-12px_rgba(16,185,129,0.18),0_8px_20px_-6px_rgba(0,0,0,0.06),inset_0_1px_2px_rgba(255,255,255,0.95)] bg-gradient-to-br from-white/95 via-emerald-50/40 to-slate-50/90 backdrop-blur-2xl relative overflow-hidden">
+          <div class="absolute inset-0 bg-[radial-gradient(#8080800c_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none"></div>
+          <div class="absolute -right-16 -top-16 w-80 h-80 bg-gradient-to-br from-emerald-200/40 via-teal-100/30 to-transparent rounded-full blur-3xl pointer-events-none"></div>
+          <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent"></div>
+          <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div class="flex items-start gap-4">
+              <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-[20px] bg-gradient-to-br from-slate-800 via-indigo-700 to-blue-700 text-white shadow-xl shadow-indigo-600/25 flex items-center justify-center shrink-0 border border-white/40 ring-1 ring-indigo-500/20">
+                <lucide-icon [name]="icons.Settings" class="w-7 h-7 sm:w-8 sm:h-8"></lucide-icon>
               </div>
-              <h1 class="text-3xl font-black tracking-tight text-white">Platform Settings Console</h1>
-              <p class="text-slate-300 text-sm mt-1 max-w-xl">Configure core enterprise parameters, tenant lifecycle policies, transactional mailers, branding whitelabeling and zero-trust security defaults.</p>
+              <div class="min-w-0">
+                <div class="flex flex-wrap items-center gap-2 mb-1.5">
+                  <span class="px-2.5 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200/80 text-[10px] font-black uppercase tracking-widest">
+                    Enterprise System Configuration
+                  </span>
+                  <span class="px-2.5 py-0.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200/80 text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                    {{ businessCatalog.length }} Verticals Registered
+                  </span>
+                </div>
+                <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">Platform Settings Console</h1>
+                <p class="text-slate-600 text-xs sm:text-sm font-medium mt-1 max-w-2xl">Configure core enterprise parameters, tenant lifecycle policies, transactional mailers, branding whitelabeling, and zero-trust security defaults.</p>
+              </div>
             </div>
-            <button (click)="savePlatformSettings()" [disabled]="settingsSaving" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 font-bold text-sm text-white shadow-lg shadow-indigo-600/30 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50">
+            <button (click)="savePlatformSettings()" [disabled]="settingsSaving" class="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 font-black text-xs uppercase tracking-wider text-white shadow-lg shadow-indigo-600/25 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 shrink-0 cursor-pointer">
               <lucide-icon [name]="icons.RefreshCcw" class="w-4 h-4" [class.animate-spin]="settingsSaving"></lucide-icon>
               {{ settingsSaving ? 'Saving Changes...' : 'Save Configuration' }}
             </button>
           </div>
         </div>
 
-        <!-- Settings Tabs Navigation -->
-        <div class="flex items-center gap-2 overflow-x-auto pb-2 border-b border-slate-200">
-          <button (click)="settingsActiveTab = 'general'" class="px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all"
-                  [class.bg-indigo-600]="settingsActiveTab === 'general'" [class.text-white]="settingsActiveTab === 'general'"
-                  [class.text-slate-600]="settingsActiveTab !== 'general'" [class.hover:bg-slate-100]="settingsActiveTab !== 'general'">
+        <!-- Settings Segmented Tabs Navigation -->
+        <div class="inline-flex items-center gap-1.5 p-1.5 rounded-2xl bg-slate-100/90 border border-slate-200/80 overflow-x-auto max-w-full">
+          <button (click)="settingsActiveTab = 'general'" class="px-4 py-2 rounded-xl font-black text-xs uppercase tracking-wider transition-all cursor-pointer shrink-0"
+                  [class.bg-white]="settingsActiveTab === 'general'" [class.text-indigo-700]="settingsActiveTab === 'general'" [class.shadow-sm]="settingsActiveTab === 'general'"
+                  [class.text-slate-600]="settingsActiveTab !== 'general'" [class.hover:text-slate-900]="settingsActiveTab !== 'general'">
             General
           </button>
-          <button (click)="settingsActiveTab = 'multi-tenancy'" class="px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all"
-                  [class.bg-indigo-600]="settingsActiveTab === 'multi-tenancy'" [class.text-white]="settingsActiveTab === 'multi-tenancy'"
-                  [class.text-slate-600]="settingsActiveTab !== 'multi-tenancy'" [class.hover:bg-slate-100]="settingsActiveTab !== 'multi-tenancy'">
+          <button (click)="settingsActiveTab = 'multi-tenancy'" class="px-4 py-2 rounded-xl font-black text-xs uppercase tracking-wider transition-all cursor-pointer shrink-0"
+                  [class.bg-white]="settingsActiveTab === 'multi-tenancy'" [class.text-indigo-700]="settingsActiveTab === 'multi-tenancy'" [class.shadow-sm]="settingsActiveTab === 'multi-tenancy'"
+                  [class.text-slate-600]="settingsActiveTab !== 'multi-tenancy'" [class.hover:text-slate-900]="settingsActiveTab !== 'multi-tenancy'">
             Multi-Tenancy Policies
           </button>
-          <button (click)="settingsActiveTab = 'smtp'" class="px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all"
-                  [class.bg-indigo-600]="settingsActiveTab === 'smtp'" [class.text-white]="settingsActiveTab === 'smtp'"
-                  [class.text-slate-600]="settingsActiveTab !== 'smtp'" [class.hover:bg-slate-100]="settingsActiveTab !== 'smtp'">
+          <button (click)="settingsActiveTab = 'smtp'" class="px-4 py-2 rounded-xl font-black text-xs uppercase tracking-wider transition-all cursor-pointer shrink-0"
+                  [class.bg-white]="settingsActiveTab === 'smtp'" [class.text-indigo-700]="settingsActiveTab === 'smtp'" [class.shadow-sm]="settingsActiveTab === 'smtp'"
+                  [class.text-slate-600]="settingsActiveTab !== 'smtp'" [class.hover:text-slate-900]="settingsActiveTab !== 'smtp'">
             SMTP Mailer
           </button>
-          <button (click)="settingsActiveTab = 'whitelabel'" class="px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all"
-                  [class.bg-indigo-600]="settingsActiveTab === 'whitelabel'" [class.text-white]="settingsActiveTab === 'whitelabel'"
-                  [class.text-slate-600]="settingsActiveTab !== 'whitelabel'" [class.hover:bg-slate-100]="settingsActiveTab !== 'whitelabel'">
-            Whitelabel & Branding
+          <button (click)="settingsActiveTab = 'whitelabel'" class="px-4 py-2 rounded-xl font-black text-xs uppercase tracking-wider transition-all cursor-pointer shrink-0"
+                  [class.bg-white]="settingsActiveTab === 'whitelabel'" [class.text-indigo-700]="settingsActiveTab === 'whitelabel'" [class.shadow-sm]="settingsActiveTab === 'whitelabel'"
+                  [class.text-slate-600]="settingsActiveTab !== 'whitelabel'" [class.hover:text-slate-900]="settingsActiveTab !== 'whitelabel'">
+            Whitelabel &amp; Branding
           </button>
-          <button (click)="settingsActiveTab = 'security'" class="px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all"
-                  [class.bg-indigo-600]="settingsActiveTab === 'security'" [class.text-white]="settingsActiveTab === 'security'"
-                  [class.text-slate-600]="settingsActiveTab !== 'security'" [class.hover:bg-slate-100]="settingsActiveTab !== 'security'">
-            Security & Authentication
+          <button (click)="settingsActiveTab = 'security'" class="px-4 py-2 rounded-xl font-black text-xs uppercase tracking-wider transition-all cursor-pointer shrink-0"
+                  [class.bg-white]="settingsActiveTab === 'security'" [class.text-indigo-700]="settingsActiveTab === 'security'" [class.shadow-sm]="settingsActiveTab === 'security'"
+                  [class.text-slate-600]="settingsActiveTab !== 'security'" [class.hover:text-slate-900]="settingsActiveTab !== 'security'">
+            Security &amp; Auth
           </button>
-          <button (click)="settingsActiveTab = 'business-catalog'" class="px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer"
-                  [class.bg-indigo-600]="settingsActiveTab === 'business-catalog'" [class.text-white]="settingsActiveTab === 'business-catalog'"
-                  [class.text-slate-600]="settingsActiveTab !== 'business-catalog'" [class.hover:bg-slate-100]="settingsActiveTab !== 'business-catalog'">
+          <button (click)="settingsActiveTab = 'business-catalog'" class="px-4 py-2 rounded-xl font-black text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
+                  [class.bg-white]="settingsActiveTab === 'business-catalog'" [class.text-indigo-700]="settingsActiveTab === 'business-catalog'" [class.shadow-sm]="settingsActiveTab === 'business-catalog'"
+                  [class.text-slate-600]="settingsActiveTab !== 'business-catalog'" [class.hover:text-slate-900]="settingsActiveTab !== 'business-catalog'">
             <span>Business Verticals</span>
-            <span class="text-[10px] px-1.5 py-0.5 rounded-full font-bold"
-                  [class.bg-white]="settingsActiveTab === 'business-catalog'"
-                  [class.text-indigo-600]="settingsActiveTab === 'business-catalog'"
+            <span class="text-[10px] px-1.5 py-0.5 rounded-lg font-black tabular-nums"
+                  [class.bg-indigo-600]="settingsActiveTab === 'business-catalog'"
+                  [class.text-white]="settingsActiveTab === 'business-catalog'"
                   [class.bg-slate-200]="settingsActiveTab !== 'business-catalog'"
                   [class.text-slate-700]="settingsActiveTab !== 'business-catalog'">
               {{ businessCatalog.length }}
@@ -1708,17 +1790,17 @@
             </div>
           </div>
 
-          <div class="hidden md:block overflow-x-auto border border-slate-200 rounded-xl">
+          <div class="hidden md:block overflow-x-auto border border-slate-200 rounded-2xl overflow-hidden shadow-2xs">
             <table class="w-full text-left text-xs">
-              <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase tracking-wider font-bold">
+              <thead class="bg-slate-900 text-white uppercase tracking-wider font-black text-[10px]">
                 <tr>
-                  <th class="px-4 py-3">#</th>
-                  <th class="px-4 py-3">Business Type</th>
-                  <th class="px-4 py-3">Sector</th>
-                  <th class="px-4 py-3">Pricing Weight</th>
-                  <th class="px-4 py-3">Console Type</th>
-                  <th class="px-4 py-3">Status</th>
-                  <th class="px-4 py-3 text-right">Actions</th>
+                  <th class="px-4 py-3.5">#</th>
+                  <th class="px-4 py-3.5">Business Type</th>
+                  <th class="px-4 py-3.5">Sector</th>
+                  <th class="px-4 py-3.5">Pricing Weight</th>
+                  <th class="px-4 py-3.5">Console Type</th>
+                  <th class="px-4 py-3.5">Status</th>
+                  <th class="px-4 py-3.5 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100 font-medium">
@@ -2093,624 +2175,374 @@
 
 
 <!-- SCS_CLIENT_POPUP_SECURE_START -->
-<div *ngIf="clientPopup" class="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/65 p-3 sm:p-5 backdrop-blur-xl animate-fade-in" (click)="closeClientPopupSecure()">
-  <div class="flex h-[92vh] max-h-[92vh] w-full max-w-6xl flex-col overflow-hidden bg-white shadow-2xl rounded-2xl sm:rounded-[2rem] border border-slate-200/80 sm:border-white/60 animate-scale-up" (click)="$event.stopPropagation()">
+<div *ngIf="clientPopup" class="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/55 p-3 sm:p-5 backdrop-blur-md animate-fade-in" (click)="closeClientPopupSecure()">
+  <div class="flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-[28px] border border-white/80 bg-white shadow-[0_30px_70px_-15px_rgba(15,23,42,0.28)] animate-scale-up" (click)="$event.stopPropagation()">
 
-    <!-- Executive Dark Obsidian Header Banner (Apple/HiOS Luxury Standard) -->
-    <div class="relative overflow-hidden bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 px-4 py-5 text-white sm:px-6 shrink-0">
-      <div class="absolute -right-20 -top-20 h-56 w-56 rounded-full bg-blue-400/20 blur-3xl pointer-events-none"></div>
-      <div class="absolute left-1/3 -bottom-10 h-40 w-40 rounded-full bg-indigo-500/15 blur-2xl pointer-events-none"></div>
-
-      <div class="relative z-10 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <!-- Client Identity Header Group -->
-        <div class="flex min-w-0 items-center gap-4">
-          <!-- 64px Executive Avatar with Live Status Dot -->
+    <!-- Clean Frosted Header (Matches Institutional / School Modal Standard) -->
+    <div class="relative shrink-0 border-b border-slate-200/80 bg-gradient-to-br from-white/95 via-emerald-50/40 to-slate-50/90 px-5 py-4 sm:px-6 sm:py-5">
+      <div class="absolute -right-12 -top-12 h-40 w-40 rounded-full bg-emerald-200/35 blur-2xl pointer-events-none"></div>
+      <div class="relative z-10 flex items-start justify-between gap-3">
+        <div class="flex min-w-0 items-center gap-3.5 sm:gap-4">
           <div class="relative shrink-0">
-            <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-2xl font-black uppercase text-white ring-1 ring-white/15 shadow-lg sm:h-16 sm:w-16">
+            <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-600 via-teal-600 to-slate-800 text-lg font-black uppercase text-white shadow-md shadow-emerald-600/20 border border-white/40 sm:h-14 sm:w-14 sm:text-xl">
               {{ clientPopupInitial() }}
             </div>
-            <span class="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-slate-950"
+            <span class="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-white shadow-xs"
                   [class.bg-emerald-500]="clientPopup.status === 'approved'"
                   [class.bg-amber-500]="clientPopup.status === 'pending' || clientPopup.status === 'pending_verification' || !clientPopup.status"
                   [class.bg-orange-500]="clientPopup.status === 'suspended'"
                   [class.bg-rose-500]="clientPopup.status === 'rejected'">
-              <span class="h-2 w-2 rounded-full bg-white" [class.animate-ping]="clientPopup.status === 'pending' || !clientPopup.status"></span>
+              <span class="h-1.5 w-1.5 rounded-full bg-white"></span>
             </span>
           </div>
 
           <div class="min-w-0">
-            <p class="text-[10px] font-black uppercase tracking-[0.28em] text-white/45">Secure Client Control</p>
-            <h2 class="mt-1 truncate text-xl font-black uppercase tracking-tight text-white sm:text-2xl">
-              {{ clientPopup.full_name || clientPopup.company_name || 'Client' }}
+            <div class="flex flex-wrap items-center gap-1.5">
+              <span class="inline-flex items-center rounded-lg px-2 py-0.5 text-[10px] font-black uppercase tracking-wider border"
+                    [class.bg-emerald-50]="clientPopup.status === 'approved'"
+                    [class.text-emerald-700]="clientPopup.status === 'approved'"
+                    [class.border-emerald-200]="clientPopup.status === 'approved'"
+                    [class.bg-amber-50]="clientPopup.status === 'pending' || clientPopup.status === 'pending_verification' || !clientPopup.status"
+                    [class.text-amber-700]="clientPopup.status === 'pending' || clientPopup.status === 'pending_verification' || !clientPopup.status"
+                    [class.border-amber-200]="clientPopup.status === 'pending' || clientPopup.status === 'pending_verification' || !clientPopup.status"
+                    [class.bg-orange-50]="clientPopup.status === 'suspended'"
+                    [class.text-orange-700]="clientPopup.status === 'suspended'"
+                    [class.border-orange-200]="clientPopup.status === 'suspended'"
+                    [class.bg-rose-50]="clientPopup.status === 'rejected'"
+                    [class.text-rose-700]="clientPopup.status === 'rejected'"
+                    [class.border-rose-200]="clientPopup.status === 'rejected'">
+                {{ clientPopupStatusLabel(clientPopup.status) }}
+              </span>
+              <span *ngIf="clientPopup.business_type" class="inline-flex items-center rounded-lg bg-slate-100 border border-slate-200/80 px-2 py-0.5 text-[10px] font-bold text-slate-700">
+                {{ clientPopup.business_type }}
+              </span>
+              <span *ngIf="clientPopup.tenant_id" class="hidden sm:inline-flex items-center rounded-lg bg-white border border-slate-200 px-2 py-0.5 text-[10px] font-mono font-bold text-slate-500">
+                {{ clientPopup.tenant_id }}
+              </span>
+            </div>
+
+            <h2 class="mt-1 truncate text-lg font-black tracking-tight text-slate-900 sm:text-xl">
+              {{ clientPopup.full_name || clientPopup.company_name || 'Client Account' }}
             </h2>
-            <div class="mt-1 flex items-center gap-2">
-              <p class="truncate text-xs font-bold text-blue-100 sm:text-sm">{{ clientPopup.email || 'No email' }}</p>
-              <button *ngIf="clientPopup.email" (click)="copyClientText(clientPopup.email, 'Email')" title="Copy corporate email" class="text-blue-200/70 hover:text-white transition-colors p-0.5">
+
+            <div class="mt-0.5 flex items-center gap-1.5 min-w-0">
+              <p class="truncate text-xs font-semibold text-slate-500 sm:text-sm">{{ clientPopup.email || 'No email on file' }}</p>
+              <button *ngIf="clientPopup.email" type="button" (click)="copyClientText(clientPopup.email, 'Email')" title="Copy email" class="p-1 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-white transition-colors shrink-0 cursor-pointer">
                 <lucide-icon [name]="icons.Copy" class="w-3.5 h-3.5"></lucide-icon>
               </button>
             </div>
-
-            <!-- Meta Pills -->
-            <div class="mt-3 flex flex-wrap items-center gap-2">
-              <span class="rounded-full bg-white/10 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-white ring-1 ring-white/15"
-                    [class.text-emerald-300]="clientPopup.status === 'approved'"
-                    [class.text-amber-300]="clientPopup.status === 'pending' || clientPopup.status === 'pending_verification' || !clientPopup.status"
-                    [class.text-orange-300]="clientPopup.status === 'suspended'"
-                    [class.text-rose-300]="clientPopup.status === 'rejected'">
-                {{ clientPopupStatusLabel(clientPopup.status) }}
-              </span>
-              <span class="rounded-full bg-white/10 px-3 py-1 text-[10px] font-mono font-bold tracking-wider text-cyan-200 ring-1 ring-white/15">
-                {{ clientPopup.tenant_id || 'tenant_1789674078676' }}
-              </span>
-              <span class="rounded-full bg-white/10 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-white/80 ring-1 ring-white/15">
-                {{ clientPopup.business_type || '2' }}
-              </span>
-            </div>
           </div>
         </div>
 
-        <!-- Executive Action Buttons -->
-        <div class="flex flex-wrap items-center gap-2 shrink-0">
-          <button type="button" (click)="selectImpersonatedTenant(clientPopup); closeClientPopupSecure()" class="rounded-full bg-indigo-600 hover:bg-indigo-500 px-4 py-2 text-xs font-bold text-white shadow-xs transition-all flex items-center gap-1.5 active:scale-95">
-            <lucide-icon [name]="icons.UserCheck" class="w-3.5 h-3.5"></lucide-icon>
-            <span>Impersonate Tenant</span>
-          </button>
-
-          <!-- Export Dossier Buttons -->
-          <div class="flex items-center gap-1 rounded-full bg-white/10 p-0.5 ring-1 ring-white/15">
-            <button type="button" (click)="exportSingleClientJson()" title="Download Client Dossier (JSON)" class="rounded-full px-3 py-1.5 text-xs font-bold text-white hover:bg-white/20 transition-all flex items-center gap-1.5 active:scale-95">
-              <lucide-icon [name]="icons.Download" class="w-3.5 h-3.5 text-cyan-300"></lucide-icon>
-              <span>Dossier JSON</span>
-            </button>
-            <button type="button" (click)="exportSingleClientCsv()" title="Download Client Record (CSV)" class="rounded-full px-2.5 py-1.5 text-xs font-bold text-white hover:bg-white/20 transition-all flex items-center gap-1 active:scale-95">
-              <span>CSV</span>
-            </button>
-          </div>
-          
-          <button type="button" (click)="toggleTenantFreeze()" class="rounded-full px-4 py-2 text-xs font-bold text-white shadow-xs transition-all flex items-center gap-1.5"
-                  [class.bg-amber-500]="clientPopup.status !== 'suspended'" [class.hover:bg-amber-400]="clientPopup.status !== 'suspended'"
-                  [class.bg-emerald-600]="clientPopup.status === 'suspended'" [class.hover:bg-emerald-500]="clientPopup.status === 'suspended'">
-            <lucide-icon [name]="clientPopup.status === 'suspended' ? icons.ShieldCheck : icons.Lock" class="w-3.5 h-3.5"></lucide-icon>
-            <span>{{ clientPopup.status === 'suspended' ? 'Unfreeze Account' : 'Freeze / Suspend' }}</span>
-          </button>
-          
-          <button type="button" *ngIf="clientPopup.status !== 'approved'" (click)="clientPopupStatusAction('approve')" [disabled]="clientPopupBusy" class="rounded-full bg-emerald-500 hover:bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-xs disabled:opacity-50 transition-all flex items-center gap-1.5">
-            <lucide-icon [name]="icons.CheckCircle2" class="w-3.5 h-3.5"></lucide-icon>
-            <span>Approve</span>
-          </button>
-          
-          <button type="button" *ngIf="clientPopup.status !== 'rejected'" (click)="clientPopupStatusAction('reject')" [disabled]="clientPopupBusy" class="rounded-full bg-rose-500 hover:bg-rose-600 px-4 py-2 text-xs font-bold text-white shadow-xs disabled:opacity-50 transition-all flex items-center gap-1.5">
-            <lucide-icon [name]="icons.X" class="w-3.5 h-3.5"></lucide-icon>
-            <span>Reject</span>
-          </button>
-          
-          <button type="button" (click)="closeClientPopupSecure()" class="rounded-full bg-white/10 hover:bg-white/20 px-4 py-2 text-xs font-bold text-white ring-1 ring-white/15 transition-all">
-            Close
-          </button>
-        </div>
+        <button type="button" (click)="closeClientPopupSecure()" title="Close" class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200/80 bg-white/90 text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition-colors cursor-pointer">
+          <lucide-icon [name]="icons.X" class="w-4 h-4"></lucide-icon>
+        </button>
       </div>
-    </div>
 
-    <!-- Capsule Segmented Tabs Bar (Apple/HiOS Light Mode) -->
-    <div class="border-b border-slate-200 bg-white px-3 py-3 sm:px-5 shrink-0">
-      <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-        <button type="button" (click)="setClientPopupTab('overview')" class="shrink-0 rounded-full px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all"
-                [class.bg-slate-950]="clientPopupTab==='overview'" [class.text-white]="clientPopupTab==='overview'" [class.shadow-md]="clientPopupTab==='overview'"
-                [class.bg-slate-100]="clientPopupTab!=='overview'" [class.text-slate-500]="clientPopupTab!=='overview'" [class.hover:text-slate-900]="clientPopupTab!=='overview'">
+      <!-- Clean 3-Tab Segmented Bar -->
+      <div class="relative z-10 mt-4 inline-flex w-full sm:w-auto items-center gap-1 rounded-2xl bg-slate-200/60 p-1">
+        <button type="button" (click)="setClientPopupTab('overview')" class="flex-1 sm:flex-none rounded-xl px-4 py-2 text-xs font-bold transition-all cursor-pointer"
+                [class.bg-white]="clientPopupTab==='overview'" [class.text-slate-900]="clientPopupTab==='overview'" [class.shadow-xs]="clientPopupTab==='overview'"
+                [class.text-slate-600]="clientPopupTab!=='overview'" [class.hover:text-slate-900]="clientPopupTab!=='overview'">
           Overview
         </button>
-        
-        <button type="button" (click)="setClientPopupTab('edit')" class="shrink-0 rounded-full px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all"
-                [class.bg-slate-950]="clientPopupTab==='edit'" [class.text-white]="clientPopupTab==='edit'" [class.shadow-md]="clientPopupTab==='edit'"
-                [class.bg-slate-100]="clientPopupTab!=='edit'" [class.text-slate-500]="clientPopupTab!=='edit'" [class.hover:text-slate-900]="clientPopupTab!=='edit'">
+        <button type="button" (click)="setClientPopupTab('edit')" class="flex-1 sm:flex-none rounded-xl px-4 py-2 text-xs font-bold transition-all cursor-pointer"
+                [class.bg-white]="clientPopupTab==='edit'" [class.text-slate-900]="clientPopupTab==='edit'" [class.shadow-xs]="clientPopupTab==='edit'"
+                [class.text-slate-600]="clientPopupTab!=='edit'" [class.hover:text-slate-900]="clientPopupTab!=='edit'">
           Edit Info
         </button>
-        
-        <button type="button" (click)="setClientPopupTab('quotas')" class="shrink-0 rounded-full px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all"
-                [class.bg-slate-950]="clientPopupTab==='quotas'" [class.text-white]="clientPopupTab==='quotas'" [class.shadow-md]="clientPopupTab==='quotas'"
-                [class.bg-slate-100]="clientPopupTab!=='quotas'" [class.text-slate-500]="clientPopupTab!=='quotas'" [class.hover:text-slate-900]="clientPopupTab!=='quotas'">
-          Resource Quotas
-        </button>
-        
-        <button type="button" (click)="setClientPopupTab('team')" class="shrink-0 rounded-full px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all"
-                [class.bg-slate-950]="clientPopupTab==='team'" [class.text-white]="clientPopupTab==='team'" [class.shadow-md]="clientPopupTab==='team'"
-                [class.bg-slate-100]="clientPopupTab!=='team'" [class.text-slate-500]="clientPopupTab!=='team'" [class.hover:text-slate-900]="clientPopupTab!=='team'">
-          Team Members
-        </button>
-        
-        <button type="button" (click)="setClientPopupTab('domains')" class="shrink-0 rounded-full px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all"
-                [class.bg-slate-950]="clientPopupTab==='domains'" [class.text-white]="clientPopupTab==='domains'" [class.shadow-md]="clientPopupTab==='domains'"
-                [class.bg-slate-100]="clientPopupTab!=='domains'" [class.text-slate-500]="clientPopupTab!=='domains'" [class.hover:text-slate-900]="clientPopupTab!=='domains'">
-          Custom Domain & SSL
-        </button>
-        
-        <button type="button" (click)="setClientPopupTab('status')" class="shrink-0 rounded-full px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all"
-                [class.bg-slate-950]="clientPopupTab==='status'" [class.text-white]="clientPopupTab==='status'" [class.shadow-md]="clientPopupTab==='status'"
-                [class.bg-slate-100]="clientPopupTab!=='status'" [class.text-slate-500]="clientPopupTab!=='status'" [class.hover:text-slate-900]="clientPopupTab!=='status'">
-          Status
-        </button>
-        
-        <button type="button" (click)="setClientPopupTab('access')" class="shrink-0 rounded-full px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all"
-                [class.bg-slate-950]="clientPopupTab==='access'" [class.text-white]="clientPopupTab==='access'" [class.shadow-md]="clientPopupTab==='access'"
-                [class.bg-slate-100]="clientPopupTab!=='access'" [class.text-slate-500]="clientPopupTab!=='access'" [class.hover:text-slate-900]="clientPopupTab!=='access'">
-          Access & Security
-        </button>
-        
-        <button type="button" (click)="setClientPopupTab('audit')" class="shrink-0 rounded-full px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all"
-                [class.bg-slate-950]="clientPopupTab==='audit'" [class.text-white]="clientPopupTab==='audit'" [class.shadow-md]="clientPopupTab==='audit'"
-                [class.bg-slate-100]="clientPopupTab!=='audit'" [class.text-slate-500]="clientPopupTab!=='audit'" [class.hover:text-slate-900]="clientPopupTab!=='audit'">
-          Audit
+        <button type="button" (click)="setClientPopupTab('access')" class="flex-1 sm:flex-none rounded-xl px-4 py-2 text-xs font-bold transition-all cursor-pointer"
+                [class.bg-white]="clientPopupTab==='access' || clientPopupTab==='audit'" [class.text-slate-900]="clientPopupTab==='access' || clientPopupTab==='audit'" [class.shadow-xs]="clientPopupTab==='access' || clientPopupTab==='audit'"
+                [class.text-slate-600]="clientPopupTab!=='access' && clientPopupTab!=='audit'" [class.hover:text-slate-900]="clientPopupTab!=='access' && clientPopupTab!=='audit'">
+          Access &amp; Audit
         </button>
       </div>
     </div>
 
-    <!-- Notification / Alert Bar -->
-    <div *ngIf="clientPopupMessage" class="border-b px-5 py-3 text-xs font-bold shrink-0 transition-all"
+    <!-- Alert / Feedback Banner -->
+    <div *ngIf="clientPopupMessage" class="border-b px-5 py-2.5 text-xs font-bold shrink-0 transition-all"
          [class.bg-emerald-50]="clientPopupMessageOk" [class.text-emerald-700]="clientPopupMessageOk" [class.border-emerald-200]="clientPopupMessageOk"
          [class.bg-rose-50]="!clientPopupMessageOk" [class.text-rose-700]="!clientPopupMessageOk" [class.border-rose-200]="!clientPopupMessageOk">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <lucide-icon [name]="clientPopupMessageOk ? icons.CheckCircle2 : icons.AlertTriangle" class="w-4 h-4"></lucide-icon>
-          <span>{{ clientPopupMessage }}</span>
+      <div class="flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2 min-w-0">
+          <lucide-icon [name]="clientPopupMessageOk ? icons.CheckCircle2 : icons.AlertTriangle" class="w-4 h-4 shrink-0"></lucide-icon>
+          <span class="truncate">{{ clientPopupMessage }}</span>
         </div>
-        <button (click)="clientPopupMessage = ''" class="opacity-60 hover:opacity-100">
+        <button type="button" (click)="clientPopupMessage = ''" class="opacity-60 hover:opacity-100 shrink-0 cursor-pointer">
           <lucide-icon [name]="icons.X" class="w-3.5 h-3.5"></lucide-icon>
         </button>
       </div>
     </div>
 
-    <!-- Main Workspace Body (HiOS Crisp Slate-50 Background) -->
-    <main class="flex-1 overflow-y-auto bg-slate-50 p-4 sm:p-6">
-      
+    <!-- Scrollable Modal Body -->
+    <main class="flex-1 overflow-y-auto bg-slate-50/80 p-4 sm:p-6">
+
       <!-- TAB 1: OVERVIEW -->
-      <section *ngIf="clientPopupTab === 'overview'" class="grid gap-5 lg:grid-cols-[1fr_360px]">
-        <!-- LEFT CARD: CLIENT IDENTITY (WHITE LUXURY CARD) -->
-        <div class="rounded-[1.75rem] bg-white p-6 shadow-sm ring-1 ring-slate-100">
-          <div class="flex items-center justify-between">
+      <section *ngIf="clientPopupTab === 'overview'" class="grid gap-5 lg:grid-cols-[1fr_300px]">
+        <!-- Client Profile Details -->
+        <div class="rounded-2xl bg-white p-5 shadow-xs border border-slate-200/70">
+          <div class="flex items-center justify-between gap-2 pb-3.5 border-b border-slate-100">
             <div>
-              <p class="text-[10px] font-black uppercase tracking-[0.25em] text-blue-500">Overview</p>
-              <h3 class="mt-1 text-xl font-black text-slate-950">Client identity</h3>
+              <p class="text-[10px] font-black uppercase tracking-widest text-emerald-600">Profile Details</p>
+              <h3 class="text-base font-black text-slate-900">Client Identity</h3>
             </div>
-            <span class="rounded-full bg-blue-50 px-3 py-1 text-[10px] font-bold text-blue-600 border border-blue-100">
-              Verified Profile
+            <span class="rounded-lg bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-700 border border-emerald-200/70">
+              Verified Record
             </span>
           </div>
 
-          <!-- 6 Data Tiles in High-Quality Clean Containers -->
-          <div class="mt-5 grid gap-3.5 sm:grid-cols-2">
-            
-            <!-- 1. Full Name -->
-            <div class="rounded-2xl bg-slate-50/90 border border-slate-100 p-4 hover:border-slate-200 transition-all">
-              <p class="text-[9px] font-black uppercase tracking-widest text-slate-400">Full Name</p>
-              <p class="mt-1 text-sm font-black text-slate-900">{{ clientPopup.full_name || '—' }}</p>
+          <div class="mt-4 grid gap-3 sm:grid-cols-2">
+            <div class="rounded-xl bg-slate-50 border border-slate-100 p-3.5">
+              <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Full Name</p>
+              <p class="mt-1 text-sm font-bold text-slate-900">{{ clientPopup.full_name || '—' }}</p>
             </div>
 
-            <!-- 2. Company -->
-            <div class="rounded-2xl bg-slate-50/90 border border-slate-100 p-4 hover:border-slate-200 transition-all">
-              <p class="text-[9px] font-black uppercase tracking-widest text-slate-400">Company</p>
-              <p class="mt-1 text-sm font-black text-slate-900">{{ clientPopup.company_name || '—' }}</p>
+            <div class="rounded-xl bg-slate-50 border border-slate-100 p-3.5">
+              <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Company</p>
+              <p class="mt-1 text-sm font-bold text-slate-900">{{ clientPopup.company_name || '—' }}</p>
             </div>
 
-            <!-- 3. Email -->
-            <div class="rounded-2xl bg-slate-50/90 border border-slate-100 p-4 hover:border-slate-200 transition-all">
+            <div class="rounded-xl bg-slate-50 border border-slate-100 p-3.5">
               <div class="flex items-center justify-between">
-                <p class="text-[9px] font-black uppercase tracking-widest text-slate-400">Email</p>
-                <button *ngIf="clientPopup.email" (click)="copyClientText(clientPopup.email, 'Email')" title="Copy email" class="text-slate-400 hover:text-slate-800 transition-colors">
+                <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Email</p>
+                <button *ngIf="clientPopup.email" type="button" (click)="copyClientText(clientPopup.email, 'Email')" title="Copy email" class="text-slate-400 hover:text-slate-800 transition-colors cursor-pointer">
                   <lucide-icon [name]="icons.Copy" class="w-3 h-3"></lucide-icon>
                 </button>
               </div>
-              <p class="mt-1 break-all text-sm font-black text-slate-900">{{ clientPopup.email || '—' }}</p>
+              <p class="mt-1 break-all text-sm font-bold text-slate-900">{{ clientPopup.email || '—' }}</p>
             </div>
 
-            <!-- 4. Phone -->
-            <div class="rounded-2xl bg-slate-50/90 border border-slate-100 p-4 hover:border-slate-200 transition-all">
-              <p class="text-[9px] font-black uppercase tracking-widest text-slate-400">Phone</p>
-              <p class="mt-1 text-sm font-black text-slate-900">{{ clientPopup.country_code || '' }} {{ clientPopup.phone || '—' }}</p>
+            <div class="rounded-xl bg-slate-50 border border-slate-100 p-3.5">
+              <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Phone</p>
+              <p class="mt-1 text-sm font-bold text-slate-900">{{ clientPopup.country_code || '' }} {{ clientPopup.phone || '—' }}</p>
             </div>
 
-            <!-- 5. Business -->
-            <div class="rounded-2xl bg-slate-50/90 border border-slate-100 p-4 hover:border-slate-200 transition-all">
-              <p class="text-[9px] font-black uppercase tracking-widest text-slate-400">Business</p>
-              <p class="mt-1 text-sm font-black text-slate-900">{{ clientPopup.business_type || '—' }}</p>
+            <div class="rounded-xl bg-slate-50 border border-slate-100 p-3.5">
+              <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Business Type</p>
+              <p class="mt-1 text-sm font-bold text-slate-900">{{ clientPopup.business_type || '—' }}</p>
             </div>
 
-            <!-- 6. Location -->
-            <div class="rounded-2xl bg-slate-50/90 border border-slate-100 p-4 hover:border-slate-200 transition-all">
-              <p class="text-[9px] font-black uppercase tracking-widest text-slate-400">Location</p>
-              <p class="mt-1 text-sm font-black text-slate-900">{{ clientPopup.city || '—' }}, {{ clientPopup.country || '—' }}</p>
+            <div class="rounded-xl bg-slate-50 border border-slate-100 p-3.5">
+              <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Location</p>
+              <p class="mt-1 text-sm font-bold text-slate-900">{{ clientPopup.city || '—' }}{{ clientPopup.country ? ', ' + clientPopup.country : '' }}</p>
             </div>
 
-          </div>
-
-          <!-- Quick Export & Verification Actions -->
-          <div class="mt-4 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
-            <span class="text-[11px] font-bold text-slate-400">Export tenant configuration & audit history:</span>
-            <div class="flex items-center gap-2">
-              <button (click)="exportSingleClientJson()" class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all flex items-center gap-1.5 active:scale-95">
-                <lucide-icon [name]="icons.FileText" class="w-3.5 h-3.5 text-indigo-600"></lucide-icon>
-                <span>Export JSON</span>
-              </button>
-              <button (click)="exportSingleClientCsv()" class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all flex items-center gap-1.5 active:scale-95">
-                <lucide-icon [name]="icons.Download" class="w-3.5 h-3.5 text-slate-600"></lucide-icon>
-                <span>Export CSV</span>
-              </button>
+            <div class="rounded-xl bg-slate-50 border border-slate-100 p-3.5 sm:col-span-2">
+              <div class="flex items-center justify-between">
+                <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Tenant ID</p>
+                <button *ngIf="clientPopup.tenant_id" type="button" (click)="copyClientText(clientPopup.tenant_id, 'Tenant ID')" title="Copy Tenant ID" class="text-slate-400 hover:text-slate-800 transition-colors cursor-pointer">
+                  <lucide-icon [name]="icons.Copy" class="w-3 h-3"></lucide-icon>
+                </button>
+              </div>
+              <p class="mt-1 font-mono text-xs font-bold text-slate-800 break-all">{{ clientPopup.tenant_id || '—' }}</p>
             </div>
           </div>
         </div>
 
-        <!-- RIGHT CARD: SECURITY RULE (OBSIDIAN CONTRAST LUXURY CARD) -->
-        <div class="rounded-[1.75rem] bg-slate-950 p-6 text-white shadow-xl relative overflow-hidden flex flex-col justify-between">
-          <div class="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-blue-500/10 blur-3xl pointer-events-none"></div>
+        <!-- Account Controls & Quick Actions -->
+        <div class="rounded-2xl bg-white p-5 shadow-xs border border-slate-200/70 flex flex-col justify-between gap-4">
+          <div class="space-y-3">
+            <div>
+              <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Account Controls</p>
+              <h3 class="text-base font-black text-slate-900">Quick Actions</h3>
+            </div>
 
-          <div>
-            <p class="text-[10px] font-black uppercase tracking-[0.25em] text-white/40">Security Rule</p>
-            <h3 class="mt-2 text-xl font-black text-white">No plain password view</h3>
-            <p class="mt-3 text-sm font-bold leading-relaxed text-white/60">
-              Admin password dekh nahi sakta. Safe flow: reset link send karo, ya one-time temporary password generate karo with force change.
-            </p>
+            <div class="space-y-2">
+              <button *ngIf="clientPopup.status !== 'approved'" type="button" (click)="clientPopupStatusAction('approve')" [disabled]="clientPopupBusy"
+                      class="w-full rounded-xl bg-emerald-600 hover:bg-emerald-700 px-4 py-2.5 text-xs font-bold text-white shadow-xs disabled:opacity-50 transition-all flex items-center justify-center gap-2 cursor-pointer">
+                <lucide-icon [name]="icons.CheckCircle2" class="w-4 h-4"></lucide-icon>
+                <span>Approve Client</span>
+              </button>
+
+              <button *ngIf="clientPopup.status !== 'rejected'" type="button" (click)="clientPopupStatusAction('reject')" [disabled]="clientPopupBusy"
+                      class="w-full rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 px-4 py-2.5 text-xs font-bold text-rose-700 disabled:opacity-50 transition-all flex items-center justify-center gap-2 cursor-pointer">
+                <lucide-icon [name]="icons.X" class="w-4 h-4"></lucide-icon>
+                <span>Reject Client</span>
+              </button>
+
+              <button type="button" (click)="toggleTenantFreeze()" [disabled]="clientPopupBusy"
+                      class="w-full rounded-xl px-4 py-2.5 text-xs font-bold transition-all flex items-center justify-center gap-2 border cursor-pointer"
+                      [class.bg-amber-50]="clientPopup.status !== 'suspended'" [class.text-amber-800]="clientPopup.status !== 'suspended'" [class.border-amber-200]="clientPopup.status !== 'suspended'" [class.hover:bg-amber-100]="clientPopup.status !== 'suspended'"
+                      [class.bg-emerald-50]="clientPopup.status === 'suspended'" [class.text-emerald-700]="clientPopup.status === 'suspended'" [class.border-emerald-200]="clientPopup.status === 'suspended'" [class.hover:bg-emerald-100]="clientPopup.status === 'suspended'">
+                <lucide-icon [name]="clientPopup.status === 'suspended' ? icons.ShieldCheck : icons.Lock" class="w-4 h-4"></lucide-icon>
+                <span>{{ clientPopup.status === 'suspended' ? 'Unfreeze Account' : 'Freeze / Suspend' }}</span>
+              </button>
+
+              <button type="button" (click)="selectImpersonatedTenant(clientPopup); closeClientPopupSecure()"
+                      class="w-full rounded-xl bg-slate-900 hover:bg-slate-800 px-4 py-2.5 text-xs font-bold text-white shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer">
+                <lucide-icon [name]="icons.UserCheck" class="w-4 h-4"></lucide-icon>
+                <span>Impersonate Tenant</span>
+              </button>
+            </div>
           </div>
 
-          <div class="mt-6">
-            <button type="button" (click)="setClientPopupTab('access')" class="w-full rounded-2xl bg-white px-5 py-3.5 text-xs font-black uppercase tracking-widest text-slate-950 hover:bg-slate-100 transition-all shadow-md active:scale-98">
-              Access & Security
-            </button>
+          <div class="pt-3 border-t border-slate-100 space-y-2">
+            <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Export Record</p>
+            <div class="grid grid-cols-2 gap-2">
+              <button type="button" (click)="exportSingleClientJson()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                <lucide-icon [name]="icons.FileText" class="w-3.5 h-3.5 text-emerald-600"></lucide-icon>
+                <span>JSON</span>
+              </button>
+              <button type="button" (click)="exportSingleClientCsv()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                <lucide-icon [name]="icons.Download" class="w-3.5 h-3.5 text-slate-600"></lucide-icon>
+                <span>CSV</span>
+              </button>
+            </div>
           </div>
         </div>
       </section>
 
       <!-- TAB 2: EDIT INFO -->
-      <section *ngIf="clientPopupTab === 'edit'" class="rounded-[1.75rem] bg-white p-6 shadow-sm ring-1 ring-slate-100">
+      <section *ngIf="clientPopupTab === 'edit'" class="rounded-2xl bg-white p-5 shadow-xs border border-slate-200/70">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-4">
           <div>
-            <p class="text-[10px] font-black uppercase tracking-[0.25em] text-blue-500">Basic CRUD</p>
-            <h3 class="mt-1 text-xl font-black text-slate-950">Edit client information</h3>
+            <p class="text-[10px] font-black uppercase tracking-widest text-emerald-600">Client Profile</p>
+            <h3 class="text-base font-black text-slate-900">Edit Client Information</h3>
           </div>
-          <button type="button" (click)="saveClientPopupInfo()" [disabled]="clientPopupBusy" class="rounded-full bg-slate-950 hover:bg-slate-900 px-6 py-3 text-xs font-black uppercase tracking-widest text-white shadow-md disabled:opacity-50 transition-all">
-            Save Changes
+          <button type="button" (click)="saveClientPopupInfo()" [disabled]="clientPopupBusy" class="rounded-xl bg-emerald-600 hover:bg-emerald-700 px-5 py-2.5 text-xs font-bold text-white shadow-xs disabled:opacity-50 transition-all cursor-pointer">
+            {{ clientPopupBusy ? 'Saving...' : 'Save Changes' }}
           </button>
         </div>
 
-        <div class="mt-6 grid gap-4 md:grid-cols-2">
+        <div class="mt-5 grid gap-4 md:grid-cols-2">
           <label class="block">
-            <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Full Name</span>
-            <input class="mt-1.5 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all" [value]="clientPopupDraft.full_name || ''" (input)="setClientPopupField('full_name', $any($event.target).value)">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Full Name</span>
+            <input class="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-semibold text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all" [value]="clientPopupDraft.full_name || ''" (input)="setClientPopupField('full_name', $any($event.target).value)">
           </label>
           <label class="block">
-            <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Email (Protected)</span>
-            <input class="mt-1.5 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-400 cursor-not-allowed" [value]="clientPopupDraft.email || ''" disabled>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Email (Protected)</span>
+            <input class="mt-1.5 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm font-semibold text-slate-400 cursor-not-allowed" [value]="clientPopupDraft.email || ''" disabled>
           </label>
           <label class="block">
-            <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Country Code</span>
-            <input class="mt-1.5 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all" [value]="clientPopupDraft.country_code || ''" (input)="setClientPopupField('country_code', $any($event.target).value)">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Country Code</span>
+            <input class="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-semibold text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all" [value]="clientPopupDraft.country_code || ''" (input)="setClientPopupField('country_code', $any($event.target).value)">
           </label>
           <label class="block">
-            <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Phone</span>
-            <input class="mt-1.5 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all" [value]="clientPopupDraft.phone || ''" (input)="setClientPopupField('phone', $any($event.target).value)">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Phone</span>
+            <input class="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-semibold text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all" [value]="clientPopupDraft.phone || ''" (input)="setClientPopupField('phone', $any($event.target).value)">
           </label>
           <label class="block">
-            <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Company</span>
-            <input class="mt-1.5 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all" [value]="clientPopupDraft.company_name || ''" (input)="setClientPopupField('company_name', $any($event.target).value)">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Company</span>
+            <input class="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-semibold text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all" [value]="clientPopupDraft.company_name || ''" (input)="setClientPopupField('company_name', $any($event.target).value)">
           </label>
           <label class="block">
-            <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Business Type</span>
-            <input class="mt-1.5 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all" [value]="clientPopupDraft.business_type || ''" (input)="setClientPopupField('business_type', $any($event.target).value)">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Business Type</span>
+            <input class="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-semibold text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all" [value]="clientPopupDraft.business_type || ''" (input)="setClientPopupField('business_type', $any($event.target).value)">
           </label>
           <label class="block">
-            <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Business Size</span>
-            <input class="mt-1.5 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all" [value]="clientPopupDraft.business_size || ''" (input)="setClientPopupField('business_size', $any($event.target).value)">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Business Size</span>
+            <input class="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-semibold text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all" [value]="clientPopupDraft.business_size || ''" (input)="setClientPopupField('business_size', $any($event.target).value)">
           </label>
           <label class="block">
-            <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Country</span>
-            <input class="mt-1.5 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all" [value]="clientPopupDraft.country || ''" (input)="setClientPopupField('country', $any($event.target).value)">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Country</span>
+            <input class="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-semibold text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all" [value]="clientPopupDraft.country || ''" (input)="setClientPopupField('country', $any($event.target).value)">
           </label>
           <label class="block">
-            <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">City</span>
-            <input class="mt-1.5 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all" [value]="clientPopupDraft.city || ''" (input)="setClientPopupField('city', $any($event.target).value)">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">City</span>
+            <input class="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-semibold text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all" [value]="clientPopupDraft.city || ''" (input)="setClientPopupField('city', $any($event.target).value)">
           </label>
           <label class="block">
-            <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">State</span>
-            <input class="mt-1.5 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all" [value]="clientPopupDraft.state || ''" (input)="setClientPopupField('state', $any($event.target).value)">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">State</span>
+            <input class="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-semibold text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all" [value]="clientPopupDraft.state || ''" (input)="setClientPopupField('state', $any($event.target).value)">
           </label>
           <label class="block md:col-span-2">
-            <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Address</span>
-            <input class="mt-1.5 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all" [value]="clientPopupDraft.address || ''" (input)="setClientPopupField('address', $any($event.target).value)">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Address</span>
+            <input class="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-semibold text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all" [value]="clientPopupDraft.address || ''" (input)="setClientPopupField('address', $any($event.target).value)">
           </label>
         </div>
       </section>
 
-      <!-- TAB 3: RESOURCE QUOTAS -->
-      <section *ngIf="clientPopupTab === 'quotas'" class="rounded-[1.75rem] bg-white p-6 shadow-sm ring-1 ring-slate-100 space-y-6">
-        <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+      <!-- TAB 3: ACCESS & AUDIT -->
+      <section *ngIf="clientPopupTab === 'access' || clientPopupTab === 'audit'" class="grid gap-5 lg:grid-cols-2">
+        <!-- Password & Session Controls -->
+        <div class="rounded-2xl bg-white p-5 shadow-xs border border-slate-200/70 space-y-5">
           <div>
-            <p class="text-[10px] font-black uppercase tracking-[0.25em] text-blue-500">Resource Metering</p>
-            <h3 class="mt-1 text-xl font-black text-slate-950">Enterprise Resource Quotas</h3>
-          </div>
-          <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700 border border-emerald-100">
-            Fair Use Enforced
-          </span>
-        </div>
-
-        <div class="grid gap-4 md:grid-cols-2">
-          <!-- Storage -->
-          <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-2">
-            <div class="flex items-center justify-between text-xs">
-              <span class="font-black text-slate-800">Tenant Cloud Storage</span>
-              <span class="font-mono font-bold text-slate-600">42.4 GB / 100 GB</span>
-            </div>
-            <div class="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
-              <div class="bg-indigo-600 h-full rounded-full w-[42.4%]"></div>
-            </div>
-            <p class="text-[11px] font-medium text-slate-400">Encrypted AES-256 S3 multi-zone bucket.</p>
-          </div>
-
-          <!-- API Requests -->
-          <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-2">
-            <div class="flex items-center justify-between text-xs">
-              <span class="font-black text-slate-800">Monthly API Quota</span>
-              <span class="font-mono font-bold text-slate-600">840,210 / 1,000,000 reqs</span>
-            </div>
-            <div class="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
-              <div class="bg-amber-500 h-full rounded-full w-[84.0%]"></div>
-            </div>
-            <p class="text-[11px] font-medium text-slate-400">84% consumed. Rate-limit threshold alert at 90%.</p>
-          </div>
-
-          <!-- Seat Licenses -->
-          <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-2">
-            <div class="flex items-center justify-between text-xs">
-              <span class="font-black text-slate-800">Provisioned Seat Licenses</span>
-              <span class="font-mono font-bold text-slate-600">18 / 25 Users</span>
-            </div>
-            <div class="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
-              <div class="bg-emerald-600 h-full rounded-full w-[72.0%]"></div>
-            </div>
-            <p class="text-[11px] font-medium text-slate-400">7 user seats remaining on active Enterprise tier.</p>
-          </div>
-
-          <!-- Webhooks -->
-          <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-2">
-            <div class="flex items-center justify-between text-xs">
-              <span class="font-black text-slate-800">Outgoing Webhooks</span>
-              <span class="font-mono font-bold text-slate-600">4 / 10 Endpoints</span>
-            </div>
-            <div class="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
-              <div class="bg-indigo-600 h-full rounded-full w-[40.0%]"></div>
-            </div>
-            <p class="text-[11px] font-medium text-slate-400">4 verified HTTP endpoints with HMAC signing.</p>
-          </div>
-        </div>
-      </section>
-
-      <!-- TAB 4: TEAM MEMBERS -->
-      <section *ngIf="clientPopupTab === 'team'" class="rounded-[1.75rem] bg-white p-6 shadow-sm ring-1 ring-slate-100 space-y-4">
-        <div class="flex items-center justify-between border-b border-slate-100 pb-4">
-          <div>
-            <p class="text-[10px] font-black uppercase tracking-[0.25em] text-blue-500">Identity & Access</p>
-            <h3 class="mt-1 text-xl font-black text-slate-950">Authorized Tenant Operators</h3>
-          </div>
-          <button (click)="isInvitingUser = !isInvitingUser" class="rounded-full bg-slate-950 hover:bg-slate-900 text-white px-4 py-2 text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all">
-            <lucide-icon [name]="icons.Plus" class="w-3.5 h-3.5"></lucide-icon>
-            <span>Invite User</span>
-          </button>
-        </div>
-
-        <!-- Inline Invite Form -->
-        <div *ngIf="isInvitingUser" class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3 animate-fade-in">
-          <h4 class="text-xs font-bold text-slate-800">Send Tenant Operator Invitation</h4>
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-            <input type="email" [value]="inviteUserEmail" (input)="inviteUserEmail = $any($event.target).value" placeholder="colleague@company.com" class="sm:col-span-2 px-3 py-2 text-xs border border-slate-200 rounded-xl outline-none focus:border-blue-500 bg-white">
-            <select [value]="inviteUserRole" (change)="inviteUserRole = $any($event.target).value" class="px-3 py-2 text-xs border border-slate-200 rounded-xl outline-none focus:border-blue-500 bg-white">
-              <option value="Admin">Tenant Admin</option>
-              <option value="Billing Admin">Billing Admin</option>
-              <option value="Member">Member</option>
-            </select>
-          </div>
-          <div class="flex justify-end gap-2">
-            <button (click)="isInvitingUser = false" class="px-3 py-1.5 text-xs text-slate-600 font-bold">Cancel</button>
-            <button (click)="inviteTeamMember()" [disabled]="!inviteUserEmail" class="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-full text-xs font-bold shadow-xs">Dispatch Invite</button>
-          </div>
-        </div>
-
-        <!-- Users Table -->
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-xs">
-            <thead class="bg-slate-50 border-b border-slate-100 text-slate-400 font-black uppercase tracking-wider text-[9px]">
-              <tr>
-                <th class="py-3 px-3">Name & Email</th>
-                <th class="py-3 px-3">Role</th>
-                <th class="py-3 px-3">2FA Security</th>
-                <th class="py-3 px-3">Status</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100">
-              <tr *ngFor="let m of paginatedClientTeamMembers" class="hover:bg-slate-50/80 transition-colors">
-                <td class="py-3.5 px-3">
-                  <p class="font-bold text-slate-900">{{ m.name }}</p>
-                  <p class="text-[11px] text-slate-500 font-mono">{{ m.email }}</p>
-                </td>
-                <td class="py-3.5 px-3">
-                  <span class="px-2.5 py-1 text-[10px] font-bold rounded-full bg-slate-100 text-slate-700">{{ m.role }}</span>
-                </td>
-                <td class="py-3.5 px-3">
-                  <span *ngIf="m.mfa" class="text-emerald-600 font-bold text-[11px] flex items-center gap-1">
-                    <lucide-icon [name]="icons.ShieldCheck" class="w-3.5 h-3.5"></lucide-icon> Enforced
-                  </span>
-                  <span *ngIf="!m.mfa" class="text-slate-400 text-[11px]">Not configured</span>
-                </td>
-                <td class="py-3.5 px-3">
-                  <span class="text-emerald-700 font-mono text-[11px] font-bold">{{ m.status }}</span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <app-pagination-bar
-          *ngIf="clientTeamMembers.length > 0"
-          [page]="clientTeamPage"
-          [pageSize]="clientTeamPageSize"
-          [totalItems]="clientTeamMembers.length"
-          itemLabel="team members"
-          containerClass="pt-3 border-t border-slate-100"
-          (pageChange)="clientTeamPage = $event">
-        </app-pagination-bar>
-      </section>
-
-      <!-- TAB 5: CUSTOM DOMAIN & SSL -->
-      <section *ngIf="clientPopupTab === 'domains'" class="rounded-[1.75rem] bg-white p-6 shadow-sm ring-1 ring-slate-100 space-y-5">
-        <div class="flex items-center justify-between border-b border-slate-100 pb-4">
-          <div>
-            <p class="text-[10px] font-black uppercase tracking-[0.25em] text-blue-500">Vanity Host</p>
-            <h3 class="mt-1 text-xl font-black text-slate-950">Custom Domain & SSL Routing</h3>
-          </div>
-          <button (click)="verifyClientDns()" [disabled]="clientDnsStatus === 'checking'" class="rounded-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white px-4 py-2 text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all">
-            <lucide-icon [name]="icons.RefreshCcw" class="w-3.5 h-3.5" [class.animate-spin]="clientDnsStatus === 'checking'"></lucide-icon>
-            <span>{{ clientDnsStatus === 'checking' ? 'Resolving DNS...' : 'Verify DNS' }}</span>
-          </button>
-        </div>
-
-        <div class="grid gap-4 sm:grid-cols-2">
-          <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-2">
-            <span class="text-[9px] font-black uppercase tracking-widest text-slate-400">Assigned Vanity Subdomain</span>
-            <p class="text-sm font-mono font-black text-slate-900">
-              app.{{ (clientPopup.company_name || 'client').toLowerCase().replace(' ', '') }}.com
+            <p class="text-[10px] font-black uppercase tracking-widest text-emerald-600">Credential Security</p>
+            <h3 class="text-base font-black text-slate-900">Password &amp; Session Controls</h3>
+            <p class="mt-1 text-xs font-medium text-slate-500 leading-relaxed">
+              Send a secure password reset link to the client or issue a one-time temporary password requiring change at next login.
             </p>
-            <div class="flex items-center gap-2 pt-1">
-              <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold"
-                    [class.bg-emerald-50]="clientDnsStatus === 'verified'" [class.text-emerald-700]="clientDnsStatus === 'verified'"
-                    [class.bg-amber-50]="clientDnsStatus !== 'verified'" [class.text-amber-700]="clientDnsStatus !== 'verified'">
-                <lucide-icon [name]="icons.CheckCircle2" class="w-3 h-3"></lucide-icon>
-                {{ clientDnsStatus === 'verified' ? 'CNAME Active' : 'Checking...' }}
-              </span>
-              <span class="text-slate-400 text-xs font-mono">Target: cname.softcodesolution.com</span>
-            </div>
-          </div>
-
-          <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-2">
-            <span class="text-[9px] font-black uppercase tracking-widest text-slate-400">TLS / SSL Certificate</span>
-            <p class="text-sm font-black text-slate-900">Let's Encrypt Wildcard 2026</p>
-            <p class="text-xs font-medium text-slate-500">Auto-renewal enabled. Expires in 84 days.</p>
-            <span class="inline-block text-[11px] font-mono text-emerald-600 font-bold">Cipher: TLS_AES_256_GCM_SHA384</span>
-          </div>
-        </div>
-      </section>
-
-      <!-- TAB 6: STATUS -->
-      <section *ngIf="clientPopupTab === 'status'" class="rounded-[1.75rem] bg-white p-6 shadow-sm ring-1 ring-slate-100">
-        <p class="text-[10px] font-black uppercase tracking-[0.25em] text-blue-500">Status Manager</p>
-        <h3 class="mt-1 text-xl font-black text-slate-950">Pending / Approved / Rejected / Suspended</h3>
-
-        <div class="mt-6 grid gap-3 md:grid-cols-4">
-          <div class="rounded-2xl bg-slate-50 p-4 border border-slate-100 flex flex-col justify-between">
-            <p class="text-[9px] font-black uppercase tracking-widest text-slate-400">Current Status</p>
-            <p class="mt-2 text-lg font-black capitalize text-slate-950">{{ clientPopupStatusLabel(clientPopup.status) }}</p>
-          </div>
-          <button type="button" (click)="clientPopupStatusAction('approve')" [disabled]="clientPopupBusy" class="rounded-2xl bg-emerald-600 hover:bg-emerald-700 px-4 py-5 text-xs font-black uppercase tracking-widest text-white shadow-md disabled:opacity-50 transition-all">
-            Approve
-          </button>
-          <button type="button" (click)="clientPopupStatusAction('reject')" [disabled]="clientPopupBusy" class="rounded-2xl bg-rose-600 hover:bg-rose-700 px-4 py-5 text-xs font-black uppercase tracking-widest text-white shadow-md disabled:opacity-50 transition-all">
-            Reject
-          </button>
-          <button type="button" (click)="clientPopupStatusAction('suspend')" [disabled]="clientPopupBusy" class="rounded-2xl bg-amber-400 hover:bg-amber-500 px-4 py-5 text-xs font-black uppercase tracking-widest text-slate-950 shadow-md disabled:opacity-50 transition-all">
-            Suspend
-          </button>
-        </div>
-
-        <div class="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-          <p class="text-xs font-bold text-slate-500">
-            Modules, plan, pricing aur billing yahan nahi honge. Woh Module Catalog / Plans & Pricing / Business Suites cards me manage honge.
-          </p>
-        </div>
-      </section>
-
-      <!-- TAB 7: ACCESS & SECURITY -->
-      <section *ngIf="clientPopupTab === 'access'" class="grid gap-5 lg:grid-cols-2">
-        <!-- Password Recovery Card -->
-        <div class="rounded-[1.75rem] bg-white p-6 shadow-sm ring-1 ring-slate-100 flex flex-col justify-between">
-          <div>
-            <p class="text-[10px] font-black uppercase tracking-[0.25em] text-blue-500">Password Recovery</p>
-            <h3 class="mt-1 text-xl font-black text-slate-950">Safe password reset</h3>
-            <p class="mt-2 text-sm font-bold leading-relaxed text-slate-500">
-              Best option reset link hai. Plain password kabhi show nahi karna. Temp password sirf emergency me one-time hona chahiye.
-            </p>
-            <div class="mt-5 grid gap-3 sm:grid-cols-2">
-              <button type="button" (click)="sendClientPasswordResetLink()" [disabled]="clientPopupBusy" class="rounded-2xl bg-blue-600 hover:bg-blue-700 px-5 py-4 text-xs font-black uppercase tracking-widest text-white disabled:opacity-50 shadow-md transition-all">
+            <div class="mt-4 grid gap-2.5 sm:grid-cols-2">
+              <button type="button" (click)="sendClientPasswordResetLink()" [disabled]="clientPopupBusy" class="rounded-xl bg-emerald-600 hover:bg-emerald-700 px-4 py-2.5 text-xs font-bold text-white disabled:opacity-50 shadow-xs transition-all cursor-pointer">
                 Send Reset Link
               </button>
-              <button type="button" (click)="generateClientTemporaryPassword()" [disabled]="clientPopupBusy" class="rounded-2xl bg-slate-950 hover:bg-slate-900 px-5 py-4 text-xs font-black uppercase tracking-widest text-white disabled:opacity-50 shadow-md transition-all">
+              <button type="button" (click)="generateClientTemporaryPassword()" [disabled]="clientPopupBusy" class="rounded-xl bg-slate-900 hover:bg-slate-800 px-4 py-2.5 text-xs font-bold text-white disabled:opacity-50 shadow-xs transition-all cursor-pointer">
                 Generate Temp Password
               </button>
             </div>
           </div>
 
-          <div *ngIf="clientPopupTempPassword" class="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 animate-fade-in">
-            <p class="text-[10px] font-black uppercase tracking-widest text-amber-700">One-time temporary password</p>
-            <div class="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center">
-              <code class="flex-1 rounded-xl bg-white px-4 py-3 text-sm font-black text-slate-900 ring-1 ring-amber-200 font-mono">{{ clientPopupTempPassword }}</code>
-              <button type="button" (click)="copyClientPopupTempPassword()" class="rounded-xl bg-amber-400 hover:bg-amber-500 px-4 py-3 text-xs font-black uppercase tracking-widest text-slate-950 font-bold transition-all">
+          <div *ngIf="clientPopupTempPassword" class="rounded-xl border border-amber-200 bg-amber-50 p-3.5 animate-fade-in">
+            <p class="text-[10px] font-black uppercase tracking-wider text-amber-800">One-Time Temporary Password</p>
+            <div class="mt-2 flex items-center gap-2">
+              <code class="flex-1 rounded-lg bg-white px-3 py-2 text-xs font-black text-slate-900 ring-1 ring-amber-200 font-mono select-all">{{ clientPopupTempPassword }}</code>
+              <button type="button" (click)="copyClientPopupTempPassword()" class="rounded-lg bg-amber-500 hover:bg-amber-600 px-3 py-2 text-xs font-bold text-white transition-all cursor-pointer">
                 Copy
               </button>
             </div>
-            <p class="mt-2 text-xs font-bold text-amber-700">Secure channel se share karo. Client next login par password change kare.</p>
           </div>
-        </div>
 
-        <!-- Session / Login Actions Card -->
-        <div class="rounded-[1.75rem] bg-white p-6 shadow-sm ring-1 ring-slate-100 flex flex-col justify-between">
-          <div>
-            <p class="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400">Access Control</p>
-            <h3 class="mt-1 text-xl font-black text-slate-950">Login/session actions</h3>
-            <div class="mt-5 grid gap-3 sm:grid-cols-2">
-              <button type="button" (click)="clientPopupAccessAction('Force logout', '/api/superadmin/clients/force-logout')" class="rounded-2xl bg-slate-100 hover:bg-slate-200 px-5 py-4 text-xs font-black uppercase tracking-widest text-slate-700 transition-all">
+          <div class="pt-4 border-t border-slate-100 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-700">Session Access</span>
+              <span class="rounded-lg bg-slate-100 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-slate-700">
+                Auth: {{ clientPopup.auth_status || 'ACTIVE' }}
+              </span>
+            </div>
+            <div class="grid gap-2 sm:grid-cols-2">
+              <button type="button" (click)="clientPopupAccessAction('Force logout', '/api/superadmin/clients/force-logout')" [disabled]="clientPopupBusy" class="rounded-xl bg-slate-100 hover:bg-slate-200 px-3.5 py-2.5 text-xs font-bold text-slate-700 transition-all cursor-pointer">
                 Force Logout
               </button>
-              <button type="button" (click)="clientPopupAccessAction('Unlock account', '/api/superadmin/clients/unlock')" class="rounded-2xl bg-slate-100 hover:bg-slate-200 px-5 py-4 text-xs font-black uppercase tracking-widest text-slate-700 transition-all">
+              <button type="button" (click)="clientPopupAccessAction('Unlock account', '/api/superadmin/clients/unlock')" [disabled]="clientPopupBusy" class="rounded-xl bg-slate-100 hover:bg-slate-200 px-3.5 py-2.5 text-xs font-bold text-slate-700 transition-all cursor-pointer">
                 Unlock Account
               </button>
-              <button type="button" (click)="clientPopupAccessAction('Disable login', '/api/superadmin/clients/login/disable')" class="rounded-2xl bg-rose-50 hover:bg-rose-100 px-5 py-4 text-xs font-black uppercase tracking-widest text-rose-700 transition-all">
+              <button type="button" (click)="clientPopupAccessAction('Disable login', '/api/superadmin/clients/login/disable')" [disabled]="clientPopupBusy" class="rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 px-3.5 py-2.5 text-xs font-bold text-rose-700 transition-all cursor-pointer">
                 Disable Login
               </button>
-              <button type="button" (click)="clientPopupAccessAction('Enable login', '/api/superadmin/clients/login/enable')" class="rounded-2xl bg-emerald-50 hover:bg-emerald-100 px-5 py-4 text-xs font-black uppercase tracking-widest text-emerald-700 transition-all">
+              <button type="button" (click)="clientPopupAccessAction('Enable login', '/api/superadmin/clients/login/enable')" [disabled]="clientPopupBusy" class="rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3.5 py-2.5 text-xs font-bold text-emerald-700 transition-all cursor-pointer">
                 Enable Login
               </button>
             </div>
           </div>
+        </div>
 
-          <div class="mt-5 rounded-2xl bg-slate-50 border border-slate-100 p-4">
-            <p class="text-[9px] font-black uppercase tracking-widest text-slate-400">Auth Status</p>
-            <p class="mt-1 text-sm font-black text-slate-900">{{ clientPopup.auth_status || 'ACTIVE' }}</p>
+        <!-- Activity & Audit Log -->
+        <div class="rounded-2xl bg-white p-5 shadow-xs border border-slate-200/70 flex flex-col">
+          <div class="flex items-center justify-between pb-3.5 border-b border-slate-100">
+            <div>
+              <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Audit Trail</p>
+              <h3 class="text-base font-black text-slate-900">Recent Action Log</h3>
+            </div>
+            <span class="rounded-lg bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold text-slate-600 tabular-nums">
+              {{ clientPopupAudit.length }} events
+            </span>
           </div>
-        </div>
-      </section>
 
-      <!-- TAB 8: AUDIT -->
-      <section *ngIf="clientPopupTab === 'audit'" class="space-y-3">
-        <div class="rounded-[1.75rem] bg-white p-6 shadow-sm ring-1 ring-slate-100">
-          <p class="text-[10px] font-black uppercase tracking-[0.25em] text-blue-500">Audit</p>
-          <h3 class="mt-1 text-xl font-black text-slate-950">Popup action log</h3>
-        </div>
-        <div *ngFor="let item of clientPopupAudit" class="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
-          <p class="text-sm font-black text-slate-900">{{ item.action }}</p>
-          <p class="mt-1 text-xs font-bold text-slate-500">{{ item.detail }}</p>
-          <p class="mt-2 text-[10px] font-mono font-bold uppercase tracking-widest text-slate-400">{{ item.time }}</p>
+          <div class="mt-3.5 space-y-2.5 max-h-72 overflow-y-auto pr-1">
+            <div *ngFor="let item of clientPopupAudit" class="rounded-xl bg-slate-50 border border-slate-100 p-3">
+              <div class="flex items-center justify-between gap-2">
+                <p class="text-xs font-bold text-slate-900">{{ item.action }}</p>
+                <span class="text-[10px] font-mono text-slate-400 shrink-0">{{ item.time }}</span>
+              </div>
+              <p class="mt-0.5 text-xs font-medium text-slate-500 break-words">{{ item.detail }}</p>
+            </div>
+            <div *ngIf="clientPopupAudit.length === 0" class="rounded-xl bg-slate-50 border border-slate-100 p-4 text-center text-xs font-medium text-slate-400">
+              No actions recorded in this session yet.
+            </div>
+          </div>
         </div>
       </section>
 
     </main>
 
-    <!-- Executive White Luxury Footer Bar -->
-    <footer class="border-t border-slate-200 bg-white px-5 py-3.5 sm:px-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shrink-0">
-      <div class="text-xs font-bold text-slate-500 flex items-center gap-2">
-        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-        <span>Secure popup only: CRUD, status, password/access, audit. Modules/plans/prices are handled in their own cards.</span>
-      </div>
-      <div class="flex items-center justify-end gap-2.5">
-        <button type="button" (click)="setClientPopupTab('edit')" class="rounded-full bg-slate-100 hover:bg-slate-200 px-5 py-2 text-xs font-black uppercase tracking-wider text-slate-800 transition-all">
-          Edit
-        </button>
-        <button type="button" (click)="closeClientPopupSecure()" class="rounded-full bg-slate-950 hover:bg-slate-900 px-6 py-2 text-xs font-black uppercase tracking-wider text-white shadow-md transition-all active:scale-95">
-          Done
-        </button>
-      </div>
+    <!-- Clean Minimal Footer -->
+    <footer class="shrink-0 border-t border-slate-200/80 bg-white px-5 py-3.5 sm:px-6 flex items-center justify-between gap-3">
+      <button type="button" (click)="setClientPopupTab(clientPopupTab === 'edit' ? 'overview' : 'edit')" class="rounded-xl bg-slate-100 hover:bg-slate-200 px-4 py-2 text-xs font-bold text-slate-800 transition-all cursor-pointer">
+        {{ clientPopupTab === 'edit' ? 'Back to Overview' : 'Edit Info' }}
+      </button>
+      <button type="button" (click)="closeClientPopupSecure()" class="rounded-xl bg-slate-900 hover:bg-slate-800 px-5 py-2 text-xs font-bold text-white shadow-xs transition-all cursor-pointer">
+        Done
+      </button>
     </footer>
 
   </div>

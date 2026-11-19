@@ -1,24 +1,31 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fade-in">
   
-  <!-- Banner -->
-  <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-8 text-white shadow-xl border border-slate-800">
-    <div class="absolute -right-10 -bottom-10 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+  <!-- School-Grade Executive Frosted 3D Hero -->
+  <div class="relative overflow-hidden rounded-[28px] border border-white/80 bg-gradient-to-br from-white/95 via-emerald-50/40 to-slate-50/90 backdrop-blur-2xl p-6 sm:p-8 shadow-[0_20px_50px_-12px_rgba(16,185,129,0.18),0_8px_20px_-6px_rgba(0,0,0,0.06),inset_0_1px_2px_rgba(255,255,255,0.95)] group">
+    <div class="absolute inset-0 bg-[radial-gradient(#8080800c_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none"></div>
+    <div class="absolute -right-16 -top-16 w-80 h-80 bg-gradient-to-br from-emerald-200/40 via-teal-100/30 to-transparent rounded-full blur-3xl pointer-events-none group-hover:scale-110 transition-transform duration-700"></div>
+    <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent"></div>
     <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-      <div>
-        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-xs font-semibold uppercase tracking-wider mb-3">
-          <lucide-icon [name]="icons.BookOpen" class="w-3.5 h-3.5"></lucide-icon>
-          Enterprise Knowledge Base & Engineering Runbooks
+      <div class="flex items-start sm:items-center gap-4">
+        <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-[20px] bg-gradient-to-br from-indigo-600 via-blue-600 to-violet-600 text-white shadow-lg shadow-indigo-500/30 flex items-center justify-center shrink-0">
+          <lucide-icon [name]="icons.BookOpen" class="w-7 h-7"></lucide-icon>
         </div>
-        <h1 class="text-3xl font-black tracking-tight text-white sm:text-4xl">Developer Hub & Architecture Docs</h1>
-        <p class="mt-2 text-slate-300 text-sm max-w-2xl">
-          Technical specifications, zero-trust cryptographic implementation guidelines, failover runbooks, and tenant integration standards.
-        </p>
+        <div>
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-200/80 text-indigo-700 text-[10px] font-black uppercase tracking-wider mb-2">
+            <lucide-icon [name]="icons.BookOpen" class="w-3.5 h-3.5"></lucide-icon>
+            Enterprise Knowledge Base & Engineering Runbooks
+          </div>
+          <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">Developer Hub & Architecture Docs</h1>
+          <p class="mt-1 text-slate-500 text-xs sm:text-sm max-w-2xl">
+            Technical specifications, zero-trust cryptographic implementation guidelines, failover runbooks, and tenant integration standards.
+          </p>
+        </div>
       </div>
     </div>
   </div>
 
   <!-- Search & Filter Controls -->
-  <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+  <div class="bg-white rounded-2xl p-4 border border-slate-200/90 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
     <div class="relative w-full sm:w-80">
       <lucide-icon [name]="icons.Search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></lucide-icon>
       <input 
@@ -26,16 +33,16 @@
         [(ngModel)]="searchQuery" 
         (ngModelChange)="applyFilter()"
         placeholder="Search runbooks, guides, and docs..." 
-        class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+        class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
       />
     </div>
 
     <div class="flex items-center gap-2 w-full sm:w-auto">
-      <span class="text-xs font-semibold text-slate-500 shrink-0">Topic:</span>
+      <span class="text-xs font-bold text-slate-500 shrink-0">Topic:</span>
       <select 
         [(ngModel)]="selectedCategory" 
         (ngModelChange)="applyFilter()" 
-        class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 focus:outline-none focus:border-indigo-500">
+        class="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-700 focus:outline-none focus:border-indigo-500">
         <option value="all">All Topics</option>
         <option value="API & Integration">API & Integration</option>
         <option value="Multi-Tenant Architecture">Multi-Tenant</option>
@@ -47,7 +54,7 @@
 
   <!-- Articles Grid -->
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-    <div *ngFor="let doc of filteredArticles" class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all flex flex-col justify-between">
+    <div *ngFor="let doc of filteredArticles" class="bg-white rounded-[24px] border border-slate-200/90 border-t-4 border-t-indigo-500 p-6 shadow-xs hover:shadow-md hover:border-indigo-300 transition-all flex flex-col justify-between">
       <div>
         <div class="flex items-center justify-between gap-3 mb-3">
           <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-100">

@@ -1,28 +1,40 @@
 <!-- SCS_DASHBOARD_SAAS_CONTROL_COMPONENT_V1_START -->
-          <div *ngIf="activeView === 'saas-control'"
-            class="space-y-5 rounded-[2rem] border border-slate-200 bg-slate-50 p-4 shadow-xl sm:p-5">
+          <div *ngIf="activeView === 'saas-control'" class="space-y-6">
 
-            <div class="overflow-hidden rounded-[1.75rem] bg-white p-6 sm:p-8 border border-slate-200/80 shadow-[0_2px_10px_rgb(0,0,0,0.02)] relative">
-              <div class="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
-              <div class="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between relative">
-                <div>
-                  <p class="text-[10px] font-black uppercase tracking-[0.32em] text-slate-400">
-                    Business-wise subscription engine
-                  </p>
-                  <h2 class="mt-2 text-3xl font-extrabold tracking-tight text-slate-900">
-                    SaaS Control Center
-                  </h2>
-                  <p class="mt-2 max-w-3xl text-sm font-bold leading-relaxed text-slate-500">
-                    Client ka official business resolve hota hai, phir usi business ka
-                    Starter, Pro ya Enterprise price aur included modules assign hote hain.
-                  </p>
+            <!-- Executive 3D Frosted Hero Card -->
+            <div class="rounded-[28px] p-5 sm:p-7 border border-white/80 shadow-[0_20px_50px_-12px_rgba(16,185,129,0.18),0_8px_20px_-6px_rgba(0,0,0,0.06),inset_0_1px_2px_rgba(255,255,255,0.95)] bg-gradient-to-br from-white/95 via-emerald-50/40 to-slate-50/90 backdrop-blur-2xl relative overflow-hidden group">
+              <div class="absolute inset-0 bg-[radial-gradient(#8080800c_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none"></div>
+              <div class="absolute -right-16 -top-16 w-80 h-80 bg-gradient-to-br from-emerald-200/40 via-teal-100/30 to-transparent rounded-full blur-3xl pointer-events-none group-hover:scale-110 transition-transform duration-700"></div>
+              <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent"></div>
+
+              <div class="relative z-10 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-6">
+                <div class="flex items-start sm:items-center gap-4 min-w-0 flex-1">
+                  <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-[20px] bg-gradient-to-br from-indigo-600 via-blue-600 to-cyan-600 text-white flex items-center justify-center font-black shadow-[0_12px_28px_-6px_rgba(79,70,229,0.45),inset_0_2px_4px_rgba(255,255,255,0.4)] border border-white/30 shrink-0">
+                    <svg class="w-7 h-7 sm:w-8 sm:h-8 drop-shadow-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                  </div>
+                  <div class="min-w-0 flex-1 space-y-1.5">
+                    <div class="flex flex-wrap items-center gap-2">
+                      <span class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-indigo-500/10 text-indigo-700 border border-indigo-300/60 text-[10px] font-black uppercase tracking-wider">
+                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
+                        Subscription Engine
+                      </span>
+                      <span class="text-[10px] font-black uppercase tracking-wider text-slate-500">Business-wise Assignment</span>
+                    </div>
+                    <h2 class="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-slate-900">
+                      SaaS Control Center<span class="text-indigo-600">.</span>
+                    </h2>
+                    <p class="max-w-3xl text-xs sm:text-sm font-medium leading-relaxed text-slate-600">
+                      Client ka official business resolve hota hai, phir usi business ka Starter, Pro ya Enterprise price aur included modules assign hote hain.
+                    </p>
+                  </div>
                 </div>
-                <div class="w-full xl:max-w-md">
-                  <label class="text-[10px] font-black uppercase tracking-widest text-slate-500">
+
+                <div class="w-full xl:max-w-md shrink-0 bg-white/80 backdrop-blur-md p-3.5 rounded-2xl border border-slate-200/90 shadow-xs">
+                  <label class="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1.5">
                     Select approved client
                   </label>
                   <select
-                    class="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-5 py-3.5 text-sm font-black text-slate-900 outline-none hover:border-slate-300 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all cursor-pointer shadow-sm"
+                    class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 outline-none hover:border-slate-300 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all cursor-pointer shadow-2xs"
                     [value]="selectedClient?.id || ''"
                     (change)="selectSaasControlClient($any($event.target).value)">
                     <option value="" class="text-slate-900">
@@ -43,195 +55,203 @@
             </div>
 
             <div *ngIf="!selectedClient"
-              class="rounded-[1.75rem] border border-dashed border-slate-300 bg-white p-12 text-center">
+              class="rounded-3xl border border-dashed border-slate-300 bg-white p-12 text-center shadow-2xs">
+              <div class="w-14 h-14 mx-auto rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center mb-4">
+                <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              </div>
               <p class="text-lg font-black text-slate-900">
                 Client select karo
               </p>
-              <p class="mt-2 text-sm font-bold text-slate-400">
+              <p class="mt-1.5 text-sm font-medium text-slate-500 max-w-md mx-auto">
                 Approved client select karne ke baad business plans aur modules yahan load honge.
               </p>
             </div>
 
             <ng-container *ngIf="selectedClient">
+              <!-- 4 Chromatic KPI Summary Cards -->
               <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <div class="rounded-2xl bg-gradient-to-b from-white via-white to-slate-50/80 p-5 border border-slate-200/90 shadow-[0_4px_14px_-2px_rgba(79,70,229,0.12)] hover:shadow-[0_12px_24px_-4px_rgba(79,70,229,0.20)] hover:-translate-y-1 transition-all duration-300">
-                  <div class="flex items-center justify-between">
-                    <p class="text-[9px] font-black uppercase tracking-widest text-slate-400">
-                      Client
-                    </p>
-                    <div class="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                    </div>
+                <div class="rounded-2xl bg-gradient-to-b from-white to-slate-50/70 p-4 sm:p-5 border border-slate-200/90 shadow-[0_4px_16px_-2px_rgba(79,70,229,0.12)] hover:shadow-[0_14px_28px_-4px_rgba(79,70,229,0.22)] hover:-translate-y-1 transition-all duration-300 flex items-center gap-4">
+                  <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-blue-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-indigo-500/30 border border-white/30">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                   </div>
-                  <p class="mt-2 truncate text-base font-black text-slate-900 tracking-tight">
-                    {{ selectedClient.company_name || selectedClient.full_name }}
-                  </p>
-                  <p class="mt-0.5 truncate text-xs font-semibold text-slate-500">
-                    {{ selectedClient.email }}
-                  </p>
+                  <div class="min-w-0 flex-1">
+                    <p class="text-[9px] font-black uppercase tracking-widest text-indigo-600">Client</p>
+                    <p class="mt-0.5 truncate text-base font-black text-slate-900 tracking-tight">
+                      {{ selectedClient.company_name || selectedClient.full_name }}
+                    </p>
+                    <p class="mt-0.5 truncate text-xs font-medium text-slate-500">
+                      {{ selectedClient.email }}
+                    </p>
+                  </div>
                 </div>
 
-                <div class="rounded-2xl bg-gradient-to-b from-white via-white to-slate-50/80 p-5 border border-slate-200/90 shadow-[0_4px_14px_-2px_rgba(37,99,235,0.12)] hover:shadow-[0_12px_24px_-4px_rgba(37,99,235,0.20)] hover:-translate-y-1 transition-all duration-300">
-                  <div class="flex items-center justify-between">
-                    <p class="text-[9px] font-black uppercase tracking-widest text-slate-400">
-                      Official Business
-                    </p>
-                    <div class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-                      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M8 10h.01"/><path d="M16 10h.01"/><path d="M8 14h.01"/><path d="M16 14h.01"/></svg>
-                    </div>
+                <div class="rounded-2xl bg-gradient-to-b from-white to-slate-50/70 p-4 sm:p-5 border border-slate-200/90 shadow-[0_4px_16px_-2px_rgba(37,99,235,0.12)] hover:shadow-[0_14px_28px_-4px_rgba(37,99,235,0.22)] hover:-translate-y-1 transition-all duration-300 flex items-center gap-4">
+                  <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-cyan-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-500/30 border border-white/30">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M8 10h.01"/><path d="M16 10h.01"/><path d="M8 14h.01"/><path d="M16 14h.01"/></svg>
                   </div>
-                  <p class="mt-2 text-base font-black text-blue-700 tracking-tight">
-                    {{ saasClientBusinessLabel() }}
-                  </p>
-                  <p class="mt-0.5 text-xs font-semibold text-slate-500">
-                    Type: {{ selectedClient.business_type }}
-                  </p>
+                  <div class="min-w-0 flex-1">
+                    <p class="text-[9px] font-black uppercase tracking-widest text-blue-600">Official Business</p>
+                    <p class="mt-0.5 truncate text-base font-black text-slate-900 tracking-tight">
+                      {{ saasClientBusinessLabel() }}
+                    </p>
+                    <p class="mt-0.5 truncate text-xs font-medium text-slate-500">
+                      Type: {{ selectedClient.business_type }}
+                    </p>
+                  </div>
                 </div>
 
-                <div class="rounded-2xl bg-gradient-to-b from-white via-white to-slate-50/80 p-5 border border-slate-200/90 shadow-[0_4px_14px_-2px_rgba(245,158,11,0.12)] hover:shadow-[0_12px_24px_-4px_rgba(245,158,11,0.20)] hover:-translate-y-1 transition-all duration-300">
-                  <div class="flex items-center justify-between">
-                    <p class="text-[9px] font-black uppercase tracking-widest text-slate-400">
-                      Subscription
-                    </p>
-                    <div class="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
-                      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
-                    </div>
+                <div class="rounded-2xl bg-gradient-to-b from-white to-slate-50/70 p-4 sm:p-5 border border-slate-200/90 shadow-[0_4px_16px_-2px_rgba(245,158,11,0.12)] hover:shadow-[0_14px_28px_-4px_rgba(245,158,11,0.22)] hover:-translate-y-1 transition-all duration-300 flex items-center gap-4">
+                  <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-amber-500/30 border border-white/30">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
                   </div>
-                  <p class="mt-2 text-base font-black uppercase text-slate-900 tracking-tight">
-                    {{ tenantSubscription.plan_id || 'No plan' }}
-                  </p>
-                  <p class="mt-0.5 text-xs font-semibold text-slate-500">
-                    {{ tenantSubscription.billing_cycle || 'monthly' }}
-                    · PKR {{ tenantSubscription.amount || 0 | number:'1.0-0' }}
-                  </p>
+                  <div class="min-w-0 flex-1">
+                    <p class="text-[9px] font-black uppercase tracking-widest text-amber-600">Subscription</p>
+                    <p class="mt-0.5 text-base font-black uppercase text-slate-900 tracking-tight truncate">
+                      {{ tenantSubscription.plan_id || 'No plan' }}
+                    </p>
+                    <p class="mt-0.5 text-xs font-semibold text-slate-500 tabular-nums truncate">
+                      {{ tenantSubscription.billing_cycle || 'monthly' }}
+                      · PKR {{ tenantSubscription.amount || 0 | number:'1.0-0' }}
+                    </p>
+                  </div>
                 </div>
 
-                <div class="rounded-2xl bg-gradient-to-b from-white via-white to-slate-50/80 p-5 border border-slate-200/90 shadow-[0_4px_14px_-2px_rgba(16,185,129,0.12)] hover:shadow-[0_12px_24px_-4px_rgba(16,185,129,0.20)] hover:-translate-y-1 transition-all duration-300">
-                  <div class="flex items-center justify-between">
-                    <p class="text-[9px] font-black uppercase tracking-widest text-slate-400">
-                      Enabled Access
-                    </p>
-                    <div class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg>
-                    </div>
+                <div class="rounded-2xl bg-gradient-to-b from-white to-slate-50/70 p-4 sm:p-5 border border-slate-200/90 shadow-[0_4px_16px_-2px_rgba(16,185,129,0.12)] hover:shadow-[0_14px_28px_-4px_rgba(16,185,129,0.22)] hover:-translate-y-1 transition-all duration-300 flex items-center gap-4">
+                  <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/30 border border-white/30">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg>
                   </div>
-                  <p class="mt-2 text-2xl font-black text-slate-900 tabular-nums tracking-tight">
-                    {{ scsSuperEnabledCount() }}
-                  </p>
-                  <p class="mt-0.5 text-xs font-semibold text-emerald-600">
-                    Active Tenant Modules
-                  </p>
+                  <div class="min-w-0 flex-1">
+                    <p class="text-[9px] font-black uppercase tracking-widest text-emerald-600">Enabled Access</p>
+                    <p class="mt-0.5 text-2xl font-black text-slate-900 tabular-nums tracking-tight leading-tight">
+                      {{ scsSuperEnabledCount() }}
+                    </p>
+                    <p class="mt-0.5 text-xs font-semibold text-emerald-600">
+                      Active Tenant Modules
+                    </p>
+                  </div>
                 </div>
               </div>
 
-              <div class="rounded-[1.75rem] bg-white p-5 ring-1 ring-slate-100 sm:p-6">
-                <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <!-- Business Plans Selection Card -->
+              <div class="rounded-3xl bg-white p-5 sm:p-7 border border-slate-200/90 shadow-xs space-y-5">
+                <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between pb-4 border-b border-slate-100">
                   <div>
-                    <p class="text-[10px] font-black uppercase tracking-[0.25em] text-blue-500">
-                      Business plans
-                    </p>
-                    <h3 class="mt-1 text-xl font-black text-slate-950">
+                    <div class="flex items-center gap-2 mb-1">
+                      <span class="w-2 h-2 rounded-full bg-indigo-600"></span>
+                      <p class="text-[10px] font-black uppercase tracking-widest text-indigo-600">
+                        Business plans
+                      </p>
+                    </div>
+                    <h3 class="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
                       {{ saasClientBusinessLabel() }}
                     </h3>
                   </div>
 
-                  <div class="inline-flex rounded-2xl bg-slate-100 p-1">
+                  <div class="inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200/80">
                     <button
                       type="button"
                       (click)="saasClientSetBillingCycle('monthly')"
-                      class="rounded-xl px-5 py-2.5 text-xs font-black uppercase tracking-widest"
-                      [class.bg-white]="saasClientBillingCycle === 'monthly'"
-                      [class.text-slate-950]="saasClientBillingCycle === 'monthly'"
-                      [class.shadow]="saasClientBillingCycle === 'monthly'"
-                      [class.text-slate-400]="saasClientBillingCycle !== 'monthly'">
+                      class="rounded-lg px-4 py-2 text-xs font-black uppercase tracking-wider transition-all cursor-pointer"
+                      [class.bg-slate-900]="saasClientBillingCycle === 'monthly'"
+                      [class.text-white]="saasClientBillingCycle === 'monthly'"
+                      [class.shadow-sm]="saasClientBillingCycle === 'monthly'"
+                      [class.text-slate-500]="saasClientBillingCycle !== 'monthly'">
                       Monthly
                     </button>
 
                     <button
                       type="button"
                       (click)="saasClientSetBillingCycle('yearly')"
-                      class="rounded-xl px-5 py-2.5 text-xs font-black uppercase tracking-widest"
-                      [class.bg-white]="saasClientBillingCycle === 'yearly'"
-                      [class.text-slate-950]="saasClientBillingCycle === 'yearly'"
-                      [class.shadow]="saasClientBillingCycle === 'yearly'"
-                      [class.text-slate-400]="saasClientBillingCycle !== 'yearly'">
+                      class="rounded-lg px-4 py-2 text-xs font-black uppercase tracking-wider transition-all cursor-pointer"
+                      [class.bg-slate-900]="saasClientBillingCycle === 'yearly'"
+                      [class.text-white]="saasClientBillingCycle === 'yearly'"
+                      [class.shadow-sm]="saasClientBillingCycle === 'yearly'"
+                      [class.text-slate-500]="saasClientBillingCycle !== 'yearly'">
                       Yearly
                     </button>
                   </div>
                 </div>
 
                 <div *ngIf="saasClientPlanLoading"
-                  class="mt-5 rounded-2xl bg-slate-50 p-8 text-center text-sm font-black text-slate-400">
+                  class="rounded-2xl bg-slate-50 p-8 text-center text-sm font-black text-slate-400">
                   Loading business plans...
                 </div>
 
                 <div *ngIf="!saasClientPlanLoading"
-                  class="mt-5 grid gap-4 lg:grid-cols-3">
-
+                  class="grid gap-4 lg:grid-cols-3">
                   <button
                     type="button"
                     *ngFor="let plan of saasAssignablePlans()"
                     (click)="saasClientSelectPlan($any(plan).id || $any(plan).plan_id)"
-                    class="rounded-[1.5rem] border p-5 text-left transition-all"
-                    [class.border-blue-500]="saasClientSelectedPlanId === ($any(plan).id || $any(plan).plan_id)"
-                    [class.bg-blue-50]="saasClientSelectedPlanId === ($any(plan).id || $any(plan).plan_id)"
-                    [class.shadow-lg]="saasClientSelectedPlanId === ($any(plan).id || $any(plan).plan_id)"
-                    [class.border-slate-200]="saasClientSelectedPlanId !== ($any(plan).id || $any(plan).plan_id)"
-                    [class.bg-white]="saasClientSelectedPlanId !== ($any(plan).id || $any(plan).plan_id)">
+                    class="rounded-2xl border p-5 text-left transition-all duration-300 cursor-pointer flex flex-col justify-between group"
+                    [class.border-indigo-600]="saasClientSelectedPlanId === ($any(plan).id || $any(plan).plan_id)"
+                    [class.ring-2]="saasClientSelectedPlanId === ($any(plan).id || $any(plan).plan_id)"
+                    [class.ring-indigo-500/20]="saasClientSelectedPlanId === ($any(plan).id || $any(plan).plan_id)"
+                    [class.bg-indigo-50/40]="saasClientSelectedPlanId === ($any(plan).id || $any(plan).plan_id)"
+                    [class.shadow-md]="saasClientSelectedPlanId === ($any(plan).id || $any(plan).plan_id)"
+                    [class.border-slate-200/90]="saasClientSelectedPlanId !== ($any(plan).id || $any(plan).plan_id)"
+                    [class.bg-gradient-to-b]="saasClientSelectedPlanId !== ($any(plan).id || $any(plan).plan_id)"
+                    [class.from-white]="saasClientSelectedPlanId !== ($any(plan).id || $any(plan).plan_id)"
+                    [class.to-slate-50/70]="saasClientSelectedPlanId !== ($any(plan).id || $any(plan).plan_id)"
+                    [class.hover:border-indigo-300]="saasClientSelectedPlanId !== ($any(plan).id || $any(plan).plan_id)"
+                    [class.hover:-translate-y-0.5]="saasClientSelectedPlanId !== ($any(plan).id || $any(plan).plan_id)">
 
-                    <div class="flex items-start justify-between gap-3">
-                      <div>
-                        <p class="text-[10px] font-black uppercase tracking-widest text-blue-500">
-                          {{ $any(plan).name || $any(plan).plan_name || ($any(plan).id || $any(plan).plan_id) }}
-                        </p>
-                        <p class="mt-2 text-2xl font-black text-slate-950">
-                          Rs {{ saasBusinessPlanPrice(plan) | number:'1.0-0' }}
-                        </p>
-                        <p class="mt-1 text-xs font-bold text-slate-400">
-                          per {{ saasClientBillingCycle === 'yearly' ? 'year' : 'month' }}
-                        </p>
+                    <div>
+                      <div class="flex items-start justify-between gap-3">
+                        <div>
+                          <p class="text-[10px] font-black uppercase tracking-widest text-indigo-600">
+                            {{ $any(plan).name || $any(plan).plan_name || ($any(plan).id || $any(plan).plan_id) }}
+                          </p>
+                          <p class="mt-2 text-2xl sm:text-3xl font-black text-slate-900 tabular-nums">
+                            Rs {{ saasBusinessPlanPrice(plan) | number:'1.0-0' }}
+                          </p>
+                          <p class="mt-0.5 text-xs font-bold text-slate-500">
+                            per {{ saasClientBillingCycle === 'yearly' ? 'year' : 'month' }}
+                          </p>
+                        </div>
+
+                        <span class="rounded-lg bg-slate-900 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-white tabular-nums shrink-0">
+                          {{ saasBusinessPlanModuleCount(plan) }} modules
+                        </span>
                       </div>
 
-                      <span class="rounded-full bg-slate-950 px-3 py-1 text-[9px] font-black uppercase tracking-widest text-white">
-                        {{ saasBusinessPlanModuleCount(plan) }} modules
-                      </span>
+                      <p class="mt-4 pt-3 border-t border-slate-200/70 text-xs font-semibold leading-relaxed text-slate-600">
+                        {{ saasBusinessPlanModuleNames(plan) }}
+                      </p>
                     </div>
-
-                    <p class="mt-4 text-xs font-bold leading-relaxed text-slate-500">
-                      {{ saasBusinessPlanModuleNames(plan) }}
-                    </p>
                   </button>
                 </div>
 
-                <div class="mt-5 flex flex-col gap-3 rounded-2xl bg-slate-950 p-4 text-white sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <p class="text-[9px] font-black uppercase tracking-widest text-white/40">
-                      Selected package total
-                    </p>
-                    <p class="mt-1 text-xl font-black">
-                      Rs {{ saasSelectedPackageTotal() | number:'1.0-0' }}
-                    </p>
-                    <p class="mt-1 text-xs font-bold text-white/45">
-                      Plan base + enabled manual addons only
-                    </p>
-
-                    <div class="mt-4 space-y-2 text-xs font-bold text-white/80">
-
-                      <div class="flex justify-between">
-                        <span>Billing</span>
-                        <span>{{ saasClientBillingCycle | titlecase }}</span>
+                <!-- Obsidian Summary Assignment Bar -->
+                <div class="flex flex-col gap-4 rounded-2xl bg-slate-900 p-5 sm:p-6 text-white sm:flex-row sm:items-center sm:justify-between shadow-md">
+                  <div class="space-y-3 flex-1">
+                    <div>
+                      <p class="text-[10px] font-black uppercase tracking-widest text-indigo-300">
+                        Selected package total
+                      </p>
+                      <div class="flex items-baseline gap-3 mt-1">
+                        <p class="text-2xl sm:text-3xl font-black tabular-nums">
+                          Rs {{ saasSelectedPackageTotal() | number:'1.0-0' }}
+                        </p>
+                        <span class="text-xs font-medium text-slate-400">
+                          Plan base + enabled manual addons only
+                        </span>
                       </div>
+                    </div>
 
-                      <div class="flex justify-between">
-                        <span>Selected Plan</span>
-                        <span>{{ saasClientSelectedPlanId || '-' }}</span>
+                    <div class="grid grid-cols-3 gap-3 max-w-lg pt-3 border-t border-white/10 text-xs font-bold">
+                      <div>
+                        <span class="text-[9px] uppercase tracking-wider text-slate-400 block">Billing</span>
+                        <span class="text-white">{{ saasClientBillingCycle | titlecase }}</span>
                       </div>
-
-                      <div class="flex justify-between">
-                        <span>Enabled Modules</span>
-                        <span>{{ scsSuperEnabledCount() }}</span>
+                      <div>
+                        <span class="text-[9px] uppercase tracking-wider text-slate-400 block">Selected Plan</span>
+                        <span class="text-indigo-300 uppercase">{{ saasClientSelectedPlanId || '-' }}</span>
                       </div>
-
+                      <div>
+                        <span class="text-[9px] uppercase tracking-wider text-slate-400 block">Enabled Modules</span>
+                        <span class="text-emerald-400 tabular-nums">{{ scsSuperEnabledCount() }}</span>
+                      </div>
                     </div>
                   </div>
 
@@ -244,91 +264,72 @@
                       !saasClientSelectedPlanId ||
                       selectedClient.status !== 'approved'
                     "
-                    class="rounded-2xl bg-white px-6 py-3 text-xs font-black uppercase tracking-widest text-slate-950 disabled:cursor-not-allowed disabled:opacity-40">
+                    class="rounded-xl bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-400 hover:to-blue-400 px-6 py-3.5 text-xs font-black uppercase tracking-wider text-white shadow-md disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer transition-all shrink-0">
                     {{ saasClientPlanSaving ? 'Assigning...' : 'Assign Business Plan' }}
                   </button>
                 </div>
 
-
-                <div class="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-5">
-
-                  <h4 class="text-sm font-black text-slate-900">
+                <!-- Concise Metadata Verification Strip -->
+                <div class="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4">
+                  <h4 class="text-xs font-black text-slate-900 uppercase tracking-wider mb-3">
                     Business Plan Summary
                   </h4>
-
-                  <div class="mt-4 grid gap-3 md:grid-cols-2">
-
-                    <div>
-                      <div class="text-[10px] font-black uppercase text-slate-400">
-                        Business
-                      </div>
-                      <div class="font-bold text-slate-900">
-                        {{ saasClientBusinessLabel() }}
-                      </div>
+                  <div class="grid gap-3 grid-cols-2 md:grid-cols-4">
+                    <div class="p-3 rounded-xl bg-white border border-slate-200/70">
+                      <div class="text-[9px] font-black uppercase tracking-wider text-slate-400">Business</div>
+                      <div class="font-bold text-slate-900 text-xs mt-0.5 truncate">{{ saasClientBusinessLabel() }}</div>
                     </div>
-
-                    <div>
-                      <div class="text-[10px] font-black uppercase text-slate-400">
-                        Selected Plan
-                      </div>
-                      <div class="font-bold text-slate-900">
-                        {{ saasClientSelectedPlanId || '-' }}
-                      </div>
+                    <div class="p-3 rounded-xl bg-white border border-slate-200/70">
+                      <div class="text-[9px] font-black uppercase tracking-wider text-slate-400">Selected Plan</div>
+                      <div class="font-bold text-indigo-700 text-xs uppercase mt-0.5 truncate">{{ saasClientSelectedPlanId || '-' }}</div>
                     </div>
-
-                    <div>
-                      <div class="text-[10px] font-black uppercase text-slate-400">
-                        Billing
-                      </div>
-                      <div class="font-bold text-slate-900">
-                        {{ saasClientBillingCycle | titlecase }}
-                      </div>
+                    <div class="p-3 rounded-xl bg-white border border-slate-200/70">
+                      <div class="text-[9px] font-black uppercase tracking-wider text-slate-400">Billing</div>
+                      <div class="font-bold text-slate-900 text-xs mt-0.5">{{ saasClientBillingCycle | titlecase }}</div>
                     </div>
-
-                    <div>
-                      <div class="text-[10px] font-black uppercase text-slate-400">
-                        Enabled Modules
-                      </div>
-                      <div class="font-bold text-slate-900">
-                        {{ scsSuperEnabledCount() }}
-                      </div>
+                    <div class="p-3 rounded-xl bg-white border border-slate-200/70">
+                      <div class="text-[9px] font-black uppercase tracking-wider text-slate-400">Enabled Modules</div>
+                      <div class="font-black text-emerald-700 text-xs tabular-nums mt-0.5">{{ scsSuperEnabledCount() }}</div>
                     </div>
-
                   </div>
-
                 </div>
 
                 <p *ngIf="saasClientPlanMessage"
-                  class="mt-4 rounded-2xl px-4 py-3 text-xs font-black"
+                  class="rounded-2xl px-4 py-3 text-xs font-black border"
                   [class.bg-emerald-50]="saasClientPlanOk"
                   [class.text-emerald-700]="saasClientPlanOk"
+                  [class.border-emerald-200]="saasClientPlanOk"
                   [class.bg-rose-50]="!saasClientPlanOk"
-                  [class.text-rose-700]="!saasClientPlanOk">
+                  [class.text-rose-700]="!saasClientPlanOk"
+                  [class.border-rose-200]="!saasClientPlanOk">
                   {{ saasClientPlanMessage }}
                 </p>
               </div>
 
-              <div class="rounded-[1.75rem] bg-white p-5 ring-1 ring-slate-100 sm:p-6">
-                <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+              <!-- Tenant Modules Access Matrix -->
+              <div class="rounded-3xl bg-white p-5 sm:p-7 border border-slate-200/90 shadow-xs">
+                <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between pb-4 border-b border-slate-100">
                   <div>
-                    <p class="text-[10px] font-black uppercase tracking-[0.25em] text-emerald-600">
-                      Tenant modules
-                    </p>
-                    <h3 class="mt-1 text-xl font-black text-slate-950">
+                    <div class="flex items-center gap-2 mb-1">
+                      <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                      <p class="text-[10px] font-black uppercase tracking-widest text-emerald-600">
+                        Tenant modules
+                      </p>
+                    </div>
+                    <h3 class="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
                       Included plan access + manual addons
                     </h3>
                   </div>
 
                   <div class="grid gap-2 sm:grid-cols-2">
                     <input
-                      class="rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold outline-none focus:border-blue-400"
+                      class="rounded-xl border border-slate-200 bg-slate-50/70 focus:bg-white px-4 py-2.5 text-sm font-bold outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all"
                       placeholder="Search modules"
                       [value]="scsSuperModuleSearch"
                       (input)="scsSuperSetModuleSearch($any($event.target).value)">
 
-
                     <select
-                      class="rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold outline-none"
+                      class="rounded-xl border border-slate-200 bg-slate-50/70 focus:bg-white px-4 py-2.5 text-sm font-bold outline-none focus:border-indigo-500 transition-all cursor-pointer"
                       [value]="scsSuperModuleCategory"
                       (change)="scsSuperSetModuleCategory($any($event.target).value)">
                       <option value="all">All categories</option>
@@ -347,65 +348,59 @@
                 </div>
 
                 <div *ngIf="!isModulesLoading"
-                  class="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                  class="mt-5 grid gap-3.5 md:grid-cols-2 xl:grid-cols-3">
 
                   <button
                     type="button"
                     *ngFor="let module of scsSuperVisibleModules(); trackBy: scsSuperTrackModule"
                     (click)="scsSuperSetModuleEnabled(module, !scsSuperIsModuleEnabled(module))"
                     [disabled]="scsSuperModuleSaving(module)"
-                    class="flex items-center justify-between gap-4 rounded-2xl border p-4 text-left transition-all disabled:opacity-50"
+                    class="flex items-center justify-between gap-4 rounded-2xl border p-4 text-left transition-all duration-200 cursor-pointer disabled:opacity-50 hover:-translate-y-0.5 hover:shadow-sm"
                     (contextmenu)="scsToggleModuleSelection(module); false"
-                    [class.ring-4]="scsIsModuleSelected(module)"
+                    [class.ring-2]="scsIsModuleSelected(module)"
                     [class.ring-indigo-500]="scsIsModuleSelected(module)"
                     [class.border-emerald-200]="scsSuperIsModuleEnabled(module)"
-                    [class.bg-emerald-50]="scsSuperIsModuleEnabled(module)"
+                    [class.bg-emerald-50/50]="scsSuperIsModuleEnabled(module)"
                     [class.border-slate-200]="!scsSuperIsModuleEnabled(module)"
-                    [class.bg-slate-50]="!scsSuperIsModuleEnabled(module)">
+                    [class.bg-white]="!scsSuperIsModuleEnabled(module)">
 
-                    <div class="min-w-0">
-                      <p class="truncate text-sm font-black text-slate-950">
-                        {{ module.name }}
-                      </p>
-                      <p class="mt-1 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                    <div class="min-w-0 flex-1">
+                      <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full shrink-0" [class.bg-emerald-500]="scsSuperIsModuleEnabled(module)" [class.bg-slate-300]="!scsSuperIsModuleEnabled(module)"></span>
+                        <p class="truncate text-sm font-black text-slate-900">
+                          {{ module.name }}
+                        </p>
+                      </div>
+                      <p class="mt-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">
                         {{ moduleCategoryLabel(module.category) }}
                       </p>
 
-                      <div class="mt-2 flex flex-wrap gap-2">
-
+                      <div class="mt-2.5 flex items-center justify-between gap-2 pt-2 border-t border-slate-200/60">
                         <span
                           *ngIf="module.source==='plan'"
-                          class="rounded-full bg-blue-600 px-2 py-1 text-[9px] font-black uppercase text-white">
+                          class="rounded-md bg-indigo-50 border border-indigo-200 px-2 py-0.5 text-[9px] font-black uppercase text-indigo-700">
                           Included
                         </span>
-
                         <span
                           *ngIf="module.source!=='plan'"
-                          class="rounded-full bg-orange-500 px-2 py-1 text-[9px] font-black uppercase text-white">
+                          class="rounded-md bg-amber-50 border border-amber-200 px-2 py-0.5 text-[9px] font-black uppercase text-amber-800">
                           Manual Addon
                         </span>
 
-                      </div>
-                      <div class="mt-2 flex items-center justify-between">
-
-                        <span class="text-xs font-bold text-slate-500">
+                        <span class="text-xs font-black text-slate-700 tabular-nums">
                           Rs {{ scsSuperModulePrice(module) | number:'1.0-0' }}
                         </span>
-
-                        <span
-                          class="rounded-full bg-slate-900 px-2 py-1 text-[9px] font-black uppercase tracking-wider text-white">
-                          Price
-                        </span>
-
                       </div>
                     </div>
 
                     <span
-                      class="shrink-0 rounded-full px-3 py-1.5 text-[9px] font-black uppercase tracking-widest"
+                      class="shrink-0 rounded-lg px-3 py-1.5 text-[10px] font-black uppercase tracking-wider border"
                       [class.bg-emerald-600]="scsSuperIsModuleEnabled(module)"
                       [class.text-white]="scsSuperIsModuleEnabled(module)"
-                      [class.bg-white]="!scsSuperIsModuleEnabled(module)"
-                      [class.text-slate-500]="!scsSuperIsModuleEnabled(module)">
+                      [class.border-emerald-600]="scsSuperIsModuleEnabled(module)"
+                      [class.bg-slate-100]="!scsSuperIsModuleEnabled(module)"
+                      [class.text-slate-600]="!scsSuperIsModuleEnabled(module)"
+                      [class.border-slate-200]="!scsSuperIsModuleEnabled(module)">
                       {{ scsSuperModuleSaving(module)
                         ? 'Saving...'
                         : (scsSuperIsModuleEnabled(module) ? 'Enabled' : 'Disabled') }}
@@ -416,21 +411,16 @@
                 <div
                   *ngIf="!isModulesLoading && scsSuperVisibleModules().length===0"
                   class="mt-6 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-10 text-center">
-
-                  <div class="text-5xl">
-                    📦
+                  <div class="w-12 h-12 mx-auto rounded-2xl bg-white border border-slate-200 text-slate-400 flex items-center justify-center mb-3 shadow-2xs">
+                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
                   </div>
-
-                  <h3 class="mt-4 text-lg font-black text-slate-900">
+                  <h3 class="text-base font-black text-slate-900">
                     No modules found
                   </h3>
-
-                  <p class="mt-2 text-sm font-bold text-slate-500">
+                  <p class="mt-1 text-sm font-medium text-slate-500">
                     Is business/category/search ke liye koi module available nahi hai.
                   </p>
-
                 </div>
-
               </div>
             </ng-container>
           </div>

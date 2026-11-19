@@ -1,22 +1,38 @@
 <div class="p-6 md:p-8 space-y-8 animate-fade-in pb-24">
-  <!-- Top Bar -->
-  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-    <div>
-      <div class="flex items-center gap-2">
-        <h2 class="text-xl font-bold tracking-tight text-slate-900">Developer Hub & Outgoing Webhooks</h2>
-        <span class="text-xs text-slate-500 font-mono">v2.4 Core</span>
+  <!-- School-Grade Executive Frosted 3D Hero -->
+  <div class="relative overflow-hidden rounded-[28px] border border-white/80 bg-gradient-to-br from-white/95 via-emerald-50/40 to-slate-50/90 backdrop-blur-2xl p-6 sm:p-7 shadow-[0_20px_50px_-12px_rgba(16,185,129,0.18),0_8px_20px_-6px_rgba(0,0,0,0.06),inset_0_1px_2px_rgba(255,255,255,0.95)]">
+    <div class="absolute inset-0 bg-[radial-gradient(#8080800c_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none"></div>
+    <div class="absolute -right-16 -top-16 w-80 h-80 bg-gradient-to-br from-emerald-200/40 via-teal-100/30 to-transparent rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent"></div>
+    <div class="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
+      <div class="flex items-start sm:items-center gap-4">
+        <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-[20px] bg-gradient-to-br from-indigo-600 via-blue-600 to-cyan-600 text-white shadow-lg shadow-indigo-500/30 flex items-center justify-center shrink-0">
+          <lucide-icon [name]="icons.Network" class="w-7 h-7"></lucide-icon>
+        </div>
+        <div>
+          <div class="flex flex-wrap items-center gap-2 mb-1">
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-200/80">
+              Event Dispatch Bus
+            </span>
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-slate-900 text-white">
+              v2.4 Core
+            </span>
+          </div>
+          <h2 class="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">Developer Hub & Outgoing Webhooks</h2>
+          <p class="text-xs sm:text-sm text-slate-500 mt-0.5">Configure HMAC-signed event subscriptions, test real-time HTTP dispatches, and inspect deliveries.</p>
+        </div>
       </div>
-      <p class="text-sm text-slate-500 mt-1">Configure event subscriptions, test real-time HTTP dispatches, and inspect deliveries.</p>
-    </div>
-    <div class="flex items-center gap-3">
-      <button (click)="openTestModal()" class="px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 shadow-xs rounded-lg text-xs font-semibold transition-all flex items-center gap-2">
-        <lucide-icon [name]="icons.Send" class="w-3.5 h-3.5 text-indigo-600"></lucide-icon>
-        Send Test Event
-      </button>
-      <button (click)="openCreateModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs rounded-lg text-xs font-semibold transition-all flex items-center gap-2">
-        <lucide-icon [name]="icons.Plus" class="w-3.5 h-3.5"></lucide-icon>
-        New Endpoint
-      </button>
+
+      <div class="flex flex-wrap items-center gap-3 shrink-0">
+        <button (click)="openTestModal()" class="px-4 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 shadow-xs rounded-xl text-xs font-extrabold transition-all flex items-center gap-2">
+          <lucide-icon [name]="icons.Send" class="w-4 h-4 text-indigo-600"></lucide-icon>
+          Send Test Event
+        </button>
+        <button (click)="openCreateModal()" class="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white shadow-md shadow-indigo-600/25 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2">
+          <lucide-icon [name]="icons.Plus" class="w-4 h-4"></lucide-icon>
+          New Endpoint
+        </button>
+      </div>
     </div>
   </div>
 
@@ -24,11 +40,11 @@
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
     <div class="lg:col-span-2 space-y-4">
       <div class="flex items-center justify-between">
-        <h3 class="text-sm font-semibold text-slate-900">Configured Endpoints ({{ endpoints.length }})</h3>
-        <span class="text-xs text-slate-400">HMAC-SHA256 Signature Enabled</span>
+        <h3 class="text-sm font-black text-slate-900">Configured Endpoints ({{ endpoints.length }})</h3>
+        <span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/80 text-[10px] font-black uppercase tracking-wider">HMAC-SHA256 Signed</span>
       </div>
 
-      <div *ngFor="let ep of endpoints" class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs hover:border-slate-300 transition-all space-y-3">
+      <div *ngFor="let ep of endpoints" class="bg-white border border-slate-200/90 rounded-[22px] p-5 shadow-xs hover:border-indigo-200 hover:shadow-md transition-all space-y-3">
         <div class="flex items-start justify-between">
           <div class="space-y-1">
             <div class="flex items-center gap-2">
@@ -92,27 +108,27 @@
   </div>
 
   <!-- Recent Delivery History Table -->
-  <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs space-y-0">
-    <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+  <div class="bg-white border border-slate-200/90 rounded-[24px] overflow-hidden shadow-xs space-y-0">
+    <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/60">
       <div>
-        <h3 class="text-sm font-semibold text-slate-900">Recent Webhook Deliveries</h3>
+        <h3 class="text-sm font-black text-slate-900">Recent Webhook Deliveries</h3>
         <p class="text-xs text-slate-500">Live delivery audits and response statuses from the last 24 hours.</p>
       </div>
-      <button (click)="openTestModal()" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800">
+      <button (click)="openTestModal()" class="px-3.5 py-2 rounded-xl bg-indigo-50 text-indigo-700 hover:bg-indigo-100 text-xs font-extrabold transition-colors">
         Simulate Event →
       </button>
     </div>
 
     <div class="overflow-x-auto">
       <table class="w-full text-left text-xs">
-        <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold">
+        <thead class="bg-slate-900 text-white uppercase text-[10px] font-black tracking-wider">
           <tr>
-            <th class="py-3 px-4">Status</th>
-            <th class="py-3 px-4">Event Topic</th>
-            <th class="py-3 px-4">Target Endpoint</th>
-            <th class="py-3 px-4">Latency</th>
-            <th class="py-3 px-4">Timestamp</th>
-            <th class="py-3 px-4 text-right">Actions</th>
+            <th class="py-3.5 px-4">Status</th>
+            <th class="py-3.5 px-4">Event Topic</th>
+            <th class="py-3.5 px-4">Target Endpoint</th>
+            <th class="py-3.5 px-4">Latency</th>
+            <th class="py-3.5 px-4">Timestamp</th>
+            <th class="py-3.5 px-4 text-right">Actions</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-100">

@@ -1,5 +1,8 @@
 import express from 'express';
 
+import fs from 'fs';
+import path from 'path';
+
 const LANG_MAP = {
   en: 'en',
   ur: 'ur',
@@ -13,10 +16,6 @@ const LANG_MAP = {
   fa: 'fa',
   hi: 'hi',
   bn: 'bn',
-  ta: 'ta',
-  te: 'te',
-  mr: 'mr',
-  gu: 'gu',
   ne: 'ne',
   si: 'si',
   zh: 'zh-CN',
@@ -29,10 +28,18 @@ const LANG_MAP = {
   tl: 'tl',
   my: 'my',
   km: 'km',
+  lo: 'lo',
+  dv: 'dv',
   tr: 'tr',
   az: 'az',
   uz: 'uz',
   kk: 'kk',
+  tg: 'tg',
+  ky: 'ky',
+  tk: 'tk',
+  ka: 'ka',
+  hy: 'hy',
+  mn: 'mn',
   es: 'es',
   fr: 'fr',
   de: 'de',
@@ -42,17 +49,35 @@ const LANG_MAP = {
   pl: 'pl',
   ru: 'ru',
   uk: 'uk',
+  be: 'be',
+  bg: 'bg',
+  sr: 'sr',
+  hr: 'hr',
+  bs: 'bs',
+  mk: 'mk',
+  sl: 'sl',
+  sk: 'sk',
+  cs: 'cs',
+  ro: 'ro',
+  hu: 'hu',
   sv: 'sv',
   no: 'no',
   da: 'da',
   fi: 'fi',
+  is: 'is',
   el: 'el',
   he: 'he',
-  cs: 'cs',
-  ro: 'ro',
-  hu: 'hu',
+  lt: 'lt',
+  lv: 'lv',
+  et: 'et',
+  sq: 'sq',
+  mt: 'mt',
+  ga: 'ga',
   sw: 'sw',
-  am: 'am'
+  am: 'am',
+  so: 'so',
+  mg: 'mg',
+  rw: 'rw'
 };
 
 const CURATED_GLOSSARY = {
@@ -114,10 +139,6 @@ const MINT_LANG_MAP = {
   fa: 'fa',
   hi: 'hi',
   bn: 'bn',
-  ta: 'ta',
-  te: 'te',
-  mr: 'mr',
-  gu: 'gu',
   ne: 'ne',
   si: 'si',
   zh: 'zh',
@@ -130,10 +151,17 @@ const MINT_LANG_MAP = {
   tl: 'tl',
   my: 'my',
   km: 'km',
+  lo: 'lo',
   tr: 'tr',
   az: 'az',
   uz: 'uz',
   kk: 'kk',
+  tg: 'tg',
+  ky: 'ky',
+  tk: 'tk',
+  ka: 'ka',
+  hy: 'hy',
+  mn: 'mn',
   es: 'es',
   fr: 'fr',
   de: 'de',
@@ -143,20 +171,72 @@ const MINT_LANG_MAP = {
   pl: 'pl',
   ru: 'ru',
   uk: 'uk',
+  be: 'be',
+  bg: 'bg',
+  sr: 'sr',
+  hr: 'hr',
+  bs: 'bs',
+  mk: 'mk',
+  sl: 'sl',
+  sk: 'sk',
+  cs: 'cs',
+  ro: 'ro',
+  hu: 'hu',
   sv: 'sv',
   no: 'nb',
   da: 'da',
   fi: 'fi',
+  is: 'is',
   el: 'el',
   he: 'he',
-  cs: 'cs',
-  ro: 'ro',
-  hu: 'hu',
+  lt: 'lt',
+  lv: 'lv',
+  et: 'et',
+  sq: 'sq',
+  mt: 'mt',
+  ga: 'ga',
   sw: 'sw',
-  am: 'am'
+  am: 'am',
+  so: 'so',
+  mg: 'mg',
+  rw: 'rw'
 };
 
+const NON_LATIN_LANGS = new Set([
+  'ur', 'sd', 'pa', 'ps', 'skr', 'bal', 'ks', 'ar', 'fa',
+  'hi', 'bn', 'ne', 'si', 'zh', 'ja', 'ko', 'th', 'my', 'km', 'lo', 'dv',
+  'ru', 'uk', 'kk', 'tg', 'ky', 'ka', 'hy', 'mn', 'bg', 'sr', 'be', 'mk',
+  'el', 'he', 'am'
+]);
+
 const STRICT_REGIONAL_LANGS = new Set(['skr', 'ks']);
+
+function shouldPreferSecondaryEngine(lang, orig, candidate) {
+  const tr = String(candidate || '').trim();
+  if (!tr) return true;
+  if (orig.includes(' ') && tr.toLowerCase() === orig.trim().toLowerCase()) return true;
+  if (NON_LATIN_LANGS.has(lang) && /^[A-Za-z0-9\s.,!?:;'"/+&\-()]+$/.test(tr) && /[A-Za-z]{4,}/.test(tr)) {
+    return true;
+  }
+  return false;
+}
+
+function loadBaselineOfflinePacks() {
+  try {
+    const candidates = [
+      path.resolve(process.cwd(), 'frontend/public/i18n-core-packs.json'),
+      path.resolve(process.cwd(), '../frontend/public/i18n-core-packs.json')
+    ];
+    for (const filePath of candidates) {
+      if (fs.existsSync(filePath)) {
+        const parsed = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+        const packs = parsed?.packs && typeof parsed.packs === 'object' ? parsed.packs : parsed;
+        if (packs && typeof packs === 'object') return packs;
+      }
+    }
+  } catch {}
+  return {};
+}
 
 const SEP_RAW = '\n[[998877]]\n';
 const SEP_REGEX = /\s*\[+\s*998877\s*\]+\s*/g;
@@ -346,6 +426,7 @@ async function runWithConcurrency(items, limit, worker) {
 export function createI18nRouter(sqliteDb) {
   const router = express.Router();
   const memoryCache = new Map();
+  const baselinePacks = loadBaselineOfflinePacks();
 
   if (sqliteDb) {
     try {
@@ -382,6 +463,12 @@ export function createI18nRouter(sqliteDb) {
           return row.translated_text;
         }
       } catch {}
+    }
+    const baseHit = baselinePacks[lang]?.[sourceText];
+    if (typeof baseHit === 'string' && baseHit.trim()) {
+      const cleaned = baseHit.trim();
+      langMap.set(sourceText, cleaned);
+      return cleaned;
     }
     return null;
   }
@@ -475,7 +562,8 @@ export function createI18nRouter(sqliteDb) {
         if (current.length > 0) chunks.push(current);
 
         await runWithConcurrency(chunks, 3, async (chunk) => {
-          // 1. Primary for the 17 Google-supported languages: multi-q GET via clients5
+          const deferredC5 = new Map();
+          // 1. Primary for Google-supported languages: multi-q GET via clients5
           if (!strictRegional) {
             try {
               const parts = await fetchClients5Batch(chunk, upstreamLang);
@@ -483,8 +571,12 @@ export function createI18nRouter(sqliteDb) {
                 chunk.forEach((orig, idx) => {
                   const candidate = parts[idx];
                   if (candidate && candidate.trim()) {
-                    result[orig] = candidate;
-                    setCached(rawLang, orig, candidate);
+                    if (mintCode && shouldPreferSecondaryEngine(rawLang, orig, candidate)) {
+                      deferredC5.set(orig, candidate.trim());
+                    } else {
+                      result[orig] = candidate;
+                      setCached(rawLang, orig, candidate);
+                    }
                   }
                 });
                 if (chunk.every((orig) => Boolean(result[orig]))) return;
@@ -611,6 +703,12 @@ export function createI18nRouter(sqliteDb) {
                   setCached(rawLang, orig, candidate);
                 }
               } catch {}
+            } else if (!result[orig] && deferredC5.has(orig)) {
+              const fallbackCandidate = deferredC5.get(orig);
+              if (fallbackCandidate) {
+                result[orig] = fallbackCandidate;
+                setCached(rawLang, orig, fallbackCandidate);
+              }
             }
           });
         });
@@ -622,15 +720,16 @@ export function createI18nRouter(sqliteDb) {
     }
   });
 
-  // Hybrid Offline Pack Summary: lists all languages & downloaded phrase counts in SQLite/memory
+  // Hybrid Offline Pack Summary: lists all languages & downloaded phrase counts in SQLite/memory/baseline
   router.get('/i18n/packs/summary', (_req, res) => {
     try {
       const packs = {};
       for (const lang of Object.keys(LANG_MAP)) {
         if (lang === 'en') continue;
         const glossaryCount = CURATED_GLOSSARY[lang] ? Object.keys(CURATED_GLOSSARY[lang]).length : 0;
+        const baselineCount = baselinePacks[lang] ? Object.keys(baselinePacks[lang]).length : 0;
         const memCount = memoryCache.get(lang)?.size || 0;
-        packs[lang] = { count: Math.max(glossaryCount, memCount) };
+        packs[lang] = { count: Math.max(glossaryCount, baselineCount, memCount) };
       }
 
       if (sqliteDb) {
@@ -642,8 +741,9 @@ export function createI18nRouter(sqliteDb) {
             const lang = String(row.target_lang || '').toLowerCase();
             if (!LANG_MAP[lang] || lang === 'en') continue;
             const glossaryCount = CURATED_GLOSSARY[lang] ? Object.keys(CURATED_GLOSSARY[lang]).length : 0;
+            const baselineCount = baselinePacks[lang] ? Object.keys(baselinePacks[lang]).length : 0;
             packs[lang] = {
-              count: Math.max(Number(row.cnt || 0), packs[lang]?.count || 0, glossaryCount),
+              count: Math.max(Number(row.cnt || 0), packs[lang]?.count || 0, glossaryCount, baselineCount),
               updatedAt: row.last_updated || null
             };
           }
@@ -656,7 +756,7 @@ export function createI18nRouter(sqliteDb) {
     }
   });
 
-  // Download full offline pack for a language from SQLite + memory + curated glossary
+  // Download full offline pack for a language from baseline + SQLite + memory + curated glossary
   router.get('/i18n/pack/:lang', (req, res) => {
     try {
       const rawLang = String(req.params.lang || '').trim().toLowerCase();
@@ -668,6 +768,10 @@ export function createI18nRouter(sqliteDb) {
       }
 
       const translations = {};
+      if (baselinePacks[rawLang] && typeof baselinePacks[rawLang] === 'object') {
+        Object.assign(translations, baselinePacks[rawLang]);
+      }
+
       if (sqliteDb) {
         try {
           const rows = sqliteDb

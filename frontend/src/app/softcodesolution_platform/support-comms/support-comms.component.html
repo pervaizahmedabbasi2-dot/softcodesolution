@@ -1,93 +1,137 @@
-<div class="px-6 sm:px-8 py-8 max-w-7xl mx-auto space-y-6">
+<div class="px-4 sm:px-6 lg:px-8 py-6 max-w-[98rem] mx-auto space-y-6 animate-fade-in">
 
-  <!-- Page Header & Tab Bar -->
-  <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 border-b border-slate-200">
-    <div>
-      <div class="flex items-center gap-2.5">
-        <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Support &amp; Email Communications Desk</h1>
-        <span class="px-2.5 py-0.5 rounded-lg text-[11px] font-bold border whitespace-nowrap"
-              [class.bg-emerald-50]="smtpConfigured()"
-              [class.text-emerald-700]="smtpConfigured()"
-              [class.border-emerald-200]="smtpConfigured()"
-              [class.bg-amber-50]="!smtpConfigured()"
-              [class.text-amber-800]="!smtpConfigured()"
-              [class.border-amber-200]="!smtpConfigured()">
-          {{ smtpConfigured() ? 'SMTP Live Ready' : 'Outbox Mode (Configure SMTP)' }}
-        </span>
+  <!-- Executive 3D Frosted Support & Comms Hero -->
+  <div class="rounded-[28px] p-5 sm:p-7 border border-white/80 shadow-[0_20px_50px_-12px_rgba(16,185,129,0.18),0_8px_20px_-6px_rgba(0,0,0,0.06),inset_0_1px_2px_rgba(255,255,255,0.95)] bg-gradient-to-br from-white/95 via-emerald-50/40 to-slate-50/90 backdrop-blur-2xl relative overflow-hidden">
+    <div class="absolute inset-0 bg-[radial-gradient(#8080800c_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none"></div>
+    <div class="absolute -right-16 -top-16 w-80 h-80 bg-gradient-to-br from-emerald-200/40 via-teal-100/30 to-transparent rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent"></div>
+    <div class="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-5">
+      <div class="flex items-start gap-4">
+        <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-[20px] bg-gradient-to-br from-indigo-600 via-blue-600 to-cyan-600 text-white shadow-xl shadow-indigo-600/25 flex items-center justify-center shrink-0 border border-white/40 ring-1 ring-indigo-500/20">
+          <lucide-icon [name]="icons.MessageSquare" class="w-7 h-7 sm:w-8 sm:h-8"></lucide-icon>
+        </div>
+        <div class="min-w-0">
+          <div class="flex flex-wrap items-center gap-2 mb-1.5">
+            <span class="px-2.5 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200/80 text-[10px] font-black uppercase tracking-widest">
+              Support &amp; Comms Studio
+            </span>
+            <span class="px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-widest border whitespace-nowrap flex items-center gap-1.5"
+                  [class.bg-emerald-50]="smtpConfigured()"
+                  [class.text-emerald-700]="smtpConfigured()"
+                  [class.border-emerald-200]="smtpConfigured()"
+                  [class.bg-amber-50]="!smtpConfigured()"
+                  [class.text-amber-800]="!smtpConfigured()"
+                  [class.border-amber-200]="!smtpConfigured()">
+              <span class="w-1.5 h-1.5 rounded-full" [class.bg-emerald-500]="smtpConfigured()" [class.bg-amber-500]="!smtpConfigured()"></span>
+              {{ smtpConfigured() ? 'SMTP Live Ready' : 'Outbox Mode (Configure SMTP)' }}
+            </span>
+          </div>
+          <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Support &amp; Email Communications Desk</h1>
+          <p class="text-xs sm:text-sm text-slate-600 font-medium mt-1 max-w-2xl">
+            Manage website support tickets, live chat escalations, Auto-Bot replies, team attribution, and promotional email campaigns from one workspace.
+          </p>
+        </div>
       </div>
-      <p class="text-sm text-slate-500 mt-1">
-        Manage website support tickets, live chat escalations, Auto-Bot replies, team attribution, and promotional email campaigns from one workspace.
-      </p>
-    </div>
 
-    <div class="flex flex-wrap items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200/80">
-      <button type="button" (click)="setTab('inbox')"
-              class="px-3.5 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer"
-              [class.bg-white]="activeTab() === 'inbox'"
-              [class.text-slate-900]="activeTab() === 'inbox'"
-              [class.shadow-xs]="activeTab() === 'inbox'"
-              [class.text-slate-600]="activeTab() !== 'inbox'">
-        <lucide-icon [name]="icons.Inbox" class="w-3.5 h-3.5"></lucide-icon>
-        <span>Support Inbox</span>
-        @if (stats().unread > 0) {
-          <span class="px-1.5 py-0.2 rounded bg-indigo-600 text-white text-[10px] font-bold tabular-nums">{{ stats().unread }}</span>
-        }
-      </button>
+      <div class="flex flex-wrap items-center gap-1.5 bg-slate-100/90 p-1.5 rounded-2xl border border-slate-200/80 shrink-0">
+        <button type="button" (click)="setTab('inbox')"
+                class="px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer"
+                [class.bg-white]="activeTab() === 'inbox'"
+                [class.text-indigo-700]="activeTab() === 'inbox'"
+                [class.shadow-xs]="activeTab() === 'inbox'"
+                [class.text-slate-600]="activeTab() !== 'inbox'">
+          <lucide-icon [name]="icons.Inbox" class="w-3.5 h-3.5"></lucide-icon>
+          <span>Support Inbox</span>
+          @if (stats().unread > 0) {
+            <span class="px-1.5 py-0.5 rounded-md bg-indigo-600 text-white text-[10px] font-black tabular-nums">{{ stats().unread }}</span>
+          }
+        </button>
 
-      <button type="button" (click)="setTab('chats')"
-              class="px-3.5 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer"
-              [class.bg-white]="activeTab() === 'chats'"
-              [class.text-slate-900]="activeTab() === 'chats'"
-              [class.shadow-xs]="activeTab() === 'chats'"
-              [class.text-slate-600]="activeTab() !== 'chats'">
-        <lucide-icon [name]="icons.MessageSquare" class="w-3.5 h-3.5"></lucide-icon>
-        <span>Live Chat &amp; Portal</span>
-        <span class="text-[10px] font-bold text-slate-500 tabular-nums">{{ stats().chats }}</span>
-      </button>
+        <button type="button" (click)="setTab('chats')"
+                class="px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer"
+                [class.bg-white]="activeTab() === 'chats'"
+                [class.text-indigo-700]="activeTab() === 'chats'"
+                [class.shadow-xs]="activeTab() === 'chats'"
+                [class.text-slate-600]="activeTab() !== 'chats'">
+          <lucide-icon [name]="icons.MessageSquare" class="w-3.5 h-3.5"></lucide-icon>
+          <span>Live Chat</span>
+          <span class="text-[10px] font-black text-slate-500 tabular-nums">{{ stats().chats }}</span>
+        </button>
 
-      <button type="button" (click)="setTab('campaigns')"
-              class="px-3.5 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer"
-              [class.bg-white]="activeTab() === 'campaigns'"
-              [class.text-slate-900]="activeTab() === 'campaigns'"
-              [class.shadow-xs]="activeTab() === 'campaigns'"
-              [class.text-slate-600]="activeTab() !== 'campaigns'">
-        <lucide-icon [name]="icons.Megaphone" class="w-3.5 h-3.5"></lucide-icon>
-        <span>Promo &amp; Direct Email</span>
-      </button>
+        <button type="button" (click)="setTab('campaigns')"
+                class="px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer"
+                [class.bg-white]="activeTab() === 'campaigns'"
+                [class.text-indigo-700]="activeTab() === 'campaigns'"
+                [class.shadow-xs]="activeTab() === 'campaigns'"
+                [class.text-slate-600]="activeTab() !== 'campaigns'">
+          <lucide-icon [name]="icons.Megaphone" class="w-3.5 h-3.5"></lucide-icon>
+          <span>Promo &amp; Email</span>
+        </button>
 
-      <button type="button" (click)="setTab('bot-smtp')"
-              class="px-3.5 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer"
-              [class.bg-white]="activeTab() === 'bot-smtp'"
-              [class.text-slate-900]="activeTab() === 'bot-smtp'"
-              [class.shadow-xs]="activeTab() === 'bot-smtp'"
-              [class.text-slate-600]="activeTab() !== 'bot-smtp'">
-        <lucide-icon [name]="icons.Bot" class="w-3.5 h-3.5"></lucide-icon>
-        <span>Auto-Bot &amp; SMTP</span>
-      </button>
+        <button type="button" (click)="setTab('bot-smtp')"
+                class="px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer"
+                [class.bg-white]="activeTab() === 'bot-smtp'"
+                [class.text-indigo-700]="activeTab() === 'bot-smtp'"
+                [class.shadow-xs]="activeTab() === 'bot-smtp'"
+                [class.text-slate-600]="activeTab() !== 'bot-smtp'">
+          <lucide-icon [name]="icons.Bot" class="w-3.5 h-3.5"></lucide-icon>
+          <span>Auto-Bot &amp; SMTP</span>
+        </button>
+      </div>
     </div>
   </div>
 
-  <!-- Summary Metrics Strip -->
+  <!-- Summary Metrics Strip (5 Chromatic Cards) -->
   <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
-    <div class="bg-white border border-slate-200 rounded-2xl p-4">
-      <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Total Tickets</p>
-      <p class="text-2xl font-extrabold text-slate-900 mt-1 tabular-nums">{{ stats().total }}</p>
+    <div class="bg-white border border-slate-200/90 border-t-4 border-t-slate-800 rounded-2xl p-4 shadow-xs flex items-center justify-between gap-3">
+      <div>
+        <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Total Tickets</p>
+        <p class="text-2xl font-black text-slate-900 mt-1 tabular-nums">{{ stats().total }}</p>
+        <p class="text-[10px] font-bold text-slate-500 mt-0.5">All queues</p>
+      </div>
+      <div class="w-9 h-9 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
+        <lucide-icon [name]="icons.Inbox" class="w-4 h-4"></lucide-icon>
+      </div>
     </div>
-    <div class="bg-white border border-slate-200 rounded-2xl p-4">
-      <p class="text-[11px] font-bold uppercase tracking-wider text-amber-600">Open Queue</p>
-      <p class="text-2xl font-extrabold text-slate-900 mt-1 tabular-nums">{{ stats().open }}</p>
+    <div class="bg-white border border-slate-200/90 border-t-4 border-t-amber-500 rounded-2xl p-4 shadow-xs flex items-center justify-between gap-3">
+      <div>
+        <p class="text-[10px] font-black uppercase tracking-wider text-amber-600">Open Queue</p>
+        <p class="text-2xl font-black text-slate-900 mt-1 tabular-nums">{{ stats().open }}</p>
+        <p class="text-[10px] font-bold text-amber-700 mt-0.5">Awaiting triage</p>
+      </div>
+      <div class="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+        <lucide-icon [name]="icons.Clock" class="w-4 h-4"></lucide-icon>
+      </div>
     </div>
-    <div class="bg-white border border-slate-200 rounded-2xl p-4">
-      <p class="text-[11px] font-bold uppercase tracking-wider text-indigo-600">Bot Handled</p>
-      <p class="text-2xl font-extrabold text-slate-900 mt-1 tabular-nums">{{ stats().botReplied }}</p>
+    <div class="bg-white border border-slate-200/90 border-t-4 border-t-indigo-600 rounded-2xl p-4 shadow-xs flex items-center justify-between gap-3">
+      <div>
+        <p class="text-[10px] font-black uppercase tracking-wider text-indigo-600">Bot Handled</p>
+        <p class="text-2xl font-black text-slate-900 mt-1 tabular-nums">{{ stats().botReplied }}</p>
+        <p class="text-[10px] font-bold text-indigo-600 mt-0.5">Instant triage</p>
+      </div>
+      <div class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+        <lucide-icon [name]="icons.Bot" class="w-4 h-4"></lucide-icon>
+      </div>
     </div>
-    <div class="bg-white border border-slate-200 rounded-2xl p-4">
-      <p class="text-[11px] font-bold uppercase tracking-wider text-sky-600">Team Active</p>
-      <p class="text-2xl font-extrabold text-slate-900 mt-1 tabular-nums">{{ stats().inProgress }}</p>
+    <div class="bg-white border border-slate-200/90 border-t-4 border-t-sky-500 rounded-2xl p-4 shadow-xs flex items-center justify-between gap-3">
+      <div>
+        <p class="text-[10px] font-black uppercase tracking-wider text-sky-600">Team Active</p>
+        <p class="text-2xl font-black text-slate-900 mt-1 tabular-nums">{{ stats().inProgress }}</p>
+        <p class="text-[10px] font-bold text-sky-700 mt-0.5">In resolution</p>
+      </div>
+      <div class="w-9 h-9 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center shrink-0">
+        <lucide-icon [name]="icons.Users" class="w-4 h-4"></lucide-icon>
+      </div>
     </div>
-    <div class="bg-white border border-slate-200 rounded-2xl p-4">
-      <p class="text-[11px] font-bold uppercase tracking-wider text-emerald-600">Emails Dispatched</p>
-      <p class="text-2xl font-extrabold text-slate-900 mt-1 tabular-nums">{{ campaigns().length }}</p>
+    <div class="bg-white border border-slate-200/90 border-t-4 border-t-emerald-500 rounded-2xl p-4 shadow-xs flex items-center justify-between gap-3 col-span-2 md:col-span-1">
+      <div>
+        <p class="text-[10px] font-black uppercase tracking-wider text-emerald-600">Emails Dispatched</p>
+        <p class="text-2xl font-black text-slate-900 mt-1 tabular-nums">{{ campaigns().length }}</p>
+        <p class="text-[10px] font-bold text-emerald-700 mt-0.5">Outbox logged</p>
+      </div>
+      <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+        <lucide-icon [name]="icons.Send" class="w-4 h-4"></lucide-icon>
+      </div>
     </div>
   </div>
 

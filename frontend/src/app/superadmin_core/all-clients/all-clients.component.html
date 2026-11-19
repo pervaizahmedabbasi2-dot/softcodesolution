@@ -1,96 +1,108 @@
 <!-- SCS_DASHBOARD_ALL_CLIENTS_COMPONENT_V1_START -->
-      <div *ngIf="activeView === 'all-tenants' && userRole === 'SUPER_ADMIN'" class="px-8 py-7 max-w-[98rem] mx-auto space-y-6">
-        <!-- Client Management Hero Strip (Matching School/Overview Standard) -->
-        <div class="relative overflow-hidden rounded-3xl bg-white border border-slate-200/90 shadow-2xs hover:shadow-sm transition-all">
-          <div class="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none"></div>
-          <div class="absolute -top-16 -right-16 w-80 h-80 rounded-full opacity-20 bg-gradient-to-br from-indigo-100 to-transparent blur-2xl pointer-events-none"></div>
-          <div class="relative px-6 sm:px-8 py-6 sm:py-8 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
-            <div>
-              <div class="flex flex-wrap items-center gap-2 mb-3">
-                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-50 border border-indigo-200/80 text-[10px] font-black text-indigo-700 uppercase tracking-widest shadow-2xs">
-                  👑 Superadmin Core
-                </span>
-                <span *ngIf="lastRefreshedAt" class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                  Updated {{ lastRefreshedAt }} · Auto in {{ autoRefreshCountdown }}s
-                </span>
+      <div *ngIf="activeView === 'all-tenants' && userRole === 'SUPER_ADMIN'" class="px-3 sm:px-6 lg:px-8 py-6 max-w-[1600px] mx-auto space-y-6">
+        <!-- Executive 3D Frosted Hero Card -->
+        <div class="rounded-[28px] p-5 sm:p-7 border border-white/80 shadow-[0_20px_50px_-12px_rgba(16,185,129,0.18),0_8px_20px_-6px_rgba(0,0,0,0.06),inset_0_1px_2px_rgba(255,255,255,0.95)] bg-gradient-to-br from-white/95 via-emerald-50/40 to-slate-50/90 backdrop-blur-2xl relative overflow-hidden transition-all duration-300 group">
+          <div class="absolute inset-0 bg-[radial-gradient(#8080800c_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none"></div>
+          <div class="absolute -right-16 -top-16 w-80 h-80 bg-gradient-to-br from-emerald-200/40 via-teal-100/30 to-transparent rounded-full blur-3xl pointer-events-none group-hover:scale-110 transition-transform duration-700"></div>
+          <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent"></div>
+
+          <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+            <div class="flex items-start sm:items-center gap-4 min-w-0 flex-1">
+              <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-[20px] bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 text-white flex items-center justify-center font-black shadow-[0_12px_28px_-6px_rgba(79,70,229,0.45),inset_0_2px_4px_rgba(255,255,255,0.4)] border border-white/30 shrink-0 transform group-hover:rotate-1 transition-transform duration-300">
+                <lucide-icon [name]="icons.Users || 'users'" class="w-7 h-7 sm:w-8 sm:h-8 drop-shadow-sm"></lucide-icon>
               </div>
-              <h1 class="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 tracking-tight leading-tight">
-                Client Tenant Management<span class="text-indigo-600">.</span>
-              </h1>
-              <p class="text-xs sm:text-sm text-slate-500 font-medium mt-1.5 max-w-2xl leading-relaxed">
-                Review and approve client registrations, manage enterprise subscriptions, configure assigned modules, and preview workspaces.
-              </p>
+              <div class="space-y-1.5 min-w-0 flex-1">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-indigo-500/10 text-indigo-700 border border-indigo-300/60 text-[10px] font-black uppercase tracking-wider">
+                    <lucide-icon [name]="icons.ShieldCheck || 'shield-check'" class="w-3 h-3"></lucide-icon>
+                    Superadmin Core
+                  </span>
+                  <span *ngIf="lastRefreshedAt" class="text-[10px] text-slate-500 font-bold uppercase tracking-wider tabular-nums">
+                    Updated {{ lastRefreshedAt }} · Auto in {{ autoRefreshCountdown }}s
+                  </span>
+                </div>
+                <h1 class="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 tracking-tight leading-snug">
+                  Client Tenant Management<span class="text-indigo-600">.</span>
+                </h1>
+                <p class="text-xs sm:text-sm text-slate-600 font-medium max-w-2xl leading-relaxed">
+                  Review and approve client registrations, manage enterprise subscriptions, configure assigned modules, and inspect workspaces.
+                </p>
+              </div>
             </div>
-            <div class="hidden sm:grid grid-cols-2 gap-3 min-w-[260px]">
-              <div class="rounded-2xl bg-gradient-to-b from-white via-white to-slate-50/80 p-4 border border-slate-200/90 shadow-[0_4px_16px_-2px_rgba(16,185,129,0.12)]">
-                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Active</p>
-                <p class="text-2xl sm:text-3xl font-black text-slate-900 tabular-nums">{{ clientTotals.approved }}</p>
+
+            <div class="flex items-center gap-2.5 flex-wrap shrink-0">
+              <div class="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-emerald-500/10 backdrop-blur-md border border-emerald-200/80 shadow-2xs text-xs font-bold text-emerald-800 whitespace-nowrap">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span><strong class="font-black tabular-nums">{{ clientTotals.approved }}</strong> Active</span>
               </div>
-              <div class="rounded-2xl bg-gradient-to-b from-white via-white to-slate-50/80 p-4 border border-slate-200/90 shadow-[0_4px_16px_-2px_rgba(245,158,11,0.12)]">
-                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Pending</p>
-                <p class="text-2xl sm:text-3xl font-black text-amber-600 tabular-nums">{{ clientTotals.pending }}</p>
+              <div class="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-amber-500/10 backdrop-blur-md border border-amber-200/80 shadow-2xs text-xs font-bold text-amber-800 whitespace-nowrap">
+                <lucide-icon [name]="icons.Clock || 'clock'" class="w-3.5 h-3.5 text-amber-600"></lucide-icon>
+                <span><strong class="font-black tabular-nums">{{ clientTotals.pending }}</strong> Pending</span>
+              </div>
+              <div class="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-white/90 backdrop-blur-md border border-white/80 shadow-2xs text-xs font-bold text-slate-700 whitespace-nowrap">
+                <span><strong class="font-black tabular-nums text-slate-900">{{ clientTotals.all }}</strong> Total</span>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- 3D Animated White Cards Status Tabs -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-5 mb-6">
+        <!-- 3D Chromatic Status Tabs -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
           <div *ngFor="let tab of [
-            {key:'pending', label:'Pending Review', count:clientTotals.pending, icon:icons.Clock, pulse:'bg-amber-400', txt:'Review', color:'amber', glow:'rgba(245,158,11,0.22)'},
-            {key:'approved', label:'Active Clients', count:clientTotals.approved, icon:icons.UserCheck, pulse:'bg-emerald-400', txt:'Live Workspaces', color:'emerald', glow:'rgba(16,185,129,0.22)'},
-            {key:'rejected', label:'Suspended / Denied', count:clientTotals.rejected, icon:icons.UserX, pulse:'bg-rose-400', txt:'Denied', color:'rose', glow:'rgba(244,63,94,0.22)'},
-            {key:'all', label:'All Tenants', count:clientTotals.all, icon:icons.Database, pulse:'bg-indigo-400', txt:'Directory', color:'indigo', glow:'rgba(79,70,229,0.22)'}
+            {key:'pending', label:'Pending Review', desc:'Awaiting KYC & activation', count:clientTotals.pending, icon:icons.Clock, pulse:'bg-amber-500', txt:'Review Queue'},
+            {key:'approved', label:'Active Clients', desc:'Verified live workspaces', count:clientTotals.approved, icon:icons.UserCheck, pulse:'bg-emerald-500', txt:'Operational'},
+            {key:'rejected', label:'Suspended / Denied', desc:'Restricted access accounts', count:clientTotals.rejected, icon:icons.UserX, pulse:'bg-rose-500', txt:'Restricted'},
+            {key:'all', label:'All Tenants', desc:'Complete platform directory', count:clientTotals.all, icon:icons.Database, pulse:'bg-indigo-500', txt:'Master Index'}
           ]" (click)="changeClientStatusTab(tab.key)"
-            class="relative overflow-hidden rounded-2xl p-5 cursor-pointer group transition-all duration-300 ease-out bg-gradient-to-b from-white via-white to-slate-50/80 border"
+            class="relative overflow-hidden rounded-2xl p-4 sm:p-5 cursor-pointer group transition-all duration-300 ease-out bg-gradient-to-b from-white via-white to-slate-50/80 border"
             [class.border-indigo-600]="clientStatusTab === tab.key"
+            [class.ring-2]="clientStatusTab === tab.key"
+            [class.ring-indigo-500/20]="clientStatusTab === tab.key"
             [class.border-slate-200/90]="clientStatusTab !== tab.key"
             [class.shadow-[0_14px_28px_-4px_rgba(79,70,229,0.22),0_4px_10px_-2px_rgba(79,70,229,0.12)]]="clientStatusTab === tab.key"
             [class.-translate-y-1]="clientStatusTab === tab.key"
-            [class.shadow-2xs]="clientStatusTab !== tab.key"
-            [class.hover:shadow-[0_12px_24px_-4px_rgba(0,0,0,0.08)]]="clientStatusTab !== tab.key"
+            [class.shadow-xs]="clientStatusTab !== tab.key"
+            [class.hover:shadow-md]="clientStatusTab !== tab.key"
             [class.hover:-translate-y-0.5]="clientStatusTab !== tab.key">
-            
-            <div class="flex items-start justify-between mb-4 relative z-10">
-              <div class="w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 shadow-md border border-white/40"
-                   [class.bg-gradient-to-tr]="true"
-                   [class.from-indigo-600]="tab.key === 'all' || (clientStatusTab === tab.key && tab.key === 'all')"
-                   [class.to-blue-600]="tab.key === 'all' || (clientStatusTab === tab.key && tab.key === 'all')"
+
+            <div class="flex items-start justify-between mb-3.5 relative z-10">
+              <div class="w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 shadow-md border border-white/40 bg-gradient-to-tr text-white group-hover:scale-105"
+                   [class.from-indigo-600]="tab.key === 'all'"
+                   [class.to-blue-600]="tab.key === 'all'"
                    [class.from-emerald-500]="tab.key === 'approved'"
                    [class.to-teal-600]="tab.key === 'approved'"
                    [class.from-amber-500]="tab.key === 'pending'"
                    [class.to-orange-500]="tab.key === 'pending'"
                    [class.from-rose-500]="tab.key === 'rejected'"
-                   [class.to-pink-600]="tab.key === 'rejected'"
-                   [class.text-white]="true">
+                   [class.to-pink-600]="tab.key === 'rejected'">
                 <lucide-icon [name]="tab.icon" class="w-6 h-6 stroke-[2.2] drop-shadow-xs"></lucide-icon>
               </div>
-              <div class="px-2.5 py-1 rounded-full border border-slate-200/80 bg-white/90 shadow-2xs flex items-center gap-1.5">
+              <div class="px-2.5 py-1 rounded-lg border border-slate-200/80 bg-white shadow-2xs flex items-center gap-1.5">
                 <div class="w-1.5 h-1.5 rounded-full" [ngClass]="tab.pulse" [class.animate-pulse]="tab.count > 0"></div>
-                <span class="text-[9px] font-black uppercase tracking-widest text-slate-600">{{ tab.txt }}</span>
+                <span class="text-[9px] font-black uppercase tracking-wider text-slate-600">{{ tab.txt }}</span>
               </div>
             </div>
 
             <div class="relative z-10">
-              <p class="text-3xl font-black mb-1 text-slate-900 tabular-nums tracking-tight">{{ tab.count }}</p>
-              <p class="text-[10px] font-black uppercase tracking-widest text-slate-500">{{ tab.label }}</p>
+              <p class="text-3xl font-black mb-0.5 text-slate-900 tabular-nums tracking-tight">{{ tab.count }}</p>
+              <p class="text-xs font-black text-slate-800">{{ tab.label }}</p>
+              <p class="text-[11px] font-medium text-slate-500 mt-0.5">{{ tab.desc }}</p>
             </div>
           </div>
         </div>
 
         <div *ngIf="actionMessage && !popupOpen"
-          class="fixed bottom-8 right-8 z-[200] flex items-center gap-3 px-6 py-4 rounded-2xl text-sm font-black uppercase tracking-widest animate-[bounce_0.5s_ease-out]"
-          style="background: #eef0f5; box-shadow: 12px 12px 24px rgba(0,0,0,0.1), -12px -12px 24px rgba(255,255,255,0.9); border: 1.5px solid rgba(255,255,255,0.8);"
+          class="fixed bottom-8 right-8 z-[200] flex items-center gap-3 px-5 py-3.5 rounded-2xl text-xs font-black uppercase tracking-wider shadow-xl border bg-white/95 backdrop-blur-xl animate-fade-in"
           [class.border-emerald-300]="actionSuccess" [class.text-emerald-800]="actionSuccess"
-          [class.border-red-300]="!actionSuccess" [class.text-red-800]="!actionSuccess">
-          <div class="w-8 h-8 rounded-full flex items-center justify-center shadow-inner"
-            [class.bg-emerald-100]="actionSuccess" [class.bg-red-100]="!actionSuccess">
-            <div class="w-3 h-3 rounded-full shadow-md animate-pulse" [class.bg-emerald-500]="actionSuccess" [class.bg-red-500]="!actionSuccess"></div>
+          [class.border-rose-300]="!actionSuccess" [class.text-rose-800]="!actionSuccess">
+          <div class="w-7 h-7 rounded-xl flex items-center justify-center shrink-0"
+            [class.bg-emerald-100]="actionSuccess" [class.bg-rose-100]="!actionSuccess">
+            <div class="w-2.5 h-2.5 rounded-full animate-pulse" [class.bg-emerald-500]="actionSuccess" [class.bg-rose-500]="!actionSuccess"></div>
           </div>
           {{ actionMessage }}
         </div>
 
-        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+        <div class="bg-white rounded-3xl border border-slate-200/90 shadow-xs overflow-hidden">
           <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
             <div class="flex items-center gap-3">
               <div class="w-9 h-9 rounded-xl bg-slate-900 flex items-center justify-center">
@@ -210,23 +222,23 @@
               </div>
             </div>
 
-            <!-- Desktop Client Table (Visible on Medium+ Screens) -->
+            <!-- Desktop Obsidian-Header Master Table (Matching School Standard) -->
             <div class="hidden md:block overflow-x-auto">
-              <table class="w-full text-left">
-              <thead>
-                <tr class="bg-slate-50 border-b border-slate-100">
+              <table class="w-full text-left text-xs">
+              <thead class="bg-slate-900 text-white font-black uppercase text-[10px] tracking-wider">
+                <tr>
                   <th class="px-3 py-3.5 w-10 text-center">
-                    <input type="checkbox" [checked]="isAllSelected()" (change)="toggleSelectAll()" title="Select all clients" class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer">
+                    <input type="checkbox" [checked]="isAllSelected()" (change)="toggleSelectAll()" title="Select all clients" class="rounded border-slate-500 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer">
                   </th>
-                  <th class="px-4 py-3.5 text-[10px] font-black text-slate-400 uppercase tracking-widest w-10">#</th>
-                  <th class="px-5 py-3.5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Client</th>
-                  <th class="px-5 py-3.5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Contact</th>
-                  <th class="px-5 py-3.5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Company</th>
-                  <th class="px-5 py-3.5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Location</th>
-                  <th class="px-5 py-3.5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Status</th>
-                  <th class="px-5 py-3.5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Plan</th>
-                  <th class="px-5 py-3.5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Joined</th>
-                  <th class="px-5 py-3.5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Actions</th>
+                  <th class="px-4 py-3.5 w-10">#</th>
+                  <th class="px-5 py-3.5">Client</th>
+                  <th class="px-5 py-3.5">Contact</th>
+                  <th class="px-5 py-3.5">Company &amp; Sector</th>
+                  <th class="px-5 py-3.5">Location</th>
+                  <th class="px-5 py-3.5 text-center">Status</th>
+                  <th class="px-5 py-3.5">Plan</th>
+                  <th class="px-5 py-3.5">Joined</th>
+                  <th class="px-5 py-3.5 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -277,15 +289,15 @@
                   <td class="px-5 py-4"><p class="text-xs font-bold text-slate-500 whitespace-nowrap">{{ client.created_at||'—' }}</p></td>
                   <td class="px-5 py-4">
                     <div class="flex items-center justify-end gap-1.5">
-                      <button (click)="openClientDetail(client)" class="flex items-center gap-1 px-3 py-2 rounded-lg bg-slate-100 hover:bg-blue-600 hover:text-white text-slate-600 text-[10px] font-black uppercase tracking-widest transition-all">
+                      <button (click)="openClientDetail(client)" class="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-indigo-700 text-white text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer shadow-2xs">
                         <lucide-icon [name]="icons.Eye" class="w-3.5 h-3.5"></lucide-icon>
                       </button>
                       <button *ngIf="client.status!=='approved'" (click)="requestApproveClient(client)" [disabled]="isClientActionBusy"
-                        class="flex items-center gap-1 px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-widest transition-all">
+                        class="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer shadow-2xs">
                         <lucide-icon [name]="icons.CheckCircle2" class="w-3.5 h-3.5"></lucide-icon>
                       </button>
                       <button *ngIf="client.status!=='rejected'" (click)="requestRejectClient(client)" [disabled]="isClientActionBusy"
-                        class="flex items-center gap-1 px-3 py-2 rounded-lg border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-50">
+                        class="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-600 text-[10px] font-black uppercase tracking-wider transition-all disabled:opacity-50 cursor-pointer">
                         <lucide-icon [name]="icons.XCircle" class="w-3.5 h-3.5"></lucide-icon>
                       </button>
                     </div>

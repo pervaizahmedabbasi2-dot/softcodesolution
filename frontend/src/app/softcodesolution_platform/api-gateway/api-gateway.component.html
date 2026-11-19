@@ -1,62 +1,74 @@
-<div *ngIf="activeView === 'api-gate-list'" class="min-h-full bg-slate-50">
-  <div class="mx-auto max-w-[98rem] space-y-6 px-5 py-5">
-    <div class="relative overflow-hidden rounded-[32px] bg-[#0A0A0B] p-6 lg:p-8 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.6)] border border-white/[0.08]">
-   <!-- Inner glow / mesh gradients -->
-   <div class="absolute -top-[50%] -left-[10%] w-[60%] h-[150%] rounded-full bg-[radial-gradient(ellipse_at_center,rgba(6,182,212,0.15)_0%,rgba(0,0,0,0)_70%)] blur-[80px]"></div>
-   <div class="absolute -bottom-[20%] -right-[10%] w-[50%] h-[100%] rounded-full bg-[radial-gradient(ellipse_at_center,rgba(139,92,246,0.15)_0%,rgba(0,0,0,0)_70%)] blur-[80px]"></div>
-   
-   <div class="relative z-10 flex flex-col xl:flex-row xl:items-end justify-between gap-8 mb-8">
-      <div class="max-w-2xl">
-         <div class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-black uppercase tracking-[0.3em] text-white/70 mb-4 shadow-[0_2px_10px_rgba(0,0,0,0.2)] backdrop-blur-md">
-            <lucide-icon [name]="icons.Network" class="h-3.5 w-3.5 text-cyan-400"></lucide-icon> API Gateway
-         </div>
-         <h1 class="text-4xl lg:text-5xl font-black tracking-tight text-white mb-3 drop-shadow-sm">
-            Endpoint Security<span class="text-cyan-400">.</span>
-         </h1>
-         <p class="text-sm font-medium leading-relaxed text-white/50">
-            Enterprise API management &mdash; monitor endpoints, manage keys, configure rate limits, enforce security policies and audit all traffic from one console.
-         </p>
-      </div>
-
-      <div class="grid grid-cols-2 gap-3 sm:flex sm:flex-nowrap sm:gap-3">
-         <div class="flex-1 sm:flex-none rounded-[20px] bg-white/[0.03] border border-white/[0.08] p-5 backdrop-blur-xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:bg-white/[0.06] transition-colors group">
-            <p class="text-[9px] font-bold uppercase tracking-[0.2em] text-white/40 mb-1 group-hover:text-cyan-400 transition-colors">Endpoints</p>
-            <p class="text-3xl font-extrabold text-white tracking-tight">{{ totalEndpoints }}</p>
-         </div>
-         <div class="flex-1 sm:flex-none rounded-[20px] bg-white/[0.03] border border-white/[0.08] p-5 backdrop-blur-xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:bg-white/[0.06] transition-colors group">
-            <div class="flex items-center gap-2 mb-1">
-               <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)] animate-pulse"></span>
-               <p class="text-[9px] font-bold uppercase tracking-[0.2em] text-white/40 group-hover:text-emerald-400 transition-colors">Live</p>
+<div *ngIf="activeView === 'api-gate-list'" class="min-h-full">
+  <div class="mx-auto max-w-[98rem] space-y-6 px-4 sm:px-6 lg:px-8 py-6 animate-fade-in">
+    <!-- Executive 3D Frosted API Gateway Hero -->
+    <div class="rounded-[28px] p-5 sm:p-7 border border-white/80 shadow-[0_20px_50px_-12px_rgba(16,185,129,0.18),0_8px_20px_-6px_rgba(0,0,0,0.06),inset_0_1px_2px_rgba(255,255,255,0.95)] bg-gradient-to-br from-white/95 via-emerald-50/40 to-slate-50/90 backdrop-blur-2xl relative overflow-hidden group">
+      <div class="absolute inset-0 bg-[radial-gradient(#8080800c_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none"></div>
+      <div class="absolute -right-16 -top-16 w-80 h-80 bg-gradient-to-br from-emerald-200/40 via-teal-100/30 to-transparent rounded-full blur-3xl pointer-events-none group-hover:scale-110 transition-transform duration-700"></div>
+      <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent"></div>
+      <div class="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
+        <div class="flex items-start gap-4 max-w-2xl">
+          <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-[20px] bg-gradient-to-br from-cyan-500 via-blue-600 to-indigo-600 text-white shadow-xl shadow-cyan-600/25 flex items-center justify-center shrink-0 border border-white/40 ring-1 ring-cyan-500/20">
+            <lucide-icon [name]="icons.Network" class="w-7 h-7 sm:w-8 sm:h-8"></lucide-icon>
+          </div>
+          <div class="min-w-0">
+            <div class="flex flex-wrap items-center gap-2 mb-1.5">
+              <span class="px-2.5 py-0.5 rounded-lg bg-cyan-50 text-cyan-700 border border-cyan-200/80 text-[10px] font-black uppercase tracking-widest">
+                API Gateway &amp; Edge Mesh
+              </span>
+              <span class="px-2.5 py-0.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200/80 text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                Gateway Online
+              </span>
             </div>
-            <p class="text-3xl font-extrabold text-white tracking-tight">{{ liveEndpoints }}</p>
-         </div>
-         <div class="flex-1 sm:flex-none rounded-[20px] bg-white/[0.03] border border-white/[0.08] p-5 backdrop-blur-xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:bg-white/[0.06] transition-colors group">
-            <p class="text-[9px] font-bold uppercase tracking-[0.2em] text-white/40 mb-1 group-hover:text-indigo-400 transition-colors">API Keys</p>
-            <p class="text-3xl font-extrabold text-white tracking-tight">{{ activeKeys }}</p>
-         </div>
-         <div class="flex-1 sm:flex-none rounded-[20px] bg-white/[0.03] border border-white/[0.08] p-5 backdrop-blur-xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:bg-white/[0.06] transition-colors group">
-            <p class="text-[9px] font-bold uppercase tracking-[0.2em] text-white/40 mb-1 group-hover:text-amber-400 transition-colors">Avg Latency</p>
-            <p class="text-3xl font-extrabold text-white tracking-tight">{{ avgLatency }}<span class="text-sm font-bold text-white/30 ml-1">ms</span></p>
-         </div>
-      </div>
-   </div>
+            <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
+              Endpoint Security &amp; Traffic Control
+            </h1>
+            <p class="mt-1 text-xs sm:text-sm font-medium leading-relaxed text-slate-600">
+              Enterprise API management &mdash; monitor endpoints, issue scoped keys, configure rate limits, enforce security policies, and inspect live traffic.
+            </p>
+          </div>
+        </div>
 
-   <div class="relative z-10 flex flex-wrap gap-2 pt-6 border-t border-white/[0.08]">
-      <button *ngFor="let tab of [{key:'endpoints',label:'Endpoints'},{key:'keys',label:'API Keys'},{key:'rate-limits',label:'Rate Limits'},{key:'security',label:'Security'},{key:'logs',label:'Live Logs'}]" type="button" (click)="setTab(tab.key)" 
-         class="flex items-center gap-2.5 px-5 py-2.5 rounded-full text-sm font-bold transition-all backdrop-blur-md border"
-         [class.bg-white]="activeTab === tab.key"
-         [class.text-[#0A0A0B]]="activeTab === tab.key"
-         [class.border-white]="activeTab === tab.key"
-         [class.shadow-[0_4px_14px_rgba(255,255,255,0.25)]]="activeTab === tab.key"
-         [class.bg-white/[0.03]]="activeTab !== tab.key"
-         [class.border-white/[0.08]]="activeTab !== tab.key"
-         [class.text-white/60]="activeTab !== tab.key"
-         [class.hover:bg-white/[0.08]]="activeTab !== tab.key"
-         [class.hover:text-white]="activeTab !== tab.key">
-         {{ tab.label }}
-      </button>
-   </div>
-</div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 shrink-0">
+          <div class="rounded-2xl bg-white/90 border border-slate-200/90 border-t-4 border-t-indigo-600 px-4 py-3 shadow-xs">
+            <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Endpoints</p>
+            <p class="mt-1 text-2xl font-black text-slate-900 tracking-tight tabular-nums">{{ totalEndpoints }}</p>
+            <p class="text-[10px] font-bold text-indigo-600 mt-0.5">Registered</p>
+          </div>
+          <div class="rounded-2xl bg-white/90 border border-slate-200/90 border-t-4 border-t-emerald-500 px-4 py-3 shadow-xs">
+            <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Live Routes</p>
+            <p class="mt-1 text-2xl font-black text-emerald-700 tracking-tight tabular-nums">{{ liveEndpoints }}</p>
+            <p class="text-[10px] font-bold text-emerald-600 mt-0.5">Healthy mesh</p>
+          </div>
+          <div class="rounded-2xl bg-white/90 border border-slate-200/90 border-t-4 border-t-cyan-500 px-4 py-3 shadow-xs">
+            <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">API Keys</p>
+            <p class="mt-1 text-2xl font-black text-slate-900 tracking-tight tabular-nums">{{ activeKeys }}</p>
+            <p class="text-[10px] font-bold text-cyan-700 mt-0.5">Active tokens</p>
+          </div>
+          <div class="rounded-2xl bg-white/90 border border-slate-200/90 border-t-4 border-t-amber-500 px-4 py-3 shadow-xs">
+            <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Avg Latency</p>
+            <p class="mt-1 text-2xl font-black text-slate-900 tracking-tight tabular-nums">{{ avgLatency }}<span class="text-xs font-bold text-slate-400 ml-0.5">ms</span></p>
+            <p class="text-[10px] font-bold text-amber-700 mt-0.5">Edge p50</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="relative z-10 flex flex-wrap gap-1.5 pt-5 mt-5 border-t border-slate-200/70">
+        <button *ngFor="let tab of [{key:'endpoints',label:'Endpoints'},{key:'keys',label:'API Keys'},{key:'rate-limits',label:'Rate Limits'},{key:'security',label:'Security Policies'},{key:'logs',label:'Live Logs'}]" type="button" (click)="setTab(tab.key)"
+          class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer border"
+          [class.bg-slate-900]="activeTab === tab.key"
+          [class.text-white]="activeTab === tab.key"
+          [class.border-slate-900]="activeTab === tab.key"
+          [class.shadow-md]="activeTab === tab.key"
+          [class.bg-white]="activeTab !== tab.key"
+          [class.border-slate-200]="activeTab !== tab.key"
+          [class.text-slate-600]="activeTab !== tab.key"
+          [class.hover:bg-slate-50]="activeTab !== tab.key"
+          [class.hover:text-slate-900]="activeTab !== tab.key">
+          {{ tab.label }}
+        </button>
+      </div>
+    </div>
     <div *ngIf="activeTab === 'endpoints'" class="space-y-4">
       <div class="rounded-[1.8rem] bg-white p-4 shadow-sm ring-1 ring-slate-200">
         <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -105,7 +117,7 @@
 
       <div
         *ngIf="hasSearchResults"
-        class="overflow-hidden rounded-[2rem] bg-white shadow-sm ring-1 ring-slate-200"><div class="overflow-x-auto"><table class="w-full text-left"><thead><tr class="border-b border-slate-200 bg-slate-50"><th class="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Method</th><th class="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Endpoint</th><th class="hidden px-5 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 lg:table-cell">Auth</th><th class="hidden px-5 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 md:table-cell">Rate</th><th class="hidden px-5 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 xl:table-cell">Latency</th><th class="hidden px-5 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 xl:table-cell">Calls</th><th class="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Status</th></tr></thead><tbody class="divide-y divide-slate-100">
+        class="overflow-hidden rounded-[24px] bg-white shadow-xs border border-slate-200/90"><div class="overflow-x-auto"><table class="w-full text-left"><thead class="bg-slate-900 text-white"><tr><th class="px-5 py-4 text-[10px] font-black uppercase tracking-widest">Method</th><th class="px-5 py-4 text-[10px] font-black uppercase tracking-widest">Endpoint</th><th class="hidden px-5 py-4 text-[10px] font-black uppercase tracking-widest lg:table-cell">Auth</th><th class="hidden px-5 py-4 text-[10px] font-black uppercase tracking-widest md:table-cell">Rate</th><th class="hidden px-5 py-4 text-[10px] font-black uppercase tracking-widest xl:table-cell">Latency</th><th class="hidden px-5 py-4 text-[10px] font-black uppercase tracking-widest xl:table-cell">Calls</th><th class="px-5 py-4 text-[10px] font-black uppercase tracking-widest">Status</th></tr></thead><tbody class="divide-y divide-slate-100">
         <tr
           *ngFor="let ep of paginatedEndpoints"
           class="cursor-pointer transition hover:bg-slate-50 focus-within:bg-slate-50"

@@ -1,79 +1,130 @@
 <div class="p-6 md:p-8 space-y-8 animate-fade-in pb-24">
-  <!-- Top Bar -->
-  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-    <div>
-      <div class="flex items-center gap-2">
-        <h2 class="text-xl font-bold tracking-tight text-slate-900">Compliance & Sovereign Data Residency</h2>
-        <span class="text-xs text-slate-500 font-mono">SOC2 / GDPR</span>
+  <!-- School-Grade Executive Frosted 3D Hero -->
+  <div class="relative overflow-hidden rounded-[28px] border border-white/80 bg-gradient-to-br from-white/95 via-emerald-50/40 to-slate-50/90 backdrop-blur-2xl p-6 sm:p-7 shadow-[0_20px_50px_-12px_rgba(16,185,129,0.18),0_8px_20px_-6px_rgba(0,0,0,0.06),inset_0_1px_2px_rgba(255,255,255,0.95)] group">
+    <div class="absolute inset-0 bg-[radial-gradient(#8080800c_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none"></div>
+    <div class="absolute -right-16 -top-16 w-80 h-80 bg-gradient-to-br from-emerald-200/40 via-teal-100/30 to-transparent rounded-full blur-3xl pointer-events-none group-hover:scale-110 transition-transform duration-700"></div>
+    <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent"></div>
+    <div class="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div class="flex items-start sm:items-center gap-4">
+        <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-[20px] bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-600 text-white shadow-lg shadow-emerald-500/25 flex items-center justify-center shrink-0">
+          <lucide-icon [name]="icons.ShieldCheck" class="w-7 h-7"></lucide-icon>
+        </div>
+        <div>
+          <div class="flex flex-wrap items-center gap-2 mb-1">
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200/80">
+              Sovereign Governance
+            </span>
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-slate-900 text-white">
+              SOC2 / GDPR
+            </span>
+          </div>
+          <h2 class="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">Compliance & Sovereign Data Residency</h2>
+          <p class="text-xs sm:text-sm text-slate-500 mt-0.5">Enforce regional boundary isolation, data sovereignty laws, and enterprise audit attestations.</p>
+        </div>
       </div>
-      <p class="text-sm text-slate-500 mt-1">Enforce regional boundary isolation, data sovereignty laws, and enterprise audit attestations.</p>
+      <button (click)="openReportModal()" class="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white shadow-md shadow-indigo-600/25 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2 shrink-0">
+        <lucide-icon [name]="icons.FileCheck" class="w-4 h-4"></lucide-icon>
+        Generate Attestation Report
+      </button>
     </div>
-    <button (click)="openReportModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs rounded-lg text-xs font-semibold transition-all flex items-center gap-2">
-      <lucide-icon [name]="icons.FileCheck" class="w-3.5 h-3.5"></lucide-icon>
-      Generate Attestation Report
-    </button>
+  </div>
+
+  <!-- Quick Summary KPIs -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="bg-white rounded-2xl border border-slate-200/90 border-t-4 border-t-indigo-600 p-5 shadow-xs flex items-center justify-between gap-3">
+      <div>
+        <p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Pinned Storage Regions</p>
+        <p class="text-3xl font-black text-slate-900 tabular-nums mt-1">{{ regions.length }}</p>
+        <p class="text-[11px] font-semibold text-indigo-600 mt-1">Regional DB isolation active</p>
+      </div>
+      <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-600 to-blue-600 text-white flex items-center justify-center shadow-sm">
+        <lucide-icon [name]="icons.Globe" class="w-5 h-5"></lucide-icon>
+      </div>
+    </div>
+    <div class="bg-white rounded-2xl border border-slate-200/90 border-t-4 border-t-emerald-500 p-5 shadow-xs flex items-center justify-between gap-3">
+      <div>
+        <p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Audited Frameworks</p>
+        <p class="text-3xl font-black text-emerald-600 tabular-nums mt-1">{{ frameworks.length }}</p>
+        <p class="text-[11px] font-semibold text-emerald-600 mt-1">Continuous automated verification</p>
+      </div>
+      <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-sm">
+        <lucide-icon [name]="icons.ShieldCheck" class="w-5 h-5"></lucide-icon>
+      </div>
+    </div>
+    <div class="bg-white rounded-2xl border border-slate-200/90 border-t-4 border-t-slate-800 p-5 shadow-xs flex items-center justify-between gap-3">
+      <div>
+        <p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Attestation Verdict</p>
+        <p class="text-2xl font-black text-slate-900 mt-1">100% Compliant</p>
+        <p class="text-[11px] font-semibold text-slate-500 mt-1">HSM tenant key segregation</p>
+      </div>
+      <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 text-white flex items-center justify-center shadow-sm">
+        <lucide-icon [name]="icons.FileCheck" class="w-5 h-5"></lucide-icon>
+      </div>
+    </div>
   </div>
 
   <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
     <!-- Data Residency Regions -->
-    <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-xs space-y-5">
-      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+    <div class="bg-white rounded-[24px] border border-slate-200/90 p-6 shadow-xs space-y-5">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-100">
         <div class="flex items-center gap-3">
-          <div class="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 to-blue-600 text-white flex items-center justify-center shadow-sm">
             <lucide-icon [name]="icons.Globe" class="w-5 h-5"></lucide-icon>
           </div>
           <div>
-            <h3 class="font-bold text-slate-900 text-sm">Designated Sovereign Storage Regions</h3>
+            <h3 class="font-black text-slate-900 text-sm">Designated Sovereign Storage Regions</h3>
             <p class="text-xs text-slate-500">Tenant databases strictly pinned to regional clusters.</p>
           </div>
         </div>
       </div>
 
       <div class="space-y-3">
-        <div *ngFor="let reg of regions" class="flex items-center justify-between p-3.5 rounded-xl border border-slate-100 bg-slate-50/60 hover:bg-white hover:border-slate-300 transition-all">
+        <div *ngFor="let reg of regions" class="flex items-center justify-between p-4 rounded-2xl border border-slate-200/80 bg-slate-50/70 hover:bg-white hover:border-indigo-200 hover:shadow-sm transition-all">
           <div class="flex items-center gap-3">
-            <span class="text-2xl">{{ reg.flag }}</span>
+            <div class="w-10 h-10 rounded-xl bg-white border border-slate-200/80 flex items-center justify-center text-xl shadow-2xs shrink-0">{{ reg.flag }}</div>
             <div>
-              <p class="text-xs font-bold text-slate-900">{{ reg.name }}</p>
-              <p class="text-[11px] text-slate-500">{{ reg.framework }} · <strong class="font-mono text-slate-700">{{ reg.tenantsCount }} tenants</strong></p>
+              <p class="text-xs font-black text-slate-900">{{ reg.name }}</p>
+              <p class="text-[11px] text-slate-500">{{ reg.framework }} · <strong class="font-mono text-slate-700 tabular-nums">{{ reg.tenantsCount }} tenants</strong></p>
             </div>
           </div>
           <div class="text-right">
-            <span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 text-[10px] font-mono font-bold rounded">
+            <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200/80 text-[10px] font-mono font-black rounded-full">
               {{ reg.status }}
             </span>
-            <p class="text-[10px] text-slate-400 font-mono mt-0.5">{{ reg.latencyMs }}ms ping</p>
+            <p class="text-[10px] text-slate-400 font-mono mt-1 tabular-nums">{{ reg.latencyMs }}ms ping</p>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Active Compliance Frameworks -->
-    <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-xs space-y-5">
-      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+    <div class="bg-white rounded-[24px] border border-slate-200/90 p-6 shadow-xs space-y-5">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-100">
         <div class="flex items-center gap-3">
-          <div class="p-2 bg-emerald-50 text-emerald-600 rounded-lg">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-sm">
             <lucide-icon [name]="icons.ShieldCheck" class="w-5 h-5"></lucide-icon>
           </div>
           <div>
-            <h3 class="font-bold text-slate-900 text-sm">Regulatory Framework Audits</h3>
+            <h3 class="font-black text-slate-900 text-sm">Regulatory Framework Audits</h3>
             <p class="text-xs text-slate-500">Continuous automated controls verified by independent auditors.</p>
           </div>
         </div>
       </div>
 
       <div class="space-y-3">
-        <div *ngFor="let item of frameworks" class="flex items-center justify-between p-3.5 rounded-xl border border-slate-100 bg-slate-50/60">
+        <div *ngFor="let item of frameworks" class="flex items-center justify-between p-4 rounded-2xl border border-slate-200/80 bg-slate-50/70 hover:bg-white hover:border-emerald-200 hover:shadow-sm transition-all">
           <div class="flex items-center gap-3">
-            <lucide-icon [name]="icons.CheckCircle2" class="w-4 h-4 text-emerald-600 shrink-0"></lucide-icon>
+            <div class="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-200/80 flex items-center justify-center shrink-0">
+              <lucide-icon [name]="icons.CheckCircle2" class="w-4 h-4 text-emerald-600"></lucide-icon>
+            </div>
             <div>
-              <p class="text-xs font-bold text-slate-900">{{ item.name }}</p>
-              <p class="text-[11px] text-slate-400">Auditor: {{ item.auditor }}</p>
+              <p class="text-xs font-black text-slate-900">{{ item.name }}</p>
+              <p class="text-[11px] text-slate-500">Auditor: {{ item.auditor }}</p>
             </div>
           </div>
           <div class="text-right">
-            <span class="text-xs font-mono font-bold text-emerald-600">{{ item.status }}</span>
-            <p class="text-[10px] text-slate-400 font-mono mt-0.5">{{ item.validity }}</p>
+            <span class="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/80 text-[10px] font-mono font-black">{{ item.status }}</span>
+            <p class="text-[10px] text-slate-400 font-mono mt-1">{{ item.validity }}</p>
           </div>
         </div>
       </div>

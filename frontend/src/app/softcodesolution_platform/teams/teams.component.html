@@ -1,55 +1,62 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fade-in">
   
-  <!-- Header Banner -->
-  <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-8 text-white shadow-xl border border-slate-800">
-    <div class="absolute -right-10 -bottom-10 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
-    <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-      <div>
-        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-xs font-semibold uppercase tracking-wider mb-3">
-          <lucide-icon [name]="icons.Shield" class="w-3.5 h-3.5"></lucide-icon>
-          Enterprise Organization Directory
+  <!-- School-Grade Executive Frosted 3D Hero -->
+  <div class="relative overflow-hidden rounded-[28px] border border-white/80 bg-gradient-to-br from-white/95 via-emerald-50/40 to-slate-50/90 backdrop-blur-2xl p-6 sm:p-8 shadow-[0_20px_50px_-12px_rgba(16,185,129,0.18),0_8px_20px_-6px_rgba(0,0,0,0.06),inset_0_1px_2px_rgba(255,255,255,0.95)]">
+    <div class="absolute inset-0 bg-[radial-gradient(#8080800c_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none"></div>
+    <div class="absolute -right-16 -top-16 w-80 h-80 bg-gradient-to-br from-emerald-200/40 via-teal-100/30 to-transparent rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent"></div>
+    <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+      <div class="flex items-start sm:items-center gap-4">
+        <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-[20px] bg-gradient-to-br from-indigo-600 via-blue-600 to-violet-600 text-white shadow-lg shadow-indigo-500/30 flex items-center justify-center shrink-0">
+          <lucide-icon [name]="icons.Users" class="w-7 h-7"></lucide-icon>
         </div>
-        <h1 class="text-3xl font-black tracking-tight text-white sm:text-4xl">Teams & Personnel Control</h1>
-        <p class="mt-2 text-slate-300 text-sm max-w-2xl">
-          Manage personnel credentials, privileged access levels, hardware-bound MFA enforcement, and tenant administration delegacy.
-        </p>
+        <div>
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-200/80 text-indigo-700 text-[10px] font-black uppercase tracking-wider mb-2">
+            <lucide-icon [name]="icons.Shield" class="w-3.5 h-3.5"></lucide-icon>
+            Enterprise Organization Directory
+          </div>
+          <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">Teams & Personnel Control</h1>
+          <p class="mt-1 text-slate-500 text-xs sm:text-sm max-w-2xl">
+            Manage personnel credentials, privileged access levels, hardware-bound MFA enforcement, and tenant administration delegacy.
+          </p>
+        </div>
       </div>
 
-      <div class="flex items-center gap-3 shrink-0">
-        <button (click)="loadMembers()" class="px-4 py-2.5 bg-slate-800/80 hover:bg-slate-700/80 text-slate-200 border border-slate-700 text-xs font-bold rounded-xl transition-all flex items-center gap-2 shadow-sm">
-          <lucide-icon [name]="icons.RefreshCcw" class="w-4 h-4" [class.animate-spin]="isLoading"></lucide-icon>
+      <div class="flex flex-wrap items-center gap-3 shrink-0">
+        <button (click)="loadMembers()" class="px-4 py-2.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-extrabold rounded-xl transition-all flex items-center gap-2 shadow-xs">
+          <lucide-icon [name]="icons.RefreshCcw" class="w-4 h-4 text-slate-500" [class.animate-spin]="isLoading"></lucide-icon>
           Sync Directory
         </button>
-        <button (click)="openInviteModal()" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-indigo-600/30 hover:scale-[1.02] active:scale-[0.98]">
+        <button (click)="openInviteModal()" class="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white text-xs font-extrabold rounded-xl transition-all flex items-center gap-2 shadow-md shadow-indigo-600/25">
           <lucide-icon [name]="icons.UserPlus" class="w-4 h-4"></lucide-icon>
           Provision Team Member
         </button>
       </div>
     </div>
 
-    <!-- Quick Telemetry Stats -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8 pt-6 border-t border-slate-800/80">
-      <div>
-        <p class="text-xs font-medium text-slate-400">Total Personnel</p>
-        <p class="text-2xl font-black text-white mt-1">{{ members.length }} <span class="text-xs text-indigo-400 font-normal">Active Seats</span></p>
+    <!-- Chromatic Quick Telemetry KPIs -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-7 pt-6 border-t border-slate-200/70">
+      <div class="bg-white/90 rounded-2xl border border-slate-200/90 border-t-4 border-t-indigo-600 p-4 shadow-2xs">
+        <p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Total Personnel</p>
+        <p class="text-2xl font-black text-slate-900 tabular-nums mt-1">{{ members.length }} <span class="text-xs text-indigo-600 font-bold">Seats</span></p>
       </div>
-      <div>
-        <p class="text-xs font-medium text-slate-400">Hardware 2FA / MFA</p>
-        <p class="text-2xl font-black text-emerald-400 mt-1">100% <span class="text-xs text-slate-400 font-normal">Enforced</span></p>
+      <div class="bg-white/90 rounded-2xl border border-slate-200/90 border-t-4 border-t-emerald-500 p-4 shadow-2xs">
+        <p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Hardware 2FA / MFA</p>
+        <p class="text-2xl font-black text-emerald-600 tabular-nums mt-1">100% <span class="text-xs text-slate-500 font-semibold">Enforced</span></p>
       </div>
-      <div>
-        <p class="text-xs font-medium text-slate-400">Active Security Sessions</p>
-        <p class="text-2xl font-black text-cyan-400 mt-1">18 <span class="text-xs text-slate-400 font-normal">Encrypted</span></p>
+      <div class="bg-white/90 rounded-2xl border border-slate-200/90 border-t-4 border-t-cyan-500 p-4 shadow-2xs">
+        <p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Active Sessions</p>
+        <p class="text-2xl font-black text-cyan-700 tabular-nums mt-1">18 <span class="text-xs text-slate-500 font-semibold">Encrypted</span></p>
       </div>
-      <div>
-        <p class="text-xs font-medium text-slate-400">Privileged Roles</p>
-        <p class="text-2xl font-black text-amber-400 mt-1">5 <span class="text-xs text-slate-400 font-normal">Tier-1 Profiles</span></p>
+      <div class="bg-white/90 rounded-2xl border border-slate-200/90 border-t-4 border-t-amber-500 p-4 shadow-2xs">
+        <p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Privileged Roles</p>
+        <p class="text-2xl font-black text-amber-600 tabular-nums mt-1">5 <span class="text-xs text-slate-500 font-semibold">Tier-1 Profiles</span></p>
       </div>
     </div>
   </div>
 
   <!-- Search & Filter Controls -->
-  <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+  <div class="bg-white rounded-2xl p-4 border border-slate-200/90 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
     <div class="relative w-full sm:w-80">
       <lucide-icon [name]="icons.Search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></lucide-icon>
       <input 
@@ -57,16 +64,16 @@
         [(ngModel)]="searchQuery" 
         (ngModelChange)="applyFilter()"
         placeholder="Search by name, email, or role..." 
-        class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+        class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
       />
     </div>
 
     <div class="flex items-center gap-2 w-full sm:w-auto">
-      <span class="text-xs font-semibold text-slate-500 shrink-0">Department:</span>
+      <span class="text-xs font-bold text-slate-500 shrink-0">Department:</span>
       <select 
         [(ngModel)]="selectedDepartment" 
         (ngModelChange)="applyFilter()" 
-        class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 focus:outline-none focus:border-indigo-500">
+        class="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-700 focus:outline-none focus:border-indigo-500">
         <option value="all">All Departments</option>
         <option value="Executive">Executive</option>
         <option value="InfraSec">InfraSec</option>
@@ -78,7 +85,7 @@
   </div>
 
   <!-- Members Table -->
-  <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+  <div class="bg-white rounded-[24px] border border-slate-200/90 shadow-xs overflow-hidden">
     <!-- Mobile Personnel Cards (Mobile View) -->
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 md:hidden">
       <div *ngFor="let member of paginatedMembers" class="apple-card rounded-2xl border border-slate-200/90 p-4 bg-white shadow-2xs space-y-3">
@@ -127,7 +134,7 @@
     <!-- Desktop Members Table (Desktop View) -->
     <div class="hidden md:block overflow-x-auto">
       <table class="w-full text-left text-xs text-slate-600">
-        <thead class="bg-slate-50 border-b border-slate-200 text-slate-700 font-bold uppercase tracking-wider text-[11px]">
+        <thead class="bg-slate-900 text-white font-black uppercase tracking-wider text-[10px]">
           <tr>
             <th class="px-6 py-4">Personnel</th>
             <th class="px-6 py-4">Department & Role</th>

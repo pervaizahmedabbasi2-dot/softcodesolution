@@ -961,61 +961,7 @@ html[lang="bn"] p, html[lang="bn"] li, html[lang="bn"] blockquote, html[lang="bn
 html[lang="bn"] h1, html[lang="bn"] h2, html[lang="bn"] h3, html[lang="bn"] h4, html[lang="bn"] h5, html[lang="bn"] h6 { line-height: 1.45; }
 [lang="bn"] { font-family: "Inter", "Noto Serif Bengali", serif, sans-serif; letter-spacing: 0 !important; }
 
-/* 22. Tamil (ta): Classic Tamil Sangam Literary Book Serif (Noto Serif Tamil) */
-html[lang="ta"],
-html[lang="ta"] body {
-  font-family: "Inter", "Noto Serif Tamil", serif, sans-serif !important;
-  letter-spacing: 0 !important;
-}
-html[lang="ta"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre) {
-  font-family: "Inter", "Noto Serif Tamil", serif, sans-serif;
-  letter-spacing: 0 !important;
-}
-html[lang="ta"] p, html[lang="ta"] li, html[lang="ta"] blockquote, html[lang="ta"] label, html[lang="ta"] td, html[lang="ta"] th, html[lang="ta"] input, html[lang="ta"] select, html[lang="ta"] textarea { line-height: 1.85; }
-html[lang="ta"] h1, html[lang="ta"] h2, html[lang="ta"] h3, html[lang="ta"] h4, html[lang="ta"] h5, html[lang="ta"] h6 { line-height: 1.45; }
-[lang="ta"] { font-family: "Inter", "Noto Serif Tamil", serif, sans-serif; letter-spacing: 0 !important; }
-
-/* 23. Telugu (te): Classic Telugu Sahitya Book Serif (Noto Serif Telugu) */
-html[lang="te"],
-html[lang="te"] body {
-  font-family: "Inter", "Noto Serif Telugu", serif, sans-serif !important;
-  letter-spacing: 0 !important;
-}
-html[lang="te"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre) {
-  font-family: "Inter", "Noto Serif Telugu", serif, sans-serif;
-  letter-spacing: 0 !important;
-}
-html[lang="te"] p, html[lang="te"] li, html[lang="te"] blockquote, html[lang="te"] label, html[lang="te"] td, html[lang="te"] th, html[lang="te"] input, html[lang="te"] select, html[lang="te"] textarea { line-height: 1.85; }
-html[lang="te"] h1, html[lang="te"] h2, html[lang="te"] h3, html[lang="te"] h4, html[lang="te"] h5, html[lang="te"] h6 { line-height: 1.45; }
-[lang="te"] { font-family: "Inter", "Noto Serif Telugu", serif, sans-serif; letter-spacing: 0 !important; }
-
-/* 24. Marathi (mr): Classic Marathi Balbodh Book Serif (Tiro Devanagari Marathi + Noto Serif Devanagari) */
-html[lang="mr"],
-html[lang="mr"] body {
-  font-family: "Inter", "Tiro Devanagari Marathi", "Noto Serif Devanagari", serif, sans-serif !important;
-  letter-spacing: 0 !important;
-}
-html[lang="mr"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre) {
-  font-family: "Inter", "Tiro Devanagari Marathi", "Noto Serif Devanagari", serif, sans-serif;
-  letter-spacing: 0 !important;
-}
-html[lang="mr"] p, html[lang="mr"] li, html[lang="mr"] blockquote, html[lang="mr"] label, html[lang="mr"] td, html[lang="mr"] th, html[lang="mr"] input, html[lang="mr"] select, html[lang="mr"] textarea { line-height: 1.75; }
-html[lang="mr"] h1, html[lang="mr"] h2, html[lang="mr"] h3, html[lang="mr"] h4, html[lang="mr"] h5, html[lang="mr"] h6 { line-height: 1.4; }
-[lang="mr"] { font-family: "Inter", "Tiro Devanagari Marathi", "Noto Serif Devanagari", serif, sans-serif; letter-spacing: 0 !important; }
-
-/* 25. Gujarati (gu): Classic Gujarati Sahitya Printed Book Serif (Noto Serif Gujarati) */
-html[lang="gu"],
-html[lang="gu"] body {
-  font-family: "Inter", "Noto Serif Gujarati", serif, sans-serif !important;
-  letter-spacing: 0 !important;
-}
-html[lang="gu"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre) {
-  font-family: "Inter", "Noto Serif Gujarati", serif, sans-serif;
-  letter-spacing: 0 !important;
-}
-html[lang="gu"] p, html[lang="gu"] li, html[lang="gu"] blockquote, html[lang="gu"] label, html[lang="gu"] td, html[lang="gu"] th, html[lang="gu"] input, html[lang="gu"] select, html[lang="gu"] textarea { line-height: 1.8; }
-html[lang="gu"] h1, html[lang="gu"] h2, html[lang="gu"] h3, html[lang="gu"] h4, html[lang="gu"] h5, html[lang="gu"] h6 { line-height: 1.45; }
-[lang="gu"] { font-family: "Inter", "Noto Serif Gujarati", serif, sans-serif; letter-spacing: 0 !important; }
+/* 22-25 removed regional duplicates (replaced by single national Hindi for IN) */
 
 /* 26. Nepali (ne): Classic Nepali Sajha Prakashan Devanagari Book Serif (Tiro Devanagari Hindi + Noto Serif Devanagari) */
 html[lang="ne"],
@@ -1143,33 +1089,81 @@ html[lang="am"] p, html[lang="am"] li, html[lang="am"] blockquote, html[lang="am
 html[lang="am"] h1, html[lang="am"] h2, html[lang="am"] h3, html[lang="am"] h4, html[lang="am"] h5, html[lang="am"] h6 { line-height: 1.45; }
 [lang="am"] { font-family: "Inter", "Noto Serif Ethiopic", serif, sans-serif; letter-spacing: 0 !important; }
 
-/* 35-36. Cyrillic Book Languages: Ukrainian (uk), Kazakh (kk) -> Classic Literary Cyrillic Book Serif (PT Serif + Source Serif 4) */
+/* 35-44. Cyrillic Book Languages: Ukrainian (uk), Kazakh (kk), Tajik (tg), Kyrgyz (ky), Mongolian (mn), Bulgarian (bg), Serbian (sr), Belarusian (be), Macedonian (mk) */
 html[lang="uk"], html[lang="uk"] body,
-html[lang="kk"], html[lang="kk"] body {
+html[lang="kk"], html[lang="kk"] body,
+html[lang="tg"], html[lang="tg"] body,
+html[lang="ky"], html[lang="ky"] body,
+html[lang="mn"], html[lang="mn"] body,
+html[lang="bg"], html[lang="bg"] body,
+html[lang="sr"], html[lang="sr"] body,
+html[lang="be"], html[lang="be"] body,
+html[lang="mk"], html[lang="mk"] body {
   font-family: "PT Serif", "Source Serif 4", "Inter", Georgia, serif !important;
   letter-spacing: -0.005em !important;
 }
 html[lang="uk"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre),
-html[lang="kk"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre) {
+html[lang="kk"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre),
+html[lang="tg"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre),
+html[lang="ky"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre),
+html[lang="mn"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre),
+html[lang="bg"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre),
+html[lang="sr"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre),
+html[lang="be"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre),
+html[lang="mk"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre) {
   font-family: "PT Serif", "Source Serif 4", "Inter", Georgia, serif;
   letter-spacing: -0.005em;
 }
-html[lang="uk"] p, html[lang="uk"] li, html[lang="uk"] blockquote, html[lang="uk"] label, html[lang="uk"] td, html[lang="uk"] th, html[lang="uk"] input, html[lang="uk"] select, html[lang="uk"] textarea,
-html[lang="kk"] p, html[lang="kk"] li, html[lang="kk"] blockquote, html[lang="kk"] label, html[lang="kk"] td, html[lang="kk"] th, html[lang="kk"] input, html[lang="kk"] select, html[lang="kk"] textarea { line-height: 1.65; }
-[lang="uk"], [lang="kk"] { font-family: "PT Serif", "Source Serif 4", "Inter", Georgia, serif; }
+html[lang="uk"] p, html[lang="uk"] li, html[lang="kk"] p, html[lang="kk"] li,
+html[lang="tg"] p, html[lang="tg"] li, html[lang="ky"] p, html[lang="ky"] li,
+html[lang="mn"] p, html[lang="mn"] li, html[lang="bg"] p, html[lang="bg"] li,
+html[lang="sr"] p, html[lang="sr"] li, html[lang="be"] p, html[lang="be"] li,
+html[lang="mk"] p, html[lang="mk"] li { line-height: 1.65; }
+[lang="uk"], [lang="kk"], [lang="tg"], [lang="ky"], [lang="mn"], [lang="bg"], [lang="sr"], [lang="be"], [lang="mk"] { font-family: "PT Serif", "Source Serif 4", "Inter", Georgia, serif; }
 
-/* 37-43. European & Nordic Literary Book Editions: Polish (pl), Hungarian (hu), Dutch (nl), Czech (cs), Swedish (sv), Norwegian (no), Danish (da) */
+/* Georgian (ka), Armenian (hy), Lao (lo), Dhivehi (dv) */
+html[lang="ka"], html[lang="ka"] body { font-family: "Inter", "Noto Serif Georgian", serif, sans-serif !important; letter-spacing: 0 !important; }
+html[lang="ka"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre) { font-family: "Inter", "Noto Serif Georgian", serif, sans-serif; letter-spacing: 0 !important; }
+[lang="ka"] { font-family: "Inter", "Noto Serif Georgian", serif, sans-serif; }
+
+html[lang="hy"], html[lang="hy"] body { font-family: "Inter", "Noto Serif Armenian", serif, sans-serif !important; letter-spacing: 0 !important; }
+html[lang="hy"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre) { font-family: "Inter", "Noto Serif Armenian", serif, sans-serif; letter-spacing: 0 !important; }
+[lang="hy"] { font-family: "Inter", "Noto Serif Armenian", serif, sans-serif; }
+
+html[lang="lo"], html[lang="lo"] body { font-family: "Inter", "Noto Serif Lao", serif, sans-serif !important; letter-spacing: 0 !important; }
+html[lang="lo"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre) { font-family: "Inter", "Noto Serif Lao", serif, sans-serif; letter-spacing: 0 !important; }
+[lang="lo"] { font-family: "Inter", "Noto Serif Lao", serif, sans-serif; }
+
+html[lang="dv"], html[lang="dv"] body { font-family: "Inter", "Noto Sans Thaana", sans-serif !important; letter-spacing: 0 !important; }
+html[lang="dv"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre) { font-family: "Inter", "Noto Sans Thaana", sans-serif; letter-spacing: 0 !important; }
+[lang="dv"] { font-family: "Inter", "Noto Sans Thaana", sans-serif; }
+
+/* European, Baltic, Central Asian & African Literary Book Editions */
 html[lang="pl"], html[lang="pl"] body,
-html[lang="hu"], html[lang="hu"] body {
+html[lang="hu"], html[lang="hu"] body,
+html[lang="hr"], html[lang="hr"] body,
+html[lang="sk"], html[lang="sk"] body,
+html[lang="sl"], html[lang="sl"] body,
+html[lang="lt"], html[lang="lt"] body,
+html[lang="lv"], html[lang="lv"] body,
+html[lang="et"], html[lang="et"] body,
+html[lang="bs"], html[lang="bs"] body {
   font-family: "PT Serif", "Source Serif 4", "Inter", Georgia, serif !important;
   letter-spacing: -0.005em !important;
 }
 html[lang="pl"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre),
-html[lang="hu"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre) {
+html[lang="hu"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre),
+html[lang="hr"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre),
+html[lang="sk"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre),
+html[lang="sl"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre),
+html[lang="lt"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre),
+html[lang="lv"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre),
+html[lang="et"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre),
+html[lang="bs"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre) {
   font-family: "PT Serif", "Source Serif 4", "Inter", Georgia, serif;
   letter-spacing: -0.005em;
 }
-[lang="pl"], [lang="hu"] { font-family: "PT Serif", "Source Serif 4", "Inter", Georgia, serif; }
+[lang="pl"], [lang="hu"], [lang="hr"], [lang="sk"], [lang="sl"], [lang="lt"], [lang="lv"], [lang="et"], [lang="bs"] { font-family: "PT Serif", "Source Serif 4", "Inter", Georgia, serif; }
 
 html[lang="nl"], html[lang="nl"] body {
   font-family: "EB Garamond", "Source Serif 4", "Inter", Georgia, serif !important;
@@ -1184,20 +1178,25 @@ html[lang="nl"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.materia
 html[lang="sv"], html[lang="sv"] body,
 html[lang="no"], html[lang="no"] body,
 html[lang="da"], html[lang="da"] body,
-html[lang="cs"], html[lang="cs"] body {
+html[lang="cs"], html[lang="cs"] body,
+html[lang="is"], html[lang="is"] body,
+html[lang="ga"], html[lang="ga"] body,
+html[lang="mt"], html[lang="mt"] body {
   font-family: "Literata", "Source Serif 4", "Inter", Georgia, serif !important;
   letter-spacing: -0.005em !important;
 }
 html[lang="sv"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre),
 html[lang="no"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre),
 html[lang="da"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre),
-html[lang="cs"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre) {
+html[lang="cs"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre),
+html[lang="is"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre),
+html[lang="ga"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre),
+html[lang="mt"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre) {
   font-family: "Literata", "Source Serif 4", "Inter", Georgia, serif;
   letter-spacing: -0.005em;
 }
-[lang="sv"], [lang="no"], [lang="da"], [lang="cs"] { font-family: "Literata", "Source Serif 4", "Inter", Georgia, serif; }
+[lang="sv"], [lang="no"], [lang="da"], [lang="cs"], [lang="is"], [lang="ga"], [lang="mt"] { font-family: "Literata", "Source Serif 4", "Inter", Georgia, serif; }
 
-/* 44-51. Editorial Literary Serif Editions: Vietnamese (vi), Malay (ms), Filipino (tl), Romanian (ro), Finnish (fi), Azerbaijani (az), Uzbek (uz), Swahili (sw) */
 html[lang="vi"], html[lang="vi"] body,
 html[lang="ms"], html[lang="ms"] body,
 html[lang="tl"], html[lang="tl"] body,
@@ -1205,7 +1204,12 @@ html[lang="ro"], html[lang="ro"] body,
 html[lang="fi"], html[lang="fi"] body,
 html[lang="az"], html[lang="az"] body,
 html[lang="uz"], html[lang="uz"] body,
-html[lang="sw"], html[lang="sw"] body {
+html[lang="tk"], html[lang="tk"] body,
+html[lang="sq"], html[lang="sq"] body,
+html[lang="sw"], html[lang="sw"] body,
+html[lang="so"], html[lang="so"] body,
+html[lang="mg"], html[lang="mg"] body,
+html[lang="rw"], html[lang="rw"] body {
   font-family: "Source Serif 4", "Literata", "Inter", Georgia, serif !important;
   letter-spacing: -0.005em !important;
 }
@@ -1216,14 +1220,19 @@ html[lang="ro"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.materia
 html[lang="fi"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre),
 html[lang="az"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre),
 html[lang="uz"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre),
-html[lang="sw"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre) {
+html[lang="tk"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre),
+html[lang="sq"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre),
+html[lang="sw"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre),
+html[lang="so"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre),
+html[lang="mg"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre),
+html[lang="rw"] *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-symbols-outlined):not(.font-mono):not(code):not(pre) {
   font-family: "Source Serif 4", "Literata", "Inter", Georgia, serif;
   letter-spacing: -0.005em;
 }
-html[lang="vi"] p, html[lang="vi"] li, html[lang="ms"] p, html[lang="ms"] li, html[lang="tl"] p, html[lang="tl"] li, html[lang="ro"] p, html[lang="ro"] li, html[lang="fi"] p, html[lang="fi"] li, html[lang="az"] p, html[lang="az"] li, html[lang="uz"] p, html[lang="uz"] li, html[lang="sw"] p, html[lang="sw"] li {
+html[lang="vi"] p, html[lang="vi"] li, html[lang="ms"] p, html[lang="ms"] li, html[lang="tl"] p, html[lang="tl"] li, html[lang="ro"] p, html[lang="ro"] li, html[lang="fi"] p, html[lang="fi"] li, html[lang="az"] p, html[lang="az"] li, html[lang="uz"] p, html[lang="uz"] li, html[lang="tk"] p, html[lang="tk"] li, html[lang="sq"] p, html[lang="sq"] li, html[lang="sw"] p, html[lang="sw"] li, html[lang="so"] p, html[lang="so"] li, html[lang="mg"] p, html[lang="mg"] li, html[lang="rw"] p, html[lang="rw"] li {
   line-height: 1.65;
 }
-[lang="vi"], [lang="ms"], [lang="tl"], [lang="ro"], [lang="fi"], [lang="az"], [lang="uz"], [lang="sw"] {
+[lang="vi"], [lang="ms"], [lang="tl"], [lang="ro"], [lang="fi"], [lang="az"], [lang="uz"], [lang="tk"], [lang="sq"], [lang="sw"], [lang="so"], [lang="mg"], [lang="rw"] {
   font-family: "Source Serif 4", "Literata", "Inter", Georgia, serif;
 }
 

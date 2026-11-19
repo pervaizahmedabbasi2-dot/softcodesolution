@@ -99,7 +99,7 @@ test('I18N API supports English identity pass-through and regional/global picker
   assert.equal(enBody.ok, true);
   assert.equal(enBody.translations['Submit Ticket'], 'Submit Ticket');
 
-  for (const lang of ['sd', 'pa', 'ps', 'bal', 'skr', 'ks', 'ar', 'fa', 'hi', 'bn', 'ko', 'th', 'vi', 'ms', 'pl', 'uk', 'he', 'ta', 'sw', 'es', 'fr']) {
+  for (const lang of ['sd', 'pa', 'ps', 'bal', 'skr', 'ks', 'ar', 'fa', 'hi', 'bn', 'ko', 'th', 'vi', 'ms', 'pl', 'uk', 'he', 'sw', 'tg', 'ka', 'bg', 'dv', 'rw', 'es', 'fr']) {
     const res = await fetch(`${baseUrl}/api/i18n/translate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -135,20 +135,28 @@ test('I18N API exposes hybrid offline pack summary, pack download, and pack impo
   assert.equal(importBody.ok, true);
   assert.ok(importBody.imported >= 1);
 
-  // Download full offline pack for ur & ar
+  // Download full offline pack for ar and new national languages (ka, dv)
   const packRes = await fetch(`${baseUrl}/api/i18n/pack/ar`);
   assert.equal(packRes.status, 200);
   const packBody = await packRes.json();
   assert.equal(packBody.ok, true);
   assert.equal(packBody.targetLang, 'ar');
   assert.equal(packBody.translations['Offline Sync Verification'], 'التحقق من المزامنة دون اتصال');
-  assert.ok(packBody.count >= 1);
+  assert.ok(packBody.count >= 75);
 
-  // Verify summary reports downloaded counts per language
+  const kaPackRes = await fetch(`${baseUrl}/api/i18n/pack/ka`);
+  assert.equal(kaPackRes.status, 200);
+  const kaPackBody = await kaPackRes.json();
+  assert.equal(kaPackBody.ok, true);
+  assert.ok(kaPackBody.count >= 75);
+
+  // Verify summary reports all 73 non-English offline packs ready
   const summaryRes = await fetch(`${baseUrl}/api/i18n/packs/summary`);
   assert.equal(summaryRes.status, 200);
   const summaryBody = await summaryRes.json();
   assert.equal(summaryBody.ok, true);
-  assert.ok(summaryBody.packs.ar?.count >= 1);
-  assert.ok(summaryBody.packs.ur?.count >= 1);
+  assert.equal(Object.keys(summaryBody.packs).length, 73);
+  assert.ok(summaryBody.packs.ar?.count >= 75);
+  assert.ok(summaryBody.packs.ur?.count >= 75);
+  assert.ok(summaryBody.packs.dv?.count >= 75);
 });
