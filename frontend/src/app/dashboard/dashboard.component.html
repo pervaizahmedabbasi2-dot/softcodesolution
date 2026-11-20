@@ -137,14 +137,14 @@
        <div *ngIf="isSchoolPreviewActive" class="space-y-6 animate-fade-in">
          
          <!-- Business Identity Card in Sidebar (White Theme) -->
-         <div class="p-3.5 rounded-2xl bg-white text-slate-900 border border-slate-200/90 shadow-2xs relative overflow-hidden">
+         <div class="p-3.5 rounded-2xl bg-gradient-to-br from-indigo-900 via-slate-900 to-indigo-950 text-white border border-indigo-500/40 shadow-xl shadow-indigo-950/30 backdrop-blur-md relative overflow-hidden">
            <div class="flex items-center gap-2.5">
              <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 text-white flex items-center justify-center shrink-0 border border-white/30 shadow-md shadow-indigo-600/30">
                <lucide-icon [name]="icons.GraduationCap" class="w-4 h-4"></lucide-icon>
              </div>
              <div class="min-w-0 flex-1">
-               <h4 class="text-xs font-black truncate leading-tight tracking-tight text-slate-900">{{ schoolDisplayName }}</h4>
-               <span class="text-[10px] font-bold text-indigo-600 uppercase tracking-wider">{{ activeSchoolRoleLabel }}</span>
+               <h4 class="text-xs font-black truncate leading-tight tracking-tight text-white">{{ schoolDisplayName }}</h4>
+               <span class="text-[10px] font-bold text-emerald-300 uppercase tracking-wider">{{ activeSchoolRoleLabel }}</span>
              </div>
            </div>
          </div>
@@ -154,7 +154,7 @@
            <div *ngFor="let section of schoolSidebarSections" class="space-y-1 mb-4">
              <div class="flex items-center justify-between px-1 mb-1 mt-2">
                <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{{ section.title }}</p>
-               <span *ngIf="section.badge" class="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">
+               <span *ngIf="section.badge" class="text-[9px] font-bold text-emerald-300 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">
                  {{ section.badge }}
                </span>
              </div>
@@ -262,7 +262,7 @@
            <div class="space-y-4">
              <div class="flex items-center justify-between px-1 mb-1">
                <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">School ERP Modules</p>
-               <span class="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">
+               <span class="text-[9px] font-bold text-emerald-300 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">
                  {{ activeSchoolSidebarItems.length }} Active
                </span>
              </div>
@@ -310,14 +310,14 @@
        <div *ngIf="!isSchoolPreviewActive && previewMode && activeSimulatedBusiness" class="space-y-6 animate-fade-in">
          
          <!-- Business Identity Card in Sidebar (White Theme) -->
-         <div class="p-3.5 rounded-2xl bg-white text-slate-900 border border-slate-200/90 shadow-2xs relative overflow-hidden">
+         <div class="p-3.5 rounded-2xl bg-gradient-to-br from-indigo-900 via-slate-900 to-indigo-950 text-white border border-indigo-500/40 shadow-xl shadow-indigo-950/30 backdrop-blur-md relative overflow-hidden">
            <div class="flex items-center gap-2.5">
              <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-600 text-white flex items-center justify-center shrink-0 border border-white/30 shadow-md shadow-indigo-600/30">
                <lucide-icon [name]="getBusinessIcon(activeSimulatedBusiness.icon)" class="w-4 h-4"></lucide-icon>
              </div>
              <div class="min-w-0 flex-1">
-               <h4 class="text-xs font-black truncate leading-tight tracking-tight text-slate-900">{{ activeSimulatedBusiness.name }}</h4>
-               <span class="text-[10px] font-bold text-indigo-600 uppercase tracking-wider">{{ activeSimulatedBusiness.sectorLabel || 'Business Preview' }}</span>
+               <h4 class="text-xs font-black truncate leading-tight tracking-tight text-white">{{ activeSimulatedBusiness.name }}</h4>
+               <span class="text-[10px] font-bold text-emerald-300 uppercase tracking-wider">{{ activeSimulatedBusiness.sectorLabel || 'Business Preview' }}</span>
              </div>
            </div>
          </div>
@@ -326,7 +326,7 @@
          <div class="space-y-4">
            <div class="flex items-center justify-between px-1 mb-1">
              <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Business Modules</p>
-             <span class="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">
+             <span class="text-[9px] font-bold text-emerald-300 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">
                {{ activeBusinessAllowedModules.length + 1 }} Active
              </span>
            </div>
@@ -352,7 +352,7 @@
                      [class.bg-white/20]="activeView === (activeSimulatedBusiness.dedicatedHubView || 'business-suites')"
                      [class.text-white]="activeView === (activeSimulatedBusiness.dedicatedHubView || 'business-suites')"
                      [class.bg-emerald-50]="activeView !== (activeSimulatedBusiness.dedicatedHubView || 'business-suites')"
-                     [class.text-emerald-700]="activeView !== (activeSimulatedBusiness.dedicatedHubView || 'business-suites')">LIVE</span>
+                     [class.text-emerald-300]="activeView !== (activeSimulatedBusiness.dedicatedHubView || 'business-suites')">LIVE</span>
              </button>
 
              <!-- Individual Allowed Modules list -->
@@ -374,7 +374,7 @@
                </div>
                <div class="flex items-center gap-1 shrink-0">
                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" *ngIf="activePreviewSubModule === modName"></span>
-                 <lucide-icon [name]="icons.ChevronRight" class="w-3.5 h-3.5 text-slate-400 group-hover:text-indigo-600 transition-colors" *ngIf="activePreviewSubModule !== modName"></lucide-icon>
+                 <lucide-icon [name]="icons.ChevronRight" class="w-3.5 h-3.5 text-slate-400 group-hover:text-emerald-300 transition-colors" *ngIf="activePreviewSubModule !== modName"></lucide-icon>
                </div>
              </button>
            </div>
@@ -387,14 +387,14 @@
        <div *ngIf="!isSchoolPreviewActive && !previewMode" class="space-y-6 animate-fade-in">
 
          <!-- Business Identity Card in Sidebar (Super Admin Card) -->
-         <div class="p-3.5 rounded-2xl bg-white text-slate-900 border border-slate-200/90 shadow-2xs relative overflow-hidden">
+         <div class="p-3.5 rounded-2xl bg-gradient-to-br from-indigo-900 via-slate-900 to-indigo-950 text-white border border-indigo-500/40 shadow-xl shadow-indigo-950/30 backdrop-blur-md relative overflow-hidden">
            <div class="flex items-center gap-2.5">
              <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 via-orange-500 to-indigo-600 text-white flex items-center justify-center shrink-0 border border-white/30 shadow-md shadow-orange-500/30">
                <lucide-icon [name]="icons.ShieldCheck" class="w-4 h-4"></lucide-icon>
              </div>
              <div class="min-w-0 flex-1">
-               <h4 class="text-xs font-black truncate leading-tight tracking-tight text-slate-900">{{ userName || 'Super Admin Console' }}</h4>
-               <span class="text-[10px] font-bold text-indigo-600 uppercase tracking-wider">{{ userRole === 'SUPER_ADMIN' ? 'Control Panel' : 'Client Workspace' }}</span>
+               <h4 class="text-xs font-black truncate leading-tight tracking-tight text-white">{{ userName || 'Super Admin Console' }}</h4>
+               <span class="text-[10px] font-bold text-emerald-300 uppercase tracking-wider">{{ userRole === 'SUPER_ADMIN' ? 'Control Panel' : 'Client Workspace' }}</span>
              </div>
            </div>
          </div>
@@ -810,17 +810,8 @@
     </nav>
     
     <!-- User Profile Footer -->
-    <div class="p-4 border-t border-slate-100 bg-slate-50/50">
+    <div class="p-4 border-t border-slate-100 bg-slate-50/50 space-y-2">
       <ng-container *ngIf="isSchoolPreviewActive">
-        <div class="flex items-center gap-3 mb-3 p-2.5 rounded-xl bg-white border border-indigo-100 shadow-2xs">
-          <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
-            <lucide-icon [name]="icons.GraduationCap" class="w-4 h-4"></lucide-icon>
-          </div>
-          <div class="flex-1 min-w-0">
-            <p class="text-xs font-black text-slate-900 truncate">{{ schoolDisplayName }}</p>
-            <p class="text-[11px] font-bold text-indigo-600 truncate">{{ userRole === 'SUPER_ADMIN' ? 'Business Owner / Super Admin' : activeSchoolRoleLabel }}</p>
-          </div>
-        </div>
         <button *ngIf="previewMode" (click)="exitClientPreview()" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-slate-200/90 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 text-slate-700 rounded-xl transition-all font-bold text-xs shadow-2xs cursor-pointer">
           <lucide-icon [name]="icons.LogOut" class="w-3.5 h-3.5"></lucide-icon> Return to Super Admin
         </button>
@@ -830,33 +821,12 @@
       </ng-container>
 
       <ng-container *ngIf="!isSchoolPreviewActive && previewMode && activeSimulatedBusiness">
-        <div class="flex items-center gap-3 mb-3 p-2.5 rounded-xl bg-white border border-indigo-100 shadow-2xs">
-          <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
-            <lucide-icon [name]="getBusinessIcon(activeSimulatedBusiness.icon)" class="w-4 h-4"></lucide-icon>
-          </div>
-          <div class="flex-1 min-w-0">
-            <p class="text-xs font-black text-slate-900 truncate">{{ activeSimulatedBusiness.name }}</p>
-            <p class="text-[11px] font-bold text-indigo-600 truncate">{{ rbacRoleDefinitions[activeSimulatedRole]?.label || activeSimulatedRole }}</p>
-          </div>
-        </div>
         <button (click)="exitClientPreview()" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-slate-200/90 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 text-slate-700 rounded-xl transition-all font-bold text-xs shadow-2xs cursor-pointer">
           <lucide-icon [name]="icons.LogOut" class="w-3.5 h-3.5"></lucide-icon> Return to Super Admin
         </button>
       </ng-container>
 
       <ng-container *ngIf="!isSchoolPreviewActive && !previewMode">
-        <div class="flex items-center gap-3 mb-3 p-2.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs">
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 to-indigo-800 text-white flex items-center justify-center font-black text-sm shrink-0 shadow-xs border border-indigo-500/20">
-             {{ getInitials(userName) }}
-          </div>
-          <div class="flex-1 min-w-0">
-            <p class="text-xs font-black text-slate-900 truncate tracking-tight">{{ userName }}</p>
-            <div class="flex items-center gap-1.5 mt-0.5">
-              <span class="w-1.5 h-1.5 rounded-full shrink-0" [class.bg-emerald-500]="isOnline" [class.animate-pulse]="isOnline" [class.bg-red-500]="!isOnline"></span>
-              <p class="text-[10px] font-bold text-indigo-700 truncate uppercase tracking-wider">{{ userRole === 'SUPER_ADMIN' ? 'Super Admin' : 'Enterprise Admin' }}</p>
-            </div>
-          </div>
-        </div>
         <button (click)="logout()" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-slate-200/90 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 text-slate-700 rounded-xl transition-all font-bold text-xs shadow-2xs cursor-pointer">
           <lucide-icon [name]="icons.LogOut" class="w-3.5 h-3.5"></lucide-icon> Sign Out
         </button>

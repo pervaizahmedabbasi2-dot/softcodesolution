@@ -99,7 +99,7 @@
             </div>
 
             <!-- Administrator / School Owner Profile Card -->
-            <div class="p-3 bg-gradient-to-r from-slate-50 to-indigo-50/40 mx-3 mt-3 rounded-2xl flex items-center gap-3 border border-slate-200/80 shadow-2xs">
+            <div class="p-3 bg-gradient-to-br from-white/95 via-emerald-50/40 to-slate-50/90 mx-3 mt-3 rounded-2xl flex items-center gap-3 border border-white/80 shadow-md">
               <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-600 text-white flex items-center justify-center font-black text-xs shadow-md shadow-indigo-600/30 border border-white/30 shrink-0">
                 {{ isSuperAdminPreview ? 'SA' : 'SO' }}
               </div>
@@ -4106,13 +4106,35 @@
             <div class="flex flex-col gap-3 pb-3 border-b border-slate-200/80 min-w-0 w-full">
               <div class="flex items-start sm:items-center justify-between flex-wrap gap-3 min-w-0">
                 <div class="min-w-0 flex-1">
-                  <h3 class="font-black text-slate-900 text-base">Institution Financial Ledger &amp; Account Khata System</h3>
-                  <p class="text-xs text-slate-500">Class-wise fee dues, defaulter khata, teacher salary arrears, profit/loss statement &amp; alerts</p>
+                  <h3 class="font-black text-slate-900 text-base">School Finance, Cash Book &amp; Account Khata</h3>
+                  <p class="text-xs text-slate-500">Record daily income &amp; expenses, collect pending student dues, pay teacher salary arrears &amp; verify cash closing</p>
                 </div>
 
-                <button (click)="openAddFinanceModal()" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs cursor-pointer flex items-center gap-1.5 shadow-xs shrink-0">
-                  <lucide-icon [name]="'plus'" class="w-3.5 h-3.5"></lucide-icon>
-                  <span>+ Record Transaction</span>
+                <div class="flex items-center gap-2 flex-wrap shrink-0">
+                  <button (click)="openAddFinanceModal('Income')" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs cursor-pointer flex items-center gap-1.5 shadow-xs shrink-0">
+                    <lucide-icon [name]="'plus'" class="w-3.5 h-3.5"></lucide-icon>
+                    <span>Record Transaction</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Quick Finance Workflow Bar -->
+              <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 text-xs">
+                <button type="button" (click)="openAddFinanceModal('Income')" class="p-2.5 rounded-xl bg-emerald-50/80 hover:bg-emerald-100/80 border border-emerald-200/80 text-left cursor-pointer transition-colors min-w-0">
+                  <span class="font-black text-emerald-900 block truncate">1. Add Income / Fee</span>
+                  <span class="text-[10px] font-medium text-emerald-700 block truncate">Open form &amp; add to Cash Book</span>
+                </button>
+                <button type="button" (click)="openAddFinanceModal('Expense')" class="p-2.5 rounded-xl bg-rose-50/80 hover:bg-rose-100/80 border border-rose-200/80 text-left cursor-pointer transition-colors min-w-0">
+                  <span class="font-black text-rose-900 block truncate">2. Record Expense</span>
+                  <span class="text-[10px] font-medium text-rose-700 block truncate">Log bills, salaries &amp; kharcha</span>
+                </button>
+                <button type="button" (click)="financeSubTab = 'defaulters'" class="p-2.5 rounded-xl bg-amber-50/80 hover:bg-amber-100/80 border border-amber-200/80 text-left cursor-pointer transition-colors min-w-0">
+                  <span class="font-black text-amber-900 block truncate">3. Collect Bakaya Dues</span>
+                  <span class="text-[10px] font-medium text-amber-700 block truncate">Recover fee &amp; send reminders</span>
+                </button>
+                <button type="button" (click)="financeSubTab = 'daily_closing'" class="p-2.5 rounded-xl bg-indigo-50/80 hover:bg-indigo-100/80 border border-indigo-200/80 text-left cursor-pointer transition-colors min-w-0">
+                  <span class="font-black text-indigo-900 block truncate">4. Daily Cash Closing</span>
+                  <span class="text-[10px] font-medium text-indigo-700 block truncate">Approve Clerk Rooznama</span>
                 </button>
               </div>
 
@@ -4543,10 +4565,10 @@
                 <!-- Controls Toolbar -->
                 <div class="flex items-center justify-between flex-wrap gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-200/90 shadow-2xs">
                   <div class="relative flex-1 min-w-0 w-full sm:min-w-[240px]">
-                    <lucide-icon [name]="'search'" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></lucide-icon>
+                    <lucide-icon [name]="'search'" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></lucide-icon>
                     <input type="text" [(ngModel)]="financeSearchQuery" (ngModelChange)="currentPage['finance'] = 1"
                       placeholder="Search description, student name, category, or ref #..."
-                      class="w-full pl-9 pr-8 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-900 placeholder:text-slate-400 focus:outline-indigo-600 shadow-2xs">
+                      class="w-full pl-10 pr-8 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-900 placeholder:text-slate-400 focus:outline-indigo-600 shadow-2xs">
                     @if (financeSearchQuery) {
                       <button (click)="financeSearchQuery = ''; currentPage['finance'] = 1" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold">×</button>
                     }
@@ -4743,10 +4765,10 @@
                 <!-- Controls Toolbar -->
                 <div class="flex items-center justify-between flex-wrap gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-200/90 shadow-2xs">
                   <div class="relative flex-1 min-w-0 w-full sm:min-w-[240px]">
-                    <lucide-icon [name]="'search'" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></lucide-icon>
+                    <lucide-icon [name]="'search'" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></lucide-icon>
                     <input type="text" [(ngModel)]="financeSearchQuery" (ngModelChange)="currentPage['finance'] = 1"
                       placeholder="Search student name, roll #, class, or guardian phone..."
-                      class="w-full pl-9 pr-8 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-900 placeholder:text-slate-400 focus:outline-indigo-600 shadow-2xs">
+                      class="w-full pl-10 pr-8 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-900 placeholder:text-slate-400 focus:outline-indigo-600 shadow-2xs">
                     @if (financeSearchQuery) {
                       <button (click)="financeSearchQuery = ''; currentPage['finance'] = 1" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold">×</button>
                     }
@@ -9736,7 +9758,7 @@
             </div>
 
             <!-- Principal Profile Card -->
-            <div class="p-3 bg-gradient-to-r from-indigo-50/80 to-purple-50/50 mx-3 mt-3 rounded-2xl flex items-center gap-3 border border-indigo-100 shadow-2xs">
+            <div class="p-3 bg-gradient-to-br from-white/95 via-emerald-50/40 to-slate-50/90 mx-3 mt-3 rounded-2xl flex items-center gap-3 border border-white/80 shadow-md">
               <img [src]="safeAvatar(principalPersona.image, principalPersona.name)" alt="Principal" referrerpolicy="no-referrer" class="w-9 h-9 rounded-xl object-cover border border-indigo-200 shrink-0">
               <div class="min-w-0 flex-1">
                 <h4 class="text-xs font-black text-slate-900 truncate">{{ principalPersona.name }}</h4>
@@ -13633,7 +13655,7 @@
             </div>
 
             <!-- Teacher Profile Card -->
-            <div class="p-3 bg-gradient-to-r from-slate-50 to-emerald-50/40 mx-3 mt-3 rounded-2xl flex items-center gap-3 border border-slate-200/80 shadow-2xs">
+            <div class="p-3 bg-gradient-to-br from-white/95 via-emerald-50/40 to-slate-50/90 mx-3 mt-3 rounded-2xl flex items-center gap-3 border border-white/80 shadow-md">
               <div class="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black text-xs shadow-sm shadow-emerald-600/20 shrink-0">
                 {{ currentTeacherProfile.initials }}
               </div>
@@ -14891,7 +14913,7 @@
             </div>
 
             <!-- Student Profile Card -->
-            <div class="p-3 bg-gradient-to-r from-slate-50 to-sky-50/40 mx-3 mt-3 rounded-2xl flex items-center gap-3 border border-slate-200/80 shadow-2xs">
+            <div class="p-3 bg-gradient-to-br from-white/95 via-emerald-50/40 to-slate-50/90 mx-3 mt-3 rounded-2xl flex items-center gap-3 border border-white/80 shadow-md">
               <div class="w-9 h-9 rounded-xl bg-sky-600 text-white flex items-center justify-center font-black text-xs shadow-sm shadow-sky-600/20 shrink-0">
                 {{ currentStudentProfile.initials }}
               </div>
@@ -16223,7 +16245,7 @@
             </div>
 
             <!-- Parent Profile Card -->
-            <div class="p-3 bg-gradient-to-r from-slate-50 to-purple-50/40 mx-3 mt-3 rounded-2xl flex items-center gap-3 border border-slate-200/80 shadow-2xs">
+            <div class="p-3 bg-gradient-to-br from-white/95 via-emerald-50/40 to-slate-50/90 mx-3 mt-3 rounded-2xl flex items-center gap-3 border border-white/80 shadow-md">
               <div class="w-9 h-9 rounded-xl bg-purple-600 text-white flex items-center justify-center font-black text-xs shadow-sm shadow-purple-600/20 shrink-0">
                 {{ currentGuardianProfile.initials }}
               </div>
@@ -19006,16 +19028,271 @@
     </div>
   }
 
+  <!-- 7B. RECORD FINANCE TRANSACTION MODAL (MASTER CASH BOOK & KHATA) -->
+  @if (isFinanceModalOpen) {
+    <div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 animate-fade-in">
+      <div class="apple-card rounded-3xl max-w-2xl w-full max-h-[92vh] overflow-hidden flex flex-col bg-white shadow-2xl border border-slate-200/80">
+        <div class="px-5 sm:px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/70 shrink-0">
+          <div>
+            <span class="text-[10px] font-black uppercase tracking-wider text-indigo-600 block">Master Cash Book &amp; Khata</span>
+            <h3 class="font-black text-slate-900 text-base">Record Finance Transaction (Income / Expense)</h3>
+          </div>
+          <button type="button" (click)="closeFinanceModal()" class="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer">
+            <lucide-icon [name]="'x'" class="w-5 h-5"></lucide-icon>
+          </button>
+        </div>
+
+        <div class="p-5 sm:p-6 overflow-y-auto custom-scrollbar space-y-4 text-xs flex-1">
+          <!-- Income vs Expense Quick Switch -->
+          @if (!isFormFieldHidden('owner_finance_ledger', 'type')) {
+            <div class="grid grid-cols-2 gap-2 p-1 rounded-2xl bg-slate-100 border border-slate-200/80">
+              <button type="button" (click)="financeForm.type = 'Income'; financeForm.category = 'Tuition'"
+                class="py-2 px-3 rounded-xl font-black text-xs cursor-pointer transition-all"
+                [class]="financeForm.type === 'Income' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'">
+                + Income (Credit / Aamdani)
+              </button>
+              <button type="button" (click)="financeForm.type = 'Expense'; financeForm.category = 'Utilities'"
+                class="py-2 px-3 rounded-xl font-black text-xs cursor-pointer transition-all"
+                [class]="financeForm.type === 'Expense' ? 'bg-rose-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'">
+                - Expense (Debit / Kharcha)
+              </button>
+            </div>
+          }
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            @if (hasCustomFieldsAtSlot('owner_finance_ledger', '__first__')) {
+              <app-school-custom-form-fields
+                [tableId]="'owner_finance_ledger'"
+                [slotAnchor]="'__first__'"
+                [inlineGrid]="true"
+                [inputSurface]="'white'"
+                [values]="formCustomValues['finance']"
+                [allowSchemaEdit]="isOwnerPortal"
+                (valuesChange)="updateFormCustomValues('finance', $event)" />
+            }
+
+            @if (!isFormFieldHidden('owner_finance_ledger', 'challanNo')) {
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Ref / Voucher #</label>
+                <input type="text" [(ngModel)]="financeForm.challanNo" placeholder="e.g. CH-FIN-1024"
+                  class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-mono font-bold text-slate-900 focus:bg-white focus:outline-indigo-600">
+              </div>
+            }
+            @if (hasCustomFieldsAtSlot('owner_finance_ledger', 'challanNo')) {
+              <app-school-custom-form-fields
+                [tableId]="'owner_finance_ledger'"
+                [slotAnchor]="'challanNo'"
+                [inlineGrid]="true"
+                [inputSurface]="'white'"
+                [values]="formCustomValues['finance']"
+                [allowSchemaEdit]="isOwnerPortal"
+                (valuesChange)="updateFormCustomValues('finance', $event)" />
+            }
+
+            @if (!isFormFieldHidden('owner_finance_ledger', 'amount')) {
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Amount (PKR) *</label>
+                <input type="number" [(ngModel)]="financeForm.amount" min="1" placeholder="28500"
+                  class="w-full px-3 py-2 rounded-xl border font-mono font-black text-sm focus:bg-white focus:outline-indigo-600"
+                  [class]="financeForm.type === 'Expense' ? 'bg-rose-50 border-rose-200 text-rose-700' : 'bg-emerald-50 border-emerald-200 text-emerald-700'">
+              </div>
+            }
+            @if (hasCustomFieldsAtSlot('owner_finance_ledger', 'amount')) {
+              <app-school-custom-form-fields
+                [tableId]="'owner_finance_ledger'"
+                [slotAnchor]="'amount'"
+                [inlineGrid]="true"
+                [inputSurface]="'white'"
+                [values]="formCustomValues['finance']"
+                [allowSchemaEdit]="isOwnerPortal"
+                (valuesChange)="updateFormCustomValues('finance', $event)" />
+            }
+
+            @if (!isFormFieldHidden('owner_finance_ledger', 'title')) {
+              <div class="sm:col-span-2">
+                <label class="block font-bold text-slate-700 mb-1">Particulars / Description *</label>
+                <input type="text" [(ngModel)]="financeForm.title" placeholder="e.g. Monthly Tuition Fee / Electricity Bill / Transport Lease"
+                  class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold text-slate-900 focus:bg-white focus:outline-indigo-600">
+              </div>
+            }
+            @if (hasCustomFieldsAtSlot('owner_finance_ledger', 'title')) {
+              <app-school-custom-form-fields
+                [tableId]="'owner_finance_ledger'"
+                [slotAnchor]="'title'"
+                [inlineGrid]="true"
+                [inputSurface]="'white'"
+                [values]="formCustomValues['finance']"
+                [allowSchemaEdit]="isOwnerPortal"
+                (valuesChange)="updateFormCustomValues('finance', $event)" />
+            }
+
+            @if (!isFormFieldHidden('owner_finance_ledger', 'studentName')) {
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Student / Party Name</label>
+                <input type="text" [(ngModel)]="financeForm.studentName" placeholder="e.g. Ali Haider or IESCO Vendor"
+                  class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold text-slate-900 focus:bg-white focus:outline-indigo-600">
+              </div>
+            }
+            @if (hasCustomFieldsAtSlot('owner_finance_ledger', 'studentName')) {
+              <app-school-custom-form-fields
+                [tableId]="'owner_finance_ledger'"
+                [slotAnchor]="'studentName'"
+                [inlineGrid]="true"
+                [inputSurface]="'white'"
+                [values]="formCustomValues['finance']"
+                [allowSchemaEdit]="isOwnerPortal"
+                (valuesChange)="updateFormCustomValues('finance', $event)" />
+            }
+
+            @if (!isFormFieldHidden('owner_finance_ledger', 'grade')) {
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Class / Section</label>
+                <input type="text" [(ngModel)]="financeForm.grade" placeholder="e.g. Grade 10 (A) or Admin"
+                  class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold text-slate-900 focus:bg-white focus:outline-indigo-600">
+              </div>
+            }
+            @if (hasCustomFieldsAtSlot('owner_finance_ledger', 'grade')) {
+              <app-school-custom-form-fields
+                [tableId]="'owner_finance_ledger'"
+                [slotAnchor]="'grade'"
+                [inlineGrid]="true"
+                [inputSurface]="'white'"
+                [values]="formCustomValues['finance']"
+                [allowSchemaEdit]="isOwnerPortal"
+                (valuesChange)="updateFormCustomValues('finance', $event)" />
+            }
+
+            @if (!isFormFieldHidden('owner_finance_ledger', 'category')) {
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Account Head / Category</label>
+                <select [(ngModel)]="financeForm.category"
+                  class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold text-slate-900 focus:bg-white focus:outline-indigo-600 cursor-pointer">
+                  <option value="Tuition">Tuition &amp; Academic Fees</option>
+                  <option value="Admission">Admission &amp; Registration</option>
+                  <option value="Transport">Transport Fee</option>
+                  <option value="Canteen">Canteen &amp; Misc Income</option>
+                  <option value="Salaries">Staff Salaries</option>
+                  <option value="Utilities">Utilities &amp; Bills</option>
+                  <option value="Maintenance">Campus Maintenance</option>
+                  <option value="Miscellaneous">Miscellaneous</option>
+                </select>
+              </div>
+            }
+            @if (hasCustomFieldsAtSlot('owner_finance_ledger', 'category')) {
+              <app-school-custom-form-fields
+                [tableId]="'owner_finance_ledger'"
+                [slotAnchor]="'category'"
+                [inlineGrid]="true"
+                [inputSurface]="'white'"
+                [values]="formCustomValues['finance']"
+                [allowSchemaEdit]="isOwnerPortal"
+                (valuesChange)="updateFormCustomValues('finance', $event)" />
+            }
+
+            @if (!isFormFieldHidden('owner_finance_ledger', 'paymentMethod')) {
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Payment Method</label>
+                <select [(ngModel)]="financeForm.paymentMethod"
+                  class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold text-slate-900 focus:bg-white focus:outline-indigo-600 cursor-pointer">
+                  <option value="Meezan Bank">Meezan Bank</option>
+                  <option value="HBL Bank">HBL Bank</option>
+                  <option value="Cash Counter">Cash Counter Vault</option>
+                  <option value="JazzCash Direct">JazzCash Direct</option>
+                  <option value="EasyPaisa Wallet">EasyPaisa Wallet</option>
+                  <option value="Cheque">Bank Cheque</option>
+                </select>
+              </div>
+            }
+            @if (hasCustomFieldsAtSlot('owner_finance_ledger', 'paymentMethod')) {
+              <app-school-custom-form-fields
+                [tableId]="'owner_finance_ledger'"
+                [slotAnchor]="'paymentMethod'"
+                [inlineGrid]="true"
+                [inputSurface]="'white'"
+                [values]="formCustomValues['finance']"
+                [allowSchemaEdit]="isOwnerPortal"
+                (valuesChange)="updateFormCustomValues('finance', $event)" />
+            }
+
+            @if (hasCustomFieldsAtSlot('owner_finance_ledger', 'type')) {
+              <app-school-custom-form-fields
+                [tableId]="'owner_finance_ledger'"
+                [slotAnchor]="'type'"
+                [inlineGrid]="true"
+                [inputSurface]="'white'"
+                [values]="formCustomValues['finance']"
+                [allowSchemaEdit]="isOwnerPortal"
+                (valuesChange)="updateFormCustomValues('finance', $event)" />
+            }
+
+            @if (!isFormFieldHidden('owner_finance_ledger', 'date')) {
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Transaction Date</label>
+                <input type="text" [(ngModel)]="financeForm.date" placeholder="e.g. Nov 20, 2026"
+                  class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold text-slate-900 focus:bg-white focus:outline-indigo-600">
+              </div>
+            }
+            @if (hasCustomFieldsAtSlot('owner_finance_ledger', 'date')) {
+              <app-school-custom-form-fields
+                [tableId]="'owner_finance_ledger'"
+                [slotAnchor]="'date'"
+                [inlineGrid]="true"
+                [inputSurface]="'white'"
+                [values]="formCustomValues['finance']"
+                [allowSchemaEdit]="isOwnerPortal"
+                (valuesChange)="updateFormCustomValues('finance', $event)" />
+            }
+
+            @if (!isFormFieldHidden('owner_finance_ledger', 'status')) {
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Verification Status</label>
+                <select [(ngModel)]="financeForm.status"
+                  class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold text-slate-900 focus:bg-white focus:outline-indigo-600 cursor-pointer">
+                  <option value="Verified">Verified</option>
+                  <option value="Pending">Pending</option>
+                </select>
+              </div>
+            }
+            @if (hasCustomFieldsAtSlot('owner_finance_ledger', 'status')) {
+              <app-school-custom-form-fields
+                [tableId]="'owner_finance_ledger'"
+                [slotAnchor]="'status'"
+                [inlineGrid]="true"
+                [inputSurface]="'white'"
+                [values]="formCustomValues['finance']"
+                [allowSchemaEdit]="isOwnerPortal"
+                (valuesChange)="updateFormCustomValues('finance', $event)" />
+            }
+          </div>
+
+          <app-school-custom-form-fields
+            [tableId]="'owner_finance_ledger'"
+            [inputSurface]="'white'"
+            [values]="formCustomValues['finance']"
+            [defaultTitle]="'Master Cash Book & Finance Form'"
+            (valuesChange)="updateFormCustomValues('finance', $event)" />
+        </div>
+
+        <div class="px-5 sm:px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-2 shrink-0">
+          <button type="button" (click)="closeFinanceModal()" class="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold text-xs cursor-pointer">Cancel</button>
+          <button type="button" (click)="saveFinance()" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs cursor-pointer shadow-xs">
+            Save Transaction to Ledger
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
   <!-- 8. RECORD ONLINE FEE COLLECTION MODAL -->
   @if (isPaymentModalOpen) {
     <div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
-      <div class="apple-card rounded-3xl max-w-lg w-full p-6 space-y-5 bg-white">
+      <div class="apple-card rounded-3xl max-w-lg w-full max-h-[92vh] overflow-y-auto custom-scrollbar p-6 space-y-5 bg-white">
         <div class="flex items-center justify-between pb-3 border-b border-slate-200">
           <div>
             <h3 class="font-black text-slate-900 text-base">+ Record Online Fee Collection</h3>
             <p class="text-xs text-slate-500">Record manual or gateway transaction entry into the master ledger</p>
           </div>
-          <button (click)="closePaymentModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600">
+          <button (click)="closePaymentModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer">
             <lucide-icon [name]="'x'" class="w-5 h-5"></lucide-icon>
           </button>
         </div>
@@ -19066,6 +19343,12 @@
             <label class="block font-bold text-slate-700 mb-1">Transaction Ref / Voucher #</label>
             <input type="text" [(ngModel)]="paymentForm.challanNo" placeholder="PAY-ONLINE-XXXX" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-mono font-bold focus:bg-white focus:outline-indigo-600">
           </div>
+
+          <app-school-custom-form-fields
+            [tableId]="'owner_payment_gateway'"
+            [values]="formCustomValues['payment']"
+            [defaultTitle]="'Online Fee Payment Form'"
+            (valuesChange)="updateFormCustomValues('payment', $event)" />
         </div>
 
         <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-200">
@@ -22615,7 +22898,7 @@
   <!-- ========================================================================= -->
   @if (isQuickFeeModalOpen) {
     <div class="fixed inset-0 z-50 flex items-center justify-center p-3 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div class="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-slate-100 space-y-4">
+      <div class="bg-white rounded-3xl max-w-lg w-full max-h-[92vh] overflow-y-auto custom-scrollbar p-5 sm:p-6 shadow-2xl border border-slate-100 space-y-4">
         <div class="flex items-center justify-between pb-3 border-b border-slate-100">
           <div class="flex items-center gap-2.5">
             <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
@@ -22670,6 +22953,12 @@
               </select>
             </div>
           </div>
+
+          <app-school-custom-form-fields
+            [tableId]="'owner_finance_ledger'"
+            [values]="formCustomValues['quickFee']"
+            [defaultTitle]="'Quick Fee Collection Form'"
+            (valuesChange)="updateFormCustomValues('quickFee', $event)" />
         </div>
 
         <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-200">
@@ -22821,7 +23110,7 @@
   <!-- ========================================================================= -->
   @if (isExpenseModalOpen) {
     <div class="fixed inset-0 z-50 flex items-center justify-center p-3 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div class="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-slate-100 space-y-4">
+      <div class="bg-white rounded-3xl max-w-lg w-full max-h-[92vh] overflow-y-auto custom-scrollbar p-5 sm:p-6 shadow-2xl border border-slate-100 space-y-4">
         <div class="flex items-center justify-between pb-3 border-b border-slate-100">
           <div class="flex items-center gap-2.5">
             <div class="w-9 h-9 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center font-bold">
@@ -22848,12 +23137,12 @@
               <label class="block font-bold text-slate-700 mb-1">Expense Category *</label>
               <select [(ngModel)]="expenseForm.category" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold text-slate-900">
                 <option value="Utilities">Utilities (Electricity, Water, Gas)</option>
-                <option value="Maintenance">Maintenance & Fuel</option>
-                <option value="Stationary">Stationary & Printing</option>
-                <option value="Lab">Science & Computer Lab</option>
-                <option value="Transport">Transport Fuel & Spares</option>
-                <option value="Salaries">Staff TA / DA & Honorarium</option>
-                <option value="Events">Sports & Annual Functions</option>
+                <option value="Maintenance">Maintenance &amp; Fuel</option>
+                <option value="Stationary">Stationary &amp; Printing</option>
+                <option value="Lab">Science &amp; Computer Lab</option>
+                <option value="Transport">Transport Fuel &amp; Spares</option>
+                <option value="Salaries">Staff TA / DA &amp; Honorarium</option>
+                <option value="Events">Sports &amp; Annual Functions</option>
               </select>
             </div>
             <div>
@@ -22877,6 +23166,12 @@
               </select>
             </div>
           </div>
+
+          <app-school-custom-form-fields
+            [tableId]="'owner_expenses'"
+            [values]="formCustomValues['expense']"
+            [defaultTitle]="'School Expense Voucher Form'"
+            (valuesChange)="updateFormCustomValues('expense', $event)" />
         </div>
 
         <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-200">
@@ -24707,6 +25002,12 @@
             </div>
           </div>
 
+          <app-school-custom-form-fields
+            [tableId]="'owner_invoices'"
+            [values]="formCustomValues['invoice']"
+            [defaultTitle]="'Master Invoices & Billing Form'"
+            (valuesChange)="updateFormCustomValues('invoice', $event)" />
+
         </div>
 
         <!-- FOOTER -->
@@ -25080,10 +25381,10 @@
   <!-- ========================================================================= -->
   @if (isAddReconciliationModalOpen) {
     <div class="fixed inset-0 z-[120] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-      <div class="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-xl overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+      <div class="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-xl max-h-[92vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
         
         <!-- Header -->
-        <div class="p-5 bg-gradient-to-r from-emerald-900 to-indigo-950 text-white flex items-center justify-between">
+        <div class="p-5 bg-gradient-to-r from-emerald-900 to-indigo-950 text-white flex items-center justify-between shrink-0">
           <div class="flex items-center gap-3">
             <div class="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center justify-center">
               <mat-icon class="text-xl">compare_arrows</mat-icon>
@@ -25099,7 +25400,7 @@
         </div>
 
         <!-- Body -->
-        <div class="p-6 space-y-4 text-xs">
+        <div class="p-6 space-y-4 text-xs overflow-y-auto custom-scrollbar flex-1">
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block font-bold text-slate-700 mb-1">Closing Date</label>
@@ -25171,6 +25472,12 @@
                       rows="2"
                       class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 font-medium focus:bg-white focus:outline-emerald-600"></textarea>
           </div>
+
+          <app-school-custom-form-fields
+            [tableId]="'owner_daily_closing'"
+            [values]="formCustomValues['reconciliation']"
+            [defaultTitle]="'Daily Closing & Reconciliation Form'"
+            (valuesChange)="updateFormCustomValues('reconciliation', $event)" />
         </div>
 
         <!-- Footer -->

@@ -3890,11 +3890,16 @@ INSTRUCTIONS:
 
   financeForm: Partial<FinanceRecord> = {
     title: '',
+    studentName: '',
+    grade: '',
     category: 'Tuition',
+    accountHead: 'Tuition & Academic Fees',
+    paymentMethod: 'Meezan Bank',
     type: 'Income',
     amount: 28500,
-    date: 'Oct 14, 2026',
-    status: 'Verified'
+    date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+    status: 'Verified',
+    challanNo: ''
   };
 
   examForm: Partial<ExamRecord> = {
@@ -11886,14 +11891,20 @@ INSTRUCTIONS:
   }
 
   // --- FINANCE CRUD ---
-  openAddFinanceModal() {
+  openAddFinanceModal(defaultType: 'Income' | 'Expense' = 'Income') {
+    const todayStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     this.financeForm = {
       title: '',
-      category: 'Tuition',
-      type: 'Income',
-      amount: 28500,
-      date: 'Oct 15, 2026',
-      status: 'Verified'
+      studentName: '',
+      grade: '',
+      category: defaultType === 'Expense' ? 'Utilities' : 'Tuition',
+      accountHead: defaultType === 'Expense' ? 'Campus Operating Expense' : 'Tuition & Academic Fees',
+      paymentMethod: 'Meezan Bank',
+      type: defaultType,
+      amount: defaultType === 'Expense' ? 15000 : 28500,
+      date: todayStr,
+      status: 'Verified',
+      challanNo: `CH-${defaultType === 'Expense' ? 'EXP' : 'FIN'}-${Math.floor(1000 + Math.random() * 9000)}`
     };
     this.formCustomValues['finance'] = {};
     this.isFinanceModalOpen = true;
@@ -11906,19 +11917,29 @@ INSTRUCTIONS:
   }
 
   saveFinance() {
-    if (!this.financeForm.title || !this.financeForm.amount) {
-      this.showToast('Please enter Title and Amount.', 'warning');
+    const customVals = this.formCustomValues['finance'] || {};
+    const hasCustomInput = Object.values(customVals).some(v => String(v || '').trim().length > 0);
+    const amountNum = Number(this.financeForm.amount || 0);
+    if ((!this.financeForm.title?.trim() && !this.financeForm.studentName?.trim() && !hasCustomInput) || amountNum <= 0) {
+      this.showToast('Please enter Particulars / Party Name and a valid Amount (PKR).', 'warning');
       return;
     }
+    const resolvedTitle = (this.financeForm.title || '').trim()
+      || (this.financeForm.studentName ? `${this.financeForm.category || 'Fee'} - ${this.financeForm.studentName}` : `${this.financeForm.category || 'Finance'} Entry`);
+    const resolvedChallan = (this.financeForm.challanNo || '').trim() || `CH-FIN-${Math.floor(1000 + Math.random() * 9000)}`;
     const newFin: FinanceRecord = {
       id: `FIN-${Math.floor(1000 + Math.random() * 9000)}`,
-      title: this.financeForm.title || '',
+      title: resolvedTitle,
+      studentName: (this.financeForm.studentName || '').trim() || undefined,
+      grade: (this.financeForm.grade || '').trim() || undefined,
       category: (this.financeForm.category as any) || 'Tuition',
+      accountHead: (this.financeForm.accountHead || this.financeForm.category || 'Tuition') as string,
+      paymentMethod: (this.financeForm.paymentMethod || 'Meezan Bank') as string,
       type: (this.financeForm.type as any) || 'Income',
-      amount: Number(this.financeForm.amount),
-      date: this.financeForm.date || 'Oct 15, 2026',
+      amount: amountNum,
+      date: (this.financeForm.date || '').trim() || new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
       status: (this.financeForm.status as any) || 'Verified',
-      challanNo: `CH-MANUAL-${Math.floor(1000 + Math.random() * 9000)}`
+      challanNo: resolvedChallan
     };
     this.finances.unshift(newFin);
     this.tableSchemaService.submitFormCustomInputs(
@@ -11926,15 +11947,20 @@ INSTRUCTIONS:
       [newFin.id, newFin.challanNo].filter(Boolean) as string[],
       this.formCustomValues['finance'],
       {
-        rowLabel: newFin.title,
+        rowLabel: newFin.studentName || newFin.title,
         submittedByName: 'School Business Owner',
         submittedByRole: this.currentPortalRole
       }
     );
     this.formCustomValues['finance'] = {};
+    if (this.currentTab === 'finance') {
+      this.financeSubTab = 'ledger';
+    }
+    this.currentPage['finance'] = 1;
     this.saveStateToStorage();
+    void this.backend.createSchoolFee(newFin);
     this.closeFinanceModal();
-    this.showToast(`Ledger entry recorded: ${newFin.title} (PKR ${newFin.amount})`, 'success');
+    this.showToast(`Transaction recorded in Master Cash Book: ${newFin.title} (PKR ${this.formatCurrency(newFin.amount)})`, 'success');
   }
 
   sendFeeReminder(s: StudentRecord) {
