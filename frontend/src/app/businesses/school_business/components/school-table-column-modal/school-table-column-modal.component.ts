@@ -44,7 +44,7 @@ interface DraftFormRow {
                   Edit Table — {{ activeDisplayTitle() }}
                 </h3>
                 <p class="text-[11px] font-medium text-slate-500 truncate">
-                  Only changes this Table (columns &amp; rows). Popup forms stay separate.
+                  Auto-syncs Table columns ↔ Form fields and saves to SQLite &amp; Cloud Firestore.
                 </p>
               </div>
             </div>
@@ -1057,6 +1057,8 @@ export class SchoolTableColumnModalComponent {
     const label = this.newColLabel().trim();
     if (!tableId || !label) return;
     const type = this.newColType();
+    const colPos = this.newColTablePos() || '__last__';
+    const formPos = this.schemaService.mapTableColumnToFormAnchor(tableId, colPos);
     const opts = type === 'select'
       ? this.newColOptions().split(',').map((s) => s.trim()).filter(Boolean)
       : undefined;
@@ -1067,9 +1069,9 @@ export class SchoolTableColumnModalComponent {
       type === 'select' ? '' : this.newColDefault(),
       opts,
       false,
-      this.newColTablePos() || '__last__',
-      '__last__',
-      'table'
+      colPos,
+      formPos,
+      'both'
     );
     this.newColLabel.set('');
     this.newColType.set('text');
@@ -1086,7 +1088,7 @@ export class SchoolTableColumnModalComponent {
     if (!target) return;
     this.schemaService.openConfirm({
       title: 'Delete Table Column?',
-      message: `Are you sure you want to remove "${target.label}" from ${this.activeDisplayTitle()}?`,
+      message: `Are you sure you want to remove "${target.label}" from ${this.activeDisplayTitle()} & its synced form?`,
       confirmLabel: 'Delete',
       danger: true,
       onConfirm: () => {
@@ -1105,12 +1107,14 @@ export class SchoolTableColumnModalComponent {
     const tableId = this.managerState().tableId;
     const label = this.editColLabel().trim();
     if (!tableId || !label) return;
+    const nextColPos = this.editColTablePos() || '__last__';
     const opts = col.type === 'select'
       ? this.editColOptions().split(',').map((s) => s.trim()).filter(Boolean)
       : undefined;
     this.schemaService.updateCustomColumn(tableId, col.id, {
       label,
-      insertAfterColumn: this.editColTablePos() || '__last__',
+      insertAfterColumn: nextColPos,
+      insertAfterFormField: this.schemaService.mapTableColumnToFormAnchor(tableId, nextColPos),
       ...(col.type === 'select' ? { options: opts } : {})
     });
   }
@@ -1144,7 +1148,7 @@ export class SchoolTableColumnModalComponent {
       confirmLabel: 'Delete All',
       danger: true,
       onConfirm: () => {
-        this.schemaService.deleteAllCustomColumns(tableId, 'table');
+        this.schemaService.deleteAllCustomColumns(tableId);
         this.selectedManageValue.set('');
         this.syncEditInputsFromSelection(this.effectiveSelectedManageValue());
       }

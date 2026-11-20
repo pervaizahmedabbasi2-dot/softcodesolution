@@ -446,6 +446,24 @@
               <!-- ADMIN -->
               <div class="space-y-0.5">
                 <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 block px-2.5 mb-1.5">ADMIN</span>
+                <button (click)="setTab('visitors')" class="w-full flex items-center justify-between px-3 py-2 rounded-2xl text-left transition-all duration-200 cursor-pointer group" [class]="currentTab === 'visitors' ? 'bg-gradient-to-r from-indigo-600 via-indigo-600 to-blue-600 text-white shadow-md shadow-indigo-600/30 border border-indigo-500/20 font-extrabold' : 'text-slate-700 hover:bg-slate-100/80 hover:text-slate-900 font-bold'">
+                  <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105" [class]="currentTab === 'visitors' ? 'bg-white/20 text-white' : 'bg-gradient-to-tr from-sky-600 to-indigo-600 text-white shadow-2xs'">
+                      <lucide-icon [name]="'shield-check'" class="w-4 h-4"></lucide-icon>
+                    </div>
+                    <span class="text-xs truncate">Security &amp; Visitors</span>
+                  </div>
+                  <span class="px-1.5 py-0.5 rounded-md text-[10px] font-extrabold border shrink-0" [class]="currentTab === 'visitors' ? 'bg-white/20 text-white border-white/20' : 'bg-sky-50 text-sky-700 border-sky-200/70'">{{ visitorGatePasses.length }}</span>
+                </button>
+                <button (click)="setTab('assets')" class="w-full flex items-center justify-between px-3 py-2 rounded-2xl text-left transition-all duration-200 cursor-pointer group" [class]="currentTab === 'assets' ? 'bg-gradient-to-r from-indigo-600 via-indigo-600 to-blue-600 text-white shadow-md shadow-indigo-600/30 border border-indigo-500/20 font-extrabold' : 'text-slate-700 hover:bg-slate-100/80 hover:text-slate-900 font-bold'">
+                  <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105" [class]="currentTab === 'assets' ? 'bg-white/20 text-white' : 'bg-gradient-to-tr from-amber-500 to-orange-600 text-white shadow-2xs'">
+                      <lucide-icon [name]="'layers'" class="w-4 h-4"></lucide-icon>
+                    </div>
+                    <span class="text-xs truncate">Assets &amp; Inventory</span>
+                  </div>
+                  <span class="px-1.5 py-0.5 rounded-md text-[10px] font-extrabold border shrink-0" [class]="currentTab === 'assets' ? 'bg-white/20 text-white border-white/20' : 'bg-amber-50 text-amber-800 border-amber-200/70'">{{ schoolAssets.length }}</span>
+                </button>
                 <button (click)="setTab('settings')" class="w-full flex items-center justify-between px-3 py-2 rounded-2xl text-left transition-all duration-200 cursor-pointer group" [class]="currentTab === 'settings' ? 'bg-gradient-to-r from-indigo-600 via-indigo-600 to-blue-600 text-white shadow-md shadow-indigo-600/30 border border-indigo-500/20 font-extrabold' : 'text-slate-700 hover:bg-slate-100/80 hover:text-slate-900 font-bold'">
                   <div class="flex items-center gap-2.5 min-w-0">
                     <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105" [class]="currentTab === 'settings' ? 'bg-white/20 text-white' : 'bg-gradient-to-tr from-slate-600 via-slate-700 to-slate-800 text-white shadow-2xs'">
@@ -2601,12 +2619,19 @@
             </div>
 
             <div class="overflow-x-auto custom-scrollbar border border-slate-200 rounded-xl">
-              <table appSchoolTable="owner_portal_users" tableTitle="Portal User Accounts & Credentials" [canAddRow]="true" addRowLabel="Add User Account" class="w-full text-left border-collapse text-xs">
+              <table appSchoolTable="owner_portal_users" tableTitle="Portal User Accounts & Credentials" [canAddRow]="true" addRowLabel="Add User Account" class="w-max min-w-full text-left border-collapse text-xs">
                 <thead class="bg-slate-50 text-slate-600 uppercase font-black text-[10px] border-b border-slate-200">
                   <tr>
                     <th class="px-4 py-3">User ID</th>
                     <th class="px-4 py-3">Full Name</th>
                     <th class="px-4 py-3">Portal Role</th>
+                    <th class="px-4 py-3">Staff / Roll ID</th>
+                    <th class="px-4 py-3">Designation</th>
+                    <th class="px-4 py-3">Department</th>
+                    <th class="px-4 py-3">Clearance Level</th>
+                    <th class="px-4 py-3">Branch</th>
+                    <th class="px-4 py-3">Email / Login</th>
+                    <th class="px-4 py-3">Phone</th>
                     <th class="px-4 py-3">Linked Section / Entity</th>
                     <th class="px-4 py-3">Login PIN</th>
                     <th class="px-4 py-3">Status</th>
@@ -2616,11 +2641,10 @@
                 </thead>
                 <tbody class="divide-y divide-slate-100 font-medium">
                   @for (u of getPaginatedItems(filteredPortalUsers, 'portals'); track u.id) {
-                    <tr class="hover:bg-slate-50/60 transition-colors">
+                    <tr [attr.data-row-key]="u.id" class="hover:bg-slate-50/60 transition-colors">
                       <td class="px-4 py-3 font-mono font-bold text-slate-500">{{ u.id }}</td>
                       <td class="px-4 py-3">
                         <p class="font-black text-slate-900">{{ u.name }}</p>
-                        <p class="text-[10px] text-slate-400 font-mono">{{ u.email }}</p>
                       </td>
                       <td class="px-4 py-3">
                         <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase"
@@ -2628,6 +2652,13 @@
                           {{ u.role }}
                         </span>
                       </td>
+                      <td class="px-4 py-3 font-mono font-bold text-indigo-700">{{ u.staffIdOrRoll || '—' }}</td>
+                      <td class="px-4 py-3 font-semibold text-slate-700">{{ u.designation || '—' }}</td>
+                      <td class="px-4 py-3 text-slate-600">{{ u.department || '—' }}</td>
+                      <td class="px-4 py-3 text-[11px] font-bold text-slate-600">{{ u.clearanceLevel || 'Standard Access' }}</td>
+                      <td class="px-4 py-3 text-slate-600">{{ u.branch || 'Main Campus' }}</td>
+                      <td class="px-4 py-3 text-[11px] text-slate-500 font-mono">{{ u.email }}</td>
+                      <td class="px-4 py-3 text-[11px] text-slate-600 font-mono">{{ u.phone || '—' }}</td>
                       <td class="px-4 py-3 font-bold text-slate-700">{{ u.linkedEntity }}</td>
                       <td class="px-4 py-3 font-mono font-bold text-slate-600">PIN: {{ u.pin }}</td>
                       <td class="px-4 py-3">
@@ -2657,7 +2688,7 @@
                   }
                   @if (filteredPortalUsers.length === 0) {
                     <tr>
-                      <td colspan="8" class="px-4 py-8 text-center text-slate-400 font-bold">
+                      <td colspan="15" class="px-4 py-8 text-center text-slate-400 font-bold">
                         No user accounts found matching your search.
                       </td>
                     </tr>
@@ -2830,61 +2861,83 @@
               <!-- VIEW MODE 2: COMPREHENSIVE FACULTY TABLE -->
               @if (facultyViewMode === 'table') {
                 <div class="overflow-x-auto custom-scrollbar border border-slate-200/90 rounded-[20px] shadow-xs bg-white">
-                  <table appSchoolTable="owner_teachers_faculty" tableTitle="Faculty Directory" [canAddRow]="true" addRowLabel="Add Faculty" class="w-full text-left border-collapse text-xs tabular-nums">
+                  <table appSchoolTable="owner_teachers_faculty" tableTitle="Faculty Directory" [canAddRow]="true" addRowLabel="Add Faculty" class="w-max min-w-full text-left border-collapse text-xs tabular-nums">
                     <thead class="bg-slate-50 text-slate-700 uppercase font-black tracking-wider text-[10px] border-b border-slate-200 select-none">
                       <tr>
                         <th class="px-4 py-3.5">Emp ID</th>
                         <th class="px-4 py-3.5">Faculty Member</th>
-                        <th class="px-4 py-3.5">Subject & Dept</th>
+                        <th class="px-4 py-3.5">Gender</th>
+                        <th class="px-4 py-3.5">CNIC</th>
+                        <th class="px-4 py-3.5">Phone</th>
+                        <th class="px-4 py-3.5">Email</th>
+                        <th class="px-4 py-3.5">Address</th>
+                        <th class="px-4 py-3.5">Emergency Contact</th>
                         <th class="px-4 py-3.5">Qualification</th>
-                        <th class="px-4 py-3.5">Assigned Periods</th>
+                        <th class="px-4 py-3.5">Previous Institute</th>
+                        <th class="px-4 py-3.5">Experience</th>
+                        <th class="px-4 py-3.5">Designation / Role</th>
+                        <th class="px-4 py-3.5">Subject &amp; Dept</th>
+                        <th class="px-4 py-3.5">Assigned Grade</th>
+                        <th class="px-4 py-3.5">In-Charge Class</th>
+                        <th class="px-4 py-3.5">Weekly Periods</th>
+                        <th class="px-4 py-3.5">Contract Type</th>
                         <th class="px-4 py-3.5">Monthly Salary</th>
+                        <th class="px-4 py-3.5">Bank &amp; IBAN</th>
+                        <th class="px-4 py-3.5">Status</th>
                         <th class="px-4 py-3.5 text-right">Actions</th>
                       </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 font-medium">
                       @for (t of getPaginatedItems(filteredTeachers, 'teachers'); track t.id) {
                         <tr [attr.data-row-key]="t.id" [class]="t.id === newlyAddedTeacherId ? 'bg-emerald-50/90 ring-2 ring-emerald-400/60 shadow-sm transition-all' : 'hover:bg-slate-50/70 transition-colors'">
-                          <td class="px-4 py-3 font-mono font-bold text-slate-500">{{ t.id }}</td>
+                          <td class="px-4 py-3 font-mono font-bold text-slate-500">{{ t.empCode || t.id }}</td>
                           <td class="px-4 py-3">
                             <div class="flex items-center gap-2.5">
                               <img [src]="t.image" alt="" class="w-8 h-8 rounded-lg object-cover border border-slate-200">
                               <div>
                                 <p class="font-black text-slate-900 flex items-center gap-1.5 flex-wrap">
                                   <span>{{ t.name }}</span>
-                                  @if (t.role) {
-                                    <span class="px-2 py-0.5 rounded-md bg-purple-100 text-purple-800 font-bold text-[9px] uppercase tracking-tight border border-purple-200 shadow-2xs">
-                                      {{ t.role }}
-                                    </span>
-                                  } @else if (t.designation) {
-                                    <span class="px-2 py-0.5 rounded-md bg-purple-100 text-purple-800 font-bold text-[9px] uppercase tracking-tight border border-purple-200 shadow-2xs">
-                                      {{ t.designation }}
-                                    </span>
-                                  }
                                   @if (t.id === newlyAddedTeacherId) {
                                     <span class="px-2 py-0.5 rounded-md bg-emerald-600 text-white font-black text-[9px] tracking-tight uppercase shadow-xs animate-pulse">
                                       ★ Newly Recruited
                                     </span>
                                   }
                                 </p>
-                                <div class="flex items-center gap-2 text-[10px] text-slate-400 font-mono flex-wrap">
-                                  <span>{{ t.phone || '0300-1234567' }}</span>
-                                  @if (t.assignedGrade) {
-                                    <span class="text-teal-700 font-sans font-bold bg-teal-50 px-1.5 py-0.5 rounded">Grade: {{ t.assignedGrade }}</span>
-                                  }
-                                </div>
                               </div>
                             </div>
                           </td>
+                          <td class="px-4 py-3 font-semibold text-slate-700">{{ t.gender || 'Male' }}</td>
+                          <td class="px-4 py-3 font-mono text-slate-600">{{ t.cnic || '—' }}</td>
+                          <td class="px-4 py-3 font-mono text-slate-700">{{ t.phone || '0300-1234567' }}</td>
+                          <td class="px-4 py-3 font-mono text-slate-600">{{ t.email || '—' }}</td>
+                          <td class="px-4 py-3 text-slate-600 max-w-[180px] truncate">{{ t.address || '—' }}</td>
+                          <td class="px-4 py-3 font-mono text-slate-600">{{ t.emergencyContact || '—' }}</td>
+                          <td class="px-4 py-3 text-slate-700 font-medium">{{ t.qualification }}</td>
+                          <td class="px-4 py-3 text-slate-600">{{ t.previousInstitute || '—' }}</td>
+                          <td class="px-4 py-3 font-mono font-bold text-slate-700">{{ t.experienceYears || 0 }} yrs</td>
+                          <td class="px-4 py-3">
+                            <span class="px-2 py-0.5 rounded-md bg-purple-50 text-purple-800 font-bold text-[10px] border border-purple-200">
+                              {{ t.role || t.designation || 'Faculty Lecturer' }}
+                            </span>
+                          </td>
                           <td class="px-4 py-3">
                             <span class="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 font-bold text-[11px] block w-max max-w-[200px] truncate" [title]="t.subject">{{ t.subject }}</span>
-                            @if (t.inchargeClass && t.inchargeClass !== 'None') {
-                              <span class="text-[10px] text-amber-700 font-bold block mt-0.5">In-Charge: {{ t.inchargeClass }}</span>
-                            }
                           </td>
-                          <td class="px-4 py-3 text-slate-700 font-medium">{{ t.qualification }}</td>
-                          <td class="px-4 py-3 font-mono font-black text-slate-900">{{ t.classes }} periods / week</td>
+                          <td class="px-4 py-3 font-bold text-teal-700">{{ t.assignedGrade || 'All Grades' }}</td>
+                          <td class="px-4 py-3 font-bold text-amber-700">{{ t.inchargeClass || 'None' }}</td>
+                          <td class="px-4 py-3 font-mono font-black text-slate-900">{{ t.weeklyPeriods || t.classes }} periods / week</td>
+                          <td class="px-4 py-3 font-bold text-slate-700">{{ t.employmentType || 'Permanent' }}</td>
                           <td class="px-4 py-3 font-mono font-black text-emerald-700">PKR {{ formatCurrency(t.monthlySalary) }}</td>
+                          <td class="px-4 py-3 font-mono text-[11px] text-slate-600">
+                            <div>{{ t.bankName || 'Meezan Bank' }}</div>
+                            <div class="text-[10px] text-slate-400">{{ t.accountNo || '—' }}</div>
+                          </td>
+                          <td class="px-4 py-3">
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-black"
+                              [class]="t.status === 'Active' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'">
+                              {{ t.status }}
+                            </span>
+                          </td>
                           <td class="px-4 py-3 text-right">
                             <div class="flex items-center justify-end gap-1.5">
                               <button (click)="switchPortal('teacher', t.id)" title="Simulate Teacher Portal" class="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-[10px] cursor-pointer">
@@ -2902,7 +2955,7 @@
                       }
                       @if (filteredTeachers.length === 0) {
                         <tr>
-                          <td colspan="7" class="px-4 py-8 text-center text-slate-400 font-bold">
+                          <td colspan="21" class="px-4 py-8 text-center text-slate-400 font-bold">
                             No faculty members found matching your search.
                           </td>
                         </tr>
@@ -2982,11 +3035,13 @@
                 <table appSchoolTable="owner_payroll" tableTitle="Staff Payroll Register" [canAddRow]="true" addRowLabel="Disburse Salary" class="w-full text-left border-collapse text-xs tabular-nums">
                   <thead class="bg-emerald-50/70 text-slate-700 uppercase font-black tracking-wider text-[10px] border-b border-slate-200 select-none">
                     <tr>
-                      <th class="px-4 py-3.5">Staff & Role</th>
+                      <th class="px-4 py-3.5">Staff &amp; Role</th>
                       <th class="px-4 py-3.5">Payroll Month</th>
                       <th class="px-4 py-3.5">Base Salary</th>
-                      <th class="px-4 py-3.5">Allowances & Deductions</th>
+                      <th class="px-4 py-3.5">Allowances &amp; Deductions</th>
                       <th class="px-4 py-3.5">Net Payable</th>
+                      <th class="px-4 py-3.5">Payment Method</th>
+                      <th class="px-4 py-3.5">Disbursed Date</th>
                       <th class="px-4 py-3.5">Status</th>
                       <th class="px-4 py-3.5 text-right">Actions</th>
                     </tr>
@@ -3007,6 +3062,8 @@
                         <td class="px-4 py-3.5 font-mono font-black text-slate-900 text-sm">
                           PKR {{ formatCurrency(p.netPayable) }}
                         </td>
+                        <td class="px-4 py-3.5 font-bold text-indigo-700">{{ p.paymentMethod || 'Bank Transfer' }}</td>
+                        <td class="px-4 py-3.5 font-mono text-slate-500">{{ p.disbursedDate || 'Pending' }}</td>
                         <td class="px-4 py-3.5">
                           <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black"
                             [class]="p.status === 'Paid' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'">
@@ -3035,7 +3092,7 @@
                     }
                     @if (filteredStaffPayrolls.length === 0) {
                       <tr>
-                        <td colspan="7" class="px-4 py-8 text-center text-slate-400 font-bold">
+                        <td colspan="9" class="px-4 py-8 text-center text-slate-400 font-bold">
                           No payroll vouchers found matching search query.
                         </td>
                       </tr>
@@ -5401,13 +5458,18 @@
           <!-- Master Invoices Data Table -->
           <div class="bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden">
             <div class="overflow-x-auto custom-scrollbar">
-              <table appSchoolTable="owner_invoices" tableTitle="Master Invoices & Billing Register" [canAddRow]="true" addRowLabel="Generate Invoice" class="w-full text-left border-collapse">
+              <table appSchoolTable="owner_invoices" tableTitle="Master Invoices & Billing Register" [canAddRow]="true" addRowLabel="Generate Invoice" class="w-max min-w-full text-left border-collapse">
                 <thead>
                   <tr class="bg-slate-50/80 border-b border-slate-200 text-[11px] font-black uppercase tracking-wider text-slate-500">
-                    <th class="p-3.5 pl-5">Invoice Reference & Type</th>
-                    <th class="p-3.5">Recipient & Particulars</th>
-                    <th class="p-3.5">Issue & Due Date</th>
+                    <th class="p-3.5 pl-5">Invoice Reference &amp; Type</th>
+                    <th class="p-3.5">Recipient Role</th>
+                    <th class="p-3.5">Recipient &amp; Particulars</th>
+                    <th class="p-3.5">Issue &amp; Due Date</th>
+                    <th class="p-3.5 text-right">Gross Subtotal</th>
+                    <th class="p-3.5 text-right">Discount</th>
+                    <th class="p-3.5 text-right">Tax</th>
                     <th class="p-3.5 text-right">Net Payable Amount</th>
+                    <th class="p-3.5">Notes</th>
                     <th class="p-3.5 text-center">Status</th>
                     <th class="p-3.5 pr-5 text-right">Actions</th>
                   </tr>
@@ -5431,6 +5493,11 @@
                         </div>
                       </td>
 
+                      <!-- Recipient Role -->
+                      <td class="p-3.5">
+                        <span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-bold text-[10px]">{{ inv.recipientRole || 'Student' }}</span>
+                      </td>
+
                       <!-- Recipient -->
                       <td class="p-3.5">
                         <div>
@@ -5450,15 +5517,26 @@
                         </div>
                       </td>
 
+                      <!-- Gross Subtotal -->
+                      <td class="p-3.5 text-right font-mono font-bold text-slate-700">PKR {{ formatCurrency(inv.amount) }}</td>
+
+                      <!-- Discount -->
+                      <td class="p-3.5 text-right font-mono font-bold text-emerald-600">
+                        {{ inv.discount > 0 ? '-PKR ' + formatCurrency(inv.discount) : '—' }}
+                      </td>
+
+                      <!-- Tax -->
+                      <td class="p-3.5 text-right font-mono text-slate-600">
+                        {{ inv.tax > 0 ? 'PKR ' + formatCurrency(inv.tax) : '—' }}
+                      </td>
+
                       <!-- Amount -->
                       <td class="p-3.5 text-right">
-                        <div class="space-y-0.5">
-                          <span class="font-black text-slate-900 text-sm tabular-nums block">PKR {{ formatCurrency(inv.netPayable) }}</span>
-                          @if (inv.discount > 0) {
-                            <span class="text-[10px] text-emerald-600 font-bold block">-PKR {{ formatCurrency(inv.discount) }} Disc</span>
-                          }
-                        </div>
+                        <span class="font-black text-slate-900 text-sm tabular-nums block">PKR {{ formatCurrency(inv.netPayable) }}</span>
                       </td>
+
+                      <!-- Notes -->
+                      <td class="p-3.5 max-w-[180px] truncate text-[11px] text-slate-500">{{ inv.notes || '—' }}</td>
 
                       <!-- Status -->
                       <td class="p-3.5 text-center">
@@ -5511,7 +5589,7 @@
 
                   @if (filteredMasterInvoices.length === 0) {
                     <tr>
-                      <td colspan="6" class="p-8 text-center text-slate-400 font-bold">
+                      <td colspan="11" class="p-8 text-center text-slate-400 font-bold">
                         No invoices match the selected filter criteria.
                       </td>
                     </tr>
@@ -5637,18 +5715,20 @@
               <thead class="bg-slate-50 text-slate-700 uppercase font-black tracking-wider text-[10px] border-b border-slate-200 select-none">
                 <tr>
                   <th class="px-4 py-3.5">RECEIPT #</th>
-                  <th class="px-4 py-3.5">TITLE & PURPOSE</th>
+                  <th class="px-4 py-3.5">TITLE &amp; PURPOSE</th>
                   <th class="px-4 py-3.5">CATEGORY</th>
                   <th class="px-4 py-3.5">VENDOR / PAYEE</th>
+                  <th class="px-4 py-3.5">DESCRIPTION</th>
                   <th class="px-4 py-3.5">DATE</th>
                   <th class="px-4 py-3.5">MODE</th>
                   <th class="px-4 py-3.5 text-right">AMOUNT</th>
+                  <th class="px-4 py-3.5">STATUS</th>
                   <th class="px-4 py-3.5 text-right">ACTIONS</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100 font-medium bg-white">
                 @for (exp of getPaginatedItems(filteredExpenses, 'expenses'); track exp.id) {
-                  <tr class="hover:bg-slate-50/70 transition-colors">
+                  <tr [attr.data-row-key]="exp.id" class="hover:bg-slate-50/70 transition-colors">
                     <td class="px-4 py-3 text-indigo-600 font-mono font-bold text-[11px]">{{ exp.receiptNo }}</td>
                     <td class="px-4 py-3 text-slate-900 font-black">{{ exp.title }}</td>
                     <td class="px-4 py-3">
@@ -5657,9 +5737,13 @@
                       </span>
                     </td>
                     <td class="px-4 py-3 text-slate-700 font-bold">{{ exp.vendor }}</td>
+                    <td class="px-4 py-3 text-slate-500 max-w-[200px] truncate">{{ $any(exp).description || exp.title }}</td>
                     <td class="px-4 py-3 text-slate-500 font-medium">{{ exp.date }}</td>
                     <td class="px-4 py-3 text-slate-600 font-bold">{{ exp.paymentMode }}</td>
                     <td class="px-4 py-3 text-right text-rose-600 font-black font-mono">PKR {{ formatCurrency(exp.amount) }}</td>
+                    <td class="px-4 py-3">
+                      <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-50 text-emerald-700">{{ $any(exp).status || 'Paid' }}</span>
+                    </td>
                     <td class="px-4 py-3 text-right">
                       <div class="flex items-center justify-end gap-1.5">
                         <button (click)="openEditExpenseModal(exp)" title="Edit Expense" class="p-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer">
@@ -5674,7 +5758,7 @@
                 }
                 @if (filteredExpenses.length === 0) {
                   <tr>
-                    <td colspan="8" class="px-4 py-8 text-center text-slate-400 font-bold">
+                    <td colspan="10" class="px-4 py-8 text-center text-slate-400 font-bold">
                       No expense records found matching your search criteria.
                     </td>
                   </tr>
@@ -5716,7 +5800,7 @@
       <!-- EDIT EXPENSE MODAL -->
       @if (isEditExpenseModalOpen && editingExpense) {
         <div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div class="apple-card rounded-3xl max-w-md w-full p-6 space-y-4 bg-white shadow-2xl border border-slate-200">
+          <div class="apple-card rounded-3xl max-w-md w-full p-6 space-y-4 bg-white shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto">
             <div class="flex items-center justify-between pb-3 border-b border-slate-100">
               <div class="flex items-center gap-2">
                 <div class="p-2 rounded-xl bg-amber-50 text-amber-600">
@@ -5782,6 +5866,13 @@
                 <input type="date" [(ngModel)]="editingExpense.date"
                   class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-900 focus:outline-indigo-600 cursor-pointer">
               </div>
+
+              <app-school-custom-form-fields
+                [tableId]="'owner_expenses'"
+                [values]="formCustomValues['editExpense']"
+                [allowSchemaEdit]="isOwnerPortal"
+                [defaultTitle]="'Expense Voucher Custom Fields'"
+                (valuesChange)="updateFormCustomValues('editExpense', $event)" />
             </div>
 
             <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">

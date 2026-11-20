@@ -39,13 +39,14 @@ import {
   FaceVerificationService
 } from '../../../../services/face-verification.service';
 import { SchoolTableDirective } from '../../directives/school-table.directive';
+import { SchoolCustomFormFieldsComponent } from '../school-custom-form-fields/school-custom-form-fields.component';
 
 export type AttendanceSubTab = 'terminal' | 'students' | 'teachers' | 'staff' | 'principals' | 'enrollment' | 'setup';
 export type ScannerCategoryFilter = 'all' | AttendanceMemberCategory;
 
 @Component({
   selector: 'app-school-attendance-hub',
-  imports: [CommonModule, LucideAngularModule, SchoolTableDirective],
+  imports: [CommonModule, LucideAngularModule, SchoolTableDirective, SchoolCustomFormFieldsComponent],
   templateUrl: './school-attendance-hub.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -104,6 +105,7 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     phone: string;
     shift: string;
     liteEnabled: boolean;
+    customValues?: Record<string, string>;
   }>();
   staffDeleted = output<string>();
   principalCreated = output<{
@@ -117,6 +119,7 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     email?: string;
     shift: string;
     liteEnabled: boolean;
+    customValues?: Record<string, string>;
   }>();
   principalDeleted = output<string>();
   absentAlertRequested = output<{ category: AttendanceMemberCategory; memberId?: string }>();
@@ -270,6 +273,7 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   newStaffPhone = signal<string>('+92 300 ');
   newStaffShift = signal<string>('Morning (07:30 AM - 03:30 PM)');
   newStaffLiteEnabled = signal<boolean>(true);
+  staffCustomValues = signal<Record<string, string>>({});
 
   // Add Principal / Vice Principal inline drawer state
   showAddPrincipalForm = signal<boolean>(false);
@@ -282,6 +286,7 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   newPrincipalPhone = signal<string>('+92 300 ');
   newPrincipalShift = signal<string>('Full Day (07:30 AM - 04:00 PM)');
   newPrincipalLiteEnabled = signal<boolean>(true);
+  principalCustomValues = signal<Record<string, string>>({});
 
   // Editable policy draft for Owner Setup tab
   policyDraft = signal<OwnerAttendancePolicy>(createDefaultOwnerAttendancePolicy());
@@ -2337,12 +2342,14 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       department: this.newStaffDepartment().trim() || 'Campus Administration',
       phone: this.newStaffPhone().trim() || '+92 300 0000000',
       shift: this.newStaffShift().trim() || 'Morning (07:30 AM - 03:30 PM)',
-      liteEnabled: this.newStaffLiteEnabled()
+      liteEnabled: this.newStaffLiteEnabled(),
+      customValues: { ...this.staffCustomValues() }
     });
     this.newStaffName.set('');
     this.newStaffFatherName.set('');
     this.newStaffCnic.set('');
     this.newStaffRole.set('');
+    this.staffCustomValues.set({});
     this.showAddStaffForm.set(false);
   }
 
@@ -2362,12 +2369,14 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       department: this.newPrincipalDepartment().trim() || 'Executive Directorate',
       phone: this.newPrincipalPhone().trim() || '+92 300 0000000',
       shift: this.newPrincipalShift().trim() || 'Full Day (07:30 AM - 04:00 PM)',
-      liteEnabled: this.newPrincipalLiteEnabled()
+      liteEnabled: this.newPrincipalLiteEnabled(),
+      customValues: { ...this.principalCustomValues() }
     });
     this.newPrincipalName.set('');
     this.newPrincipalFatherName.set('');
     this.newPrincipalCnic.set('');
     this.newPrincipalRole.set('Vice Principal');
+    this.principalCustomValues.set({});
     this.showAddPrincipalForm.set(false);
   }
 

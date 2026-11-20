@@ -471,12 +471,8 @@ export class SchoolCustomFormFieldsComponent {
     const label = this.newLabel().trim();
     if (!label) return;
     const type = this.newType();
-    const canonical = this.schemaService.resolveCanonicalTableId(this.tableId());
     const formPos = this.newFormPos() || '__last__';
-    const isAdmissionOrStudent = canonical === 'owner_admissions' || canonical === 'students_master';
-    const tablePos = isAdmissionOrStudent
-      ? this.schemaService.mapFormAnchorToTableColumn(this.tableId(), formPos)
-      : '__last__';
+    const tablePos = this.schemaService.mapFormAnchorToTableColumn(this.tableId(), formPos);
     const created = this.schemaService.addCustomColumn(
       this.tableId(),
       label,
@@ -486,7 +482,7 @@ export class SchoolCustomFormFieldsComponent {
       false,
       tablePos,
       formPos,
-      isAdmissionOrStudent ? 'both' : 'form'
+      'both'
     );
     if (created && created.defaultValue) {
       const next = { ...(this.values() || {}), [created.id]: created.defaultValue };
@@ -501,9 +497,11 @@ export class SchoolCustomFormFieldsComponent {
   saveSelectedCustomEdit(colId: string): void {
     const label = this.editColLabel().trim();
     if (!label) return;
+    const nextFormPos = this.editColFormPos() || '__last__';
     this.schemaService.updateCustomColumn(this.tableId(), colId, {
       label,
-      insertAfterFormField: this.editColFormPos() || '__last__'
+      insertAfterFormField: nextFormPos,
+      insertAfterColumn: this.schemaService.mapFormAnchorToTableColumn(this.tableId(), nextFormPos)
     });
   }
 
@@ -514,7 +512,7 @@ export class SchoolCustomFormFieldsComponent {
     const label = target?.label || 'this field';
     this.schemaService.openConfirm({
       title: 'Delete Form Field?',
-      message: `Are you sure you want to remove "${label}" from this form?`,
+      message: `Are you sure you want to remove "${label}" from this form & its synced table?`,
       confirmLabel: 'Delete',
       danger: true,
       onConfirm: () => {
@@ -542,11 +540,11 @@ export class SchoolCustomFormFieldsComponent {
     const addedIds = new Set(this.formCustomColumns().map((c) => c.id));
     this.schemaService.openConfirm({
       title: 'Delete All Added Fields?',
-      message: `Are you sure you want to delete all ${count} added form field(s)?`,
+      message: `Are you sure you want to delete all ${count} added form & table field(s)?`,
       confirmLabel: 'Delete All',
       danger: true,
       onConfirm: () => {
-        this.schemaService.deleteAllCustomColumns(this.tableId(), 'form');
+        this.schemaService.deleteAllCustomColumns(this.tableId());
         const cur = { ...(this.values() || {}) };
         let changed = false;
         for (const id of addedIds) {

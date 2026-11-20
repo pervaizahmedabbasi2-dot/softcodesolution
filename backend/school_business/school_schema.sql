@@ -453,6 +453,7 @@ CREATE TABLE IF NOT EXISTS local_school_table_schemas (
   custom_title TEXT,
   hidden_columns_json TEXT DEFAULT '[]',
   hidden_column_labels_json TEXT DEFAULT '[]',
+  hidden_form_fields_json TEXT DEFAULT '[]',
   renamed_headers_json TEXT DEFAULT '{}',
   renamed_headers_by_label_json TEXT DEFAULT '{}',
   custom_columns_json TEXT DEFAULT '[]',

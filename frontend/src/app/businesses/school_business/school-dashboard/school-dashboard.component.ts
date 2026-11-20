@@ -3100,6 +3100,9 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
       urgency: post.urgency || 'Normal Notice',
       attachedFileUrl: post.attachedFileUrl || ''
     };
+    this.formCustomValues['feedEdit'] = {
+      ...(this.tableSchemaService.getSchema('campus_notices_feed').customCells[post.id] || {})
+    };
     this.isEditFeedModalOpen = true;
   }
 
@@ -3127,6 +3130,18 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
     this.editingFeedPost.category = this.feedForm.purposeCategory;
     this.editingFeedPost.urgency = this.feedForm.urgency;
 
+    this.tableSchemaService.submitFormCustomInputs(
+      'campus_notices_feed',
+      [this.editingFeedPost.id, this.editingFeedPost.dispatchRefNo].filter(Boolean),
+      this.formCustomValues['feedEdit'],
+      {
+        rowLabel: this.editingFeedPost.title,
+        submittedByName: this.editingFeedPost.authorName || 'School Business Owner',
+        submittedByRole: this.currentPortalRole
+      }
+    );
+    this.formCustomValues['feedEdit'] = {};
+    this.saveStateToStorage();
     this.closeEditFeedModal();
     this.showToast('✏️ Feed post updated successfully!', 'success');
   }
@@ -3139,6 +3154,8 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
     const idx = this.campusFeedPosts.findIndex(p => p.id === post.id);
     if (idx !== -1) {
       this.campusFeedPosts.splice(idx, 1);
+      this.tableSchemaService.clearRowCustomData('campus_notices_feed', [post.id, post.dispatchRefNo].filter(Boolean));
+      this.saveStateToStorage();
       this.showToast('🗑️ Post deleted from feed', 'info');
     }
   }
@@ -3269,6 +3286,7 @@ All students, faculty & parents are requested to adhere to instructions.
       coordinatorTeacher: 'Prof. Rehan Alvi',
       assignedTeachersStr: 'Prof. Tariq Mehmood, Ms. Hira Naeem, Coach Rashid'
     };
+    this.formCustomValues['event'] = {};
     this.isEventModalOpen = true;
   }
 
@@ -3318,6 +3336,18 @@ All students, faculty & parents are requested to adhere to instructions.
     };
 
     this.schoolEventsList.unshift(newEvent as any);
+    this.tableSchemaService.submitFormCustomInputs(
+      'owner_events',
+      [newEvent.id],
+      this.formCustomValues['event'],
+      {
+        rowLabel: newEvent.title,
+        submittedByName: 'School Business Owner',
+        submittedByRole: this.currentPortalRole
+      }
+    );
+    this.formCustomValues['event'] = {};
+    this.saveStateToStorage();
     this.closeEventModal();
     this.showToast('🎯 New event planned successfully! You can now publish to portals.', 'success');
   }
@@ -3339,7 +3369,19 @@ All students, faculty & parents are requested to adhere to instructions.
       linkTab: 'events'
     });
 
+    this.saveStateToStorage();
     this.showToast(`🚀 Event "${evt.title}" published & broadcasted to Student & Parent portals!`, 'success');
+  }
+
+  deleteEvent(evt: any): void {
+    if (!this.isOwnerPortal) {
+      this.showToast('Access Restricted: Only School Business Owner can delete events.', 'warning');
+      return;
+    }
+    this.schoolEventsList = this.schoolEventsList.filter(e => e.id !== evt.id);
+    this.tableSchemaService.clearRowCustomData('owner_events', [evt.id]);
+    this.saveStateToStorage();
+    this.showToast(`Removed event "${evt.title}"`, 'info');
   }
 
   viewEventDetails(evt: any): void {
@@ -3674,6 +3716,7 @@ INSTRUCTIONS:
     admission: {},
     teacher: {},
     feed: {},
+    feedEdit: {},
     lessonPlan: {},
     teacherHomework: {},
     parentLeave: {},
@@ -3681,7 +3724,35 @@ INSTRUCTIONS:
     accountantCollect: {},
     accountantChallan: {},
     accountantPetty: {},
-    accountantDailyClosing: {}
+    accountantDailyClosing: {},
+    portalUser: {},
+    finance: {},
+    exam: {},
+    timetable: {},
+    announcement: {},
+    payment: {},
+    quickFee: {},
+    expense: {},
+    editExpense: {},
+    invoice: {},
+    subject: {},
+    transport: {},
+    library: {},
+    checkout: {},
+    visitor: {},
+    medical: {},
+    discipline: {},
+    asset: {},
+    payroll: {},
+    staffLeave: {},
+    event: {},
+    hostel: {},
+    alumni: {},
+    lab: {},
+    slc: {},
+    reconciliation: {},
+    notice: {},
+    publicAdmission: {}
   };
 
   updateFormCustomValues(formKey: string, nextVals: Record<string, string>): void {
@@ -3883,6 +3954,8 @@ INSTRUCTIONS:
     { id: 'safeguarding', label: 'Child Safeguarding & Safety', shortLabel: 'Safeguarding', icon: ShieldCheck, badge: 'Safety' },
     { id: 'directives', label: 'Executive Directives & Circulars', shortLabel: 'Directives', icon: FileText, badge: 'Official' },
     { id: 'alumni', label: 'Alumni & Graduate Archive', shortLabel: 'Alumni', icon: Award, count: '450+' },
+    { id: 'visitors', label: 'Visitor Gate Passes', shortLabel: 'Visitors', icon: ShieldCheck, badge: 'Gate' },
+    { id: 'assets', label: 'Assets & Inventory', shortLabel: 'Assets', icon: Layers, badge: 'Stock' },
     { id: 'portals', label: 'Role Portals & RBAC', shortLabel: 'Portals', icon: ShieldCheck, count: '3 Portals' },
     { id: 'reports', label: 'Certificates & Transcripts', shortLabel: 'Reports', icon: FileText, badge: 'SLC/PDF' },
     { id: 'audit', label: 'Institutional Audit & Compliance', shortLabel: 'Audit Hub', icon: ShieldCheck, badge: '98.4%' },
@@ -4475,6 +4548,7 @@ INSTRUCTIONS:
   }
 
   openCreateInvoiceModal(): void {
+    this.formCustomValues['invoice'] = {};
     this.isCreateInvoiceModalOpen = true;
   }
 
@@ -4533,7 +4607,19 @@ INSTRUCTIONS:
     };
 
     this.masterInvoices.unshift(newInv);
+    this.tableSchemaService.submitFormCustomInputs(
+      'owner_invoices',
+      [newInv.id, newInv.invoiceNo],
+      this.formCustomValues['invoice'],
+      {
+        rowLabel: newInv.recipientName || newInv.title,
+        submittedByName: 'School Business Owner',
+        submittedByRole: this.currentPortalRole
+      }
+    );
+    this.formCustomValues['invoice'] = {};
     this.saveMasterInvoicesToStorage();
+    this.saveStateToStorage();
     this.closeCreateInvoiceModal();
     this.showToast(`🧾 Invoice [${invNo}] generated & dispatched successfully!`, 'success');
   }
@@ -5966,6 +6052,7 @@ INSTRUCTIONS:
       this.quickFeeForm.rollNo = def?.rollNo || '1001';
       this.quickFeeForm.amount = def?.feeAmount || 6500;
     }
+    this.formCustomValues['quickFee'] = {};
     this.isQuickFeeModalOpen = true;
     this.cdr.detectChanges();
   }
@@ -5989,8 +6076,9 @@ INSTRUCTIONS:
     };
     this.recentPayments.unshift(newPayment);
 
+    const finId = `FIN-${Math.floor(1000 + Math.random() * 9000)}`;
     this.finances.unshift({
-      id: `FIN-${Math.floor(1000 + Math.random() * 9000)}`,
+      id: finId,
       title: `Fee Collection (${this.quickFeeForm.month}) - ${this.quickFeeForm.studentName}`,
       studentName: this.quickFeeForm.studentName,
       grade: this.quickFeeForm.grade,
@@ -6007,6 +6095,17 @@ INSTRUCTIONS:
       targetStudent.feeStatus = 'Paid';
     }
 
+    this.tableSchemaService.submitFormCustomInputs(
+      'owner_finance_ledger',
+      [finId, rcpNo],
+      this.formCustomValues['quickFee'],
+      {
+        rowLabel: this.quickFeeForm.studentName,
+        submittedByName: 'School Business Owner',
+        submittedByRole: this.currentPortalRole
+      }
+    );
+    this.formCustomValues['quickFee'] = {};
     this.recalculateDefaulters();
     this.saveStateToStorage();
     this.closeQuickFeeModal();
@@ -6046,6 +6145,7 @@ INSTRUCTIONS:
       date: new Date().toISOString().slice(0, 10),
       description: ''
     };
+    this.formCustomValues['expense'] = {};
     this.isExpenseModalOpen = true;
     this.cdr.detectChanges();
   }
@@ -6079,14 +6179,30 @@ INSTRUCTIONS:
       status: 'Verified',
       challanNo: newExp.receiptNo
     });
+    this.tableSchemaService.submitFormCustomInputs(
+      'owner_expenses',
+      [newExp.id, newExp.receiptNo],
+      this.formCustomValues['expense'],
+      {
+        rowLabel: newExp.title,
+        submittedByName: 'School Business Owner',
+        submittedByRole: this.currentPortalRole
+      }
+    );
+    this.formCustomValues['expense'] = {};
     this.saveStateToStorage();
     this.closeExpenseModal();
     this.showToast(`Expense of PKR ${this.formatCurrency(newExp.amount)} recorded!`, 'success');
   }
 
   deleteExpense(exp: any) {
+    if (!this.isOwnerPortal) {
+      this.showToast('Access Restricted: Only School Business Owner can delete expense records.', 'warning');
+      return;
+    }
     this.schoolExpenses = this.schoolExpenses.filter(e => e.id !== exp.id);
     this.finances = this.finances.filter(f => f.challanNo !== exp.receiptNo);
+    this.tableSchemaService.clearRowCustomData('owner_expenses', [exp.id, exp.receiptNo].filter(Boolean));
     this.saveStateToStorage();
     this.showToast(`Expense ${exp.title} removed`, 'info');
   }
@@ -7019,11 +7135,11 @@ INSTRUCTIONS:
         try { this.enabledModules = JSON.parse(savedModules); } catch {}
       }
 
-      const savedHostel = localStorage.getItem('scs_school_hostel_rooms_v1');
-      const savedAlumni = localStorage.getItem('scs_school_alumni_list_v1');
-      const savedWorkstations = localStorage.getItem('scs_school_lab_workstations_v1');
-      const savedSchedules = localStorage.getItem('scs_school_lab_schedules_v1');
-      const savedSms = localStorage.getItem('scs_school_sms_gateway_v1');
+      const savedHostel = this.getScopedItem('scs_school_hostel_rooms_v1') || localStorage.getItem('scs_school_hostel_rooms_v1');
+      const savedAlumni = this.getScopedItem('scs_school_alumni_list_v1') || localStorage.getItem('scs_school_alumni_list_v1');
+      const savedWorkstations = this.getScopedItem('scs_school_lab_workstations_v1') || localStorage.getItem('scs_school_lab_workstations_v1');
+      const savedSchedules = this.getScopedItem('scs_school_lab_schedules_v1') || localStorage.getItem('scs_school_lab_schedules_v1');
+      const savedSms = this.getScopedItem('scs_school_sms_gateway_v1') || localStorage.getItem('scs_school_sms_gateway_v1');
 
       if (savedHostel) this.hostelRooms = JSON.parse(savedHostel);
       else this.hostelRooms = this.getInitialHostelRooms();
@@ -7039,10 +7155,57 @@ INSTRUCTIONS:
 
       if (savedSms) this.smsGatewayConfig = JSON.parse(savedSms);
 
-      const savedExpenses = localStorage.getItem('scs_school_expenses_v1');
+      const savedTransport = this.getScopedItem('scs_school_transport_routes_v1');
+      if (savedTransport) {
+        try { this.transportRoutes = JSON.parse(savedTransport); } catch { this.transportRoutes = this.getInitialTransportRoutes(); }
+      } else {
+        this.transportRoutes = this.getInitialTransportRoutes();
+      }
+
+      const savedEvents = this.getScopedItem('scs_school_events_v1');
+      if (savedEvents) {
+        try {
+          const parsedEv = JSON.parse(savedEvents);
+          if (Array.isArray(parsedEv) && parsedEv.length > 0) this.schoolEventsList = parsedEv;
+        } catch {}
+      }
+
+      const savedFeedPosts = this.getScopedItem('scs_school_feed_posts_v1');
+      if (savedFeedPosts) {
+        try {
+          const parsedFp = JSON.parse(savedFeedPosts);
+          if (Array.isArray(parsedFp) && parsedFp.length > 0) this.campusFeedPosts = parsedFp;
+        } catch {}
+      }
+
+      const savedSubjects = this.getScopedItem('scs_school_subjects_v1');
+      if (savedSubjects) {
+        try {
+          const parsedSub = JSON.parse(savedSubjects);
+          if (Array.isArray(parsedSub) && parsedSub.length > 0) this.schoolSubjectsList = parsedSub;
+        } catch {}
+      }
+
+      const savedSlcs = this.getScopedItem('scs_school_slc_v1');
+      if (savedSlcs) {
+        try {
+          const parsedSlc = JSON.parse(savedSlcs);
+          if (Array.isArray(parsedSlc) && parsedSlc.length > 0) this.studentLeavingCertificates = parsedSlc;
+        } catch {}
+      }
+
+      const savedCompliance = this.getScopedItem('scs_school_compliance_v1');
+      if (savedCompliance) {
+        try {
+          const parsedComp = JSON.parse(savedCompliance);
+          if (Array.isArray(parsedComp) && parsedComp.length > 0) this.complianceAuditList = parsedComp;
+        } catch {}
+      }
+
+      const savedExpenses = this.getScopedItem('scs_school_expenses_v1') || localStorage.getItem('scs_school_expenses_v1');
       if (savedExpenses) this.schoolExpenses = JSON.parse(savedExpenses);
 
-      const savedRecentPay = localStorage.getItem('scs_school_recent_payments_v1');
+      const savedRecentPay = this.getScopedItem('scs_school_recent_payments_v1') || localStorage.getItem('scs_school_recent_payments_v1');
       if (savedRecentPay) {
         try {
           const parsedRecent = JSON.parse(savedRecentPay);
@@ -7276,6 +7439,27 @@ INSTRUCTIONS:
         if (Array.isArray(w.timetables) && w.timetables.length > 0) this.timetables = w.timetables;
         if (Array.isArray(w.parentMessages) && w.parentMessages.length > 0) this.parentMessages = w.parentMessages;
         if (Array.isArray(w.portalUsers) && w.portalUsers.length > 0) this.portalUsers = w.portalUsers;
+        if (Array.isArray(w.examsList) && w.examsList.length > 0) this.examsList = w.examsList;
+        if (Array.isArray(w.schoolSubjectsList) && w.schoolSubjectsList.length > 0) this.schoolSubjectsList = w.schoolSubjectsList;
+        if (Array.isArray(w.transportRoutes) && w.transportRoutes.length > 0) this.transportRoutes = w.transportRoutes;
+        if (Array.isArray(w.hostelRooms) && w.hostelRooms.length > 0) this.hostelRooms = w.hostelRooms;
+        if (Array.isArray(w.alumniList) && w.alumniList.length > 0) this.alumniList = w.alumniList;
+        if (Array.isArray(w.labSchedules) && w.labSchedules.length > 0) this.labSchedules = w.labSchedules;
+        if (Array.isArray(w.libraryBooks) && w.libraryBooks.length > 0) this.libraryBooks = w.libraryBooks;
+        if (Array.isArray(w.libraryCirculations) && w.libraryCirculations.length > 0) this.libraryCirculations = w.libraryCirculations;
+        if (Array.isArray(w.visitorGatePasses) && w.visitorGatePasses.length > 0) this.visitorGatePasses = w.visitorGatePasses;
+        if (Array.isArray(w.studentMedicalRecords) && w.studentMedicalRecords.length > 0) this.studentMedicalRecords = w.studentMedicalRecords;
+        if (Array.isArray(w.disciplinaryIncidents) && w.disciplinaryIncidents.length > 0) this.disciplinaryIncidents = w.disciplinaryIncidents;
+        if (Array.isArray(w.schoolAssets) && w.schoolAssets.length > 0) this.schoolAssets = w.schoolAssets;
+        if (Array.isArray(w.staffPayrolls) && w.staffPayrolls.length > 0) this.staffPayrolls = w.staffPayrolls;
+        if (Array.isArray(w.staffLeaveRequests) && w.staffLeaveRequests.length > 0) this.staffLeaveRequests = w.staffLeaveRequests;
+        if (Array.isArray(w.schoolExpenses) && w.schoolExpenses.length > 0) this.schoolExpenses = w.schoolExpenses;
+        if (Array.isArray(w.masterInvoices) && w.masterInvoices.length > 0) this.masterInvoices = w.masterInvoices;
+        if (Array.isArray(w.schoolEventsList) && w.schoolEventsList.length > 0) this.schoolEventsList = w.schoolEventsList;
+        if (Array.isArray(w.campusFeedPosts) && w.campusFeedPosts.length > 0) this.campusFeedPosts = w.campusFeedPosts;
+        if (Array.isArray(w.studentLeavingCertificates) && w.studentLeavingCertificates.length > 0) this.studentLeavingCertificates = w.studentLeavingCertificates;
+        if (Array.isArray(w.complianceAuditList) && w.complianceAuditList.length > 0) this.complianceAuditList = w.complianceAuditList;
+        if (Array.isArray(w.auditWaiversList) && w.auditWaiversList.length > 0) this.auditWaiversList = w.auditWaiversList;
       }
 
       if (stuRes?.ok && Array.isArray(stuRes.students) && stuRes.students.length > 0) {
@@ -7657,6 +7841,12 @@ INSTRUCTIONS:
       this.setScopedItem('scs_school_owner_attendance_policy_v1', JSON.stringify(this.ownerAttendancePolicy));
       this.setScopedItem('scs_school_face_verification_logs_v1', JSON.stringify(this.faceVerificationLogs));
       this.setScopedItem('scs_school_audit_waivers_v1', JSON.stringify(this.auditWaiversList));
+      this.setScopedItem('scs_school_transport_routes_v1', JSON.stringify(this.transportRoutes));
+      this.setScopedItem('scs_school_events_v1', JSON.stringify(this.schoolEventsList));
+      this.setScopedItem('scs_school_feed_posts_v1', JSON.stringify(this.campusFeedPosts));
+      this.setScopedItem('scs_school_subjects_v1', JSON.stringify(this.schoolSubjectsList));
+      this.setScopedItem('scs_school_slc_v1', JSON.stringify(this.studentLeavingCertificates));
+      this.setScopedItem('scs_school_compliance_v1', JSON.stringify(this.complianceAuditList));
       this.setScopedItem('scs_school_table_schemas_v1', JSON.stringify(this.tableSchemaService.exportSchemas()));
       void this.backend.saveSchoolWorkspace({
         schoolName: this.schoolName,
@@ -7664,7 +7854,28 @@ INSTRUCTIONS:
         announcements: this.announcements,
         timetables: this.timetables,
         parentMessages: this.parentMessages,
-        portalUsers: this.portalUsers
+        portalUsers: this.portalUsers,
+        examsList: this.examsList,
+        schoolSubjectsList: this.schoolSubjectsList,
+        transportRoutes: this.transportRoutes,
+        hostelRooms: this.hostelRooms,
+        alumniList: this.alumniList,
+        labSchedules: this.labSchedules,
+        libraryBooks: this.libraryBooks,
+        libraryCirculations: this.libraryCirculations,
+        visitorGatePasses: this.visitorGatePasses,
+        studentMedicalRecords: this.studentMedicalRecords,
+        disciplinaryIncidents: this.disciplinaryIncidents,
+        schoolAssets: this.schoolAssets,
+        staffPayrolls: this.staffPayrolls,
+        staffLeaveRequests: this.staffLeaveRequests,
+        schoolExpenses: this.schoolExpenses,
+        masterInvoices: this.masterInvoices,
+        schoolEventsList: this.schoolEventsList,
+        campusFeedPosts: this.campusFeedPosts,
+        studentLeavingCertificates: this.studentLeavingCertificates,
+        complianceAuditList: this.complianceAuditList,
+        auditWaiversList: this.auditWaiversList
       });
       this.syncToCloud(false);
     } catch {}
@@ -9533,6 +9744,7 @@ INSTRUCTIONS:
       clearanceLevel: 'Level 5 - Executive Academic Authority',
       branch: 'Main Senior Campus'
     };
+    this.formCustomValues['portalUser'] = {};
     this.isPortalUserModalOpen = true;
     this.cdr.detectChanges();
   }
@@ -9585,6 +9797,9 @@ INSTRUCTIONS:
   openEditPortalUserModal(user: PortalUserRecord) {
     this.activePortalUserForEdit = user;
     this.portalUserForm = { ...user };
+    this.formCustomValues['portalUser'] = {
+      ...(this.tableSchemaService.getSchema('owner_portal_users').customCells[user.id] || {})
+    };
     this.isPortalUserModalOpen = true;
     this.cdr.detectChanges();
   }
@@ -9602,6 +9817,16 @@ INSTRUCTIONS:
     }
     if (this.activePortalUserForEdit) {
       Object.assign(this.activePortalUserForEdit, this.portalUserForm);
+      this.tableSchemaService.submitFormCustomInputs(
+        'owner_portal_users',
+        [this.activePortalUserForEdit.id, this.activePortalUserForEdit.staffIdOrRoll].filter(Boolean) as string[],
+        this.formCustomValues['portalUser'],
+        {
+          rowLabel: this.activePortalUserForEdit.name,
+          submittedByName: 'School Business Owner',
+          submittedByRole: this.currentPortalRole
+        }
+      );
       this.showToast(`Updated credentials for ${this.portalUserForm.name}`, 'success');
     } else {
       const role = this.portalUserForm.role || 'principal';
@@ -9623,8 +9848,19 @@ INSTRUCTIONS:
         branch: this.portalUserForm.branch || 'Main Executive Campus'
       };
       this.portalUsers.unshift(newUser);
+      this.tableSchemaService.submitFormCustomInputs(
+        'owner_portal_users',
+        [newUser.id, newUser.staffIdOrRoll].filter(Boolean) as string[],
+        this.formCustomValues['portalUser'],
+        {
+          rowLabel: newUser.name,
+          submittedByName: 'School Business Owner',
+          submittedByRole: this.currentPortalRole
+        }
+      );
       this.showToast(`Created new ${role.toUpperCase()} portal access account for ${newUser.name}!`, 'success');
     }
+    this.formCustomValues['portalUser'] = {};
     this.saveStateToStorage();
     this.closePortalUserModal();
   }
@@ -9635,6 +9871,7 @@ INSTRUCTIONS:
       return;
     }
     this.portalUsers = this.portalUsers.filter(u => u.id !== user.id);
+    this.tableSchemaService.clearRowCustomData('owner_portal_users', [user.id, user.staffIdOrRoll].filter(Boolean) as string[]);
     this.saveStateToStorage();
     this.showToast(`Removed portal access for ${user.name}`, 'info');
   }
@@ -10089,6 +10326,9 @@ INSTRUCTIONS:
 
   openEditExpenseModal(exp: any) {
     this.editingExpense = { ...exp };
+    this.formCustomValues['editExpense'] = {
+      ...(this.tableSchemaService.getSchema('owner_expenses').customCells[exp.id] || {})
+    };
     this.isEditExpenseModalOpen = true;
     this.cdr.detectChanges();
   }
@@ -10104,6 +10344,17 @@ INSTRUCTIONS:
     const idx = this.schoolExpenses.findIndex(e => e.id === this.editingExpense.id);
     if (idx !== -1) {
       this.schoolExpenses[idx] = { ...this.editingExpense };
+      this.tableSchemaService.submitFormCustomInputs(
+        'owner_expenses',
+        [this.editingExpense.id, this.editingExpense.receiptNo].filter(Boolean),
+        this.formCustomValues['editExpense'],
+        {
+          rowLabel: this.editingExpense.title,
+          submittedByName: 'School Business Owner',
+          submittedByRole: this.currentPortalRole
+        }
+      );
+      this.formCustomValues['editExpense'] = {};
       this.saveStateToStorage();
       this.showToast(`Expense ${this.editingExpense.receiptNo} updated successfully!`, 'success');
     }
@@ -10282,6 +10533,7 @@ INSTRUCTIONS:
       passMarks: 40,
       totalMarks: 100
     };
+    this.formCustomValues['subject'] = {};
     this.isSubjectModalOpen = true;
     this.cdr.detectChanges();
   }
@@ -10296,7 +10548,7 @@ INSTRUCTIONS:
       this.showToast('Please enter Subject Code and Title', 'warning');
       return;
     }
-    this.schoolSubjectsList.unshift({
+    const newSub = {
       id: `SUB-${Date.now()}`,
       code: this.subjectForm.code,
       title: this.subjectForm.title,
@@ -10306,7 +10558,20 @@ INSTRUCTIONS:
       type: this.subjectForm.type,
       passMarks: this.subjectForm.passMarks,
       totalMarks: this.subjectForm.totalMarks
-    });
+    };
+    this.schoolSubjectsList.unshift(newSub);
+    this.tableSchemaService.submitFormCustomInputs(
+      'owner_subjects',
+      [newSub.id, newSub.code],
+      this.formCustomValues['subject'],
+      {
+        rowLabel: newSub.title,
+        submittedByName: 'School Business Owner',
+        submittedByRole: this.currentPortalRole
+      }
+    );
+    this.formCustomValues['subject'] = {};
+    this.saveStateToStorage();
     this.closeSubjectModal();
     this.showToast(`Subject ${this.subjectForm.title} successfully added!`, 'success');
   }
@@ -10317,6 +10582,7 @@ INSTRUCTIONS:
       return;
     }
     this.schoolSubjectsList = this.schoolSubjectsList.filter(s => s.id !== sub.id);
+    this.tableSchemaService.clearRowCustomData('owner_subjects', [sub.id, sub.code].filter(Boolean));
     this.saveStateToStorage();
     this.showToast(`Subject ${sub.title} removed`, 'info');
   }
@@ -10617,6 +10883,7 @@ INSTRUCTIONS:
       status: 'Verified',
       challanNo: `PAY-ONLINE-${Math.floor(1000 + Math.random() * 9000)}`
     };
+    this.formCustomValues['payment'] = {};
     this.isPaymentModalOpen = true;
     this.cdr.detectChanges();
   }
@@ -10644,6 +10911,17 @@ INSTRUCTIONS:
       challanNo: this.paymentForm.challanNo || `PAY-ONLINE-${Math.floor(1000 + Math.random() * 9000)}`
     };
     this.finances.unshift(newRecord);
+    this.tableSchemaService.submitFormCustomInputs(
+      'owner_payment_gateway',
+      [newRecord.id, newRecord.challanNo].filter(Boolean) as string[],
+      this.formCustomValues['payment'],
+      {
+        rowLabel: newRecord.studentName || newRecord.title,
+        submittedByName: 'School Business Owner',
+        submittedByRole: this.currentPortalRole
+      }
+    );
+    this.formCustomValues['payment'] = {};
     this.saveStateToStorage();
     void this.backend.createSchoolFee(newRecord);
     this.closePaymentModal();
@@ -10662,6 +10940,7 @@ INSTRUCTIONS:
       return;
     }
     this.finances = this.finances.filter(f => f.id !== record.id);
+    this.tableSchemaService.clearRowCustomData('owner_payment_gateway', [record.id, record.challanNo].filter(Boolean) as string[]);
     this.saveStateToStorage();
     void this.backend.deleteSchoolFee(record.id);
     this.showToast(`Deleted payment record ${record.challanNo}`, 'warning');
@@ -11538,6 +11817,7 @@ INSTRUCTIONS:
       date: 'Oct 15, 2026',
       status: 'Verified'
     };
+    this.formCustomValues['finance'] = {};
     this.isFinanceModalOpen = true;
     this.cdr.detectChanges();
   }
@@ -11558,11 +11838,22 @@ INSTRUCTIONS:
       category: (this.financeForm.category as any) || 'Tuition',
       type: (this.financeForm.type as any) || 'Income',
       amount: Number(this.financeForm.amount),
-      date: 'Oct 15, 2026',
-      status: 'Verified',
+      date: this.financeForm.date || 'Oct 15, 2026',
+      status: (this.financeForm.status as any) || 'Verified',
       challanNo: `CH-MANUAL-${Math.floor(1000 + Math.random() * 9000)}`
     };
     this.finances.unshift(newFin);
+    this.tableSchemaService.submitFormCustomInputs(
+      'owner_finance_ledger',
+      [newFin.id, newFin.challanNo].filter(Boolean) as string[],
+      this.formCustomValues['finance'],
+      {
+        rowLabel: newFin.title,
+        submittedByName: 'School Business Owner',
+        submittedByRole: this.currentPortalRole
+      }
+    );
+    this.formCustomValues['finance'] = {};
     this.saveStateToStorage();
     this.closeFinanceModal();
     this.showToast(`Ledger entry recorded: ${newFin.title} (PKR ${newFin.amount})`, 'success');
@@ -11578,6 +11869,7 @@ INSTRUCTIONS:
       return;
     }
     this.finances = this.finances.filter(x => x.id !== fin.id);
+    this.tableSchemaService.clearRowCustomData('owner_finance_ledger', [fin.id, fin.challanNo].filter(Boolean) as string[]);
     this.saveStateToStorage();
     this.showToast('Ledger entry removed.', 'info');
   }
@@ -11591,6 +11883,7 @@ INSTRUCTIONS:
       status: 'Scheduled',
       averageGPA: '3.80 / 4.0'
     };
+    this.formCustomValues['exam'] = {};
     this.isExamModalOpen = true;
     this.cdr.detectChanges();
   }
@@ -11614,6 +11907,17 @@ INSTRUCTIONS:
       averageGPA: this.examForm.averageGPA || '3.75 / 4.0'
     };
     this.examsList.unshift(newEx);
+    this.tableSchemaService.submitFormCustomInputs(
+      'owner_exams',
+      [newEx.id],
+      this.formCustomValues['exam'],
+      {
+        rowLabel: newEx.examName,
+        submittedByName: 'School Business Owner',
+        submittedByRole: this.currentPortalRole
+      }
+    );
+    this.formCustomValues['exam'] = {};
     this.saveStateToStorage();
     this.closeExamModal();
     this.showToast(`Scheduled new examination: ${newEx.examName}`, 'success');
@@ -11625,6 +11929,7 @@ INSTRUCTIONS:
       return;
     }
     this.examsList = this.examsList.filter(x => x.id !== ex.id);
+    this.tableSchemaService.clearRowCustomData('owner_exams', [ex.id]);
     this.saveStateToStorage();
     this.showToast('Examination record removed.', 'info');
   }
@@ -11639,6 +11944,7 @@ INSTRUCTIONS:
       room: 'CS Lab 2',
       grade: 'Grade 10-A'
     };
+    this.formCustomValues['timetable'] = {};
     this.isTimetableModalOpen = true;
     this.cdr.detectChanges();
   }
@@ -11663,6 +11969,17 @@ INSTRUCTIONS:
       grade: this.timetableForm.grade || 'Grade 10-A'
     };
     this.timetables.push(newTt);
+    this.tableSchemaService.submitFormCustomInputs(
+      'owner_timetable',
+      [newTt.id],
+      this.formCustomValues['timetable'],
+      {
+        rowLabel: `${newTt.period} - ${newTt.subject}`,
+        submittedByName: 'School Business Owner',
+        submittedByRole: this.currentPortalRole
+      }
+    );
+    this.formCustomValues['timetable'] = {};
     this.saveStateToStorage();
     this.closeTimetableModal();
     this.showToast(`Timetable Period added for ${newTt.subject}`, 'success');
@@ -11674,6 +11991,7 @@ INSTRUCTIONS:
       return;
     }
     this.timetables = this.timetables.filter(x => x.id !== tt.id);
+    this.tableSchemaService.clearRowCustomData('owner_timetable', [tt.id]);
     this.saveStateToStorage();
     this.showToast('Timetable period removed.', 'info');
   }
@@ -11687,6 +12005,7 @@ INSTRUCTIONS:
       priority: 'Normal',
       author: 'Principal Office'
     };
+    this.formCustomValues['announcement'] = {};
     this.isAnnouncementModalOpen = true;
     this.cdr.detectChanges();
   }
@@ -11706,11 +12025,22 @@ INSTRUCTIONS:
       title: this.announcementForm.title || '',
       target: (this.announcementForm.target as any) || 'All',
       date: 'Oct 15, 2026',
-      author: 'Principal Office',
+      author: this.announcementForm.author || 'Principal Office',
       content: this.announcementForm.content || '',
       priority: (this.announcementForm.priority as any) || 'Normal'
     };
     this.announcements.unshift(newAnn);
+    this.tableSchemaService.submitFormCustomInputs(
+      'owner_feed_table',
+      [newAnn.id],
+      this.formCustomValues['announcement'],
+      {
+        rowLabel: newAnn.title,
+        submittedByName: newAnn.author,
+        submittedByRole: this.currentPortalRole
+      }
+    );
+    this.formCustomValues['announcement'] = {};
     this.saveStateToStorage();
     this.closeAnnouncementModal();
     this.showToast(`Announcement Broadcast sent to ${newAnn.target} Portals!`, 'success');
@@ -11718,6 +12048,7 @@ INSTRUCTIONS:
 
   deleteAnnouncement(ann: AnnouncementRecord) {
     this.announcements = this.announcements.filter(x => x.id !== ann.id);
+    this.tableSchemaService.clearRowCustomData('owner_feed_table', [ann.id]);
     this.saveStateToStorage();
     this.showToast('Announcement removed.', 'info');
   }
@@ -11734,6 +12065,7 @@ INSTRUCTIONS:
       enrolledStudents: 32,
       status: 'Active'
     };
+    this.formCustomValues['transport'] = {};
     this.isTransportModalOpen = true;
     this.cdr.detectChanges();
   }
@@ -11760,6 +12092,17 @@ INSTRUCTIONS:
       status: (this.transportForm.status as any) || 'Active'
     };
     this.transportRoutes.unshift(newRoute);
+    this.tableSchemaService.submitFormCustomInputs(
+      'owner_transport',
+      [newRoute.id],
+      this.formCustomValues['transport'],
+      {
+        rowLabel: newRoute.routeName,
+        submittedByName: 'School Business Owner',
+        submittedByRole: this.currentPortalRole
+      }
+    );
+    this.formCustomValues['transport'] = {};
     this.saveStateToStorage();
     this.closeTransportModal();
     this.showToast(`Added transport route: ${newRoute.routeName}`, 'success');
@@ -11771,6 +12114,7 @@ INSTRUCTIONS:
       return;
     }
     this.transportRoutes = this.transportRoutes.filter(r => r.id !== tr.id);
+    this.tableSchemaService.clearRowCustomData('owner_transport', [tr.id]);
     this.saveStateToStorage();
     this.showToast(`Removed transport route ${tr.routeName}`, 'warning');
   }
@@ -11818,6 +12162,7 @@ INSTRUCTIONS:
       availableCopies: 8,
       rackNo: 'RACK-05'
     };
+    this.formCustomValues['library'] = {};
     this.isLibraryModalOpen = true;
     this.cdr.detectChanges();
   }
@@ -11852,6 +12197,17 @@ INSTRUCTIONS:
       rackNo: this.libraryForm.rackNo || 'RACK-01'
     };
     this.libraryBooks.unshift(newBook);
+    this.tableSchemaService.submitFormCustomInputs(
+      'owner_library_catalog',
+      [newBook.id, newBook.isbn],
+      this.formCustomValues['library'],
+      {
+        rowLabel: newBook.title,
+        submittedByName: 'School Business Owner',
+        submittedByRole: this.currentPortalRole
+      }
+    );
+    this.formCustomValues['library'] = {};
     this.saveStateToStorage();
     this.closeLibraryModal();
     this.showToast(`Cataloged new book with classification tags: "${newBook.title}"`, 'success');
@@ -11863,6 +12219,7 @@ INSTRUCTIONS:
       return;
     }
     this.libraryBooks = this.libraryBooks.filter(b => b.id !== bk.id);
+    this.tableSchemaService.clearRowCustomData('owner_library_catalog', [bk.id, bk.isbn].filter(Boolean));
     this.saveStateToStorage();
     this.showToast(`Removed book "${bk.title}"`, 'warning');
   }
@@ -12019,6 +12376,7 @@ INSTRUCTIONS:
       issuePeriodDays: 14,
       notes: 'Issued under standard institutional library regulations.'
     };
+    this.formCustomValues['checkout'] = {};
     this.isCheckoutModalOpen = true;
     this.cdr.detectChanges();
   }
@@ -12077,6 +12435,17 @@ INSTRUCTIONS:
 
     bk.availableCopies = Math.max(0, bk.availableCopies - 1);
     this.libraryCirculations.unshift(newCirculation);
+    this.tableSchemaService.submitFormCustomInputs(
+      'owner_library_circulation',
+      [newCirculation.id, newCirculation.issueNo],
+      this.formCustomValues['checkout'],
+      {
+        rowLabel: newCirculation.borrowerName,
+        submittedByName: 'School Business Owner',
+        submittedByRole: this.currentPortalRole
+      }
+    );
+    this.formCustomValues['checkout'] = {};
     this.saveStateToStorage();
     this.checkAndUpdateOverdueBooks();
     this.closeCheckoutModal();
@@ -12921,6 +13290,7 @@ INSTRUCTIONS:
     phone: string;
     shift: string;
     liteEnabled: boolean;
+    customValues?: Record<string, string>;
   }): Promise<void> {
     const res = await this.backend.saveSchoolStaff(payload);
     const created: StaffMemberRecord = res?.ok && res.staff
@@ -12943,6 +13313,13 @@ INSTRUCTIONS:
           liteEnabled: payload.liteEnabled
         };
     this.schoolStaff = [created, ...this.schoolStaff];
+    if (payload.customValues && Object.keys(payload.customValues).length > 0) {
+      this.tableSchemaService.submitFormCustomInputs('attendance_roster_staff', {
+        rowKey: created.id,
+        rowLabel: created.name,
+        values: payload.customValues
+      });
+    }
     this.saveStateToStorage();
     this.showToast(`Campus staff member ${created.name} added (${created.empCode}). Enroll their face photo to activate gate scanning.`, 'success');
     this.cdr.detectChanges();
@@ -12951,6 +13328,7 @@ INSTRUCTIONS:
   async onHubStaffDeleted(staffId: string): Promise<void> {
     this.schoolStaff = this.schoolStaff.filter((s) => s.id !== staffId);
     this.schoolFaceProfiles = this.schoolFaceProfiles.filter((fp) => !(fp.memberCategory === 'staff' && fp.memberId === staffId));
+    this.tableSchemaService.clearRowCustomData('attendance_roster_staff', [staffId]);
     this.saveStateToStorage();
     await this.backend.deleteSchoolStaff(staffId);
     this.showToast('Staff record removed from campus attendance roster.', 'info');
@@ -12968,6 +13346,7 @@ INSTRUCTIONS:
     email?: string;
     shift: string;
     liteEnabled: boolean;
+    customValues?: Record<string, string>;
   }): Promise<void> {
     const res = await this.backend.saveSchoolPrincipal(payload);
     const created: PrincipalMemberRecord = res?.ok && res.principal
@@ -12991,6 +13370,13 @@ INSTRUCTIONS:
           liteEnabled: payload.liteEnabled
         };
     this.schoolPrincipals = [created, ...this.schoolPrincipals];
+    if (payload.customValues && Object.keys(payload.customValues).length > 0) {
+      this.tableSchemaService.submitFormCustomInputs('attendance_roster_principals', {
+        rowKey: created.id,
+        rowLabel: created.name,
+        values: payload.customValues
+      });
+    }
     this.saveStateToStorage();
     this.showToast(`Principal profile ${created.name} added (${created.empCode}). Enroll their face photo to activate gate scanning.`, 'success');
     this.cdr.detectChanges();
@@ -12999,6 +13385,7 @@ INSTRUCTIONS:
   async onHubPrincipalDeleted(principalId: string): Promise<void> {
     this.schoolPrincipals = this.schoolPrincipals.filter((p) => p.id !== principalId);
     this.schoolFaceProfiles = this.schoolFaceProfiles.filter((fp) => !(fp.memberCategory === 'principal' && fp.memberId === principalId));
+    this.tableSchemaService.clearRowCustomData('attendance_roster_principals', [principalId]);
     this.saveStateToStorage();
     await this.backend.deleteSchoolPrincipal(principalId);
     this.showToast('Principal record removed from campus attendance roster.', 'info');
@@ -13538,6 +13925,7 @@ INSTRUCTIONS:
       badgeNo: `B-${Math.floor(10 + Math.random() * 89)}`,
       status: 'In-School'
     };
+    this.formCustomValues['visitor'] = {};
     this.isVisitorModalOpen = true;
     this.cdr.detectChanges();
   }
@@ -13565,6 +13953,17 @@ INSTRUCTIONS:
       vehicleNo: this.visitorForm.vehicleNo || undefined
     };
     this.visitorGatePasses.unshift(newVisitor);
+    this.tableSchemaService.submitFormCustomInputs(
+      'owner_visitors',
+      [newVisitor.id, newVisitor.gatePassNo],
+      this.formCustomValues['visitor'],
+      {
+        rowLabel: newVisitor.visitorName,
+        submittedByName: 'School Business Owner',
+        submittedByRole: this.currentPortalRole
+      }
+    );
+    this.formCustomValues['visitor'] = {};
     this.saveStateToStorage();
     this.closeVisitorModal();
     this.showToast(`Issued Security Gate Pass ${newVisitor.gatePassNo} for ${newVisitor.visitorName}`, 'success');
@@ -13578,11 +13977,14 @@ INSTRUCTIONS:
   }
 
   deleteVisitor(v: VisitorGatePassRecord) {
-    if (confirm(`Remove visitor record ${v.gatePassNo}?`)) {
-      this.visitorGatePasses = this.visitorGatePasses.filter((item: VisitorGatePassRecord) => item.id !== v.id);
-      this.saveStateToStorage();
-      this.showToast(`Removed visitor log ${v.gatePassNo}`, 'warning');
+    if (!this.isOwnerPortal) {
+      this.showToast('Access Restricted: Only School Business Owner can delete visitor records.', 'warning');
+      return;
     }
+    this.visitorGatePasses = this.visitorGatePasses.filter((item: VisitorGatePassRecord) => item.id !== v.id);
+    this.tableSchemaService.clearRowCustomData('owner_visitors', [v.id, v.gatePassNo].filter(Boolean));
+    this.saveStateToStorage();
+    this.showToast(`Removed visitor log ${v.gatePassNo}`, 'warning');
   }
 
   openGatePassPrintModal(v: VisitorGatePassRecord) {
@@ -13615,6 +14017,7 @@ INSTRUCTIONS:
       doctorName: 'Dr. S. K. Lodhi',
       medicalAlert: false
     };
+    this.formCustomValues['medical'] = {};
     this.isMedicalModalOpen = true;
     this.cdr.detectChanges();
   }
@@ -13645,6 +14048,17 @@ INSTRUCTIONS:
       medicalAlert: Boolean(this.medicalForm.medicalAlert)
     };
     this.studentMedicalRecords.unshift(newMed);
+    this.tableSchemaService.submitFormCustomInputs(
+      'owner_medical',
+      [newMed.id, newMed.studentId, newMed.rollNo].filter(Boolean),
+      this.formCustomValues['medical'],
+      {
+        rowLabel: newMed.studentName,
+        submittedByName: 'School Business Owner',
+        submittedByRole: this.currentPortalRole
+      }
+    );
+    this.formCustomValues['medical'] = {};
     this.saveStateToStorage();
     this.closeMedicalModal();
     this.showToast(`Updated health & medical record for ${newMed.studentName}`, 'success');
@@ -13662,6 +14076,7 @@ INSTRUCTIONS:
       return;
     }
     this.studentMedicalRecords = this.studentMedicalRecords.filter((item: StudentMedicalRecord) => item.id !== m.id);
+    this.tableSchemaService.clearRowCustomData('owner_medical', [m.id, m.studentId, m.rollNo].filter(Boolean));
     this.saveStateToStorage();
     this.showToast(`Deleted health record for ${m.studentName}`, 'warning');
   }
@@ -13678,6 +14093,7 @@ INSTRUCTIONS:
       actionTaken: 'Verbal Warning & Counseling',
       fineAmount: 500
     };
+    this.formCustomValues['discipline'] = {};
     this.isDisciplinaryModalOpen = true;
     this.cdr.detectChanges();
   }
@@ -13708,6 +14124,17 @@ INSTRUCTIONS:
       status: 'Open'
     };
     this.disciplinaryIncidents.unshift(newDisc);
+    this.tableSchemaService.submitFormCustomInputs(
+      'owner_discipline',
+      [newDisc.id, newDisc.studentId, newDisc.rollNo].filter(Boolean),
+      this.formCustomValues['discipline'],
+      {
+        rowLabel: newDisc.studentName,
+        submittedByName: 'School Business Owner',
+        submittedByRole: this.currentPortalRole
+      }
+    );
+    this.formCustomValues['discipline'] = {};
     this.saveStateToStorage();
     this.closeDisciplinaryModal();
     this.showToast(`Logged disciplinary incident for ${newDisc.studentName}. Parent notified via SMS.`, 'success');
@@ -13731,6 +14158,7 @@ INSTRUCTIONS:
       return;
     }
     this.disciplinaryIncidents = this.disciplinaryIncidents.filter((item: DisciplinaryIncidentRecord) => item.id !== d.id);
+    this.tableSchemaService.clearRowCustomData('owner_discipline', [d.id, d.studentId, d.rollNo].filter(Boolean));
     this.saveStateToStorage();
     this.showToast(`Removed disciplinary incident #${d.id}`, 'warning');
   }
@@ -13746,6 +14174,7 @@ INSTRUCTIONS:
       condition: 'Excellent',
       custodian: 'Engr. Bilal Hashmi'
     };
+    this.formCustomValues['asset'] = {};
     this.isAssetModalOpen = true;
     this.cdr.detectChanges();
   }
@@ -13773,6 +14202,17 @@ INSTRUCTIONS:
       lastServiced: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
     };
     this.schoolAssets.unshift(newAsset);
+    this.tableSchemaService.submitFormCustomInputs(
+      'owner_assets',
+      [newAsset.id, newAsset.assetCode],
+      this.formCustomValues['asset'],
+      {
+        rowLabel: newAsset.name,
+        submittedByName: 'School Business Owner',
+        submittedByRole: this.currentPortalRole
+      }
+    );
+    this.formCustomValues['asset'] = {};
     this.saveStateToStorage();
     this.closeAssetModal();
     this.showToast(`Asset '${newAsset.name}' added to inventory register.`, 'success');
@@ -13790,6 +14230,7 @@ INSTRUCTIONS:
       return;
     }
     this.schoolAssets = this.schoolAssets.filter((item: SchoolAssetRecord) => item.id !== a.id);
+    this.tableSchemaService.clearRowCustomData('owner_assets', [a.id, a.assetCode].filter(Boolean));
     this.saveStateToStorage();
     this.showToast(`Removed asset '${a.name}' from inventory`, 'warning');
   }
@@ -13805,6 +14246,7 @@ INSTRUCTIONS:
       deductions: 5000,
       paymentMethod: 'Meezan Bank Direct Deposit'
     };
+    this.formCustomValues['payroll'] = {};
     this.isStaffPayrollModalOpen = true;
     this.cdr.detectChanges();
   }
@@ -13844,6 +14286,17 @@ INSTRUCTIONS:
       disbursedDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
     };
     this.staffPayrolls.unshift(newPay);
+    this.tableSchemaService.submitFormCustomInputs(
+      'owner_payroll',
+      [newPay.id, newPay.staffId],
+      this.formCustomValues['payroll'],
+      {
+        rowLabel: newPay.staffName,
+        submittedByName: 'School Business Owner',
+        submittedByRole: this.currentPortalRole
+      }
+    );
+    this.formCustomValues['payroll'] = {};
     this.saveStateToStorage();
     this.closeStaffPayrollModal();
     this.showToast(`Disbursed salary PKR ${this.formatCurrency(newPay.netPayable)} for ${newPay.staffName}`, 'success');
@@ -13972,6 +14425,7 @@ INSTRUCTIONS:
       return;
     }
     this.staffPayrolls = this.staffPayrolls.filter((item: StaffPayrollRecord) => item.id !== p.id);
+    this.tableSchemaService.clearRowCustomData('owner_payroll', [p.id, p.staffId].filter(Boolean));
     this.saveStateToStorage();
     this.showToast(`Removed payroll entry for ${p.staffName}`, 'warning');
   }
@@ -13986,6 +14440,7 @@ INSTRUCTIONS:
       totalDays: 2,
       reason: 'Medical rest advised'
     };
+    this.formCustomValues['staffLeave'] = {};
     this.isStaffLeaveModalOpen = true;
     this.cdr.detectChanges();
   }
@@ -14013,6 +14468,17 @@ INSTRUCTIONS:
       appliedDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
     };
     this.staffLeaveRequests.unshift(newLeave);
+    this.tableSchemaService.submitFormCustomInputs(
+      'owner_staff_leaves',
+      [newLeave.id, newLeave.staffId],
+      this.formCustomValues['staffLeave'],
+      {
+        rowLabel: newLeave.staffName,
+        submittedByName: 'School Business Owner',
+        submittedByRole: this.currentPortalRole
+      }
+    );
+    this.formCustomValues['staffLeave'] = {};
     this.saveStateToStorage();
     this.closeStaffLeaveModal();
     this.showToast(`Staff leave application submitted for ${newLeave.staffName}`, 'success');
@@ -14030,6 +14496,7 @@ INSTRUCTIONS:
       return;
     }
     this.staffLeaveRequests = this.staffLeaveRequests.filter((item: StaffLeaveRecord) => item.id !== l.id);
+    this.tableSchemaService.clearRowCustomData('owner_staff_leaves', [l.id, l.staffId].filter(Boolean));
     this.saveStateToStorage();
     this.showToast(`Removed leave request for ${l.staffName}`, 'warning');
   }
@@ -14479,6 +14946,7 @@ INSTRUCTIONS:
       priority: 'High',
       content: 'Annual Parent Teacher Conference scheduled for Friday October 24th from 9:00 AM to 1:00 PM.'
     };
+    this.formCustomValues['notice'] = {};
     this.isNoticeModalOpen = true;
     this.cdr.detectChanges();
   }
@@ -14503,6 +14971,17 @@ INSTRUCTIONS:
       date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
     };
     this.announcements.unshift(newNotice);
+    this.tableSchemaService.submitFormCustomInputs(
+      'owner_feed_table',
+      [newNotice.id],
+      this.formCustomValues['notice'],
+      {
+        rowLabel: newNotice.title,
+        submittedByName: 'Principal Office',
+        submittedByRole: this.currentPortalRole
+      }
+    );
+    this.formCustomValues['notice'] = {};
     this.saveStateToStorage();
     this.closeNoticeModal();
     this.showToast(`Notice published to ${newNotice.target} portal!`, 'success');
@@ -14512,6 +14991,7 @@ INSTRUCTIONS:
   // FEATURE 1: PUBLIC PARENT ADMISSION PORTAL
   // ==========================================
   openPublicAdmissionModal() {
+    this.formCustomValues['publicAdmission'] = {};
     this.isPublicAdmissionModalOpen = true;
     this.cdr.detectChanges();
   }
@@ -14553,6 +15033,17 @@ INSTRUCTIONS:
       decisionRemarks: 'Submitted via Online Portal. Initial academic & document review pending.'
     };
     this.admissionsList.unshift(newEntry);
+    this.tableSchemaService.submitFormCustomInputs(
+      'owner_admissions',
+      [admId],
+      this.formCustomValues['publicAdmission'],
+      {
+        rowLabel: newEntry.applicant,
+        submittedByName: newEntry.fatherName,
+        submittedByRole: 'parent'
+      }
+    );
+    this.formCustomValues['publicAdmission'] = {};
     this.lastSubmittedAdmissionId = admId;
     this.saveStateToStorage();
     this.isPublicAdmissionModalOpen = false;
@@ -15029,6 +15520,7 @@ INSTRUCTIONS:
       labClearance: true,
       sportsClearance: true
     };
+    this.formCustomValues['slc'] = {};
     this.cdr.detectChanges();
   }
 
@@ -15096,6 +15588,18 @@ INSTRUCTIONS:
       ipAddress: '192.168.10.4 (Principal Directorate)'
     });
 
+    this.tableSchemaService.submitFormCustomInputs(
+      'owner_audit_slc',
+      [newSLC.id, newSLC.certificateNo, newSLC.rollNo].filter(Boolean),
+      this.formCustomValues['slc'],
+      {
+        rowLabel: newSLC.studentName,
+        submittedByName: 'Dr. Tahir Malik',
+        submittedByRole: this.currentPortalRole
+      }
+    );
+    this.formCustomValues['slc'] = {};
+    this.saveStateToStorage();
     this.closeCreateSLCModal();
     this.openSLCViewModal(newSLC);
     this.showToast(`Official School Leaving Certificate ${newSLC.certificateNo} issued successfully!`, 'success');
@@ -15178,6 +15682,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       verifiedByAuditor: 'Dr. Tahir Malik (Principal)',
       notes: 'Weekly cash counter closing & bank challan verification.'
     };
+    this.formCustomValues['reconciliation'] = {};
     this.cdr.detectChanges();
   }
 
@@ -15229,6 +15734,18 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       ipAddress: '192.168.10.22 (Bursar Counter)'
     });
 
+    this.tableSchemaService.submitFormCustomInputs(
+      'owner_audit_reconciliation',
+      [newRec.id],
+      this.formCustomValues['reconciliation'],
+      {
+        rowLabel: `Closing ${newRec.date}`,
+        submittedByName: newRec.cashierName || 'Accounts Controller',
+        submittedByRole: this.currentPortalRole
+      }
+    );
+    this.formCustomValues['reconciliation'] = {};
+    this.saveStateToStorage();
     this.closeAddReconciliationModal();
     this.showToast(`Fee Reconciliation record ${newRec.id} logged and verified!`, 'success');
   }
@@ -15310,6 +15827,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
   }
 
   openHostelModal() {
+    this.formCustomValues['hostel'] = {};
     this.isHostelModalOpen = true;
     this.cdr.detectChanges();
   }
@@ -15337,9 +15855,31 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       residentStudents: []
     };
     this.hostelRooms.unshift(newRoom);
+    this.tableSchemaService.submitFormCustomInputs(
+      'owner_hostel',
+      [newRoom.id, newRoom.roomNo],
+      this.formCustomValues['hostel'],
+      {
+        rowLabel: newRoom.roomNo,
+        submittedByName: 'School Business Owner',
+        submittedByRole: this.currentPortalRole
+      }
+    );
+    this.formCustomValues['hostel'] = {};
     this.saveStateToStorage();
     this.closeHostelModal();
     this.showToast(`Hostel ${newRoom.roomNo} registered successfully!`, 'success');
+  }
+
+  deleteHostelRoom(room: HostelRoomRecord) {
+    if (!this.isOwnerPortal) {
+      this.showToast('Access Restricted: Only School Business Owner can delete hostel rooms.', 'warning');
+      return;
+    }
+    this.hostelRooms = this.hostelRooms.filter(r => r.id !== room.id);
+    this.tableSchemaService.clearRowCustomData('owner_hostel', [room.id, room.roomNo].filter(Boolean));
+    this.saveStateToStorage();
+    this.showToast(`Removed hostel room ${room.roomNo}`, 'info');
   }
 
   recordNightCurfew(room: HostelRoomRecord) {
@@ -15368,6 +15908,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
   }
 
   openAlumniModal() {
+    this.formCustomValues['alumni'] = {};
     this.isAlumniModalOpen = true;
     this.cdr.detectChanges();
   }
@@ -15396,9 +15937,31 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       gpa: this.alumniForm.gpa || '3.8'
     };
     this.alumniList.unshift(newAlumni);
+    this.tableSchemaService.submitFormCustomInputs(
+      'owner_alumni',
+      [newAlumni.id, newAlumni.rollNo, newAlumni.slcNumber].filter(Boolean),
+      this.formCustomValues['alumni'],
+      {
+        rowLabel: newAlumni.name,
+        submittedByName: 'School Business Owner',
+        submittedByRole: this.currentPortalRole
+      }
+    );
+    this.formCustomValues['alumni'] = {};
     this.saveStateToStorage();
     this.closeAlumniModal();
     this.showToast(`Alumni record for ${newAlumni.name} archived successfully!`, 'success');
+  }
+
+  deleteAlumniRecord(al: AlumniRecord) {
+    if (!this.isOwnerPortal) {
+      this.showToast('Access Restricted: Only School Business Owner can delete alumni records.', 'warning');
+      return;
+    }
+    this.alumniList = this.alumniList.filter(a => a.id !== al.id);
+    this.tableSchemaService.clearRowCustomData('owner_alumni', [al.id, al.rollNo, al.slcNumber].filter(Boolean));
+    this.saveStateToStorage();
+    this.showToast(`Removed alumni record for ${al.name}`, 'info');
   }
 
   // ==========================================
@@ -15438,6 +16001,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
   }
 
   openBookLabModal() {
+    this.formCustomValues['lab'] = {};
     this.isBookLabModalOpen = true;
     this.cdr.detectChanges();
   }
@@ -15463,6 +16027,17 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       experimentTopic: this.labBookingForm.topic || 'Laboratory Practical'
     };
     this.labSchedules.unshift(newSlot);
+    this.tableSchemaService.submitFormCustomInputs(
+      'owner_labs_schedule',
+      [newSlot.id],
+      this.formCustomValues['lab'],
+      {
+        rowLabel: `${newSlot.lab} - ${newSlot.subject}`,
+        submittedByName: 'School Business Owner',
+        submittedByRole: this.currentPortalRole
+      }
+    );
+    this.formCustomValues['lab'] = {};
     this.saveStateToStorage();
     this.closeBookLabModal();
     this.showToast(`Lab session booked for ${newSlot.grade} (${newSlot.period})!`, 'success');
@@ -17507,6 +18082,25 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
         alumniList: this.alumniList,
         workstations: this.workstations,
         labSchedules: this.labSchedules,
+        transportRoutes: this.transportRoutes,
+        schoolEventsList: this.schoolEventsList,
+        campusFeedPosts: this.campusFeedPosts,
+        examsList: this.examsList,
+        timetables: this.timetables,
+        portalUsers: this.portalUsers,
+        schoolSubjectsList: this.schoolSubjectsList,
+        libraryBooks: this.libraryBooks,
+        libraryCirculations: this.libraryCirculations,
+        visitorGatePasses: this.visitorGatePasses,
+        studentMedicalRecords: this.studentMedicalRecords,
+        disciplinaryIncidents: this.disciplinaryIncidents,
+        schoolAssets: this.schoolAssets,
+        staffPayrolls: this.staffPayrolls,
+        staffLeaveRequests: this.staffLeaveRequests,
+        schoolExpenses: this.schoolExpenses,
+        masterInvoices: this.masterInvoices,
+        studentLeavingCertificates: this.studentLeavingCertificates,
+        complianceAuditList: this.complianceAuditList,
         smsGatewayConfig: this.smsGatewayConfig,
         settingsForm: this.settingsForm,
         schoolName: this.schoolName,
@@ -17573,6 +18167,63 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
         }
         if (cloudData.labSchedules && Array.isArray(cloudData.labSchedules)) {
           this.labSchedules = cloudData.labSchedules;
+        }
+        if (Array.isArray(cloudData.transportRoutes) && cloudData.transportRoutes.length > 0) {
+          this.transportRoutes = cloudData.transportRoutes;
+        }
+        if (Array.isArray(cloudData.schoolEventsList) && cloudData.schoolEventsList.length > 0) {
+          this.schoolEventsList = cloudData.schoolEventsList;
+        }
+        if (Array.isArray(cloudData.campusFeedPosts) && cloudData.campusFeedPosts.length > 0) {
+          this.campusFeedPosts = cloudData.campusFeedPosts;
+        }
+        if (Array.isArray(cloudData.examsList) && cloudData.examsList.length > 0) {
+          this.examsList = cloudData.examsList;
+        }
+        if (Array.isArray(cloudData.timetables) && cloudData.timetables.length > 0) {
+          this.timetables = cloudData.timetables;
+        }
+        if (Array.isArray(cloudData.portalUsers) && cloudData.portalUsers.length > 0) {
+          this.portalUsers = cloudData.portalUsers;
+        }
+        if (Array.isArray(cloudData.schoolSubjectsList) && cloudData.schoolSubjectsList.length > 0) {
+          this.schoolSubjectsList = cloudData.schoolSubjectsList;
+        }
+        if (Array.isArray(cloudData.libraryBooks) && cloudData.libraryBooks.length > 0) {
+          this.libraryBooks = cloudData.libraryBooks;
+        }
+        if (Array.isArray(cloudData.libraryCirculations) && cloudData.libraryCirculations.length > 0) {
+          this.libraryCirculations = cloudData.libraryCirculations;
+        }
+        if (Array.isArray(cloudData.visitorGatePasses) && cloudData.visitorGatePasses.length > 0) {
+          this.visitorGatePasses = cloudData.visitorGatePasses;
+        }
+        if (Array.isArray(cloudData.studentMedicalRecords) && cloudData.studentMedicalRecords.length > 0) {
+          this.studentMedicalRecords = cloudData.studentMedicalRecords;
+        }
+        if (Array.isArray(cloudData.disciplinaryIncidents) && cloudData.disciplinaryIncidents.length > 0) {
+          this.disciplinaryIncidents = cloudData.disciplinaryIncidents;
+        }
+        if (Array.isArray(cloudData.schoolAssets) && cloudData.schoolAssets.length > 0) {
+          this.schoolAssets = cloudData.schoolAssets;
+        }
+        if (Array.isArray(cloudData.staffPayrolls) && cloudData.staffPayrolls.length > 0) {
+          this.staffPayrolls = cloudData.staffPayrolls;
+        }
+        if (Array.isArray(cloudData.staffLeaveRequests) && cloudData.staffLeaveRequests.length > 0) {
+          this.staffLeaveRequests = cloudData.staffLeaveRequests;
+        }
+        if (Array.isArray(cloudData.schoolExpenses) && cloudData.schoolExpenses.length > 0) {
+          this.schoolExpenses = cloudData.schoolExpenses;
+        }
+        if (Array.isArray(cloudData.masterInvoices) && cloudData.masterInvoices.length > 0) {
+          this.masterInvoices = cloudData.masterInvoices;
+        }
+        if (Array.isArray(cloudData.studentLeavingCertificates) && cloudData.studentLeavingCertificates.length > 0) {
+          this.studentLeavingCertificates = cloudData.studentLeavingCertificates;
+        }
+        if (Array.isArray(cloudData.complianceAuditList) && cloudData.complianceAuditList.length > 0) {
+          this.complianceAuditList = cloudData.complianceAuditList;
         }
         if (cloudData.smsGatewayConfig) {
           this.smsGatewayConfig = { ...this.smsGatewayConfig, ...cloudData.smsGatewayConfig };
@@ -17874,6 +18525,92 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
         { key: 'conductRating', label: 'Conduct Rating', type: 'select', options: ['Exemplary & Outstanding', 'Good & Satisfactory', 'Average'] },
         { key: 'status', label: 'Status', type: 'select', options: ['Issued & Sealed', 'Pending Dues Clearance', 'Archived'] }
       ]
+    },
+    transport: {
+      title: 'School Bus & Transport Route',
+      tableId: 'owner_transport',
+      fields: [
+        { key: 'routeName', label: 'Route Name', type: 'text' },
+        { key: 'vehicleNo', label: 'Vehicle #', type: 'text' },
+        { key: 'driverName', label: 'Driver Name', type: 'text' },
+        { key: 'driverPhone', label: 'Driver Phone', type: 'text' },
+        { key: 'monthlyFee', label: 'Monthly Fee (PKR)', type: 'number' },
+        { key: 'capacity', label: 'Seat Capacity', type: 'number' },
+        { key: 'enrolledStudents', label: 'Enrolled Students', type: 'number' },
+        { key: 'status', label: 'Status', type: 'select', options: ['Active', 'Maintenance'] }
+      ]
+    },
+    hostel: {
+      title: 'Hostel & Boarding Room',
+      tableId: 'owner_hostel',
+      fields: [
+        { key: 'roomNo', label: 'Room Number & Wing', type: 'text' },
+        { key: 'floor', label: 'Floor Assignment', type: 'text' },
+        { key: 'capacity', label: 'Bed Capacity', type: 'number' },
+        { key: 'occupied', label: 'Occupied Beds', type: 'number' },
+        { key: 'warden', label: 'Hostel Warden', type: 'text' },
+        { key: 'phone', label: 'Warden Phone', type: 'text' },
+        { key: 'messFee', label: 'Monthly Mess Fee (PKR)', type: 'number' },
+        { key: 'status', label: 'Status', type: 'select', options: ['Available', 'Full', 'Maintenance'] }
+      ]
+    },
+    alumni: {
+      title: 'Alumni & Graduate Record',
+      tableId: 'owner_alumni',
+      fields: [
+        { key: 'rollNo', label: 'Roll Number', type: 'text' },
+        { key: 'name', label: 'Graduate Name', type: 'text' },
+        { key: 'batchYear', label: 'Passing Batch Year', type: 'text' },
+        { key: 'matricClass', label: 'Matric Class', type: 'text' },
+        { key: 'slcNumber', label: 'SLC Number', type: 'text' },
+        { key: 'institute', label: 'Higher Institute / Career', type: 'text' },
+        { key: 'phone', label: 'Phone', type: 'text' },
+        { key: 'email', label: 'Email', type: 'text' },
+        { key: 'achievements', label: 'Achievements', type: 'text' },
+        { key: 'gpa', label: 'GPA / Marks', type: 'text' }
+      ]
+    },
+    visitor: {
+      title: 'Visitor Security Gate Pass',
+      tableId: 'owner_visitors',
+      fields: [
+        { key: 'visitorName', label: 'Visitor Full Name', type: 'text' },
+        { key: 'cnicOrPhone', label: 'CNIC or Mobile Phone', type: 'text' },
+        { key: 'purpose', label: 'Purpose of Visit', type: 'text' },
+        { key: 'personToMeet', label: 'Person / Office to Meet', type: 'text' },
+        { key: 'badgeNo', label: 'Security Badge #', type: 'text' },
+        { key: 'vehicleNo', label: 'Vehicle Plate #', type: 'text' },
+        { key: 'status', label: 'Gate Status', type: 'select', options: ['In-School', 'Checked-Out', 'Flagged'] }
+      ]
+    },
+    asset: {
+      title: 'Campus Asset & Equipment',
+      tableId: 'owner_assets',
+      fields: [
+        { key: 'name', label: 'Asset Name / Model', type: 'text' },
+        { key: 'category', label: 'Asset Category', type: 'select', options: ['IT Hardware', 'Classroom Furniture', 'Lab Equipment', 'Sports Gear', 'Library Facility'] },
+        { key: 'location', label: 'Location / Room', type: 'text' },
+        { key: 'quantity', label: 'Quantity', type: 'number' },
+        { key: 'unitValue', label: 'Unit Value (PKR)', type: 'number' },
+        { key: 'custodian', label: 'Custodian / Assigned Staff', type: 'text' },
+        { key: 'condition', label: 'Condition', type: 'select', options: ['Excellent', 'Good', 'Needs Repair', 'Retired'] }
+      ]
+    },
+    event: {
+      title: 'Campus Event & Calendar Entry',
+      tableId: 'owner_events',
+      fields: [
+        { key: 'title', label: 'Event Title', type: 'text' },
+        { key: 'category', label: 'Category', type: 'select', options: ['Sports & Athletics', 'Academic Competition', 'Cultural Festival', 'Exhibition', 'Annual Function', 'Parent-Teacher Meeting', 'Workshop'] },
+        { key: 'eventDate', label: 'Date', type: 'text' },
+        { key: 'eventTime', label: 'Time Slot', type: 'text' },
+        { key: 'venue', label: 'Venue / Location', type: 'text' },
+        { key: 'chiefGuest', label: 'Chief Guest', type: 'text' },
+        { key: 'organizerName', label: 'Organizer', type: 'text' },
+        { key: 'coordinatorTeacher', label: 'Coordinator Teacher', type: 'text' },
+        { key: 'allocatedBudget', label: 'Allocated Budget (PKR)', type: 'number' },
+        { key: 'description', label: 'Description & Notes', type: 'text' }
+      ]
     }
   };
 
@@ -17902,6 +18639,12 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       case 'waiver': return this.auditWaiversList;
       case 'compliance': return this.complianceAuditList;
       case 'slc': return this.studentLeavingCertificates;
+      case 'transport': return this.transportRoutes;
+      case 'hostel': return this.hostelRooms;
+      case 'alumni': return this.alumniList;
+      case 'visitor': return this.visitorGatePasses;
+      case 'asset': return this.schoolAssets;
+      case 'event': return this.schoolEventsList;
       default: return null;
     }
   }
@@ -18104,6 +18847,18 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       this.insertItemAtPosition(this.complianceAuditList, { id: uid, ...coerced } as any, rowPos, idxOffset);
     } else if (entity === 'slc') {
       this.insertItemAtPosition(this.studentLeavingCertificates, { id: uid, securityHash: 'sha256:sealed', studentId: uid, rollNo: uid, admissionDate: '2023-08-15', academicAchievement: 'Good Standing', accountsClearance: true, libraryClearance: true, labClearance: true, sportsClearance: true, issuedBy: 'School Business Owner', ...coerced } as any, rowPos, idxOffset);
+    } else if (entity === 'transport') {
+      this.insertItemAtPosition(this.transportRoutes, { id: uid, enrolledStudents: 0, status: 'Active', ...coerced } as any, rowPos, idxOffset);
+    } else if (entity === 'hostel') {
+      this.insertItemAtPosition(this.hostelRooms, { id: uid, occupied: 0, status: 'Available', residentStudents: [], ...coerced } as any, rowPos, idxOffset);
+    } else if (entity === 'alumni') {
+      this.insertItemAtPosition(this.alumniList, { id: uid, ...coerced } as any, rowPos, idxOffset);
+    } else if (entity === 'visitor') {
+      this.insertItemAtPosition(this.visitorGatePasses, { id: uid, gatePassNo: `GP-${Math.floor(1000 + Math.random() * 9000)}`, checkInTime: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }), status: 'In-School', ...coerced } as any, rowPos, idxOffset);
+    } else if (entity === 'asset') {
+      this.insertItemAtPosition(this.schoolAssets, { id: uid, assetCode: `AST-${Math.floor(100 + Math.random() * 899)}`, lastServiced: 'Today', ...coerced } as any, rowPos, idxOffset);
+    } else if (entity === 'event') {
+      this.insertItemAtPosition(this.schoolEventsList, { id: uid, status: 'Planning', sponsorCollections: 0, ticketCollections: 0, totalExpenses: 0, netSurplusOrDeficit: Number(coerced['allocatedBudget']) || 0, assignedTeachers: [], subTasks: [], expenseItems: [], isPublishedToPortals: false, attendingStudentsCount: 0, attendingParentsCount: 0, ...coerced } as any, rowPos, idxOffset);
     }
 
     if (tableId) {
@@ -18268,6 +19023,28 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
         break;
       case 'owner_audit_reconciliation':
         this.openAddReconciliationModal();
+        break;
+      case 'owner_events':
+      case 'events_calendar':
+        this.openEventModal();
+        break;
+      case 'owner_transport':
+        this.openAddTransportModal();
+        break;
+      case 'owner_hostel':
+        this.openHostelModal();
+        break;
+      case 'owner_alumni':
+        this.openAlumniModal();
+        break;
+      case 'owner_visitors':
+        this.openAddVisitorModal();
+        break;
+      case 'owner_assets':
+        this.openAddAssetModal();
+        break;
+      case 'campus_notices_feed':
+        this.openFeedModal();
         break;
       default:
         break;

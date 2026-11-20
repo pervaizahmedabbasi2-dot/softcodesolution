@@ -180,6 +180,9 @@ export const SCHOOL_TABLE_FAMILY_MAP: Record<string, string> = {
   teacher_feed_table: 'campus_notices_feed',
   student_feed_table: 'campus_notices_feed',
   parent_feed_table: 'campus_notices_feed',
+  // Events calendar
+  owner_events: 'events_calendar',
+  teacher_events: 'events_calendar',
   // SLC
   owner_audit_slc: 'slc_certificates',
   principal_slc: 'slc_certificates',
@@ -230,7 +233,21 @@ export const SCHOOL_TABLE_CATALOG: TableCatalogItem[] = [
     canonicalId: 'teachers_master',
     title: 'Teachers & Faculty Directory',
     portals: 'Owner, Principal',
-    defaultHeaders: ['Emp ID', 'Faculty Name', 'Department', 'Subjects', 'Salary', 'Status']
+    defaultHeaders: [
+      'Faculty Member', 'Gender', 'CNIC', 'Phone', 'Email', 'Address', 'Emergency Contact',
+      'Qualification', 'Previous Institute', 'Experience', 'Designation / Role', 'Subjects / Dept',
+      'Assigned Grade', 'In-Charge Class', 'Weekly Periods', 'Contract Type', 'Salary', 'Bank & IBAN', 'Status'
+    ]
+  },
+  {
+    tableId: 'owner_portal_users',
+    canonicalId: 'owner_portal_users',
+    title: 'Role Portals & RBAC Users',
+    portals: 'Owner',
+    defaultHeaders: [
+      'Full Name', 'Role', 'Staff / Roll ID', 'Designation', 'Department', 'Clearance Level',
+      'Branch', 'Email / Login', 'Phone', 'Linked Scope', 'Access PIN', 'Status'
+    ]
   },
   {
     tableId: 'parents_master',
@@ -247,6 +264,13 @@ export const SCHOOL_TABLE_CATALOG: TableCatalogItem[] = [
     defaultHeaders: ['Receipt #', 'Student', 'Channel & Ref', 'Desk', 'Amount']
   },
   {
+    tableId: 'owner_finance_ledger',
+    canonicalId: 'owner_finance_ledger',
+    title: 'Fees & Finance Master Ledger',
+    portals: 'Owner',
+    defaultHeaders: ['Challan / Ref #', 'Particulars', 'Category', 'Entry Type', 'Amount (PKR)', 'Date', 'Status']
+  },
+  {
     tableId: 'fee_defaulters',
     canonicalId: 'fee_defaulters',
     title: 'Fee Defaulters (Bakaya) Register',
@@ -258,7 +282,7 @@ export const SCHOOL_TABLE_CATALOG: TableCatalogItem[] = [
     canonicalId: 'fee_challans_invoices',
     title: 'Master Invoices & Fee Challans',
     portals: 'Owner, Accountant',
-    defaultHeaders: ['Challan / Invoice #', 'Student / Recipient', 'Title / Month', 'Amount', 'Status']
+    defaultHeaders: ['Invoice #', 'Type', 'Recipient', 'Role', 'Title & Line Items', 'Issue / Due Date', 'Gross', 'Discount', 'Tax', 'Net Total', 'Status']
   },
   {
     tableId: 'petty_vouchers',
@@ -272,7 +296,7 @@ export const SCHOOL_TABLE_CATALOG: TableCatalogItem[] = [
     canonicalId: 'daily_closing_reconciliation',
     title: 'Daily Rooznama & Cash Reconciliation',
     portals: 'Owner, Accountant',
-    defaultHeaders: ['Date', 'Cashier', 'Cash & Bank', 'Actual Collected', 'Approval Status']
+    defaultHeaders: ['Closing Date', 'Counter Cash', 'Meezan Bank', 'HBL Branch', 'KuickPay Digital', 'Total Collected', 'System Billed', 'Variance', 'Notes', 'Owner Status']
   },
   {
     tableId: 'campus_notices_feed',
@@ -280,6 +304,13 @@ export const SCHOOL_TABLE_CATALOG: TableCatalogItem[] = [
     title: 'Campus Notices & Circulars Feed',
     portals: 'Owner, Teacher, Student, Parent',
     defaultHeaders: ['Title / Circular', 'Author', 'Target Class', 'Priority', 'Date']
+  },
+  {
+    tableId: 'events_calendar',
+    canonicalId: 'events_calendar',
+    title: 'Events & Campus Calendar',
+    portals: 'Owner, Teacher',
+    defaultHeaders: ['Event Title', 'Category', 'Date', 'Time', 'Venue', 'Chief Guest', 'Organizer', 'Coordinator', 'Budget (PKR)', 'Status', 'Description']
   },
   {
     tableId: 'principal_lesson_plans',
@@ -303,18 +334,25 @@ export const SCHOOL_TABLE_CATALOG: TableCatalogItem[] = [
     defaultHeaders: ['Student / Roll #', 'Subject', 'Obtained / Total', 'Grade']
   },
   {
+    tableId: 'owner_library_catalog',
+    canonicalId: 'owner_library_catalog',
+    title: 'Library Book Catalog',
+    portals: 'Owner',
+    defaultHeaders: ['ISBN', 'Book Title & Author', 'Category / Genre', 'Grade Level', 'Rack Location', 'Copies (Avail / Total)']
+  },
+  {
     tableId: 'library_circulation',
     canonicalId: 'library_circulation',
     title: 'Library Book Circulation & Loans',
     portals: 'Owner, Student',
-    defaultHeaders: ['Issue #', 'Book Title', 'Borrower', 'Due Date', 'Status']
+    defaultHeaders: ['Issue #', 'Book Title', 'ISBN', 'Borrower', 'Class / Dept', 'Due Date', 'Fine', 'Status']
   },
   {
     tableId: 'slc_certificates',
     canonicalId: 'slc_certificates',
     title: 'Student Leaving Certificates (SLC)',
     portals: 'Owner, Principal',
-    defaultHeaders: ['Certificate #', 'Student', 'Father Name', 'Grade', 'Status']
+    defaultHeaders: ['Certificate No.', 'Student Name', 'Class', 'Admission Date', 'Leaving Date', 'Reason for Leaving', 'Conduct & Standing', 'Achievement', 'Clearance (4-Way)', 'Status']
   },
   {
     tableId: 'attendance_gate_logs',
@@ -324,39 +362,53 @@ export const SCHOOL_TABLE_CATALOG: TableCatalogItem[] = [
     defaultHeaders: ['Date', 'Time', 'Member', 'Status', 'Gate']
   },
   {
+    tableId: 'attendance_roster_staff',
+    canonicalId: 'attendance_roster_staff',
+    title: 'Campus Staff Attendance Roster',
+    portals: 'Owner, Principal',
+    defaultHeaders: ['ID / Roll', 'Member Details', 'Father / Guardian', 'CNIC / B-Form', 'Gender', 'Role / Dept', 'Mobile / Phone', 'Status']
+  },
+  {
+    tableId: 'attendance_roster_principals',
+    canonicalId: 'attendance_roster_principals',
+    title: 'Principals & Directorate Roster',
+    portals: 'Owner, Principal',
+    defaultHeaders: ['ID / Roll', 'Member Details', 'Father / Guardian', 'CNIC / B-Form', 'Gender', 'Role / Dept', 'Mobile / Phone', 'Status']
+  },
+  {
     tableId: 'owner_expenses',
     canonicalId: 'owner_expenses',
     title: 'School Expenses & Vendor Bills',
     portals: 'Owner',
-    defaultHeaders: ['Voucher / Ref', 'Category', 'Vendor / Payee', 'Amount', 'Status']
+    defaultHeaders: ['Voucher / Ref', 'Category', 'Vendor / Payee', 'Description', 'Amount', 'Status']
   },
   {
     tableId: 'owner_medical',
     canonicalId: 'owner_medical',
     title: 'Student Health & Medical Records',
     portals: 'Owner',
-    defaultHeaders: ['Roll #', 'Student', 'Blood Group', 'Vaccination', 'Emergency']
+    defaultHeaders: ['Roll #', 'Student', 'Blood Group', 'Vaccination', 'Allergies', 'Chronic Conditions', 'Emergency', 'Physician']
   },
   {
     tableId: 'owner_discipline',
     canonicalId: 'owner_discipline',
     title: 'Disciplinary & Conduct Incident Log',
     portals: 'Owner',
-    defaultHeaders: ['Student', 'Category', 'Severity', 'Action Taken', 'Status']
+    defaultHeaders: ['Student', 'Category', 'Severity', 'Description', 'Action Taken', 'Fine', 'Status']
   },
   {
     tableId: 'owner_payroll',
     canonicalId: 'owner_payroll',
     title: 'Staff Payroll Register',
     portals: 'Owner',
-    defaultHeaders: ['Staff Member', 'Month', 'Base Salary', 'Net Payable', 'Status']
+    defaultHeaders: ['Staff Member', 'Month', 'Base Salary', 'Allowances', 'Deductions', 'Net Payable', 'Payment Method', 'Disbursed Date', 'Status']
   },
   {
     tableId: 'owner_staff_leaves',
     canonicalId: 'owner_staff_leaves',
     title: 'Staff Leave Applications',
     portals: 'Owner',
-    defaultHeaders: ['Staff Member', 'Leave Type', 'Dates', 'Days', 'Status']
+    defaultHeaders: ['Staff Member', 'Leave Type', 'Dates', 'Days', 'Reason', 'Status']
   },
   {
     tableId: 'owner_exams',
@@ -366,11 +418,74 @@ export const SCHOOL_TABLE_CATALOG: TableCatalogItem[] = [
     defaultHeaders: ['Exam Title', 'Class', 'Start Date', 'Average GPA', 'Status']
   },
   {
+    tableId: 'owner_subjects',
+    canonicalId: 'owner_subjects',
+    title: 'Subject Catalog & Class Map',
+    portals: 'Owner',
+    defaultHeaders: ['Subject Code', 'Subject Name', 'Assigned Class', 'Subject Type', 'Weekly Periods', 'Lead Teacher', 'Total / Passing Marks']
+  },
+  {
     tableId: 'owner_timetable',
     canonicalId: 'owner_timetable',
     title: 'Class Timetable Roster',
     portals: 'Owner',
-    defaultHeaders: ['Period', 'Time', 'Class', 'Subject', 'Teacher']
+    defaultHeaders: ['Period & Time', 'Class', 'Subject', 'Faculty Teacher', 'Classroom / Lab']
+  },
+  {
+    tableId: 'owner_labs_schedule',
+    canonicalId: 'owner_labs_schedule',
+    title: 'Practical Lab Schedule',
+    portals: 'Owner',
+    defaultHeaders: ['Day & Period', 'Laboratory', 'Class', 'Subject', 'Practical Experiment Topic', 'Supervising Teacher']
+  },
+  {
+    tableId: 'owner_transport',
+    canonicalId: 'owner_transport',
+    title: 'School Bus & Transport Fleet',
+    portals: 'Owner',
+    defaultHeaders: ['Route Name', 'Vehicle #', 'Driver Name', 'Driver Phone', 'Monthly Fee', 'Capacity', 'Enrolled', 'Status']
+  },
+  {
+    tableId: 'owner_hostel',
+    canonicalId: 'owner_hostel',
+    title: 'Hostel & Boarding Rooms',
+    portals: 'Owner',
+    defaultHeaders: ['Room #', 'Floor / Wing', 'Capacity', 'Occupied', 'Warden', 'Warden Phone', 'Mess Fee (PKR)', 'Residents', 'Status']
+  },
+  {
+    tableId: 'owner_alumni',
+    canonicalId: 'owner_alumni',
+    title: 'Alumni & Graduate Archive',
+    portals: 'Owner',
+    defaultHeaders: ['Roll #', 'Graduate Name', 'Batch Year', 'Matric Class', 'SLC #', 'Institute / Career', 'Phone', 'Email', 'Achievements', 'GPA']
+  },
+  {
+    tableId: 'owner_visitors',
+    canonicalId: 'owner_visitors',
+    title: 'Visitor Security & Gate Passes',
+    portals: 'Owner',
+    defaultHeaders: ['Pass #', 'Visitor Name', 'CNIC / Phone', 'Purpose', 'Host / Whom to Meet', 'Badge #', 'Vehicle #', 'Check-In / Out', 'Status']
+  },
+  {
+    tableId: 'owner_assets',
+    canonicalId: 'owner_assets',
+    title: 'Campus Assets & Inventory Ledger',
+    portals: 'Owner',
+    defaultHeaders: ['Asset Code', 'Asset Name', 'Category', 'Location / Room', 'Qty', 'Unit Value (PKR)', 'Custodian', 'Last Serviced', 'Condition']
+  },
+  {
+    tableId: 'owner_audit_waivers',
+    canonicalId: 'owner_audit_waivers',
+    title: 'Concession & Hardship Waivers',
+    portals: 'Owner',
+    defaultHeaders: ['Student Name', 'Class', 'Category', 'Original Fee', 'Concession % / Net', 'Reason / Justification', 'Authorizing Body', 'Approval Date']
+  },
+  {
+    tableId: 'owner_audit_compliance',
+    canonicalId: 'owner_audit_compliance',
+    title: 'Regulatory & Compliance Audits',
+    portals: 'Owner',
+    defaultHeaders: ['Audit Area', 'Title & Standard', 'Regulatory Standard', 'Compliance Status', 'Responsible Officer', 'Last Checked', 'Next Renewal', 'Audit Inspector Notes']
   },
   {
     tableId: 'owner_homework_log',
@@ -641,12 +756,115 @@ export const SCHOOL_FORM_FIELD_ANCHORS: Record<string, FormFieldAnchorOption[]> 
   slc_certificates: [
     { key: 'certificateNo', label: 'Certificate No.' },
     { key: 'studentName', label: 'Student Name' },
-    { key: 'fatherName', label: 'Father Name' },
     { key: 'grade', label: 'Class / Grade' },
+    { key: 'admissionDate', label: 'Admission Date' },
     { key: 'leavingDate', label: 'Leaving Date' },
     { key: 'reasonForLeaving', label: 'Reason for Leaving' },
     { key: 'conductRating', label: 'Conduct Rating' },
+    { key: 'achievement', label: 'Academic Achievement' },
     { key: 'status', label: 'Status' }
+  ],
+  owner_portal_users: [
+    { key: 'pu_name', label: 'Full Name' },
+    { key: 'pu_role', label: 'Portal Role' },
+    { key: 'pu_staff_id', label: 'Staff / Roll ID' },
+    { key: 'pu_designation', label: 'Designation' },
+    { key: 'pu_department', label: 'Department' },
+    { key: 'pu_clearance', label: 'Clearance Level' },
+    { key: 'pu_branch', label: 'Branch' },
+    { key: 'pu_email', label: 'Email / Login' },
+    { key: 'pu_phone', label: 'Phone' },
+    { key: 'pu_linked', label: 'Linked Scope' },
+    { key: 'pu_pin', label: 'Access PIN' },
+    { key: 'pu_status', label: 'Status' }
+  ],
+  owner_expenses: [
+    { key: 'exp_title', label: 'Expense Title / Voucher' },
+    { key: 'exp_category', label: 'Category' },
+    { key: 'exp_vendor', label: 'Vendor / Payee' },
+    { key: 'exp_description', label: 'Description' },
+    { key: 'exp_amount', label: 'Amount (PKR)' },
+    { key: 'exp_date', label: 'Date' },
+    { key: 'exp_method', label: 'Payment Method' },
+    { key: 'exp_status', label: 'Status' }
+  ],
+  owner_transport: [
+    { key: 'tr_route', label: 'Route Name' },
+    { key: 'tr_vehicle', label: 'Vehicle #' },
+    { key: 'tr_driver', label: 'Driver Name' },
+    { key: 'tr_phone', label: 'Driver Phone' },
+    { key: 'tr_fee', label: 'Monthly Fee (PKR)' },
+    { key: 'tr_capacity', label: 'Seat Capacity' },
+    { key: 'tr_enrolled', label: 'Enrolled Students' },
+    { key: 'tr_status', label: 'Status' }
+  ],
+  owner_hostel: [
+    { key: 'hs_room', label: 'Room Number & Wing' },
+    { key: 'hs_floor', label: 'Floor Assignment' },
+    { key: 'hs_capacity', label: 'Bed Capacity' },
+    { key: 'hs_warden', label: 'Hostel Warden' },
+    { key: 'hs_phone', label: 'Warden Phone' },
+    { key: 'hs_mess', label: 'Monthly Mess Fee (PKR)' }
+  ],
+  owner_alumni: [
+    { key: 'al_roll', label: 'Roll Number' },
+    { key: 'al_name', label: 'Graduate Name' },
+    { key: 'al_year', label: 'Passing Batch Year' },
+    { key: 'al_class', label: 'Matric Class' },
+    { key: 'al_slc', label: 'SLC Number' },
+    { key: 'al_institute', label: 'Higher Institute / Career' },
+    { key: 'al_phone', label: 'Phone' },
+    { key: 'al_email', label: 'Email' },
+    { key: 'al_achievements', label: 'Achievements' },
+    { key: 'al_gpa', label: 'GPA / Marks' }
+  ],
+  owner_visitors: [
+    { key: 'vs_name', label: 'Visitor Full Name' },
+    { key: 'vs_cnic_phone', label: 'CNIC or Mobile Phone' },
+    { key: 'vs_purpose', label: 'Purpose of Visit' },
+    { key: 'vs_host', label: 'Person / Office to Meet' },
+    { key: 'vs_badge', label: 'Security Badge #' },
+    { key: 'vs_vehicle', label: 'Vehicle Plate #' },
+    { key: 'vs_status', label: 'Gate Status' }
+  ],
+  owner_assets: [
+    { key: 'as_name', label: 'Asset Name / Model' },
+    { key: 'as_category', label: 'Asset Category' },
+    { key: 'as_location', label: 'Location / Room' },
+    { key: 'as_qty', label: 'Quantity' },
+    { key: 'as_value', label: 'Unit Value (PKR)' },
+    { key: 'as_custodian', label: 'Custodian / Assigned Staff' },
+    { key: 'as_condition', label: 'Condition' }
+  ],
+  events_calendar: [
+    { key: 'ev_title', label: 'Event Title' },
+    { key: 'ev_category', label: 'Category' },
+    { key: 'ev_date', label: 'Date' },
+    { key: 'ev_time', label: 'Time Slot' },
+    { key: 'ev_venue', label: 'Venue / Location' },
+    { key: 'ev_guest', label: 'Chief Guest' },
+    { key: 'ev_organizer', label: 'Organizer' },
+    { key: 'ev_coordinator', label: 'Coordinator Teacher' },
+    { key: 'ev_budget', label: 'Allocated Budget (PKR)' },
+    { key: 'ev_desc', label: 'Description & Notes' }
+  ],
+  attendance_roster_staff: [
+    { key: 'st_name', label: 'Full Name' },
+    { key: 'st_father', label: 'Father Name' },
+    { key: 'st_cnic', label: 'CNIC Number' },
+    { key: 'st_role', label: 'Role / Designation' },
+    { key: 'st_dept', label: 'Department' },
+    { key: 'st_phone', label: 'Phone' },
+    { key: 'st_gender', label: 'Gender' }
+  ],
+  attendance_roster_principals: [
+    { key: 'pr_name', label: 'Full Name' },
+    { key: 'pr_father', label: 'Father / Husband Name' },
+    { key: 'pr_cnic', label: 'CNIC / National ID' },
+    { key: 'pr_role', label: 'Designation' },
+    { key: 'pr_dept', label: 'Directorate / Dept' },
+    { key: 'pr_phone', label: 'Phone' },
+    { key: 'pr_gender', label: 'Gender' }
   ]
 };
 
@@ -1629,7 +1847,187 @@ export class SchoolTableSchemaService {
       return studentAndAdmissionAnchorMap[key] || '__last__';
     }
 
+    const teachersAnchorMap: Record<string, string> = {
+      t_name: 'built:Faculty Member',
+      t_gender: 'built:Gender',
+      t_cnic: 'built:CNIC',
+      t_phone: 'built:Phone',
+      t_email: 'built:Email',
+      t_address: 'built:Address',
+      t_emergency: 'built:Emergency Contact',
+      t_qual: 'built:Qualification',
+      t_prev: 'built:Previous Institute',
+      t_exp: 'built:Experience',
+      t_role: 'built:Designation / Role',
+      t_subject: 'built:Subjects / Dept',
+      t_grade: 'built:Assigned Grade',
+      t_incharge: 'built:In-Charge Class',
+      t_periods: 'built:Weekly Periods',
+      t_contract: 'built:Contract Type',
+      t_salary: 'built:Salary',
+      t_bank: 'built:Bank & IBAN',
+      t_account: 'built:Bank & IBAN',
+      t_sec_1: 'built:Emergency Contact',
+      t_sec_2: 'built:Experience',
+      t_sec_3: 'built:Weekly Periods',
+      t_sec_4: 'built:Bank & IBAN'
+    };
+    if (canonical === 'teachers_master' && teachersAnchorMap[key]) {
+      return teachersAnchorMap[key];
+    }
+
+    const portalUsersMap: Record<string, string> = {
+      pu_name: 'built:Full Name',
+      pu_role: 'built:Role',
+      pu_staff_id: 'built:Staff / Roll ID',
+      pu_designation: 'built:Designation',
+      pu_department: 'built:Department',
+      pu_clearance: 'built:Clearance Level',
+      pu_branch: 'built:Branch',
+      pu_email: 'built:Email / Login',
+      pu_phone: 'built:Phone',
+      pu_linked: 'built:Linked Scope',
+      pu_pin: 'built:Access PIN',
+      pu_status: 'built:Status'
+    };
+    if (canonical === 'owner_portal_users' && portalUsersMap[key]) {
+      return portalUsersMap[key];
+    }
+
+    const extraAnchorMaps: Record<string, Record<string, string>> = {
+      events_calendar: {
+        ev_title: 'built:Event Title',
+        ev_category: 'built:Category',
+        ev_date: 'built:Date',
+        ev_time: 'built:Time',
+        ev_venue: 'built:Venue',
+        ev_guest: 'built:Chief Guest',
+        ev_organizer: 'built:Organizer',
+        ev_coordinator: 'built:Coordinator',
+        ev_budget: 'built:Budget (PKR)',
+        ev_desc: 'built:Description'
+      },
+      owner_transport: {
+        tr_route: 'built:Route Name',
+        tr_vehicle: 'built:Vehicle #',
+        tr_driver: 'built:Driver Name',
+        tr_phone: 'built:Driver Phone',
+        tr_fee: 'built:Monthly Fee',
+        tr_capacity: 'built:Capacity',
+        tr_enrolled: 'built:Enrolled',
+        tr_status: 'built:Status'
+      },
+      owner_hostel: {
+        hs_room: 'built:Room #',
+        hs_floor: 'built:Floor / Wing',
+        hs_capacity: 'built:Capacity',
+        hs_warden: 'built:Warden',
+        hs_phone: 'built:Warden Phone',
+        hs_mess: 'built:Mess Fee (PKR)'
+      },
+      owner_alumni: {
+        al_roll: 'built:Roll #',
+        al_name: 'built:Graduate Name',
+        al_year: 'built:Batch Year',
+        al_class: 'built:Matric Class',
+        al_slc: 'built:SLC #',
+        al_institute: 'built:Institute / Career',
+        al_phone: 'built:Phone',
+        al_email: 'built:Email',
+        al_achievements: 'built:Achievements',
+        al_gpa: 'built:GPA'
+      },
+      owner_visitors: {
+        vs_name: 'built:Visitor Name',
+        vs_cnic_phone: 'built:CNIC / Phone',
+        vs_purpose: 'built:Purpose',
+        vs_host: 'built:Host / Whom to Meet',
+        vs_badge: 'built:Badge #',
+        vs_vehicle: 'built:Vehicle #',
+        vs_status: 'built:Status'
+      },
+      owner_assets: {
+        as_name: 'built:Asset Name',
+        as_category: 'built:Category',
+        as_location: 'built:Location / Room',
+        as_qty: 'built:Qty',
+        as_value: 'built:Unit Value (PKR)',
+        as_custodian: 'built:Custodian',
+        as_condition: 'built:Condition'
+      },
+      attendance_roster_staff: {
+        st_name: 'built:Member Details',
+        st_father: 'built:Father / Guardian',
+        st_cnic: 'built:CNIC / B-Form',
+        st_role: 'built:Role / Dept',
+        st_dept: 'built:Role / Dept',
+        st_phone: 'built:Mobile / Phone',
+        st_gender: 'built:Gender'
+      },
+      attendance_roster_principals: {
+        pr_name: 'built:Member Details',
+        pr_father: 'built:Father / Guardian',
+        pr_cnic: 'built:CNIC / B-Form',
+        pr_role: 'built:Role / Dept',
+        pr_dept: 'built:Role / Dept',
+        pr_phone: 'built:Mobile / Phone',
+        pr_gender: 'built:Gender'
+      }
+    };
+
+    if (extraAnchorMaps[canonical]?.[key]) {
+      return extraAnchorMaps[canonical][key];
+    }
+
+    const anchors = SCHOOL_FORM_FIELD_ANCHORS[canonical] || SCHOOL_FORM_FIELD_ANCHORS[tableId] || [];
+    const matchedAnchor = anchors.find((a) => a.key === key);
+    if (matchedAnchor) {
+      const headers = this.getDetectedHeadersForTable(canonical);
+      const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+      const targetNorm = norm(matchedAnchor.label);
+      const exact = headers.find((h) => norm(h.originalLabel) === targetNorm);
+      if (exact) return `built:${exact.originalLabel}`;
+      const targetWords = targetNorm.split(' ').filter((w) => w.length > 2);
+      const partial = headers.find((h) => {
+        const hn = norm(h.originalLabel);
+        return hn.includes(targetNorm) || targetNorm.includes(hn) || (targetWords.length > 0 && targetWords.some((w) => hn.includes(w)));
+      });
+      if (partial) return `built:${partial.originalLabel}`;
+    }
+
     return '__last__';
+  }
+
+  mapTableColumnToFormAnchor(tableId: string, colPos: string): string {
+    const canonical = this.resolveCanonicalTableId(tableId);
+    const raw = (colPos || '').trim();
+    if (!raw || raw === '__last__' || raw === '__bottom__') return '__last__';
+    if (raw === '__first__') return '__first__';
+    if (raw.startsWith('custom:')) return raw;
+
+    const headerLabel = raw.startsWith('built:') ? raw.slice(6).trim() : raw;
+    const anchors = SCHOOL_FORM_FIELD_ANCHORS[canonical] || SCHOOL_FORM_FIELD_ANCHORS[tableId] || [];
+    if (anchors.length === 0) return '__last__';
+
+    const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+    const targetNorm = norm(headerLabel);
+
+    for (const a of anchors) {
+      const mapped = this.mapFormAnchorToTableColumn(canonical, a.key);
+      if (mapped.startsWith('built:') && norm(mapped.slice(6)) === targetNorm) {
+        return a.key;
+      }
+    }
+
+    const exactAnchor = anchors.find((a) => norm(a.label) === targetNorm);
+    if (exactAnchor) return exactAnchor.key;
+
+    const words = targetNorm.split(' ').filter((w) => w.length > 2);
+    const partialAnchor = anchors.find((a) => {
+      const an = norm(a.label);
+      return an.includes(targetNorm) || targetNorm.includes(an) || (words.length > 0 && words.some((w) => an.includes(w)));
+    });
+    return partialAnchor ? partialAnchor.key : '__last__';
   }
 
   addCustomColumn(
@@ -1670,21 +2068,29 @@ export class SchoolTableSchemaService {
     }));
     void this.backend.saveSchoolTableSchema(canonical, this.getSchema(canonical));
 
-    // Mirror custom fields added on New Admission Form directly to Students Master schema
-    if (canonical === 'owner_admissions') {
-      const studentCol: SchoolCustomColumn = {
+    // Bidirectional mirror between Admissions Form and Students Master Directory
+    if (canonical === 'owner_admissions' || canonical === 'students_master') {
+      const siblingTableId = canonical === 'owner_admissions' ? 'students_master' : 'owner_admissions';
+      const mappedColPos = cleanFormPos !== '__last__'
+        ? this.mapFormAnchorToTableColumn(siblingTableId, cleanFormPos)
+        : cleanColPos;
+      const mappedFormPos = cleanColPos !== '__last__' && cleanFormPos === '__last__'
+        ? this.mapTableColumnToFormAnchor(siblingTableId, cleanColPos)
+        : cleanFormPos;
+      const siblingCol: SchoolCustomColumn = {
         ...col,
-        insertAfterColumn: this.mapFormAnchorToTableColumn('owner_admissions', cleanFormPos),
+        insertAfterColumn: mappedColPos,
+        insertAfterFormField: mappedFormPos,
         scope: 'both'
       };
-      this.mutateSchema('students_master', (stuSchema) => {
-        if (stuSchema.customColumns.some((c) => c.id === studentCol.id)) return stuSchema;
+      this.mutateSchema(siblingTableId, (sibSchema) => {
+        if (sibSchema.customColumns.some((c) => c.id === siblingCol.id)) return sibSchema;
         return {
-          ...stuSchema,
-          customColumns: [...stuSchema.customColumns, studentCol]
+          ...sibSchema,
+          customColumns: [...sibSchema.customColumns, siblingCol]
         };
       });
-      void this.backend.saveSchoolTableSchema('students_master', this.getSchema('students_master'));
+      void this.backend.saveSchoolTableSchema(siblingTableId, this.getSchema(siblingTableId));
     }
 
     return col;
@@ -1727,15 +2133,23 @@ export class SchoolTableSchemaService {
     }));
     void this.backend.saveSchoolTableSchema(canonical, this.getSchema(canonical));
 
-    if (canonical === 'owner_admissions') {
-      const stu = this.getSchema('students_master');
-      if (stu.customColumns.some((c) => c.id === colId)) {
-        const mappedColPos = updates.insertAfterFormField !== undefined
-          ? this.mapFormAnchorToTableColumn('owner_admissions', updates.insertAfterFormField)
-          : undefined;
-        this.mutateSchema('students_master', (stuSchema) => ({
-          ...stuSchema,
-          customColumns: stuSchema.customColumns.map((col) =>
+    if (canonical === 'owner_admissions' || canonical === 'students_master') {
+      const siblingTableId = canonical === 'owner_admissions' ? 'students_master' : 'owner_admissions';
+      const sibling = this.getSchema(siblingTableId);
+      if (sibling.customColumns.some((c) => c.id === colId)) {
+        const mappedColPos = updates.insertAfterColumn !== undefined
+          ? updates.insertAfterColumn.trim() || '__last__'
+          : (updates.insertAfterFormField !== undefined
+            ? this.mapFormAnchorToTableColumn(siblingTableId, updates.insertAfterFormField)
+            : undefined);
+        const mappedFormPos = updates.insertAfterFormField !== undefined
+          ? updates.insertAfterFormField.trim() || '__last__'
+          : (updates.insertAfterColumn !== undefined
+            ? this.mapTableColumnToFormAnchor(siblingTableId, updates.insertAfterColumn)
+            : undefined);
+        this.mutateSchema(siblingTableId, (sibSchema) => ({
+          ...sibSchema,
+          customColumns: sibSchema.customColumns.map((col) =>
             col.id === colId
               ? {
                   ...col,
@@ -1744,14 +2158,12 @@ export class SchoolTableSchemaService {
                   defaultValue: updates.defaultValue !== undefined ? updates.defaultValue : col.defaultValue,
                   options: updates.options !== undefined ? updates.options : col.options,
                   ...(mappedColPos ? { insertAfterColumn: mappedColPos } : {}),
-                  ...(updates.insertAfterFormField !== undefined
-                    ? { insertAfterFormField: updates.insertAfterFormField.trim() || '__last__' }
-                    : {})
+                  ...(mappedFormPos ? { insertAfterFormField: mappedFormPos } : {})
                 }
               : col
           )
         }));
-        void this.backend.saveSchoolTableSchema('students_master', this.getSchema('students_master'));
+        void this.backend.saveSchoolTableSchema(siblingTableId, this.getSchema(siblingTableId));
       }
     }
 
@@ -1784,14 +2196,15 @@ export class SchoolTableSchemaService {
     });
     void this.backend.deleteSchoolTableColumn(canonical, colId);
 
-    if (canonical === 'owner_admissions') {
-      const stu = this.getSchema('students_master');
-      if (stu.customColumns.some((c) => c.id === colId)) {
-        this.mutateSchema('students_master', (stuSchema) => ({
-          ...stuSchema,
-          customColumns: stuSchema.customColumns.filter((c) => c.id !== colId)
+    if (canonical === 'owner_admissions' || canonical === 'students_master') {
+      const siblingTableId = canonical === 'owner_admissions' ? 'students_master' : 'owner_admissions';
+      const sibling = this.getSchema(siblingTableId);
+      if (sibling.customColumns.some((c) => c.id === colId)) {
+        this.mutateSchema(siblingTableId, (sibSchema) => ({
+          ...sibSchema,
+          customColumns: sibSchema.customColumns.filter((c) => c.id !== colId)
         }));
-        void this.backend.deleteSchoolTableColumn('students_master', colId);
+        void this.backend.deleteSchoolTableColumn(siblingTableId, colId);
       }
     }
   }
@@ -1830,12 +2243,13 @@ export class SchoolTableSchemaService {
     });
     void this.backend.saveSchoolTableSchema(canonical, this.getSchema(canonical));
 
-    if (canonical === 'owner_admissions' && removedIds.size > 0) {
-      this.mutateSchema('students_master', (stuSchema) => ({
-        ...stuSchema,
-        customColumns: stuSchema.customColumns.filter((c) => !removedIds.has(c.id))
+    if ((canonical === 'owner_admissions' || canonical === 'students_master') && removedIds.size > 0) {
+      const siblingTableId = canonical === 'owner_admissions' ? 'students_master' : 'owner_admissions';
+      this.mutateSchema(siblingTableId, (sibSchema) => ({
+        ...sibSchema,
+        customColumns: sibSchema.customColumns.filter((c) => !removedIds.has(c.id))
       }));
-      void this.backend.saveSchoolTableSchema('students_master', this.getSchema('students_master'));
+      void this.backend.saveSchoolTableSchema(siblingTableId, this.getSchema(siblingTableId));
     }
   }
 

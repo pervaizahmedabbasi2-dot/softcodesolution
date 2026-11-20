@@ -1,5 +1,5 @@
 import express from 'express';
-import { doc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { getCryptoVault } from '../auth_security/crypto_vault.js';
 
 export const SCHOOL_STUDENTS = [
@@ -3430,6 +3430,9 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     teacher_feed_table: 'campus_notices_feed',
     student_feed_table: 'campus_notices_feed',
     parent_feed_table: 'campus_notices_feed',
+    // Events calendar
+    owner_events: 'events_calendar',
+    teacher_events: 'events_calendar',
     // SLC
     owner_audit_slc: 'slc_certificates',
     principal_slc: 'slc_certificates',
@@ -3591,10 +3594,102 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     }
   };
 
+  const hydrateTenantTableSchemasFromCloud = async (tid) => {
+    if (!db) return {};
+    try {
+      const snap = await getDoc(doc(db, 'school_workspaces', tid));
+      if (!snap.exists()) return {};
+      const data = snap.data() || {};
+      const cloudSchemas = data.tableSchemas;
+      if (!cloudSchemas || typeof cloudSchemas !== 'object') return {};
+
+      if (sqliteDb) {
+        const now = new Date().toISOString();
+        for (const [rawKey, rawSchema] of Object.entries(cloudSchemas)) {
+          if (!rawSchema || typeof rawSchema !== 'object') continue;
+          const canonical = resolveCanonicalTableId(rawSchema.tableId || rawKey);
+          sqliteDb.prepare(`
+            INSERT OR REPLACE INTO local_school_table_schemas
+            (tenant_id, table_id, custom_title, hidden_columns_json, hidden_column_labels_json, hidden_form_fields_json, renamed_headers_json, renamed_headers_by_label_json, custom_columns_json, updated_by, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `).run(
+            tid,
+            canonical,
+            String(rawSchema.customTitle || ''),
+            JSON.stringify(Array.isArray(rawSchema.hiddenColumns) ? rawSchema.hiddenColumns : []),
+            JSON.stringify(Array.isArray(rawSchema.hiddenColumnLabels) ? rawSchema.hiddenColumnLabels : []),
+            JSON.stringify(Array.isArray(rawSchema.hiddenFormFields) ? rawSchema.hiddenFormFields : []),
+            JSON.stringify(rawSchema.renamedHeaders && typeof rawSchema.renamedHeaders === 'object' ? rawSchema.renamedHeaders : {}),
+            JSON.stringify(rawSchema.renamedHeadersByLabel && typeof rawSchema.renamedHeadersByLabel === 'object' ? rawSchema.renamedHeadersByLabel : {}),
+            JSON.stringify(Array.isArray(rawSchema.customColumns) ? rawSchema.customColumns : []),
+            'Firestore Sync',
+            now
+          );
+
+          if (Array.isArray(rawSchema.customRows)) {
+            for (const cr of rawSchema.customRows) {
+              if (!cr || !cr.rowKey) continue;
+              const vals = { ...(cr.values && typeof cr.values === 'object' ? cr.values : {}) };
+              if (cr.insertAfterRowKey) vals.__insertAfterRowKey = cr.insertAfterRowKey;
+              sqliteDb.prepare(`
+                INSERT OR REPLACE INTO local_school_table_rows
+                (tenant_id, table_id, row_key, row_label, values_json, submitted_by_name, submitted_by_role, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+              `).run(
+                tid,
+                canonical,
+                String(cr.rowKey),
+                String(cr.rowLabel || ''),
+                JSON.stringify(vals),
+                String(cr.submittedByName || ''),
+                String(cr.submittedByRole || 'owner'),
+                String(cr.createdAt || now),
+                now
+              );
+            }
+          }
+
+          if (rawSchema.customCells && typeof rawSchema.customCells === 'object') {
+            for (const [rKey, colsMap] of Object.entries(rawSchema.customCells)) {
+              if (!colsMap || typeof colsMap !== 'object') continue;
+              for (const [cId, val] of Object.entries(colsMap)) {
+                const meta = rawSchema.cellMeta?.[rKey]?.[cId] || {};
+                sqliteDb.prepare(`
+                  INSERT OR REPLACE INTO local_school_table_cells
+                  (tenant_id, table_id, row_key, col_id, cell_value, submitted_by_name, submitted_by_role, updated_at)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                `).run(
+                  tid,
+                  canonical,
+                  String(rKey),
+                  String(cId),
+                  String(val ?? ''),
+                  String(meta.submittedByName || ''),
+                  String(meta.submittedByRole || 'owner'),
+                  String(meta.updatedAt || now)
+                );
+              }
+            }
+          }
+        }
+        return loadTenantTableSchemas(tid);
+      }
+      return cloudSchemas;
+    } catch {
+      return {};
+    }
+  };
+
   // GET all table schemas + custom rows + custom cells (all roles read-only mirror)
-  router.get('/table-schemas', (req, res) => {
+  router.get('/table-schemas', async (req, res) => {
     const tid = resolveTenantId(req);
-    const schemas = loadTenantTableSchemas(tid);
+    let schemas = loadTenantTableSchemas(tid);
+    if (Object.keys(schemas).length === 0) {
+      const hydrated = await hydrateTenantTableSchemasFromCloud(tid);
+      if (Object.keys(hydrated).length > 0) {
+        schemas = hydrated;
+      }
+    }
     res.json({ ok: true, tenantId: tid, schemas });
   });
 
@@ -3944,7 +4039,7 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
   });
 
   // Per-tenant Workspace State Snapshot (settings, notices, classes, timetable, calendar, etc.)
-  router.get('/workspace', (req, res) => {
+  router.get('/workspace', async (req, res) => {
     const tid = resolveTenantId(req);
     let workspace = null;
     if (sqliteDb) {
@@ -3960,7 +4055,33 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
         }
       } catch {}
     }
-    const tableSchemas = loadTenantTableSchemas(tid);
+    let tableSchemas = loadTenantTableSchemas(tid);
+    if ((!workspace || Object.keys(tableSchemas).length === 0) && db) {
+      try {
+        const snap = await getDoc(doc(db, 'school_workspaces', tid));
+        if (snap.exists()) {
+          const cloudData = snap.data() || {};
+          if (!workspace && Object.keys(cloudData).length > 0) {
+            const { tableSchemas: _ts, tenant_id: _tid, ...restCloud } = cloudData;
+            workspace = { tenantId: tid, ...restCloud };
+            if (sqliteDb) {
+              try {
+                sqliteDb.prepare(`
+                  INSERT OR REPLACE INTO local_school_workspaces (tenant_id, school_name, payload_json, updated_at)
+                  VALUES (?, ?, ?, ?)
+                `).run(tid, String(workspace.schoolName || ''), JSON.stringify(restCloud), String(workspace.updatedAt || new Date().toISOString()));
+              } catch {}
+            }
+          }
+          if (Object.keys(tableSchemas).length === 0 && cloudData.tableSchemas) {
+            const hydrated = await hydrateTenantTableSchemasFromCloud(tid);
+            if (Object.keys(hydrated).length > 0) {
+              tableSchemas = hydrated;
+            }
+          }
+        }
+      } catch {}
+    }
     if (workspace) {
       workspace.tableSchemas = tableSchemas;
     } else if (Object.keys(tableSchemas).length > 0) {
