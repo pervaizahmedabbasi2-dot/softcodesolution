@@ -260,12 +260,21 @@ export function triggerPdfDownload(bytes: Uint8Array, filename: string): void {
   setTimeout(() => URL.revokeObjectURL(url), 1500);
 }
 
+export interface PdfGenericCardEntry {
+  title: string;
+  subtitle: string;
+  badgeText?: string;
+  fields: Array<{ label: string; value: string }>;
+}
+
 export function downloadStudentsTablePdf(params: {
   title: string;
   subtitle: string;
   headers: string[];
   rows: string[][];
   filename: string;
+  footerLabel?: string;
+  emptyMessage?: string;
 }): void {
   const PAGE_W = 841.89; // A4 Landscape
   const PAGE_H = 595.28;
@@ -327,7 +336,14 @@ export function downloadStudentsTablePdf(params: {
 
   if (params.rows.length === 0) {
     doc.strokeRect(MARGIN_X, cursorY, CONTENT_W, 28, 0.85, 0.88, 0.92, 0.5);
-    doc.drawText('No student records matched the active filters.', MARGIN_X + 12, cursorY + 17, 8.5, false, [0.45, 0.50, 0.58]);
+    doc.drawText(
+      params.emptyMessage || 'No student records matched the active filters.',
+      MARGIN_X + 12,
+      cursorY + 17,
+      8.5,
+      false,
+      [0.45, 0.50, 0.58]
+    );
   } else {
     params.rows.forEach((row, rIdx) => {
       const wrappedCells = headers.map((_, cIdx) =>
@@ -361,7 +377,8 @@ export function downloadStudentsTablePdf(params: {
     });
   }
 
-  doc.stampFooters(`SoftCode School ERP | Row-Wise Student Master Export | Generated ${new Date().toLocaleString()}`);
+  const footerPrefix = params.footerLabel || 'SoftCode School ERP | Row-Wise Student Master Export';
+  doc.stampFooters(`${footerPrefix} | Generated ${new Date().toLocaleString()}`);
   triggerPdfDownload(doc.buildBytes(), params.filename);
 }
 
@@ -485,5 +502,112 @@ export function downloadStudentsCardsPdf(params: {
   });
 
   doc.stampFooters(`SoftCode School ERP | Student Profile Dossier Export | Generated ${new Date().toLocaleString()}`);
+  triggerPdfDownload(doc.buildBytes(), params.filename);
+}
+
+export function downloadTableCardsPdf(params: {
+  title: string;
+  subtitle: string;
+  cards: PdfGenericCardEntry[];
+  filename: string;
+  footerLabel?: string;
+  emptyMessage?: string;
+}): void {
+  const PAGE_W = 595.28; // A4 Portrait
+  const PAGE_H = 841.89;
+  const MARGIN_X = 28;
+  const CONTENT_W = PAGE_W - MARGIN_X * 2;
+  const BOTTOM_LIMIT = PAGE_H - 36;
+
+  const doc = new PdfCanvasBuilder(PAGE_W, PAGE_H);
+
+  const drawDocHeader = (isFirst: boolean): number => {
+    const h = isFirst ? 50 : 30;
+    doc.fillRect(MARGIN_X, 22, CONTENT_W, h, 0.19, 0.22, 0.56);
+    doc.drawText(params.title, MARGIN_X + 12, 40, isFirst ? 12.5 : 10, true, [1, 1, 1]);
+    if (isFirst) {
+      doc.drawText(params.subtitle, MARGIN_X + 12, 57, 8, false, [0.85, 0.88, 0.99]);
+    }
+    return 22 + h + 12;
+  };
+
+  let cursorY = drawDocHeader(true);
+
+  if (params.cards.length === 0) {
+    doc.strokeRect(MARGIN_X, cursorY, CONTENT_W, 34, 0.85, 0.88, 0.92, 0.5);
+    doc.drawText(
+      params.emptyMessage || 'No records matched the active table view.',
+      MARGIN_X + 12,
+      cursorY + 20,
+      8.5,
+      false,
+      [0.45, 0.50, 0.58]
+    );
+  } else {
+    const halfW = (CONTENT_W - 24) / 2;
+
+    params.cards.forEach((card) => {
+      const rowPairs = Math.ceil(Math.max(1, card.fields.length) / 2);
+      const estimatedH = 44 + rowPairs * 18 + 14;
+      if (cursorY + estimatedH > BOTTOM_LIMIT && cursorY > 95) {
+        doc.startPage();
+        cursorY = drawDocHeader(false);
+      }
+
+      let cardStartY = cursorY;
+
+      // Card header bar
+      doc.fillRect(MARGIN_X, cursorY, CONTENT_W, 36, 0.95, 0.96, 0.99);
+      const titleLine = wrapTextLines(card.title || 'Record', CONTENT_W - 140, 10, 1)[0];
+      doc.drawText(titleLine, MARGIN_X + 10, cursorY + 15, 10, true, [0.08, 0.11, 0.22]);
+      const subLine = wrapTextLines(card.subtitle || '', CONTENT_W - 140, 7.4, 1)[0];
+      doc.drawText(subLine, MARGIN_X + 10, cursorY + 28, 7.4, false, [0.36, 0.41, 0.51]);
+
+      if (card.badgeText) {
+        const bTxt = wrapTextLines(card.badgeText, 120, 7.5, 1)[0];
+        const bW = approxTextWidth(bTxt, 7.5);
+        doc.drawText(bTxt, MARGIN_X + CONTENT_W - bW - 10, cursorY + 17, 7.5, true, [0.22, 0.27, 0.68]);
+      }
+
+      cursorY += 42;
+
+      for (let i = 0; i < card.fields.length; i += 2) {
+        const left = card.fields[i];
+        const right = card.fields[i + 1];
+
+        const leftValLines = wrapTextLines(left.value || '-', halfW - 92, 7.5, 2);
+        const rightValLines = right ? wrapTextLines(right.value || '-', halfW - 92, 7.5, 2) : [];
+        const lineCount = Math.max(1, leftValLines.length, rightValLines.length);
+        const rowH = lineCount * 10 + 5;
+
+        if (cursorY + rowH > BOTTOM_LIMIT) {
+          doc.strokeRect(MARGIN_X, cardStartY, CONTENT_W, Math.max(20, cursorY - cardStartY), 0.80, 0.84, 0.90, 0.6);
+          doc.startPage();
+          cursorY = drawDocHeader(false);
+          cardStartY = cursorY;
+        }
+
+        const drawPair = (item: { label: string; value: string }, valLines: string[], baseX: number) => {
+          const lbl = wrapTextLines(`${item.label}:`, 88, 7.4, 1)[0];
+          doc.drawText(lbl, baseX, cursorY + 8, 7.4, false, [0.42, 0.46, 0.55]);
+          valLines.forEach((vl, lIdx) => {
+            doc.drawText(vl, baseX + 90, cursorY + 8 + lIdx * 9.5, 7.5, true, [0.10, 0.13, 0.20]);
+          });
+        };
+
+        drawPair(left, leftValLines, MARGIN_X + 10);
+        if (right) {
+          drawPair(right, rightValLines, MARGIN_X + 16 + halfW);
+        }
+        cursorY += rowH;
+      }
+
+      doc.strokeRect(MARGIN_X, cardStartY, CONTENT_W, Math.max(40, cursorY - cardStartY + 4), 0.78, 0.82, 0.90, 0.65);
+      cursorY += 14;
+    });
+  }
+
+  const footerPrefix = params.footerLabel || 'SoftCode School ERP | Cards Export';
+  doc.stampFooters(`${footerPrefix} | Generated ${new Date().toLocaleString()}`);
   triggerPdfDownload(doc.buildBytes(), params.filename);
 }

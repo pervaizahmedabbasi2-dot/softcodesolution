@@ -1,5 +1,10 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { BackendService } from '../../../services/backend.service';
+import {
+  PdfGenericCardEntry,
+  downloadStudentsTablePdf,
+  downloadTableCardsPdf
+} from './school-pdf-export.util';
 
 export type SchoolTablePortalRole = 'owner' | 'principal' | 'teacher' | 'student' | 'parent' | 'accountant';
 export type CustomColumnType = 'text' | 'number' | 'date' | 'badge' | 'select';
@@ -2528,55 +2533,195 @@ export class SchoolTableSchemaService {
     void this.backend.deleteSchoolTableSchema(canonical);
   }
 
-  exportTableCsv(tableId: string, fallbackTitle?: string): void {
+  getPortalRoleLabel(): string {
+    switch (this.portalRole()) {
+      case 'owner':
+        return 'School Owner Portal';
+      case 'principal':
+        return 'Principal Portal';
+      case 'teacher':
+        return 'Teacher Portal';
+      case 'student':
+        return 'Student Portal';
+      case 'parent':
+        return 'Parent Portal';
+      case 'accountant':
+        return 'Accountant Portal';
+      default:
+        return 'School Portal';
+    }
+  }
+
+  private extractCellExportText(td: HTMLElement): string {
+    const inputEl = td.querySelector('input, select, textarea') as
+      | HTMLInputElement
+      | HTMLSelectElement
+      | HTMLTextAreaElement
+      | null;
+    if (inputEl) {
+      if (typeof HTMLSelectElement !== 'undefined' && inputEl instanceof HTMLSelectElement) {
+        const txt = inputEl.options[inputEl.selectedIndex]?.text || inputEl.value || '';
+        if (txt.trim()) return txt.replace(/\s+/g, ' ').trim();
+      } else if (typeof HTMLInputElement !== 'undefined' && inputEl instanceof HTMLInputElement && inputEl.type === 'checkbox') {
+        return inputEl.checked ? 'Yes' : 'No';
+      } else if ((inputEl.value || '').trim()) {
+        return inputEl.value.replace(/\s+/g, ' ').trim();
+      }
+    }
+    const clone = td.cloneNode(true) as HTMLElement;
+    clone.querySelectorAll('[data-scs-ignore-export]').forEach((n) => n.remove());
+    return (clone.textContent || '').replace(/\s+/g, ' ').trim();
+  }
+
+  private extractVisibleTableData(tableId: string, fallbackTitle?: string): {
+    title: string;
+    roleLabel: string;
+    roleSlug: string;
+    safeBaseName: string;
+    headers: string[];
+    rows: string[][];
+    cards: PdfGenericCardEntry[];
+  } | null {
     const entry = this.tableRegistry.get(tableId);
-    if (!entry) return;
-    const { tableEl, title } = entry;
-    const rows: string[][] = [];
+    if (!entry) return null;
+    const { tableEl, title: regTitle } = entry;
+    const schema = this.getSchema(tableId);
+    const title = (schema.customTitle || fallbackTitle || regTitle || tableId.replace(/_/g, ' ')).trim();
+    const roleLabel = this.getPortalRoleLabel();
+    const roleSlug = this.portalRole() || 'school';
+    const safeName = title.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || tableId;
+    const dateStamp = new Date().toISOString().slice(0, 10);
+    const safeBaseName = `${roleSlug}_${safeName}_${dateStamp}`;
+
     const headerRow = tableEl.querySelector('thead tr');
+    const keptColIndices: number[] = [];
+    const headers: string[] = [];
+    const skipHeaderLabels = new Set(['actions', 'action', 'quick actions', 'remove']);
+
     if (headerRow) {
-      const headers: string[] = [];
-      Array.from(headerRow.children).forEach((th) => {
+      Array.from(headerRow.children).forEach((th, idx) => {
         const el = th as HTMLElement;
         if (el.style.display === 'none') return;
         const text = (el.textContent || '').replace(/\s+/g, ' ').trim();
-        if (text.toLowerCase() === 'actions' || text.toLowerCase() === 'action' || text.toLowerCase() === 'quick actions') return;
-        headers.push(text);
+        if (skipHeaderLabels.has(text.toLowerCase())) return;
+        keptColIndices.push(idx);
+        headers.push(text || `Column ${idx + 1}`);
       });
-      if (headers.length > 0) rows.push(headers);
     }
 
-    const bodyRows = tableEl.querySelectorAll('tbody tr');
+    const rows: string[][] = [];
+    const cards: PdfGenericCardEntry[] = [];
+    const bodyRows = Array.from(tableEl.querySelectorAll('tbody tr')) as HTMLTableRowElement[];
+
     bodyRows.forEach((tr) => {
+      if (tr.hasAttribute('data-scs-row-detail')) return;
       const cells = Array.from(tr.children) as HTMLElement[];
-      if (cells.length === 1 && cells[0].hasAttribute('colspan')) return;
-      const line: string[] = [];
-      const headerThs = headerRow ? Array.from(headerRow.children) : [];
-      cells.forEach((td, i) => {
-        if (td.style.display === 'none') return;
-        const th = headerThs[i] as HTMLElement | undefined;
-        const thLabel = (th?.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
-        if (thLabel === 'actions' || thLabel === 'action' || thLabel === 'quick actions') return;
-        const clone = td.cloneNode(true) as HTMLElement;
-        clone.querySelectorAll('[data-scs-ignore-export]').forEach((n) => n.remove());
-        line.push((clone.textContent || '').replace(/\s+/g, ' ').trim());
+      if (cells.length === 1 && (cells[0].hasAttribute('colspan') || cells[0].hasAttribute('data-scs-empty-row'))) {
+        return;
+      }
+
+      const rowValues: string[] = [];
+      const cardFields: Array<{ label: string; value: string }> = [];
+
+      if (keptColIndices.length > 0) {
+        keptColIndices.forEach((colIdx, hPos) => {
+          const td = cells[colIdx];
+          if (!td || td.style.display === 'none') {
+            rowValues.push('');
+            return;
+          }
+          const val = this.extractCellExportText(td);
+          rowValues.push(val);
+          cardFields.push({
+            label: headers[hPos] || `Field ${hPos + 1}`,
+            value: val || '-'
+          });
+        });
+      } else {
+        cells.forEach((td, idx) => {
+          if (td.style.display === 'none') return;
+          const val = this.extractCellExportText(td);
+          rowValues.push(val);
+          cardFields.push({
+            label: `Field ${idx + 1}`,
+            value: val || '-'
+          });
+        });
+      }
+
+      if (rowValues.length === 0) return;
+      rows.push(rowValues);
+
+      const resolvedLabel = (tr.getAttribute('data-scs-resolved-label') || '').trim();
+      const nonEmptyVals = rowValues.filter((v) => v && v !== '—' && v !== '-');
+      const cardTitle = resolvedLabel || nonEmptyVals[0] || `Record #${rows.length}`;
+      const statusField = cardFields.find((f) => /status|grade|result|fee|state/i.test(f.label));
+
+      cards.push({
+        title: cardTitle,
+        subtitle: `${roleLabel} | ${title} | Record #${rows.length}`,
+        badgeText: statusField?.value && statusField.value !== '-' ? statusField.value : `#${rows.length}`,
+        fields: cardFields
       });
-      if (line.length > 0) rows.push(line);
     });
 
-    const csv = rows
+    return {
+      title,
+      roleLabel,
+      roleSlug,
+      safeBaseName,
+      headers,
+      rows,
+      cards
+    };
+  }
+
+  exportTableCsv(tableId: string, fallbackTitle?: string): void {
+    const extracted = this.extractVisibleTableData(tableId, fallbackTitle);
+    if (!extracted || typeof document === 'undefined') return;
+    const csvLines: string[][] = [];
+    if (extracted.headers.length > 0) {
+      csvLines.push(extracted.headers);
+    }
+    csvLines.push(...extracted.rows);
+    const csv = csvLines
       .map((r) => r.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(','))
       .join('\n');
 
-    if (typeof document === 'undefined') return;
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    const safeName = (fallbackTitle || title || tableId).toLowerCase().replace(/[^a-z0-9]+/g, '_');
     a.href = url;
-    a.download = `${safeName}_export.csv`;
+    a.download = `${extracted.safeBaseName}.csv`;
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  exportTablePdf(tableId: string, fallbackTitle?: string): void {
+    const extracted = this.extractVisibleTableData(tableId, fallbackTitle);
+    if (!extracted) return;
+    downloadStudentsTablePdf({
+      title: `${extracted.title} (Row & Column Register)`,
+      subtitle: `${extracted.roleLabel} | ${extracted.rows.length} Record(s) | ${extracted.headers.length} Column(s)`,
+      headers: extracted.headers,
+      rows: extracted.rows,
+      filename: `${extracted.safeBaseName}_table.pdf`,
+      footerLabel: `SoftCode School ERP | ${extracted.roleLabel} | Table PDF`,
+      emptyMessage: 'No records found in this table view.'
+    });
+  }
+
+  exportTableCardsPdf(tableId: string, fallbackTitle?: string): void {
+    const extracted = this.extractVisibleTableData(tableId, fallbackTitle);
+    if (!extracted) return;
+    downloadTableCardsPdf({
+      title: `${extracted.title} (Card / Widget-Wise)`,
+      subtitle: `${extracted.roleLabel} | ${extracted.cards.length} Record Card(s) | ${extracted.headers.length} Field(s) Each`,
+      cards: extracted.cards,
+      filename: `${extracted.safeBaseName}_cards.pdf`,
+      footerLabel: `SoftCode School ERP | ${extracted.roleLabel} | Cards PDF`,
+      emptyMessage: 'No records found in this table view.'
+    });
   }
 
   getSummaryBadge(tableId: string, builtInCount: number): { hiddenCount: number; customCount: number; renamedCount: number; customRowCount: number } {

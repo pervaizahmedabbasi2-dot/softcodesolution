@@ -84,7 +84,7 @@ import { SchoolTableSchemaService, SchoolCustomColumn, TableColumnPositionOption
 import { PdfStudentCardEntry, downloadStudentsCardsPdf, downloadStudentsTablePdf } from '../services/school-pdf-export.util';
 import { PasskeyManagerComponent } from '../../../auth_security/passkey-manager/passkey-manager.component';
 
-export type SchoolDashboardTab = 'overview' | 'stage_wise' | 'feed' | 'events' | 'students' | 'teachers' | 'admissions' | 'attendance' | 'finance' | 'invoices' | 'expenses' | 'payment_gateway' | 'transport' | 'library' | 'exams' | 'timetable' | 'hostel' | 'labs' | 'alumni' | 'portals' | 'reports' | 'settings' | 'audit' | 'lesson_plans' | 'appraisals' | 'inspections' | 'exam_moderation' | 'parent_complaints' | 'substitutions' | 'syllabus' | 'safeguarding' | 'directives';
+export type SchoolDashboardTab = 'overview' | 'stage_wise' | 'feed' | 'events' | 'students' | 'teachers' | 'admissions' | 'attendance' | 'finance' | 'invoices' | 'expenses' | 'payment_gateway' | 'transport' | 'library' | 'exams' | 'timetable' | 'hostel' | 'labs' | 'alumni' | 'portals' | 'reports' | 'visitors' | 'assets' | 'settings' | 'audit' | 'lesson_plans' | 'appraisals' | 'inspections' | 'exam_moderation' | 'parent_complaints' | 'substitutions' | 'syllabus' | 'safeguarding' | 'directives';
 export type SchoolPortalRole = 'owner' | 'principal' | 'teacher' | 'student' | 'parent' | 'accountant';
 
 export interface SchoolAuditTrailRecord {
@@ -882,6 +882,49 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
+  admissionViewMode: 'cards' | 'table' = 'table';
+
+  setAdmissionViewMode(mode: 'cards' | 'table'): void {
+    this.admissionViewMode = mode;
+    this.cdr.detectChanges();
+  }
+
+  transportViewMode: 'cards' | 'table' = 'table';
+  setTransportViewMode(mode: 'cards' | 'table'): void {
+    this.transportViewMode = mode;
+    this.cdr.detectChanges();
+  }
+
+  hostelViewMode: 'cards' | 'table' = 'table';
+  setHostelViewMode(mode: 'cards' | 'table'): void {
+    this.hostelViewMode = mode;
+    this.cdr.detectChanges();
+  }
+
+  alumniViewMode: 'cards' | 'table' = 'table';
+  setAlumniViewMode(mode: 'cards' | 'table'): void {
+    this.alumniViewMode = mode;
+    this.cdr.detectChanges();
+  }
+
+  eventsViewMode: 'cards' | 'table' = 'table';
+  setEventsViewMode(mode: 'cards' | 'table'): void {
+    this.eventsViewMode = mode;
+    this.cdr.detectChanges();
+  }
+
+  homeworkViewMode: 'cards' | 'table' = 'table';
+  setHomeworkViewMode(mode: 'cards' | 'table'): void {
+    this.homeworkViewMode = mode;
+    this.cdr.detectChanges();
+  }
+
+  leaveViewMode: 'cards' | 'table' = 'table';
+  setLeaveViewMode(mode: 'cards' | 'table'): void {
+    this.leaveViewMode = mode;
+    this.cdr.detectChanges();
+  }
+
   toggleStudentExportMenu(): void {
     this.isStudentExportMenuOpen = !this.isStudentExportMenuOpen;
     this.cdr.detectChanges();
@@ -986,6 +1029,24 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
     const cols = this.getMergedStudentCustomColumns();
     if (cols.length === 0) return [];
     const vals = this.getStudentCustomCellValues(student);
+    return cols.map((c) => {
+      const raw = vals[c.id];
+      const val = raw !== undefined && String(raw).trim() !== '' ? String(raw).trim() : (c.defaultValue || '—');
+      return { id: c.id, label: c.label, value: val };
+    });
+  }
+
+  getAdmissionCustomFields(adm: AdmissionRecord): Array<{ id: string; label: string; value: string }> {
+    this.tableSchemaService.schemaRevision();
+    const schema = this.tableSchemaService.getSchema('owner_admissions');
+    const cols = (schema.customColumns || []).filter(
+      (c) => !c.scope || c.scope === 'table' || c.scope === 'both'
+    );
+    if (cols.length === 0) return [];
+    const vals = {
+      ...(adm.applicant ? schema.customCells[adm.applicant] || {} : {}),
+      ...(adm.id ? schema.customCells[adm.id] || {} : {})
+    };
     return cols.map((c) => {
       const raw = vals[c.id];
       const val = raw !== undefined && String(raw).trim() !== '' ? String(raw).trim() : (c.defaultValue || '—');
@@ -2200,6 +2261,8 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
     portals: 1,
     reports: 1,
     alumni: 1,
+    visitors: 1,
+    assets: 1,
     settings: 1,
     audit: 1,
     lesson_plans: 1,
@@ -11666,6 +11729,21 @@ INSTRUCTIONS:
     this.cdr.detectChanges();
   }
 
+  toggleAdmissionRow(id: string, event?: MouseEvent): void {
+    if (event) {
+      const target = event.target as HTMLElement;
+      if (target.closest('button') || target.closest('a') || target.closest('input') || target.closest('select')) {
+        return;
+      }
+    }
+    this.expandedAdmissionId = this.expandedAdmissionId === id ? null : id;
+    this.cdr.detectChanges();
+  }
+
+  isAdmissionExpanded(id: string): boolean {
+    return this.expandedAdmissionId === id;
+  }
+
   openAdmissionDossierModal(adm: AdmissionRecord): void {
     this.selectedAdmissionForDossier = adm;
     this.isAdmissionDossierModalOpen = true;
@@ -13314,11 +13392,12 @@ INSTRUCTIONS:
         };
     this.schoolStaff = [created, ...this.schoolStaff];
     if (payload.customValues && Object.keys(payload.customValues).length > 0) {
-      this.tableSchemaService.submitFormCustomInputs('attendance_roster_staff', {
-        rowKey: created.id,
-        rowLabel: created.name,
-        values: payload.customValues
-      });
+      this.tableSchemaService.submitFormCustomInputs(
+        'attendance_roster_staff',
+        created.id,
+        payload.customValues,
+        { rowLabel: created.name }
+      );
     }
     this.saveStateToStorage();
     this.showToast(`Campus staff member ${created.name} added (${created.empCode}). Enroll their face photo to activate gate scanning.`, 'success');
@@ -13371,11 +13450,12 @@ INSTRUCTIONS:
         };
     this.schoolPrincipals = [created, ...this.schoolPrincipals];
     if (payload.customValues && Object.keys(payload.customValues).length > 0) {
-      this.tableSchemaService.submitFormCustomInputs('attendance_roster_principals', {
-        rowKey: created.id,
-        rowLabel: created.name,
-        values: payload.customValues
-      });
+      this.tableSchemaService.submitFormCustomInputs(
+        'attendance_roster_principals',
+        created.id,
+        payload.customValues,
+        { rowLabel: created.name }
+      );
     }
     this.saveStateToStorage();
     this.showToast(`Principal profile ${created.name} added (${created.empCode}). Enroll their face photo to activate gate scanning.`, 'success');
