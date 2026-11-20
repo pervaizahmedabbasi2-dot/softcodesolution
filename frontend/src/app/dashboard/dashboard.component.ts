@@ -2301,15 +2301,19 @@ export class DashboardComponent implements OnInit, OnDestroy {
     } else if (modId === 'overview' && this.activeSchoolRole !== 'principal' && this.activeSchoolRole !== 'accountant') {
       localStorage.setItem('activeSchoolRole', 'owner');
     }
+    const wasAlreadyInSchoolHub = this.activeView === 'school-hub' || this.activeView.startsWith('school-') || this.activeView === 'school_college';
+    const subModuleChanged = this.activePreviewSubModule !== modId;
     this.activePreviewSubModule = modId;
     this.activeView = 'school-hub';
-    this.closeSidebarOnMobile();
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('scs-school-action', { detail: modId }));
+    if (this.isSidebarOpen && typeof window !== 'undefined' && window.innerWidth < 768) {
+      this.isSidebarOpen = false;
     }
     try {
       this.cdr.detectChanges();
     } catch {}
+    if (typeof window !== 'undefined' && (!wasAlreadyInSchoolHub || !subModuleChanged)) {
+      window.dispatchEvent(new CustomEvent('scs-school-action', { detail: modId }));
+    }
   }
 
   launchSchoolPreviewDirect(roleKey: RbacRoleKey = 'owner'): void {
@@ -6681,7 +6685,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     // 20. School Settings
     if (id.includes('setting') || id.includes('config')) {
-      return 'bg-gradient-to-tr from-slate-700 via-slate-800 to-slate-900 text-white shadow-2xs group-hover:scale-105';
+      return 'bg-gradient-to-tr from-emerald-600 via-teal-600 to-emerald-700 text-white shadow-2xs group-hover:scale-105';
     }
 
     // Default / Hub / Overview
@@ -6726,7 +6730,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
     // Developer Hub / Webhooks
     if (key === 'webhooks' || key.includes('webhook') || key.includes('developer')) {
-      return 'bg-gradient-to-tr from-slate-800 via-slate-900 to-slate-950 text-white border border-white/30 shadow-md shadow-slate-900/30 group-hover:scale-105';
+      return 'bg-gradient-to-tr from-emerald-600 via-teal-600 to-cyan-600 text-white border border-white/30 shadow-md shadow-emerald-600/30 group-hover:scale-105';
     }
     // Data Protection
     if (key === 'data-protection' || key.includes('data')) {
@@ -6770,7 +6774,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
     // Settings
     if (key === 'settings' || key === 'settings-list' || key.includes('setting')) {
-      return 'bg-gradient-to-tr from-slate-700 via-slate-800 to-slate-900 text-white border border-white/30 shadow-md shadow-slate-800/30 group-hover:scale-105';
+      return 'bg-gradient-to-tr from-emerald-600 via-teal-600 to-emerald-700 text-white border border-white/30 shadow-md shadow-emerald-600/30 group-hover:scale-105';
     }
     // Global Edge
     if (key === 'global-edge' || key.includes('edge')) {
@@ -6865,7 +6869,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
     // Manufacturing & Factory
     if (key.includes('manufacturing') || key.includes('factory')) {
-      return 'bg-gradient-to-tr from-slate-700 via-zinc-800 to-slate-900 text-white border border-white/30 shadow-md shadow-slate-700/30 group-hover:scale-105';
+      return 'bg-gradient-to-tr from-emerald-600 via-teal-600 to-cyan-700 text-white border border-white/30 shadow-md shadow-emerald-600/30 group-hover:scale-105';
     }
     // Logistics & Transport
     if (key.includes('logistics') || key.includes('transport')) {

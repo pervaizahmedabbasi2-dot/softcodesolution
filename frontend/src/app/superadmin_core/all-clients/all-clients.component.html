@@ -102,10 +102,10 @@
           {{ actionMessage }}
         </div>
 
-        <div class="bg-white rounded-3xl border border-slate-200/90 shadow-xs overflow-hidden">
-          <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+        <div class="rounded-[28px] border border-white/80 bg-gradient-to-br from-white/95 via-emerald-50/35 to-slate-50/90 backdrop-blur-xl shadow-[0_20px_50px_-12px_rgba(16,185,129,0.16),0_8px_20px_-6px_rgba(0,0,0,0.05),inset_0_1px_2px_rgba(255,255,255,0.95)] overflow-hidden">
+          <div class="px-6 py-4 bg-gradient-to-r from-emerald-50/80 via-white to-teal-50/60 border-b border-emerald-100/90 flex items-center justify-between">
             <div class="flex items-center gap-3">
-              <div class="w-9 h-9 rounded-xl bg-slate-900 flex items-center justify-center">
+              <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-600 shadow-sm shadow-emerald-500/25 flex items-center justify-center">
                 <lucide-icon [name]="icons.Database" class="w-4 h-4 text-white"></lucide-icon>
               </div>
               <div>
@@ -153,7 +153,7 @@
               <lucide-icon [name]="icons.Users" class="w-7 h-7 text-slate-300"></lucide-icon>
             </div>
             <p class="text-slate-600 font-black uppercase tracking-widest text-sm">No Records Found</p>
-            <button (click)="loadSuperadminClients(true)" class="mt-5 px-6 py-3 rounded-xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all">Reload</button>
+            <button (click)="loadSuperadminClients(true)" class="mt-5 px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-[10px] font-black uppercase tracking-widest shadow-sm transition-all">Reload</button>
           </div>
 
           <div *ngIf="superadminClients.length > 0">
@@ -222,13 +222,13 @@
               </div>
             </div>
 
-            <!-- Desktop Obsidian-Header Master Table (Matching School Standard) -->
+            <!-- Desktop Frosted Emerald-White 3D Master Table -->
             <div class="hidden md:block overflow-x-auto">
               <table class="w-full text-left text-xs">
-              <thead class="bg-slate-900 text-white font-black uppercase text-[10px] tracking-wider">
+              <thead class="bg-gradient-to-r from-emerald-50/90 via-slate-50 to-teal-50/80 text-slate-700 border-b border-emerald-100/90 font-black uppercase text-[10px] tracking-wider">
                 <tr>
                   <th class="px-3 py-3.5 w-10 text-center">
-                    <input type="checkbox" [checked]="isAllSelected()" (change)="toggleSelectAll()" title="Select all clients" class="rounded border-slate-500 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer">
+                    <input type="checkbox" [checked]="isAllSelected()" (change)="toggleSelectAll()" title="Select all clients" class="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer">
                   </th>
                   <th class="px-4 py-3.5 w-10">#</th>
                   <th class="px-5 py-3.5">Client</th>
@@ -289,7 +289,7 @@
                   <td class="px-5 py-4"><p class="text-xs font-bold text-slate-500 whitespace-nowrap">{{ client.created_at||'—' }}</p></td>
                   <td class="px-5 py-4">
                     <div class="flex items-center justify-end gap-1.5">
-                      <button (click)="openClientDetail(client)" class="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-indigo-700 text-white text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer shadow-2xs">
+                      <button (click)="openClientDetail(client)" class="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer shadow-2xs">
                         <lucide-icon [name]="icons.Eye" class="w-3.5 h-3.5"></lucide-icon>
                       </button>
                       <button *ngIf="client.status!=='approved'" (click)="requestApproveClient(client)" [disabled]="isClientActionBusy"
@@ -318,10 +318,10 @@
         </div>
 
         <!-- Floating Bulk Action Drawer -->
-        <div *ngIf="getSelectedCount() > 0" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] flex flex-wrap items-center gap-3 px-5 py-3 rounded-2xl bg-slate-950 text-white shadow-2xl border border-white/10 animate-fade-in">
-          <div class="flex items-center gap-2 pr-3 border-r border-slate-800">
-            <span class="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-pulse"></span>
-            <span class="text-xs font-bold whitespace-nowrap">{{ getSelectedCount() }} Clients Selected</span>
+        <div *ngIf="getSelectedCount() > 0" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] flex flex-wrap items-center gap-3 px-5 py-3 rounded-2xl bg-gradient-to-r from-white/95 via-emerald-50/90 to-teal-50/95 backdrop-blur-2xl text-slate-900 shadow-[0_20px_50px_-12px_rgba(16,185,129,0.28),0_8px_20px_-6px_rgba(0,0,0,0.12)] border border-emerald-200/80 animate-fade-in">
+          <div class="flex items-center gap-2 pr-3 border-r border-emerald-200">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span class="text-xs font-black whitespace-nowrap text-slate-900">{{ getSelectedCount() }} Clients Selected</span>
           </div>
           <button (click)="requestBulkApprove()" class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs">
             <lucide-icon [name]="icons.CheckCircle2" class="w-3.5 h-3.5"></lucide-icon>
@@ -331,11 +331,11 @@
             <lucide-icon [name]="icons.Lock" class="w-3.5 h-3.5"></lucide-icon>
             Suspend
           </button>
-          <button (click)="exportClientsToCsv()" class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold flex items-center gap-1.5 transition-all">
+          <button (click)="exportClientsToCsv()" class="px-3.5 py-1.5 rounded-xl bg-white hover:bg-emerald-50 text-slate-700 border border-slate-200 text-xs font-bold flex items-center gap-1.5 transition-all">
             <lucide-icon [name]="icons.Download" class="w-3.5 h-3.5"></lucide-icon>
             Export CSV
           </button>
-          <button (click)="clearSelection()" class="p-1.5 text-slate-400 hover:text-white transition-colors ml-1" title="Deselect All">
+          <button (click)="clearSelection()" class="p-1.5 text-slate-400 hover:text-slate-700 transition-colors ml-1" title="Deselect All">
             <lucide-icon [name]="icons.X" class="w-4 h-4"></lucide-icon>
           </button>
         </div>

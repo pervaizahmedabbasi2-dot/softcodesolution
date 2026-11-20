@@ -92,7 +92,7 @@
       <button *ngFor="let s of sectors"
               (click)="selectedSector = s.id"
               class="px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer"
-              [class.bg-slate-900]="selectedSector === s.id"
+              [class.bg-emerald-600]="selectedSector === s.id"
               [class.text-white]="selectedSector === s.id"
               [class.shadow-sm]="selectedSector === s.id"
               [class.bg-slate-100]="selectedSector !== s.id"

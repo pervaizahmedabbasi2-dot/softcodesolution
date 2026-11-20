@@ -152,6 +152,30 @@ aside nav::-webkit-scrollbar-thumb {
   box-shadow: 0 1px 4px rgba(79, 70, 229, 0.3) !important;
 }
 
+[data-scs-table-scroll="1"],
+.custom-scrollbar {
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y;
+}
+
+.modal-clean-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.45) transparent;
+}
+.modal-clean-scroll::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.modal-clean-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.modal-clean-scroll::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.45);
+  border-radius: 9999px;
+}
+
 .sidebar-scroll::-webkit-scrollbar-thumb:hover,
 .custom-scrollbar::-webkit-scrollbar-thumb:hover,
 .pretty-scrollbar::-webkit-scrollbar-thumb:hover,
@@ -1311,9 +1335,9 @@ html[lang="vi"] p, html[lang="vi"] li, html[lang="ms"] p, html[lang="ms"] li, ht
 .fixed.inset-0.bg-slate-950\/65,
 .fixed.inset-0.bg-slate-950\/70,
 .fixed.inset-0.bg-slate-900\/60 {
-  background-color: rgba(15, 23, 42, 0.42) !important;
-  backdrop-filter: blur(16px) saturate(160%) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(160%) !important;
+  background-color: rgba(15, 23, 42, 0.38) !important;
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(6px) !important;
 }
 
 /* Universal HiOS Modal Card / Container */
@@ -1453,9 +1477,9 @@ input[type="password"]::-webkit-contacts-auto-fill-button {
    ========================================================================== */
 
 .sidebar-slomo-transition {
-  transition: transform 1250ms cubic-bezier(0.22, 1, 0.36, 1), 
-              margin 1250ms cubic-bezier(0.22, 1, 0.36, 1),
-              opacity 1000ms cubic-bezier(0.22, 1, 0.36, 1) !important;
+  transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1), 
+              margin 280ms cubic-bezier(0.22, 1, 0.36, 1),
+              opacity 220ms cubic-bezier(0.22, 1, 0.36, 1) !important;
 }
 
 /* ==========================================================================

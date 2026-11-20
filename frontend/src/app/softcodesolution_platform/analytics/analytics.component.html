@@ -44,7 +44,7 @@
               {{ period }}
             </button>
           </div>
-          <button type="button" class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-[10px] font-black uppercase tracking-widest shadow-md transition-all cursor-pointer">
+          <button type="button" class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-[10px] font-black uppercase tracking-widest shadow-[0_8px_18px_-6px_rgba(16,185,129,0.45)] transition-all cursor-pointer">
             <lucide-icon [name]="icons.Download" class="w-3.5 h-3.5"></lucide-icon>
             Export CSV
           </button>
@@ -169,50 +169,50 @@
         </div>
       </div>
 
-      <!-- Cohort Analysis / Tenant Health -->
-      <div class="bg-slate-900 rounded-3xl border border-slate-800 shadow-xl p-6 text-white flex flex-col relative overflow-hidden">
-        <div class="absolute -right-8 -top-8 w-36 h-36 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
+      <!-- Cohort Analysis / Tenant Health (Frosted Emerald-White 3D Card) -->
+      <div class="rounded-[28px] border border-white/80 bg-gradient-to-br from-white/95 via-emerald-50/45 to-slate-50/90 backdrop-blur-2xl shadow-[0_20px_50px_-12px_rgba(16,185,129,0.18),0_8px_20px_-6px_rgba(0,0,0,0.06),inset_0_1px_2px_rgba(255,255,255,0.95)] p-6 text-slate-900 flex flex-col relative overflow-hidden">
+        <div class="absolute -right-8 -top-8 w-36 h-36 bg-emerald-200/40 rounded-full blur-3xl pointer-events-none"></div>
         <div class="flex justify-between items-center mb-6 relative z-10">
           <div>
-            <h3 class="text-lg font-black text-white tracking-tight">Platform Health Index</h3>
-            <p class="text-xs text-slate-400 font-medium mt-0.5">Tenant Engagement Score (TES)</p>
+            <h3 class="text-lg font-black text-slate-900 tracking-tight">Platform Health Index</h3>
+            <p class="text-xs text-slate-500 font-medium mt-0.5">Tenant Engagement Score (TES)</p>
           </div>
-          <div class="w-8 h-8 rounded-xl bg-slate-800 border border-slate-700 text-indigo-400 flex items-center justify-center">
+          <div class="w-9 h-9 rounded-xl bg-emerald-100/80 border border-emerald-200 text-emerald-700 flex items-center justify-center shadow-2xs">
             <lucide-icon [name]="icons.Activity" class="w-4 h-4"></lucide-icon>
           </div>
         </div>
 
-        <div class="flex-1 flex flex-col justify-center items-center">
+        <div class="flex-1 flex flex-col justify-center items-center relative z-10">
           <!-- Circular Progress -->
           <div class="relative w-40 h-40 flex items-center justify-center">
             <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-              <circle cx="50" cy="50" r="45" fill="none" stroke="#1e293b" stroke-width="8" />
-              <circle cx="50" cy="50" r="45" fill="none" stroke="#6366f1" stroke-width="8" stroke-dasharray="283" stroke-dashoffset="34" class="transition-all duration-1000" />
+              <circle cx="50" cy="50" r="45" fill="none" stroke="#d1fae5" stroke-width="8" />
+              <circle cx="50" cy="50" r="45" fill="none" stroke="#10b981" stroke-width="8" stroke-dasharray="283" stroke-dashoffset="34" class="transition-all duration-1000" />
             </svg>
             <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
-              <span class="text-4xl font-black">88</span>
-              <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Excellent</span>
+              <span class="text-4xl font-black text-slate-900">88</span>
+              <span class="text-[9px] font-bold text-emerald-700 uppercase tracking-widest mt-1">Excellent</span>
             </div>
           </div>
         </div>
         
-        <div class="mt-8 space-y-4">
+        <div class="mt-8 space-y-4 relative z-10">
           <div>
             <div class="flex justify-between text-[10px] font-bold uppercase tracking-widest mb-1.5">
-              <span class="text-slate-400">Power Users (>5h/day)</span>
-              <span class="text-white">45%</span>
+              <span class="text-slate-500">Power Users (&gt;5h/day)</span>
+              <span class="text-slate-900 font-black">45%</span>
             </div>
-            <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
-              <div class="h-full bg-emerald-400 rounded-full" style="width: 45%"></div>
+            <div class="w-full h-1.5 bg-emerald-100 rounded-full overflow-hidden">
+              <div class="h-full bg-emerald-500 rounded-full" style="width: 45%"></div>
             </div>
           </div>
           <div>
             <div class="flex justify-between text-[10px] font-bold uppercase tracking-widest mb-1.5">
-              <span class="text-slate-400">At-Risk Accounts</span>
-              <span class="text-white">3.2%</span>
+              <span class="text-slate-500">At-Risk Accounts</span>
+              <span class="text-slate-900 font-black">3.2%</span>
             </div>
-            <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
-              <div class="h-full bg-amber-400 rounded-full" style="width: 15%"></div>
+            <div class="w-full h-1.5 bg-amber-100 rounded-full overflow-hidden">
+              <div class="h-full bg-amber-500 rounded-full" style="width: 15%"></div>
             </div>
           </div>
         </div>

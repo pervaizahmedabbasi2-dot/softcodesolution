@@ -71,7 +71,7 @@ import {
                       type="button"
                       (click)="setManagerTab('add')"
                       class="px-3 py-1.5 rounded-lg text-[11px] font-bold cursor-pointer inline-flex items-center gap-1 transition-colors"
-                      [class]="managerTab() === 'add' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
+                      [class]="managerTab() === 'add' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
                     >
                       <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">add</mat-icon>
                       <span>Add Field</span>
@@ -218,7 +218,7 @@ import {
                                 type="button"
                                 (click)="saveSelectedCustomEdit(selCol.id)"
                                 [disabled]="!editColLabel().trim()"
-                                class="px-3.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 disabled:opacity-40 text-white text-[11px] font-bold cursor-pointer inline-flex items-center gap-1"
+                                class="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-40 text-white text-[11px] font-bold cursor-pointer inline-flex items-center gap-1"
                               >
                                 <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">check</mat-icon>
                                 <span>Save Changes</span>

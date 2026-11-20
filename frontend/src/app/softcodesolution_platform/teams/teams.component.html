@@ -134,7 +134,7 @@
     <!-- Desktop Members Table (Desktop View) -->
     <div class="hidden md:block overflow-x-auto">
       <table class="w-full text-left text-xs text-slate-600">
-        <thead class="bg-slate-900 text-white font-black uppercase tracking-wider text-[10px]">
+        <thead class="bg-gradient-to-r from-emerald-50/90 via-slate-50 to-teal-50/80 text-slate-700 border-b border-emerald-100/90 font-black uppercase tracking-wider text-[10px]">
           <tr>
             <th class="px-6 py-4">Personnel</th>
             <th class="px-6 py-4">Department & Role</th>
@@ -212,12 +212,12 @@
   <!-- Provision Modal -->
   <div *ngIf="isInviteOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
     <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden transform transition-all">
-      <div class="px-6 py-5 bg-slate-900 text-white flex items-center justify-between">
+      <div class="px-6 py-5 bg-gradient-to-r from-emerald-50/90 via-white to-teal-50/80 border-b border-emerald-100/90 text-slate-900 flex items-center justify-between">
         <div>
-          <h3 class="text-base font-bold">Provision Enterprise Access</h3>
-          <p class="text-xs text-slate-400 mt-0.5">Send cryptographically signed onboarding invitation</p>
+          <h3 class="text-base font-black text-slate-900">Provision Enterprise Access</h3>
+          <p class="text-xs text-slate-500 mt-0.5">Send cryptographically signed onboarding invitation</p>
         </div>
-        <button (click)="closeInviteModal()" class="text-slate-400 hover:text-white p-1 rounded-lg">
+        <button (click)="closeInviteModal()" class="text-slate-400 hover:text-slate-700 p-1 rounded-lg">
           <lucide-icon [name]="icons.X" class="w-5 h-5"></lucide-icon>
         </button>
       </div>

@@ -86,11 +86,11 @@
     </div>
   </div>
 
-  <!-- Obsidian Header License Registry Table -->
-  <div class="bg-white rounded-[24px] border border-slate-200/90 overflow-hidden shadow-xs">
+  <!-- Frosted Emerald-White 3D License Registry Table -->
+  <div class="rounded-[24px] border border-white/80 bg-gradient-to-br from-white/95 via-emerald-50/35 to-slate-50/90 backdrop-blur-xl shadow-[0_14px_36px_-10px_rgba(16,185,129,0.16),0_4px_12px_-4px_rgba(0,0,0,0.04)] overflow-hidden">
     <div class="overflow-x-auto">
       <table class="w-full text-left text-sm whitespace-nowrap">
-        <thead class="bg-slate-900 text-white uppercase text-[10px] font-black tracking-wider">
+        <thead class="bg-gradient-to-r from-emerald-50/90 via-slate-50 to-teal-50/80 text-slate-700 border-b border-emerald-100/90 uppercase text-[10px] font-black tracking-wider">
           <tr>
             <th class="px-6 py-4">License Key</th>
             <th class="px-6 py-4">Client</th>
@@ -175,17 +175,17 @@
     <div class="relative flex flex-col w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200 animate-scale-up" (click)="$event.stopPropagation()">
       
       <!-- Modal Header -->
-      <div class="px-6 py-5 bg-gradient-to-r from-slate-950 to-indigo-950 text-white flex items-center justify-between">
+      <div class="px-6 py-5 bg-gradient-to-r from-emerald-50/90 via-white to-teal-50/80 border-b border-emerald-100/90 text-slate-900 flex items-center justify-between">
         <div class="flex items-center gap-2.5">
-          <div class="w-8 h-8 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center border border-indigo-400/30">
+          <div class="w-8 h-8 rounded-xl bg-emerald-100/80 text-emerald-700 flex items-center justify-center border border-emerald-200/80">
             <lucide-icon [name]="icons.Key || 'key'" class="w-4 h-4"></lucide-icon>
           </div>
           <div>
-            <h3 class="text-sm font-black uppercase tracking-wider">Cryptographic License Provisioner</h3>
-            <p class="text-[11px] text-slate-400">Ed25519 Hardware Signature & Device Binding</p>
+            <h3 class="text-sm font-black uppercase tracking-wider text-slate-900">Cryptographic License Provisioner</h3>
+            <p class="text-[11px] text-slate-500">Ed25519 Hardware Signature & Device Binding</p>
           </div>
         </div>
-        <button (click)="closeGenerateModal()" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors">
+        <button (click)="closeGenerateModal()" class="p-1.5 rounded-lg bg-white hover:bg-emerald-50 text-slate-500 hover:text-slate-900 border border-slate-200 transition-colors">
           ✕
         </button>
       </div>
@@ -241,7 +241,7 @@
           <div>
             <label class="block font-bold text-slate-500 uppercase tracking-wider text-[10px] mb-1">Generated License Key</label>
             <div class="flex items-center gap-2">
-              <code class="flex-1 px-3 py-2.5 rounded-xl bg-slate-900 text-cyan-300 font-mono text-xs border border-slate-800 font-bold select-all break-all">{{ generatedKey }}</code>
+              <code class="flex-1 px-3 py-2.5 rounded-xl bg-gradient-to-br from-emerald-50/80 via-white to-slate-50 text-emerald-800 font-mono text-xs border border-emerald-200/90 font-bold select-all break-all shadow-2xs">{{ generatedKey }}</code>
             </div>
           </div>
 

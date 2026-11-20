@@ -37,8 +37,8 @@
         <div class="flex flex-wrap gap-2 max-h-[220px] overflow-y-auto scrollbar-thin">
           <button type="button" (click)="setModuleCatalogCategory('all')"
             class="flex items-center gap-2 px-3.5 py-2 rounded-xl border text-xs font-black transition-all cursor-pointer shadow-2xs"
-            [class.bg-slate-900]="moduleCatalogCategory === 'all'"
-            [class.border-slate-900]="moduleCatalogCategory === 'all'"
+            [class.bg-emerald-600]="moduleCatalogCategory === 'all'"
+            [class.border-emerald-600]="moduleCatalogCategory === 'all'"
             [class.text-white]="moduleCatalogCategory === 'all'"
             [class.bg-white]="moduleCatalogCategory !== 'all'"
             [class.border-slate-200]="moduleCatalogCategory !== 'all'"
@@ -126,7 +126,7 @@
           </div>
           <div class="flex items-center gap-2.5 shrink-0">
             <span class="hidden sm:inline-flex px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200 text-[10px] font-black text-slate-700 uppercase tracking-wider">{{ formatModuleCategory($any(m).category) }}</span>
-            <button type="button" (click)="openModuleCatalogEdit(m)" class="px-4 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-black text-slate-700 shadow-2xs hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all cursor-pointer">Edit</button><!-- SCS_MODULE_CATALOG_EDIT_BUTTON -->
+            <button type="button" (click)="openModuleCatalogEdit(m)" class="px-4 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-black text-slate-700 shadow-2xs hover:bg-emerald-600 hover:text-white hover:border-emerald-600 transition-all cursor-pointer">Edit</button><!-- SCS_MODULE_CATALOG_EDIT_BUTTON -->
           </div>
         </div>
       </div>

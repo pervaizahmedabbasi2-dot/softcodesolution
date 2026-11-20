@@ -6,7 +6,7 @@
     <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent"></div>
     <div class="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
       <div class="flex items-start sm:items-center gap-4">
-        <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-[20px] bg-gradient-to-br from-slate-900 via-indigo-900 to-indigo-700 text-white shadow-lg shadow-indigo-500/25 flex items-center justify-center shrink-0">
+        <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-[20px] bg-gradient-to-br from-emerald-500 via-teal-600 to-cyan-600 text-white shadow-lg shadow-emerald-500/25 flex items-center justify-center shrink-0">
           <lucide-icon [name]="icons.ShieldCheck" class="w-7 h-7"></lucide-icon>
         </div>
         <div>
@@ -109,7 +109,7 @@
 
     <div *ngIf="intruderLogs.length > 0" class="overflow-x-auto rounded-2xl border border-slate-200/80">
       <table class="w-full text-left border-collapse">
-        <thead class="bg-slate-900 text-white text-[10px] font-black uppercase tracking-wider">
+        <thead class="bg-gradient-to-r from-emerald-50/90 via-slate-50 to-teal-50/80 text-slate-700 border-b border-emerald-100/90 text-[10px] font-black uppercase tracking-wider">
           <tr>
             <th class="p-3.5">Camera Snapshot</th>
             <th class="p-3.5">Target Email & Owner</th>
@@ -274,13 +274,13 @@
   <!-- Two-Column Layout: IP Rules & Active Sessions -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
     <!-- IP Rules Firewall Manager -->
-    <div class="bg-white rounded-[24px] border border-slate-200/90 overflow-hidden shadow-xs space-y-0">
-      <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-900 text-white">
+    <div class="rounded-[24px] border border-white/80 bg-gradient-to-br from-white/95 via-emerald-50/35 to-slate-50/90 backdrop-blur-xl shadow-[0_14px_36px_-10px_rgba(16,185,129,0.16),0_4px_12px_-4px_rgba(0,0,0,0.04)] overflow-hidden space-y-0">
+      <div class="p-5 border-b border-emerald-100/90 flex items-center justify-between bg-gradient-to-r from-emerald-50/90 via-white to-teal-50/70 text-slate-900">
         <div>
-          <h3 class="text-sm font-black">IP Firewall & Access Control</h3>
-          <p class="text-[11px] text-slate-300">Allow or quarantine incoming IP ranges.</p>
+          <h3 class="text-sm font-black text-slate-900">IP Firewall & Access Control</h3>
+          <p class="text-[11px] text-slate-500">Allow or quarantine incoming IP ranges.</p>
         </div>
-        <button (click)="openIpModal()" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition-all shadow-sm">
+        <button (click)="openIpModal()" class="px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition-all shadow-sm">
           <lucide-icon [name]="icons.Plus" class="w-3.5 h-3.5"></lucide-icon>
           Add IP Rule
         </button>
@@ -306,13 +306,13 @@
     </div>
 
     <!-- Active Sessions Viewer -->
-    <div class="bg-white rounded-[24px] border border-slate-200/90 overflow-hidden shadow-xs space-y-0">
-      <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-900 text-white">
+    <div class="rounded-[24px] border border-white/80 bg-gradient-to-br from-white/95 via-emerald-50/35 to-slate-50/90 backdrop-blur-xl shadow-[0_14px_36px_-10px_rgba(16,185,129,0.16),0_4px_12px_-4px_rgba(0,0,0,0.04)] overflow-hidden space-y-0">
+      <div class="p-5 border-b border-emerald-100/90 flex items-center justify-between bg-gradient-to-r from-emerald-50/90 via-white to-teal-50/70 text-slate-900">
         <div>
-          <h3 class="text-sm font-black">Active Administrative Sessions</h3>
-          <p class="text-[11px] text-slate-300">Real-time authenticated operator tokens.</p>
+          <h3 class="text-sm font-black text-slate-900">Active Administrative Sessions</h3>
+          <p class="text-[11px] text-slate-500">Real-time authenticated operator tokens.</p>
         </div>
-        <span class="px-2.5 py-1 rounded-full bg-white/10 text-xs font-mono font-bold text-white tabular-nums">{{ activeSessions.length }} active</span>
+        <span class="px-2.5 py-1 rounded-full bg-emerald-100/80 border border-emerald-200/70 text-xs font-mono font-bold text-emerald-800 tabular-nums">{{ activeSessions.length }} active</span>
       </div>
 
       <div class="divide-y divide-slate-100">
@@ -372,7 +372,7 @@
 
       <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
         <button (click)="closeIpModal()" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800">Cancel</button>
-        <button (click)="saveIpRule()" [disabled]="!newIpRule.cidr" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white text-xs font-semibold rounded-lg shadow-xs transition-all">Add Rule</button>
+        <button (click)="saveIpRule()" [disabled]="!newIpRule.cidr" class="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-50 text-white text-xs font-semibold rounded-xl shadow-xs transition-all">Add Rule</button>
       </div>
     </div>
   </div>
@@ -417,11 +417,11 @@
         </button>
       </div>
 
-      <div class="bg-slate-900 text-slate-200 p-4 rounded-xl font-mono text-[11px] space-y-1">
-        <p class="text-emerald-400 font-bold">✓ Audit checksum: sha256:e8f9a28b...</p>
-        <p class="text-slate-400">Total Entries: 14,293 events logged</p>
-        <p class="text-slate-400">Timespan: Last 30 Days (Rolling Window)</p>
-        <p class="text-slate-400">Classification: Highly Confidential / Enterprise</p>
+      <div class="bg-gradient-to-br from-emerald-50/80 via-white to-slate-50 border border-emerald-200/80 text-slate-700 p-4 rounded-xl font-mono text-[11px] space-y-1 shadow-2xs">
+        <p class="text-emerald-700 font-bold">✓ Audit checksum: sha256:e8f9a28b...</p>
+        <p class="text-slate-600">Total Entries: 14,293 events logged</p>
+        <p class="text-slate-600">Timespan: Last 30 Days (Rolling Window)</p>
+        <p class="text-slate-600">Classification: Highly Confidential / Enterprise</p>
       </div>
 
       <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">

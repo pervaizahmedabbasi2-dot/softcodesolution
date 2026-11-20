@@ -113,7 +113,7 @@ export interface PasskeyItem {
           <button type="button"
                   (click)="enrollPasskey()"
                   [disabled]="enrolling() || sessionUpgradeRequired()"
-                  class="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-indigo-600 disabled:bg-slate-300 text-white text-xs font-extrabold transition-all cursor-pointer inline-flex items-center justify-center gap-2 shrink-0 shadow-xs">
+                  class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:bg-slate-300 text-white text-xs font-extrabold transition-all cursor-pointer inline-flex items-center justify-center gap-2 shrink-0 shadow-xs">
             <mat-icon class="!text-[17px] !w-[17px] !h-[17px]">{{ enrolling() ? 'hourglass_top' : 'add_circle' }}</mat-icon>
             <span>{{ enrolling() ? 'Waiting for Device...' : 'Add Passkey' }}</span>
           </button>

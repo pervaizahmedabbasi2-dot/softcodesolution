@@ -295,7 +295,7 @@ export class DashboardOverviewComponent {
     }
     // Manufacturing & Factory
     if (key.includes('manufacturing')) {
-      return 'bg-gradient-to-tr from-slate-700 via-zinc-800 to-slate-900 text-white shadow-slate-700/30';
+      return 'bg-gradient-to-tr from-emerald-600 via-teal-600 to-cyan-700 text-white shadow-emerald-600/30';
     }
     // Logistics & Transport
     if (key.includes('logistics')) {

@@ -36,7 +36,7 @@ interface DraftFormRow {
           <!-- Header -->
           <div class="px-4 sm:px-5 py-3.5 border-b border-slate-200/80 bg-slate-50/95 flex items-center justify-between gap-3">
             <div class="flex items-center gap-2.5 min-w-0">
-              <div class="w-8 h-8 rounded-xl bg-slate-900 text-white flex items-center justify-center shrink-0">
+              <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-600 text-white flex items-center justify-center shrink-0 shadow-xs">
                 <mat-icon class="!text-[17px] !w-[17px] !h-[17px]">table_chart</mat-icon>
               </div>
               <div class="min-w-0">
@@ -77,7 +77,7 @@ interface DraftFormRow {
                 type="button"
                 (click)="activeTab.set('columns')"
                 class="px-3 py-2 rounded-xl text-xs font-bold cursor-pointer transition-colors inline-flex items-center justify-center gap-1.5"
-                [class]="activeTab() === 'columns' ? 'bg-slate-900 text-white shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
+                [class]="activeTab() === 'columns' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
               >
                 <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">view_column</mat-icon>
                 <span>Table Columns</span>
@@ -86,7 +86,7 @@ interface DraftFormRow {
                 type="button"
                 (click)="activeTab.set('rows')"
                 class="px-3 py-2 rounded-xl text-xs font-bold cursor-pointer transition-colors inline-flex items-center justify-center gap-1.5"
-                [class]="activeTab() === 'rows' ? 'bg-slate-900 text-white shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
+                [class]="activeTab() === 'rows' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
               >
                 <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">playlist_add</mat-icon>
                 <span>Table Rows ({{ totalCustomEntriesCount() }})</span>
@@ -107,7 +107,7 @@ interface DraftFormRow {
                     type="button"
                     (click)="setColMode('add')"
                     class="px-3.5 py-1.5 rounded-lg text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 transition-colors"
-                    [class]="colMode() === 'add' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
+                    [class]="colMode() === 'add' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
                   >
                     <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">add</mat-icon>
                     <span>Add Column</span>
@@ -270,7 +270,7 @@ interface DraftFormRow {
                               type="button"
                               (click)="saveSelectedCustomEdit(selCol)"
                               [disabled]="!editColLabel().trim()"
-                              class="px-3.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 disabled:opacity-40 text-white text-[11px] font-bold cursor-pointer inline-flex items-center gap-1"
+                              class="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-40 text-white text-[11px] font-bold cursor-pointer inline-flex items-center gap-1"
                             >
                               <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">check</mat-icon>
                               <span>Save Changes</span>
@@ -292,7 +292,7 @@ interface DraftFormRow {
                               type="button"
                               (click)="saveSelectedBuiltInRename(selBuilt)"
                               [disabled]="!editColLabel().trim()"
-                              class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 disabled:opacity-40 text-white text-xs font-bold cursor-pointer inline-flex items-center justify-center gap-1 shrink-0"
+                              class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-40 text-white text-xs font-bold cursor-pointer inline-flex items-center justify-center gap-1 shrink-0"
                             >
                               <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">check</mat-icon>
                               <span>Save Name</span>
@@ -380,7 +380,7 @@ interface DraftFormRow {
                       <button
                         type="button"
                         (click)="saveTableTitle()"
-                        class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold cursor-pointer shrink-0"
+                        class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold cursor-pointer shrink-0"
                       >
                         Save
                       </button>
@@ -676,7 +676,7 @@ interface DraftFormRow {
             <button
               type="button"
               (click)="closeManager()"
-              class="px-5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold cursor-pointer transition-colors"
+              class="px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold cursor-pointer transition-colors"
             >
               Done
             </button>

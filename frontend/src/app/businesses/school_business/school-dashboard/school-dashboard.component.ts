@@ -796,27 +796,33 @@ export interface PrincipalFeeCollectionRecord {
   templateUrl: './school-dashboard.component.html',
   styles: [`
     .glass-surface {
-      background: rgba(255, 255, 255, 0.94);
-      backdrop-filter: blur(24px) saturate(180%);
-      -webkit-backdrop-filter: blur(24px) saturate(180%);
-      border: 1px solid rgba(226, 232, 240, 0.85);
+      background: rgba(255, 255, 255, 0.98);
+      border: 1px solid rgba(226, 232, 240, 0.9);
     }
 
     .apple-card {
-      background: #FFFFFF;
-      border: 1px solid rgba(226, 232, 240, 0.9);
-      box-shadow: 0 2px 10px -2px rgba(0, 0, 0, 0.03), 
-                  0 8px 26px -4px rgba(0, 0, 0, 0.045), 
-                  0 0 0 1px rgba(0, 0, 0, 0.04);
+      background: linear-gradient(135deg, #ffffff 0%, #f4fbf8 55%, #f8fafc 100%);
+      border: 1px solid rgba(226, 232, 240, 0.85);
+      box-shadow: 0 12px 32px -12px rgba(16, 185, 129, 0.14),
+                  0 4px 12px -4px rgba(15, 23, 42, 0.04),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    }
+
+    .fixed .apple-card,
+    .apple-card.modal-white-card {
+      background: #ffffff !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      border-color: rgba(226, 232, 240, 0.95);
     }
     
     .apple-card-hover {
-      transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+      transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.22s cubic-bezier(0.22, 1, 0.36, 1);
     }
     .apple-card-hover:hover {
       transform: translateY(-2px);
-      box-shadow: 0 12px 32px -4px rgba(0,0,0,0.08), 
-                  0 24px 50px -6px rgba(0,0,0,0.08);
+      box-shadow: 0 20px 44px -10px rgba(16, 185, 129, 0.20),
+                  0 10px 20px -6px rgba(0, 0, 0, 0.06);
     }
 
     .tabular {
@@ -847,6 +853,11 @@ export interface PrincipalFeeCollectionRecord {
         left: 0;
         top: 0;
         width: 100%;
+      }
+      .apple-card {
+        background: #ffffff !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
       }
     }
   `]
@@ -10117,8 +10128,12 @@ INSTRUCTIONS:
 
   // --- EXISTING OWNER ERP METHODS ---
   setTab(tab: SchoolDashboardTab | string): void {
-    this.currentTab = tab as SchoolDashboardTab;
-    if (tab === 'library') {
+    const nextTab = tab as SchoolDashboardTab;
+    if (this.currentTab === nextTab) {
+      return;
+    }
+    this.currentTab = nextTab;
+    if (nextTab === 'library') {
       this.checkAndUpdateOverdueBooks();
     }
     this.tabChanged.emit(tab);
@@ -10655,14 +10670,24 @@ INSTRUCTIONS:
     this.showToast(`Subject ${sub.title} removed`, 'info');
   }
 
+  private _classFeeMemoKey = '';
+  private _classFeeMemoVal: ClassFeeSummary[] = [];
+
   get calculatedClassFeeSummaries(): ClassFeeSummary[] {
+    const stLen = (this.activeStudents || []).length;
+    const defLen = (this.studentFeeDefaulters || []).length;
+    const bakayaSum = this.totalSchoolBakayaDues;
+    const memoKey = `${stLen}|${defLen}|${bakayaSum}`;
+    if (memoKey === this._classFeeMemoKey) {
+      return this._classFeeMemoVal;
+    }
     const classes = [
       'Class Nursery', 'Class KG', 'Class 1', 'Class 2', 'Class 3', 'Class 4', 
       'Class 5', 'Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10'
     ];
-    return classes.map(c => {
+    const result = classes.map(c => {
       const classStudents = (this.activeStudents || []).filter(s => s.grade.includes(c) || s.grade === c);
-      const studentCount = classStudents.length || Math.floor(25 + Math.random() * 20);
+      const studentCount = classStudents.length || 28;
       const classDefaulters = (this.studentFeeDefaulters || []).filter(d => d.grade.includes(c) || d.grade === c);
       const avgMonthlyFee = classStudents.length > 0 ? (classStudents[0].feeAmount || 25000) : 25000;
       const totalBilled = studentCount * avgMonthlyFee;
@@ -10679,6 +10704,9 @@ INSTRUCTIONS:
         collectionRate: Math.min(100, Math.max(0, rate))
       };
     });
+    this._classFeeMemoKey = memoKey;
+    this._classFeeMemoVal = result;
+    return result;
   }
 
   get filteredFeeDefaulters(): StudentFeeDefaulterRecord[] {
@@ -17343,8 +17371,36 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     return Math.max(0, expected - paid);
   }
 
+  private _monCashKey = '';
+  private _monCashVal: any = null;
+  private _monSplitKey = '';
+  private _monSplitVal: any = null;
+  private _monDonutKey = '';
+  private _monDonutVal: any = null;
+  private _monDuesKey = '';
+  private _monDuesVal: Array<{ grade: string; dueAmount: number; studentsCount: number; widthPct: number }> = [];
+  private _monSeriesKey = '';
+  private _monSeriesVal: any[] = [];
+  private _monChartKey = '';
+  private _monChartVal: any = null;
+
+  private getFinanceMonitoringSignature(): string {
+    const colCount = (this.principalFeeCollections || []).length;
+    const finCount = (this.finances || []).length;
+    const recCount = (this.feeReconciliations || []).length;
+    const pvCount = (this.accountantPettyVouchers || []).length;
+    const defCount = (this.studentFeeDefaulters || []).length;
+    const stCount = (this.activeStudents || []).length;
+    const snapCount = (this.backendMonitoringSnapshot?.dailyRevenueSeries || []).length;
+    return `${this.monitoringRangeDays}|${colCount}|${finCount}|${recCount}|${pvCount}|${defCount}|${stCount}|${this.totalFinanceIncome}|${this.totalFinanceExpense}|${this.totalAccountantPettyVouchers}|${this.totalUncollectedDues}|${this.dailyOpeningVaultCash}|${snapCount}`;
+  }
+
   // Real-Time Owner Financial Monitoring Dashboard Computed Metrics
   get monitoringCashFlowSummary() {
+    const sig = this.getFinanceMonitoringSignature();
+    if (sig === this._monCashKey && this._monCashVal) {
+      return this._monCashVal;
+    }
     const accInflow = this.accountantCollectedTotal;
     const prinInflow = this.principalCollectedTotal;
     const onlineInflow = this.ownerOnlineCollectedTotal;
@@ -17376,7 +17432,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     const totalExpected = grossRevenue + pendingBakaya;
     const recoveryRatePct = totalExpected > 0 ? Math.min(100, Math.round((grossRevenue / totalExpected) * 100)) : 100;
 
-    return {
+    this._monCashVal = {
       openingVault,
       grossRevenue,
       accInflow,
@@ -17394,9 +17450,15 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       pendingBakaya,
       recoveryRatePct
     };
+    this._monCashKey = sig;
+    return this._monCashVal;
   }
 
   get monitoringCollectorSplit() {
+    const sig = this.getFinanceMonitoringSignature();
+    if (sig === this._monSplitKey && this._monSplitVal) {
+      return this._monSplitVal;
+    }
     const receipts = this.principalFeeCollections || [];
     const accReceipts = receipts.filter(f => f.collectorRole === 'accountant' || (f.collectedBy || '').toLowerCase().includes('accountant') || (f.collectedBy || '').toLowerCase().includes('fee clerk'));
     const prinReceipts = receipts.filter(f => f.collectorRole === 'principal' || (!f.collectorRole && (f.collectedBy || '').toLowerCase().includes('principal')));
@@ -17407,7 +17469,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     const ownerAmt = ownerReceipts.reduce((s, r) => s + Number(r.amount || 0), 0);
     const total = Math.max(1, accAmt + prinAmt + ownerAmt);
 
-    return [
+    this._monSplitVal = [
       {
         key: 'accountant',
         label: 'Accountant / Fee Clerk Desk',
@@ -17436,9 +17498,15 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
         badgeClass: 'bg-indigo-50 text-indigo-800'
       }
     ];
+    this._monSplitKey = sig;
+    return this._monSplitVal;
   }
 
   get monitoringChannelDonut() {
+    const sig = this.getFinanceMonitoringSignature();
+    if (sig === this._monDonutKey && this._monDonutVal) {
+      return this._monDonutVal;
+    }
     const cf = this.monitoringCashFlowSummary;
     const total = Math.max(1, cf.cashInflow + cf.meezanInflow + cf.hblInflow + cf.digitalInflow);
     const circumference = 2 * Math.PI * 52; // r = 52
@@ -17461,10 +17529,16 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       cumulativeOffset += dashLen;
       return seg;
     });
-    return { total: cf.grossRevenue, circumference, segments };
+    this._monDonutVal = { total: cf.grossRevenue, circumference, segments };
+    this._monDonutKey = sig;
+    return this._monDonutVal;
   }
 
   get monitoringPendingDuesByGrade(): Array<{ grade: string; dueAmount: number; studentsCount: number; widthPct: number }> {
+    const sig = this.getFinanceMonitoringSignature();
+    if (sig === this._monDuesKey) {
+      return this._monDuesVal;
+    }
     const map = new Map<string, { grade: string; dueAmount: number; studentsCount: number }>();
     for (const d of (this.studentFeeDefaulters || [])) {
       const amt = Number(d.totalRemainingBakaya || 0);
@@ -17493,10 +17567,12 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     }
     const list = Array.from(map.values()).sort((a, b) => b.dueAmount - a.dueAmount).slice(0, 7);
     const maxAmt = Math.max(1, ...list.map(x => x.dueAmount));
-    return list.map(x => ({
+    this._monDuesVal = list.map(x => ({
       ...x,
       widthPct: Math.max(10, Math.round((x.dueAmount / maxAmt) * 100))
     }));
+    this._monDuesKey = sig;
+    return this._monDuesVal;
   }
 
   get monitoringDailySeries(): Array<{
@@ -17510,15 +17586,30 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     netCashFlow: number;
     receiptsCount: number;
   }> {
+    const sig = this.getFinanceMonitoringSignature();
+    if (sig === this._monSeriesKey && this._monSeriesVal.length > 0) {
+      return this._monSeriesVal;
+    }
+    const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const days = this.monitoringRangeDays;
-    const today = new Date();
-    const todayIso = today.toISOString().split('T')[0];
+    const nowMs = Date.now();
+    const today = new Date(nowMs);
+    const pad2 = (n: number) => (n < 10 ? '0' + n : '' + n);
+    const todayIso = `${today.getUTCFullYear()}-${pad2(today.getUTCMonth() + 1)}-${pad2(today.getUTCDate())}`;
 
-    // Seed baseline rolling session curve anchored to real collections & closings
     const liveAccToday = this.accountantCollectedTotal;
     const livePrinToday = this.principalCollectedTotal;
     const liveOnlineToday = this.ownerOnlineCollectedTotal;
     const livePettyToday = this.totalAccountantPettyVouchers;
+
+    const recByDate = new Map<string, any>();
+    for (const r of (this.feeReconciliations || [])) {
+      if (r?.date && !recByDate.has(r.date)) recByDate.set(r.date, r);
+    }
+    const backendByDate = new Map<string, any>();
+    for (const d of (this.backendMonitoringSnapshot?.dailyRevenueSeries || [])) {
+      if (d?.date && !backendByDate.has(d.date)) backendByDate.set(d.date, d);
+    }
 
     const buckets: Array<{
       date: string;
@@ -17533,10 +17624,10 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     }> = [];
 
     for (let i = days - 1; i >= 0; i--) {
-      const dt = new Date(today.getTime() - i * 86400000);
-      const iso = dt.toISOString().split('T')[0];
-      const label = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      const matchingRec = (this.feeReconciliations || []).find(r => r.date === iso);
+      const dt = new Date(nowMs - i * 86400000);
+      const iso = `${dt.getUTCFullYear()}-${pad2(dt.getUTCMonth() + 1)}-${pad2(dt.getUTCDate())}`;
+      const label = `${MONTHS[dt.getMonth()]} ${dt.getDate()}`;
+      const matchingRec = recByDate.get(iso);
 
       if (iso === todayIso) {
         const accVal = Math.max(liveAccToday, Number(matchingRec?.accountantCollected || matchingRec?.actualCollected || 0));
@@ -17573,8 +17664,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
           receiptsCount: 4
         });
       } else {
-        // Check backend series first if present
-        const backendDay = (this.backendMonitoringSnapshot?.dailyRevenueSeries || []).find((d: any) => d.date === iso);
+        const backendDay = backendByDate.get(iso);
         if (backendDay) {
           buckets.push({
             date: iso,
@@ -17588,7 +17678,6 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
             receiptsCount: Number(backendDay.receiptsCount || 0)
           });
         } else {
-          // Historical rolling baseline pattern so chart illustrates cash flow trend continuously
           const wave = ((days - i) % 5);
           const accVal = [42000, 68500, 54000, 82000, 49500][wave];
           const prinVal = [25000, 28500, 18000, 32000, 22000][wave];
@@ -17609,10 +17698,16 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
         }
       }
     }
+    this._monSeriesVal = buckets;
+    this._monSeriesKey = sig;
     return buckets;
   }
 
   get monitoringSvgChart() {
+    const sig = this.getFinanceMonitoringSignature();
+    if (sig === this._monChartKey && this._monChartVal) {
+      return this._monChartVal;
+    }
     const series = this.monitoringDailySeries;
     const W = 680;
     const H = 200;
@@ -17656,7 +17751,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
 
     const labelStep = count > 16 ? 4 : (count > 9 ? 2 : 1);
 
-    return {
+    this._monChartVal = {
       viewBox: `0 0 ${W} ${H}`,
       padL,
       padT,
@@ -17670,6 +17765,8 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       yTicks,
       labelStep
     };
+    this._monChartKey = sig;
+    return this._monChartVal;
   }
 
   get selectedMonitoringDayDetail() {

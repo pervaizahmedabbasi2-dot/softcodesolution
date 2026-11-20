@@ -166,7 +166,7 @@
         }
 
         <button type="submit"
-                class="px-4 py-2 bg-slate-900 hover:bg-indigo-600 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
+                class="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 whitespace-nowrap cursor-pointer shadow-xs transition-all">
           <lucide-icon [name]="icons.RefreshCw" class="w-3.5 h-3.5"></lucide-icon>
           <span>{{ ticketsLoading() ? 'Syncing...' : 'Refresh' }}</span>
         </button>
@@ -658,7 +658,7 @@
         </div>
 
         <button type="submit" [disabled]="botSaving()"
-                class="px-5 py-3 bg-slate-900 hover:bg-indigo-600 text-white rounded-xl text-xs font-bold whitespace-nowrap cursor-pointer">
+                class="px-5 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-bold whitespace-nowrap cursor-pointer shadow-sm transition-all">
           {{ botSaving() ? 'Saving Rules...' : 'Save Auto-Bot Configuration' }}
         </button>
       </form>

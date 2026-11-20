@@ -56,15 +56,15 @@
       <div class="relative z-10 flex flex-wrap gap-1.5 pt-5 mt-5 border-t border-slate-200/70">
         <button *ngFor="let tab of [{key:'endpoints',label:'Endpoints'},{key:'keys',label:'API Keys'},{key:'rate-limits',label:'Rate Limits'},{key:'security',label:'Security Policies'},{key:'logs',label:'Live Logs'}]" type="button" (click)="setTab(tab.key)"
           class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer border"
-          [class.bg-slate-900]="activeTab === tab.key"
+          [class.bg-emerald-600]="activeTab === tab.key"
           [class.text-white]="activeTab === tab.key"
-          [class.border-slate-900]="activeTab === tab.key"
+          [class.border-emerald-600]="activeTab === tab.key"
           [class.shadow-md]="activeTab === tab.key"
           [class.bg-white]="activeTab !== tab.key"
           [class.border-slate-200]="activeTab !== tab.key"
           [class.text-slate-600]="activeTab !== tab.key"
-          [class.hover:bg-slate-50]="activeTab !== tab.key"
-          [class.hover:text-slate-900]="activeTab !== tab.key">
+          [class.hover:bg-emerald-50]="activeTab !== tab.key"
+          [class.hover:text-emerald-800]="activeTab !== tab.key">
           {{ tab.label }}
         </button>
       </div>
@@ -110,14 +110,14 @@
           *ngIf="searchQuery"
           type="button"
           (click)="clearSearch()"
-          class="mt-4 rounded-xl bg-slate-900 px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-white transition hover:bg-slate-700">
+          class="mt-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-white transition hover:from-emerald-500 hover:to-teal-500 cursor-pointer">
           Clear Search
         </button>
       </div>
 
       <div
         *ngIf="hasSearchResults"
-        class="overflow-hidden rounded-[24px] bg-white shadow-xs border border-slate-200/90"><div class="overflow-x-auto"><table class="w-full text-left"><thead class="bg-slate-900 text-white"><tr><th class="px-5 py-4 text-[10px] font-black uppercase tracking-widest">Method</th><th class="px-5 py-4 text-[10px] font-black uppercase tracking-widest">Endpoint</th><th class="hidden px-5 py-4 text-[10px] font-black uppercase tracking-widest lg:table-cell">Auth</th><th class="hidden px-5 py-4 text-[10px] font-black uppercase tracking-widest md:table-cell">Rate</th><th class="hidden px-5 py-4 text-[10px] font-black uppercase tracking-widest xl:table-cell">Latency</th><th class="hidden px-5 py-4 text-[10px] font-black uppercase tracking-widest xl:table-cell">Calls</th><th class="px-5 py-4 text-[10px] font-black uppercase tracking-widest">Status</th></tr></thead><tbody class="divide-y divide-slate-100">
+        class="overflow-hidden rounded-[24px] bg-gradient-to-br from-white/95 via-emerald-50/25 to-slate-50/90 shadow-[0_14px_34px_-12px_rgba(16,185,129,0.14)] border border-white/80"><div class="overflow-x-auto"><table class="w-full text-left"><thead class="bg-gradient-to-r from-emerald-50/90 via-slate-50 to-teal-50/80 text-slate-700 border-b border-emerald-100/90"><tr><th class="px-5 py-4 text-[10px] font-black uppercase tracking-widest">Method</th><th class="px-5 py-4 text-[10px] font-black uppercase tracking-widest">Endpoint</th><th class="hidden px-5 py-4 text-[10px] font-black uppercase tracking-widest lg:table-cell">Auth</th><th class="hidden px-5 py-4 text-[10px] font-black uppercase tracking-widest md:table-cell">Rate</th><th class="hidden px-5 py-4 text-[10px] font-black uppercase tracking-widest xl:table-cell">Latency</th><th class="hidden px-5 py-4 text-[10px] font-black uppercase tracking-widest xl:table-cell">Calls</th><th class="px-5 py-4 text-[10px] font-black uppercase tracking-widest">Status</th></tr></thead><tbody class="divide-y divide-slate-100">
         <tr
           *ngFor="let ep of paginatedEndpoints"
           class="cursor-pointer transition hover:bg-slate-50 focus-within:bg-slate-50"
@@ -149,7 +149,7 @@
   <p class="text-sm font-black text-rose-700">Unable to load API keys</p>
   <p class="mt-1 text-xs font-medium text-rose-600">{{ apiKeysError }}</p>
   <button type="button" (click)="loadApiKeys()"
-    class="mt-4 rounded-xl bg-slate-900 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white">
+    class="mt-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white cursor-pointer">
     Retry
   </button>
 </div>
@@ -237,10 +237,10 @@
           </div>
         </div>
 
-        <div class="rounded-2xl bg-slate-900 p-5 text-white">
-          <p class="text-[10px] font-black uppercase tracking-widest text-white/40">Traffic</p>
-          <p class="mt-2 text-3xl font-black">{{ selectedEndpoint.callsToday | number }}</p>
-          <p class="mt-1 text-xs font-medium text-white/45">Calls today</p>
+        <div class="rounded-2xl border border-emerald-200/80 bg-gradient-to-br from-white via-emerald-50/55 to-teal-50/50 p-5 text-slate-900 shadow-xs">
+          <p class="text-[10px] font-black uppercase tracking-widest text-emerald-700">Traffic</p>
+          <p class="mt-2 text-3xl font-black text-slate-900">{{ selectedEndpoint.callsToday | number }}</p>
+          <p class="mt-1 text-xs font-medium text-slate-500">Calls today</p>
         </div>
 
       </div>

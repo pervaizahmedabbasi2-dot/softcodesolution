@@ -297,7 +297,7 @@
                 @for (cat of allowedCategories(); track cat) {
                   <button type="button" (click)="quickEnrollCategory.set(cat)"
                     class="flex-1 py-1.5 px-2 rounded-lg text-[11px] font-bold cursor-pointer transition-colors whitespace-nowrap"
-                    [class]="quickEnrollCategory() === cat ? 'bg-slate-900 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'">
+                    [class]="quickEnrollCategory() === cat ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'">
                     {{ categoryLabel(cat) }}
                   </button>
                 }
@@ -337,7 +337,7 @@
             }
 
             <div class="flex flex-col sm:flex-row items-center gap-3">
-              <div class="w-20 h-20 rounded-2xl bg-slate-900 border border-slate-300 overflow-hidden shrink-0 flex items-center justify-center text-slate-400 shadow-inner">
+              <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-50 to-slate-100 border border-emerald-200/80 overflow-hidden shrink-0 flex items-center justify-center text-emerald-600 shadow-inner">
                 @if (quickEnrollPreviewUrl()) {
                   <img [src]="quickEnrollPreviewUrl()" alt="Quick Selfie Preview" referrerpolicy="no-referrer"
                     class="w-full h-full object-cover" />
@@ -361,8 +361,8 @@
 
                 <div class="flex items-center gap-2 flex-wrap">
                   <button type="button" (click)="cameraActive() ? snapQuickSelfieFromLiveCamera() : startCamera('verify')"
-                    class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap active:scale-[0.98] transition-all">
-                    <lucide-icon [name]="'camera'" class="w-3.5 h-3.5 text-emerald-400"></lucide-icon>
+                    class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap active:scale-[0.98] transition-all shadow-xs">
+                    <lucide-icon [name]="'camera'" class="w-3.5 h-3.5 text-white"></lucide-icon>
                     <span>{{ cameraActive() ? 'Snap Live Selfie' : 'Open Camera to Snap' }}</span>
                   </button>
                   <button type="button" (click)="saveQuickSelfieEnrollment()" [disabled]="!quickEnrollExtraction() || !quickEnrollMemberId()"
@@ -918,8 +918,8 @@
 
             @if (canExportCurrentPortal()) {
               <button type="button" (click)="exportCurrentCategoryPDF()"
-                class="h-10 px-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 shadow-xs transition-all active:scale-[0.98] whitespace-nowrap">
-                <lucide-icon [name]="'printer'" class="w-3.5 h-3.5 text-emerald-400"></lucide-icon>
+                class="h-10 px-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 shadow-xs transition-all active:scale-[0.98] whitespace-nowrap">
+                <lucide-icon [name]="'printer'" class="w-3.5 h-3.5 text-white"></lucide-icon>
                 <span>PDF</span>
               </button>
               <button type="button" (click)="exportCurrentCategoryCSV()"
@@ -968,7 +968,7 @@
               <div class="flex items-center gap-1.5 flex-wrap">
                 <button type="button" (click)="applyColumnPreset('essential')"
                   class="px-3 py-1.5 rounded-xl text-[11px] font-bold cursor-pointer border transition-all"
-                  [class]="activeColumnPreset() === 'essential' ? 'bg-slate-900 text-white border-slate-900 shadow-xs' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'">
+                  [class]="activeColumnPreset() === 'essential' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-emerald-600 shadow-xs' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'">
                   Compact Sheet
                 </button>
                 <button type="button" (click)="applyColumnPreset('local_official')"
@@ -1025,8 +1025,8 @@
                 </span>
                 <div class="flex items-center gap-2">
                   <button type="button" (click)="exportCurrentCategoryPDF()"
-                    class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 shadow-xs">
-                    <lucide-icon [name]="'printer'" class="w-3.5 h-3.5 text-emerald-400"></lucide-icon>
+                    class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 shadow-xs">
+                    <lucide-icon [name]="'printer'" class="w-3.5 h-3.5 text-white"></lucide-icon>
                     <span>Print / Export Selected PDF</span>
                   </button>
                   <button type="button" (click)="exportCurrentCategoryCSV()"
@@ -1544,7 +1544,7 @@
                       @if (canUseManualFallback()) {
                         <button type="button" (click)="handleRosterStatusAction(m, 'Present')"
                           class="px-2 py-1.5 rounded-lg border text-[11px] font-bold cursor-pointer transition-colors"
-                          [class]="m.status === 'Present' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'">
+                          [class]="m.status === 'Present' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'">
                           P
                         </button>
                         <button type="button" (click)="handleRosterStatusAction(m, 'Late')"
@@ -1705,7 +1705,7 @@
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
             @if (!cameraActive()) {
               <button type="button" (click)="startCamera('enroll')"
-                class="h-10 px-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold cursor-pointer inline-flex items-center justify-center gap-1.5 shadow-sm transition-all active:scale-[0.98]">
+                class="h-10 px-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold cursor-pointer inline-flex items-center justify-center gap-1.5 shadow-sm transition-all active:scale-[0.98]">
                 <lucide-icon [name]="'video'" class="w-4 h-4"></lucide-icon>
                 <span>Open Live Camera</span>
               </button>
@@ -1817,7 +1817,7 @@
                     </button>
                   } @else {
                     <button type="button" (click)="enrollTargetMemberId.set(m.id); startCamera('enroll')"
-                      class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-bold cursor-pointer transition-colors">
+                      class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-[11px] font-bold cursor-pointer transition-colors shadow-xs">
                       Enroll
                     </button>
                   }
@@ -2251,8 +2251,8 @@
 
           <div class="pt-4 border-t border-slate-100 flex items-center justify-end">
             <button type="button" (click)="commitOwnerPolicy()"
-              class="h-11 px-5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold cursor-pointer inline-flex items-center gap-2 shadow-sm transition-all active:scale-[0.98]">
-              <lucide-icon [name]="'shield-check'" class="w-4 h-4 text-emerald-400"></lucide-icon>
+              class="h-11 px-5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold cursor-pointer inline-flex items-center gap-2 shadow-sm transition-all active:scale-[0.98]">
+              <lucide-icon [name]="'shield-check'" class="w-4 h-4 text-white"></lucide-icon>
               <span>Save Owner Attendance Setup &amp; Permissions</span>
             </button>
           </div>

@@ -901,7 +901,7 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
       const tablePdfBtn = document.createElement('button');
       tablePdfBtn.type = 'button';
       tablePdfBtn.className =
-        'px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-[11px] inline-flex items-center gap-1.5 shadow-2xs active:scale-95 transition-all cursor-pointer whitespace-nowrap';
+        'px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-[11px] inline-flex items-center gap-1.5 shadow-2xs active:scale-95 transition-all cursor-pointer whitespace-nowrap';
       tablePdfBtn.title = 'Download Row & Column Table PDF';
       tablePdfBtn.appendChild(this.createToolbarIcon('table'));
       const tablePdfTxt = document.createElement('span');

@@ -369,54 +369,54 @@ export type ChartVisualizationType = 'area' | 'bar' | 'health' | 'composed';
             <!-- Recharts Style Floating Interactive Tooltip -->
             @if (hoveredPoint(); as hp) {
               <div
-                class="absolute z-20 pointer-events-none p-3.5 rounded-2xl bg-slate-900/95 text-white shadow-xl backdrop-blur-md border border-slate-700/80 text-xs space-y-2 min-w-[220px] transition-all duration-100 ease-out"
+                class="absolute z-20 pointer-events-none p-3.5 rounded-2xl bg-gradient-to-br from-white/95 via-emerald-50/75 to-slate-50/95 text-slate-900 shadow-[0_20px_40px_-10px_rgba(16,185,129,0.25),0_8px_20px_-6px_rgba(0,0,0,0.08)] backdrop-blur-xl border border-emerald-200/80 text-xs space-y-2 min-w-[220px] transition-all duration-100 ease-out"
                 [style.left.px]="tooltipLeft()"
                 [style.top.px]="tooltipTop()">
                 
-                <div class="flex items-center justify-between pb-1.5 border-b border-slate-700/80">
-                  <span class="font-black text-slate-200">{{ hp.date }}</span>
-                  <span class="px-2 py-0.5 rounded text-[10px] font-mono font-black uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                <div class="flex items-center justify-between pb-1.5 border-b border-emerald-100">
+                  <span class="font-black text-slate-900">{{ hp.date }}</span>
+                  <span class="px-2 py-0.5 rounded text-[10px] font-mono font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-200/80">
                     {{ hp.auditStatus }}
                   </span>
                 </div>
 
                 <div class="space-y-1 font-mono text-[11px]">
                   <div class="flex items-center justify-between">
-                    <span class="flex items-center gap-1.5 text-slate-300">
+                    <span class="flex items-center gap-1.5 text-slate-600">
                       <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
                       <span>Billed Amount:</span>
                     </span>
-                    <strong class="text-white font-bold">PKR {{ (hp.billed || 0).toLocaleString() }}</strong>
+                    <strong class="text-slate-900 font-bold">PKR {{ (hp.billed || 0).toLocaleString() }}</strong>
                   </div>
 
                   <div class="flex items-center justify-between">
-                    <span class="flex items-center gap-1.5 text-slate-300">
-                      <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                    <span class="flex items-center gap-1.5 text-slate-600">
+                      <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                       <span>Bank Reconciled:</span>
                     </span>
-                    <strong class="text-emerald-400 font-bold">PKR {{ (hp.collected || 0).toLocaleString() }}</strong>
+                    <strong class="text-emerald-700 font-bold">PKR {{ (hp.collected || 0).toLocaleString() }}</strong>
                   </div>
 
                   <div class="flex items-center justify-between">
-                    <span class="flex items-center gap-1.5 text-slate-300">
-                      <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                    <span class="flex items-center gap-1.5 text-slate-600">
+                      <span class="w-2 h-2 rounded-full bg-amber-500"></span>
                       <span>Variance Delta:</span>
                     </span>
-                    <strong [class.text-emerald-400]="hp.variance === 0" [class.text-rose-400]="hp.variance !== 0">
+                    <strong [class.text-emerald-700]="hp.variance === 0" [class.text-rose-600]="hp.variance !== 0">
                       PKR {{ (hp.variance || 0).toLocaleString() }}
                     </strong>
                   </div>
 
-                  <div class="flex items-center justify-between pt-1 border-t border-slate-700/60">
-                    <span class="flex items-center gap-1.5 text-slate-300">
-                      <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+                  <div class="flex items-center justify-between pt-1 border-t border-emerald-100">
+                    <span class="flex items-center gap-1.5 text-slate-600">
+                      <span class="w-2 h-2 rounded-full bg-teal-500"></span>
                       <span>Audit Health Score:</span>
                     </span>
-                    <strong class="text-cyan-300 font-bold">{{ hp.healthScore }}%</strong>
+                    <strong class="text-teal-700 font-bold">{{ hp.healthScore }}%</strong>
                   </div>
                 </div>
 
-                <div class="pt-1 text-[9px] text-slate-400 flex items-center justify-between font-mono">
+                <div class="pt-1 text-[9px] text-slate-500 flex items-center justify-between font-mono">
                   <span>Meezan + HBL + 1Link</span>
                   <span>Ver: {{ hp.verifiedBy }}</span>
                 </div>

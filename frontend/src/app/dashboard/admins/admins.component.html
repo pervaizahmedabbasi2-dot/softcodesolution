@@ -1,16 +1,16 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fade-in">
   
   <!-- Banner -->
-  <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-red-950 via-slate-950 to-slate-900 p-8 text-white shadow-xl border border-red-950/40">
-    <div class="absolute -right-10 -bottom-10 w-80 h-80 bg-red-600/10 rounded-full blur-3xl pointer-events-none"></div>
+  <div class="relative overflow-hidden rounded-[28px] border border-white/80 bg-gradient-to-br from-white/95 via-emerald-50/40 to-slate-50/90 backdrop-blur-2xl p-8 text-slate-900 shadow-[0_20px_50px_-12px_rgba(16,185,129,0.18),0_8px_20px_-6px_rgba(0,0,0,0.06),inset_0_1px_2px_rgba(255,255,255,0.95)]">
+    <div class="absolute -right-10 -bottom-10 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
     <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
       <div>
-        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/20 border border-red-400/30 text-red-300 text-xs font-semibold uppercase tracking-wider mb-3">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold uppercase tracking-wider mb-3">
           <lucide-icon [name]="icons.ShieldCheck" class="w-3.5 h-3.5"></lucide-icon>
           Privileged Platform Access (Tier-0)
         </div>
-        <h1 class="text-3xl font-black tracking-tight text-white sm:text-4xl">Platform Superadmin Operations</h1>
-        <p class="mt-2 text-slate-300 text-sm max-w-2xl">
+        <h1 class="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">Platform Superadmin Operations</h1>
+        <p class="mt-2 text-slate-600 text-sm max-w-2xl">
           Zero-trust privileged identity management (PIM), hardware security token authentication, IP subnet restriction, and cryptographic session termination.
         </p>
       </div>
@@ -19,34 +19,34 @@
         <button 
           (click)="triggerEmergencyRotation()" 
           [disabled]="isRotating"
-          class="px-5 py-2.5 bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-red-600/30">
+          class="px-5 py-2.5 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-rose-600/20 cursor-pointer">
           <lucide-icon [name]="icons.Key" class="w-4 h-4" [class.animate-spin]="isRotating"></lucide-icon>
           {{ isRotating ? 'Rotating Keys...' : 'Rotate Root Cryptographic Keys' }}
         </button>
       </div>
     </div>
 
-    <div *ngIf="rotationSuccess" class="mt-4 p-3 bg-emerald-500/20 border border-emerald-400/40 rounded-xl text-emerald-200 text-xs font-bold flex items-center gap-2 animate-fade-in">
-      <lucide-icon [name]="icons.CheckCircle2" class="w-4 h-4 text-emerald-400"></lucide-icon>
+    <div *ngIf="rotationSuccess" class="mt-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs font-bold flex items-center gap-2 animate-fade-in">
+      <lucide-icon [name]="icons.CheckCircle2" class="w-4 h-4 text-emerald-600"></lucide-icon>
       All Tier-0 SSH certificates and Ed25519 signing keys successfully rotated and validated across 3 clusters.
     </div>
 
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8 pt-6 border-t border-slate-800">
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8 pt-6 border-t border-emerald-100/90">
       <div>
-        <p class="text-xs font-medium text-slate-400">Tier-0 Operators</p>
-        <p class="text-2xl font-black text-white mt-1">{{ admins.length }} <span class="text-xs text-red-400 font-normal">Active</span></p>
+        <p class="text-xs font-medium text-slate-500">Tier-0 Operators</p>
+        <p class="text-2xl font-black text-slate-900 mt-1">{{ admins.length }} <span class="text-xs text-rose-600 font-normal">Active</span></p>
       </div>
       <div>
-        <p class="text-xs font-medium text-slate-400">Mutual TLS (mTLS)</p>
-        <p class="text-2xl font-black text-emerald-400 mt-1">Enforced <span class="text-xs text-slate-400 font-normal">Strict</span></p>
+        <p class="text-xs font-medium text-slate-500">Mutual TLS (mTLS)</p>
+        <p class="text-2xl font-black text-emerald-700 mt-1">Enforced <span class="text-xs text-slate-500 font-normal">Strict</span></p>
       </div>
       <div>
-        <p class="text-xs font-medium text-slate-400">IP Geofencing</p>
-        <p class="text-2xl font-black text-cyan-400 mt-1">Active <span class="text-xs text-slate-400 font-normal">CIDR Gated</span></p>
+        <p class="text-xs font-medium text-slate-500">IP Geofencing</p>
+        <p class="text-2xl font-black text-teal-700 mt-1">Active <span class="text-xs text-slate-500 font-normal">CIDR Gated</span></p>
       </div>
       <div>
-        <p class="text-xs font-medium text-slate-400">Audit Compliance</p>
-        <p class="text-2xl font-black text-emerald-400 mt-1">SOC-2 Type II <span class="text-xs text-slate-400 font-normal">Pass</span></p>
+        <p class="text-xs font-medium text-slate-500">Audit Compliance</p>
+        <p class="text-2xl font-black text-emerald-700 mt-1">SOC-2 Type II <span class="text-xs text-slate-500 font-normal">Pass</span></p>
       </div>
     </div>
   </div>

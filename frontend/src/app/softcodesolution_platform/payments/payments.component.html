@@ -214,7 +214,7 @@
                 <span *ngFor="let m of gw.acceptedMethods" class="px-2 py-0.5 rounded bg-slate-100 text-slate-600 text-[10px] font-medium">{{ m }}</span>
               </div>
               <button (click)="openEditGateway(gw)"
-                      class="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition-colors flex items-center gap-1.5 shrink-0">
+                      class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-semibold shadow-2xs transition-all flex items-center gap-1.5 shrink-0">
                 <lucide-icon [img]="myIcons.Settings" [size]="12"></lucide-icon>
                 <span>Edit Credentials</span>
               </button>
@@ -271,7 +271,7 @@
           <!-- Desktop Transactions Table (Desktop View) -->
           <div class="hidden md:block overflow-x-auto">
             <table class="w-full text-left text-xs text-slate-600">
-              <thead class="bg-slate-900 font-black uppercase text-[10px] tracking-wider text-white">
+              <thead class="bg-gradient-to-r from-emerald-50/90 via-slate-50 to-teal-50/80 border-b border-emerald-100/90 font-black uppercase text-[10px] tracking-wider text-slate-700">
                 <tr>
                   <th class="px-4 py-3.5">Invoice #</th>
                   <th class="px-4 py-3.5">Customer</th>
@@ -471,7 +471,7 @@
 
           <div class="overflow-x-auto">
             <table class="w-full text-left text-xs text-slate-600">
-              <thead class="bg-slate-900 font-black uppercase text-[10px] tracking-wider text-white">
+              <thead class="bg-gradient-to-r from-emerald-50/90 via-slate-50 to-teal-50/80 border-b border-emerald-100/90 font-black uppercase text-[10px] tracking-wider text-slate-700">
                 <tr>
                   <th class="px-4 py-3.5">Channel</th>
                   <th class="px-4 py-3.5">Scope / Target</th>
@@ -546,7 +546,7 @@
         </div>
         <div *ngIf="invoices.length > 0" class="overflow-x-auto">
           <table class="w-full text-left text-sm whitespace-nowrap">
-            <thead class="bg-slate-900 text-[10px] font-black uppercase tracking-wider text-white">
+            <thead class="bg-gradient-to-r from-emerald-50/90 via-slate-50 to-teal-50/80 border-b border-emerald-100/90 text-[10px] font-black uppercase tracking-wider text-slate-700">
               <tr>
                 <th class="px-6 py-4">Invoice No</th>
                 <th class="px-6 py-4">Tenant</th>
@@ -595,7 +595,7 @@
         </div>
         <div *ngIf="pendingApprovals.length > 0" class="overflow-x-auto">
           <table class="w-full text-left text-sm whitespace-nowrap">
-            <thead class="bg-slate-900 text-[10px] font-black uppercase tracking-wider text-white">
+            <thead class="bg-gradient-to-r from-emerald-50/90 via-slate-50 to-teal-50/80 border-b border-emerald-100/90 text-[10px] font-black uppercase tracking-wider text-slate-700">
               <tr>
                 <th class="px-6 py-4">Tenant / Invoice</th>
                 <th class="px-6 py-4">Method</th>
@@ -643,7 +643,7 @@
           <p class="text-sm font-bold uppercase tracking-widest text-slate-400 mb-2">Current Balance</p>
           <h2 class="text-4xl font-black text-slate-900">{{walletBalance?.currency || 'USD'}} {{walletBalance?.balance || 0}}</h2>
           <div class="mt-8 flex gap-4 justify-center">
-            <button class="bg-slate-900 text-white px-6 py-3 rounded-xl font-bold hover:bg-slate-800 transition-colors">Deposit Funds</button>
+            <button class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white px-6 py-3 rounded-xl font-bold shadow-sm transition-all">Deposit Funds</button>
             <button class="bg-white text-slate-900 px-6 py-3 rounded-xl font-bold border border-slate-200 hover:bg-slate-50 transition-colors">Deduct</button>
           </div>
         </div>
@@ -661,7 +661,7 @@
         </div>
         <div *ngIf="coupons.length > 0" class="overflow-x-auto">
           <table class="w-full text-left text-sm whitespace-nowrap">
-            <thead class="bg-slate-900 text-[10px] font-black uppercase tracking-wider text-white">
+            <thead class="bg-gradient-to-r from-emerald-50/90 via-slate-50 to-teal-50/80 border-b border-emerald-100/90 text-[10px] font-black uppercase tracking-wider text-slate-700">
               <tr>
                 <th class="px-6 py-4">Code</th>
                 <th class="px-6 py-4">Type</th>
@@ -696,7 +696,7 @@
       <!-- TAX RULES TAB -->
       <div *ngIf="!isLoading && activeTab === 'tax'">
         <div class="p-4 border-b border-slate-100 bg-slate-50 flex justify-end">
-          <button class="bg-slate-900 text-white px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 hover:bg-slate-800 transition-colors">
+          <button class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2 shadow-xs transition-all">
             <lucide-icon [img]="myIcons.Plus" [size]="16"></lucide-icon> Add Tax Rule
           </button>
         </div>
@@ -705,7 +705,7 @@
         </div>
         <div *ngIf="taxRules.length > 0" class="overflow-x-auto">
           <table class="w-full text-left text-sm whitespace-nowrap">
-            <thead class="bg-slate-900 text-[10px] font-black uppercase tracking-wider text-white">
+            <thead class="bg-gradient-to-r from-emerald-50/90 via-slate-50 to-teal-50/80 border-b border-emerald-100/90 text-[10px] font-black uppercase tracking-wider text-slate-700">
               <tr>
                 <th class="px-6 py-4">Country / State</th>
                 <th class="px-6 py-4">Tax Name</th>
@@ -743,16 +743,16 @@
     <div class="relative flex flex-col w-full max-w-2xl max-h-[90vh] bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200 animate-scale-up" (click)="$event.stopPropagation()">
       
       <!-- Top Action Bar -->
-      <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between shrink-0">
+      <div class="px-6 py-4 bg-gradient-to-r from-emerald-50/90 via-white to-teal-50/80 border-b border-emerald-100/90 text-slate-900 flex items-center justify-between shrink-0">
         <div class="flex items-center gap-2">
-          <lucide-icon [img]="myIcons.Receipt" [size]="18" class="text-indigo-400"></lucide-icon>
-          <span class="text-xs font-bold uppercase tracking-wider">Official Tax Invoice & Receipt</span>
+          <lucide-icon [img]="myIcons.Receipt" [size]="18" class="text-emerald-600"></lucide-icon>
+          <span class="text-xs font-black uppercase tracking-wider text-slate-900">Official Tax Invoice & Receipt</span>
         </div>
         <div class="flex items-center gap-2">
-          <button (click)="printInvoice()" class="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs">
+          <button (click)="printInvoice()" class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs">
             <lucide-icon [img]="myIcons.Printer" [size]="14"></lucide-icon> Print / PDF
           </button>
-          <button (click)="closeInvoiceModal()" class="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors">
+          <button (click)="closeInvoiceModal()" class="p-1.5 rounded-xl bg-white hover:bg-emerald-50 text-slate-500 hover:text-slate-900 border border-slate-200 transition-colors">
             <lucide-icon [img]="myIcons.X" [size]="16"></lucide-icon>
           </button>
         </div>

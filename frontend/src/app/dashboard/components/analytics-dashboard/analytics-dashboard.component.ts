@@ -94,7 +94,7 @@ export type GrowthMetricType = 'health' | 'enrollment' | 'examSecurity' | 'civil
             <button
               type="button"
               (click)="exportAnalyticsSummary()"
-              class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs shadow-xs cursor-pointer flex items-center gap-1.5 transition-transform active:scale-95">
+              class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-xs shadow-xs cursor-pointer flex items-center gap-1.5 transition-transform active:scale-95">
               <mat-icon class="text-sm">file_download</mat-icon>
               <span>Export Analytics (CSV)</span>
             </button>
@@ -310,33 +310,33 @@ export type GrowthMetricType = 'health' | 'enrollment' | 'examSecurity' | 'civil
             <!-- Floating D3 Line Tooltip -->
             @if (hoveredLinePoint(); as hp) {
               <div
-                class="absolute z-20 pointer-events-none p-3 rounded-2xl bg-slate-900/95 text-white shadow-xl backdrop-blur-md border border-slate-700/80 text-xs space-y-1.5 min-w-[210px] transition-all duration-75"
+                class="absolute z-20 pointer-events-none p-3 rounded-2xl bg-gradient-to-br from-white/95 via-emerald-50/75 to-slate-50/95 text-slate-900 shadow-[0_20px_40px_-10px_rgba(16,185,129,0.25),0_8px_20px_-6px_rgba(0,0,0,0.08)] backdrop-blur-xl border border-emerald-200/80 text-xs space-y-1.5 min-w-[210px] transition-all duration-75"
                 [style.left.px]="lineTooltipLeft()"
                 [style.top.px]="lineTooltipTop()">
                 
-                <div class="flex items-center justify-between pb-1 border-b border-slate-700/80">
-                  <span class="font-black text-slate-200">{{ hp.dateLabel }} ({{ hp.period }})</span>
-                  <span class="px-2 py-0.5 rounded text-[9px] font-mono font-black uppercase bg-cyan-500/20 text-cyan-400">
+                <div class="flex items-center justify-between pb-1 border-b border-emerald-100">
+                  <span class="font-black text-slate-900">{{ hp.dateLabel }} ({{ hp.period }})</span>
+                  <span class="px-2 py-0.5 rounded text-[9px] font-mono font-black uppercase bg-emerald-100 text-emerald-800">
                     {{ hp.auditMilestone }}
                   </span>
                 </div>
 
                 <div class="space-y-1 font-mono text-[11px]">
                   <div class="flex items-center justify-between">
-                    <span class="text-slate-300">Audit Health Score:</span>
-                    <strong class="text-cyan-300 font-black">{{ hp.healthScore }}%</strong>
+                    <span class="text-slate-600">Audit Health Score:</span>
+                    <strong class="text-teal-700 font-black">{{ hp.healthScore }}%</strong>
                   </div>
                   <div class="flex items-center justify-between">
-                    <span class="text-slate-300">Active Student Census:</span>
-                    <strong class="text-white">{{ hp.enrolledStudents }} Enrolled</strong>
+                    <span class="text-slate-600">Active Student Census:</span>
+                    <strong class="text-slate-900">{{ hp.enrolledStudents }} Enrolled</strong>
                   </div>
                   <div class="flex items-center justify-between">
-                    <span class="text-slate-300">NADRA B-Form Verified:</span>
-                    <strong class="text-emerald-400">{{ hp.verifiedCivilDocs }}%</strong>
+                    <span class="text-slate-600">NADRA B-Form Verified:</span>
+                    <strong class="text-emerald-700">{{ hp.verifiedCivilDocs }}%</strong>
                   </div>
                   <div class="flex items-center justify-between">
-                    <span class="text-slate-300">SHA-256 Tamper Locks:</span>
-                    <strong class="text-indigo-300">{{ hp.examSecurityLocks }}% Sealed</strong>
+                    <span class="text-slate-600">SHA-256 Tamper Locks:</span>
+                    <strong class="text-indigo-700">{{ hp.examSecurityLocks }}% Sealed</strong>
                   </div>
                 </div>
 
@@ -442,29 +442,29 @@ export type GrowthMetricType = 'health' | 'enrollment' | 'examSecurity' | 'civil
             <!-- Floating D3 Bar Tooltip -->
             @if (hoveredBarPoint(); as bp) {
               <div
-                class="absolute z-20 pointer-events-none p-3 rounded-2xl bg-slate-900/95 text-white shadow-xl backdrop-blur-md border border-slate-700/80 text-xs space-y-1.5 min-w-[200px] transition-all duration-75"
+                class="absolute z-20 pointer-events-none p-3 rounded-2xl bg-gradient-to-br from-white/95 via-emerald-50/75 to-slate-50/95 text-slate-900 shadow-[0_20px_40px_-10px_rgba(16,185,129,0.25),0_8px_20px_-6px_rgba(0,0,0,0.08)] backdrop-blur-xl border border-emerald-200/80 text-xs space-y-1.5 min-w-[200px] transition-all duration-75"
                 [style.left.px]="barTooltipLeft()"
                 [style.top.px]="barTooltipTop()">
                 
-                <div class="flex items-center justify-between pb-1 border-b border-slate-700/80">
-                  <span class="font-black text-slate-200">{{ bp.month }}</span>
-                  <span class="px-2 py-0.2 rounded text-[9px] font-mono font-black uppercase bg-emerald-500/20 text-emerald-400">
+                <div class="flex items-center justify-between pb-1 border-b border-emerald-100">
+                  <span class="font-black text-slate-900">{{ bp.month }}</span>
+                  <span class="px-2 py-0.2 rounded text-[9px] font-mono font-black uppercase bg-emerald-100 text-emerald-800">
                     {{ bp.efficiencyRate.toFixed(1) }}% Cleared
                   </span>
                 </div>
 
                 <div class="space-y-1 font-mono text-[11px]">
                   <div class="flex items-center justify-between">
-                    <span class="text-slate-300">Billed Target:</span>
-                    <strong class="text-indigo-300">PKR {{ (bp.billedAmount || 0).toLocaleString() }}</strong>
+                    <span class="text-slate-600">Billed Target:</span>
+                    <strong class="text-indigo-700">PKR {{ (bp.billedAmount || 0).toLocaleString() }}</strong>
                   </div>
                   <div class="flex items-center justify-between">
-                    <span class="text-slate-300">Realized Collections:</span>
-                    <strong class="text-emerald-400 font-bold">PKR {{ (bp.collectedAmount || 0).toLocaleString() }}</strong>
+                    <span class="text-slate-600">Realized Collections:</span>
+                    <strong class="text-emerald-700 font-bold">PKR {{ (bp.collectedAmount || 0).toLocaleString() }}</strong>
                   </div>
-                  <div class="flex items-center justify-between pt-0.5 border-t border-slate-700/60 text-[10px]">
-                    <span class="text-slate-400">Meezan: {{ (bp.meezanShare / 1000).toFixed(0) }}k</span>
-                    <span class="text-slate-400">KuickPay: {{ (bp.digitalKuickPay / 1000).toFixed(0) }}k</span>
+                  <div class="flex items-center justify-between pt-0.5 border-t border-emerald-100 text-[10px]">
+                    <span class="text-slate-500">Meezan: {{ (bp.meezanShare / 1000).toFixed(0) }}k</span>
+                    <span class="text-slate-500">KuickPay: {{ (bp.digitalKuickPay / 1000).toFixed(0) }}k</span>
                   </div>
                 </div>
 

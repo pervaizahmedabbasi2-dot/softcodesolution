@@ -147,15 +147,15 @@
                     </h3>
                   </div>
 
-                  <div class="inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200/80">
+                  <div class="inline-flex rounded-xl bg-emerald-50/70 p-1 border border-emerald-200/70">
                     <button
                       type="button"
                       (click)="saasClientSetBillingCycle('monthly')"
                       class="rounded-lg px-4 py-2 text-xs font-black uppercase tracking-wider transition-all cursor-pointer"
-                      [class.bg-slate-900]="saasClientBillingCycle === 'monthly'"
+                      [class.bg-emerald-600]="saasClientBillingCycle === 'monthly'"
                       [class.text-white]="saasClientBillingCycle === 'monthly'"
                       [class.shadow-sm]="saasClientBillingCycle === 'monthly'"
-                      [class.text-slate-500]="saasClientBillingCycle !== 'monthly'">
+                      [class.text-slate-600]="saasClientBillingCycle !== 'monthly'">
                       Monthly
                     </button>
 
@@ -163,10 +163,10 @@
                       type="button"
                       (click)="saasClientSetBillingCycle('yearly')"
                       class="rounded-lg px-4 py-2 text-xs font-black uppercase tracking-wider transition-all cursor-pointer"
-                      [class.bg-slate-900]="saasClientBillingCycle === 'yearly'"
+                      [class.bg-emerald-600]="saasClientBillingCycle === 'yearly'"
                       [class.text-white]="saasClientBillingCycle === 'yearly'"
                       [class.shadow-sm]="saasClientBillingCycle === 'yearly'"
-                      [class.text-slate-500]="saasClientBillingCycle !== 'yearly'">
+                      [class.text-slate-600]="saasClientBillingCycle !== 'yearly'">
                       Yearly
                     </button>
                   </div>
@@ -210,7 +210,7 @@
                           </p>
                         </div>
 
-                        <span class="rounded-lg bg-slate-900 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-white tabular-nums shrink-0">
+                        <span class="rounded-lg bg-emerald-100/90 border border-emerald-200/80 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-emerald-800 tabular-nums shrink-0">
                           {{ saasBusinessPlanModuleCount(plan) }} modules
                         </span>
                       </div>
@@ -222,35 +222,35 @@
                   </button>
                 </div>
 
-                <!-- Obsidian Summary Assignment Bar -->
-                <div class="flex flex-col gap-4 rounded-2xl bg-slate-900 p-5 sm:p-6 text-white sm:flex-row sm:items-center sm:justify-between shadow-md">
+                <!-- Frosted Emerald-White Summary Assignment Bar -->
+                <div class="flex flex-col gap-4 rounded-[24px] border border-white/80 bg-gradient-to-br from-white/95 via-emerald-50/55 to-teal-50/60 backdrop-blur-2xl p-5 sm:p-6 text-slate-900 sm:flex-row sm:items-center sm:justify-between shadow-[0_18px_42px_-12px_rgba(16,185,129,0.22),0_6px_16px_-6px_rgba(0,0,0,0.06),inset_0_1px_2px_rgba(255,255,255,0.95)]">
                   <div class="space-y-3 flex-1">
                     <div>
-                      <p class="text-[10px] font-black uppercase tracking-widest text-indigo-300">
+                      <p class="text-[10px] font-black uppercase tracking-widest text-emerald-700">
                         Selected package total
                       </p>
                       <div class="flex items-baseline gap-3 mt-1">
-                        <p class="text-2xl sm:text-3xl font-black tabular-nums">
+                        <p class="text-2xl sm:text-3xl font-black tabular-nums text-slate-900">
                           Rs {{ saasSelectedPackageTotal() | number:'1.0-0' }}
                         </p>
-                        <span class="text-xs font-medium text-slate-400">
+                        <span class="text-xs font-medium text-slate-500">
                           Plan base + enabled manual addons only
                         </span>
                       </div>
                     </div>
 
-                    <div class="grid grid-cols-3 gap-3 max-w-lg pt-3 border-t border-white/10 text-xs font-bold">
+                    <div class="grid grid-cols-3 gap-3 max-w-lg pt-3 border-t border-emerald-200/60 text-xs font-bold">
                       <div>
-                        <span class="text-[9px] uppercase tracking-wider text-slate-400 block">Billing</span>
-                        <span class="text-white">{{ saasClientBillingCycle | titlecase }}</span>
+                        <span class="text-[9px] uppercase tracking-wider text-slate-500 block">Billing</span>
+                        <span class="text-slate-900">{{ saasClientBillingCycle | titlecase }}</span>
                       </div>
                       <div>
-                        <span class="text-[9px] uppercase tracking-wider text-slate-400 block">Selected Plan</span>
-                        <span class="text-indigo-300 uppercase">{{ saasClientSelectedPlanId || '-' }}</span>
+                        <span class="text-[9px] uppercase tracking-wider text-slate-500 block">Selected Plan</span>
+                        <span class="text-emerald-700 uppercase">{{ saasClientSelectedPlanId || '-' }}</span>
                       </div>
                       <div>
-                        <span class="text-[9px] uppercase tracking-wider text-slate-400 block">Enabled Modules</span>
-                        <span class="text-emerald-400 tabular-nums">{{ scsSuperEnabledCount() }}</span>
+                        <span class="text-[9px] uppercase tracking-wider text-slate-500 block">Enabled Modules</span>
+                        <span class="text-emerald-700 tabular-nums">{{ scsSuperEnabledCount() }}</span>
                       </div>
                     </div>
                   </div>
@@ -264,7 +264,7 @@
                       !saasClientSelectedPlanId ||
                       selectedClient.status !== 'approved'
                     "
-                    class="rounded-xl bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-400 hover:to-blue-400 px-6 py-3.5 text-xs font-black uppercase tracking-wider text-white shadow-md disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer transition-all shrink-0">
+                    class="rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 px-6 py-3.5 text-xs font-black uppercase tracking-wider text-white shadow-[0_10px_24px_-6px_rgba(16,185,129,0.45)] disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer transition-all shrink-0">
                     {{ saasClientPlanSaving ? 'Assigning...' : 'Assign Business Plan' }}
                   </button>
                 </div>

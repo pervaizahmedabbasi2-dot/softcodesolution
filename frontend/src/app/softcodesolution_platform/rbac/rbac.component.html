@@ -101,7 +101,7 @@
       <button
         type="button"
         (click)="setDetailTab('audit')"
-        class="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-5 py-3.5 text-xs font-black uppercase tracking-widest text-white transition hover:bg-slate-800">
+        class="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 px-5 py-3.5 text-xs font-black uppercase tracking-widest text-white shadow-sm transition">
         <lucide-icon [name]="icons.Activity" class="h-4 w-4"></lucide-icon>
         Audit
       </button>
@@ -136,7 +136,7 @@
                   <p class="truncate text-sm font-black text-slate-900">{{ role.name }}</p>
                   <span
                     *ngIf="role.isSystem"
-                    class="inline-flex items-center gap-1 rounded-full bg-slate-900 px-2 py-1 text-[9px] font-black uppercase tracking-widest text-white">
+                    class="inline-flex items-center gap-1 rounded-full bg-emerald-100 border border-emerald-200 px-2 py-1 text-[9px] font-black uppercase tracking-widest text-emerald-800">
                     <lucide-icon [name]="icons.Lock" class="h-3 w-3"></lucide-icon>
                     System
                   </span>
@@ -168,7 +168,7 @@
                 <button
                   type="button"
                   (click)="$event.stopPropagation(); duplicateRole(role)"
-                  class="rounded-xl bg-slate-900 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-white">
+                  class="rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-white shadow-2xs transition">
                   Duplicate
                 </button>
               </div>
@@ -195,7 +195,7 @@
                 <h2 class="text-2xl font-black tracking-tight text-slate-950">{{ role.name }}</h2>
                 <span
                   *ngIf="role.isSystem"
-                  class="inline-flex items-center gap-1 rounded-full bg-slate-900 px-2.5 py-1 text-[9px] font-black uppercase tracking-widest text-white">
+                  class="inline-flex items-center gap-1 rounded-full bg-emerald-100 border border-emerald-200 px-2.5 py-1 text-[9px] font-black uppercase tracking-widest text-emerald-800">
                   <lucide-icon [name]="icons.Lock" class="h-3 w-3"></lucide-icon>
                   System Role
                 </span>
@@ -223,7 +223,7 @@
               <button
                 type="button"
                 (click)="duplicateRole(role)"
-                class="rounded-2xl bg-slate-900 px-4 py-3 text-xs font-black uppercase tracking-widest text-white">
+                class="rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 px-4 py-3 text-xs font-black uppercase tracking-widest text-white shadow-sm transition">
                 Duplicate
               </button>
               <button
@@ -392,7 +392,7 @@
                       type="button"
                       [disabled]="role.isSystem"
                       (click)="setActionAcrossModules(role.id, 'export', true)"
-                      class="rounded-xl bg-slate-900 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white disabled:cursor-not-allowed disabled:opacity-40">
+                      class="rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white disabled:cursor-not-allowed disabled:opacity-40 shadow-2xs transition">
                       Grant Export
                     </button>
                     <button
@@ -444,7 +444,7 @@
                         type="button"
                         [disabled]="role.isSystem"
                         (click)="setGroupPermissions(role.id, group.modules, false)"
-                        class="rounded-xl bg-slate-900 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-white disabled:cursor-not-allowed disabled:opacity-40">
+                        class="rounded-xl bg-white border border-slate-200 hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-800 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-slate-700 disabled:cursor-not-allowed disabled:opacity-40 transition">
                         Clear Group
                       </button>
                     </div>
@@ -489,7 +489,7 @@
 
                 <div *ngIf="role.isSystem" class="rounded-[1.5rem] border border-dashed border-slate-200 bg-slate-50 p-5">
                   <div class="flex items-center gap-3">
-                    <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 text-white">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-sm">
                       <lucide-icon [name]="icons.Lock" class="h-5 w-5"></lucide-icon>
                     </div>
                     <div>
