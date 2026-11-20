@@ -1460,103 +1460,105 @@
               </div>
 
               <!-- High-Performance Stage Students Table -->
-              <div class="overflow-x-auto custom-scrollbar rounded-2xl border border-slate-200/90 shadow-2xs bg-white">
-                <table appSchoolTable="owner_stage_wise" tableTitle="Stage-Wise Students Registry" [canAddRow]="true" addRowLabel="Add Student" class="w-full min-w-[950px] text-left text-xs border-collapse">
-                  <thead class="bg-slate-900 text-white font-black uppercase text-[10px] tracking-wider border-b border-slate-800">
-                    <tr>
-                      <th class="py-3 px-3.5">Roll #</th>
-                      <th class="py-3 px-4">Student Profile & Class</th>
-                      <th class="py-3 px-4">Guardian Particulars</th>
-                      <th class="py-3 px-4">Emergency Contact</th>
-                      <th class="py-3 px-3.5 text-center">Attendance</th>
-                      <th class="py-3 px-4">Monthly Fee & Dues</th>
-                      <th class="py-3 px-3.5 text-center">Fee Status</th>
-                      <th class="py-3 px-4 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-slate-100 font-medium bg-white text-slate-800">
-                    @for (s of getPaginatedStageStudents(ownerSelectedStage, ownerStagePage); track s.id) {
-                      <tr [attr.data-row-key]="s.id" class="hover:bg-indigo-50/30 transition-colors">
-                        <td class="py-3 px-3.5 font-mono font-black text-indigo-700">#{{ s.rollNo }}</td>
-                        <td class="py-3 px-4">
-                          <div class="flex items-center gap-2.5">
-                            <img [src]="safeAvatar(s.image, s.name)" [alt]="s.name" class="w-9 h-9 rounded-xl object-cover border border-slate-200 shadow-2xs shrink-0" referrerpolicy="no-referrer">
-                            <div>
-                              <p class="font-black text-slate-900 text-xs">{{ s.name }}</p>
-                              <div class="flex items-center gap-1.5 mt-0.5">
-                                <span class="px-1.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 text-[10px] font-bold">{{ s.grade }}</span>
-                                <span class="text-[10px] text-slate-500 font-medium">{{ s.section || 'General' }}</span>
-                              </div>
-                              @if (s.studentBForm) {
-                                <span class="text-[9px] text-slate-400 font-mono block">B-Form: {{ s.studentBForm }}</span>
-                              }
-                            </div>
-                          </div>
-                        </td>
-                        <td class="py-3 px-4">
-                          <p class="font-bold text-slate-900">{{ s.guardian }}</p>
-                          <p class="text-[10px] text-slate-500 font-mono">{{ s.guardianCnic || '35202-*******-1' }}</p>
-                          @if (s.guardianOccupation) {
-                            <p class="text-[10px] text-slate-400 truncate max-w-[150px]">{{ s.guardianOccupation }}</p>
-                          }
-                        </td>
-                        <td class="py-3 px-4">
-                          <a [href]="'tel:' + s.guardianPhone" class="font-mono text-xs font-bold text-indigo-600 hover:underline flex items-center gap-1">
-                            <lucide-icon [name]="'phone'" class="w-3 h-3 text-indigo-500"></lucide-icon>
-                            <span>{{ s.guardianPhone }}</span>
-                          </a>
-                        </td>
-                        <td class="py-3 px-3.5 text-center">
-                          <span class="font-mono font-black text-slate-900 text-xs block">{{ s.attendance || '96%' }}</span>
-                          <span class="inline-block px-2 py-0.5 rounded-full text-[9px] font-black uppercase mt-0.5"
-                            [class]="s.status === 'Present' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : (s.status === 'Late' ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-rose-50 text-rose-700 border border-rose-200')">
-                            {{ s.status || 'Present' }}
-                          </span>
-                        </td>
-                        <td class="py-3 px-4 font-mono">
-                          <p class="font-black text-slate-900">PKR {{ formatCurrency((s.feeAmount || 0)) }}/mo</p>
-                          @if (s.dueBakaya && s.dueBakaya > 0) {
-                            <p class="text-[10px] text-rose-600 font-black">Bakaya: PKR {{ formatCurrency(s.dueBakaya) }}</p>
-                          }
-                        </td>
-                        <td class="py-3 px-3.5 text-center">
-                          <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase inline-block shadow-2xs"
-                            [class]="s.feeStatus === 'Paid' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : (s.feeStatus === 'Overdue' ? 'bg-rose-100 text-rose-800 border border-rose-200' : 'bg-amber-100 text-amber-800 border border-amber-200')">
-                            {{ s.feeStatus }}
-                          </span>
-                        </td>
-                        <td class="py-3 px-4 text-right">
-                          <div class="flex items-center justify-end gap-1.5">
-                            <button (click)="openPrincipalFeeCollectModal(s)" title="Collect Fee at Counter" class="px-2 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[10px] cursor-pointer shadow-2xs active:scale-95 transition-all flex items-center gap-1">
-                              <lucide-icon [name]="'credit-card'" class="w-3 h-3"></lucide-icon>
-                              <span>Fee</span>
-                            </button>
-                            <button (click)="openEditStudentModal(s)" title="Edit Student Record" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[10px] cursor-pointer flex items-center gap-1">
-                              <lucide-icon [name]="'pencil'" class="w-3 h-3"></lucide-icon>
-                              <span>Edit</span>
-                            </button>
-                            <button (click)="openFeeChallanVoucher(s)" title="Print 3-Part Bank Challan" class="p-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 cursor-pointer">
-                              <lucide-icon [name]="'file-text'" class="w-3.5 h-3.5 text-indigo-600"></lucide-icon>
-                            </button>
-                            <button (click)="deleteStudentFromStage(s)" title="Remove Student" class="p-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 cursor-pointer">
-                              <lucide-icon [name]="'trash-2'" class="w-3.5 h-3.5 text-rose-600"></lucide-icon>
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    } @empty {
+              <div class="rounded-2xl border border-slate-200/90 shadow-2xs bg-white overflow-hidden">
+                <div data-scs-table-scroll="1" class="w-full overflow-x-auto custom-scrollbar">
+                  <table appSchoolTable="owner_stage_wise" tableTitle="Stage-Wise Students Registry" [canAddRow]="true" addRowLabel="Add Student" class="w-max min-w-full text-left text-xs border-collapse tabular-nums">
+                    <thead class="bg-slate-900 text-white font-black uppercase text-[10px] tracking-wider border-b border-slate-800">
                       <tr>
-                        <td colspan="8" class="py-12 text-center text-slate-400 font-bold space-y-2">
-                          <lucide-icon [name]="'search'" class="w-8 h-8 text-slate-300 mx-auto"></lucide-icon>
-                          <p>No student records found in {{ ownerSelectedStage }} matching your search or filters.</p>
-                          <button (click)="stageSearchQuery = ''; stageGradeFilter = 'All'; stageFeeFilter = 'All'; ownerStagePage = 1" class="px-3 py-1 rounded-lg bg-indigo-50 text-indigo-600 font-bold text-xs cursor-pointer">
-                            Reset Filters
-                          </button>
-                        </td>
+                        <th class="py-3 px-3.5 whitespace-nowrap">Roll #</th>
+                        <th class="py-3 px-4 whitespace-nowrap">Student Profile &amp; Class</th>
+                        <th class="py-3 px-4 whitespace-nowrap">Guardian Particulars</th>
+                        <th class="py-3 px-4 whitespace-nowrap">Emergency Contact</th>
+                        <th class="py-3 px-3.5 text-center whitespace-nowrap">Attendance</th>
+                        <th class="py-3 px-4 whitespace-nowrap">Monthly Fee &amp; Dues</th>
+                        <th class="py-3 px-3.5 text-center whitespace-nowrap">Fee Status</th>
+                        <th class="py-3 px-4 text-right whitespace-nowrap">Actions</th>
                       </tr>
-                    }
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 font-medium bg-white text-slate-800">
+                      @for (s of getPaginatedStageStudents(ownerSelectedStage, ownerStagePage); track s.id) {
+                        <tr [attr.data-row-key]="s.id" class="hover:bg-indigo-50/30 transition-colors">
+                          <td class="py-3 px-3.5 font-mono font-black text-indigo-700 whitespace-nowrap">#{{ s.rollNo }}</td>
+                          <td class="py-3 px-4 whitespace-nowrap">
+                            <div class="flex items-center gap-2.5">
+                              <img [src]="safeAvatar(s.image, s.name)" [alt]="s.name" class="w-9 h-9 rounded-xl object-cover border border-slate-200 shadow-2xs shrink-0" referrerpolicy="no-referrer">
+                              <div>
+                                <p class="font-black text-slate-900 text-xs">{{ s.name }}</p>
+                                <div class="flex items-center gap-1.5 mt-0.5">
+                                  <span class="px-1.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 text-[10px] font-bold">{{ s.grade }}</span>
+                                  <span class="text-[10px] text-slate-500 font-medium">{{ s.section || 'General' }}</span>
+                                </div>
+                                @if (s.studentBForm) {
+                                  <span class="text-[9px] text-slate-400 font-mono block">B-Form: {{ s.studentBForm }}</span>
+                                }
+                              </div>
+                            </div>
+                          </td>
+                          <td class="py-3 px-4 whitespace-nowrap">
+                            <p class="font-bold text-slate-900">{{ s.guardian }}</p>
+                            <p class="text-[10px] text-slate-500 font-mono">{{ s.guardianCnic || '35202-*******-1' }}</p>
+                            @if (s.guardianOccupation) {
+                              <p class="text-[10px] text-slate-400 truncate max-w-[160px]">{{ s.guardianOccupation }}</p>
+                            }
+                          </td>
+                          <td class="py-3 px-4 whitespace-nowrap">
+                            <a [href]="'tel:' + s.guardianPhone" class="font-mono text-xs font-bold text-indigo-600 hover:underline flex items-center gap-1">
+                              <lucide-icon [name]="'phone'" class="w-3 h-3 text-indigo-500"></lucide-icon>
+                              <span>{{ s.guardianPhone }}</span>
+                            </a>
+                          </td>
+                          <td class="py-3 px-3.5 text-center whitespace-nowrap">
+                            <span class="font-mono font-black text-slate-900 text-xs block">{{ s.attendance || '96%' }}</span>
+                            <span class="inline-block px-2 py-0.5 rounded-full text-[9px] font-black uppercase mt-0.5"
+                              [class]="s.status === 'Present' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : (s.status === 'Late' ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-rose-50 text-rose-700 border border-rose-200')">
+                              {{ s.status || 'Present' }}
+                            </span>
+                          </td>
+                          <td class="py-3 px-4 font-mono whitespace-nowrap">
+                            <p class="font-black text-slate-900">PKR {{ formatCurrency((s.feeAmount || 0)) }}/mo</p>
+                            @if (s.dueBakaya && s.dueBakaya > 0) {
+                              <p class="text-[10px] text-rose-600 font-black">Bakaya: PKR {{ formatCurrency(s.dueBakaya) }}</p>
+                            }
+                          </td>
+                          <td class="py-3 px-3.5 text-center whitespace-nowrap">
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase inline-block shadow-2xs"
+                              [class]="s.feeStatus === 'Paid' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : (s.feeStatus === 'Overdue' ? 'bg-rose-100 text-rose-800 border border-rose-200' : 'bg-amber-100 text-amber-800 border border-amber-200')">
+                              {{ s.feeStatus }}
+                            </span>
+                          </td>
+                          <td class="py-3 px-4 text-right whitespace-nowrap">
+                            <div class="flex items-center justify-end gap-1.5">
+                              <button (click)="openPrincipalFeeCollectModal(s)" title="Collect Fee at Counter" class="px-2 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[10px] cursor-pointer shadow-2xs active:scale-95 transition-all flex items-center gap-1">
+                                <lucide-icon [name]="'credit-card'" class="w-3 h-3"></lucide-icon>
+                                <span>Fee</span>
+                              </button>
+                              <button (click)="openEditStudentModal(s)" title="Edit Student Record" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[10px] cursor-pointer flex items-center gap-1">
+                                <lucide-icon [name]="'pencil'" class="w-3 h-3"></lucide-icon>
+                                <span>Edit</span>
+                              </button>
+                              <button (click)="openFeeChallanVoucher(s)" title="Print 3-Part Bank Challan" class="p-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 cursor-pointer">
+                                <lucide-icon [name]="'file-text'" class="w-3.5 h-3.5 text-indigo-600"></lucide-icon>
+                              </button>
+                              <button (click)="deleteStudentFromStage(s)" title="Remove Student" class="p-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 cursor-pointer">
+                                <lucide-icon [name]="'trash-2'" class="w-3.5 h-3.5 text-rose-600"></lucide-icon>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      } @empty {
+                        <tr>
+                          <td [attr.colspan]="getTableColspan('owner_stage_wise', 8)" class="py-12 text-center text-slate-400 font-bold space-y-2">
+                            <lucide-icon [name]="'search'" class="w-8 h-8 text-slate-300 mx-auto"></lucide-icon>
+                            <p>No student records found in {{ ownerSelectedStage }} matching your search or filters.</p>
+                            <button (click)="stageSearchQuery = ''; stageGradeFilter = 'All'; stageFeeFilter = 'All'; ownerStagePage = 1" class="px-3 py-1 rounded-lg bg-indigo-50 text-indigo-600 font-bold text-xs cursor-pointer">
+                              Reset Filters
+                            </button>
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
               </div>
 
               <!-- Pagination Controls with Page Numbers -->
@@ -1839,237 +1841,296 @@
 
               <!-- Row & Column Table View (Works on Mobile & Desktop) -->
               @if (studentViewMode === 'table') {
-                <div id="students-roster-table" class="overflow-x-auto custom-scrollbar border border-slate-200/90 rounded-[20px] shadow-xs bg-white scroll-mt-24">
-                <div class="px-4 py-2.5 bg-slate-900 text-white flex items-center justify-between text-xs font-bold border-b border-slate-800">
-                  <div class="flex items-center gap-2">
-                    <span class="w-2.5 h-2.5 rounded-full bg-sky-400"></span>
-                    <span>Enrolled Student Body Directory</span>
-                    <span class="px-2 py-0.5 rounded-md bg-white/10 text-[10px] font-mono text-slate-300">{{ filteredStudents.length }} Records</span>
+                <div id="students-roster-table" class="border border-slate-200/90 rounded-[20px] shadow-xs bg-white overflow-hidden scroll-mt-24">
+                  <div class="px-4 py-2.5 bg-slate-900 text-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 text-xs font-bold border-b border-slate-800">
+                    <div class="flex items-center gap-2 min-w-0 flex-wrap">
+                      <span class="w-2.5 h-2.5 rounded-full bg-sky-400 shrink-0"></span>
+                      <span class="truncate">Enrolled Student Body Directory</span>
+                      <span class="px-2 py-0.5 rounded-md bg-white/10 text-[10px] font-mono text-slate-300 whitespace-nowrap">{{ filteredStudents.length }} Records</span>
+                    </div>
+                    <div class="text-[11px] text-slate-300">
+                      Swipe horizontally for all 27 fields · Click row for quick Dossier
+                    </div>
                   </div>
-                  <div class="text-[11px] text-slate-300">
-                    Click a row or <span class="text-white font-black">Dossier</span> to inspect all 20 student fields
-                  </div>
-                </div>
 
-                <table appSchoolTable="owner_students_roster" tableTitle="Enrolled Student Body Directory" [canAddRow]="true" addRowLabel="Enroll Student" class="w-full text-left border-collapse text-xs tabular-nums">
-                  <thead class="bg-slate-100 text-slate-700 uppercase font-black tracking-wider text-[10px] border-b border-slate-200 select-none">
-                    <tr>
-                      <th class="px-3.5 py-3.5 whitespace-nowrap">Roll & ID</th>
-                      <th class="px-4 py-3.5 whitespace-nowrap">Student</th>
-                      <th class="px-3.5 py-3.5 whitespace-nowrap">Class & Sec</th>
-                      <th class="px-4 py-3.5 whitespace-nowrap">Guardian & Phone</th>
-                      <th class="px-3.5 py-3.5 whitespace-nowrap">Attendance</th>
-                      <th class="px-3.5 py-3.5 whitespace-nowrap">Monthly Fee</th>
-                      <th class="px-3.5 py-3.5 whitespace-nowrap">Fee Status</th>
-                      <th class="px-4 py-3.5 text-right whitespace-nowrap bg-slate-100">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-slate-100 font-medium bg-white text-slate-800">
-                    @for (student of getPaginatedItems(filteredStudents, 'students'); track student.id) {
-                      <tr [attr.data-row-key]="student.id" (click)="toggleStudentRow(student.id)" class="hover:bg-indigo-50/40 transition-colors duration-150 cursor-pointer"
-                          [class.bg-emerald-50]="student.id === newlyEnrolledStudentId">
-                        <!-- 1. Roll # & ID -->
-                        <td class="px-3.5 py-3.5 font-mono">
-                          <span class="px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 font-bold text-slate-800">#{{ student.rollNo }}</span>
-                          <span class="block text-[10px] text-slate-400 font-bold mt-0.5">{{ student.id }}</span>
-                        </td>
-                        <!-- 2. Student Name & Avatar -->
-                        <td class="px-4 py-3.5">
-                          <div class="flex items-center gap-2.5">
-                            <img [src]="safeAvatar(student.image, student.name)" [alt]="student.name" referrerpolicy="no-referrer" class="w-9 h-9 rounded-full object-cover border border-slate-200 shrink-0">
-                            <div class="min-w-0">
-                              <div class="flex items-center gap-1.5 flex-wrap">
+                  <div data-scs-table-scroll="1" class="w-full overflow-x-auto custom-scrollbar">
+                    <table appSchoolTable="owner_students_roster" tableTitle="Enrolled Student Body Directory" [canAddRow]="true" addRowLabel="Enroll Student" class="w-max min-w-full text-left border-collapse text-xs tabular-nums">
+                      <thead class="bg-slate-100 text-slate-700 uppercase font-black tracking-wider text-[10px] border-b border-slate-200 select-none">
+                        <tr>
+                          <th class="px-3.5 py-3.5 whitespace-nowrap">Roll #</th>
+                          <th class="px-3.5 py-3.5 whitespace-nowrap">Student ID</th>
+                          <th class="px-4 py-3.5 whitespace-nowrap">Student Name</th>
+                          <th class="px-3.5 py-3.5 whitespace-nowrap">Gender</th>
+                          <th class="px-3.5 py-3.5 whitespace-nowrap">Date of Birth</th>
+                          <th class="px-3.5 py-3.5 whitespace-nowrap">B-Form / CNIC</th>
+                          <th class="px-3.5 py-3.5 whitespace-nowrap">Blood Group</th>
+                          <th class="px-3.5 py-3.5 whitespace-nowrap">Class / Grade</th>
+                          <th class="px-3.5 py-3.5 whitespace-nowrap">Section</th>
+                          <th class="px-3.5 py-3.5 whitespace-nowrap">Previous School</th>
+                          <th class="px-3.5 py-3.5 whitespace-nowrap">Merit Score</th>
+                          <th class="px-4 py-3.5 whitespace-nowrap">Father / Guardian</th>
+                          <th class="px-3.5 py-3.5 whitespace-nowrap">Relation</th>
+                          <th class="px-3.5 py-3.5 whitespace-nowrap">Guardian CNIC</th>
+                          <th class="px-4 py-3.5 whitespace-nowrap">Mobile &amp; WhatsApp</th>
+                          <th class="px-3.5 py-3.5 whitespace-nowrap">Guardian Email</th>
+                          <th class="px-3.5 py-3.5 whitespace-nowrap">Occupation</th>
+                          <th class="px-4 py-3.5 whitespace-nowrap">Residential Address</th>
+                          <th class="px-3.5 py-3.5 whitespace-nowrap">Emergency Contact</th>
+                          <th class="px-3.5 py-3.5 whitespace-nowrap">Admission Fee</th>
+                          <th class="px-3.5 py-3.5 whitespace-nowrap">Monthly Tuition</th>
+                          <th class="px-3.5 py-3.5 whitespace-nowrap">Concession %</th>
+                          <th class="px-3.5 py-3.5 whitespace-nowrap">Due Bakaya</th>
+                          <th class="px-3.5 py-3.5 whitespace-nowrap">Fee Status</th>
+                          <th class="px-3.5 py-3.5 whitespace-nowrap">Attendance</th>
+                          <th class="px-4 py-3.5 whitespace-nowrap">Medical Notes</th>
+                          <th class="px-3.5 py-3.5 whitespace-nowrap">Admission Date</th>
+                          <th class="px-4 py-3.5 text-right whitespace-nowrap bg-slate-100">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y divide-slate-100 font-medium bg-white text-slate-800">
+                        @for (student of getPaginatedItems(filteredStudents, 'students'); track student.id) {
+                          <tr [attr.data-row-key]="student.id" (click)="toggleStudentRow(student.id)" class="hover:bg-indigo-50/40 transition-colors duration-150 cursor-pointer"
+                              [class.bg-emerald-50]="student.id === newlyEnrolledStudentId">
+                            <!-- 1. Roll # -->
+                            <td class="px-3.5 py-3.5 font-mono whitespace-nowrap">
+                              <span class="px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 font-bold text-slate-800">#{{ student.rollNo }}</span>
+                            </td>
+                            <!-- 2. Student ID -->
+                            <td class="px-3.5 py-3.5 font-mono text-[11px] font-bold text-slate-500 whitespace-nowrap">{{ student.id }}</td>
+                            <!-- 3. Student Name -->
+                            <td class="px-4 py-3.5 whitespace-nowrap">
+                              <div class="flex items-center gap-2.5">
+                                <img [src]="safeAvatar(student.image, student.name)" [alt]="student.name" referrerpolicy="no-referrer" class="w-8 h-8 rounded-full object-cover border border-slate-200 shrink-0">
                                 <span class="font-black text-slate-900 text-xs">{{ student.name }}</span>
                                 @if (student.id === newlyEnrolledStudentId) {
-                                  <span class="px-2 py-0.5 rounded-full bg-emerald-600 text-white font-black text-[9px] uppercase tracking-wider">Newly Enrolled</span>
+                                  <span class="px-2 py-0.5 rounded-full bg-emerald-600 text-white font-black text-[9px] uppercase tracking-wider shrink-0">New</span>
                                 }
                               </div>
-                              <span class="text-[10px] text-slate-500">{{ student.gender || 'Male' }} · {{ student.bloodGroup || 'B+' }}</span>
-                            </div>
-                          </div>
-                        </td>
-                        <!-- 3. Grade & Section -->
-                        <td class="px-3.5 py-3.5">
-                          <span class="font-black text-indigo-700 block">{{ student.grade }}</span>
-                          <span class="text-[10px] text-slate-500 font-bold">Sec {{ student.section || 'A' }}</span>
-                        </td>
-                        <!-- 4. Guardian & Phone -->
-                        <td class="px-4 py-3.5">
-                          <span class="font-bold text-slate-900 block truncate max-w-[160px]">{{ student.guardian }}</span>
-                          <a [href]="'tel:' + student.guardianPhone" (click)="$event.stopPropagation()" class="font-mono font-bold text-[11px] text-indigo-600 hover:underline inline-flex items-center gap-1">
-                            <lucide-icon [name]="'phone'" class="w-3 h-3 text-emerald-600"></lucide-icon>
-                            <span>{{ student.guardianPhone }}</span>
-                          </a>
-                        </td>
-                        <!-- 5. Attendance -->
-                        <td class="px-3.5 py-3.5">
-                          <span class="px-2 py-0.5 rounded-full text-[10px] font-black"
-                            [class]="student.status === 'Present' ? 'bg-emerald-50 text-emerald-700' : (student.status === 'Late' ? 'bg-amber-50 text-amber-700' : 'bg-rose-50 text-rose-700')">
-                            {{ student.attendance }} ({{ student.status }})
-                          </span>
-                        </td>
-                        <!-- 6. Monthly Fee -->
-                        <td class="px-3.5 py-3.5 font-mono font-bold text-slate-900">PKR {{ formatCurrency((student.feeAmount || 18000)) }}</td>
-                        <!-- 7. Fee Status -->
-                        <td class="px-3.5 py-3.5 font-bold">
-                          <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase"
-                            [class]="student.feeStatus === 'Paid' ? 'bg-emerald-100 text-emerald-800' : (student.feeStatus === 'Overdue' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800')">
-                            {{ student.feeStatus }}
-                          </span>
-                        </td>
-                        <!-- 8. Actions -->
-                        <td class="px-4 py-3.5 text-right whitespace-nowrap bg-white">
-                          <div class="flex items-center justify-end gap-1" (click)="$event.stopPropagation()">
-                            <button (click)="openEditStudentModal(student); $event.stopPropagation()" title="Edit Student Profile" class="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer">
-                              <lucide-icon [name]="'pencil'" class="w-3.5 h-3.5 text-indigo-600"></lucide-icon>
-                            </button>
-                            <button (click)="openStudentDossierModal(student); $event.stopPropagation()" title="View Full 20-Field Student Dossier" class="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-black text-[10px] cursor-pointer flex items-center gap-1">
-                              <lucide-icon [name]="'file-text'" class="w-3 h-3"></lucide-icon>
-                              <span>Dossier</span>
-                            </button>
-                            <button (click)="openFaceEnrollmentModal(student.id, 'Student'); $event.stopPropagation()" title="Enroll Face/Eye Biometrics" class="p-1.5 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-700 cursor-pointer">
-                              <lucide-icon [name]="'eye'" class="w-3.5 h-3.5"></lucide-icon>
-                            </button>
-                            <button (click)="openIdCardModal(student); $event.stopPropagation()" title="View Student ID Card" class="p-1.5 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-700 cursor-pointer">
-                              <lucide-icon [name]="'qr-code'" class="w-3.5 h-3.5"></lucide-icon>
-                            </button>
-                            <button (click)="openFeeChallanVoucher(student); $event.stopPropagation()" title="Print 3-Copy Bank Challan" class="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer">
-                              <lucide-icon [name]="'printer'" class="w-3.5 h-3.5"></lucide-icon>
-                            </button>
-                            <button (click)="deleteStudent(student); $event.stopPropagation()" title="Delete Student" class="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 cursor-pointer">
-                              <lucide-icon [name]="'trash-2'" class="w-3.5 h-3.5"></lucide-icon>
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-
-                      <!-- Row Expansion Feature: Detailed View showing Contact, Parent Details, and Status -->
-                      @if (isStudentExpanded(student.id)) {
-                        <tr class="bg-slate-50/60 transition-all">
-                          <td colspan="8" class="p-4 sm:p-5">
-                            <div class="p-5 sm:p-6 rounded-2xl bg-gradient-to-b from-white via-white to-indigo-50/35 shadow-[0_12px_32px_-8px_rgba(79,70,229,0.16),0_2px_8px_-2px_rgba(15,23,42,0.06)] space-y-5">
-                              <!-- Expanded Header -->
-                              <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                                <div class="flex items-center gap-3">
-                                  <img [src]="safeAvatar(student.image, student.name)" [alt]="student.name" referrerpolicy="no-referrer" class="w-12 h-12 rounded-2xl object-cover shadow-xs">
-                                  <div>
-                                    <div class="flex items-center gap-2 flex-wrap">
-                                      <h4 class="text-sm font-black text-slate-950">{{ student.name }}</h4>
-                                      <span class="px-2 py-0.5 rounded-md bg-indigo-600 text-white text-[10px] font-black uppercase">Roll #{{ student.rollNo }}</span>
-                                      <span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-800 text-[10px] font-bold font-mono">{{ student.id }}</span>
-                                      <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold"
-                                        [class]="student.status === 'Present' ? 'bg-emerald-100 text-emerald-800' : (student.status === 'Late' ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800')">
-                                        ● {{ student.status }} Today ({{ student.attendance }})
-                                      </span>
-                                    </div>
-                                    <p class="text-[11px] text-slate-500 mt-0.5">
-                                      Class: <span class="font-bold text-slate-800">{{ student.grade }} ({{ student.section }})</span> · Admission Date: <span class="font-semibold text-slate-800">{{ student.admissionDate }}</span>
-                                    </p>
-                                  </div>
-                                </div>
-
-                                <div class="flex items-center gap-2 self-end sm:self-center flex-wrap">
-                                  <button (click)="openStudentDossierModal(student); $event.stopPropagation()" class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shadow-2xs flex items-center gap-1.5 cursor-pointer">
-                                    <lucide-icon [name]="'file-text'" class="w-3.5 h-3.5"></lucide-icon>
-                                    <span>Full Dossier</span>
-                                  </button>
-                                  <button (click)="openIdCardModal(student); $event.stopPropagation()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold flex items-center gap-1.5 cursor-pointer">
-                                    <lucide-icon [name]="'qr-code'" class="w-3.5 h-3.5 text-indigo-600"></lucide-icon>
-                                    <span>ID Card</span>
-                                  </button>
-                                  <button (click)="openFeeChallanVoucher(student); $event.stopPropagation()" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-2xs flex items-center gap-1.5 cursor-pointer">
-                                    <lucide-icon [name]="'printer'" class="w-3.5 h-3.5"></lucide-icon>
-                                    <span>Fee Challan</span>
-                                  </button>
-                                  <button (click)="toggleStudentRow(student.id); $event.stopPropagation()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer" title="Collapse row">
-                                    <lucide-icon [name]="'x'" class="w-4 h-4"></lucide-icon>
-                                  </button>
-                                </div>
-                              </div>
-
-                              <!-- Borderless 3-Column Student & Parent Particulars inside the Single Card -->
-                              <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs">
-                                <div class="space-y-1.5">
-                                  <span class="text-[10px] font-black uppercase tracking-wider text-indigo-600 block">Candidate &amp; Intake</span>
-                                  <div class="flex justify-between"><span class="text-slate-500 font-bold">Form-B / CNIC:</span><span class="font-mono text-slate-900 font-black">{{ student.studentBForm || 'Pending' }}</span></div>
-                                  <div class="flex justify-between"><span class="text-slate-500 font-bold">Blood Group:</span><span class="font-black text-rose-700">{{ student.bloodGroup || 'B+' }}</span></div>
-                                  <div class="flex justify-between"><span class="text-slate-500 font-bold">Gender &amp; DOB:</span><span class="font-bold text-slate-800">{{ student.gender || 'Male' }}, {{ student.dob || '2010-01-01' }}</span></div>
-                                  <div class="flex justify-between"><span class="text-slate-500 font-bold">Entrance Score:</span><span class="font-mono font-black text-emerald-700">{{ student.score || 'Admitted' }}</span></div>
-                                </div>
-
-                                <div class="space-y-1.5">
-                                  <span class="text-[10px] font-black uppercase tracking-wider text-indigo-600 block">Parent &amp; Guardian Details</span>
-                                  <div class="flex justify-between"><span class="text-slate-500 font-bold">Father / Guardian:</span><span class="font-black text-slate-900">{{ student.guardian }} ({{ student.guardianRelation || 'Father' }})</span></div>
-                                  <div class="flex justify-between"><span class="text-slate-500 font-bold">Father's CNIC:</span><span class="font-mono text-slate-800 font-bold">{{ student.guardianCnic || 'On file' }}</span></div>
-                                  <div class="flex justify-between"><span class="text-slate-500 font-bold">Occupation:</span><span class="font-bold text-slate-800 truncate max-w-[140px]">{{ student.guardianOccupation || 'Professional' }}</span></div>
-                                  <div class="flex justify-between"><span class="text-slate-500 font-bold">Email:</span><span class="font-medium text-slate-700 truncate max-w-[140px]">{{ student.guardianEmail || 'guardian@campus.edu' }}</span></div>
-                                </div>
-
-                                <div class="space-y-1.5">
-                                  <span class="text-[10px] font-black uppercase tracking-wider text-indigo-600 block">Contact &amp; Medical Record</span>
-                                  <div class="flex justify-between">
-                                    <span class="text-slate-500 font-bold">Primary Phone:</span>
-                                    <a [href]="'tel:' + student.guardianPhone" (click)="$event.stopPropagation()" class="font-mono font-black text-indigo-600 hover:underline">{{ student.guardianPhone }}</a>
-                                  </div>
-                                  <div class="flex justify-between"><span class="text-slate-500 font-bold">Emergency:</span><span class="font-mono font-bold text-slate-800">{{ student.emergencyContact || student.guardianPhone }}</span></div>
-                                  <div class="flex justify-between"><span class="text-slate-500 font-bold">Address:</span><span class="font-medium text-slate-800 truncate max-w-[150px]">{{ student.address || 'Campus Zone' }}</span></div>
-                                  <div class="flex justify-between"><span class="text-slate-500 font-bold">Medical Notes:</span><span class="font-medium text-slate-800 truncate max-w-[150px]">{{ student.medicalConditions || 'Normal health' }}</span></div>
-                                </div>
-                              </div>
-
-                                <!-- Additional Custom Fields from Admission / Student Form -->
-                                @if (getStudentCardCustomFields(student).length > 0) {
-                                  <div class="pt-2 border-t border-slate-200/70">
-                                    <span class="text-[10px] font-black uppercase tracking-wider text-indigo-600 block mb-2">Additional Enrollment Particulars</span>
-                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-1.5 text-xs">
-                                      @for (cf of getStudentCardCustomFields(student); track cf.id) {
-                                        <div class="flex justify-between gap-2">
-                                          <span class="text-slate-500 font-bold truncate">{{ cf.label }}:</span>
-                                          <span class="font-black text-slate-900 truncate">{{ cf.value }}</span>
-                                        </div>
-                                      }
-                                    </div>
-                                  </div>
-                                }
-
-                                <!-- Single Unified Fee & Attendance Highlight Strip -->
-                                <div class="rounded-xl p-3.5 bg-gradient-to-r from-indigo-50 via-emerald-50/70 to-rose-50/60 flex flex-wrap items-center justify-between gap-4 text-xs">
-                                  <div class="flex items-center gap-4 flex-wrap">
-                                    <div>
-                                      <span class="text-[10px] font-black uppercase text-slate-500 block">Attendance Rate</span>
-                                      <span class="font-black text-slate-950">{{ student.status }} ({{ student.attendance }})</span>
-                                    </div>
-                                    <div>
-                                      <span class="text-[10px] font-black uppercase text-slate-500 block">Fee Ledger Status</span>
-                                      <span class="font-black" [class]="student.feeStatus === 'Paid' ? 'text-emerald-700' : (student.feeStatus === 'Pending' ? 'text-amber-700' : 'text-rose-700')">{{ student.feeStatus }}</span>
-                                    </div>
-                                  </div>
-                                  <div class="flex items-center gap-5">
-                                    <div class="text-right">
-                                      <span class="text-[10px] font-black uppercase text-slate-500 block">Monthly Tuition Fee</span>
-                                      <span class="font-mono font-black text-sm text-indigo-950">PKR {{ formatCurrency(student.feeAmount) }}</span>
-                                    </div>
-                                    <div class="text-right">
-                                      <span class="text-[10px] font-black uppercase text-rose-700 block">Due Bakaya</span>
-                                      <span class="font-mono font-black text-sm text-rose-700">PKR {{ formatCurrency(student.dueBakaya || (student.feeStatus === 'Paid' ? 0 : student.feeAmount)) }}</span>
-                                    </div>
-                                  </div>
-                                </div>
+                            </td>
+                            <!-- 4. Gender -->
+                            <td class="px-3.5 py-3.5 whitespace-nowrap text-slate-700 font-semibold">{{ student.gender || 'Male' }}</td>
+                            <!-- 5. Date of Birth -->
+                            <td class="px-3.5 py-3.5 whitespace-nowrap font-mono text-[11px] text-slate-600">{{ student.dob || '—' }}</td>
+                            <!-- 6. B-Form / CNIC -->
+                            <td class="px-3.5 py-3.5 whitespace-nowrap font-mono text-[11px] text-slate-700">{{ student.studentBForm || 'Pending' }}</td>
+                            <!-- 7. Blood Group -->
+                            <td class="px-3.5 py-3.5 whitespace-nowrap">
+                              <span class="px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 font-mono font-bold text-[10px]">{{ student.bloodGroup || 'B+' }}</span>
+                            </td>
+                            <!-- 8. Class / Grade -->
+                            <td class="px-3.5 py-3.5 whitespace-nowrap font-black text-indigo-700">{{ student.grade }}</td>
+                            <!-- 9. Section -->
+                            <td class="px-3.5 py-3.5 whitespace-nowrap text-slate-700 font-bold">{{ student.section || 'Section A' }}</td>
+                            <!-- 10. Previous School -->
+                            <td class="px-3.5 py-3.5 whitespace-nowrap max-w-[200px] truncate text-slate-600" [title]="student.previousSchool || ''">{{ student.previousSchool || '—' }}</td>
+                            <!-- 11. Merit Score -->
+                            <td class="px-3.5 py-3.5 whitespace-nowrap font-mono font-bold text-emerald-700">{{ student.score || '—' }}</td>
+                            <!-- 12. Father / Guardian -->
+                            <td class="px-4 py-3.5 whitespace-nowrap font-bold text-slate-900">{{ student.guardian }}</td>
+                            <!-- 13. Relation -->
+                            <td class="px-3.5 py-3.5 whitespace-nowrap text-slate-600">{{ student.guardianRelation || 'Father' }}</td>
+                            <!-- 14. Guardian CNIC -->
+                            <td class="px-3.5 py-3.5 whitespace-nowrap font-mono text-[11px] text-slate-700">{{ student.guardianCnic || '—' }}</td>
+                            <!-- 15. Mobile & WhatsApp -->
+                            <td class="px-4 py-3.5 whitespace-nowrap">
+                              <a [href]="'tel:' + student.guardianPhone" (click)="$event.stopPropagation()" class="font-mono font-bold text-[11px] text-indigo-600 hover:underline inline-flex items-center gap-1">
+                                <lucide-icon [name]="'phone'" class="w-3 h-3 text-emerald-600 shrink-0"></lucide-icon>
+                                <span>{{ student.guardianPhone }}</span>
+                              </a>
+                            </td>
+                            <!-- 16. Guardian Email -->
+                            <td class="px-3.5 py-3.5 whitespace-nowrap text-slate-600 max-w-[200px] truncate" [title]="student.guardianEmail || ''">{{ student.guardianEmail || '—' }}</td>
+                            <!-- 17. Occupation -->
+                            <td class="px-3.5 py-3.5 whitespace-nowrap text-slate-600 max-w-[180px] truncate" [title]="student.guardianOccupation || ''">{{ student.guardianOccupation || '—' }}</td>
+                            <!-- 18. Residential Address -->
+                            <td class="px-4 py-3.5 whitespace-nowrap text-slate-600 max-w-[220px] truncate" [title]="student.address || ''">{{ student.address || '—' }}</td>
+                            <!-- 19. Emergency Contact -->
+                            <td class="px-3.5 py-3.5 whitespace-nowrap font-mono text-[11px] text-slate-700">{{ student.emergencyContact || student.guardianPhone || '—' }}</td>
+                            <!-- 20. Admission Fee -->
+                            <td class="px-3.5 py-3.5 whitespace-nowrap font-mono font-bold text-slate-800">PKR {{ formatCurrency((getStudentAdmissionFee(student) ?? 25000)) }}</td>
+                            <!-- 21. Monthly Tuition -->
+                            <td class="px-3.5 py-3.5 whitespace-nowrap font-mono font-bold text-slate-900">PKR {{ formatCurrency((student.feeAmount || 18000)) }}</td>
+                            <!-- 22. Concession % -->
+                            <td class="px-3.5 py-3.5 whitespace-nowrap font-mono font-bold text-violet-700">{{ getStudentDiscount(student) }}%</td>
+                            <!-- 23. Due Bakaya -->
+                            <td class="px-3.5 py-3.5 whitespace-nowrap font-mono font-bold"
+                              [class]="(student.dueBakaya || (student.feeStatus === 'Paid' ? 0 : (student.feeAmount || 0))) > 0 ? 'text-rose-700' : 'text-emerald-700'">
+                              PKR {{ formatCurrency(student.dueBakaya || (student.feeStatus === 'Paid' ? 0 : (student.feeAmount || 0))) }}
+                            </td>
+                            <!-- 24. Fee Status -->
+                            <td class="px-3.5 py-3.5 whitespace-nowrap font-bold">
+                              <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase"
+                                [class]="student.feeStatus === 'Paid' ? 'bg-emerald-100 text-emerald-800' : (student.feeStatus === 'Overdue' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800')">
+                                {{ student.feeStatus }}
+                              </span>
+                            </td>
+                            <!-- 25. Attendance -->
+                            <td class="px-3.5 py-3.5 whitespace-nowrap">
+                              <span class="px-2 py-0.5 rounded-full text-[10px] font-black"
+                                [class]="student.status === 'Present' ? 'bg-emerald-50 text-emerald-700' : (student.status === 'Late' ? 'bg-amber-50 text-amber-700' : 'bg-rose-50 text-rose-700')">
+                                {{ student.attendance || '96%' }} ({{ student.status || 'Present' }})
+                              </span>
+                            </td>
+                            <!-- 26. Medical Notes -->
+                            <td class="px-4 py-3.5 whitespace-nowrap text-slate-600 max-w-[200px] truncate" [title]="student.medicalConditions || 'Normal health'">{{ student.medicalConditions || 'Normal health' }}</td>
+                            <!-- 27. Admission Date -->
+                            <td class="px-3.5 py-3.5 whitespace-nowrap font-mono text-[11px] text-slate-500">{{ student.admissionDate || '—' }}</td>
+                            <!-- 28. Actions -->
+                            <td class="px-4 py-3.5 text-right whitespace-nowrap bg-white">
+                              <div class="flex items-center justify-end gap-1" (click)="$event.stopPropagation()">
+                                <button (click)="openEditStudentModal(student); $event.stopPropagation()" title="Edit Student Profile" class="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer">
+                                  <lucide-icon [name]="'pencil'" class="w-3.5 h-3.5 text-indigo-600"></lucide-icon>
+                                </button>
+                                <button (click)="openStudentDossierModal(student); $event.stopPropagation()" title="View Full 20-Field Student Dossier" class="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-black text-[10px] cursor-pointer flex items-center gap-1">
+                                  <lucide-icon [name]="'file-text'" class="w-3 h-3"></lucide-icon>
+                                  <span>Dossier</span>
+                                </button>
+                                <button (click)="openFaceEnrollmentModal(student.id, 'Student'); $event.stopPropagation()" title="Enroll Face/Eye Biometrics" class="p-1.5 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-700 cursor-pointer">
+                                  <lucide-icon [name]="'eye'" class="w-3.5 h-3.5"></lucide-icon>
+                                </button>
+                                <button (click)="openIdCardModal(student); $event.stopPropagation()" title="View Student ID Card" class="p-1.5 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-700 cursor-pointer">
+                                  <lucide-icon [name]="'qr-code'" class="w-3.5 h-3.5"></lucide-icon>
+                                </button>
+                                <button (click)="openFeeChallanVoucher(student); $event.stopPropagation()" title="Print 3-Copy Bank Challan" class="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer">
+                                  <lucide-icon [name]="'printer'" class="w-3.5 h-3.5"></lucide-icon>
+                                </button>
+                                <button (click)="deleteStudent(student); $event.stopPropagation()" title="Delete Student" class="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 cursor-pointer">
+                                  <lucide-icon [name]="'trash-2'" class="w-3.5 h-3.5"></lucide-icon>
+                                </button>
                               </div>
                             </td>
                           </tr>
-                        }
-                      }
 
-                      @if (filteredStudents.length === 0) {
-                        <tr>
-                          <td colspan="8" class="px-4 py-10 text-center text-slate-400 font-bold text-xs">
-                            No students found matching current class or search filters.
-                          </td>
-                        </tr>
-                      }
-                    </tbody>
-                  </table>
+                          <!-- Row Expansion Feature: Detailed View pinned within viewport width -->
+                          @if (isStudentExpanded(student.id)) {
+                            <tr class="bg-slate-50/60 transition-all">
+                              <td [attr.colspan]="getTableColspan('owner_students_roster', 28)" class="p-0 bg-slate-50/70">
+                                <div class="sticky left-0 w-[min(calc(100vw-2.5rem),60rem)] sm:w-[min(calc(100vw-4rem),64rem)] p-3 sm:p-5">
+                                  <div class="p-4 sm:p-6 rounded-2xl bg-gradient-to-b from-white via-white to-indigo-50/35 shadow-[0_12px_32px_-8px_rgba(79,70,229,0.16),0_2px_8px_-2px_rgba(15,23,42,0.06)] space-y-5">
+                                    <!-- Expanded Header -->
+                                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                                      <div class="flex items-center gap-3">
+                                        <img [src]="safeAvatar(student.image, student.name)" [alt]="student.name" referrerpolicy="no-referrer" class="w-12 h-12 rounded-2xl object-cover shadow-xs">
+                                        <div>
+                                          <div class="flex items-center gap-2 flex-wrap">
+                                            <h4 class="text-sm font-black text-slate-950">{{ student.name }}</h4>
+                                            <span class="px-2 py-0.5 rounded-md bg-indigo-600 text-white text-[10px] font-black uppercase">Roll #{{ student.rollNo }}</span>
+                                            <span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-800 text-[10px] font-bold font-mono">{{ student.id }}</span>
+                                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold"
+                                              [class]="student.status === 'Present' ? 'bg-emerald-100 text-emerald-800' : (student.status === 'Late' ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800')">
+                                              ● {{ student.status }} Today ({{ student.attendance }})
+                                            </span>
+                                          </div>
+                                          <p class="text-[11px] text-slate-500 mt-0.5">
+                                            Class: <span class="font-bold text-slate-800">{{ student.grade }} ({{ student.section }})</span> · Admission Date: <span class="font-semibold text-slate-800">{{ student.admissionDate }}</span>
+                                          </p>
+                                        </div>
+                                      </div>
+
+                                      <div class="flex items-center gap-2 self-end sm:self-center flex-wrap">
+                                        <button (click)="openStudentDossierModal(student); $event.stopPropagation()" class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shadow-2xs flex items-center gap-1.5 cursor-pointer">
+                                          <lucide-icon [name]="'file-text'" class="w-3.5 h-3.5"></lucide-icon>
+                                          <span>Full Dossier</span>
+                                        </button>
+                                        <button (click)="openIdCardModal(student); $event.stopPropagation()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold flex items-center gap-1.5 cursor-pointer">
+                                          <lucide-icon [name]="'qr-code'" class="w-3.5 h-3.5 text-indigo-600"></lucide-icon>
+                                          <span>ID Card</span>
+                                        </button>
+                                        <button (click)="openFeeChallanVoucher(student); $event.stopPropagation()" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-2xs flex items-center gap-1.5 cursor-pointer">
+                                          <lucide-icon [name]="'printer'" class="w-3.5 h-3.5"></lucide-icon>
+                                          <span>Fee Challan</span>
+                                        </button>
+                                        <button (click)="toggleStudentRow(student.id); $event.stopPropagation()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer" title="Collapse row">
+                                          <lucide-icon [name]="'x'" class="w-4 h-4"></lucide-icon>
+                                        </button>
+                                      </div>
+                                    </div>
+
+                                    <!-- Borderless 3-Column Student & Parent Particulars inside the Single Card -->
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs">
+                                      <div class="space-y-1.5">
+                                        <span class="text-[10px] font-black uppercase tracking-wider text-indigo-600 block">Candidate &amp; Intake</span>
+                                        <div class="flex justify-between"><span class="text-slate-500 font-bold">Form-B / CNIC:</span><span class="font-mono text-slate-900 font-black">{{ student.studentBForm || 'Pending' }}</span></div>
+                                        <div class="flex justify-between"><span class="text-slate-500 font-bold">Blood Group:</span><span class="font-black text-rose-700">{{ student.bloodGroup || 'B+' }}</span></div>
+                                        <div class="flex justify-between"><span class="text-slate-500 font-bold">Gender &amp; DOB:</span><span class="font-bold text-slate-800">{{ student.gender || 'Male' }}, {{ student.dob || '2010-01-01' }}</span></div>
+                                        <div class="flex justify-between"><span class="text-slate-500 font-bold">Entrance Score:</span><span class="font-mono font-black text-emerald-700">{{ student.score || 'Admitted' }}</span></div>
+                                      </div>
+
+                                      <div class="space-y-1.5">
+                                        <span class="text-[10px] font-black uppercase tracking-wider text-indigo-600 block">Parent &amp; Guardian Details</span>
+                                        <div class="flex justify-between"><span class="text-slate-500 font-bold">Father / Guardian:</span><span class="font-black text-slate-900">{{ student.guardian }} ({{ student.guardianRelation || 'Father' }})</span></div>
+                                        <div class="flex justify-between"><span class="text-slate-500 font-bold">Father's CNIC:</span><span class="font-mono text-slate-800 font-bold">{{ student.guardianCnic || 'On file' }}</span></div>
+                                        <div class="flex justify-between"><span class="text-slate-500 font-bold">Occupation:</span><span class="font-bold text-slate-800 truncate max-w-[140px]">{{ student.guardianOccupation || 'Professional' }}</span></div>
+                                        <div class="flex justify-between"><span class="text-slate-500 font-bold">Email:</span><span class="font-medium text-slate-700 truncate max-w-[140px]">{{ student.guardianEmail || 'guardian@campus.edu' }}</span></div>
+                                      </div>
+
+                                      <div class="space-y-1.5">
+                                        <span class="text-[10px] font-black uppercase tracking-wider text-indigo-600 block">Contact &amp; Medical Record</span>
+                                        <div class="flex justify-between">
+                                          <span class="text-slate-500 font-bold">Primary Phone:</span>
+                                          <a [href]="'tel:' + student.guardianPhone" (click)="$event.stopPropagation()" class="font-mono font-black text-indigo-600 hover:underline">{{ student.guardianPhone }}</a>
+                                        </div>
+                                        <div class="flex justify-between"><span class="text-slate-500 font-bold">Emergency:</span><span class="font-mono font-bold text-slate-800">{{ student.emergencyContact || student.guardianPhone }}</span></div>
+                                        <div class="flex justify-between"><span class="text-slate-500 font-bold">Address:</span><span class="font-medium text-slate-800 truncate max-w-[150px]">{{ student.address || 'Campus Zone' }}</span></div>
+                                        <div class="flex justify-between"><span class="text-slate-500 font-bold">Medical Notes:</span><span class="font-medium text-slate-800 truncate max-w-[150px]">{{ student.medicalConditions || 'Normal health' }}</span></div>
+                                      </div>
+                                    </div>
+
+                                    <!-- Additional Custom Fields from Admission / Student Form -->
+                                    @if (getStudentCardCustomFields(student).length > 0) {
+                                      <div class="pt-2 border-t border-slate-200/70">
+                                        <span class="text-[10px] font-black uppercase tracking-wider text-indigo-600 block mb-2">Additional Enrollment Particulars</span>
+                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-1.5 text-xs">
+                                          @for (cf of getStudentCardCustomFields(student); track cf.id) {
+                                            <div class="flex justify-between gap-2">
+                                              <span class="text-slate-500 font-bold truncate">{{ cf.label }}:</span>
+                                              <span class="font-black text-slate-900 truncate">{{ cf.value }}</span>
+                                            </div>
+                                          }
+                                        </div>
+                                      </div>
+                                    }
+
+                                    <!-- Single Unified Fee & Attendance Highlight Strip -->
+                                    <div class="rounded-xl p-3.5 bg-gradient-to-r from-indigo-50 via-emerald-50/70 to-rose-50/60 flex flex-wrap items-center justify-between gap-4 text-xs">
+                                      <div class="flex items-center gap-4 flex-wrap">
+                                        <div>
+                                          <span class="text-[10px] font-black uppercase text-slate-500 block">Attendance Rate</span>
+                                          <span class="font-black text-slate-950">{{ student.status }} ({{ student.attendance }})</span>
+                                        </div>
+                                        <div>
+                                          <span class="text-[10px] font-black uppercase text-slate-500 block">Fee Ledger Status</span>
+                                          <span class="font-black" [class]="student.feeStatus === 'Paid' ? 'text-emerald-700' : (student.feeStatus === 'Pending' ? 'text-amber-700' : 'text-rose-700')">{{ student.feeStatus }}</span>
+                                        </div>
+                                      </div>
+                                      <div class="flex items-center gap-5">
+                                        <div class="text-right">
+                                          <span class="text-[10px] font-black uppercase text-slate-500 block">Monthly Tuition Fee</span>
+                                          <span class="font-mono font-black text-sm text-indigo-950">PKR {{ formatCurrency(student.feeAmount) }}</span>
+                                        </div>
+                                        <div class="text-right">
+                                          <span class="text-[10px] font-black uppercase text-rose-700 block">Due Bakaya</span>
+                                          <span class="font-mono font-black text-sm text-rose-700">PKR {{ formatCurrency(student.dueBakaya || (student.feeStatus === 'Paid' ? 0 : student.feeAmount)) }}</span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
+                          }
+                        }
+
+                        @if (filteredStudents.length === 0) {
+                          <tr>
+                            <td [attr.colspan]="getTableColspan('owner_students_roster', 28)" class="px-4 py-10 text-center text-slate-400 font-bold text-xs">
+                              No students found matching current class or search filters.
+                            </td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               }
 
@@ -2140,70 +2201,72 @@
               </div>
 
               <!-- Medical Table -->
-              <div class="overflow-x-auto custom-scrollbar border border-slate-200/90 rounded-[20px] shadow-xs bg-white">
-                <table appSchoolTable="owner_medical" tableTitle="Student Health & Medical Records" [canAddRow]="true" addRowLabel="Record Health Entry" class="w-full text-left border-collapse text-xs tabular-nums">
-                  <thead class="bg-rose-50/70 text-slate-700 uppercase font-black tracking-wider text-[10px] border-b border-slate-200 select-none">
-                    <tr>
-                      <th class="px-4 py-3.5">Roll #</th>
-                      <th class="px-4 py-3.5">Student & Class</th>
-                      <th class="px-4 py-3.5">Blood & Vaccines</th>
-                      <th class="px-4 py-3.5">Allergies & Conditions</th>
-                      <th class="px-4 py-3.5">Emergency Contact & Physician</th>
-                      <th class="px-4 py-3.5">Medical Alert</th>
-                      <th class="px-4 py-3.5 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-slate-100 font-medium">
-                    @for (m of getPaginatedItems(filteredStudentMedicalRecords, 'students'); track m.id) {
-                      <tr [attr.data-row-key]="m.id" class="hover:bg-slate-50/70 transition-colors">
-                        <td class="px-4 py-3.5 font-mono font-bold text-slate-700">{{ m.rollNo }}</td>
-                        <td class="px-4 py-3.5">
-                          <p class="font-black text-slate-900">{{ m.studentName }}</p>
-                          <p class="text-[10px] font-bold text-indigo-600">{{ m.grade }}</p>
-                        </td>
-                        <td class="px-4 py-3.5">
-                          <span class="px-2 py-0.5 rounded-md bg-rose-100 text-rose-800 font-mono font-black text-[10px] mr-1.5">{{ m.bloodGroup }}</span>
-                          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold"
-                            [class]="m.vaccinationStatus === 'Fully Vaccinated' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'">
-                            {{ m.vaccinationStatus }}
-                          </span>
-                        </td>
-                        <td class="px-4 py-3.5 text-slate-700">
-                          <p class="font-bold text-slate-800">{{ m.allergies }}</p>
-                          <p class="text-[10px] text-slate-400">{{ m.chronicConditions }}</p>
-                        </td>
-                        <td class="px-4 py-3.5 text-slate-600">
-                          <p class="font-bold font-mono">{{ m.emergencyContact }}</p>
-                          <p class="text-[10px] text-slate-400">{{ m.doctorName }}</p>
-                        </td>
-                        <td class="px-4 py-3.5">
-                          <button (click)="toggleMedicalAlert(m)"
-                            class="px-2.5 py-1 rounded-full text-[10px] font-black cursor-pointer transition-all"
-                            [class]="m.medicalAlert ? 'bg-rose-600 text-white animate-pulse shadow-2xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'">
-                            {{ m.medicalAlert ? 'CRITICAL ALERT' : 'Normal' }}
-                          </button>
-                        </td>
-                        <td class="px-4 py-3.5 text-right">
-                          <div class="flex items-center justify-end gap-1.5">
-                            <button (click)="openOwnerRecordCrudModal('medical', 'edit', m)" title="Edit Medical Record" class="p-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 cursor-pointer">
-                              <lucide-icon [name]="'pencil'" class="w-3.5 h-3.5"></lucide-icon>
-                            </button>
-                            <button (click)="deleteMedicalRecord(m)" class="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 cursor-pointer">
-                              <lucide-icon [name]="'trash-2'" class="w-3.5 h-3.5"></lucide-icon>
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    }
-                    @if (filteredStudentMedicalRecords.length === 0) {
+              <div class="border border-slate-200/90 rounded-[20px] shadow-xs bg-white overflow-hidden">
+                <div data-scs-table-scroll="1" class="w-full overflow-x-auto custom-scrollbar">
+                  <table appSchoolTable="owner_medical" tableTitle="Student Health & Medical Records" [canAddRow]="true" addRowLabel="Record Health Entry" class="w-max min-w-full text-left border-collapse text-xs tabular-nums">
+                    <thead class="bg-rose-50/70 text-slate-700 uppercase font-black tracking-wider text-[10px] border-b border-slate-200 select-none">
                       <tr>
-                        <td colspan="7" class="px-4 py-8 text-center text-slate-400 font-bold">
-                          No student health records found matching search query.
-                        </td>
+                        <th class="px-4 py-3.5 whitespace-nowrap">Roll #</th>
+                        <th class="px-4 py-3.5 whitespace-nowrap">Student &amp; Class</th>
+                        <th class="px-4 py-3.5 whitespace-nowrap">Blood &amp; Vaccines</th>
+                        <th class="px-4 py-3.5 whitespace-nowrap">Allergies &amp; Conditions</th>
+                        <th class="px-4 py-3.5 whitespace-nowrap">Emergency Contact &amp; Physician</th>
+                        <th class="px-4 py-3.5 whitespace-nowrap">Medical Alert</th>
+                        <th class="px-4 py-3.5 text-right whitespace-nowrap">Actions</th>
                       </tr>
-                    }
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 font-medium">
+                      @for (m of getPaginatedItems(filteredStudentMedicalRecords, 'students'); track m.id) {
+                        <tr [attr.data-row-key]="m.id" class="hover:bg-slate-50/70 transition-colors">
+                          <td class="px-4 py-3.5 font-mono font-bold text-slate-700 whitespace-nowrap">{{ m.rollNo }}</td>
+                          <td class="px-4 py-3.5 whitespace-nowrap">
+                            <p class="font-black text-slate-900">{{ m.studentName }}</p>
+                            <p class="text-[10px] font-bold text-indigo-600">{{ m.grade }}</p>
+                          </td>
+                          <td class="px-4 py-3.5 whitespace-nowrap">
+                            <span class="px-2 py-0.5 rounded-md bg-rose-100 text-rose-800 font-mono font-black text-[10px] mr-1.5">{{ m.bloodGroup }}</span>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                              [class]="m.vaccinationStatus === 'Fully Vaccinated' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'">
+                              {{ m.vaccinationStatus }}
+                            </span>
+                          </td>
+                          <td class="px-4 py-3.5 text-slate-700 whitespace-nowrap">
+                            <p class="font-bold text-slate-800">{{ m.allergies }}</p>
+                            <p class="text-[10px] text-slate-400">{{ m.chronicConditions }}</p>
+                          </td>
+                          <td class="px-4 py-3.5 text-slate-600 whitespace-nowrap">
+                            <p class="font-bold font-mono">{{ m.emergencyContact }}</p>
+                            <p class="text-[10px] text-slate-400">{{ m.doctorName }}</p>
+                          </td>
+                          <td class="px-4 py-3.5 whitespace-nowrap">
+                            <button (click)="toggleMedicalAlert(m)"
+                              class="px-2.5 py-1 rounded-full text-[10px] font-black cursor-pointer transition-all"
+                              [class]="m.medicalAlert ? 'bg-rose-600 text-white animate-pulse shadow-2xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'">
+                              {{ m.medicalAlert ? 'CRITICAL ALERT' : 'Normal' }}
+                            </button>
+                          </td>
+                          <td class="px-4 py-3.5 text-right whitespace-nowrap">
+                            <div class="flex items-center justify-end gap-1.5">
+                              <button (click)="openOwnerRecordCrudModal('medical', 'edit', m)" title="Edit Medical Record" class="p-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 cursor-pointer">
+                                <lucide-icon [name]="'pencil'" class="w-3.5 h-3.5"></lucide-icon>
+                              </button>
+                              <button (click)="deleteMedicalRecord(m)" class="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 cursor-pointer">
+                                <lucide-icon [name]="'trash-2'" class="w-3.5 h-3.5"></lucide-icon>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      }
+                      @if (filteredStudentMedicalRecords.length === 0) {
+                        <tr>
+                          <td [attr.colspan]="getTableColspan('owner_medical', 7)" class="px-4 py-8 text-center text-slate-400 font-bold">
+                            No student health records found matching search query.
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
               </div>
 
               <!-- Pagination Bar -->
@@ -2273,72 +2336,74 @@
               </div>
 
               <!-- Disciplinary Table -->
-              <div class="overflow-x-auto custom-scrollbar border border-slate-200/90 rounded-[20px] shadow-xs bg-white">
-                <table appSchoolTable="owner_discipline" tableTitle="Disciplinary & Behavior Incident Log" [canAddRow]="true" addRowLabel="Log Incident" class="w-full text-left border-collapse text-xs tabular-nums">
-                  <thead class="bg-amber-50/70 text-slate-700 uppercase font-black tracking-wider text-[10px] border-b border-slate-200 select-none">
-                    <tr>
-                      <th class="px-4 py-3.5">Roll #</th>
-                      <th class="px-4 py-3.5">Student & Grade</th>
-                      <th class="px-4 py-3.5">Category & Severity</th>
-                      <th class="px-4 py-3.5">Violation Details & Action Taken</th>
-                      <th class="px-4 py-3.5">Fine Amount</th>
-                      <th class="px-4 py-3.5">Status</th>
-                      <th class="px-4 py-3.5 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-slate-100 font-medium">
-                    @for (d of getPaginatedItems(filteredDisciplinaryIncidents, 'students'); track d.id) {
-                      <tr [attr.data-row-key]="d.id" class="hover:bg-slate-50/70 transition-colors">
-                        <td class="px-4 py-3.5 font-mono font-bold text-slate-700">{{ d.rollNo }}</td>
-                        <td class="px-4 py-3.5">
-                          <p class="font-black text-slate-900">{{ d.studentName }}</p>
-                          <p class="text-[10px] font-bold text-indigo-600">{{ d.grade }}</p>
-                        </td>
-                        <td class="px-4 py-3.5">
-                          <span class="px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 font-bold text-[10px] mr-1.5">{{ d.category }}</span>
-                          <span class="px-2 py-0.5 rounded-full text-[10px] font-black"
-                            [class]="d.severity === 'Low' ? 'bg-slate-100 text-slate-700' : (d.severity === 'Medium' ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800')">
-                            {{ d.severity }}
-                          </span>
-                        </td>
-                        <td class="px-4 py-3.5 text-slate-700">
-                          <p class="font-bold text-slate-900 max-w-xs truncate">{{ d.description }}</p>
-                          <p class="text-[10px] text-indigo-600 font-medium">{{ d.actionTaken }}</p>
-                        </td>
-                        <td class="px-4 py-3.5 font-mono font-black text-slate-800">
-                          PKR {{ formatCurrency(d.fineAmount) }}
-                        </td>
-                        <td class="px-4 py-3.5">
-                          <button (click)="toggleIncidentStatus(d)"
-                            class="px-2.5 py-1 rounded-full text-[10px] font-black cursor-pointer transition-all"
-                            [class]="d.status === 'Resolved' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : (d.status === 'Open' ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-amber-50 text-amber-700 border border-amber-200')">
-                            {{ d.status }}
-                          </button>
-                        </td>
-                        <td class="px-4 py-3.5 text-right">
-                          <div class="flex items-center justify-end gap-1.5">
-                            <button (click)="openOwnerRecordCrudModal('discipline', 'edit', d)" title="Edit Incident Record" class="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer">
-                              <lucide-icon [name]="'pencil'" class="w-3.5 h-3.5 text-indigo-600"></lucide-icon>
-                            </button>
-                            <button (click)="sendParentWarningSms(d)" title="Dispatch Guardian SMS Warning" class="p-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 cursor-pointer">
-                              <lucide-icon [name]="'send'" class="w-3.5 h-3.5"></lucide-icon>
-                            </button>
-                            <button (click)="deleteDisciplinaryIncident(d)" title="Delete Incident" class="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 cursor-pointer">
-                              <lucide-icon [name]="'trash-2'" class="w-3.5 h-3.5"></lucide-icon>
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    }
-                    @if (filteredDisciplinaryIncidents.length === 0) {
+              <div class="border border-slate-200/90 rounded-[20px] shadow-xs bg-white overflow-hidden">
+                <div data-scs-table-scroll="1" class="w-full overflow-x-auto custom-scrollbar">
+                  <table appSchoolTable="owner_discipline" tableTitle="Disciplinary & Behavior Incident Log" [canAddRow]="true" addRowLabel="Log Incident" class="w-max min-w-full text-left border-collapse text-xs tabular-nums">
+                    <thead class="bg-amber-50/70 text-slate-700 uppercase font-black tracking-wider text-[10px] border-b border-slate-200 select-none">
                       <tr>
-                        <td colspan="7" class="px-4 py-8 text-center text-slate-400 font-bold">
-                          No disciplinary incidents logged matching search criteria.
-                        </td>
+                        <th class="px-4 py-3.5 whitespace-nowrap">Roll #</th>
+                        <th class="px-4 py-3.5 whitespace-nowrap">Student &amp; Grade</th>
+                        <th class="px-4 py-3.5 whitespace-nowrap">Category &amp; Severity</th>
+                        <th class="px-4 py-3.5 whitespace-nowrap">Violation Details &amp; Action Taken</th>
+                        <th class="px-4 py-3.5 whitespace-nowrap">Fine Amount</th>
+                        <th class="px-4 py-3.5 whitespace-nowrap">Status</th>
+                        <th class="px-4 py-3.5 text-right whitespace-nowrap">Actions</th>
                       </tr>
-                    }
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 font-medium">
+                      @for (d of getPaginatedItems(filteredDisciplinaryIncidents, 'students'); track d.id) {
+                        <tr [attr.data-row-key]="d.id" class="hover:bg-slate-50/70 transition-colors">
+                          <td class="px-4 py-3.5 font-mono font-bold text-slate-700 whitespace-nowrap">{{ d.rollNo }}</td>
+                          <td class="px-4 py-3.5 whitespace-nowrap">
+                            <p class="font-black text-slate-900">{{ d.studentName }}</p>
+                            <p class="text-[10px] font-bold text-indigo-600">{{ d.grade }}</p>
+                          </td>
+                          <td class="px-4 py-3.5 whitespace-nowrap">
+                            <span class="px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 font-bold text-[10px] mr-1.5">{{ d.category }}</span>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-black"
+                              [class]="d.severity === 'Low' ? 'bg-slate-100 text-slate-700' : (d.severity === 'Medium' ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800')">
+                              {{ d.severity }}
+                            </span>
+                          </td>
+                          <td class="px-4 py-3.5 text-slate-700 whitespace-nowrap">
+                            <p class="font-bold text-slate-900 max-w-xs truncate">{{ d.description }}</p>
+                            <p class="text-[10px] text-indigo-600 font-medium max-w-xs truncate">{{ d.actionTaken }}</p>
+                          </td>
+                          <td class="px-4 py-3.5 font-mono font-black text-slate-800 whitespace-nowrap">
+                            PKR {{ formatCurrency(d.fineAmount) }}
+                          </td>
+                          <td class="px-4 py-3.5 whitespace-nowrap">
+                            <button (click)="toggleIncidentStatus(d)"
+                              class="px-2.5 py-1 rounded-full text-[10px] font-black cursor-pointer transition-all"
+                              [class]="d.status === 'Resolved' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : (d.status === 'Open' ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-amber-50 text-amber-700 border border-amber-200')">
+                              {{ d.status }}
+                            </button>
+                          </td>
+                          <td class="px-4 py-3.5 text-right whitespace-nowrap">
+                            <div class="flex items-center justify-end gap-1.5">
+                              <button (click)="openOwnerRecordCrudModal('discipline', 'edit', d)" title="Edit Incident Record" class="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer">
+                                <lucide-icon [name]="'pencil'" class="w-3.5 h-3.5 text-indigo-600"></lucide-icon>
+                              </button>
+                              <button (click)="sendParentWarningSms(d)" title="Dispatch Guardian SMS Warning" class="p-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 cursor-pointer">
+                                <lucide-icon [name]="'send'" class="w-3.5 h-3.5"></lucide-icon>
+                              </button>
+                              <button (click)="deleteDisciplinaryIncident(d)" title="Delete Incident" class="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 cursor-pointer">
+                                <lucide-icon [name]="'trash-2'" class="w-3.5 h-3.5"></lucide-icon>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      }
+                      @if (filteredDisciplinaryIncidents.length === 0) {
+                        <tr>
+                          <td [attr.colspan]="getTableColspan('owner_discipline', 7)" class="px-4 py-8 text-center text-slate-400 font-bold">
+                            No disciplinary incidents logged matching search criteria.
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
               </div>
 
               <!-- Pagination Bar -->
@@ -3560,119 +3625,172 @@
 
             <!-- Responsive Desktop Admissions Table (Visible md+) -->
             <div class="hidden md:block">
-              <div class="overflow-x-auto custom-scrollbar border border-slate-200/80 rounded-2xl bg-white">
-                <table appSchoolTable="owner_admissions" tableTitle="Admissions & Enrollment Inquiries" [canAddRow]="true" addRowLabel="Record Application" class="w-full text-left border-collapse text-xs tabular-nums">
-                  <thead class="bg-slate-50/90 text-slate-500 uppercase font-bold text-[10px] tracking-wider border-b border-slate-200/80 select-none">
-                    <tr>
-                      <th class="px-4 py-3.5 whitespace-nowrap">Ref ID &amp; Date</th>
-                      <th class="px-4 py-3.5 whitespace-nowrap">Applicant &amp; Class</th>
-                      <th class="px-4 py-3.5 whitespace-nowrap">Guardian &amp; Phone</th>
-                      <th class="px-4 py-3.5 whitespace-nowrap">Source &amp; Score</th>
-                      <th class="px-4 py-3.5 whitespace-nowrap">Admission &amp; Tuition</th>
-                      <th class="px-4 py-3.5 text-center whitespace-nowrap">Status</th>
-                      <th class="px-4 py-3.5 text-right whitespace-nowrap">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-slate-100 font-medium bg-white text-slate-800">
-                    @for (adm of getPaginatedItems(filteredAdmissions, 'admissions'); track adm.id) {
-                      <tr [attr.data-row-key]="adm.id" class="hover:bg-slate-50/80 transition-colors duration-150 group">
-                        <!-- 1. Ref ID & Date -->
-                        <td class="px-4 py-3.5 font-mono whitespace-nowrap">
-                          <span class="font-bold text-indigo-700 block">#{{ adm.id }}</span>
-                          <span class="text-[10px] text-slate-500 font-semibold block mt-0.5">{{ adm.date }}</span>
-                        </td>
-                        <!-- 2. Applicant & Class -->
-                        <td class="px-4 py-3.5">
-                          <div class="flex items-center gap-3 min-w-[180px]">
-                            <div class="w-9 h-9 rounded-full font-black text-xs text-white flex items-center justify-center shrink-0 shadow-2xs"
-                              [class]="adm.gender === 'Female' ? 'bg-gradient-to-tr from-pink-500 to-purple-600' : 'bg-gradient-to-tr from-indigo-600 to-blue-600'">
-                              {{ adm.applicant.slice(0, 2).toUpperCase() }}
+              <div class="border border-slate-200/80 rounded-2xl bg-white overflow-hidden">
+                <div data-scs-table-scroll="1" class="w-full overflow-x-auto custom-scrollbar">
+                  <table appSchoolTable="owner_admissions" tableTitle="Admissions & Enrollment Inquiries" [canAddRow]="true" addRowLabel="Record Application" class="w-max min-w-full text-left border-collapse text-xs tabular-nums">
+                    <thead class="bg-slate-50/90 text-slate-500 uppercase font-bold text-[10px] tracking-wider border-b border-slate-200/80 select-none">
+                      <tr>
+                        <th class="px-3.5 py-3.5 whitespace-nowrap">Ref ID</th>
+                        <th class="px-3.5 py-3.5 whitespace-nowrap">Date</th>
+                        <th class="px-3.5 py-3.5 whitespace-nowrap">Roll #</th>
+                        <th class="px-4 py-3.5 whitespace-nowrap">Student Name</th>
+                        <th class="px-3.5 py-3.5 whitespace-nowrap">Gender</th>
+                        <th class="px-3.5 py-3.5 whitespace-nowrap">Date of Birth</th>
+                        <th class="px-3.5 py-3.5 whitespace-nowrap">B-Form / CNIC</th>
+                        <th class="px-3.5 py-3.5 whitespace-nowrap">Blood Group</th>
+                        <th class="px-3.5 py-3.5 whitespace-nowrap">Class / Grade</th>
+                        <th class="px-3.5 py-3.5 whitespace-nowrap">Section</th>
+                        <th class="px-3.5 py-3.5 whitespace-nowrap">Previous School</th>
+                        <th class="px-3.5 py-3.5 whitespace-nowrap">Merit Score</th>
+                        <th class="px-4 py-3.5 whitespace-nowrap">Father / Guardian</th>
+                        <th class="px-3.5 py-3.5 whitespace-nowrap">Relation</th>
+                        <th class="px-3.5 py-3.5 whitespace-nowrap">Guardian CNIC</th>
+                        <th class="px-4 py-3.5 whitespace-nowrap">Mobile &amp; WhatsApp</th>
+                        <th class="px-3.5 py-3.5 whitespace-nowrap">Guardian Email</th>
+                        <th class="px-3.5 py-3.5 whitespace-nowrap">Occupation</th>
+                        <th class="px-4 py-3.5 whitespace-nowrap">Residential Address</th>
+                        <th class="px-3.5 py-3.5 whitespace-nowrap">Emergency Contact</th>
+                        <th class="px-3.5 py-3.5 whitespace-nowrap">Admission Fee</th>
+                        <th class="px-3.5 py-3.5 whitespace-nowrap">Monthly Tuition</th>
+                        <th class="px-3.5 py-3.5 whitespace-nowrap">Concession %</th>
+                        <th class="px-3.5 py-3.5 whitespace-nowrap">Fee Status</th>
+                        <th class="px-3.5 py-3.5 whitespace-nowrap">Source</th>
+                        <th class="px-4 py-3.5 whitespace-nowrap">Medical Notes</th>
+                        <th class="px-4 py-3.5 text-center whitespace-nowrap">Status</th>
+                        <th class="px-4 py-3.5 text-right whitespace-nowrap">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 font-medium bg-white text-slate-800">
+                      @for (adm of getPaginatedItems(filteredAdmissions, 'admissions'); track adm.id) {
+                        <tr [attr.data-row-key]="adm.id" class="hover:bg-slate-50/80 transition-colors duration-150 group">
+                          <!-- 1. Ref ID -->
+                          <td class="px-3.5 py-3.5 font-mono font-bold text-indigo-700 whitespace-nowrap">#{{ adm.id }}</td>
+                          <!-- 2. Date -->
+                          <td class="px-3.5 py-3.5 font-mono text-[11px] text-slate-500 whitespace-nowrap">{{ adm.date }}</td>
+                          <!-- 3. Roll # -->
+                          <td class="px-3.5 py-3.5 font-mono font-bold text-slate-800 whitespace-nowrap">{{ adm.rollNo ? '#' + adm.rollNo : 'Auto' }}</td>
+                          <!-- 4. Student Name -->
+                          <td class="px-4 py-3.5 whitespace-nowrap">
+                            <div class="flex items-center gap-2.5">
+                              <div class="w-8 h-8 rounded-full font-black text-[11px] text-white flex items-center justify-center shrink-0 shadow-2xs"
+                                [class]="adm.gender === 'Female' ? 'bg-gradient-to-tr from-pink-500 to-purple-600' : 'bg-gradient-to-tr from-indigo-600 to-blue-600'">
+                                {{ adm.applicant.slice(0, 2).toUpperCase() }}
+                              </div>
+                              <span class="font-bold text-slate-900 text-xs hover:text-indigo-600 cursor-pointer" (click)="openAdmissionDossierModal(adm)">{{ adm.applicant }}</span>
                             </div>
-                            <div class="min-w-0">
-                              <span class="font-bold text-slate-900 text-xs hover:text-indigo-600 cursor-pointer block truncate" (click)="openAdmissionDossierModal(adm)">{{ adm.applicant }}</span>
-                              <span class="text-[11px] font-medium text-slate-500 block truncate">
-                                {{ adm.appliedFor }} · Sec {{ adm.section || 'A' }} · {{ adm.gender || 'Male' }}
-                              </span>
-                            </div>
-                          </div>
-                        </td>
-                        <!-- 3. Guardian & Phone -->
-                        <td class="px-4 py-3.5 whitespace-nowrap">
-                          <span class="font-bold text-slate-900 block">{{ adm.fatherName || 'Guardian' }}</span>
-                          <a [href]="'tel:' + adm.phone" class="font-mono font-semibold text-[11px] text-indigo-600 hover:underline inline-flex items-center gap-1 mt-0.5">
-                            <lucide-icon [name]="'phone'" class="w-3 h-3 text-emerald-600"></lucide-icon>
-                            <span>{{ adm.phone || '+92 300 0000000' }}</span>
-                          </a>
-                        </td>
-                        <!-- 4. Source & Score -->
-                        <td class="px-4 py-3.5 whitespace-nowrap">
-                          <span class="text-[11px] font-bold block"
-                            [class]="adm.source === 'Online Parent Portal' ? 'text-sky-700' : 'text-slate-700'">
-                            {{ adm.source === 'Online Parent Portal' ? 'Online Parent Portal' : 'Office Direct' }}
-                          </span>
-                          <div class="text-[11px] font-mono font-bold text-emerald-700 mt-0.5">Score: {{ adm.score || 'Pending' }}</div>
-                        </td>
-                        <!-- 5. Admission & Tuition Fee -->
-                        <td class="px-4 py-3.5 font-mono whitespace-nowrap">
-                          <div class="font-bold text-slate-900">Adm: PKR {{ formatCurrency((adm.admissionFee || 25000)) }}</div>
-                          <div class="text-[10px] text-slate-500 font-semibold mt-0.5">
-                            Tuition: PKR {{ formatCurrency((adm.tuitionFee || 18000)) }}
-                            <span class="mx-1 text-slate-300">·</span>
-                            <span class="font-bold" [class]="adm.initialPaymentStatus === 'Paid' ? 'text-emerald-600' : 'text-amber-600'">
+                          </td>
+                          <!-- 5. Gender -->
+                          <td class="px-3.5 py-3.5 whitespace-nowrap text-slate-700 font-semibold">{{ adm.gender || 'Male' }}</td>
+                          <!-- 6. Date of Birth -->
+                          <td class="px-3.5 py-3.5 whitespace-nowrap font-mono text-[11px] text-slate-600">{{ adm.dob || '—' }}</td>
+                          <!-- 7. B-Form / CNIC -->
+                          <td class="px-3.5 py-3.5 whitespace-nowrap font-mono text-[11px] text-slate-700">{{ adm.studentBForm || 'Pending' }}</td>
+                          <!-- 8. Blood Group -->
+                          <td class="px-3.5 py-3.5 whitespace-nowrap">
+                            <span class="px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 font-mono font-bold text-[10px]">{{ adm.bloodGroup || 'B+' }}</span>
+                          </td>
+                          <!-- 9. Class / Grade -->
+                          <td class="px-3.5 py-3.5 whitespace-nowrap font-bold text-indigo-700">{{ adm.appliedFor }}</td>
+                          <!-- 10. Section -->
+                          <td class="px-3.5 py-3.5 whitespace-nowrap text-slate-700 font-semibold">{{ adm.section || 'Section A' }}</td>
+                          <!-- 11. Previous School -->
+                          <td class="px-3.5 py-3.5 whitespace-nowrap max-w-[200px] truncate text-slate-600" [title]="adm.previousSchool || ''">{{ adm.previousSchool || '—' }}</td>
+                          <!-- 12. Merit Score -->
+                          <td class="px-3.5 py-3.5 whitespace-nowrap font-mono font-bold text-emerald-700">{{ adm.score || 'Pending' }}</td>
+                          <!-- 13. Father / Guardian -->
+                          <td class="px-4 py-3.5 whitespace-nowrap font-bold text-slate-900">{{ adm.fatherName || 'Guardian' }}</td>
+                          <!-- 14. Relation -->
+                          <td class="px-3.5 py-3.5 whitespace-nowrap text-slate-600">{{ adm.relation || 'Father' }}</td>
+                          <!-- 15. Guardian CNIC -->
+                          <td class="px-3.5 py-3.5 whitespace-nowrap font-mono text-[11px] text-slate-700">{{ adm.fatherCnic || '—' }}</td>
+                          <!-- 16. Mobile & WhatsApp -->
+                          <td class="px-4 py-3.5 whitespace-nowrap">
+                            <a [href]="'tel:' + adm.phone" class="font-mono font-semibold text-[11px] text-indigo-600 hover:underline inline-flex items-center gap-1">
+                              <lucide-icon [name]="'phone'" class="w-3 h-3 text-emerald-600 shrink-0"></lucide-icon>
+                              <span>{{ adm.phone || '+92 300 0000000' }}</span>
+                            </a>
+                          </td>
+                          <!-- 17. Guardian Email -->
+                          <td class="px-3.5 py-3.5 whitespace-nowrap text-slate-600 max-w-[200px] truncate" [title]="adm.email || ''">{{ adm.email || '—' }}</td>
+                          <!-- 18. Occupation -->
+                          <td class="px-3.5 py-3.5 whitespace-nowrap text-slate-600 max-w-[180px] truncate" [title]="adm.fatherOccupation || ''">{{ adm.fatherOccupation || '—' }}</td>
+                          <!-- 19. Residential Address -->
+                          <td class="px-4 py-3.5 whitespace-nowrap text-slate-600 max-w-[220px] truncate" [title]="adm.address || ''">{{ adm.address || '—' }}</td>
+                          <!-- 20. Emergency Contact -->
+                          <td class="px-3.5 py-3.5 whitespace-nowrap font-mono text-[11px] text-slate-700">{{ adm.emergencyContact || adm.phone || '—' }}</td>
+                          <!-- 21. Admission Fee -->
+                          <td class="px-3.5 py-3.5 whitespace-nowrap font-mono font-bold text-slate-900">PKR {{ formatCurrency((adm.admissionFee || 25000)) }}</td>
+                          <!-- 22. Monthly Tuition -->
+                          <td class="px-3.5 py-3.5 whitespace-nowrap font-mono font-bold text-slate-800">PKR {{ formatCurrency((adm.tuitionFee || 18000)) }}</td>
+                          <!-- 23. Concession % -->
+                          <td class="px-3.5 py-3.5 whitespace-nowrap font-mono font-bold text-violet-700">{{ adm.discount || 0 }}%</td>
+                          <!-- 24. Fee Status -->
+                          <td class="px-3.5 py-3.5 whitespace-nowrap font-bold">
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase"
+                              [class]="adm.initialPaymentStatus === 'Paid' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'">
                               {{ adm.initialPaymentStatus || 'Paid' }}
                             </span>
-                          </div>
-                        </td>
-                        <!-- 6. Status -->
-                        <td class="px-4 py-3.5 text-center whitespace-nowrap">
-                          <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold"
-                            [class]="adm.status === 'Approved' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/70' : (adm.status === 'Interview Scheduled' ? 'bg-violet-50 text-violet-700 border border-violet-200/70' : (adm.status === 'Rejected' ? 'bg-rose-50 text-rose-700 border border-rose-200/70' : 'bg-amber-50 text-amber-700 border border-amber-200/70'))">
-                            {{ adm.status }}
-                          </span>
-                        </td>
-                        <!-- 7. Actions -->
-                        <td class="px-4 py-3.5 text-right whitespace-nowrap">
-                          <div class="flex items-center justify-end gap-1.5">
-                            <button type="button" (click)="openAdmissionDossierModal(adm)" title="View Full 25-Field Application Dossier"
-                              class="px-2.5 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-[11px] cursor-pointer inline-flex items-center gap-1 transition-colors whitespace-nowrap">
-                              <lucide-icon [name]="'file-text'" class="w-3.5 h-3.5"></lucide-icon>
-                              <span>Form</span>
-                            </button>
-                            @if (adm.status !== 'Approved') {
-                              <button type="button" (click)="approveAndEnrollAdmission(adm)" title="Approve & Enroll Student"
-                                class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-[11px] cursor-pointer inline-flex items-center gap-1 shadow-2xs transition-all active:scale-[0.98] whitespace-nowrap">
-                                <lucide-icon [name]="'check'" class="w-3.5 h-3.5"></lucide-icon>
-                                <span>Admit</span>
+                          </td>
+                          <!-- 25. Source -->
+                          <td class="px-3.5 py-3.5 whitespace-nowrap">
+                            <span class="text-[11px] font-bold"
+                              [class]="adm.source === 'Online Parent Portal' ? 'text-sky-700' : 'text-slate-700'">
+                              {{ adm.source === 'Online Parent Portal' ? 'Online Parent Portal' : 'Office Direct' }}
+                            </span>
+                          </td>
+                          <!-- 26. Medical Notes -->
+                          <td class="px-4 py-3.5 whitespace-nowrap text-slate-600 max-w-[200px] truncate" [title]="adm.medicalNotes || 'Normal health'">{{ adm.medicalNotes || 'Normal health' }}</td>
+                          <!-- 27. Status -->
+                          <td class="px-4 py-3.5 text-center whitespace-nowrap">
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold"
+                              [class]="adm.status === 'Approved' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/70' : (adm.status === 'Interview Scheduled' ? 'bg-violet-50 text-violet-700 border border-violet-200/70' : (adm.status === 'Rejected' ? 'bg-rose-50 text-rose-700 border border-rose-200/70' : 'bg-amber-50 text-amber-700 border border-amber-200/70'))">
+                              {{ adm.status }}
+                            </span>
+                          </td>
+                          <!-- 28. Actions -->
+                          <td class="px-4 py-3.5 text-right whitespace-nowrap">
+                            <div class="flex items-center justify-end gap-1.5">
+                              <button type="button" (click)="openAdmissionDossierModal(adm)" title="View Full 25-Field Application Dossier"
+                                class="px-2.5 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-[11px] cursor-pointer inline-flex items-center gap-1 transition-colors whitespace-nowrap">
+                                <lucide-icon [name]="'file-text'" class="w-3.5 h-3.5"></lucide-icon>
+                                <span>Form</span>
                               </button>
-                            }
-                            <button type="button" (click)="printAdmissionChallan(adm)" title="Print 3-Copy Bank Challan"
-                              class="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer transition-colors">
-                              <lucide-icon [name]="'receipt'" class="w-3.5 h-3.5 text-indigo-600"></lucide-icon>
-                            </button>
-                            <button type="button" (click)="deleteAdmission(adm)" title="Delete Application"
-                              class="p-1.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer transition-colors">
-                              <lucide-icon [name]="'trash-2'" class="w-3.5 h-3.5"></lucide-icon>
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    }
-                    @if (filteredAdmissions.length === 0) {
-                      <tr>
-                        <td colspan="7" class="px-4 py-12 text-center">
-                          <div class="inline-flex flex-col items-center gap-2 text-slate-400">
-                            <lucide-icon [name]="'search'" class="w-6 h-6 text-slate-300"></lucide-icon>
-                            <p class="text-xs font-semibold text-slate-500">No admission applications match your search or filters.</p>
-                            <button type="button" (click)="admissionsSearchQuery = ''; selectedAdmissionFilter = 'all'; selectedAdmissionSourceFilter = 'all'"
-                              class="px-3.5 py-1.5 rounded-xl bg-indigo-50 text-indigo-700 font-bold text-xs cursor-pointer">
-                              Reset All Filters
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
+                              @if (adm.status !== 'Approved') {
+                                <button type="button" (click)="approveAndEnrollAdmission(adm)" title="Approve & Enroll Student"
+                                  class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-[11px] cursor-pointer inline-flex items-center gap-1 shadow-2xs transition-all active:scale-[0.98] whitespace-nowrap">
+                                  <lucide-icon [name]="'check'" class="w-3.5 h-3.5"></lucide-icon>
+                                  <span>Admit</span>
+                                </button>
+                              }
+                              <button type="button" (click)="printAdmissionChallan(adm)" title="Print 3-Copy Bank Challan"
+                                class="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer transition-colors">
+                                <lucide-icon [name]="'receipt'" class="w-3.5 h-3.5 text-indigo-600"></lucide-icon>
+                              </button>
+                              <button type="button" (click)="deleteAdmission(adm)" title="Delete Application"
+                                class="p-1.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer transition-colors">
+                                <lucide-icon [name]="'trash-2'" class="w-3.5 h-3.5"></lucide-icon>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      }
+                      @if (filteredAdmissions.length === 0) {
+                        <tr>
+                          <td [attr.colspan]="getTableColspan('owner_admissions', 28)" class="px-4 py-12 text-center">
+                            <div class="inline-flex flex-col items-center gap-2 text-slate-400">
+                              <lucide-icon [name]="'search'" class="w-6 h-6 text-slate-300"></lucide-icon>
+                              <p class="text-xs font-semibold text-slate-500">No admission applications match your search or filters.</p>
+                              <button type="button" (click)="admissionsSearchQuery = ''; selectedAdmissionFilter = 'all'; selectedAdmissionSourceFilter = 'all'"
+                                class="px-3.5 py-1.5 rounded-xl bg-indigo-50 text-indigo-700 font-bold text-xs cursor-pointer">
+                                Reset All Filters
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
 
@@ -10381,105 +10499,107 @@
               </div>
 
               <!-- High-Performance Stage Students Table -->
-              <div class="overflow-x-auto custom-scrollbar rounded-2xl border border-slate-200/90 shadow-2xs bg-white">
-                <table appSchoolTable="principal_stage_wise" tableTitle="Principal Stage-Wise Roster" class="w-full min-w-[950px] text-left text-xs border-collapse">
-                  <thead class="bg-slate-900 text-white font-black uppercase text-[10px] tracking-wider border-b border-slate-800">
-                    <tr>
-                      <th class="py-3 px-3.5">Roll #</th>
-                      <th class="py-3 px-4">Student Profile & Class</th>
-                      <th class="py-3 px-4">Guardian Particulars</th>
-                      <th class="py-3 px-4">Emergency Contact</th>
-                      <th class="py-3 px-3.5 text-center">Attendance</th>
-                      <th class="py-3 px-4">Monthly Fee & Dues</th>
-                      <th class="py-3 px-3.5 text-center">Fee Status</th>
-                      <th class="py-3 px-4 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-slate-100 font-medium bg-white text-slate-800">
-                    @for (s of getPaginatedStageStudents(principalSelectedStage, principalStagePage); track s.id) {
-                      <tr [attr.data-row-key]="s.id" class="hover:bg-indigo-50/30 transition-colors">
-                        <td class="py-3 px-3.5 font-mono font-black text-indigo-700">#{{ s.rollNo }}</td>
-                        <td class="py-3 px-4">
-                          <div class="flex items-center gap-2.5">
-                            <img [src]="safeAvatar(s.image, s.name)" [alt]="s.name" class="w-9 h-9 rounded-xl object-cover border border-slate-200 shadow-2xs shrink-0" referrerpolicy="no-referrer">
-                            <div>
-                              <p class="font-black text-slate-900 text-xs">{{ s.name }}</p>
-                              <div class="flex items-center gap-1.5 mt-0.5">
-                                <span class="px-1.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 text-[10px] font-bold">{{ s.grade }}</span>
-                                <span class="text-[10px] text-slate-500 font-medium">{{ s.section || 'General' }}</span>
+              <div class="rounded-2xl border border-slate-200/90 shadow-2xs bg-white overflow-hidden">
+                <div data-scs-table-scroll="1" class="w-full overflow-x-auto custom-scrollbar">
+                  <table appSchoolTable="principal_stage_wise" tableTitle="Principal Stage-Wise Roster" class="w-max min-w-full text-left text-xs border-collapse tabular-nums">
+                    <thead class="bg-slate-900 text-white font-black uppercase text-[10px] tracking-wider border-b border-slate-800">
+                      <tr>
+                        <th class="py-3 px-3.5 whitespace-nowrap">Roll #</th>
+                        <th class="py-3 px-4 whitespace-nowrap">Student Profile &amp; Class</th>
+                        <th class="py-3 px-4 whitespace-nowrap">Guardian Particulars</th>
+                        <th class="py-3 px-4 whitespace-nowrap">Emergency Contact</th>
+                        <th class="py-3 px-3.5 text-center whitespace-nowrap">Attendance</th>
+                        <th class="py-3 px-4 whitespace-nowrap">Monthly Fee &amp; Dues</th>
+                        <th class="py-3 px-3.5 text-center whitespace-nowrap">Fee Status</th>
+                        <th class="py-3 px-4 text-right whitespace-nowrap">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 font-medium bg-white text-slate-800">
+                      @for (s of getPaginatedStageStudents(principalSelectedStage, principalStagePage); track s.id) {
+                        <tr [attr.data-row-key]="s.id" class="hover:bg-indigo-50/30 transition-colors">
+                          <td class="py-3 px-3.5 font-mono font-black text-indigo-700 whitespace-nowrap">#{{ s.rollNo }}</td>
+                          <td class="py-3 px-4 whitespace-nowrap">
+                            <div class="flex items-center gap-2.5">
+                              <img [src]="safeAvatar(s.image, s.name)" [alt]="s.name" class="w-9 h-9 rounded-xl object-cover border border-slate-200 shadow-2xs shrink-0" referrerpolicy="no-referrer">
+                              <div>
+                                <p class="font-black text-slate-900 text-xs">{{ s.name }}</p>
+                                <div class="flex items-center gap-1.5 mt-0.5">
+                                  <span class="px-1.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 text-[10px] font-bold">{{ s.grade }}</span>
+                                  <span class="text-[10px] text-slate-500 font-medium">{{ s.section || 'General' }}</span>
+                                </div>
+                                @if (s.studentBForm) {
+                                  <span class="text-[9px] text-slate-400 font-mono block">B-Form: {{ s.studentBForm }}</span>
+                                }
                               </div>
-                              @if (s.studentBForm) {
-                                <span class="text-[9px] text-slate-400 font-mono block">B-Form: {{ s.studentBForm }}</span>
+                            </div>
+                          </td>
+                          <td class="py-3 px-4 whitespace-nowrap">
+                            <p class="font-bold text-slate-900">{{ s.guardian }}</p>
+                            <p class="text-[10px] text-slate-500 font-mono">{{ s.guardianCnic || '35202-*******-1' }}</p>
+                            @if (s.guardianOccupation) {
+                              <p class="text-[10px] text-slate-400 truncate max-w-[160px]">{{ s.guardianOccupation }}</p>
+                            }
+                          </td>
+                          <td class="py-3 px-4 whitespace-nowrap">
+                            <a [href]="'tel:' + s.guardianPhone" class="font-mono text-xs font-bold text-indigo-600 hover:underline flex items-center gap-1">
+                              <lucide-icon [name]="'phone'" class="w-3 h-3 text-indigo-500"></lucide-icon>
+                              <span>{{ s.guardianPhone }}</span>
+                            </a>
+                          </td>
+                          <td class="py-3 px-3.5 text-center whitespace-nowrap">
+                            <span class="font-mono font-black text-slate-900 text-xs block">{{ s.attendance || '96%' }}</span>
+                            <span class="inline-block px-2 py-0.5 rounded-full text-[9px] font-black uppercase mt-0.5"
+                              [class]="s.status === 'Present' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : (s.status === 'Late' ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-rose-50 text-rose-700 border border-rose-200')">
+                              {{ s.status || 'Present' }}
+                            </span>
+                          </td>
+                          <td class="py-3 px-4 font-mono whitespace-nowrap">
+                            <p class="font-black text-slate-900">PKR {{ formatCurrency((s.feeAmount || 0)) }}/mo</p>
+                            @if (s.dueBakaya && s.dueBakaya > 0) {
+                              <p class="text-[10px] text-rose-600 font-black">Bakaya: PKR {{ formatCurrency(s.dueBakaya) }}</p>
+                            }
+                          </td>
+                          <td class="py-3 px-3.5 text-center whitespace-nowrap">
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase inline-block shadow-2xs"
+                              [class]="s.feeStatus === 'Paid' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : (s.feeStatus === 'Overdue' ? 'bg-rose-100 text-rose-800 border border-rose-200' : 'bg-amber-100 text-amber-800 border border-amber-200')">
+                              {{ s.feeStatus }}
+                            </span>
+                          </td>
+                          <td class="py-3 px-4 text-right whitespace-nowrap">
+                            <div class="flex items-center justify-end gap-1.5">
+                              <button (click)="openPrincipalFeeCollectModal(s)" title="Collect Fee at Counter" class="px-2 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[10px] cursor-pointer shadow-2xs active:scale-95 transition-all flex items-center gap-1">
+                                <lucide-icon [name]="'credit-card'" class="w-3 h-3"></lucide-icon>
+                                <span>Fee</span>
+                              </button>
+                              <button (click)="openEditStudentModal(s)" title="Edit Student Record" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[10px] cursor-pointer flex items-center gap-1">
+                                <lucide-icon [name]="'pencil'" class="w-3 h-3"></lucide-icon>
+                                <span>Edit</span>
+                              </button>
+                              <button (click)="openFeeChallanVoucher(s)" title="Print 3-Part Bank Challan" class="p-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 cursor-pointer">
+                                <lucide-icon [name]="'file-text'" class="w-3.5 h-3.5 text-indigo-600"></lucide-icon>
+                              </button>
+                              @if (isOwnerPortal) {
+                                <button (click)="deleteStudentFromStage(s)" title="Remove Student (Owner Only)" class="p-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 cursor-pointer">
+                                  <lucide-icon [name]="'trash-2'" class="w-3.5 h-3.5 text-rose-600"></lucide-icon>
+                                </button>
                               }
                             </div>
-                          </div>
-                        </td>
-                        <td class="py-3 px-4">
-                          <p class="font-bold text-slate-900">{{ s.guardian }}</p>
-                          <p class="text-[10px] text-slate-500 font-mono">{{ s.guardianCnic || '35202-*******-1' }}</p>
-                          @if (s.guardianOccupation) {
-                            <p class="text-[10px] text-slate-400 truncate max-w-[150px]">{{ s.guardianOccupation }}</p>
-                          }
-                        </td>
-                        <td class="py-3 px-4">
-                          <a [href]="'tel:' + s.guardianPhone" class="font-mono text-xs font-bold text-indigo-600 hover:underline flex items-center gap-1">
-                            <lucide-icon [name]="'phone'" class="w-3 h-3 text-indigo-500"></lucide-icon>
-                            <span>{{ s.guardianPhone }}</span>
-                          </a>
-                        </td>
-                        <td class="py-3 px-3.5 text-center">
-                          <span class="font-mono font-black text-slate-900 text-xs block">{{ s.attendance || '96%' }}</span>
-                          <span class="inline-block px-2 py-0.5 rounded-full text-[9px] font-black uppercase mt-0.5"
-                            [class]="s.status === 'Present' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : (s.status === 'Late' ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-rose-50 text-rose-700 border border-rose-200')">
-                            {{ s.status || 'Present' }}
-                          </span>
-                        </td>
-                        <td class="py-3 px-4 font-mono">
-                          <p class="font-black text-slate-900">PKR {{ formatCurrency((s.feeAmount || 0)) }}/mo</p>
-                          @if (s.dueBakaya && s.dueBakaya > 0) {
-                            <p class="text-[10px] text-rose-600 font-black">Bakaya: PKR {{ formatCurrency(s.dueBakaya) }}</p>
-                          }
-                        </td>
-                        <td class="py-3 px-3.5 text-center">
-                          <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase inline-block shadow-2xs"
-                            [class]="s.feeStatus === 'Paid' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : (s.feeStatus === 'Overdue' ? 'bg-rose-100 text-rose-800 border border-rose-200' : 'bg-amber-100 text-amber-800 border border-amber-200')">
-                            {{ s.feeStatus }}
-                          </span>
-                        </td>
-                        <td class="py-3 px-4 text-right">
-                          <div class="flex items-center justify-end gap-1.5">
-                            <button (click)="openPrincipalFeeCollectModal(s)" title="Collect Fee at Counter" class="px-2 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[10px] cursor-pointer shadow-2xs active:scale-95 transition-all flex items-center gap-1">
-                              <lucide-icon [name]="'credit-card'" class="w-3 h-3"></lucide-icon>
-                              <span>Fee</span>
+                          </td>
+                        </tr>
+                      } @empty {
+                        <tr>
+                          <td [attr.colspan]="getTableColspan('principal_stage_wise', 8)" class="py-12 text-center text-slate-400 font-bold space-y-2">
+                            <lucide-icon [name]="'search'" class="w-8 h-8 text-slate-300 mx-auto"></lucide-icon>
+                            <p>No student records found in {{ principalSelectedStage }} matching your search or filters.</p>
+                            <button (click)="stageSearchQuery = ''; stageGradeFilter = 'All'; stageFeeFilter = 'All'; principalStagePage = 1" class="px-3 py-1 rounded-lg bg-indigo-50 text-indigo-600 font-bold text-xs cursor-pointer">
+                              Reset Filters
                             </button>
-                            <button (click)="openEditStudentModal(s)" title="Edit Student Record" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[10px] cursor-pointer flex items-center gap-1">
-                              <lucide-icon [name]="'pencil'" class="w-3 h-3"></lucide-icon>
-                              <span>Edit</span>
-                            </button>
-                            <button (click)="openFeeChallanVoucher(s)" title="Print 3-Part Bank Challan" class="p-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 cursor-pointer">
-                              <lucide-icon [name]="'file-text'" class="w-3.5 h-3.5 text-indigo-600"></lucide-icon>
-                            </button>
-                            @if (isOwnerPortal) {
-                              <button (click)="deleteStudentFromStage(s)" title="Remove Student (Owner Only)" class="p-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 cursor-pointer">
-                                <lucide-icon [name]="'trash-2'" class="w-3.5 h-3.5 text-rose-600"></lucide-icon>
-                              </button>
-                            }
-                          </div>
-                        </td>
-                      </tr>
-                    } @empty {
-                      <tr>
-                        <td colspan="8" class="py-12 text-center text-slate-400 font-bold space-y-2">
-                          <lucide-icon [name]="'search'" class="w-8 h-8 text-slate-300 mx-auto"></lucide-icon>
-                          <p>No student records found in {{ principalSelectedStage }} matching your search or filters.</p>
-                          <button (click)="stageSearchQuery = ''; stageGradeFilter = 'All'; stageFeeFilter = 'All'; principalStagePage = 1" class="px-3 py-1 rounded-lg bg-indigo-50 text-indigo-600 font-bold text-xs cursor-pointer">
-                            Reset Filters
-                          </button>
-                        </td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
               </div>
 
               <!-- Pagination Controls with Page Numbers -->
@@ -10629,50 +10749,52 @@
 
             <!-- TABLE VIEW 1: STUDENTS -->
             @if (principalMasterTab === 'students') {
-              <div class="overflow-x-auto rounded-2xl border border-slate-200">
-                <table appSchoolTable="principal_master_students" tableTitle="Principal Master Students" class="w-full text-left text-xs">
-                  <thead class="bg-slate-900 text-white font-black uppercase text-[10px] tracking-wider">
-                    <tr>
-                      <th class="py-3 px-4">Roll #</th>
-                      <th class="py-3 px-4">Student Name &amp; Class</th>
-                      <th class="py-3 px-4">Father / Guardian</th>
-                      <th class="py-3 px-4">Emergency Contact</th>
-                      <th class="py-3 px-4 font-mono">Monthly Fee &amp; Dues</th>
-                      <th class="py-3 px-4 text-center">Fee Status</th>
-                      <th class="py-3 px-4 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-slate-100 font-bold bg-white text-slate-800">
-                    @for (s of getPaginatedPrincipalStudents(); track s.id) {
-                      <tr [attr.data-row-key]="s.id" class="hover:bg-indigo-50/30 transition-colors">
-                        <td class="py-3 px-4 font-mono font-black text-indigo-700">#{{ s.rollNo }}</td>
-                        <td class="py-3 px-4">
-                          <div class="flex items-center gap-2.5">
-                            <img [src]="safeAvatar(s.image, s.name)" [alt]="s.name" class="w-8 h-8 rounded-full object-cover border border-slate-200" referrerpolicy="no-referrer">
-                            <div>
-                              <p class="font-black text-slate-900 text-xs">{{ s.name }}</p>
-                              <p class="text-[11px] text-indigo-600 font-semibold">{{ s.grade }} ({{ s.section || 'General' }})</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td class="py-3 px-4 font-bold text-slate-900">{{ s.guardian }}</td>
-                        <td class="py-3 px-4 font-mono text-slate-700">{{ s.guardianPhone }}</td>
-                        <td class="py-3 px-4 font-mono font-black text-slate-900">PKR {{ formatCurrency((s.feeAmount || 0)) }}</td>
-                        <td class="py-3 px-4 text-center">
-                          <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase"
-                            [class]="s.feeStatus === 'Paid' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'">
-                            {{ s.feeStatus }}
-                          </span>
-                        </td>
-                        <td class="py-3 px-4 text-right">
-                          <button (click)="openStudentDossierModal(s)" class="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-black text-[10px] cursor-pointer shadow-2xs">
-                            View Dossier
-                          </button>
-                        </td>
+              <div class="rounded-2xl border border-slate-200 bg-white overflow-hidden">
+                <div data-scs-table-scroll="1" class="w-full overflow-x-auto custom-scrollbar">
+                  <table appSchoolTable="principal_master_students" tableTitle="Principal Master Students" class="w-max min-w-full text-left text-xs tabular-nums border-collapse">
+                    <thead class="bg-slate-900 text-white font-black uppercase text-[10px] tracking-wider">
+                      <tr>
+                        <th class="py-3 px-4 whitespace-nowrap">Roll #</th>
+                        <th class="py-3 px-4 whitespace-nowrap">Student Name &amp; Class</th>
+                        <th class="py-3 px-4 whitespace-nowrap">Father / Guardian</th>
+                        <th class="py-3 px-4 whitespace-nowrap">Emergency Contact</th>
+                        <th class="py-3 px-4 font-mono whitespace-nowrap">Monthly Fee &amp; Dues</th>
+                        <th class="py-3 px-4 text-center whitespace-nowrap">Fee Status</th>
+                        <th class="py-3 px-4 text-right whitespace-nowrap">Actions</th>
                       </tr>
-                    }
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 font-bold bg-white text-slate-800">
+                      @for (s of getPaginatedPrincipalStudents(); track s.id) {
+                        <tr [attr.data-row-key]="s.id" class="hover:bg-indigo-50/30 transition-colors">
+                          <td class="py-3 px-4 font-mono font-black text-indigo-700 whitespace-nowrap">#{{ s.rollNo }}</td>
+                          <td class="py-3 px-4 whitespace-nowrap">
+                            <div class="flex items-center gap-2.5">
+                              <img [src]="safeAvatar(s.image, s.name)" [alt]="s.name" class="w-8 h-8 rounded-full object-cover border border-slate-200 shrink-0" referrerpolicy="no-referrer">
+                              <div>
+                                <p class="font-black text-slate-900 text-xs">{{ s.name }}</p>
+                                <p class="text-[11px] text-indigo-600 font-semibold">{{ s.grade }} ({{ s.section || 'General' }})</p>
+                              </div>
+                            </div>
+                          </td>
+                          <td class="py-3 px-4 font-bold text-slate-900 whitespace-nowrap">{{ s.guardian }}</td>
+                          <td class="py-3 px-4 font-mono text-slate-700 whitespace-nowrap">{{ s.guardianPhone }}</td>
+                          <td class="py-3 px-4 font-mono font-black text-slate-900 whitespace-nowrap">PKR {{ formatCurrency((s.feeAmount || 0)) }}</td>
+                          <td class="py-3 px-4 text-center whitespace-nowrap">
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase"
+                              [class]="s.feeStatus === 'Paid' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'">
+                              {{ s.feeStatus }}
+                            </span>
+                          </td>
+                          <td class="py-3 px-4 text-right whitespace-nowrap">
+                            <button (click)="openStudentDossierModal(s)" class="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-black text-[10px] cursor-pointer shadow-2xs">
+                              View Dossier
+                            </button>
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
               </div>
 
               <!-- Pagination Controls for Students -->
@@ -17438,163 +17560,441 @@
 
   <!-- 5. STUDENT MODAL (OWNER ADD/EDIT) -->
   @if (isStudentModalOpen) {
-    <div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-      <div class="apple-card rounded-3xl max-w-lg w-full p-6 space-y-4">
-        <div class="flex items-center justify-between">
+    <div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+      <div class="apple-card rounded-3xl max-w-3xl w-full max-h-[92vh] overflow-hidden flex flex-col bg-white shadow-2xl border border-slate-200/80">
+        <div class="px-5 sm:px-6 py-4 border-b border-slate-100 flex items-center justify-between shrink-0 bg-slate-50/70">
           <h3 class="font-black text-slate-900 text-base">
-            {{ activeStudentForEdit ? 'Edit Student Profile' : 'Enroll New Student' }}
+            {{ activeStudentForEdit ? 'Edit Student Profile (All Particulars)' : 'Enroll New Student' }}
           </h3>
-          <button (click)="closeStudentModal()" class="p-1 rounded-lg text-slate-400 hover:text-slate-600">
+          <button (click)="closeStudentModal()" class="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer">
             <lucide-icon [name]="'x'" class="w-5 h-5"></lucide-icon>
           </button>
         </div>
 
-        <div class="grid grid-cols-2 gap-3 text-xs">
-          @if (hasCustomFieldsAtSlot('students_master', '__first__')) {
-            <app-school-custom-form-fields
-              [tableId]="'students_master'"
-              [slotAnchor]="'__first__'"
-              [inlineGrid]="true"
-              [values]="formCustomValues['student']"
-              [allowSchemaEdit]="isOwnerPortal"
-              (valuesChange)="updateFormCustomValues('student', $event)" />
-          }
-          @if (!isFormFieldHidden('students_master', 'stu_name')) {
-            <div class="col-span-2">
-              <label class="block font-bold text-slate-700 mb-1">Student Full Name</label>
-              <input type="text" [(ngModel)]="studentForm.name" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold">
-            </div>
-          }
-          @if (hasCustomFieldsAtSlot('students_master', 'stu_name')) {
-            <app-school-custom-form-fields
-              [tableId]="'students_master'"
-              [slotAnchor]="'stu_name'"
-              [inlineGrid]="true"
-              [values]="formCustomValues['student']"
-              [allowSchemaEdit]="isOwnerPortal"
-              (valuesChange)="updateFormCustomValues('student', $event)" />
-          }
-          @if (!isFormFieldHidden('students_master', 'stu_grade')) {
+        <div class="p-5 sm:p-6 overflow-y-auto custom-scrollbar space-y-4 flex-1">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+            @if (hasCustomFieldsAtSlot('students_master', '__first__')) {
+              <app-school-custom-form-fields
+                [tableId]="'students_master'"
+                [slotAnchor]="'__first__'"
+                [inlineGrid]="true"
+                [values]="formCustomValues['student']"
+                [allowSchemaEdit]="isOwnerPortal"
+                (valuesChange)="updateFormCustomValues('student', $event)" />
+            }
+            @if (!isFormFieldHidden('students_master', 'stu_roll')) {
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Roll #</label>
+                <input type="text" [(ngModel)]="studentForm.rollNo" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-mono font-bold">
+              </div>
+            }
+            @if (hasCustomFieldsAtSlot('students_master', 'stu_roll')) {
+              <app-school-custom-form-fields
+                [tableId]="'students_master'"
+                [slotAnchor]="'stu_roll'"
+                [inlineGrid]="true"
+                [values]="formCustomValues['student']"
+                [allowSchemaEdit]="isOwnerPortal"
+                (valuesChange)="updateFormCustomValues('student', $event)" />
+            }
+            @if (!isFormFieldHidden('students_master', 'stu_name')) {
+              <div class="sm:col-span-2">
+                <label class="block font-bold text-slate-700 mb-1">Student Full Name</label>
+                <input type="text" [(ngModel)]="studentForm.name" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold">
+              </div>
+            }
+            @if (hasCustomFieldsAtSlot('students_master', 'stu_name')) {
+              <app-school-custom-form-fields
+                [tableId]="'students_master'"
+                [slotAnchor]="'stu_name'"
+                [inlineGrid]="true"
+                [values]="formCustomValues['student']"
+                [allowSchemaEdit]="isOwnerPortal"
+                (valuesChange)="updateFormCustomValues('student', $event)" />
+            }
+            @if (!isFormFieldHidden('students_master', 'stu_gender')) {
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Gender</label>
+                <select [(ngModel)]="studentForm.gender" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold">
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                </select>
+              </div>
+            }
+            @if (hasCustomFieldsAtSlot('students_master', 'stu_gender')) {
+              <app-school-custom-form-fields
+                [tableId]="'students_master'"
+                [slotAnchor]="'stu_gender'"
+                [inlineGrid]="true"
+                [values]="formCustomValues['student']"
+                [allowSchemaEdit]="isOwnerPortal"
+                (valuesChange)="updateFormCustomValues('student', $event)" />
+            }
+            @if (!isFormFieldHidden('students_master', 'stu_dob')) {
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Date of Birth</label>
+                <input type="date" [(ngModel)]="studentForm.dob" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold">
+              </div>
+            }
+            @if (hasCustomFieldsAtSlot('students_master', 'stu_dob')) {
+              <app-school-custom-form-fields
+                [tableId]="'students_master'"
+                [slotAnchor]="'stu_dob'"
+                [inlineGrid]="true"
+                [values]="formCustomValues['student']"
+                [allowSchemaEdit]="isOwnerPortal"
+                (valuesChange)="updateFormCustomValues('student', $event)" />
+            }
+            @if (!isFormFieldHidden('students_master', 'stu_bform')) {
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">B-Form / CNIC</label>
+                <input type="text" [(ngModel)]="studentForm.studentBForm" placeholder="37405-XXXXXXX-X" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-mono font-bold">
+              </div>
+            }
+            @if (hasCustomFieldsAtSlot('students_master', 'stu_bform')) {
+              <app-school-custom-form-fields
+                [tableId]="'students_master'"
+                [slotAnchor]="'stu_bform'"
+                [inlineGrid]="true"
+                [values]="formCustomValues['student']"
+                [allowSchemaEdit]="isOwnerPortal"
+                (valuesChange)="updateFormCustomValues('student', $event)" />
+            }
+            @if (!isFormFieldHidden('students_master', 'stu_blood')) {
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Blood Group</label>
+                <select [(ngModel)]="studentForm.bloodGroup" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold">
+                  <option value="A+">A+</option>
+                  <option value="B+">B+</option>
+                  <option value="AB+">AB+</option>
+                  <option value="O+">O+</option>
+                  <option value="A-">A-</option>
+                  <option value="B-">B-</option>
+                  <option value="AB-">AB-</option>
+                  <option value="O-">O-</option>
+                </select>
+              </div>
+            }
+            @if (hasCustomFieldsAtSlot('students_master', 'stu_blood')) {
+              <app-school-custom-form-fields
+                [tableId]="'students_master'"
+                [slotAnchor]="'stu_blood'"
+                [inlineGrid]="true"
+                [values]="formCustomValues['student']"
+                [allowSchemaEdit]="isOwnerPortal"
+                (valuesChange)="updateFormCustomValues('student', $event)" />
+            }
+            @if (!isFormFieldHidden('students_master', 'stu_grade')) {
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Class &amp; Grade</label>
+                <input type="text" [(ngModel)]="studentForm.grade" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold">
+              </div>
+            }
+            @if (hasCustomFieldsAtSlot('students_master', 'stu_grade')) {
+              <app-school-custom-form-fields
+                [tableId]="'students_master'"
+                [slotAnchor]="'stu_grade'"
+                [inlineGrid]="true"
+                [values]="formCustomValues['student']"
+                [allowSchemaEdit]="isOwnerPortal"
+                (valuesChange)="updateFormCustomValues('student', $event)" />
+            }
+            @if (!isFormFieldHidden('students_master', 'stu_section')) {
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Section</label>
+                <input type="text" [(ngModel)]="studentForm.section" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold">
+              </div>
+            }
+            @if (hasCustomFieldsAtSlot('students_master', 'stu_section')) {
+              <app-school-custom-form-fields
+                [tableId]="'students_master'"
+                [slotAnchor]="'stu_section'"
+                [inlineGrid]="true"
+                [values]="formCustomValues['student']"
+                [allowSchemaEdit]="isOwnerPortal"
+                (valuesChange)="updateFormCustomValues('student', $event)" />
+            }
+            @if (!isFormFieldHidden('students_master', 'stu_prev_school')) {
+              <div class="sm:col-span-2">
+                <label class="block font-bold text-slate-700 mb-1">Previous School Attended</label>
+                <input type="text" [(ngModel)]="studentForm.previousSchool" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold">
+              </div>
+            }
+            @if (hasCustomFieldsAtSlot('students_master', 'stu_prev_school')) {
+              <app-school-custom-form-fields
+                [tableId]="'students_master'"
+                [slotAnchor]="'stu_prev_school'"
+                [inlineGrid]="true"
+                [values]="formCustomValues['student']"
+                [allowSchemaEdit]="isOwnerPortal"
+                (valuesChange)="updateFormCustomValues('student', $event)" />
+            }
+            @if (!isFormFieldHidden('students_master', 'stu_score')) {
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Entrance / Merit Score</label>
+                <input type="text" [(ngModel)]="studentForm.score" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold">
+              </div>
+            }
+            @if (hasCustomFieldsAtSlot('students_master', 'stu_score')) {
+              <app-school-custom-form-fields
+                [tableId]="'students_master'"
+                [slotAnchor]="'stu_score'"
+                [inlineGrid]="true"
+                [values]="formCustomValues['student']"
+                [allowSchemaEdit]="isOwnerPortal"
+                (valuesChange)="updateFormCustomValues('student', $event)" />
+            }
+            @if (hasCustomFieldsAtSlot('students_master', 'stu_identity')) {
+              <app-school-custom-form-fields
+                [tableId]="'students_master'"
+                [slotAnchor]="'stu_identity'"
+                [inlineGrid]="true"
+                [values]="formCustomValues['student']"
+                [allowSchemaEdit]="isOwnerPortal"
+                (valuesChange)="updateFormCustomValues('student', $event)" />
+            }
+            @if (!isFormFieldHidden('students_master', 'stu_guardian')) {
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Father / Guardian Name</label>
+                <input type="text" [(ngModel)]="studentForm.guardian" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold">
+              </div>
+            }
+            @if (hasCustomFieldsAtSlot('students_master', 'stu_guardian')) {
+              <app-school-custom-form-fields
+                [tableId]="'students_master'"
+                [slotAnchor]="'stu_guardian'"
+                [inlineGrid]="true"
+                [values]="formCustomValues['student']"
+                [allowSchemaEdit]="isOwnerPortal"
+                (valuesChange)="updateFormCustomValues('student', $event)" />
+            }
+            @if (!isFormFieldHidden('students_master', 'stu_relation')) {
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Relationship</label>
+                <select [(ngModel)]="studentForm.guardianRelation" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold">
+                  <option value="Father">Father</option>
+                  <option value="Mother">Mother</option>
+                  <option value="Legal Guardian">Legal Guardian</option>
+                  <option value="Elder Brother">Elder Brother</option>
+                </select>
+              </div>
+            }
+            @if (hasCustomFieldsAtSlot('students_master', 'stu_relation')) {
+              <app-school-custom-form-fields
+                [tableId]="'students_master'"
+                [slotAnchor]="'stu_relation'"
+                [inlineGrid]="true"
+                [values]="formCustomValues['student']"
+                [allowSchemaEdit]="isOwnerPortal"
+                (valuesChange)="updateFormCustomValues('student', $event)" />
+            }
+            @if (!isFormFieldHidden('students_master', 'stu_cnic')) {
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Guardian CNIC</label>
+                <input type="text" [(ngModel)]="studentForm.guardianCnic" placeholder="35202-XXXXXXX-X" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-mono font-bold">
+              </div>
+            }
+            @if (hasCustomFieldsAtSlot('students_master', 'stu_cnic')) {
+              <app-school-custom-form-fields
+                [tableId]="'students_master'"
+                [slotAnchor]="'stu_cnic'"
+                [inlineGrid]="true"
+                [values]="formCustomValues['student']"
+                [allowSchemaEdit]="isOwnerPortal"
+                (valuesChange)="updateFormCustomValues('student', $event)" />
+            }
+            @if (!isFormFieldHidden('students_master', 'stu_phone')) {
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Mobile &amp; WhatsApp</label>
+                <input type="text" [(ngModel)]="studentForm.guardianPhone" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-mono font-bold">
+              </div>
+            }
+            @if (hasCustomFieldsAtSlot('students_master', 'stu_phone')) {
+              <app-school-custom-form-fields
+                [tableId]="'students_master'"
+                [slotAnchor]="'stu_phone'"
+                [inlineGrid]="true"
+                [values]="formCustomValues['student']"
+                [allowSchemaEdit]="isOwnerPortal"
+                (valuesChange)="updateFormCustomValues('student', $event)" />
+            }
+            @if (!isFormFieldHidden('students_master', 'stu_email')) {
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Guardian Email</label>
+                <input type="email" [(ngModel)]="studentForm.guardianEmail" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold">
+              </div>
+            }
+            @if (hasCustomFieldsAtSlot('students_master', 'stu_email')) {
+              <app-school-custom-form-fields
+                [tableId]="'students_master'"
+                [slotAnchor]="'stu_email'"
+                [inlineGrid]="true"
+                [values]="formCustomValues['student']"
+                [allowSchemaEdit]="isOwnerPortal"
+                (valuesChange)="updateFormCustomValues('student', $event)" />
+            }
+            @if (!isFormFieldHidden('students_master', 'stu_occupation')) {
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Guardian Occupation</label>
+                <input type="text" [(ngModel)]="studentForm.guardianOccupation" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold">
+              </div>
+            }
+            @if (hasCustomFieldsAtSlot('students_master', 'stu_occupation')) {
+              <app-school-custom-form-fields
+                [tableId]="'students_master'"
+                [slotAnchor]="'stu_occupation'"
+                [inlineGrid]="true"
+                [values]="formCustomValues['student']"
+                [allowSchemaEdit]="isOwnerPortal"
+                (valuesChange)="updateFormCustomValues('student', $event)" />
+            }
+            @if (!isFormFieldHidden('students_master', 'stu_address')) {
+              <div class="sm:col-span-2">
+                <label class="block font-bold text-slate-700 mb-1">Permanent Residential Address</label>
+                <input type="text" [(ngModel)]="studentForm.address" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold">
+              </div>
+            }
+            @if (hasCustomFieldsAtSlot('students_master', 'stu_address')) {
+              <app-school-custom-form-fields
+                [tableId]="'students_master'"
+                [slotAnchor]="'stu_address'"
+                [inlineGrid]="true"
+                [values]="formCustomValues['student']"
+                [allowSchemaEdit]="isOwnerPortal"
+                (valuesChange)="updateFormCustomValues('student', $event)" />
+            }
+            @if (!isFormFieldHidden('students_master', 'stu_emergency')) {
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Emergency Contact</label>
+                <input type="text" [(ngModel)]="studentForm.emergencyContact" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-mono font-bold">
+              </div>
+            }
+            @if (hasCustomFieldsAtSlot('students_master', 'stu_emergency')) {
+              <app-school-custom-form-fields
+                [tableId]="'students_master'"
+                [slotAnchor]="'stu_emergency'"
+                [inlineGrid]="true"
+                [values]="formCustomValues['student']"
+                [allowSchemaEdit]="isOwnerPortal"
+                (valuesChange)="updateFormCustomValues('student', $event)" />
+            }
+            @if (!isFormFieldHidden('students_master', 'stu_adm_fee')) {
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Admission Fee (PKR)</label>
+                <input type="number" [(ngModel)]="studentForm.admissionFee" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-mono font-bold">
+              </div>
+            }
+            @if (hasCustomFieldsAtSlot('students_master', 'stu_adm_fee')) {
+              <app-school-custom-form-fields
+                [tableId]="'students_master'"
+                [slotAnchor]="'stu_adm_fee'"
+                [inlineGrid]="true"
+                [values]="formCustomValues['student']"
+                [allowSchemaEdit]="isOwnerPortal"
+                (valuesChange)="updateFormCustomValues('student', $event)" />
+            }
+            @if (!isFormFieldHidden('students_master', 'stu_fee_amount')) {
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Monthly Tuition Fee (PKR)</label>
+                <input type="number" [(ngModel)]="studentForm.feeAmount" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-mono font-bold">
+              </div>
+            }
+            @if (hasCustomFieldsAtSlot('students_master', 'stu_fee_amount')) {
+              <app-school-custom-form-fields
+                [tableId]="'students_master'"
+                [slotAnchor]="'stu_fee_amount'"
+                [inlineGrid]="true"
+                [values]="formCustomValues['student']"
+                [allowSchemaEdit]="isOwnerPortal"
+                (valuesChange)="updateFormCustomValues('student', $event)" />
+            }
+            @if (!isFormFieldHidden('students_master', 'stu_discount')) {
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Concession (%)</label>
+                <input type="number" [(ngModel)]="studentForm.discount" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-mono font-bold">
+              </div>
+            }
+            @if (hasCustomFieldsAtSlot('students_master', 'stu_discount')) {
+              <app-school-custom-form-fields
+                [tableId]="'students_master'"
+                [slotAnchor]="'stu_discount'"
+                [inlineGrid]="true"
+                [values]="formCustomValues['student']"
+                [allowSchemaEdit]="isOwnerPortal"
+                (valuesChange)="updateFormCustomValues('student', $event)" />
+            }
+            @if (!isFormFieldHidden('students_master', 'stu_bakaya')) {
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Due Bakaya (PKR)</label>
+                <input type="number" [(ngModel)]="studentForm.dueBakaya" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-mono font-bold">
+              </div>
+            }
+            @if (hasCustomFieldsAtSlot('students_master', 'stu_bakaya')) {
+              <app-school-custom-form-fields
+                [tableId]="'students_master'"
+                [slotAnchor]="'stu_bakaya'"
+                [inlineGrid]="true"
+                [values]="formCustomValues['student']"
+                [allowSchemaEdit]="isOwnerPortal"
+                (valuesChange)="updateFormCustomValues('student', $event)" />
+            }
+            @if (!isFormFieldHidden('students_master', 'stu_fee_status')) {
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Fee Status</label>
+                <select [(ngModel)]="studentForm.feeStatus" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold">
+                  <option value="Paid">Paid</option>
+                  <option value="Pending">Pending</option>
+                  <option value="Overdue">Overdue</option>
+                </select>
+              </div>
+            }
+            @if (hasCustomFieldsAtSlot('students_master', 'stu_fee_status')) {
+              <app-school-custom-form-fields
+                [tableId]="'students_master'"
+                [slotAnchor]="'stu_fee_status'"
+                [inlineGrid]="true"
+                [values]="formCustomValues['student']"
+                [allowSchemaEdit]="isOwnerPortal"
+                (valuesChange)="updateFormCustomValues('student', $event)" />
+            }
             <div>
-              <label class="block font-bold text-slate-700 mb-1">Class & Grade</label>
-              <input type="text" [(ngModel)]="studentForm.grade" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold">
+              <label class="block font-bold text-slate-700 mb-1">Attendance Rate</label>
+              <input type="text" [(ngModel)]="studentForm.attendance" placeholder="e.g. 96%" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-mono font-bold">
             </div>
-          }
-          @if (hasCustomFieldsAtSlot('students_master', 'stu_grade')) {
-            <app-school-custom-form-fields
-              [tableId]="'students_master'"
-              [slotAnchor]="'stu_grade'"
-              [inlineGrid]="true"
-              [values]="formCustomValues['student']"
-              [allowSchemaEdit]="isOwnerPortal"
-              (valuesChange)="updateFormCustomValues('student', $event)" />
-          }
-          @if (!isFormFieldHidden('students_master', 'stu_section')) {
-            <div>
-              <label class="block font-bold text-slate-700 mb-1">Section</label>
-              <input type="text" [(ngModel)]="studentForm.section" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold">
-            </div>
-          }
-          @if (hasCustomFieldsAtSlot('students_master', 'stu_section')) {
-            <app-school-custom-form-fields
-              [tableId]="'students_master'"
-              [slotAnchor]="'stu_section'"
-              [inlineGrid]="true"
-              [values]="formCustomValues['student']"
-              [allowSchemaEdit]="isOwnerPortal"
-              (valuesChange)="updateFormCustomValues('student', $event)" />
-          }
-          @if (hasCustomFieldsAtSlot('students_master', 'stu_identity')) {
-            <app-school-custom-form-fields
-              [tableId]="'students_master'"
-              [slotAnchor]="'stu_identity'"
-              [inlineGrid]="true"
-              [values]="formCustomValues['student']"
-              [allowSchemaEdit]="isOwnerPortal"
-              (valuesChange)="updateFormCustomValues('student', $event)" />
-          }
-          @if (!isFormFieldHidden('students_master', 'stu_guardian')) {
-            <div>
-              <label class="block font-bold text-slate-700 mb-1">Guardian Name</label>
-              <input type="text" [(ngModel)]="studentForm.guardian" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold">
-            </div>
-          }
-          @if (hasCustomFieldsAtSlot('students_master', 'stu_guardian')) {
-            <app-school-custom-form-fields
-              [tableId]="'students_master'"
-              [slotAnchor]="'stu_guardian'"
-              [inlineGrid]="true"
-              [values]="formCustomValues['student']"
-              [allowSchemaEdit]="isOwnerPortal"
-              (valuesChange)="updateFormCustomValues('student', $event)" />
-          }
-          @if (!isFormFieldHidden('students_master', 'stu_phone')) {
-            <div>
-              <label class="block font-bold text-slate-700 mb-1">Guardian Contact Phone</label>
-              <input type="text" [(ngModel)]="studentForm.guardianPhone" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold">
-            </div>
-          }
-          @if (hasCustomFieldsAtSlot('students_master', 'stu_phone')) {
-            <app-school-custom-form-fields
-              [tableId]="'students_master'"
-              [slotAnchor]="'stu_phone'"
-              [inlineGrid]="true"
-              [values]="formCustomValues['student']"
-              [allowSchemaEdit]="isOwnerPortal"
-              (valuesChange)="updateFormCustomValues('student', $event)" />
-          }
-          @if (!isFormFieldHidden('students_master', 'stu_fee_amount')) {
-            <div>
-              <label class="block font-bold text-slate-700 mb-1">Monthly Tuition Fee (PKR)</label>
-              <input type="number" [(ngModel)]="studentForm.feeAmount" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold">
-            </div>
-          }
-          @if (hasCustomFieldsAtSlot('students_master', 'stu_fee_amount')) {
-            <app-school-custom-form-fields
-              [tableId]="'students_master'"
-              [slotAnchor]="'stu_fee_amount'"
-              [inlineGrid]="true"
-              [values]="formCustomValues['student']"
-              [allowSchemaEdit]="isOwnerPortal"
-              (valuesChange)="updateFormCustomValues('student', $event)" />
-          }
-          @if (!isFormFieldHidden('students_master', 'stu_fee_status')) {
-            <div>
-              <label class="block font-bold text-slate-700 mb-1">Fee Status</label>
-              <select [(ngModel)]="studentForm.feeStatus" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold">
-                <option value="Paid">Paid</option>
-                <option value="Pending">Pending</option>
-                <option value="Overdue">Overdue</option>
-              </select>
-            </div>
-          }
-          @if (hasCustomFieldsAtSlot('students_master', 'stu_fee_status')) {
-            <app-school-custom-form-fields
-              [tableId]="'students_master'"
-              [slotAnchor]="'stu_fee_status'"
-              [inlineGrid]="true"
-              [values]="formCustomValues['student']"
-              [allowSchemaEdit]="isOwnerPortal"
-              (valuesChange)="updateFormCustomValues('student', $event)" />
-          }
-          @if (hasCustomFieldsAtSlot('students_master', 'stu_fee')) {
-            <app-school-custom-form-fields
-              [tableId]="'students_master'"
-              [slotAnchor]="'stu_fee'"
-              [inlineGrid]="true"
-              [values]="formCustomValues['student']"
-              [allowSchemaEdit]="isOwnerPortal"
-              (valuesChange)="updateFormCustomValues('student', $event)" />
-          }
+            @if (hasCustomFieldsAtSlot('students_master', 'stu_fee')) {
+              <app-school-custom-form-fields
+                [tableId]="'students_master'"
+                [slotAnchor]="'stu_fee'"
+                [inlineGrid]="true"
+                [values]="formCustomValues['student']"
+                [allowSchemaEdit]="isOwnerPortal"
+                (valuesChange)="updateFormCustomValues('student', $event)" />
+            }
+            @if (!isFormFieldHidden('students_master', 'stu_medical')) {
+              <div class="sm:col-span-3">
+                <label class="block font-bold text-slate-700 mb-1">Health, Allergies &amp; Medical Notes</label>
+                <input type="text" [(ngModel)]="studentForm.medicalConditions" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold">
+              </div>
+            }
+            @if (hasCustomFieldsAtSlot('students_master', 'stu_medical')) {
+              <app-school-custom-form-fields
+                [tableId]="'students_master'"
+                [slotAnchor]="'stu_medical'"
+                [inlineGrid]="true"
+                [values]="formCustomValues['student']"
+                [allowSchemaEdit]="isOwnerPortal"
+                (valuesChange)="updateFormCustomValues('student', $event)" />
+            }
+          </div>
+
+          <app-school-custom-form-fields
+            [tableId]="'students_master'"
+            [values]="formCustomValues['student']"
+            [defaultTitle]="'Student Directory Custom Fields'"
+            (valuesChange)="updateFormCustomValues('student', $event)" />
         </div>
 
-        <app-school-custom-form-fields
-          [tableId]="'students_master'"
-          [values]="formCustomValues['student']"
-          [defaultTitle]="'Student Directory Custom Fields'"
-          (valuesChange)="updateFormCustomValues('student', $event)" />
-
-        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+        <div class="px-5 sm:px-6 py-3.5 border-t border-slate-100 flex items-center justify-end gap-2 shrink-0 bg-slate-50/70">
           <button (click)="closeStudentModal()" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs cursor-pointer">Cancel</button>
           <button (click)="saveStudent()" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs cursor-pointer shadow">
             Save Student Record

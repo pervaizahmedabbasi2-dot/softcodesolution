@@ -312,6 +312,8 @@ export interface StudentRecord {
   guardianOccupation?: string;
   address?: string;
   emergencyContact?: string;
+  admissionFee?: number;
+  discount?: number;
   dueBakaya?: number;
   lastPaymentDate?: string;
   biometricEnrolled?: boolean;
@@ -928,6 +930,37 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
       const aName = (a.applicant || '').trim().toLowerCase();
       return (cleanRoll && aRoll === cleanRoll) || (cleanName && aName === cleanName);
     });
+  }
+
+  getStudentAdmissionFee(student: StudentRecord): number | null {
+    if (student.admissionFee !== undefined && student.admissionFee !== null) {
+      return Number(student.admissionFee);
+    }
+    const matchedAdm = this.findMatchingAdmissionForStudent(student);
+    if (matchedAdm && matchedAdm.admissionFee !== undefined && matchedAdm.admissionFee !== null) {
+      return Number(matchedAdm.admissionFee);
+    }
+    return null;
+  }
+
+  getStudentDiscount(student: StudentRecord): number {
+    if (student.discount !== undefined && student.discount !== null) {
+      return Number(student.discount);
+    }
+    const matchedAdm = this.findMatchingAdmissionForStudent(student);
+    if (matchedAdm && matchedAdm.discount !== undefined && matchedAdm.discount !== null) {
+      return Number(matchedAdm.discount);
+    }
+    return 0;
+  }
+
+  getTableColspan(tableId: string, builtInTotalCols: number): number {
+    this.tableSchemaService.schemaRevision();
+    const schema = this.tableSchemaService.getSchema(tableId);
+    const customCols = (schema.customColumns || []).filter(
+      (c) => !c.scope || c.scope === 'table' || c.scope === 'both'
+    ).length;
+    return Math.max(1, builtInTotalCols + customCols);
   }
 
   getStudentCustomCellValues(student: StudentRecord): Record<string, string> {
@@ -10653,7 +10686,11 @@ INSTRUCTIONS:
 
   openEditStudentModal(student: StudentRecord) {
     this.activeStudentForEdit = student;
-    this.studentForm = { ...student };
+    this.studentForm = {
+      ...student,
+      admissionFee: this.getStudentAdmissionFee(student) ?? 25000,
+      discount: this.getStudentDiscount(student)
+    };
     const mergedCells = this.getStudentCustomCellValues(student);
     this.formCustomValues['student'] = { ...mergedCells };
     this.isStudentModalOpen = true;
@@ -11174,6 +11211,8 @@ INSTRUCTIONS:
       guardianOccupation: this.admissionForm.fatherOccupation ? this.admissionForm.fatherOccupation.trim() : 'Business / Private Service',
       feeStatus: this.admissionForm.initialPaymentStatus === 'Paid' ? 'Paid' : 'Pending',
       feeAmount: finalMonthlyFee,
+      admissionFee: Number(this.admissionForm.admissionFee || 25000),
+      discount: Number(this.admissionForm.discount || 0),
       dueBakaya: this.admissionForm.initialPaymentStatus === 'Paid' ? 0 : Number(this.admissionForm.admissionFee || 25000),
       rollNo: roll,
       admissionDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
@@ -11416,6 +11455,8 @@ INSTRUCTIONS:
         guardianOccupation: adm.fatherOccupation || 'Private Business / Services',
         feeStatus: adm.initialPaymentStatus === 'Paid' ? 'Paid' : 'Pending',
         feeAmount: finalMonthlyFee,
+        admissionFee: Number(adm.admissionFee || 25000),
+        discount: Number(adm.discount || 0),
         dueBakaya: adm.initialPaymentStatus === 'Paid' ? 0 : Number(adm.admissionFee || 25000),
         rollNo: roll,
         admissionDate: adm.date || new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
@@ -14594,29 +14635,33 @@ INSTRUCTIONS:
       anchor: string;
       value: (s: StudentRecord) => string | number;
     }> = [
-      { key: 'rollNo', label: headerName('Roll & ID'), anchor: 'built:Roll & ID', value: (s) => s.rollNo },
-      { key: 'id', label: 'Student ID', anchor: 'built:Roll & ID', value: (s) => s.id },
-      { key: 'name', label: headerName('Student'), anchor: 'built:Student', value: (s) => s.name || '' },
-      { key: 'gender', label: 'Gender', anchor: 'built:Student', value: (s) => s.gender || 'Male' },
-      { key: 'dob', label: 'Date of Birth', anchor: 'built:Student', value: (s) => s.dob || 'On file' },
-      { key: 'bform', label: 'B-Form / CNIC', anchor: 'built:Student', value: (s) => s.studentBForm || 'Pending' },
-      { key: 'bloodGroup', label: 'Blood Group', anchor: 'built:Student', value: (s) => s.bloodGroup || 'B+' },
-      { key: 'grade', label: headerName('Class & Sec'), anchor: 'built:Class & Sec', value: (s) => s.grade },
-      { key: 'section', label: 'Section', anchor: 'built:Class & Sec', value: (s) => s.section || 'A' },
-      { key: 'attendance', label: headerName('Attendance'), anchor: 'built:Attendance', value: (s) => s.attendance },
-      { key: 'status', label: 'Today Status', anchor: 'built:Attendance', value: (s) => s.status },
-      { key: 'guardian', label: headerName('Guardian & Phone'), anchor: 'built:Guardian & Phone', value: (s) => s.guardian || '' },
-      { key: 'relation', label: 'Relation', anchor: 'built:Guardian & Phone', value: (s) => s.guardianRelation || 'Father' },
-      { key: 'phone', label: 'Guardian Phone', anchor: 'built:Guardian & Phone', value: (s) => s.guardianPhone || '' },
-      { key: 'email', label: 'Guardian Email', anchor: 'built:Guardian & Phone', value: (s) => s.guardianEmail || 'N/A' },
-      { key: 'cnic', label: 'Father CNIC', anchor: 'built:Guardian & Phone', value: (s) => s.guardianCnic || 'N/A' },
-      { key: 'occupation', label: 'Guardian Occupation', anchor: 'built:Guardian & Phone', value: (s) => s.guardianOccupation || 'N/A' },
+      { key: 'rollNo', label: headerName('Roll #'), anchor: 'built:Roll #', value: (s) => s.rollNo },
+      { key: 'id', label: headerName('Student ID'), anchor: 'built:Student ID', value: (s) => s.id },
+      { key: 'name', label: headerName('Student Name'), anchor: 'built:Student Name', value: (s) => s.name || '' },
+      { key: 'gender', label: headerName('Gender'), anchor: 'built:Gender', value: (s) => s.gender || 'Male' },
+      { key: 'dob', label: headerName('Date of Birth'), anchor: 'built:Date of Birth', value: (s) => s.dob || '—' },
+      { key: 'bform', label: headerName('B-Form / CNIC'), anchor: 'built:B-Form / CNIC', value: (s) => s.studentBForm || '—' },
+      { key: 'bloodGroup', label: headerName('Blood Group'), anchor: 'built:Blood Group', value: (s) => s.bloodGroup || 'B+' },
+      { key: 'grade', label: headerName('Class / Grade'), anchor: 'built:Class / Grade', value: (s) => s.grade },
+      { key: 'section', label: headerName('Section'), anchor: 'built:Section', value: (s) => s.section || 'A' },
+      { key: 'previousSchool', label: headerName('Previous School'), anchor: 'built:Previous School', value: (s) => s.previousSchool || 'Direct Admission' },
+      { key: 'score', label: headerName('Merit Score'), anchor: 'built:Merit Score', value: (s) => s.score || '—' },
+      { key: 'guardian', label: headerName('Father / Guardian'), anchor: 'built:Father / Guardian', value: (s) => s.guardian || '' },
+      { key: 'relation', label: headerName('Relation'), anchor: 'built:Relation', value: (s) => s.guardianRelation || 'Father' },
+      { key: 'cnic', label: headerName('Guardian CNIC'), anchor: 'built:Guardian CNIC', value: (s) => s.guardianCnic || '—' },
+      { key: 'phone', label: headerName('Mobile & WhatsApp'), anchor: 'built:Mobile & WhatsApp', value: (s) => s.guardianPhone || '' },
+      { key: 'email', label: headerName('Guardian Email'), anchor: 'built:Guardian Email', value: (s) => s.guardianEmail || '—' },
+      { key: 'occupation', label: headerName('Occupation'), anchor: 'built:Occupation', value: (s) => s.guardianOccupation || '—' },
+      { key: 'address', label: headerName('Residential Address'), anchor: 'built:Residential Address', value: (s) => s.address || '—' },
+      { key: 'emergencyContact', label: headerName('Emergency Contact'), anchor: 'built:Emergency Contact', value: (s) => s.emergencyContact || s.guardianPhone || '—' },
+      { key: 'admissionFee', label: headerName('Admission Fee'), anchor: 'built:Admission Fee', value: (s) => this.getStudentAdmissionFee(s) ?? 0 },
+      { key: 'feeAmount', label: headerName('Monthly Tuition'), anchor: 'built:Monthly Tuition', value: (s) => s.feeAmount || 0 },
+      { key: 'discount', label: headerName('Concession %'), anchor: 'built:Concession %', value: (s) => `${this.getStudentDiscount(s)}%` },
+      { key: 'dueBakaya', label: headerName('Due Bakaya'), anchor: 'built:Due Bakaya', value: (s) => s.dueBakaya || 0 },
       { key: 'feeStatus', label: headerName('Fee Status'), anchor: 'built:Fee Status', value: (s) => s.feeStatus },
-      { key: 'feeAmount', label: headerName('Monthly Fee'), anchor: 'built:Monthly Fee', value: (s) => s.feeAmount || 0 },
-      { key: 'dueBakaya', label: 'Remaining Bakaya (PKR)', anchor: 'built:Monthly Fee', value: (s) => s.dueBakaya || 0 },
-      { key: 'admissionDate', label: 'Admission Date', anchor: 'built:Student', value: (s) => s.admissionDate || '' },
-      { key: 'emergencyContact', label: 'Emergency Contact', anchor: 'built:Guardian & Phone', value: (s) => s.emergencyContact || s.guardianPhone || '' },
-      { key: 'address', label: 'Residential Address', anchor: 'built:Guardian & Phone', value: (s) => s.address || 'Islamabad, Pakistan' }
+      { key: 'attendance', label: headerName('Attendance'), anchor: 'built:Attendance', value: (s) => `${s.attendance} (${s.status})` },
+      { key: 'medical', label: headerName('Medical Notes'), anchor: 'built:Medical Notes', value: (s) => s.medicalConditions || 'Normal health' },
+      { key: 'admissionDate', label: headerName('Admission Date'), anchor: 'built:Admission Date', value: (s) => s.admissionDate || '—' }
     ];
 
     type CsvCol =
@@ -14698,13 +14743,33 @@ INSTRUCTIONS:
     }
 
     const detectedBuiltIns = [
-      { index: 0, originalLabel: 'Roll & ID' },
-      { index: 1, originalLabel: 'Student' },
-      { index: 2, originalLabel: 'Class & Sec' },
-      { index: 3, originalLabel: 'Guardian & Phone' },
-      { index: 4, originalLabel: 'Attendance' },
-      { index: 5, originalLabel: 'Monthly Fee' },
-      { index: 6, originalLabel: 'Fee Status' }
+      { index: 0, originalLabel: 'Roll #' },
+      { index: 1, originalLabel: 'Student ID' },
+      { index: 2, originalLabel: 'Student Name' },
+      { index: 3, originalLabel: 'Gender' },
+      { index: 4, originalLabel: 'Date of Birth' },
+      { index: 5, originalLabel: 'B-Form / CNIC' },
+      { index: 6, originalLabel: 'Blood Group' },
+      { index: 7, originalLabel: 'Class / Grade' },
+      { index: 8, originalLabel: 'Section' },
+      { index: 9, originalLabel: 'Previous School' },
+      { index: 10, originalLabel: 'Merit Score' },
+      { index: 11, originalLabel: 'Father / Guardian' },
+      { index: 12, originalLabel: 'Relation' },
+      { index: 13, originalLabel: 'Guardian CNIC' },
+      { index: 14, originalLabel: 'Mobile & WhatsApp' },
+      { index: 15, originalLabel: 'Guardian Email' },
+      { index: 16, originalLabel: 'Occupation' },
+      { index: 17, originalLabel: 'Residential Address' },
+      { index: 18, originalLabel: 'Emergency Contact' },
+      { index: 19, originalLabel: 'Admission Fee' },
+      { index: 20, originalLabel: 'Monthly Tuition' },
+      { index: 21, originalLabel: 'Concession %' },
+      { index: 22, originalLabel: 'Due Bakaya' },
+      { index: 23, originalLabel: 'Fee Status' },
+      { index: 24, originalLabel: 'Attendance' },
+      { index: 25, originalLabel: 'Medical Notes' },
+      { index: 26, originalLabel: 'Admission Date' }
     ];
     const resolved = this.tableSchemaService.resolveOrderedColumns('students_master', detectedBuiltIns, stuSchema);
 
@@ -14722,13 +14787,36 @@ INSTRUCTIONS:
 
     const builtInExtractor = (idx: number, s: StudentRecord): string => {
       switch (idx) {
-        case 0: return `#${s.rollNo} (${s.id})`;
-        case 1: return `${s.name} (${s.gender || 'Male'}, ${s.bloodGroup || 'B+'})`;
-        case 2: return `${s.grade} - Sec ${s.section || 'A'}`;
-        case 3: return `${s.guardian} (${s.guardianPhone})`;
-        case 4: return `${s.attendance} (${s.status})`;
-        case 5: return `PKR ${this.formatCurrency(s.feeAmount || 18000)}`;
-        case 6: return s.feeStatus;
+        case 0: return `#${s.rollNo}`;
+        case 1: return s.id;
+        case 2: return s.name;
+        case 3: return s.gender || 'Male';
+        case 4: return s.dob || '—';
+        case 5: return s.studentBForm || '—';
+        case 6: return s.bloodGroup || 'B+';
+        case 7: return s.grade;
+        case 8: return s.section || 'A';
+        case 9: return s.previousSchool || 'Direct Admission';
+        case 10: return s.score || '—';
+        case 11: return s.guardian;
+        case 12: return s.guardianRelation || 'Father';
+        case 13: return s.guardianCnic || '—';
+        case 14: return s.guardianPhone;
+        case 15: return s.guardianEmail || '—';
+        case 16: return s.guardianOccupation || '—';
+        case 17: return s.address || '—';
+        case 18: return s.emergencyContact || s.guardianPhone || '—';
+        case 19: {
+          const admFee = this.getStudentAdmissionFee(s);
+          return admFee !== null ? `PKR ${this.formatCurrency(admFee)}` : '—';
+        }
+        case 20: return `PKR ${this.formatCurrency(s.feeAmount || 18000)}`;
+        case 21: return `${this.getStudentDiscount(s)}%`;
+        case 22: return `PKR ${this.formatCurrency(s.dueBakaya || 0)}`;
+        case 23: return s.feeStatus;
+        case 24: return `${s.attendance} (${s.status})`;
+        case 25: return s.medicalConditions || 'Normal health';
+        case 26: return s.admissionDate || '—';
         default: return '-';
       }
     };

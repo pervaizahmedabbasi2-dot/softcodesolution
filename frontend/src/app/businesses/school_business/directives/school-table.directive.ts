@@ -273,10 +273,13 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
             (builtInTds[0].hasAttribute('colspan') || builtInTds[0].hasAttribute('data-scs-empty-row'));
 
           if (isEmptyStateRow) {
+            const visibleCustomCount = schema.customColumns.filter(
+              (c) => !c.scope || c.scope === 'table' || c.scope === 'both'
+            ).length;
             builtInTds[0].setAttribute('data-scs-empty-row', '1');
             builtInTds[0].setAttribute(
               'colspan',
-              String(Math.max(1, visibleBuiltInCount + schema.customColumns.length))
+              String(Math.max(1, visibleBuiltInCount + visibleCustomCount))
             );
             return;
           }
@@ -448,14 +451,25 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
     }
   }
 
+  private getChromeMountTarget(
+    tableEl: HTMLTableElement
+  ): { container: HTMLElement; beforeEl: Element | null; externalScroll: boolean } | null {
+    const parent = tableEl.parentElement;
+    if (!parent) return null;
+    if (parent.hasAttribute('data-scs-table-scroll') && parent.parentElement) {
+      return { container: parent.parentElement, beforeEl: parent, externalScroll: true };
+    }
+    return { container: parent, beforeEl: tableEl, externalScroll: false };
+  }
+
   private syncTitleBanner(
     tableEl: HTMLTableElement,
     tableId: string,
     schema: SchoolTableSchema,
     isOwner: boolean
   ): void {
-    const parent = tableEl.parentElement;
-    if (!parent) return;
+    const mount = this.getChromeMountTarget(tableEl);
+    if (!mount) return;
 
     const customTitle = (schema.customTitle || '').trim();
     if (!customTitle) {
@@ -469,9 +483,12 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
     if (!this.titleBannerEl) {
       this.titleBannerEl = document.createElement('div');
       this.titleBannerEl.setAttribute('data-scs-custom-title-banner', tableId);
-      this.titleBannerEl.className =
-        'px-3.5 py-2 bg-indigo-50/75 border-b border-indigo-200/70 flex items-center justify-between gap-2 text-xs';
-      parent.insertBefore(this.titleBannerEl, tableEl);
+      this.titleBannerEl.className = mount.externalScroll
+        ? 'px-3.5 py-2 bg-indigo-50/75 border-b border-indigo-200/70 flex items-center justify-between gap-2 text-xs'
+        : 'sticky left-0 z-10 px-3.5 py-2 bg-indigo-50/75 border-b border-indigo-200/70 flex items-center justify-between gap-2 text-xs';
+      mount.container.insertBefore(this.titleBannerEl, mount.beforeEl);
+    } else if (this.titleBannerEl.parentElement !== mount.container) {
+      mount.container.insertBefore(this.titleBannerEl, mount.beforeEl);
     }
 
     while (this.titleBannerEl.firstChild) {
@@ -720,8 +737,8 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
     hiddenCount: number,
     isOwner: boolean
   ): void {
-    const parent = tableEl.parentElement;
-    if (!parent) return;
+    const mount = this.getChromeMountTarget(tableEl);
+    if (!mount) return;
 
     if (!isOwner) {
       if (this.toolbarEl && this.toolbarEl.parentElement) {
@@ -731,13 +748,20 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
       return;
     }
 
+    const anchor =
+      this.titleBannerEl && this.titleBannerEl.parentElement === mount.container
+        ? this.titleBannerEl
+        : mount.beforeEl;
+
     if (!this.toolbarEl) {
       this.toolbarEl = document.createElement('div');
       this.toolbarEl.setAttribute('data-scs-table-toolbar', tableId);
-      this.toolbarEl.className =
-        'sticky left-0 z-10 flex flex-wrap items-center justify-between gap-2 px-3.5 py-2 bg-slate-50/95 border-b border-slate-200/80 text-[11px]';
-      const anchor = this.titleBannerEl || tableEl;
-      parent.insertBefore(this.toolbarEl, anchor);
+      this.toolbarEl.className = mount.externalScroll
+        ? 'flex flex-wrap items-center justify-between gap-2 px-3.5 py-2.5 bg-slate-50/95 border-b border-slate-200/80 text-[11px]'
+        : 'sticky left-0 z-10 flex flex-wrap items-center justify-between gap-2 px-3.5 py-2 bg-slate-50/95 border-b border-slate-200/80 text-[11px]';
+      mount.container.insertBefore(this.toolbarEl, anchor);
+    } else if (this.toolbarEl.parentElement !== mount.container) {
+      mount.container.insertBefore(this.toolbarEl, anchor);
     }
 
     const title = schema.customTitle || this.tableTitle() || tableId.replace(/_/g, ' ');

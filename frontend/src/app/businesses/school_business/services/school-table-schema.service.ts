@@ -203,14 +203,27 @@ export const SCHOOL_TABLE_CATALOG: TableCatalogItem[] = [
     canonicalId: 'students_master',
     title: 'Students Master Directory',
     portals: 'Owner, Principal',
-    defaultHeaders: ['Student', 'Roll #', 'Grade', 'Guardian', 'Fee Status']
+    defaultHeaders: [
+      'Roll #', 'Student ID', 'Student Name', 'Gender', 'Date of Birth', 'B-Form / CNIC', 'Blood Group',
+      'Class / Grade', 'Section', 'Previous School', 'Merit Score',
+      'Father / Guardian', 'Relation', 'Guardian CNIC', 'Mobile & WhatsApp', 'Guardian Email',
+      'Occupation', 'Residential Address', 'Emergency Contact',
+      'Admission Fee', 'Monthly Tuition', 'Concession %', 'Due Bakaya', 'Fee Status',
+      'Attendance', 'Medical Notes', 'Admission Date'
+    ]
   },
   {
     tableId: 'owner_admissions',
     canonicalId: 'owner_admissions',
     title: 'Admissions & Enrollment Applications',
     portals: 'Owner, Principal',
-    defaultHeaders: ['Applicant', 'Class Applied', 'Guardian', 'Phone', 'Score', 'Status']
+    defaultHeaders: [
+      'Ref ID', 'Date', 'Roll #', 'Student Name', 'Gender', 'Date of Birth', 'B-Form / CNIC', 'Blood Group',
+      'Class / Grade', 'Section', 'Previous School', 'Merit Score',
+      'Father / Guardian', 'Relation', 'Guardian CNIC', 'Mobile & WhatsApp', 'Guardian Email',
+      'Occupation', 'Residential Address', 'Emergency Contact',
+      'Admission Fee', 'Monthly Tuition', 'Concession %', 'Fee Status', 'Source', 'Medical Notes', 'Status'
+    ]
   },
   {
     tableId: 'teachers_master',
@@ -402,13 +415,30 @@ export const SCHOOL_FORM_FIELD_ANCHORS: Record<string, FormFieldAnchorOption[]> 
     { key: 'adm_medical', label: 'Health, Allergies & Medical Notes' }
   ],
   students_master: [
+    { key: 'stu_roll', label: 'Assigned Roll No.' },
     { key: 'stu_name', label: 'Student Full Name' },
+    { key: 'stu_gender', label: 'Gender' },
+    { key: 'stu_dob', label: 'Date of Birth' },
+    { key: 'stu_bform', label: 'Student B-Form / CNIC' },
+    { key: 'stu_blood', label: 'Blood Group' },
     { key: 'stu_grade', label: 'Class & Grade' },
     { key: 'stu_section', label: 'Section' },
-    { key: 'stu_guardian', label: 'Guardian Name' },
-    { key: 'stu_phone', label: 'Guardian Contact Phone' },
+    { key: 'stu_prev_school', label: 'Previous School Attended' },
+    { key: 'stu_score', label: 'Entrance / Merit Score' },
+    { key: 'stu_guardian', label: 'Father / Guardian Name' },
+    { key: 'stu_relation', label: 'Relationship' },
+    { key: 'stu_cnic', label: 'Guardian CNIC' },
+    { key: 'stu_phone', label: 'Mobile & WhatsApp' },
+    { key: 'stu_email', label: 'Guardian Email' },
+    { key: 'stu_occupation', label: 'Guardian Occupation' },
+    { key: 'stu_address', label: 'Permanent Residential Address' },
+    { key: 'stu_emergency', label: 'Emergency Contact' },
+    { key: 'stu_adm_fee', label: 'Admission Fee (PKR)' },
     { key: 'stu_fee_amount', label: 'Monthly Tuition Fee (PKR)' },
-    { key: 'stu_fee_status', label: 'Fee Status' }
+    { key: 'stu_discount', label: 'Scholarship / Concession (%)' },
+    { key: 'stu_bakaya', label: 'Due Bakaya (PKR)' },
+    { key: 'stu_fee_status', label: 'Fee Status' },
+    { key: 'stu_medical', label: 'Health, Allergies & Medical Notes' }
   ],
   teachers_master: [
     { key: 't_name', label: 'Teacher Full Name' },
@@ -1543,35 +1573,60 @@ export class SchoolTableSchemaService {
     if (key === '__first__') return '__first__';
     if (key.startsWith('custom:')) return key;
 
-    if (canonical === 'owner_admissions') {
-      if (key === 'adm_roll') return 'built:Roll & ID';
-      if (['adm_name', 'adm_gender', 'adm_dob', 'adm_bform', 'adm_blood'].includes(key)) {
-        return 'built:Student';
-      }
-      if (['adm_class', 'adm_section', 'adm_prev_school', 'adm_score'].includes(key)) {
-        return 'built:Class & Sec';
-      }
-      if (
-        ['adm_father', 'adm_relation', 'adm_cnic', 'adm_phone', 'adm_email', 'adm_occupation', 'adm_address', 'adm_emergency'].includes(key)
-      ) {
-        return 'built:Guardian & Phone';
-      }
-      if (['adm_fee', 'adm_tuition', 'adm_discount'].includes(key)) {
-        return 'built:Monthly Fee';
-      }
-      if (key === 'adm_pay_status') {
-        return 'built:Fee Status';
-      }
-      return '__last__';
-    }
+    const studentAndAdmissionAnchorMap: Record<string, string> = {
+      adm_roll: 'built:Roll #',
+      stu_roll: 'built:Roll #',
+      adm_name: 'built:Student Name',
+      stu_name: 'built:Student Name',
+      stu_identity: 'built:Student Name',
+      adm_gender: 'built:Gender',
+      stu_gender: 'built:Gender',
+      adm_dob: 'built:Date of Birth',
+      stu_dob: 'built:Date of Birth',
+      adm_bform: 'built:B-Form / CNIC',
+      stu_bform: 'built:B-Form / CNIC',
+      adm_blood: 'built:Blood Group',
+      stu_blood: 'built:Blood Group',
+      adm_class: 'built:Class / Grade',
+      stu_grade: 'built:Class / Grade',
+      adm_section: 'built:Section',
+      stu_section: 'built:Section',
+      adm_prev_school: 'built:Previous School',
+      stu_prev_school: 'built:Previous School',
+      adm_score: 'built:Merit Score',
+      stu_score: 'built:Merit Score',
+      adm_father: 'built:Father / Guardian',
+      stu_guardian: 'built:Father / Guardian',
+      adm_relation: 'built:Relation',
+      stu_relation: 'built:Relation',
+      adm_cnic: 'built:Guardian CNIC',
+      stu_cnic: 'built:Guardian CNIC',
+      adm_phone: 'built:Mobile & WhatsApp',
+      stu_phone: 'built:Mobile & WhatsApp',
+      adm_email: 'built:Guardian Email',
+      stu_email: 'built:Guardian Email',
+      adm_occupation: 'built:Occupation',
+      stu_occupation: 'built:Occupation',
+      adm_address: 'built:Residential Address',
+      stu_address: 'built:Residential Address',
+      adm_emergency: 'built:Emergency Contact',
+      stu_emergency: 'built:Emergency Contact',
+      adm_fee: 'built:Admission Fee',
+      stu_adm_fee: 'built:Admission Fee',
+      adm_tuition: 'built:Monthly Tuition',
+      stu_fee_amount: 'built:Monthly Tuition',
+      stu_fee: 'built:Monthly Tuition',
+      adm_discount: 'built:Concession %',
+      stu_discount: 'built:Concession %',
+      stu_bakaya: 'built:Due Bakaya',
+      adm_pay_status: 'built:Fee Status',
+      stu_fee_status: 'built:Fee Status',
+      adm_medical: 'built:Medical Notes',
+      stu_medical: 'built:Medical Notes'
+    };
 
-    if (canonical === 'students_master') {
-      if (key === 'stu_name' || key === 'stu_identity') return 'built:Student';
-      if (key === 'stu_grade' || key === 'stu_section') return 'built:Class & Sec';
-      if (key === 'stu_guardian' || key === 'stu_phone') return 'built:Guardian & Phone';
-      if (key === 'stu_fee_amount' || key === 'stu_fee') return 'built:Monthly Fee';
-      if (key === 'stu_fee_status') return 'built:Fee Status';
-      return '__last__';
+    if (canonical === 'owner_admissions' || canonical === 'students_master') {
+      return studentAndAdmissionAnchorMap[key] || '__last__';
     }
 
     return '__last__';
