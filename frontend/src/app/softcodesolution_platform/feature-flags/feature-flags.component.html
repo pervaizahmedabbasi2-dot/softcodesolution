@@ -79,7 +79,7 @@
 
   <!-- Main Flags Registry -->
   <div class="scs-surface-3d rounded-[24px] overflow-hidden">
-    <div class="p-4 sm:p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white/60">
+    <div class="p-4 sm:p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white">
       <div class="relative flex-1 max-w-sm">
         <lucide-icon [name]="icons.Search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></lucide-icon>
         <input type="text" [value]="searchQuery" (input)="setSearchQuery($any($event.target).value)" placeholder="Search feature flags by name or key..." class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none">
@@ -108,7 +108,7 @@
           </span>
         </div>
 
-        <div class="space-y-1.5 bg-slate-50 p-3 rounded-xl border border-slate-100">
+        <div class="space-y-1.5 bg-white p-3 rounded-xl border border-slate-200/80">
           <div class="flex items-center justify-between text-xs">
             <span class="text-slate-500 font-medium">Rollout Allocation:</span>
             <span class="font-mono font-bold text-indigo-600">{{ flag.rolloutPercentage }}%</span>
@@ -130,7 +130,7 @@
     <!-- Desktop Feature Flags Table (Desktop View) -->
     <div class="hidden md:block overflow-x-auto">
       <table class="w-full text-left text-xs border-collapse">
-        <thead class="bg-gradient-to-r from-emerald-50/90 via-slate-50 to-teal-50/80 text-slate-700 border-b border-emerald-100/90 uppercase text-[10px] font-black tracking-wider">
+        <thead class="bg-white text-slate-700 border-b border-slate-200/80 uppercase text-[10px] font-black tracking-wider">
           <tr>
             <th class="py-3.5 px-4">Feature Name & Key</th>
             <th class="py-3.5 px-4">State</th>

@@ -680,7 +680,7 @@ test('School Business: Multi-Category Face Verification Attendance (Student, Tea
     assert.equal((await forbidden.json()).error, 'ROLE_FORBIDDEN');
   }
 
-  // Manual attendance by student is still RBAC-blocked (403), while face_camera kiosk works with zero permission friction
+  // Manual & face_camera attendance by student are BOTH blocked (403 ROLE_FORBIDDEN) until Owner enables student self check-in
   const blockedManualSelf = await fetch(`${baseUrl}/api/school/attendance`, {
     method: 'POST',
     headers: studentHeaders,
@@ -694,8 +694,9 @@ test('School Business: Multi-Category Face Verification Attendance (Student, Tea
     })
   });
   assert.equal(blockedManualSelf.status, 403);
+  assert.equal((await blockedManualSelf.json()).error, 'ROLE_FORBIDDEN');
 
-  const openCameraSelf = await fetch(`${baseUrl}/api/school/attendance`, {
+  const blockedCameraSelf = await fetch(`${baseUrl}/api/school/attendance`, {
     method: 'POST',
     headers: studentHeaders,
     body: JSON.stringify({
@@ -707,9 +708,100 @@ test('School Business: Multi-Category Face Verification Attendance (Student, Tea
       status: 'Present'
     })
   });
-  assert.equal(openCameraSelf.status, 200);
+  assert.equal(blockedCameraSelf.status, 403);
+  assert.equal((await blockedCameraSelf.json()).error, 'ROLE_FORBIDDEN');
 
-  // Owner enables Lite mode, fills lighting boost & allows student self camera check-in
+  // Strict category & role toggle enforcement: Owner limits Principal to Students ONLY
+  const studentsOnlyPolicyRes = await fetch(`${baseUrl}/api/school/attendance/policy`, {
+    method: 'PUT',
+    headers: ownerHeaders,
+    body: JSON.stringify({
+      roleAccess: {
+        principal: {
+          enabled: true,
+          canScanStudents: true,
+          canScanTeachers: false,
+          canScanStaff: false,
+          canScanPrincipal: false,
+          canEnrollFaces: true,
+          liteModeAllowed: true,
+          manualFallbackAllowed: false,
+          canExportReports: true,
+          selfCheckInEnabled: false
+        }
+      }
+    })
+  });
+  assert.equal(studentsOnlyPolicyRes.status, 200);
+
+  const priAllowedStuRes = await fetch(`${baseUrl}/api/school/attendance`, {
+    method: 'POST',
+    headers: principalHeaders,
+    body: JSON.stringify({
+      studentId: 'STD-PRI-OK',
+      studentName: 'Student By Principal',
+      memberCategory: 'student',
+      verificationMode: 'face_camera',
+      confidenceScore: 91,
+      status: 'Present'
+    })
+  });
+  assert.equal(priAllowedStuRes.status, 200);
+
+  const priBlockedTchRes = await fetch(`${baseUrl}/api/school/attendance`, {
+    method: 'POST',
+    headers: principalHeaders,
+    body: JSON.stringify({
+      studentId: 'TCH-99',
+      studentName: 'Prof. Imran',
+      memberCategory: 'teacher',
+      verificationMode: 'face_camera',
+      confidenceScore: 93,
+      status: 'Present'
+    })
+  });
+  assert.equal(priBlockedTchRes.status, 403);
+  assert.equal((await priBlockedTchRes.json()).error, 'ROLE_FORBIDDEN');
+
+  // Owner revokes Principal attendance access completely -> even student verification is 403
+  const revokePriPolicyRes = await fetch(`${baseUrl}/api/school/attendance/policy`, {
+    method: 'PUT',
+    headers: ownerHeaders,
+    body: JSON.stringify({
+      roleAccess: {
+        principal: {
+          enabled: false,
+          canScanStudents: true,
+          canScanTeachers: false,
+          canScanStaff: false,
+          canScanPrincipal: false,
+          canEnrollFaces: false,
+          liteModeAllowed: true,
+          manualFallbackAllowed: false,
+          canExportReports: false,
+          selfCheckInEnabled: false
+        }
+      }
+    })
+  });
+  assert.equal(revokePriPolicyRes.status, 200);
+
+  const priRevokedStuRes = await fetch(`${baseUrl}/api/school/attendance`, {
+    method: 'POST',
+    headers: principalHeaders,
+    body: JSON.stringify({
+      studentId: 'STD-PRI-REV',
+      studentName: 'Student Blocked',
+      memberCategory: 'student',
+      verificationMode: 'face_camera',
+      confidenceScore: 92,
+      status: 'Present'
+    })
+  });
+  assert.equal(priRevokedStuRes.status, 403);
+  assert.equal((await priRevokedStuRes.json()).error, 'ROLE_FORBIDDEN');
+
+  // Owner enables Lite mode, fills lighting boost & grants Principal and Student permissions per policy
   const savePolicyRes = await fetch(`${baseUrl}/api/school/attendance/policy`, {
     method: 'PUT',
     headers: ownerHeaders,
@@ -722,10 +814,10 @@ test('School Business: Multi-Category Face Verification Attendance (Student, Tea
       liteConfidenceThreshold: 62,
       scheduledStartTime: '08:00',
       roleAccess: {
-        principal: { enabled: true, canScanStudents: true, canScanTeachers: true, canScanStaff: true, canEnrollFaces: true, liteModeAllowed: true, manualFallbackAllowed: false, canExportReports: true, selfCheckInEnabled: false },
-        teacher: { enabled: true, canScanStudents: true, canScanTeachers: false, canScanStaff: false, canEnrollFaces: true, liteModeAllowed: true, manualFallbackAllowed: false, canExportReports: true, selfCheckInEnabled: false },
-        staff: { enabled: true, canScanStudents: true, canScanTeachers: true, canScanStaff: true, canEnrollFaces: false, liteModeAllowed: true, manualFallbackAllowed: false, canExportReports: false, selfCheckInEnabled: false },
-        student: { enabled: true, canScanStudents: false, canScanTeachers: false, canScanStaff: false, canEnrollFaces: false, liteModeAllowed: true, manualFallbackAllowed: false, canExportReports: false, selfCheckInEnabled: true }
+        principal: { enabled: true, canScanStudents: true, canScanTeachers: true, canScanStaff: true, canScanPrincipal: false, canEnrollFaces: true, liteModeAllowed: true, manualFallbackAllowed: false, canExportReports: true, selfCheckInEnabled: false },
+        teacher: { enabled: true, canScanStudents: true, canScanTeachers: false, canScanStaff: false, canScanPrincipal: false, canEnrollFaces: true, liteModeAllowed: true, manualFallbackAllowed: false, canExportReports: true, selfCheckInEnabled: false },
+        staff: { enabled: true, canScanStudents: true, canScanTeachers: true, canScanStaff: true, canScanPrincipal: false, canEnrollFaces: false, liteModeAllowed: true, manualFallbackAllowed: false, canExportReports: false, selfCheckInEnabled: false },
+        student: { enabled: true, canScanStudents: false, canScanTeachers: false, canScanStaff: false, canScanPrincipal: false, canEnrollFaces: false, liteModeAllowed: true, manualFallbackAllowed: false, canExportReports: false, selfCheckInEnabled: true }
       }
     })
   });

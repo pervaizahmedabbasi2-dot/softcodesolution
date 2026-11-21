@@ -326,13 +326,53 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
 
     effect(() => {
       const ctx = this.portalContext();
+      const locked = this.isPortalLocked();
+      const canVerify = this.canVerifyCameraCurrentPortal();
+      const canEnroll = this.canEnrollCurrentPortal();
+      const allowed = this.allowedCategories();
+      const enrollAllowed = this.enrollAllowedCategories();
+
       if (ctx === 'student' && this.currentStudentId()) {
         this.selectedTargetMemberId.set(this.currentStudentId());
       }
+
       if (ctx !== 'owner') {
         this.columnPickerOpen.set(false);
-        if (this.activeSubTab() === 'setup') {
-          this.activeSubTab.set('terminal');
+        if (locked || (!canVerify && !canEnroll)) {
+          this.stopCamera(false);
+          this.quickEnrollDrawerOpen.set(false);
+        }
+
+        if (allowed.length > 0) {
+          const curCat = this.activeCategory();
+          if (curCat === 'all' && allowed.length === 1) {
+            this.activeCategory.set(allowed[0]);
+          } else if (curCat !== 'all' && !allowed.includes(curCat)) {
+            this.activeCategory.set(allowed[0]);
+          }
+        }
+
+        if (enrollAllowed.length > 0) {
+          if (!enrollAllowed.includes(this.enrollCategory())) {
+            this.enrollCategory.set(enrollAllowed[0]);
+          }
+          if (!enrollAllowed.includes(this.quickEnrollCategory())) {
+            this.quickEnrollCategory.set(enrollAllowed[0]);
+          }
+        }
+
+        const tab = this.activeSubTab();
+        const isTabAllowed =
+          tab !== 'setup' &&
+          (tab !== 'terminal' || canVerify) &&
+          (tab !== 'enrollment' || canEnroll) &&
+          (tab !== 'students' || allowed.includes('student')) &&
+          (tab !== 'teachers' || allowed.includes('teacher')) &&
+          (tab !== 'staff' || allowed.includes('staff')) &&
+          (tab !== 'principals' || allowed.includes('principal'));
+
+        if (!isTabAllowed) {
+          this.activeSubTab.set(this.resolveDefaultSubTab());
         }
       }
     });
@@ -367,6 +407,8 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     if (
       typeof document !== 'undefined' &&
       document.visibilityState === 'visible' &&
+      !this.isPortalLocked() &&
+      this.canVerifyCameraCurrentPortal() &&
       this.keepCameraOn() &&
       this.activeSubTab() === 'terminal' &&
       !this.cameraActive()
@@ -389,9 +431,9 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     if (typeof document !== 'undefined') {
       document.addEventListener('visibilitychange', this.boundVisibilityHandler);
     }
-    if (this.activeSubTab() === 'terminal' && this.keepCameraOn()) {
+    if (!this.isPortalLocked() && this.canVerifyCameraCurrentPortal() && this.activeSubTab() === 'terminal' && this.keepCameraOn()) {
       setTimeout(() => {
-        if (!this.cameraActive() && this.activeSubTab() === 'terminal' && this.keepCameraOn()) {
+        if (!this.cameraActive() && !this.isPortalLocked() && this.canVerifyCameraCurrentPortal() && this.activeSubTab() === 'terminal' && this.keepCameraOn()) {
           void this.startCamera('verify', true);
         }
       }, 60);
@@ -409,7 +451,7 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     this.stopCamera(false);
   }
 
-  // Zero-Permission-Friction Access Computeds (No role lockouts on the scanning platform)
+  // Strict Owner-Governed Portal & Category Access Computeds
   readonly isOwner = computed(() => this.portalContext() === 'owner');
 
   readonly rolePerms = computed<RoleAttendancePermission>(() => {
@@ -421,6 +463,7 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
         canScanStudents: true,
         canScanTeachers: true,
         canScanStaff: true,
+        canScanPrincipal: true,
         canEnrollFaces: true,
         liteModeAllowed: true,
         manualFallbackAllowed: true,
@@ -434,22 +477,101 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     return p.roleAccess.student;
   });
 
-  // Never lock out the self-contained face scanner platform
-  readonly isPortalLocked = computed(() => false);
+  readonly allowedCategories = computed<AttendanceMemberCategory[]>(() => {
+    if (this.isOwner()) {
+      return ['student', 'teacher', 'staff', 'principal'];
+    }
+    const perms = this.rolePerms();
+    const p = this.policy();
+    if (!perms.enabled) {
+      return [];
+    }
+    if (this.portalContext() === 'student') {
+      return p.categories.student.enabled && Boolean(perms.selfCheckInEnabled) ? ['student'] : [];
+    }
+    const list: AttendanceMemberCategory[] = [];
+    if (p.categories.student.enabled && perms.canScanStudents) list.push('student');
+    if (p.categories.teacher.enabled && perms.canScanTeachers) list.push('teacher');
+    if (p.categories.staff.enabled && perms.canScanStaff) list.push('staff');
+    if (p.categories.principal.enabled && Boolean(perms.canScanPrincipal)) list.push('principal');
+    return list;
+  });
 
-  readonly allowedCategories = computed<AttendanceMemberCategory[]>(() => ['student', 'teacher', 'staff', 'principal']);
+  readonly enrollAllowedCategories = computed<AttendanceMemberCategory[]>(() => {
+    if (this.isOwner()) {
+      return ['student', 'teacher', 'staff', 'principal'];
+    }
+    const perms = this.rolePerms();
+    const p = this.policy();
+    if (!perms.enabled || !perms.canEnrollFaces) {
+      return [];
+    }
+    if (this.portalContext() === 'student') {
+      return p.categories.student.enabled ? ['student'] : [];
+    }
+    return this.allowedCategories();
+  });
+
+  readonly studentSelfCheckInAllowed = computed(() => {
+    if (this.isOwner()) return true;
+    if (this.portalContext() !== 'student') return false;
+    const perms = this.rolePerms();
+    return Boolean(perms.enabled && this.policy().categories.student.enabled && perms.selfCheckInEnabled);
+  });
+
+  readonly canVerifyCameraCurrentPortal = computed(() => {
+    if (this.isOwner()) return true;
+    const perms = this.rolePerms();
+    if (!perms.enabled) return false;
+    if (this.portalContext() === 'student') {
+      return this.studentSelfCheckInAllowed();
+    }
+    return this.allowedCategories().length > 0;
+  });
+
+  readonly canEnrollCurrentPortal = computed(() => {
+    if (this.isOwner()) return true;
+    const perms = this.rolePerms();
+    return Boolean(perms.enabled && perms.canEnrollFaces && this.enrollAllowedCategories().length > 0);
+  });
 
   readonly canUseManualFallback = computed(() => {
     const p = this.policy();
     if (this.isOwner()) {
       return !p.requireCameraForAllAttendance || p.roleAccess.principal.manualFallbackAllowed;
     }
-    return !p.requireCameraForAllAttendance && this.rolePerms().manualFallbackAllowed;
+    const perms = this.rolePerms();
+    return !p.requireCameraForAllAttendance && perms.enabled && perms.manualFallbackAllowed && this.allowedCategories().length > 0;
   });
 
-  readonly canEnrollCurrentPortal = computed(() => true);
-  readonly canExportCurrentPortal = computed(() => this.isOwner() || this.rolePerms().canExportReports);
-  readonly studentSelfCheckInAllowed = computed(() => true);
+  readonly canExportCurrentPortal = computed(() => {
+    if (this.isOwner()) return true;
+    const perms = this.rolePerms();
+    return Boolean(perms.enabled && perms.canExportReports && this.allowedCategories().length > 0);
+  });
+
+  readonly isPortalLocked = computed(() => {
+    if (this.isOwner()) return false;
+    const perms = this.rolePerms();
+    if (!perms.enabled) return true;
+    return (
+      !this.canVerifyCameraCurrentPortal() &&
+      !this.canEnrollCurrentPortal() &&
+      !this.canUseManualFallback() &&
+      !this.canExportCurrentPortal()
+    );
+  });
+
+  private resolveDefaultSubTab(): AttendanceSubTab {
+    if (this.canVerifyCameraCurrentPortal()) return 'terminal';
+    const allowed = this.allowedCategories();
+    if (allowed.includes('student')) return 'students';
+    if (allowed.includes('teacher')) return 'teachers';
+    if (allowed.includes('staff')) return 'staff';
+    if (allowed.includes('principal')) return 'principals';
+    if (this.canEnrollCurrentPortal()) return 'enrollment';
+    return 'terminal';
+  }
 
   readonly effectiveThreshold = computed(() => {
     const p = this.policy();
@@ -819,7 +941,14 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
 
   readonly activeCategoryMembers = computed<AttendanceMemberView[]>(() => {
     const cat = this.activeCategory();
-    if (cat === 'all') return this.allCampusMembers();
+    const allowed = this.allowedCategories();
+    if (cat === 'all') {
+      if (this.isOwner()) return this.allCampusMembers();
+      return this.allCampusMembers().filter((m) => allowed.includes(m.category));
+    }
+    if (!this.isOwner() && !allowed.includes(cat)) {
+      return [];
+    }
     if (cat === 'teacher') return this.teacherMembers();
     if (cat === 'staff') return this.staffMembers();
     if (cat === 'principal') return this.principalMembers();
@@ -828,13 +957,19 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
 
   readonly activeFaceProfiles = computed<FaceProfileRecord[]>(() => {
     const cat = this.activeCategory();
-    const all = this.cleanFaceProfiles();
-    if (cat === 'all') return all;
-    return all.filter((fp) => fp.memberCategory === cat);
+    const allowed = this.allowedCategories();
+    const permittedProfiles = this.isOwner()
+      ? this.cleanFaceProfiles()
+      : this.cleanFaceProfiles().filter((fp) => allowed.includes(fp.memberCategory));
+    if (cat === 'all') return permittedProfiles;
+    return permittedProfiles.filter((fp) => fp.memberCategory === cat);
   });
 
   readonly enrollCategoryMembers = computed<AttendanceMemberView[]>(() => {
     const cat = this.enrollCategory();
+    if (!this.isOwner() && !this.enrollAllowedCategories().includes(cat)) {
+      return [];
+    }
     if (cat === 'teacher') return this.teacherMembers();
     if (cat === 'staff') return this.staffMembers();
     if (cat === 'principal') return this.principalMembers();
@@ -849,6 +984,9 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
 
   readonly quickEnrollFilteredMembers = computed<AttendanceMemberView[]>(() => {
     const cat = this.quickEnrollCategory();
+    if (!this.isOwner() && !this.enrollAllowedCategories().includes(cat)) {
+      return [];
+    }
     const base =
       cat === 'teacher'
         ? this.teacherMembers()
@@ -880,10 +1018,11 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
 
   readonly currentTabMembersUnfiltered = computed<AttendanceMemberView[]>(() => {
     const tab = this.activeSubTab();
-    if (tab === 'teachers') return this.teacherMembers();
-    if (tab === 'staff') return this.staffMembers();
-    if (tab === 'principals') return this.principalMembers();
-    if (tab === 'students') return this.studentMembers();
+    const allowed = this.allowedCategories();
+    if (tab === 'teachers') return (this.isOwner() || allowed.includes('teacher')) ? this.teacherMembers() : [];
+    if (tab === 'staff') return (this.isOwner() || allowed.includes('staff')) ? this.staffMembers() : [];
+    if (tab === 'principals') return (this.isOwner() || allowed.includes('principal')) ? this.principalMembers() : [];
+    if (tab === 'students') return (this.isOwner() || allowed.includes('student')) ? this.studentMembers() : [];
     return this.activeCategoryMembers();
   });
 
@@ -950,16 +1089,19 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     const cat = this.activeCategory();
     const tab = this.activeSubTab();
     const lookup = this.rawMemberLookup();
-    const logs = (this.verificationLogs() || []).map((l) => {
-      if (!this.isMaskedValue(l.memberName)) return l;
-      const raw = lookup.get(`${l.memberCategory}:${l.memberId}`);
-      return {
-        ...l,
-        memberName: raw?.name || l.memberCode || 'Campus Member',
-        memberCode: this.isMaskedValue(l.memberCode) ? (raw?.code || l.memberId) : l.memberCode,
-        gradeOrDept: this.isMaskedValue(l.gradeOrDept) ? (raw?.subLabel || 'Campus') : l.gradeOrDept
-      };
-    });
+    const allowed = this.allowedCategories();
+    const logs = (this.verificationLogs() || [])
+      .filter((l) => this.isOwner() || allowed.includes(l.memberCategory))
+      .map((l) => {
+        if (!this.isMaskedValue(l.memberName)) return l;
+        const raw = lookup.get(`${l.memberCategory}:${l.memberId}`);
+        return {
+          ...l,
+          memberName: raw?.name || l.memberCode || 'Campus Member',
+          memberCode: this.isMaskedValue(l.memberCode) ? (raw?.code || l.memberId) : l.memberCode,
+          gradeOrDept: this.isMaskedValue(l.gradeOrDept) ? (raw?.subLabel || 'Campus') : l.gradeOrDept
+        };
+      });
     if (tab === 'terminal' && cat !== 'all') {
       return logs.filter((l) => l.memberCategory === cat).slice(0, 14);
     }
@@ -969,6 +1111,7 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   readonly markedAttendanceTableRows = computed(() => {
     this.punchRevision();
     const cat = this.activeCategory();
+    const allowed = this.allowedCategories();
     const q = this.searchQuery().trim().toLowerCase();
     const membersMap = new Map<string, AttendanceMemberView>();
     for (const m of this.allCampusMembers()) {
@@ -1002,6 +1145,7 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
 
     for (const l of this.verificationLogs() || []) {
       if (l.status === 'Rejected') continue;
+      if (!this.isOwner() && !allowed.includes(l.memberCategory)) continue;
       if (cat !== 'all' && l.memberCategory !== cat) continue;
       const memberKey = `${l.memberCategory}:${l.memberId}`;
       const member = membersMap.get(memberKey);
@@ -1081,29 +1225,72 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       this.emitToast('Only School Owner can modify attendance threshold & cutoff policy.', 'warning');
       return;
     }
+    if (this.isPortalLocked()) {
+      this.emitToast('School Owner has locked Attendance Verification for this portal.', 'warning');
+      return;
+    }
+    if (tab === 'terminal' && !this.canVerifyCameraCurrentPortal()) {
+      this.emitToast('Live camera attendance verification is not enabled for this portal by School Owner.', 'warning');
+      return;
+    }
+    if (tab === 'enrollment' && !this.canEnrollCurrentPortal()) {
+      this.emitToast('Face registry enrollment is restricted by School Owner.', 'warning');
+      return;
+    }
+    const allowed = this.allowedCategories();
+    if (!this.isOwner()) {
+      if (
+        (tab === 'students' && !allowed.includes('student')) ||
+        (tab === 'teachers' && !allowed.includes('teacher')) ||
+        (tab === 'staff' && !allowed.includes('staff')) ||
+        (tab === 'principals' && !allowed.includes('principal'))
+      ) {
+        this.emitToast('School Owner has restricted access to that attendance category.', 'warning');
+        return;
+      }
+    }
+
     this.stopCamera(false);
     this.activeSubTab.set(tab);
     if (tab === 'students') this.activeCategory.set('student');
     if (tab === 'teachers') this.activeCategory.set('teacher');
     if (tab === 'staff') this.activeCategory.set('staff');
     if (tab === 'principals') this.activeCategory.set('principal');
-    if (tab === 'terminal' && this.keepCameraOn()) {
+    if (tab === 'terminal' && this.keepCameraOn() && this.canVerifyCameraCurrentPortal()) {
       setTimeout(() => void this.startCamera('verify', true), 60);
     }
     if (tab === 'enrollment') {
-      const cat = this.activeCategory() === 'all' ? 'student' : (this.activeCategory() as AttendanceMemberCategory);
+      const enrollAllowed = this.enrollAllowedCategories();
+      const curCat = this.activeCategory();
+      const cat =
+        curCat !== 'all' && enrollAllowed.includes(curCat)
+          ? curCat
+          : (enrollAllowed[0] || 'student');
       this.enrollCategory.set(cat);
       const list = this.enrollCategoryMembers();
       if (list.length > 0 && !this.enrollTargetMemberId()) {
         this.enrollTargetMemberId.set(list[0].id);
       }
-      if (this.keepCameraOn()) {
+      if (this.keepCameraOn() && this.canEnrollCurrentPortal()) {
         setTimeout(() => void this.startCamera('enroll', true), 60);
       }
     }
   }
 
   setCategory(cat: ScannerCategoryFilter): void {
+    if (!this.isOwner()) {
+      const allowed = this.allowedCategories();
+      if (allowed.length === 0) {
+        this.emitToast('School Owner has not granted attendance permissions for any category.', 'warning');
+        return;
+      }
+      if (cat === 'all' && allowed.length === 1) {
+        cat = allowed[0];
+      } else if (cat !== 'all' && !allowed.includes(cat)) {
+        this.emitToast(`School Owner has restricted ${this.categoryLabel(cat)} attendance for this portal.`, 'warning');
+        return;
+      }
+    }
     this.activeCategory.set(cat);
     this.selectedTargetMemberId.set('');
     this.lastVerificationResult.set(null);
@@ -1117,6 +1304,14 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   }
 
   openQuickEnrollPanel(prefillFromLive: boolean = false): void {
+    if (!this.canEnrollCurrentPortal()) {
+      this.emitToast('Face enrollment is restricted by School Owner permissions.', 'warning');
+      return;
+    }
+    const enrollAllowed = this.enrollAllowedCategories();
+    if (!this.isOwner() && enrollAllowed.length > 0 && !enrollAllowed.includes(this.quickEnrollCategory())) {
+      this.quickEnrollCategory.set(enrollAllowed[0]);
+    }
     this.quickEnrollDrawerOpen.set(true);
     const list = this.quickEnrollFilteredMembers();
     if (list.length > 0 && !this.quickEnrollMemberId()) {
@@ -1126,7 +1321,7 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       if (prefillFromLive) {
         this.snapQuickSelfieFromLiveCamera();
       }
-    } else {
+    } else if (this.canVerifyCameraCurrentPortal()) {
       void this.startCamera('verify', true);
     }
   }
@@ -1138,6 +1333,10 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   }
 
   async snapQuickSelfieFromLiveCamera(): Promise<void> {
+    if (!this.canEnrollCurrentPortal()) {
+      this.emitToast('Face enrollment is disabled by School Owner permissions.', 'warning');
+      return;
+    }
     const videoEl = this.verifyVideoEl?.nativeElement;
     if (!this.cameraActive() || !videoEl || videoEl.readyState < 2) {
       this.quickSelfieFileEl?.nativeElement?.click();
@@ -1154,6 +1353,9 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   }
 
   async onQuickSelfieFileSelected(event: Event): Promise<void> {
+    if (!this.canEnrollCurrentPortal()) {
+      return;
+    }
     const inputEl = event.target as HTMLInputElement;
     const file = inputEl?.files?.[0];
     if (!file) return;
@@ -1169,6 +1371,10 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   }
 
   saveQuickSelfieEnrollment(): void {
+    if (!this.canEnrollCurrentPortal()) {
+      this.emitToast('Face enrollment is disabled by School Owner permissions.', 'warning');
+      return;
+    }
     const memberId = this.quickEnrollMemberId();
     const extraction = this.quickEnrollExtraction();
     if (!memberId || !extraction) {
@@ -1176,6 +1382,10 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       return;
     }
     const cat = this.quickEnrollCategory();
+    if (!this.isOwner() && !this.enrollAllowedCategories().includes(cat)) {
+      this.emitToast(`You do not have Owner permission to enroll ${this.categoryLabel(cat)} faces.`, 'warning');
+      return;
+    }
     const list =
       cat === 'teacher'
         ? this.teacherMembers()
@@ -1215,6 +1425,10 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   }
 
   openCameraForMember(member: AttendanceMemberView): void {
+    if (!this.canVerifyCameraCurrentPortal() || (!this.isOwner() && !this.allowedCategories().includes(member.category))) {
+      this.emitToast(`School Owner has restricted camera verification for ${this.singleCategoryLabel(member.category)} records.`, 'warning');
+      return;
+    }
     this.keepCameraOn.set(true);
     this.activeCategory.set(member.category);
     this.scanScope.set('targeted');
@@ -1226,6 +1440,10 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   }
 
   openEnrollmentForMember(member: AttendanceMemberView): void {
+    if (!this.canEnrollCurrentPortal() || (!this.isOwner() && !this.enrollAllowedCategories().includes(member.category))) {
+      this.emitToast(`School Owner has restricted face enrollment for ${this.singleCategoryLabel(member.category)} records.`, 'warning');
+      return;
+    }
     this.keepCameraOn.set(true);
     this.enrollCategory.set(member.category);
     this.enrollTargetMemberId.set(member.id);
@@ -1237,6 +1455,10 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   }
 
   setEnrollCategory(cat: AttendanceMemberCategory): void {
+    if (!this.isOwner() && !this.enrollAllowedCategories().includes(cat)) {
+      this.emitToast(`School Owner has restricted face enrollment for ${this.categoryLabel(cat)}.`, 'warning');
+      return;
+    }
     this.enrollCategory.set(cat);
     const list =
       cat === 'teacher'
@@ -1251,8 +1473,19 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     this.enrollExtraction.set(null);
   }
 
-  // WebRTC Continuous Camera Engine (stays ON non-stop once started)
+  // WebRTC Continuous Camera Engine
   async startCamera(slot: 'verify' | 'enroll', silent: boolean = false): Promise<boolean> {
+    if (
+      this.isPortalLocked() ||
+      (slot === 'verify' && !this.canVerifyCameraCurrentPortal()) ||
+      (slot === 'enroll' && !this.canEnrollCurrentPortal())
+    ) {
+      this.stopCamera(false);
+      if (!silent) {
+        this.emitToast('Camera verification access is currently locked by School Owner policy.', 'warning');
+      }
+      return false;
+    }
     this.keepCameraOn.set(true);
     this.cameraError.set('');
     this.cameraErrorKind.set('none');
@@ -1385,6 +1618,14 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   }
 
   async activatePhoneCamera(slot: 'verify' | 'enroll'): Promise<void> {
+    if (
+      this.isPortalLocked() ||
+      (slot === 'verify' && !this.canVerifyCameraCurrentPortal()) ||
+      (slot === 'enroll' && !this.canEnrollCurrentPortal())
+    ) {
+      this.emitToast('Camera verification access is currently disabled by School Owner.', 'warning');
+      return;
+    }
     this.keepCameraOn.set(true);
     const liveStarted = await this.startCamera(slot, true);
     if (liveStarted) {
@@ -1505,6 +1746,10 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   }
 
   private async runSingleAutoScanTick(): Promise<void> {
+    if (this.isPortalLocked() || !this.canVerifyCameraCurrentPortal()) {
+      this.stopCamera(false);
+      return;
+    }
     const videoEl = this.verifyVideoEl?.nativeElement;
     if (!videoEl || videoEl.readyState < 2) return;
 
@@ -1627,11 +1872,19 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
 
   // Manual Frame Verification Button (if auto-scan paused or instant trigger)
   async verifyLiveCameraFrame(): Promise<void> {
+    if (this.isPortalLocked() || !this.canVerifyCameraCurrentPortal()) {
+      this.emitToast('Live camera verification is restricted by School Owner permissions.', 'warning');
+      return;
+    }
     if (this.isProcessingScan()) return;
     const profiles = this.activeFaceProfiles();
     if (profiles.length === 0) {
-      this.openQuickEnrollPanel(true);
-      this.emitToast('No faces enrolled yet — snap a selfie in the Quick Register panel to get started.', 'info');
+      if (this.canEnrollCurrentPortal()) {
+        this.openQuickEnrollPanel(true);
+        this.emitToast('No faces enrolled for permitted categories yet — snap a selfie to get started.', 'info');
+      } else {
+        this.emitToast('No enrolled faces found for the categories permitted to your portal.', 'warning');
+      }
       return;
     }
 
@@ -1704,15 +1957,23 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   }
 
   private async processVerifyBatchFiles(files: File[]): Promise<void> {
+    if (this.isPortalLocked() || !this.canVerifyCameraCurrentPortal()) {
+      this.emitToast('Photo verification is restricted by School Owner permissions.', 'warning');
+      return;
+    }
     const profiles = this.activeFaceProfiles();
     if (profiles.length === 0) {
-      // Auto-load first photo into Quick Selfie Enroll if no profiles exist yet!
-      const { result, rawDataUrl } = await this.faceVerifier.extractFromFile(files[0]);
-      if (result) {
-        this.quickEnrollPreviewUrl.set(result.photoDataUrl || rawDataUrl);
-        this.quickEnrollExtraction.set(result);
-        this.quickEnrollDrawerOpen.set(true);
-        this.emitToast('No enrolled faces yet — select a member and tap Save & Activate Face!', 'info');
+      if (this.canEnrollCurrentPortal()) {
+        // Auto-load first photo into Quick Selfie Enroll if no profiles exist yet!
+        const { result, rawDataUrl } = await this.faceVerifier.extractFromFile(files[0]);
+        if (result) {
+          this.quickEnrollPreviewUrl.set(result.photoDataUrl || rawDataUrl);
+          this.quickEnrollExtraction.set(result);
+          this.quickEnrollDrawerOpen.set(true);
+          this.emitToast('No enrolled faces yet — select a member and tap Save & Activate Face!', 'info');
+        }
+      } else {
+        this.emitToast('No enrolled faces found for your permitted categories.', 'warning');
       }
       return;
     }
@@ -1845,6 +2106,9 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     this.unknownConsecutiveHits = 0;
     this.unknownWarnedThisVisit = false;
     const prof = match.profile;
+    if (!this.isOwner() && !this.allowedCategories().includes(prof.memberCategory)) {
+      return;
+    }
     const memberKey = `${prof.memberCategory}:${prof.memberId}`;
 
     // 2-frame neural stability lock (or instant 1-frame if confidence is very clear)
@@ -2213,6 +2477,10 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
 
   // Face Enrollment Tab Methods
   async captureEnrollmentFromCamera(): Promise<void> {
+    if (!this.canEnrollCurrentPortal()) {
+      this.emitToast('Face enrollment is restricted by School Owner permissions.', 'warning');
+      return;
+    }
     const videoEl = this.enrollVideoEl?.nativeElement;
     if (!this.cameraActive() || !videoEl) {
       this.emitToast('Open Live Camera or snap a Selfie to capture face.', 'warning');
@@ -2234,6 +2502,7 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   }
 
   async onEnrollPhotoFileSelected(event: Event): Promise<void> {
+    if (!this.canEnrollCurrentPortal()) return;
     const inputEl = event.target as HTMLInputElement;
     const file = inputEl?.files?.[0];
     if (!file) return;
@@ -2258,6 +2527,10 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   }
 
   saveEnrolledFaceProfile(): void {
+    if (!this.canEnrollCurrentPortal()) {
+      this.emitToast('Face enrollment is restricted by School Owner permissions.', 'warning');
+      return;
+    }
     const memberId = this.enrollTargetMemberId();
     const extraction = this.enrollExtraction();
     if (!memberId || !extraction) {
@@ -2265,6 +2538,10 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       return;
     }
     const cat = this.enrollCategory();
+    if (!this.isOwner() && !this.enrollAllowedCategories().includes(cat)) {
+      this.emitToast(`School Owner has restricted face enrollment for ${this.categoryLabel(cat)}.`, 'warning');
+      return;
+    }
     const member = this.enrollCategoryMembers().find((m) => m.id === memberId);
     if (!member) {
       this.emitToast('Selected member record could not be found.', 'warning');
@@ -2293,11 +2570,23 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   }
 
   removeEnrolledFace(profileId: string): void {
+    if (!this.canEnrollCurrentPortal()) {
+      this.emitToast('Face enrollment removal is restricted by School Owner permissions.', 'warning');
+      return;
+    }
     this.faceRemoved.emit(profileId);
   }
 
   handleRosterStatusAction(member: AttendanceMemberView, status: 'Present' | 'Late' | 'Absent' | 'On Leave'): void {
+    if (!this.isOwner() && !this.allowedCategories().includes(member.category)) {
+      this.emitToast(`School Owner has restricted attendance actions for ${this.singleCategoryLabel(member.category)} records.`, 'warning');
+      return;
+    }
     if (!this.canUseManualFallback()) {
+      if (!this.canVerifyCameraCurrentPortal()) {
+        this.emitToast('Camera verification is disabled for your portal by School Owner.', 'warning');
+        return;
+      }
       this.emitToast(`Opening Face Scanner for ${member.name}...`, 'info');
       this.openCameraForMember(member);
       return;
@@ -2424,13 +2713,21 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   }
 
   toggleCategoryRule(cat: AttendanceMemberCategory, key: 'enabled' | 'liteEnabled' | 'cameraRequired' | 'allowSelfCheckIn'): void {
-    this.policyDraft.update((d) => ({
-      ...d,
-      categories: {
-        ...d.categories,
-        [cat]: { ...d.categories[cat], [key]: !d.categories[cat][key] }
-      }
-    }));
+    this.policyDraft.update((d) => {
+      const nextVal = !d.categories[cat][key];
+      const nextRoleAccess =
+        cat === 'student' && key === 'allowSelfCheckIn'
+          ? { ...d.roleAccess, student: { ...d.roleAccess.student, selfCheckInEnabled: nextVal } }
+          : d.roleAccess;
+      return {
+        ...d,
+        categories: {
+          ...d.categories,
+          [cat]: { ...d.categories[cat], [key]: nextVal }
+        },
+        roleAccess: nextRoleAccess
+      };
+    });
   }
 
   getCategoryRule(cat: AttendanceMemberCategory) {
@@ -2438,13 +2735,21 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   }
 
   toggleRolePermission(role: 'principal' | 'teacher' | 'staff' | 'student', key: keyof RoleAttendancePermission): void {
-    this.policyDraft.update((d) => ({
-      ...d,
-      roleAccess: {
-        ...d.roleAccess,
-        [role]: { ...d.roleAccess[role], [key]: !d.roleAccess[role][key] }
-      }
-    }));
+    this.policyDraft.update((d) => {
+      const nextVal = !d.roleAccess[role][key];
+      const nextCategories =
+        role === 'student' && key === 'selfCheckInEnabled'
+          ? { ...d.categories, student: { ...d.categories.student, allowSelfCheckIn: nextVal } }
+          : d.categories;
+      return {
+        ...d,
+        categories: nextCategories,
+        roleAccess: {
+          ...d.roleAccess,
+          [role]: { ...d.roleAccess[role], [key]: nextVal }
+        }
+      };
+    });
   }
 
   toggleIndividualOperatorOverride(cat: 'teacher' | 'staff' | 'principal', memberId: string, field: 'enabled' | 'liteEnabled'): void {

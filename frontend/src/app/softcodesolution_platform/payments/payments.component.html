@@ -84,8 +84,8 @@
 
     <!-- Main Content -->
     <div class="rounded-[24px] scs-surface-3d overflow-hidden">
-      <div class="flex flex-col gap-4 border-b border-slate-200/80 p-5 lg:flex-row lg:items-center lg:justify-between bg-slate-50/40">
-        <div class="flex flex-wrap gap-1.5 p-1.5 rounded-2xl bg-slate-100/90 border border-slate-200/80 w-full lg:w-auto">
+      <div class="flex flex-col gap-4 border-b border-slate-200/80 p-5 lg:flex-row lg:items-center lg:justify-between bg-white">
+        <div class="flex flex-wrap gap-1.5 p-1.5 rounded-2xl bg-white border border-slate-200/80 w-full lg:w-auto">
           <button (click)="setTab('gateways')" [class.bg-white]="activeTab === 'gateways'" [class.shadow-xs]="activeTab === 'gateways'" [class.text-indigo-700]="activeTab === 'gateways'" [class.text-slate-600]="activeTab !== 'gateways'" class="rounded-xl px-3.5 py-2 text-xs font-black uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer">
             <lucide-icon [img]="myIcons.Settings" [size]="14"></lucide-icon>
             <span>Payment Gateways</span>
@@ -107,7 +107,7 @@
           <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-400">
             <lucide-icon [img]="myIcons.Search" [size]="16"></lucide-icon>
           </div>
-          <input type="text" placeholder="Search records..." class="h-10 w-full rounded-xl border-0 bg-slate-50 pl-10 pr-4 text-sm font-medium text-slate-900 ring-1 ring-inset ring-slate-200 placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-green-500">
+          <input type="text" placeholder="Search records..." class="h-10 w-full rounded-xl border-0 bg-white pl-10 pr-4 text-sm font-medium text-slate-900 ring-1 ring-inset ring-slate-200 placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-green-500">
         </div>
       </div>
 
@@ -127,7 +127,7 @@
 
       <!-- GATEWAYS TAB (SUPERADMIN INTEGRATIONS) -->
       <div *ngIf="!isLoading && activeTab === 'gateways'" class="p-6 space-y-8 animate-fade-in">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-indigo-50/70 border border-indigo-100 rounded-2xl p-5">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-slate-200/80 rounded-2xl p-5">
           <div>
             <span class="text-[10px] font-mono uppercase tracking-widest text-indigo-700 font-bold bg-indigo-100 px-2 py-0.5 rounded-md">Live Platform Gateways</span>
             <h3 class="text-base font-extrabold text-slate-900 mt-1">Multi-Channel Customer Payment Processing</h3>
@@ -182,7 +182,7 @@
               <p class="text-xs text-slate-500 mb-4 leading-relaxed">{{ gw.description }}</p>
 
               <!-- Gateway Parameters Specs -->
-              <div class="bg-slate-50 rounded-xl p-3 border border-slate-100 space-y-1.5 text-xs">
+              <div class="bg-white rounded-xl p-3 border border-slate-200/80 space-y-1.5 text-xs">
                 <div *ngIf="gw.id === 'stripe'" class="flex justify-between items-center text-slate-600">
                   <span class="font-medium">Stripe Mode:</span>
                   <span class="font-mono px-2 py-0.5 rounded bg-amber-100 text-amber-800 text-[10px] font-bold">{{ gw.testMode ? 'Sandbox (Test)' : 'Production (Live)' }}</span>
@@ -222,7 +222,7 @@
 
         <!-- Recent Customer Transactions Table -->
         <div class="scs-surface-3d rounded-2xl overflow-hidden">
-          <div class="p-4 bg-white/45 border-b border-slate-200/70 flex items-center justify-between text-xs">
+          <div class="p-4 bg-white border-b border-slate-200/70 flex items-center justify-between text-xs">
             <span class="font-bold text-slate-800">Recent Customer Gateway Transactions</span>
             <span class="text-slate-500 font-mono text-[11px]">{{ transactions.length }} Processed</span>
           </div>
@@ -245,7 +245,7 @@
                 <p class="text-xs text-slate-500 font-medium">{{ tx.customerEmail }}</p>
               </div>
 
-              <div class="space-y-1 text-xs bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+              <div class="space-y-1 text-xs bg-white p-2.5 rounded-xl border border-slate-200/80">
                 <div class="flex items-center justify-between">
                   <span class="text-slate-400 font-medium">Software:</span>
                   <span class="font-bold text-slate-800 truncate max-w-[160px]">{{ tx.softwareTitle }}</span>
@@ -269,7 +269,7 @@
           <!-- Desktop Transactions Table (Desktop View) -->
           <div class="hidden md:block overflow-x-auto">
             <table class="w-full text-left text-xs text-slate-600">
-              <thead class="bg-slate-50 border-b border-slate-200/70 font-black uppercase text-[10px] tracking-wider text-slate-700">
+              <thead class="bg-white border-b border-slate-200/70 font-black uppercase text-[10px] tracking-wider text-slate-700">
                 <tr>
                   <th class="px-4 py-3.5">Invoice #</th>
                   <th class="px-4 py-3.5">Customer</th>
@@ -317,7 +317,7 @@
         <!-- Dual Scope Architecture Banner -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <!-- 1. Platform Revenue Notifications (SoftCodeSolution Company) -->
-          <div class="bg-indigo-50/70 border border-indigo-200/80 rounded-2xl p-5 space-y-2">
+          <div class="bg-white border border-slate-200/80 rounded-2xl p-5 space-y-2">
             <div class="flex items-center justify-between">
               <span class="text-[10px] font-mono uppercase tracking-widest text-indigo-700 font-bold bg-indigo-100 px-2 py-0.5 rounded">SoftCodeSolution Company Level</span>
               <span class="w-2 h-2 rounded-full bg-indigo-600"></span>
@@ -333,7 +333,7 @@
           </div>
 
           <!-- 2. Tenant Business Customer Notifications -->
-          <div class="bg-emerald-50/70 border border-emerald-200/80 rounded-2xl p-5 space-y-2">
+          <div class="bg-white border border-slate-200/80 rounded-2xl p-5 space-y-2">
             <div class="flex items-center justify-between">
               <span class="text-[10px] font-mono uppercase tracking-widest text-emerald-800 font-bold bg-emerald-100 px-2 py-0.5 rounded">Tenant Business Level</span>
               <span class="w-2 h-2 rounded-full bg-emerald-600"></span>
@@ -459,7 +459,7 @@
 
         <!-- Live Dispatch Logs Table -->
         <div class="scs-surface-3d rounded-2xl overflow-hidden">
-          <div class="p-4 bg-white/45 border-b border-slate-200/70 flex items-center justify-between text-xs">
+          <div class="p-4 bg-white border-b border-slate-200/70 flex items-center justify-between text-xs">
             <div class="flex items-center gap-2">
               <lucide-icon [img]="myIcons.MessageSquare" [size]="15" class="text-indigo-600"></lucide-icon>
               <span class="font-bold text-slate-900">Live Multi-Channel Delivery Logs</span>
@@ -469,7 +469,7 @@
 
           <div class="overflow-x-auto">
             <table class="w-full text-left text-xs text-slate-600">
-              <thead class="bg-slate-50 border-b border-slate-200/70 font-black uppercase text-[10px] tracking-wider text-slate-700">
+              <thead class="bg-white border-b border-slate-200/70 font-black uppercase text-[10px] tracking-wider text-slate-700">
                 <tr>
                   <th class="px-4 py-3.5">Channel</th>
                   <th class="px-4 py-3.5">Scope / Target</th>
@@ -544,7 +544,7 @@
         </div>
         <div *ngIf="invoices.length > 0" class="overflow-x-auto">
           <table class="w-full text-left text-sm whitespace-nowrap">
-            <thead class="bg-slate-50 border-b border-slate-200/70 text-[10px] font-black uppercase tracking-wider text-slate-700">
+            <thead class="bg-white border-b border-slate-200/70 text-[10px] font-black uppercase tracking-wider text-slate-700">
               <tr>
                 <th class="px-6 py-4">Invoice No</th>
                 <th class="px-6 py-4">Tenant</th>
@@ -585,7 +585,7 @@
       <!-- APPROVALS TAB -->
       <div *ngIf="!isLoading && activeTab === 'approvals'">
         <div *ngIf="pendingApprovals.length === 0" class="p-12 text-center text-slate-400">
-          <div class="mx-auto w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
+          <div class="mx-auto w-16 h-16 bg-white border border-slate-200 rounded-full flex items-center justify-center mb-4">
             <lucide-icon [img]="myIcons.Shield" [size]="24"></lucide-icon>
           </div>
           <p class="font-bold text-slate-900 mb-1">No Pending Approvals</p>
@@ -593,7 +593,7 @@
         </div>
         <div *ngIf="pendingApprovals.length > 0" class="overflow-x-auto">
           <table class="w-full text-left text-sm whitespace-nowrap">
-            <thead class="bg-slate-50 border-b border-slate-200/70 text-[10px] font-black uppercase tracking-wider text-slate-700">
+            <thead class="bg-white border-b border-slate-200/70 text-[10px] font-black uppercase tracking-wider text-slate-700">
               <tr>
                 <th class="px-6 py-4">Tenant / Invoice</th>
                 <th class="px-6 py-4">Method</th>
@@ -649,7 +649,7 @@
 
       <!-- COUPONS TAB -->
       <div *ngIf="!isLoading && activeTab === 'coupons'">
-        <div class="p-4 border-b border-slate-100 bg-slate-50 flex justify-end">
+        <div class="p-4 border-b border-slate-200/70 bg-white flex justify-end">
           <button class="bg-green-500 text-white px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 hover:bg-green-600 transition-colors">
             <lucide-icon [img]="myIcons.Plus" [size]="16"></lucide-icon> Create Coupon
           </button>
@@ -659,7 +659,7 @@
         </div>
         <div *ngIf="coupons.length > 0" class="overflow-x-auto">
           <table class="w-full text-left text-sm whitespace-nowrap">
-            <thead class="bg-slate-50 border-b border-slate-200/70 text-[10px] font-black uppercase tracking-wider text-slate-700">
+            <thead class="bg-white border-b border-slate-200/70 text-[10px] font-black uppercase tracking-wider text-slate-700">
               <tr>
                 <th class="px-6 py-4">Code</th>
                 <th class="px-6 py-4">Type</th>
@@ -693,7 +693,7 @@
 
       <!-- TAX RULES TAB -->
       <div *ngIf="!isLoading && activeTab === 'tax'">
-        <div class="p-4 border-b border-slate-100 bg-slate-50 flex justify-end">
+        <div class="p-4 border-b border-slate-200/70 bg-white flex justify-end">
           <button class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2 shadow-xs transition-all">
             <lucide-icon [img]="myIcons.Plus" [size]="16"></lucide-icon> Add Tax Rule
           </button>
@@ -703,7 +703,7 @@
         </div>
         <div *ngIf="taxRules.length > 0" class="overflow-x-auto">
           <table class="w-full text-left text-sm whitespace-nowrap">
-            <thead class="bg-slate-50 border-b border-slate-200/70 text-[10px] font-black uppercase tracking-wider text-slate-700">
+            <thead class="bg-white border-b border-slate-200/70 text-[10px] font-black uppercase tracking-wider text-slate-700">
               <tr>
                 <th class="px-6 py-4">Country / State</th>
                 <th class="px-6 py-4">Tax Name</th>
@@ -741,7 +741,7 @@
     <div class="relative flex flex-col w-full max-w-2xl max-h-[90vh] bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200 animate-scale-up" (click)="$event.stopPropagation()">
       
       <!-- Top Action Bar -->
-      <div class="px-6 py-4 bg-slate-50 border-b border-slate-200/70 text-slate-900 flex items-center justify-between shrink-0">
+      <div class="px-6 py-4 bg-white border-b border-slate-200/70 text-slate-900 flex items-center justify-between shrink-0">
         <div class="flex items-center gap-2">
           <lucide-icon [img]="myIcons.Receipt" [size]="18" class="text-emerald-600"></lucide-icon>
           <span class="text-xs font-black uppercase tracking-wider text-slate-900">Official Tax Invoice & Receipt</span>
@@ -779,13 +779,13 @@
 
         <!-- Billed To -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-          <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
+          <div class="p-4 rounded-2xl bg-white border border-slate-200/80 space-y-1">
             <p class="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Billed To</p>
             <p class="font-black text-slate-900 text-sm">Tenant Account</p>
             <p class="font-mono text-slate-600 font-semibold">{{ selectedInvoiceForModal.tenant_id }}</p>
             <p class="text-slate-500">Corporate Enterprise Subscription</p>
           </div>
-          <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
+          <div class="p-4 rounded-2xl bg-white border border-slate-200/80 space-y-1">
             <p class="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Payment Details</p>
             <p class="text-slate-600 font-medium">Method: <strong class="text-slate-900 font-mono uppercase">Bank Wire / Instant Card</strong></p>
             <p class="text-slate-600 font-medium">Currency: <strong class="text-slate-900 font-mono">{{ selectedInvoiceForModal.currency || 'PKR' }}</strong></p>
@@ -796,7 +796,7 @@
         <!-- Line Items -->
         <div class="rounded-2xl border border-slate-200 overflow-hidden">
           <table class="w-full text-left text-xs">
-            <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px]">
+            <thead class="bg-white border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px]">
               <tr>
                 <th class="py-3 px-4">Description</th>
                 <th class="py-3 px-4 text-center">Qty</th>
@@ -871,7 +871,7 @@
         </div>
 
         <!-- Stripe Specific Inputs -->
-        <div *ngIf="editingGateway.id === 'stripe'" class="space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+        <div *ngIf="editingGateway.id === 'stripe'" class="space-y-3 bg-white p-4 rounded-2xl border border-slate-200/80">
           <div>
             <label class="block font-bold text-slate-700 mb-1">Publishable Key (pk_test... / pk_live...)</label>
             <input [(ngModel)]="editingGateway.publishableKey" class="w-full px-3 py-2 rounded-xl border border-slate-200 font-mono text-[11px]" />
@@ -883,7 +883,7 @@
         </div>
 
         <!-- JazzCash / EasyPaisa Specific Inputs -->
-        <div *ngIf="editingGateway.id === 'jazzcash' || editingGateway.id === 'easypaisa'" class="space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+        <div *ngIf="editingGateway.id === 'jazzcash' || editingGateway.id === 'easypaisa'" class="space-y-3 bg-white p-4 rounded-2xl border border-slate-200/80">
           <div>
             <label class="block font-bold text-slate-700 mb-1">Merchant Store ID</label>
             <input [(ngModel)]="editingGateway.merchantId" class="w-full px-3 py-2 rounded-xl border border-slate-200 font-mono text-[11px]" />
@@ -895,7 +895,7 @@
         </div>
 
         <!-- Bank Transfer Specific Inputs -->
-        <div *ngIf="editingGateway.id === 'bank_transfer'" class="space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+        <div *ngIf="editingGateway.id === 'bank_transfer'" class="space-y-3 bg-white p-4 rounded-2xl border border-slate-200/80">
           <div>
             <label class="block font-bold text-slate-700 mb-1">Bank Name</label>
             <input [(ngModel)]="editingGateway.bankName" class="w-full px-3 py-2 rounded-xl border border-slate-200 font-medium" />

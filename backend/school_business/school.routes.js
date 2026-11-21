@@ -77,6 +77,7 @@ export function getDefaultAttendancePolicy() {
         canScanStudents: true,
         canScanTeachers: false,
         canScanStaff: false,
+        canScanPrincipal: false,
         canEnrollFaces: true,
         liteModeAllowed: true,
         manualFallbackAllowed: false,
@@ -87,6 +88,7 @@ export function getDefaultAttendancePolicy() {
         canScanStudents: true,
         canScanTeachers: false,
         canScanStaff: true,
+        canScanPrincipal: false,
         canEnrollFaces: false,
         liteModeAllowed: true,
         manualFallbackAllowed: false,
@@ -97,6 +99,7 @@ export function getDefaultAttendancePolicy() {
         canScanStudents: false,
         canScanTeachers: false,
         canScanStaff: false,
+        canScanPrincipal: false,
         canEnrollFaces: false,
         liteModeAllowed: true,
         manualFallbackAllowed: false,
@@ -1557,6 +1560,103 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     return defaults;
   };
 
+  const getAllowedAttendanceCategoriesForRole = (policy, role) => {
+    if (!role || OWNER_ROLES.has(role)) {
+      return ['student', 'teacher', 'staff', 'principal'];
+    }
+    if (!['principal', 'teacher', 'staff', 'student'].includes(role)) {
+      return [];
+    }
+    const rolePerms = policy?.roleAccess?.[role];
+    if (!rolePerms || rolePerms.enabled === false) {
+      return [];
+    }
+    const cats = policy?.categories || {};
+    if (role === 'student') {
+      if (cats.student?.enabled === false) return [];
+      return (rolePerms.selfCheckInEnabled || rolePerms.canEnrollFaces) ? ['student'] : [];
+    }
+    const allowed = [];
+    if (cats.student?.enabled !== false && rolePerms.canScanStudents) allowed.push('student');
+    if (cats.teacher?.enabled !== false && rolePerms.canScanTeachers) allowed.push('teacher');
+    if (cats.staff?.enabled !== false && rolePerms.canScanStaff) allowed.push('staff');
+    if (cats.principal?.enabled !== false && rolePerms.canScanPrincipal) allowed.push('principal');
+    return allowed;
+  };
+
+  const canRolePerformAttendanceAction = (policy, role, memberCategory, action) => {
+    if (!role || OWNER_ROLES.has(role)) {
+      return { allowed: true };
+    }
+    if (!['principal', 'teacher', 'staff', 'student'].includes(role)) {
+      return {
+        allowed: false,
+        message: `Role '${role}' is not authorized to perform attendance ${action} actions.`
+      };
+    }
+    const rolePerms = policy?.roleAccess?.[role];
+    if (!rolePerms || rolePerms.enabled === false) {
+      return {
+        allowed: false,
+        message: `School Owner has revoked attendance verification permission for '${role}'.`
+      };
+    }
+    const catRule = policy?.categories?.[memberCategory];
+    if (!catRule || catRule.enabled === false) {
+      return {
+        allowed: false,
+        message: `Attendance verification for '${memberCategory}' is disabled by School Owner.`
+      };
+    }
+    if (role === 'student') {
+      if (memberCategory !== 'student') {
+        return {
+          allowed: false,
+          message: 'Student portal is restricted to student attendance only.'
+        };
+      }
+      if (action === 'manual') {
+        return {
+          allowed: false,
+          message: `Role '${role}' is not authorized to mark manual attendance.`
+        };
+      }
+      if (action === 'enroll') {
+        return rolePerms.canEnrollFaces
+          ? { allowed: true }
+          : { allowed: false, message: 'School Owner has disabled student face enrollment.' };
+      }
+      return rolePerms.selfCheckInEnabled
+        ? { allowed: true }
+        : { allowed: false, message: 'School Owner has disabled student self camera attendance verification.' };
+    }
+    const categoryPermMap = {
+      student: Boolean(rolePerms.canScanStudents),
+      teacher: Boolean(rolePerms.canScanTeachers),
+      staff: Boolean(rolePerms.canScanStaff),
+      principal: Boolean(rolePerms.canScanPrincipal)
+    };
+    if (!categoryPermMap[memberCategory]) {
+      return {
+        allowed: false,
+        message: `School Owner has not granted '${role}' permission to take '${memberCategory}' attendance.`
+      };
+    }
+    if (action === 'manual' && (policy?.requireCameraForAllAttendance || !rolePerms.manualFallbackAllowed)) {
+      return {
+        allowed: false,
+        message: `Manual attendance override is disabled for '${role}' by School Owner policy.`
+      };
+    }
+    if (action === 'enroll' && !rolePerms.canEnrollFaces) {
+      return {
+        allowed: false,
+        message: `Face enrollment is disabled for '${role}' by School Owner policy.`
+      };
+    }
+    return { allowed: true };
+  };
+
   const mapStaffRow = (r, tid) => ({
     id: r.id,
     tenantId: r.tenant_id || tid,
@@ -1944,6 +2044,11 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       },
       operatorOverrides: { ...(current.operatorOverrides || {}), ...(b.operatorOverrides || {}) }
     };
+    if (b.roleAccess?.student?.selfCheckInEnabled !== undefined && b.categories?.student?.allowSelfCheckIn === undefined) {
+      merged.categories.student.allowSelfCheckIn = Boolean(b.roleAccess.student.selfCheckInEnabled);
+    } else if (b.categories?.student?.allowSelfCheckIn !== undefined && b.roleAccess?.student?.selfCheckInEnabled === undefined) {
+      merged.roleAccess.student.selfCheckInEnabled = Boolean(b.categories.student.allowSelfCheckIn);
+    }
 
     if (sqliteDb) {
       sqliteDb.prepare(`
@@ -2068,21 +2173,37 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
         return { ...p, memberName: resolved || p.memberCode || p.memberId || 'Campus Member' };
       });
     }
+    const role = resolveUserRole(req);
+    if (role && !OWNER_ROLES.has(role)) {
+      const policy = loadTenantAttendancePolicy(tid);
+      const allowedCategories = getAllowedAttendanceCategoriesForRole(policy, role);
+      profiles = profiles.filter((p) => allowedCategories.includes(String(p.memberCategory || 'student').toLowerCase()));
+    }
     res.json({ ok: true, tenantId: tid, profiles });
   });
 
   router.post('/attendance/face-profiles', (req, res) => {
     const tid = resolveTenantId(req);
+    const role = resolveUserRole(req);
     const b = req.body || {};
     const memberId = String(b.memberId || '').trim();
     const memberCategory = String(b.memberCategory || 'student').trim().toLowerCase();
     const memberName = String(b.memberName || '').trim();
     const descriptor = Array.isArray(b.faceDescriptor) ? b.faceDescriptor.map(Number) : [];
-    if (!memberId || !memberName || descriptor.length < 8) {
-      return res.status(400).json({ ok: false, message: 'memberId, memberName, and valid camera faceDescriptor are required.' });
-    }
     if (!['student', 'teacher', 'staff', 'principal'].includes(memberCategory)) {
       return res.status(400).json({ ok: false, message: 'memberCategory must be student, teacher, staff, or principal.' });
+    }
+    const policy = loadTenantAttendancePolicy(tid);
+    const permCheck = canRolePerformAttendanceAction(policy, role, memberCategory, 'enroll');
+    if (!permCheck.allowed) {
+      return res.status(403).json({
+        ok: false,
+        error: 'ROLE_FORBIDDEN',
+        message: permCheck.message
+      });
+    }
+    if (!memberId || !memberName || descriptor.length < 8) {
+      return res.status(400).json({ ok: false, message: 'memberId, memberName, and valid camera faceDescriptor are required.' });
     }
     const id = b.id || `FP-${memberCategory}-${memberId}`;
     const enrolledAt = String(b.enrolledAt || new Date().toISOString());
@@ -2155,10 +2276,20 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
   router.delete('/attendance/face-profiles/:id', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
     const tid = resolveTenantId(req);
+    const role = resolveUserRole(req);
     const id = req.params.id;
     if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
     const row = sqliteDb.prepare('SELECT id, member_id, member_category FROM local_school_face_profiles WHERE id = ? AND tenant_id = ?').get(id, tid);
     if (!row) return res.status(404).json({ ok: false, message: 'Face profile not found for this tenant' });
+    const policy = loadTenantAttendancePolicy(tid);
+    const permCheck = canRolePerformAttendanceAction(policy, role, String(row.member_category || 'student').toLowerCase(), 'enroll');
+    if (!permCheck.allowed) {
+      return res.status(403).json({
+        ok: false,
+        error: 'ROLE_FORBIDDEN',
+        message: permCheck.message
+      });
+    }
     sqliteDb.prepare('DELETE FROM local_school_face_profiles WHERE id = ? AND tenant_id = ?').run(id, tid);
     if (row.member_category === 'staff') {
       try { sqliteDb.prepare('UPDATE local_school_staff SET face_enrolled = 0 WHERE id = ? AND tenant_id = ?').run(row.member_id, tid); } catch {}
@@ -2287,14 +2418,18 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     const role = resolveUserRole(req);
     const body = req.body || {};
     const memberCategory = String(body.memberCategory || 'student').trim().toLowerCase();
+    if (!['student', 'teacher', 'staff', 'principal'].includes(memberCategory)) {
+      return res.status(400).json({ ok: false, message: 'memberCategory must be student, teacher, staff, or principal.' });
+    }
     const mode = String(body.verificationMode || body.verification_mode || 'face_camera');
     const isCameraScan = mode.startsWith('face_camera') || mode.startsWith('face_kiosk');
-
-    if (!isCameraScan && role && ['student', 'parent', 'accountant'].includes(role)) {
+    const policy = loadTenantAttendancePolicy(tid);
+    const permCheck = canRolePerformAttendanceAction(policy, role, memberCategory, isCameraScan ? 'camera' : 'manual');
+    if (!permCheck.allowed) {
       return res.status(403).json({
         ok: false,
         error: 'ROLE_FORBIDDEN',
-        message: `Role '${role}' is not authorized to mark manual attendance.`
+        message: permCheck.message
       });
     }
 
@@ -2315,7 +2450,6 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     const markedByRole = String(body.markedByRole || role || 'kiosk');
     const remarks = String(body.remarks || '').trim();
 
-    const policy = loadTenantAttendancePolicy(tid);
     const scheduledStartTime = String(body.scheduledStartTime || policy.scheduledStartTime || '08:00');
     const nowTimeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const checkInTime = String(body.checkInTime || body.timestamp || nowTimeStr);

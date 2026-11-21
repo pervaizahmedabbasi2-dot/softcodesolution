@@ -112,7 +112,7 @@
            class="fixed inset-y-0 left-0 top-0 z-[100] md:z-30 w-72 scs-sidebar-hero-bg text-slate-700 sidebar-slomo-transition md:static flex flex-col shadow-sm border-r border-slate-200/70 shrink-0 h-full overflow-hidden">
       
       <!-- Sidebar Brand Header (Full height drawer top bar) -->
-      <div class="h-16 flex items-center px-6 border-b border-slate-200/70 shrink-0 bg-slate-50 z-[60] justify-between">
+      <div class="h-16 flex items-center px-6 border-b border-slate-200/70 shrink-0 z-[60] justify-between" [class.bg-white]="(userRole === 'SUPER_ADMIN' && !previewMode) || isSchoolPreviewActive" [class.bg-slate-50]="!((userRole === 'SUPER_ADMIN' && !previewMode) || isSchoolPreviewActive)">
         <div class="flex items-center gap-2.5 min-w-0">
           <a href="/" class="flex-shrink-0 w-9 h-9 bg-white rounded-full flex items-center justify-center shadow-sm overflow-hidden border border-slate-100 group block">
             <img src="/logos/logo.png" alt="Logo" class="w-full h-full object-center object-contain p-1 group-hover:scale-110 transition-transform">
@@ -807,7 +807,7 @@
     </nav>
     
     <!-- User Profile Footer -->
-    <div class="p-3.5 sm:p-4 border-t border-slate-200/70 bg-slate-50 relative overflow-hidden space-y-2 shrink-0">
+    <div class="p-3.5 sm:p-4 border-t border-slate-200/70 relative overflow-hidden space-y-2 shrink-0" [class.bg-white]="(userRole === 'SUPER_ADMIN' && !previewMode) || isSchoolPreviewActive" [class.bg-slate-50]="!((userRole === 'SUPER_ADMIN' && !previewMode) || isSchoolPreviewActive)">
       <ng-container *ngIf="isSchoolPreviewActive">
         <button *ngIf="previewMode" (click)="exitClientPreview()" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-transparent hover:bg-slate-900/[0.04] hover:text-rose-600 text-slate-700 transition-all font-bold text-xs cursor-pointer relative z-10">
           <lucide-icon [name]="icons.LogOut" class="w-3.5 h-3.5"></lucide-icon> Return to Super Admin
@@ -835,7 +835,7 @@
   <div class="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative">
 
     <!-- Top Header -->
-    <header class="h-16 border-b border-slate-200/70 px-3 sm:px-6 flex items-center justify-between flex-shrink-0 z-40 bg-slate-50 relative">
+    <header class="h-16 border-b border-slate-200/70 px-3 sm:px-6 flex items-center justify-between flex-shrink-0 z-40 relative" [class.bg-white]="(userRole === 'SUPER_ADMIN' && !previewMode) || isSchoolPreviewActive" [class.bg-slate-50]="!((userRole === 'SUPER_ADMIN' && !previewMode) || isSchoolPreviewActive)">
       <div class="flex items-center gap-2 sm:gap-3 min-w-0">
         <!-- Toggle Sidebar Button (9-Dot Diamond Kite SVG) - Shown ONLY when sidebar is closed -->
         <button *ngIf="!isSidebarOpen"
@@ -899,7 +899,7 @@
                   class="flex items-center gap-1 p-1 rounded-xl bg-transparent hover:bg-slate-900/[0.04] text-slate-700 transition-all cursor-pointer active:scale-95 group shadow-none border-0"
                   title="User Profile & Options">
             <!-- Clean Profile Icon Sign -->
-            <div class="w-8 h-8 rounded-xl bg-slate-50 border border-slate-200/70 text-slate-700 group-hover:text-slate-900 flex items-center justify-center transition-all">
+            <div class="w-8 h-8 rounded-xl border border-slate-200/70 text-slate-700 group-hover:text-slate-900 flex items-center justify-center transition-all" [class.bg-white]="(userRole === 'SUPER_ADMIN' && !previewMode) || isSchoolPreviewActive" [class.bg-slate-50]="!((userRole === 'SUPER_ADMIN' && !previewMode) || isSchoolPreviewActive)">
               <lucide-icon [name]="icons.User" class="w-4 h-4"></lucide-icon>
             </div>
 
@@ -1005,7 +1005,8 @@
                   <input type="text"
                          [(ngModel)]="countrySearchQuery"
                          [placeholder]="loc.t('search_placeholder')"
-                         class="w-full text-xs font-semibold pl-8 pr-7 py-1.5 bg-slate-50 border border-slate-200/90 rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white text-slate-800 placeholder:text-slate-400" />
+                         class="w-full text-xs font-semibold pl-8 pr-7 py-1.5 bg-slate-50 border border-slate-200/90 rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white text-slate-800 placeholder:text-slate-400"
+                         [class.bg-white]="(userRole === 'SUPER_ADMIN' && !previewMode) || isSchoolPreviewActive" />
                   <lucide-icon [name]="icons.Search" class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2"></lucide-icon>
                   <button *ngIf="countrySearchQuery" (click)="countrySearchQuery = ''" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
                     <lucide-icon [name]="icons.X" class="w-3.5 h-3.5"></lucide-icon>
@@ -1052,7 +1053,8 @@
                             [class.bg-indigo-50]="loc.currentCountry().code === c.code"
                             [class.border-indigo-300]="loc.currentCountry().code === c.code"
                             [class.text-indigo-900]="loc.currentCountry().code === c.code"
-                            [class.bg-slate-50/60]="loc.currentCountry().code !== c.code"
+                            [class.bg-slate-50/60]="loc.currentCountry().code !== c.code && !((userRole === 'SUPER_ADMIN' && !previewMode) || isSchoolPreviewActive)"
+                            [class.bg-white]="loc.currentCountry().code !== c.code && ((userRole === 'SUPER_ADMIN' && !previewMode) || isSchoolPreviewActive)"
                             [class.border-slate-100]="loc.currentCountry().code !== c.code"
                             [class.text-slate-700]="loc.currentCountry().code !== c.code"
                             [class.hover:bg-slate-100]="loc.currentCountry().code !== c.code">
@@ -1081,7 +1083,8 @@
                   <input type="text"
                          [(ngModel)]="languageSearchQuery"
                          [placeholder]="loc.t('search_lang_placeholder')"
-                         class="w-full text-xs font-semibold pl-8 pr-7 py-1.5 bg-slate-50 border border-slate-200/90 rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white text-slate-800 placeholder:text-slate-400" />
+                         class="w-full text-xs font-semibold pl-8 pr-7 py-1.5 bg-slate-50 border border-slate-200/90 rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white text-slate-800 placeholder:text-slate-400"
+                         [class.bg-white]="(userRole === 'SUPER_ADMIN' && !previewMode) || isSchoolPreviewActive" />
                   <lucide-icon [name]="icons.Search" class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2"></lucide-icon>
                   <button *ngIf="languageSearchQuery" (click)="languageSearchQuery = ''" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
                     <lucide-icon [name]="icons.X" class="w-3.5 h-3.5"></lucide-icon>
@@ -1096,7 +1099,8 @@
                           [class.bg-indigo-50]="loc.currentLanguage().code === l.code"
                           [class.border-indigo-300]="loc.currentLanguage().code === l.code"
                           [class.text-indigo-900]="loc.currentLanguage().code === l.code"
-                          [class.bg-slate-50/60]="loc.currentLanguage().code !== l.code"
+                          [class.bg-slate-50/60]="loc.currentLanguage().code !== l.code && !((userRole === 'SUPER_ADMIN' && !previewMode) || isSchoolPreviewActive)"
+                          [class.bg-white]="loc.currentLanguage().code !== l.code && ((userRole === 'SUPER_ADMIN' && !previewMode) || isSchoolPreviewActive)"
                           [class.border-slate-100]="loc.currentLanguage().code !== l.code"
                           [class.text-slate-700]="loc.currentLanguage().code !== l.code"
                           [class.hover:bg-slate-100]="loc.currentLanguage().code !== l.code">
@@ -1355,7 +1359,7 @@
 
           <div *ngIf="activeView !== 'module-catalog' && activeView !== 'saas-control' && activeView !== 'plans-pricing'" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5">
             <div *ngFor="let group of saasPage.groups; let idx = index" class="scs-surface-3d rounded-[24px] hover:shadow-md transition-all overflow-hidden flex flex-col">
-              <div class="px-5 py-4 border-b border-slate-100/80 bg-white/55 flex items-center justify-between gap-3">
+              <div class="px-5 py-4 border-b border-slate-100/80 bg-white flex items-center justify-between gap-3">
                 <div class="flex items-center gap-3 min-w-0">
                   <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-600 to-blue-600 text-white font-black text-xs flex items-center justify-center shrink-0 shadow-xs tabular-nums">
                     0{{ idx + 1 }}
@@ -1770,7 +1774,7 @@
 
           <div class="scs-surface-3d hidden md:block overflow-x-auto rounded-2xl overflow-hidden">
             <table class="w-full text-left text-xs">
-              <thead class="bg-gradient-to-r from-emerald-50/90 via-slate-50 to-teal-50/80 text-slate-700 uppercase tracking-wider font-black text-[10px] border-b border-emerald-100/90">
+              <thead class="bg-white text-slate-700 uppercase tracking-wider font-black text-[10px] border-b border-slate-200/80">
                 <tr>
                   <th class="px-4 py-3.5">#</th>
                   <th class="px-4 py-3.5">Business Type</th>
@@ -1932,7 +1936,7 @@
           <div class="hidden md:block overflow-x-auto">
             <table class="w-full text-left border-collapse">
               <thead>
-                <tr class="bg-slate-50 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100">
+                <tr class="text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100" [class.bg-white]="(userRole === 'SUPER_ADMIN' && !previewMode) || isSchoolPreviewActive" [class.bg-slate-50]="!((userRole === 'SUPER_ADMIN' && !previewMode) || isSchoolPreviewActive)">
                   <th class="p-4">Record Identifier</th>
                   <th class="p-4">Name / Title</th>
                   <th class="p-4">Category</th>
@@ -1985,15 +1989,15 @@
             <div class="space-y-4 text-xs">
               <div>
                 <label class="block font-semibold text-slate-700 mb-1.5">Entry Name / Title</label>
-                <input type="text" [(ngModel)]="genericDraftItem.name" placeholder="e.g. Primary Operations Unit" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200/80 bg-slate-50/50 text-xs focus:bg-white focus:outline-none focus:border-[#0071E3] focus:ring-3 focus:ring-[#0071E3]/15 transition-all">
+                <input type="text" [(ngModel)]="genericDraftItem.name" placeholder="e.g. Primary Operations Unit" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200/80 text-xs focus:bg-white focus:outline-none focus:border-[#0071E3] focus:ring-3 focus:ring-[#0071E3]/15 transition-all" [class.bg-white]="(userRole === 'SUPER_ADMIN' && !previewMode) || isSchoolPreviewActive" [class.bg-slate-50/50]="!((userRole === 'SUPER_ADMIN' && !previewMode) || isSchoolPreviewActive)">
               </div>
               <div>
                 <label class="block font-semibold text-slate-700 mb-1.5">Code / SKU Identifier</label>
-                <input type="text" [(ngModel)]="genericDraftItem.code" placeholder="e.g. MOD-091" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200/80 bg-slate-50/50 text-xs font-mono focus:bg-white focus:outline-none focus:border-[#0071E3] focus:ring-3 focus:ring-[#0071E3]/15 transition-all">
+                <input type="text" [(ngModel)]="genericDraftItem.code" placeholder="e.g. MOD-091" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200/80 text-xs font-mono focus:bg-white focus:outline-none focus:border-[#0071E3] focus:ring-3 focus:ring-[#0071E3]/15 transition-all" [class.bg-white]="(userRole === 'SUPER_ADMIN' && !previewMode) || isSchoolPreviewActive" [class.bg-slate-50/50]="!((userRole === 'SUPER_ADMIN' && !previewMode) || isSchoolPreviewActive)">
               </div>
               <div>
                 <label class="block font-semibold text-slate-700 mb-1.5">Details / Specifications</label>
-                <input type="text" [(ngModel)]="genericDraftItem.description" placeholder="e.g. Active Capacity" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200/80 bg-slate-50/50 text-xs focus:bg-white focus:outline-none focus:border-[#0071E3] focus:ring-3 focus:ring-[#0071E3]/15 transition-all">
+                <input type="text" [(ngModel)]="genericDraftItem.description" placeholder="e.g. Active Capacity" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200/80 text-xs focus:bg-white focus:outline-none focus:border-[#0071E3] focus:ring-3 focus:ring-[#0071E3]/15 transition-all" [class.bg-white]="(userRole === 'SUPER_ADMIN' && !previewMode) || isSchoolPreviewActive" [class.bg-slate-50/50]="!((userRole === 'SUPER_ADMIN' && !previewMode) || isSchoolPreviewActive)">
               </div>
             </div>
             <div class="pt-4 flex items-center justify-end gap-3 border-t border-slate-100">
@@ -2087,7 +2091,7 @@
       <!-- SCS_SUPERADMIN_PLATFORM_EXPANSION_PAGES_END -->
 
       <!-- Footer (scrolls naturally with page content at the bottom of the scroll, not fixed over the screen) -->
-      <footer class="min-h-14 border-t border-slate-200/70 px-4 sm:px-8 py-3 flex items-center justify-between gap-3 mt-auto shrink-0 bg-slate-50 relative overflow-hidden">
+      <footer class="min-h-14 border-t border-slate-200/70 px-4 sm:px-8 py-3 flex items-center justify-between gap-3 mt-auto shrink-0 relative overflow-hidden" [class.bg-white]="(userRole === 'SUPER_ADMIN' && !previewMode) || isSchoolPreviewActive" [class.bg-slate-50]="!((userRole === 'SUPER_ADMIN' && !previewMode) || isSchoolPreviewActive)">
         <span class="text-[10px] sm:text-[11px] font-black text-slate-600 uppercase tracking-[2px] truncate relative z-10">© 2026 SoftCode Solution</span>
         <div class="flex items-center gap-2 px-1 py-1 relative z-10 shrink-0">
           <div class="w-1.5 h-1.5 rounded-full" [class.bg-emerald-500]="isOnline" [class.animate-pulse]="isOnline" [class.bg-red-400]="!isOnline"></div>
@@ -2253,7 +2257,7 @@
     </div>
 
     <!-- Scrollable Modal Body -->
-    <main class="flex-1 overflow-y-auto bg-slate-50/80 p-4 sm:p-6">
+    <main class="flex-1 overflow-y-auto bg-white p-4 sm:p-6">
 
       <!-- TAB 1: OVERVIEW -->
       <section *ngIf="clientPopupTab === 'overview'" class="grid gap-5 lg:grid-cols-[1fr_300px]">
@@ -2270,17 +2274,17 @@
           </div>
 
           <div class="mt-4 grid gap-3 sm:grid-cols-2">
-            <div class="rounded-xl bg-slate-50 border border-slate-100 p-3.5">
+            <div class="rounded-xl bg-white border border-slate-200/80 p-3.5">
               <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Full Name</p>
               <p class="mt-1 text-sm font-bold text-slate-900">{{ clientPopup.full_name || '—' }}</p>
             </div>
 
-            <div class="rounded-xl bg-slate-50 border border-slate-100 p-3.5">
+            <div class="rounded-xl bg-white border border-slate-200/80 p-3.5">
               <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Company</p>
               <p class="mt-1 text-sm font-bold text-slate-900">{{ clientPopup.company_name || '—' }}</p>
             </div>
 
-            <div class="rounded-xl bg-slate-50 border border-slate-100 p-3.5">
+            <div class="rounded-xl bg-white border border-slate-200/80 p-3.5">
               <div class="flex items-center justify-between">
                 <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Email</p>
                 <button *ngIf="clientPopup.email" type="button" (click)="copyClientText(clientPopup.email, 'Email')" title="Copy email" class="text-slate-400 hover:text-slate-800 transition-colors cursor-pointer">
@@ -2290,22 +2294,22 @@
               <p class="mt-1 break-all text-sm font-bold text-slate-900">{{ clientPopup.email || '—' }}</p>
             </div>
 
-            <div class="rounded-xl bg-slate-50 border border-slate-100 p-3.5">
+            <div class="rounded-xl bg-white border border-slate-200/80 p-3.5">
               <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Phone</p>
               <p class="mt-1 text-sm font-bold text-slate-900">{{ clientPopup.country_code || '' }} {{ clientPopup.phone || '—' }}</p>
             </div>
 
-            <div class="rounded-xl bg-slate-50 border border-slate-100 p-3.5">
+            <div class="rounded-xl bg-white border border-slate-200/80 p-3.5">
               <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Business Type</p>
               <p class="mt-1 text-sm font-bold text-slate-900">{{ clientPopup.business_type || '—' }}</p>
             </div>
 
-            <div class="rounded-xl bg-slate-50 border border-slate-100 p-3.5">
+            <div class="rounded-xl bg-white border border-slate-200/80 p-3.5">
               <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Location</p>
               <p class="mt-1 text-sm font-bold text-slate-900">{{ clientPopup.city || '—' }}{{ clientPopup.country ? ', ' + clientPopup.country : '' }}</p>
             </div>
 
-            <div class="rounded-xl bg-slate-50 border border-slate-100 p-3.5 sm:col-span-2">
+            <div class="rounded-xl bg-white border border-slate-200/80 p-3.5 sm:col-span-2">
               <div class="flex items-center justify-between">
                 <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Tenant ID</p>
                 <button *ngIf="clientPopup.tenant_id" type="button" (click)="copyClientText(clientPopup.tenant_id, 'Tenant ID')" title="Copy Tenant ID" class="text-slate-400 hover:text-slate-800 transition-colors cursor-pointer">
@@ -2389,7 +2393,7 @@
           </label>
           <label class="block">
             <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Email (Protected)</span>
-            <input class="mt-1.5 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm font-semibold text-slate-400 cursor-not-allowed" [value]="clientPopupDraft.email || ''" disabled>
+            <input class="mt-1.5 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm font-semibold text-slate-400 cursor-not-allowed" [class.bg-white]="userRole === 'SUPER_ADMIN' && !previewMode" [value]="clientPopupDraft.email || ''" disabled>
           </label>
           <label class="block">
             <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Country Code</span>
@@ -2497,14 +2501,14 @@
           </div>
 
           <div class="mt-3.5 space-y-2.5 max-h-72 overflow-y-auto pr-1">
-            <div *ngFor="let item of clientPopupAudit" class="rounded-xl bg-slate-50 border border-slate-100 p-3">
+            <div *ngFor="let item of clientPopupAudit" class="rounded-xl bg-white border border-slate-200/80 p-3">
               <div class="flex items-center justify-between gap-2">
                 <p class="text-xs font-bold text-slate-900">{{ item.action }}</p>
                 <span class="text-[10px] font-mono text-slate-400 shrink-0">{{ item.time }}</span>
               </div>
               <p class="mt-0.5 text-xs font-medium text-slate-500 break-words">{{ item.detail }}</p>
             </div>
-            <div *ngIf="clientPopupAudit.length === 0" class="rounded-xl bg-slate-50 border border-slate-100 p-4 text-center text-xs font-medium text-slate-400">
+            <div *ngIf="clientPopupAudit.length === 0" class="rounded-xl bg-white border border-slate-200/80 p-4 text-center text-xs font-medium text-slate-400">
               No actions recorded in this session yet.
             </div>
           </div>
@@ -2531,7 +2535,7 @@
 <div *ngIf="isOmniSearchOpen" class="fixed inset-0 z-[120] bg-slate-950/40 backdrop-blur-md flex items-start justify-center pt-16 sm:pt-24 p-4 animate-fade-in" (click)="closeOmniSearch()">
   <div class="bg-white/95 backdrop-blur-2xl rounded-2xl border border-white/80 shadow-[0_32px_72px_-16px_rgba(0,0,0,0.22)] max-w-xl w-full overflow-hidden flex flex-col max-h-[80vh] animate-scale-up" (click)="$event.stopPropagation()">
     <!-- Search Bar Input Header -->
-    <div class="p-4 border-b border-slate-100 flex items-center gap-3 bg-slate-50/50">
+    <div class="p-4 border-b border-slate-100 flex items-center gap-3 bg-white">
       <lucide-icon [name]="icons.Search" class="w-5 h-5 text-slate-400 shrink-0"></lucide-icon>
       <input id="omni-search-input" type="text" [value]="omniSearchQuery" (input)="omniSearchQuery = $any($event.target).value" placeholder="Search tenants, system modules, security, webhooks..." class="w-full bg-transparent text-sm font-medium text-slate-900 placeholder:text-slate-400 outline-none">
       <button (click)="closeOmniSearch()" class="p-1 text-slate-400 hover:text-slate-700 rounded-md">
@@ -2584,7 +2588,7 @@
     </div>
 
     <!-- Footer Shortcuts -->
-    <div class="p-3 border-t border-slate-100 bg-slate-50 flex items-center justify-between text-[11px] text-slate-500">
+    <div class="p-3 border-t border-slate-100 bg-white flex items-center justify-between text-[11px] text-slate-500">
       <div class="flex items-center gap-3">
         <span>Navigate: <kbd class="px-1 bg-white border border-slate-200 rounded font-mono">↑</kbd> <kbd class="px-1 bg-white border border-slate-200 rounded font-mono">↓</kbd></span>
         <span>Select: <kbd class="px-1 bg-white border border-slate-200 rounded font-mono">↵</kbd></span>
@@ -2598,7 +2602,7 @@
 <div *ngIf="isNotificationDrawerOpen" class="fixed inset-0 z-[110] bg-slate-950/30 backdrop-blur-sm flex justify-end animate-fade-in" (click)="toggleNotificationDrawer()">
   <div class="w-full max-w-sm h-full bg-white/95 backdrop-blur-2xl border-l border-slate-200/80 shadow-2xl flex flex-col animate-slide-left" (click)="$event.stopPropagation()">
     <!-- Header -->
-    <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+    <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-white">
       <div class="flex items-center gap-2">
         <lucide-icon [name]="icons.Bell" class="w-4 h-4 text-slate-700"></lucide-icon>
         <h3 class="text-sm font-bold text-slate-900">System Notifications</h3>
@@ -2612,7 +2616,7 @@
     </div>
 
     <!-- Actions Bar -->
-    <div class="px-4 py-2 bg-slate-50 border-b border-slate-100 flex items-center justify-between text-xs">
+    <div class="px-4 py-2 bg-white border-b border-slate-100 flex items-center justify-between text-xs">
       <button (click)="markAllNotificationsAsRead()" class="text-indigo-600 hover:text-indigo-800 font-semibold text-[11px]">
         Mark all as read
       </button>
@@ -2673,9 +2677,10 @@
           <div *ngFor="let r of selectedBusinessForMatrix?.roles || []"
                class="rounded-2xl border p-5 transition-all flex flex-col justify-between gap-4"
                [class.border-indigo-500]="activeSimulatedRole === r.key"
-               [class.bg-indigo-50/20]="activeSimulatedRole === r.key"
+               [class.bg-indigo-50/20]="activeSimulatedRole === r.key && !(userRole === 'SUPER_ADMIN' && !previewMode)"
                [class.border-slate-200]="activeSimulatedRole !== r.key"
-               [class.bg-slate-50/50]="activeSimulatedRole !== r.key">
+               [class.bg-slate-50/50]="activeSimulatedRole !== r.key && !(userRole === 'SUPER_ADMIN' && !previewMode)"
+               [class.bg-white]="userRole === 'SUPER_ADMIN' && !previewMode">
             
             <div>
               <div class="flex items-center justify-between gap-2 mb-2">
@@ -2748,7 +2753,7 @@
 <div *ngIf="isSwitchBusinessModalOpen" class="fixed inset-0 z-[120000] bg-slate-950/60 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 animate-fade-in" (click)="closeSwitchBusinessModal()">
   <div class="bg-white rounded-3xl border border-slate-200/80 shadow-2xl max-w-3xl w-full max-h-[85vh] flex flex-col overflow-hidden animate-scale-up" (click)="$event.stopPropagation()">
     <!-- Header -->
-    <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+    <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-white">
       <div>
         <h3 class="text-lg font-black text-slate-900 tracking-tight">Quick Business Switcher</h3>
         <p class="text-xs text-slate-500">Jump to any of the 32 industry business consoles immediately</p>
@@ -2882,15 +2887,15 @@
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-      <div class="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
+      <div class="p-3 rounded-xl border border-slate-200/80" [class.bg-white]="(userRole === 'SUPER_ADMIN' && !previewMode) || isSchoolPreviewActive" [class.bg-slate-50]="!((userRole === 'SUPER_ADMIN' && !previewMode) || isSchoolPreviewActive)">
         <p class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Account Role</p>
         <p class="font-black text-slate-900 mt-0.5">{{ userRole === 'SUPER_ADMIN' ? 'Super Administrator' : 'Business Owner' }}</p>
       </div>
-      <div class="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
+      <div class="p-3 rounded-xl border border-slate-200/80" [class.bg-white]="(userRole === 'SUPER_ADMIN' && !previewMode) || isSchoolPreviewActive" [class.bg-slate-50]="!((userRole === 'SUPER_ADMIN' && !previewMode) || isSchoolPreviewActive)">
         <p class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Workspace</p>
         <p class="font-black text-slate-900 mt-0.5 truncate">{{ displayCompanyName || companyName }}</p>
       </div>
-      <div class="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
+      <div class="p-3 rounded-xl border border-slate-200/80" [class.bg-white]="(userRole === 'SUPER_ADMIN' && !previewMode) || isSchoolPreviewActive" [class.bg-slate-50]="!((userRole === 'SUPER_ADMIN' && !previewMode) || isSchoolPreviewActive)">
         <p class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Tenant ID</p>
         <p class="font-mono font-bold text-slate-700 mt-0.5 truncate">{{ tenantId || 'tenant-root-platform' }}</p>
       </div>

@@ -64,7 +64,7 @@
         [(ngModel)]="searchQuery" 
         (ngModelChange)="applyFilter()"
         placeholder="Search by name, email, or role..." 
-        class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+        class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
       />
     </div>
 
@@ -73,7 +73,7 @@
       <select 
         [(ngModel)]="selectedDepartment" 
         (ngModelChange)="applyFilter()" 
-        class="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-700 focus:outline-none focus:border-indigo-500">
+        class="bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-700 focus:outline-none focus:border-indigo-500">
         <option value="all">All Departments</option>
         <option value="Executive">Executive</option>
         <option value="InfraSec">InfraSec</option>
@@ -106,7 +106,7 @@
           </span>
         </div>
 
-        <div class="space-y-1 text-xs bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+        <div class="space-y-1 text-xs bg-white p-2.5 rounded-xl border border-slate-200/80">
           <div class="flex items-center justify-between">
             <span class="text-slate-400 font-medium">Role:</span>
             <span class="font-bold text-slate-800">{{ member.role }}</span>
@@ -134,7 +134,7 @@
     <!-- Desktop Members Table (Desktop View) -->
     <div class="hidden md:block overflow-x-auto">
       <table class="w-full text-left text-xs text-slate-600">
-        <thead class="bg-slate-50 text-slate-700 border-b border-slate-200/80 font-black uppercase tracking-wider text-[10px]">
+        <thead class="bg-white text-slate-700 border-b border-slate-200/80 font-black uppercase tracking-wider text-[10px]">
           <tr>
             <th class="px-6 py-4">Personnel</th>
             <th class="px-6 py-4">Department & Role</th>
@@ -271,7 +271,7 @@
         </div>
       </div>
 
-      <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-3">
+      <div class="px-6 py-4 bg-white border-t border-slate-100 flex items-center justify-end gap-3">
         <button (click)="closeInviteModal()" class="px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-900">Cancel</button>
         <button 
           (click)="submitInvite()" 

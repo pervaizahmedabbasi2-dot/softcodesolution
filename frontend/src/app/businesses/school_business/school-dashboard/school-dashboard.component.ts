@@ -1570,7 +1570,101 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
     return this.parentChildMonthlyTuition + 3500;
   }
 
+  private mergeOwnerAttendancePolicy(raw: Partial<OwnerAttendancePolicy> | null | undefined): OwnerAttendancePolicy {
+    const def = createDefaultOwnerAttendancePolicy();
+    const src: any = raw && typeof raw === 'object' ? raw : {};
+    const mergedCategories: OwnerAttendancePolicy['categories'] = {
+      student: { ...def.categories.student, ...(src.categories?.student || {}) },
+      teacher: { ...def.categories.teacher, ...(src.categories?.teacher || {}) },
+      staff: { ...def.categories.staff, ...(src.categories?.staff || {}) },
+      principal: { ...def.categories.principal, ...(src.categories?.principal || {}) }
+    };
+    const mergedRoleAccess: OwnerAttendancePolicy['roleAccess'] = {
+      principal: { ...def.roleAccess.principal, ...(src.roleAccess?.principal || {}) },
+      teacher: { ...def.roleAccess.teacher, ...(src.roleAccess?.teacher || {}) },
+      staff: { ...def.roleAccess.staff, ...(src.roleAccess?.staff || {}) },
+      student: { ...def.roleAccess.student, ...(src.roleAccess?.student || {}) }
+    };
+    if (
+      src.roleAccess?.student &&
+      typeof src.roleAccess.student.selfCheckInEnabled === 'boolean' &&
+      src.categories?.student?.allowSelfCheckIn === undefined
+    ) {
+      mergedCategories.student.allowSelfCheckIn = src.roleAccess.student.selfCheckInEnabled;
+    } else if (
+      src.categories?.student &&
+      typeof src.categories.student.allowSelfCheckIn === 'boolean' &&
+      src.roleAccess?.student?.selfCheckInEnabled === undefined
+    ) {
+      mergedRoleAccess.student.selfCheckInEnabled = src.categories.student.allowSelfCheckIn;
+    }
+    return {
+      ...def,
+      ...src,
+      categories: mergedCategories,
+      roleAccess: mergedRoleAccess,
+      operatorOverrides: { ...(src.operatorOverrides || {}) }
+    };
+  }
+
+  isAttendanceCategoryAllowedForRole(role: 'principal' | 'teacher' | 'staff', category: AttendanceMemberCategory): boolean {
+    const policy = this.ownerAttendancePolicy;
+    const perm = policy?.roleAccess?.[role];
+    if (!perm || !perm.enabled || !policy?.categories?.[category]?.enabled) return false;
+    if (category === 'student') return Boolean(perm.canScanStudents);
+    if (category === 'teacher') return Boolean(perm.canScanTeachers);
+    if (category === 'staff') return Boolean(perm.canScanStaff);
+    return Boolean(perm.canScanPrincipal);
+  }
+
+  getAllowedAttendanceCategoriesForRole(role: 'principal' | 'teacher' | 'staff'): AttendanceMemberCategory[] {
+    const order: AttendanceMemberCategory[] = ['student', 'teacher', 'staff', 'principal'];
+    return order.filter((cat) => this.isAttendanceCategoryAllowedForRole(role, cat));
+  }
+
+  get principalAllowedCategoriesLabel(): string {
+    const cats = this.getAllowedAttendanceCategoriesForRole('principal');
+    if (cats.length === 0) return 'Restricted';
+    const labels: Record<AttendanceMemberCategory, string> = {
+      student: 'Students',
+      teacher: 'Teachers',
+      staff: 'Staff',
+      principal: 'Principal'
+    };
+    return cats.map((c) => labels[c]).join(', ');
+  }
+
+  get canPrincipalUseAttendanceVerification(): boolean {
+    const perm = this.ownerAttendancePolicy?.roleAccess?.principal;
+    return Boolean(perm?.enabled && this.getAllowedAttendanceCategoriesForRole('principal').length > 0);
+  }
+
+  get canTeacherUseAttendanceVerification(): boolean {
+    const perm = this.ownerAttendancePolicy?.roleAccess?.teacher;
+    return Boolean(perm?.enabled && this.getAllowedAttendanceCategoriesForRole('teacher').length > 0);
+  }
+
+  get canStudentUseAttendanceVerification(): boolean {
+    const policy = this.ownerAttendancePolicy;
+    const stuPerm = policy?.roleAccess?.student;
+    if (!stuPerm?.enabled || !policy?.categories?.student?.enabled) return false;
+    return Boolean(stuPerm.selfCheckInEnabled || stuPerm.canEnrollFaces);
+  }
+
+  private syncPortalAttendanceTabAccess(): void {
+    if (this.principalTab === 'biometric_attendance' && !this.canPrincipalUseAttendanceVerification) {
+      this.principalTab = 'overview';
+    }
+    if (this.teacherTab === 'attendance' && !this.canTeacherUseAttendanceVerification) {
+      this.teacherTab = 'schedule';
+    }
+  }
+
   setPrincipalTab(tab: 'overview' | 'stage_wise' | 'master_registries' | 'supervision' | 'substitutions' | 'syllabus' | 'inspections' | 'discipline' | 'directives' | 'appraisals' | 'exam_moderation' | 'academic_reports' | 'faculty_tasks' | 'teacher_leaves' | 'student_certificates' | 'ptm_interventions' | 'admissions_review' | 'fee_oversight' | 'parent_complaints' | 'safeguarding' | 'facilities_transport' | 'biometric_attendance'): void {
+    if (tab === 'biometric_attendance' && !this.canPrincipalUseAttendanceVerification) {
+      this.showToast('Attendance Verification access is locked by School Owner Setup.', 'warning');
+      return;
+    }
     this.principalTab = tab;
     this.tabChanged.emit(tab);
     this.cdr.detectChanges();
@@ -1687,6 +1781,10 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
   }
 
   setTeacherTab(tab: 'schedule' | 'feed' | 'events' | 'attendance' | 'marks' | 'lessons' | 'homework' | 'students' | 'communication' | 'library'): void {
+    if (tab === 'attendance' && !this.canTeacherUseAttendanceVerification) {
+      this.showToast('Class Attendance Verification access is disabled by School Owner Setup.', 'warning');
+      return;
+    }
     this.teacherTab = tab;
     this.tabChanged.emit(tab);
     this.cdr.detectChanges();
@@ -6559,8 +6657,12 @@ INSTRUCTIONS:
         const isKiosk = params.get('kiosk') === '1';
         if (requestedTab === 'attendance' || isKiosk) {
           this.currentTab = 'attendance';
-          this.principalTab = 'biometric_attendance';
-          this.teacherTab = 'attendance';
+          if (this.canPrincipalUseAttendanceVerification) {
+            this.principalTab = 'biometric_attendance';
+          }
+          if (this.canTeacherUseAttendanceVerification) {
+            this.teacherTab = 'attendance';
+          }
           this.studentTab = 'attendance';
           if (isKiosk && (this.currentPortalRole === 'parent' || this.currentPortalRole === 'accountant')) {
             this.currentPortalRole = 'owner';
@@ -6595,6 +6697,7 @@ INSTRUCTIONS:
       window.addEventListener('school-role-changed', (ev: any) => {
         if (ev.detail?.role) {
           this.currentPortalRole = ev.detail.role;
+          this.syncPortalAttendanceTabAccess();
           this.cdr.detectChanges();
         }
       });
@@ -7365,20 +7468,16 @@ INSTRUCTIONS:
       if (savedOwnerAttPolicy) {
         try {
           const parsedPol = JSON.parse(savedOwnerAttPolicy);
-          const def = createDefaultOwnerAttendancePolicy();
-          this.ownerAttendancePolicy = {
-            ...def,
-            ...parsedPol,
-            categories: { ...def.categories, ...(parsedPol?.categories || {}) },
-            roleAccess: { ...def.roleAccess, ...(parsedPol?.roleAccess || {}) },
-            operatorOverrides: { ...(parsedPol?.operatorOverrides || {}) }
-          };
+          this.ownerAttendancePolicy = this.mergeOwnerAttendancePolicy(parsedPol);
           this.ownerBiometricPolicy.principalBiometricAccessGranted = Boolean(this.ownerAttendancePolicy.roleAccess.principal.enabled);
+          this.syncPortalAttendanceTabAccess();
         } catch {
           this.ownerAttendancePolicy = createDefaultOwnerAttendancePolicy();
+          this.syncPortalAttendanceTabAccess();
         }
       } else {
         this.ownerAttendancePolicy = createDefaultOwnerAttendancePolicy();
+        this.syncPortalAttendanceTabAccess();
       }
 
       const savedFaceLogs = this.getScopedItem('scs_school_face_verification_logs_v1');
@@ -7789,15 +7888,10 @@ INSTRUCTIONS:
       }
 
       if (polRes?.ok && polRes.policy) {
-        const def = createDefaultOwnerAttendancePolicy();
-        this.ownerAttendancePolicy = {
-          ...def,
-          ...polRes.policy,
-          categories: { ...def.categories, ...(polRes.policy.categories || {}) },
-          roleAccess: { ...def.roleAccess, ...(polRes.policy.roleAccess || {}) },
-          operatorOverrides: { ...(polRes.policy.operatorOverrides || {}) }
-        };
+        this.ownerAttendancePolicy = this.mergeOwnerAttendancePolicy(polRes.policy);
         this.ownerBiometricPolicy.principalBiometricAccessGranted = Boolean(this.ownerAttendancePolicy.roleAccess.principal.enabled);
+        this.syncPortalAttendanceTabAccess();
+        this.cdr.detectChanges();
       }
 
       if (fpRes?.ok && Array.isArray(fpRes.profiles)) {
@@ -9654,6 +9748,7 @@ INSTRUCTIONS:
     }
 
     this.currentPortalRole = role as SchoolPortalRole;
+    this.syncPortalAttendanceTabAccess();
     if (personaId) {
       if (role === 'teacher') this.activeTeacherId = personaId;
       else if (role === 'student') this.activeStudentId = personaId;
@@ -13214,22 +13309,21 @@ INSTRUCTIONS:
   }
 
   async onAttendancePolicySaved(policy: OwnerAttendancePolicy): Promise<void> {
-    this.ownerAttendancePolicy = {
-      ...policy,
-      categories: { ...policy.categories },
-      roleAccess: { ...policy.roleAccess },
-      operatorOverrides: { ...(policy.operatorOverrides || {}) }
-    };
+    this.ownerAttendancePolicy = this.mergeOwnerAttendancePolicy(policy);
     this.ownerBiometricPolicy = {
       ...this.ownerBiometricPolicy,
-      principalBiometricAccessGranted: Boolean(policy.roleAccess.principal.enabled),
-      manualRollCallEnabled: !policy.requireCameraForAllAttendance
+      principalBiometricAccessGranted: Boolean(this.ownerAttendancePolicy.roleAccess.principal.enabled),
+      manualRollCallEnabled: !this.ownerAttendancePolicy.requireCameraForAllAttendance
     };
+    this.syncPortalAttendanceTabAccess();
     this.saveStateToStorage();
     const isOnline = typeof navigator === 'undefined' || navigator.onLine !== false;
     const res = isOnline ? await this.backend.saveSchoolAttendancePolicy(this.ownerAttendancePolicy) : { ok: false };
     if (res?.ok && res.policy) {
-      this.ownerAttendancePolicy = { ...this.ownerAttendancePolicy, ...res.policy };
+      this.ownerAttendancePolicy = this.mergeOwnerAttendancePolicy(res.policy);
+      this.ownerBiometricPolicy.principalBiometricAccessGranted = Boolean(this.ownerAttendancePolicy.roleAccess.principal.enabled);
+      this.syncPortalAttendanceTabAccess();
+      this.saveStateToStorage();
       this.showToast('School Owner Attendance Setup & Access Control saved & enforced across all portals.', 'success');
     } else {
       this.enqueueOfflineMutation('policy', this.ownerAttendancePolicy);
@@ -13578,10 +13672,22 @@ INSTRUCTIONS:
     this.stopCameraStream();
     this.isFaceEnrollmentModalOpen = false;
     if (this.currentPortalRole === 'principal') {
+      if (!this.canPrincipalUseAttendanceVerification || !this.ownerAttendancePolicy.roleAccess.principal.canEnrollFaces) {
+        this.showToast('Face Enrollment access is disabled for Principal by School Owner Setup.', 'warning');
+        return;
+      }
       this.setPrincipalTab('biometric_attendance');
     } else if (this.currentPortalRole === 'teacher') {
+      if (!this.canTeacherUseAttendanceVerification || !this.ownerAttendancePolicy.roleAccess.teacher.canEnrollFaces) {
+        this.showToast('Face Enrollment access is disabled for Teacher by School Owner Setup.', 'warning');
+        return;
+      }
       this.setTeacherTab('attendance');
     } else if (this.currentPortalRole === 'student') {
+      if (!this.canStudentUseAttendanceVerification || !this.ownerAttendancePolicy.roleAccess.student.canEnrollFaces) {
+        this.showToast('Self Face Enrollment is disabled for Student by School Owner Setup.', 'warning');
+        return;
+      }
       this.setStudentTab('attendance');
     } else {
       this.setTab('attendance');
@@ -13868,14 +13974,26 @@ INSTRUCTIONS:
       this.showToast('🔒 Only School Owner Executive has authority to grant or revoke Principal Biometric Access.', 'warning');
       return;
     }
-    this.ownerBiometricPolicy.principalBiometricAccessGranted = !this.ownerBiometricPolicy.principalBiometricAccessGranted;
+    const nextEnabled = !this.ownerAttendancePolicy.roleAccess.principal.enabled;
+    const nextPolicy = this.mergeOwnerAttendancePolicy({
+      ...this.ownerAttendancePolicy,
+      roleAccess: {
+        ...this.ownerAttendancePolicy.roleAccess,
+        principal: {
+          ...this.ownerAttendancePolicy.roleAccess.principal,
+          enabled: nextEnabled
+        }
+      }
+    });
+    this.ownerBiometricPolicy.principalBiometricAccessGranted = nextEnabled;
     this.saveOwnerPolicy();
-    const status = this.ownerBiometricPolicy.principalBiometricAccessGranted ? 'GRANTED ✓' : 'REVOKED 🔒';
-    this.showToast(`Principal Biometric Attendance Access ${status}`, this.ownerBiometricPolicy.principalBiometricAccessGranted ? 'success' : 'info');
+    void this.onAttendancePolicySaved(nextPolicy);
+    const status = nextEnabled ? 'GRANTED ✓' : 'REVOKED 🔒';
+    this.showToast(`Principal Biometric Attendance Access ${status}`, nextEnabled ? 'success' : 'info');
   }
 
   canPrincipalAccessBiometrics(): boolean {
-    return !!this.ownerBiometricPolicy.principalBiometricAccessGranted;
+    return this.canPrincipalUseAttendanceVerification;
   }
 
   switchPortalRole(role: any) {
@@ -18447,15 +18565,9 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
         }
         this.syncBiometricFlagsFromFaceProfiles();
         if (cloudData.ownerAttendancePolicy && typeof cloudData.ownerAttendancePolicy === 'object') {
-          const def = createDefaultOwnerAttendancePolicy();
-          this.ownerAttendancePolicy = {
-            ...def,
-            ...cloudData.ownerAttendancePolicy,
-            categories: { ...def.categories, ...(cloudData.ownerAttendancePolicy.categories || {}) },
-            roleAccess: { ...def.roleAccess, ...(cloudData.ownerAttendancePolicy.roleAccess || {}) },
-            operatorOverrides: { ...(cloudData.ownerAttendancePolicy.operatorOverrides || {}) }
-          };
+          this.ownerAttendancePolicy = this.mergeOwnerAttendancePolicy(cloudData.ownerAttendancePolicy);
           this.ownerBiometricPolicy.principalBiometricAccessGranted = Boolean(this.ownerAttendancePolicy.roleAccess.principal.enabled);
+          this.syncPortalAttendanceTabAccess();
         }
         if (Array.isArray(cloudData.faceVerificationLogs) && cloudData.faceVerificationLogs.length > 0) {
           this.faceVerificationLogs = cloudData.faceVerificationLogs;

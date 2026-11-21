@@ -147,7 +147,7 @@
                     </h3>
                   </div>
 
-                  <div class="inline-flex rounded-xl bg-emerald-50/70 p-1 border border-emerald-200/70">
+                  <div class="inline-flex rounded-xl bg-white p-1 border border-slate-200/80">
                     <button
                       type="button"
                       (click)="saasClientSetBillingCycle('monthly')"
@@ -187,7 +187,7 @@
                     [class.border-indigo-600]="saasClientSelectedPlanId === ($any(plan).id || $any(plan).plan_id)"
                     [class.ring-2]="saasClientSelectedPlanId === ($any(plan).id || $any(plan).plan_id)"
                     [class.ring-indigo-500/20]="saasClientSelectedPlanId === ($any(plan).id || $any(plan).plan_id)"
-                    [class.bg-indigo-50/40]="saasClientSelectedPlanId === ($any(plan).id || $any(plan).plan_id)"
+                    [class.bg-white]="saasClientSelectedPlanId === ($any(plan).id || $any(plan).plan_id)"
                     [class.shadow-md]="saasClientSelectedPlanId === ($any(plan).id || $any(plan).plan_id)"
                     [class.scs-tile-3d]="saasClientSelectedPlanId !== ($any(plan).id || $any(plan).plan_id)"
                     [class.hover:border-indigo-300]="saasClientSelectedPlanId !== ($any(plan).id || $any(plan).plan_id)"
@@ -320,13 +320,13 @@
 
                   <div class="grid gap-2 sm:grid-cols-2">
                     <input
-                      class="rounded-xl border border-slate-200 bg-slate-50/70 focus:bg-white px-4 py-2.5 text-sm font-bold outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all"
+                      class="rounded-xl border border-slate-200 bg-white focus:bg-white px-4 py-2.5 text-sm font-bold outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all"
                       placeholder="Search modules"
                       [value]="scsSuperModuleSearch"
                       (input)="scsSuperSetModuleSearch($any($event.target).value)">
 
                     <select
-                      class="rounded-xl border border-slate-200 bg-slate-50/70 focus:bg-white px-4 py-2.5 text-sm font-bold outline-none focus:border-indigo-500 transition-all cursor-pointer"
+                      class="rounded-xl border border-slate-200 bg-white focus:bg-white px-4 py-2.5 text-sm font-bold outline-none focus:border-indigo-500 transition-all cursor-pointer"
                       [value]="scsSuperModuleCategory"
                       (change)="scsSuperSetModuleCategory($any($event.target).value)">
                       <option value="all">All categories</option>
@@ -357,7 +357,7 @@
                     [class.ring-2]="scsIsModuleSelected(module)"
                     [class.ring-indigo-500]="scsIsModuleSelected(module)"
                     [class.border-emerald-200]="scsSuperIsModuleEnabled(module)"
-                    [class.bg-emerald-50/50]="scsSuperIsModuleEnabled(module)"
+                    [class.bg-white]="scsSuperIsModuleEnabled(module)"
                     [class.scs-tile-3d]="!scsSuperIsModuleEnabled(module)">
 
                     <div class="min-w-0 flex-1">

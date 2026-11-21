@@ -323,6 +323,10 @@ interface SuperadminClientsResponse {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
+  host: {
+    '[class.superadmin-white-theme]': "userRole === 'SUPER_ADMIN' && !previewMode",
+    '[class.school-white-theme]': 'isSchoolPreviewActive'
+  },
   imports: [
     CommonModule,
     PaginationBarComponent,

@@ -34,7 +34,7 @@ interface DraftFormRow {
           (click)="$event.stopPropagation()"
         >
           <!-- Header -->
-          <div class="px-4 sm:px-5 py-3.5 border-b border-slate-200/80 bg-slate-50/95 flex items-center justify-between gap-3">
+          <div class="px-4 sm:px-5 py-3.5 border-b border-slate-200/80 bg-white flex items-center justify-between gap-3">
             <div class="flex items-center gap-2.5 min-w-0">
               <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-600 text-white flex items-center justify-center shrink-0 shadow-xs">
                 <mat-icon class="!text-[17px] !w-[17px] !h-[17px]">table_chart</mat-icon>
@@ -63,7 +63,7 @@ interface DraftFormRow {
               <select
                 [value]="canonicalTableId()"
                 (change)="onSwitchTable($any($event.target).value)"
-                class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-800 focus:bg-white focus:border-slate-400 focus:outline-none cursor-pointer"
+                class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-800 focus:bg-white focus:border-slate-400 focus:outline-none cursor-pointer"
                 aria-label="Select Table"
               >
                 @for (cat of catalogTables(); track cat.canonicalId) {
@@ -77,7 +77,7 @@ interface DraftFormRow {
                 type="button"
                 (click)="activeTab.set('columns')"
                 class="px-3 py-2 rounded-xl text-xs font-bold cursor-pointer transition-colors inline-flex items-center justify-center gap-1.5"
-                [class]="activeTab() === 'columns' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
+                [class]="activeTab() === 'columns' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-2xs' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'"
               >
                 <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">view_column</mat-icon>
                 <span>Table Columns</span>
@@ -86,7 +86,7 @@ interface DraftFormRow {
                 type="button"
                 (click)="activeTab.set('rows')"
                 class="px-3 py-2 rounded-xl text-xs font-bold cursor-pointer transition-colors inline-flex items-center justify-center gap-1.5"
-                [class]="activeTab() === 'rows' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
+                [class]="activeTab() === 'rows' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-2xs' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'"
               >
                 <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">playlist_add</mat-icon>
                 <span>Table Rows ({{ totalCustomEntriesCount() }})</span>
@@ -95,7 +95,7 @@ interface DraftFormRow {
           </div>
 
           <!-- Body -->
-          <div class="p-4 sm:p-5 overflow-y-auto space-y-4 flex-1 bg-slate-50/50">
+          <div class="p-4 sm:p-5 overflow-y-auto space-y-4 flex-1 bg-white">
             <!-- =============================================================== -->
             <!-- TAB 1: TABLE COLUMNS (MATCHES CLEAN FORM FIELD MANAGER UX)      -->
             <!-- =============================================================== -->
@@ -107,7 +107,7 @@ interface DraftFormRow {
                     type="button"
                     (click)="setColMode('add')"
                     class="px-3.5 py-1.5 rounded-lg text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 transition-colors"
-                    [class]="colMode() === 'add' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
+                    [class]="colMode() === 'add' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-2xs' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'"
                   >
                     <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">add</mat-icon>
                     <span>Add Column</span>
@@ -116,7 +116,7 @@ interface DraftFormRow {
                     type="button"
                     (click)="setColMode('delete')"
                     class="px-3.5 py-1.5 rounded-lg text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 transition-colors"
-                    [class]="colMode() === 'delete' ? 'bg-rose-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
+                    [class]="colMode() === 'delete' ? 'bg-rose-600 text-white' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'"
                   >
                     <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">delete_outline</mat-icon>
                     <span>Delete / Manage Columns</span>
@@ -134,7 +134,7 @@ interface DraftFormRow {
                           [value]="newColLabel()"
                           (input)="newColLabel.set($any($event.target).value)"
                           placeholder="e.g. Bus Route, Remarks, Fee Note"
-                          class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none"
+                          class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none"
                         />
                       </div>
                       <div>
@@ -142,7 +142,7 @@ interface DraftFormRow {
                         <select
                           [value]="newColType()"
                           (change)="newColType.set($any($event.target).value)"
-                          class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none cursor-pointer"
+                          class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none cursor-pointer"
                         >
                           <option value="text">Text</option>
                           <option value="number">Number</option>
@@ -159,7 +159,7 @@ interface DraftFormRow {
                         <select
                           [value]="newColTablePos()"
                           (change)="newColTablePos.set($any($event.target).value)"
-                          class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none cursor-pointer"
+                          class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none cursor-pointer"
                         >
                           @for (opt of addPositionOptions(); track opt.value) {
                             <option [value]="opt.value">{{ opt.label }}</option>
@@ -175,7 +175,7 @@ interface DraftFormRow {
                             [value]="newColOptions()"
                             (input)="newColOptions.set($any($event.target).value)"
                             placeholder="e.g. Paid, Pending, Exempt"
-                            class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none"
+                            class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none"
                           />
                         </div>
                       } @else {
@@ -186,7 +186,7 @@ interface DraftFormRow {
                             [value]="newColDefault()"
                             (input)="newColDefault.set($any($event.target).value)"
                             placeholder="Optional default cell text"
-                            class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none"
+                            class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none"
                           />
                         </div>
                       }
@@ -214,7 +214,7 @@ interface DraftFormRow {
                           <select
                             [value]="effectiveSelectedManageValue()"
                             (change)="onSelectManageColumn($any($event.target).value)"
-                            class="flex-1 min-w-0 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none cursor-pointer"
+                            class="flex-1 min-w-0 px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none cursor-pointer"
                           >
                             @for (mc of manageableColumns(); track mc.value) {
                               <option [value]="mc.value">{{ mc.label }}</option>
@@ -242,12 +242,12 @@ interface DraftFormRow {
                               [value]="editColLabel()"
                               (input)="editColLabel.set($any($event.target).value)"
                               placeholder="Column name"
-                              class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none"
+                              class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none"
                             />
                             <select
                               [value]="editColTablePos()"
                               (change)="editColTablePos.set($any($event.target).value)"
-                              class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none cursor-pointer"
+                              class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none cursor-pointer"
                             >
                               @for (opt of editPositionOptionsFor(selCol.id); track opt.value) {
                                 <option [value]="opt.value">{{ opt.label }}</option>
@@ -261,7 +261,7 @@ interface DraftFormRow {
                                 [value]="editColOptions()"
                                 (input)="editColOptions.set($any($event.target).value)"
                                 placeholder="Dropdown choices (comma separated)"
-                                class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none"
+                                class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none"
                               />
                             </div>
                           }
@@ -286,7 +286,7 @@ interface DraftFormRow {
                               [value]="editColLabel()"
                               (input)="editColLabel.set($any($event.target).value)"
                               [placeholder]="selBuilt.originalLabel"
-                              class="flex-1 min-w-0 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none"
+                              class="flex-1 min-w-0 px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none"
                             />
                             <button
                               type="button"
@@ -315,7 +315,7 @@ interface DraftFormRow {
                             <button
                               type="button"
                               (click)="restoreColumn(hc)"
-                              class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-700 text-[11px] font-bold cursor-pointer inline-flex items-center gap-1"
+                              class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:bg-emerald-50 hover:text-emerald-700 text-slate-700 text-[11px] font-bold cursor-pointer inline-flex items-center gap-1"
                               title="Restore column to table"
                             >
                               <span>{{ hc.displayLabel }}</span>
@@ -346,7 +346,7 @@ interface DraftFormRow {
                         <button
                           type="button"
                           (click)="resetTable()"
-                          class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-700 text-[11px] font-bold cursor-pointer inline-flex items-center gap-1"
+                          class="px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 hover:bg-rose-50 text-slate-700 hover:text-rose-700 text-[11px] font-bold cursor-pointer inline-flex items-center gap-1"
                         >
                           <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">restart_alt</mat-icon>
                           <span>Reset Table</span>
@@ -375,7 +375,7 @@ interface DraftFormRow {
                         [value]="titleDraft()"
                         (input)="titleDraft.set($any($event.target).value)"
                         [placeholder]="managerState().tableTitle || 'Custom table heading...'"
-                        class="flex-1 min-w-0 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none"
+                        class="flex-1 min-w-0 px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none"
                       />
                       <button
                         type="button"
@@ -403,7 +403,7 @@ interface DraftFormRow {
                   <button
                     type="button"
                     (click)="addStudioDraftRow()"
-                    class="px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-200 text-slate-800 hover:text-emerald-700 text-[11px] font-bold cursor-pointer inline-flex items-center gap-1"
+                    class="px-3 py-1.5 rounded-xl bg-white hover:bg-emerald-50 border border-slate-200 hover:border-emerald-200 text-slate-800 hover:text-emerald-700 text-[11px] font-bold cursor-pointer inline-flex items-center gap-1"
                   >
                     <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">add</mat-icon>
                     <span>Add Another Row</span>
@@ -416,7 +416,7 @@ interface DraftFormRow {
                   <select
                     [value]="studioRowPos()"
                     (change)="studioRowPos.set($any($event.target).value)"
-                    class="flex-1 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none cursor-pointer"
+                    class="flex-1 px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none cursor-pointer"
                   >
                     @for (opt of studioRowPositionOptions(); track opt.value) {
                       <option [value]="opt.value">{{ opt.label }}</option>
@@ -558,7 +558,7 @@ interface DraftFormRow {
                               <select
                                 [value]="editRowPos()"
                                 (change)="editRowPos.set($any($event.target).value)"
-                                class="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 cursor-pointer"
+                                class="w-full px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-semibold text-slate-900 cursor-pointer"
                               >
                                 @for (opt of studioRowPositionOptions(); track opt.value) {
                                   @if (opt.value !== 'after:' + crow.rowKey) {
@@ -577,7 +577,7 @@ interface DraftFormRow {
                                         type="text"
                                         [value]="editRowValues()['built_' + item.header.index] ?? ''"
                                         (input)="updateEditRowField('built_' + item.header.index, $any($event.target).value)"
-                                        class="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900"
+                                        class="w-full px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-semibold text-slate-900"
                                       />
                                     </div>
                                   }
@@ -588,7 +588,7 @@ interface DraftFormRow {
                                       type="text"
                                       [value]="editRowValues()[item.col.id] ?? ''"
                                       (input)="updateEditRowField(item.col.id, $any($event.target).value)"
-                                      class="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900"
+                                      class="w-full px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-semibold text-slate-900"
                                     />
                                   </div>
                                 }
@@ -599,14 +599,14 @@ interface DraftFormRow {
                           <div class="flex flex-wrap gap-1.5 text-[11px] text-slate-600">
                             @for (h of visibleHeaders(); track h.index) {
                               @if (crow.values['built_' + h.index]) {
-                                <span class="px-2 py-0.5 rounded-md bg-slate-50 border border-slate-200/80">
+                                <span class="px-2 py-0.5 rounded-md bg-white border border-slate-200/80">
                                   <strong>{{ getHeaderValue(h.index, h.originalLabel) }}:</strong> {{ crow.values['built_' + h.index] }}
                                 </span>
                               }
                             }
                             @for (col of tableCustomColumns(); track col.id) {
                               @if (crow.values[col.id]) {
-                                <span class="px-2 py-0.5 rounded-md bg-slate-50 border border-slate-200/80">
+                                <span class="px-2 py-0.5 rounded-md bg-white border border-slate-200/80">
                                   <strong>{{ col.label }}:</strong> {{ crow.values[col.id] }}
                                 </span>
                               }
@@ -633,7 +633,7 @@ interface DraftFormRow {
                           <span class="font-mono text-[11px] font-bold text-slate-800">{{ entry.rowKey }}</span>
                           <div class="flex flex-wrap gap-1.5 text-[11px]">
                             @for (cell of entry.cells; track cell.colId) {
-                              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-800 border border-slate-200/80">
+                              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white text-slate-800 border border-slate-200/80">
                                 <strong>{{ cell.colLabel }}:</strong> {{ cell.value }}
                                 <button
                                   type="button"
@@ -669,7 +669,7 @@ interface DraftFormRow {
           </div>
 
           <!-- Footer -->
-          <div class="px-4 sm:px-5 py-3 border-t border-slate-200/80 bg-slate-50/90 flex items-center justify-between gap-3">
+          <div class="px-4 sm:px-5 py-3 border-t border-slate-200/80 bg-white flex items-center justify-between gap-3">
             <span class="text-[11px] font-medium text-slate-500">
               Table changes save automatically
             </span>
@@ -697,7 +697,7 @@ interface DraftFormRow {
           class="bg-white rounded-2xl shadow-xl border border-slate-200/80 w-full max-w-md overflow-hidden"
           (click)="$event.stopPropagation()"
         >
-          <div class="px-5 py-3.5 border-b border-slate-200/80 bg-slate-50/90 flex items-center justify-between">
+          <div class="px-5 py-3.5 border-b border-slate-200/80 bg-white flex items-center justify-between">
             <div>
               <h3 class="text-sm font-black text-slate-900">Edit Table Cell</h3>
               <p class="text-[11px] font-medium text-slate-500 truncate max-w-[300px]">
@@ -735,7 +735,7 @@ interface DraftFormRow {
               />
             }
           </div>
-          <div class="px-5 py-3.5 border-t border-slate-200/80 bg-slate-50/90 flex items-center justify-between gap-2">
+          <div class="px-5 py-3.5 border-t border-slate-200/80 bg-white flex items-center justify-between gap-2">
             <button
               type="button"
               (click)="deleteCellValue()"

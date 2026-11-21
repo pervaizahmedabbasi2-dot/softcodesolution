@@ -57,7 +57,7 @@ import {
               <button
                 type="button"
                 (click)="toggleCustomizer()"
-                class="px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-[11px] font-bold cursor-pointer inline-flex items-center gap-1.5 transition-colors"
+                class="px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-[11px] font-bold cursor-pointer inline-flex items-center gap-1.5 transition-colors"
               >
                 <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">{{ showCustomizer() ? 'close' : 'tune' }}</mat-icon>
                 <span>{{ showCustomizer() ? 'Close Field Manager' : 'Add / Delete Form Fields' }}</span>
@@ -71,7 +71,7 @@ import {
                       type="button"
                       (click)="setManagerTab('add')"
                       class="px-3 py-1.5 rounded-lg text-[11px] font-bold cursor-pointer inline-flex items-center gap-1 transition-colors"
-                      [class]="managerTab() === 'add' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
+                      [class]="managerTab() === 'add' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-xs' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'"
                     >
                       <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">add</mat-icon>
                       <span>Add Field</span>
@@ -80,7 +80,7 @@ import {
                       type="button"
                       (click)="setManagerTab('delete')"
                       class="px-3 py-1.5 rounded-lg text-[11px] font-bold cursor-pointer inline-flex items-center gap-1 transition-colors"
-                      [class]="managerTab() === 'delete' ? 'bg-rose-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
+                      [class]="managerTab() === 'delete' ? 'bg-rose-600 text-white' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'"
                     >
                       <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">delete_outline</mat-icon>
                       <span>Delete / Manage Fields</span>
@@ -97,7 +97,7 @@ import {
                             [value]="newLabel()"
                             (input)="newLabel.set($any($event.target).value)"
                             placeholder="e.g. Father Occupation, Bus Stop"
-                            class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none"
+                            class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none"
                           />
                         </div>
                         <div>
@@ -105,7 +105,7 @@ import {
                           <select
                             [value]="newType()"
                             (change)="newType.set($any($event.target).value)"
-                            class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none cursor-pointer"
+                            class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none cursor-pointer"
                           >
                             <option value="text">Text</option>
                             <option value="number">Number</option>
@@ -121,7 +121,7 @@ import {
                           <select
                             [value]="newFormPos()"
                             (change)="newFormPos.set($any($event.target).value)"
-                            class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none cursor-pointer"
+                            class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none cursor-pointer"
                           >
                             @for (opt of formPositionOptions(); track opt.key) {
                               <option [value]="opt.key">{{ opt.label }}</option>
@@ -137,7 +137,7 @@ import {
                               [value]="newOptions()"
                               (input)="newOptions.set($any($event.target).value)"
                               placeholder="e.g. Yes, No, Pending"
-                              class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none"
+                              class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none"
                             />
                           </div>
                         } @else {
@@ -148,7 +148,7 @@ import {
                               [value]="newDefault()"
                               (input)="newDefault.set($any($event.target).value)"
                               placeholder="Optional default"
-                              class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none"
+                              class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none"
                             />
                           </div>
                         }
@@ -175,7 +175,7 @@ import {
                             <select
                               [value]="effectiveSelectedManageValue()"
                               (change)="onSelectManageField($any($event.target).value)"
-                              class="flex-1 min-w-0 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none cursor-pointer"
+                              class="flex-1 min-w-0 px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none cursor-pointer"
                             >
                               @for (mf of manageableFields(); track mf.value) {
                                 <option [value]="mf.value">{{ mf.label }}</option>
@@ -201,12 +201,12 @@ import {
                                 [value]="editColLabel()"
                                 (input)="editColLabel.set($any($event.target).value)"
                                 placeholder="Field name"
-                                class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none"
+                                class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none"
                               />
                               <select
                                 [value]="editColFormPos()"
                                 (change)="editColFormPos.set($any($event.target).value)"
-                                class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none cursor-pointer"
+                                class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:border-slate-400 focus:outline-none cursor-pointer"
                               >
                                 @for (opt of formPositionOptionsFor(selCol.id); track opt.key) {
                                   <option [value]="opt.key">{{ opt.label }}</option>
@@ -239,7 +239,7 @@ import {
                                 <button
                                   type="button"
                                   (click)="restoreField(hf.key)"
-                                  class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-700 text-[10px] font-bold cursor-pointer inline-flex items-center gap-1"
+                                  class="px-2 py-1 rounded-lg bg-white border border-slate-200 hover:bg-emerald-50 hover:text-emerald-700 text-slate-700 text-[10px] font-bold cursor-pointer inline-flex items-center gap-1"
                                   title="Restore field to form"
                                 >
                                   <span>{{ hf.label }}</span>
@@ -378,13 +378,13 @@ export class SchoolCustomFormFieldsComponent {
   readonly inputClass = computed<string>(() =>
     this.inputSurface() === 'white'
       ? 'w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 font-bold text-slate-900 focus:border-indigo-600 focus:outline-none'
-      : 'w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 font-bold text-slate-900 focus:bg-white focus:border-indigo-600 focus:outline-none'
+      : 'w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 font-bold text-slate-900 focus:bg-white focus:border-indigo-600 focus:outline-none'
   );
 
   readonly selectClass = computed<string>(() =>
     this.inputSurface() === 'white'
       ? 'w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 font-bold text-slate-900 focus:border-indigo-600 focus:outline-none cursor-pointer'
-      : 'w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 font-bold text-slate-900 focus:bg-white focus:border-indigo-600 focus:outline-none cursor-pointer'
+      : 'w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 font-bold text-slate-900 focus:bg-white focus:border-indigo-600 focus:outline-none cursor-pointer'
   );
 
   readonly formCustomColumns = computed<SchoolCustomColumn[]>(() => {

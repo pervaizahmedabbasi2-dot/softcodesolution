@@ -1750,3 +1750,48 @@ input[type="password"]::-webkit-contacts-auto-fill-button {
   }
 }
 
+/* ==========================================================================
+   Superadmin & School Business Unified Pure-White Dashboard Theme
+   Scoped strictly to Superadmin & School workspaces (preserves Hero cards & other businesses)
+   ========================================================================== */
+.superadmin-white-theme .scs-canvas-3d,
+.superadmin-white-theme .scs-sidebar-hero-bg,
+.school-white-theme .scs-canvas-3d,
+.school-white-theme .scs-sidebar-hero-bg {
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+}
+
+.superadmin-white-theme .scs-surface-3d,
+.superadmin-white-theme .scs-tile-3d,
+.superadmin-white-theme .apple-card:not(.modal-white-card):not([class*="from-"]):not([class*="bg-indigo-"]):not([class*="bg-emerald-"]):not([class*="bg-amber-"]):not([class*="bg-rose-"]),
+.school-white-theme .scs-surface-3d,
+.school-white-theme .scs-tile-3d,
+.school-white-theme .apple-card:not(.modal-white-card):not([class*="from-"]):not([class*="bg-slate-9"]):not([class*="bg-indigo-"]):not([class*="bg-emerald-"]):not([class*="bg-amber-"]):not([class*="bg-rose-"]) {
+  background: #ffffff !important;
+  border-color: rgba(226, 232, 240, 0.9);
+}
+
+.superadmin-white-theme app-dashboard-business-suites thead,
+.superadmin-white-theme app-dashboard-business-suites .bg-slate-50,
+.superadmin-white-theme app-dashboard-business-suites .bg-slate-100:not(button):not(span),
+.school-white-theme app-analytics-dashboard thead,
+.school-white-theme app-analytics-dashboard thead tr,
+.school-white-theme app-analytics-dashboard [class*="from-slate-50"],
+.school-white-theme app-analytics-dashboard .bg-slate-100,
+.school-white-theme app-audit-reconciliation-trends [class*="from-slate-50"],
+.school-white-theme app-audit-reconciliation-trends .bg-slate-100:not(.rounded-full),
+.school-white-theme app-audit-reconciliation-trends [class*="bg-slate-50"],
+.school-white-theme app-data-table thead,
+.school-white-theme app-data-table [class*="bg-slate-50"],
+.school-white-theme app-data-table .bg-slate-100:not(button):not(span),
+.school-white-theme app-passkey-manager [class*="from-slate-50"],
+.school-white-theme app-passkey-manager [class*="bg-slate-50"] {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+}
+
+.superadmin-white-theme app-pagination-bar > div,
+.school-white-theme app-pagination-bar > div {
+  background-color: #ffffff !important;
+}

@@ -76,18 +76,18 @@
             <p class="text-xs text-slate-500 font-mono mt-0.5">{{ admin.email }} • <span class="text-slate-800 font-bold">{{ admin.role }}</span></p>
             
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4 pt-3 border-t border-slate-100 text-xs">
-              <div class="bg-slate-50/80 p-2.5 rounded-xl border border-slate-100">
+              <div class="bg-white p-2.5 rounded-xl border border-slate-200/80">
                 <span class="text-slate-400 block text-[10px] font-bold uppercase tracking-wider">Hardware Token</span>
                 <span class="font-bold text-slate-800 flex items-center gap-1 mt-0.5">
                   <lucide-icon [name]="icons.Key" class="w-3.5 h-3.5 text-indigo-600"></lucide-icon>
                   {{ admin.mfaHardwareKey }}
                 </span>
               </div>
-              <div class="bg-slate-50/80 p-2.5 rounded-xl border border-slate-100">
+              <div class="bg-white p-2.5 rounded-xl border border-slate-200/80">
                 <span class="text-slate-400 block text-[10px] font-bold uppercase tracking-wider">Allowed IP Subnets</span>
                 <span class="font-mono text-slate-800 text-[11px] font-bold block mt-0.5">{{ admin.ipWhitelist }}</span>
               </div>
-              <div class="bg-slate-50/80 p-2.5 rounded-xl border border-slate-100">
+              <div class="bg-white p-2.5 rounded-xl border border-slate-200/80">
                 <span class="text-slate-400 block text-[10px] font-bold uppercase tracking-wider">Origin Session</span>
                 <span class="text-slate-800 font-bold block mt-0.5">{{ admin.lastLoginIp }}</span>
               </div>
