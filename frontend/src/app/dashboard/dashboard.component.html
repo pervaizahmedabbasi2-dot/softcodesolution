@@ -135,11 +135,8 @@
        <!-- ========================================== -->
        <div *ngIf="isSchoolPreviewActive" class="space-y-6 animate-fade-in">
          
-         <!-- Business Identity Card in Sidebar (Frosted Emerald-White Apple Standard) -->
-         <div class="p-3.5 rounded-[22px] bg-gradient-to-br from-white/95 via-emerald-50/50 to-slate-50/90 text-slate-900 border border-white/80 shadow-[0_14px_34px_-10px_rgba(16,185,129,0.22),0_4px_12px_-4px_rgba(0,0,0,0.05),inset_0_1px_2px_rgba(255,255,255,0.95)] backdrop-blur-2xl relative overflow-hidden">
-           <div class="absolute inset-0 bg-[radial-gradient(#8080800c_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none"></div>
-           <div class="absolute -right-8 -top-8 w-28 h-28 bg-gradient-to-br from-emerald-200/45 via-teal-100/30 to-transparent rounded-full blur-2xl pointer-events-none"></div>
-           <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/90 to-transparent pointer-events-none"></div>
+         <!-- Business Identity Card in Sidebar -->
+         <div class="p-3.5 rounded-[22px] scs-tile-3d text-slate-900 relative overflow-hidden">
            <div class="flex items-center gap-2.5 relative z-10">
              <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 via-emerald-600 to-teal-600 text-white flex items-center justify-center shrink-0 border border-white/30 shadow-[0_8px_18px_-4px_rgba(16,185,129,0.42),inset_0_1px_2px_rgba(255,255,255,0.4)]">
                <lucide-icon [name]="icons.GraduationCap" class="w-4 h-4"></lucide-icon>
@@ -400,11 +397,8 @@
        <!-- ========================================== -->
        <div *ngIf="!isSchoolPreviewActive && !previewMode" class="space-y-6 animate-fade-in">
 
-         <!-- Business Identity Card in Sidebar (Frosted Emerald-White Apple Standard) -->
-         <div class="p-3.5 rounded-[22px] bg-gradient-to-br from-white/95 via-emerald-50/50 to-slate-50/90 text-slate-900 border border-white/80 shadow-[0_14px_34px_-10px_rgba(16,185,129,0.22),0_4px_12px_-4px_rgba(0,0,0,0.05),inset_0_1px_2px_rgba(255,255,255,0.95)] backdrop-blur-2xl relative overflow-hidden">
-           <div class="absolute inset-0 bg-[radial-gradient(#8080800c_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none"></div>
-           <div class="absolute -right-8 -top-8 w-28 h-28 bg-gradient-to-br from-emerald-200/45 via-teal-100/30 to-transparent rounded-full blur-2xl pointer-events-none"></div>
-           <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/90 to-transparent pointer-events-none"></div>
+         <!-- Business Identity Card in Sidebar -->
+         <div class="p-3.5 rounded-[22px] scs-tile-3d text-slate-900 relative overflow-hidden">
            <div class="flex items-center gap-2.5 relative z-10">
              <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 via-emerald-600 to-teal-600 text-white flex items-center justify-center shrink-0 border border-white/30 shadow-[0_8px_18px_-4px_rgba(16,185,129,0.42),inset_0_1px_2px_rgba(255,255,255,0.4)]">
                <lucide-icon [name]="icons.ShieldCheck" class="w-4 h-4"></lucide-icon>
@@ -985,7 +979,7 @@
               <!-- TAB 1: CURRENCY & COUNTRY WITH COUNTRY STICKERS LOGOS -->
               <div *ngIf="activeLocalizationTab === 'currency'" class="space-y-2 animate-fade-in">
                 <!-- Active Summary Pill -->
-                <div class="flex items-center justify-between p-2 rounded-xl bg-indigo-50/70 border border-indigo-100">
+                <div class="flex items-center justify-between p-2 rounded-xl bg-white border border-slate-200">
                   <div class="flex items-center gap-2 min-w-0">
                     <img [src]="getFlagUrl(loc.currentCountry().code)"
                          [alt]="loc.currentCountry().name"
@@ -2675,12 +2669,9 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div *ngFor="let r of selectedBusinessForMatrix?.roles || []"
-               class="rounded-2xl border p-5 transition-all flex flex-col justify-between gap-4"
+               class="rounded-2xl border p-5 transition-all flex flex-col justify-between gap-4 bg-white"
                [class.border-indigo-500]="activeSimulatedRole === r.key"
-               [class.bg-indigo-50/20]="activeSimulatedRole === r.key && !(userRole === 'SUPER_ADMIN' && !previewMode)"
-               [class.border-slate-200]="activeSimulatedRole !== r.key"
-               [class.bg-slate-50/50]="activeSimulatedRole !== r.key && !(userRole === 'SUPER_ADMIN' && !previewMode)"
-               [class.bg-white]="userRole === 'SUPER_ADMIN' && !previewMode">
+               [class.border-slate-200]="activeSimulatedRole !== r.key">
             
             <div>
               <div class="flex items-center justify-between gap-2 mb-2">
@@ -2741,7 +2732,7 @@
     </div>
 
     <!-- Footer -->
-    <div class="p-4 border-t border-emerald-100/80 bg-emerald-50/40 flex items-center justify-end gap-3">
+    <div class="p-4 border-t border-slate-200/80 bg-white flex items-center justify-end gap-3">
       <button (click)="closeRbacMatrix()" class="px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-bold hover:from-emerald-500 hover:to-teal-500 transition-colors cursor-pointer">
         Close Matrix
       </button>
@@ -2796,7 +2787,7 @@
 <!-- CLIENT PORTAL HELP & SUPPORT / COMPLAINT DRAWER -->
 <div *ngIf="clientSupportDrawerOpen" class="fixed inset-0 z-[125000] bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4" (click)="closeClientSupportDrawer()">
   <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-3xl w-full max-h-[88vh] flex flex-col overflow-hidden" (click)="$event.stopPropagation()">
-    <div class="p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+    <div class="p-5 border-b border-slate-200 flex items-center justify-between bg-white">
       <div>
         <h3 class="text-lg font-extrabold text-slate-900">Client Support &amp; Issue Desk</h3>
         <p class="text-xs text-slate-500">Raise a complaint, hardware request, or billing inquiry directly to SoftCodeSolution SuperAdmin.</p>
@@ -2812,7 +2803,7 @@
       </div>
 
       <!-- Submit New Complaint / Support Ticket -->
-      <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-4">
+      <div class="p-5 rounded-2xl bg-white border border-slate-200 space-y-4">
         <p class="text-xs font-extrabold uppercase tracking-wider text-slate-700">New Ticket / Complaint</p>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <select [(ngModel)]="clientTicketDraft.subject" class="px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold">

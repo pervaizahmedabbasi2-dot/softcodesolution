@@ -30,14 +30,14 @@
         </div>
 
         <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 shrink-0">
-          <div class="inline-flex items-center p-1 rounded-xl bg-slate-100/90 border border-slate-200/80 shadow-2xs">
+          <div class="inline-flex items-center p-1 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
             <button
               *ngFor="let period of periods"
               type="button"
               (click)="selectPeriod(period)"
               class="px-3.5 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer"
-              [class.bg-white]="selectedPeriod === period"
-              [class.text-indigo-700]="selectedPeriod === period"
+              [class.bg-slate-900]="selectedPeriod === period"
+              [class.text-white]="selectedPeriod === period"
               [class.shadow-xs]="selectedPeriod === period"
               [class.text-slate-600]="selectedPeriod !== period"
               [class.hover:text-slate-900]="selectedPeriod !== period">
@@ -50,72 +50,72 @@
           </button>
         </div>
       </div>
+    </div>
+  </div>
 
-      <!-- Core Financial KPIs (3D White Cards) -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <!-- Card 1: ARR (Indigo 3D White Card) -->
-        <div class="rounded-2xl p-5 border border-slate-200/90 shadow-[0_4px_16px_-2px_rgba(79,70,229,0.12),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_14px_28px_-4px_rgba(79,70,229,0.25),0_4px_10px_-2px_rgba(79,70,229,0.12)] hover:-translate-y-1 hover:border-indigo-300/80 transition-all duration-300 ease-out bg-gradient-to-b from-white via-white to-slate-50/80 group flex flex-col justify-between">
-          <div>
-            <div class="flex items-center justify-between mb-3">
-              <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-indigo-600 transition-colors">Annual Recurring Rev (ARR)</span>
-              <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-600 to-blue-600 text-white flex items-center justify-center shadow-md shadow-indigo-500/30 group-hover:scale-105 transition-transform border border-white/30 shrink-0">
-                <lucide-icon [name]="icons.TrendingUp" class="w-5 h-5 stroke-[2.2] drop-shadow-xs"></lucide-icon>
-              </div>
-            </div>
-            <h2 class="text-3xl font-black text-slate-900 tracking-tight tabular-nums block leading-none">$12.4M</h2>
-          </div>
-          <div class="flex items-center gap-1.5 mt-3 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 w-fit px-2.5 py-0.5 rounded-lg shadow-2xs">
-            <lucide-icon [name]="icons.ArrowUpRight" class="w-3.5 h-3.5"></lucide-icon> 24.5% YoY
+  <!-- Core Financial KPIs (Compliance Plain White Cards) -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <!-- Card 1: ARR -->
+    <div class="rounded-2xl p-5 scs-tile-3d border border-slate-200/90 hover:-translate-y-1 transition-all duration-300 ease-out group flex flex-col justify-between">
+      <div>
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 transition-colors">Annual Recurring Rev (ARR)</span>
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-600 to-blue-600 text-white flex items-center justify-center shadow-md shadow-indigo-500/30 group-hover:scale-105 transition-transform border border-white/30 shrink-0">
+            <lucide-icon [name]="icons.TrendingUp" class="w-5 h-5 stroke-[2.2] drop-shadow-xs"></lucide-icon>
           </div>
         </div>
+        <h2 class="text-3xl font-black text-slate-900 tracking-tight tabular-nums block leading-none">$12.4M</h2>
+      </div>
+      <div class="flex items-center gap-1.5 mt-3 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 w-fit px-2.5 py-0.5 rounded-lg shadow-2xs">
+        <lucide-icon [name]="icons.ArrowUpRight" class="w-3.5 h-3.5"></lucide-icon> 24.5% YoY
+      </div>
+    </div>
 
-        <!-- Card 2: NRR (Cyan 3D White Card) -->
-        <div class="rounded-2xl p-5 border border-slate-200/90 shadow-[0_4px_16px_-2px_rgba(6,182,212,0.12),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_14px_28px_-4px_rgba(6,182,212,0.25),0_4px_10px_-2px_rgba(6,182,212,0.12)] hover:-translate-y-1 hover:border-cyan-300/80 transition-all duration-300 ease-out bg-gradient-to-b from-white via-white to-slate-50/80 group flex flex-col justify-between">
-          <div>
-            <div class="flex items-center justify-between mb-3">
-              <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-cyan-600 transition-colors">Net Revenue Retention (NRR)</span>
-              <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-cyan-500 via-cyan-600 to-blue-600 text-white flex items-center justify-center shadow-md shadow-cyan-500/30 group-hover:scale-105 transition-transform border border-white/30 shrink-0">
-                <lucide-icon [name]="icons.Activity" class="w-5 h-5 stroke-[2.2] drop-shadow-xs"></lucide-icon>
-              </div>
-            </div>
-            <h2 class="text-3xl font-black text-slate-900 tracking-tight tabular-nums block leading-none">132%</h2>
-          </div>
-          <div class="flex items-center gap-1.5 mt-3 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 w-fit px-2.5 py-0.5 rounded-lg shadow-2xs">
-            <lucide-icon [name]="icons.ArrowUpRight" class="w-3.5 h-3.5"></lucide-icon> Top Quartile
+    <!-- Card 2: NRR -->
+    <div class="rounded-2xl p-5 scs-tile-3d border border-slate-200/90 hover:-translate-y-1 transition-all duration-300 ease-out group flex flex-col justify-between">
+      <div>
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 transition-colors">Net Revenue Retention (NRR)</span>
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-cyan-500 via-cyan-600 to-blue-600 text-white flex items-center justify-center shadow-md shadow-cyan-500/30 group-hover:scale-105 transition-transform border border-white/30 shrink-0">
+            <lucide-icon [name]="icons.Activity" class="w-5 h-5 stroke-[2.2] drop-shadow-xs"></lucide-icon>
           </div>
         </div>
+        <h2 class="text-3xl font-black text-slate-900 tracking-tight tabular-nums block leading-none">132%</h2>
+      </div>
+      <div class="flex items-center gap-1.5 mt-3 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 w-fit px-2.5 py-0.5 rounded-lg shadow-2xs">
+        <lucide-icon [name]="icons.ArrowUpRight" class="w-3.5 h-3.5"></lucide-icon> Top Quartile
+      </div>
+    </div>
 
-        <!-- Card 3: Churn Rate (Rose 3D White Card) -->
-        <div class="rounded-2xl p-5 border border-slate-200/90 shadow-[0_4px_16px_-2px_rgba(244,63,94,0.12),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_14px_28px_-4px_rgba(244,63,94,0.25),0_4px_10px_-2px_rgba(244,63,94,0.12)] hover:-translate-y-1 hover:border-rose-300/80 transition-all duration-300 ease-out bg-gradient-to-b from-white via-white to-slate-50/80 group flex flex-col justify-between">
-          <div>
-            <div class="flex items-center justify-between mb-3">
-              <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-rose-600 transition-colors">Gross Churn Rate</span>
-              <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-rose-500 via-rose-600 to-pink-600 text-white flex items-center justify-center shadow-md shadow-rose-500/30 group-hover:scale-105 transition-transform border border-white/30 shrink-0">
-                <lucide-icon [name]="icons.ArrowDownRight" class="w-5 h-5 stroke-[2.2] drop-shadow-xs"></lucide-icon>
-              </div>
-            </div>
-            <h2 class="text-3xl font-black text-slate-900 tracking-tight tabular-nums block leading-none">1.2%</h2>
-          </div>
-          <div class="flex items-center gap-1.5 mt-3 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 w-fit px-2.5 py-0.5 rounded-lg shadow-2xs">
-            <lucide-icon [name]="icons.ArrowDownRight" class="w-3.5 h-3.5"></lucide-icon> -0.4% QoQ
+    <!-- Card 3: Churn Rate -->
+    <div class="rounded-2xl p-5 scs-tile-3d border border-slate-200/90 hover:-translate-y-1 transition-all duration-300 ease-out group flex flex-col justify-between">
+      <div>
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 transition-colors">Gross Churn Rate</span>
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-rose-500 via-rose-600 to-pink-600 text-white flex items-center justify-center shadow-md shadow-rose-500/30 group-hover:scale-105 transition-transform border border-white/30 shrink-0">
+            <lucide-icon [name]="icons.ArrowDownRight" class="w-5 h-5 stroke-[2.2] drop-shadow-xs"></lucide-icon>
           </div>
         </div>
+        <h2 class="text-3xl font-black text-slate-900 tracking-tight tabular-nums block leading-none">1.2%</h2>
+      </div>
+      <div class="flex items-center gap-1.5 mt-3 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 w-fit px-2.5 py-0.5 rounded-lg shadow-2xs">
+        <lucide-icon [name]="icons.ArrowDownRight" class="w-3.5 h-3.5"></lucide-icon> -0.4% QoQ
+      </div>
+    </div>
 
-        <!-- Card 4: ARPA (Emerald 3D White Card) -->
-        <div class="rounded-2xl p-5 border border-slate-200/90 shadow-[0_4px_16px_-2px_rgba(16,185,129,0.12),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_14px_28px_-4px_rgba(16,185,129,0.25),0_4px_10px_-2px_rgba(16,185,129,0.12)] hover:-translate-y-1 hover:border-emerald-300/80 transition-all duration-300 ease-out bg-gradient-to-b from-white via-white to-slate-50/80 group flex flex-col justify-between">
-          <div>
-            <div class="flex items-center justify-between mb-3">
-              <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-emerald-600 transition-colors">Avg Revenue Per Acct (ARPA)</span>
-              <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 via-emerald-600 to-teal-600 text-white flex items-center justify-center shadow-md shadow-emerald-500/30 group-hover:scale-105 transition-transform border border-white/30 shrink-0">
-                <lucide-icon [name]="icons.CreditCard" class="w-5 h-5 stroke-[2.2] drop-shadow-xs"></lucide-icon>
-              </div>
-            </div>
-            <h2 class="text-3xl font-black text-slate-900 tracking-tight tabular-nums block leading-none">$8,450</h2>
-          </div>
-          <div class="flex items-center gap-1.5 mt-3 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 w-fit px-2.5 py-0.5 rounded-lg shadow-2xs">
-            <lucide-icon [name]="icons.ArrowUpRight" class="w-3.5 h-3.5"></lucide-icon> Expansion Tier
+    <!-- Card 4: ARPA -->
+    <div class="rounded-2xl p-5 scs-tile-3d border border-slate-200/90 hover:-translate-y-1 transition-all duration-300 ease-out group flex flex-col justify-between">
+      <div>
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 transition-colors">Avg Revenue Per Acct (ARPA)</span>
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 via-emerald-600 to-teal-600 text-white flex items-center justify-center shadow-md shadow-emerald-500/30 group-hover:scale-105 transition-transform border border-white/30 shrink-0">
+            <lucide-icon [name]="icons.CreditCard" class="w-5 h-5 stroke-[2.2] drop-shadow-xs"></lucide-icon>
           </div>
         </div>
+        <h2 class="text-3xl font-black text-slate-900 tracking-tight tabular-nums block leading-none">$8,450</h2>
+      </div>
+      <div class="flex items-center gap-1.5 mt-3 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 w-fit px-2.5 py-0.5 rounded-lg shadow-2xs">
+        <lucide-icon [name]="icons.ArrowUpRight" class="w-3.5 h-3.5"></lucide-icon> Expansion Tier
       </div>
     </div>
   </div>
@@ -124,8 +124,8 @@
     <!-- Charts Section -->
     <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
       
-      <!-- MRR Growth Chart (3D White Card) -->
-      <div class="xl:col-span-2 scs-surface-3d rounded-3xl shadow-[0_4px_16px_-2px_rgba(79,70,229,0.10),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_12px_24px_-4px_rgba(79,70,229,0.18)] transition-all duration-300 p-6">
+      <!-- MRR Growth Chart -->
+      <div class="xl:col-span-2 scs-surface-3d rounded-3xl p-6">
         <div class="flex justify-between items-center mb-6">
           <div class="flex items-center gap-2.5">
             <div class="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center shadow-2xs">

@@ -3,66 +3,68 @@
   <!-- ========================================== -->
   <!-- 1. EXECUTIVE HERO STRIP (APPLE macOS VIBE) -->
   <!-- ========================================== -->
-  <div *ngIf="activeBusiness" class="rounded-[28px] p-5 sm:p-7 text-slate-900 border border-white/80 shadow-[0_20px_50px_-12px_rgba(16,185,129,0.18),0_8px_20px_-6px_rgba(0,0,0,0.06),inset_0_1px_2px_rgba(255,255,255,0.95)] bg-gradient-to-br from-white/95 via-emerald-50/40 to-slate-50/90 backdrop-blur-2xl relative overflow-hidden transition-all duration-300 group w-full max-w-full min-w-0">
-    <!-- Subtle Architectural 3D Grid & Specular Ambient Glow -->
-    <div class="absolute inset-0 bg-[radial-gradient(#8080800c_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none"></div>
-    <div class="absolute -right-16 -top-16 w-80 h-80 bg-gradient-to-br from-emerald-200/40 via-teal-100/30 to-transparent rounded-full blur-3xl pointer-events-none group-hover:scale-110 transition-transform duration-700"></div>
-    <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent"></div>
+  <ng-container *ngIf="activeBusiness">
+    <div class="rounded-[28px] p-5 sm:p-7 text-slate-900 border border-white/80 shadow-[0_20px_50px_-12px_rgba(16,185,129,0.18),0_8px_20px_-6px_rgba(0,0,0,0.06),inset_0_1px_2px_rgba(255,255,255,0.95)] bg-gradient-to-br from-white/95 via-emerald-50/40 to-slate-50/90 backdrop-blur-2xl relative overflow-hidden transition-all duration-300 group w-full max-w-full min-w-0">
+      <!-- Subtle Architectural 3D Grid & Specular Ambient Glow -->
+      <div class="absolute inset-0 bg-[radial-gradient(#8080800c_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none"></div>
+      <div class="absolute -right-16 -top-16 w-80 h-80 bg-gradient-to-br from-emerald-200/40 via-teal-100/30 to-transparent rounded-full blur-3xl pointer-events-none group-hover:scale-110 transition-transform duration-700"></div>
+      <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent"></div>
 
-    <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6 min-w-0 max-w-full">
-      <div class="space-y-3 max-w-3xl min-w-0 flex-1 max-w-full">
-        <!-- Metadata Row -->
-        <div class="flex flex-wrap items-center gap-2 text-xs min-w-0 max-w-full">
-          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-700 border border-indigo-300/60 shadow-[inset_0_1px_1px_rgba(255,255,255,0.8)] text-[10px] font-black uppercase tracking-wider backdrop-blur-md shrink-0">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            {{ activeBusiness.sector }} SECTOR
-          </span>
-          <span class="px-3 py-1 rounded-full bg-slate-200/60 border border-slate-300/60 text-slate-700 text-[10px] font-mono uppercase font-bold tracking-wider backdrop-blur-md shrink-0">
-            ID: {{ activeBusiness.id }}
-          </span>
-          <span class="px-3 py-1 rounded-full bg-amber-500/10 border border-amber-300/60 text-amber-800 text-[10px] font-black uppercase tracking-wider backdrop-blur-md shrink-0">
-            {{ getRoleLabel() }}
-          </span>
-          <span *ngIf="activeBusiness.id === 'travel_tourism'" class="px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-300/60 text-cyan-800 font-bold text-[10px] backdrop-blur-md shrink-0">
-            ★ #16 Core Suite
-          </span>
+      <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6 min-w-0 max-w-full">
+        <div class="space-y-3 max-w-3xl min-w-0 flex-1 max-w-full">
+          <!-- Metadata Row -->
+          <div class="flex flex-wrap items-center gap-2 text-xs min-w-0 max-w-full">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-700 border border-indigo-300/60 shadow-[inset_0_1px_1px_rgba(255,255,255,0.8)] text-[10px] font-black uppercase tracking-wider backdrop-blur-md shrink-0">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              {{ activeBusiness.sector }} SECTOR
+            </span>
+            <span class="px-3 py-1 rounded-full bg-slate-200/60 border border-slate-300/60 text-slate-700 text-[10px] font-mono uppercase font-bold tracking-wider backdrop-blur-md shrink-0">
+              ID: {{ activeBusiness.id }}
+            </span>
+            <span class="px-3 py-1 rounded-full bg-amber-500/10 border border-amber-300/60 text-amber-800 text-[10px] font-black uppercase tracking-wider backdrop-blur-md shrink-0">
+              {{ getRoleLabel() }}
+            </span>
+            <span *ngIf="activeBusiness.id === 'travel_tourism'" class="px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-300/60 text-cyan-800 font-bold text-[10px] backdrop-blur-md shrink-0">
+              ★ #16 Core Suite
+            </span>
+          </div>
+
+          <!-- Title & Description -->
+          <h1 class="text-3xl sm:text-4xl font-black tracking-tight text-slate-900 leading-tight break-words min-w-0 max-w-full">
+            {{ activeBusiness.name }}<span class="text-indigo-600">.</span>
+          </h1>
+          <p class="text-indigo-600 text-sm sm:text-base font-bold break-words max-w-full">{{ activeBusiness.tagline }}</p>
+          <p class="text-slate-600 text-xs sm:text-sm font-medium leading-relaxed max-w-2xl break-words max-w-full">{{ activeBusiness.description }}</p>
         </div>
 
-        <!-- Title & Description -->
-        <h1 class="text-3xl sm:text-4xl font-black tracking-tight text-slate-900 leading-tight break-words min-w-0 max-w-full">
-          {{ activeBusiness.name }}<span class="text-indigo-600">.</span>
-        </h1>
-        <p class="text-indigo-600 text-sm sm:text-base font-bold break-words max-w-full">{{ activeBusiness.tagline }}</p>
-        <p class="text-slate-600 text-xs sm:text-sm font-medium leading-relaxed max-w-2xl break-words max-w-full">{{ activeBusiness.description }}</p>
-      </div>
+        <!-- Quick Action Controls -->
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+          <button *ngIf="activeBusiness.dedicatedHubView"
+                  (click)="openDedicatedHub(activeBusiness.dedicatedHubView!)"
+                  class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl bg-white/80 hover:bg-white text-slate-900 text-xs font-black transition-all duration-200 border border-slate-200/90 shadow-[0_4px_12px_rgba(0,0,0,0.04),inset_0_1px_1px_rgba(255,255,255,0.9)] active:scale-95 cursor-pointer">
+            <lucide-icon [name]="icons.ExternalLink" class="w-4 h-4 text-indigo-600"></lucide-icon>
+            <span>Dedicated Live Console</span>
+          </button>
 
-      <!-- Quick Action Controls -->
-      <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
-        <button *ngIf="activeBusiness.dedicatedHubView"
-                (click)="openDedicatedHub(activeBusiness.dedicatedHubView!)"
-                class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl bg-white/80 hover:bg-white text-slate-900 text-xs font-black transition-all duration-200 border border-slate-200/90 shadow-[0_4px_12px_rgba(0,0,0,0.04),inset_0_1px_1px_rgba(255,255,255,0.9)] active:scale-95 cursor-pointer">
-          <lucide-icon [name]="icons.ExternalLink" class="w-4 h-4 text-indigo-600"></lucide-icon>
-          <span>Dedicated Live Console</span>
-        </button>
-
-        <button (click)="showAddRecordModal = true"
-                class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-b from-indigo-600 via-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white text-xs font-black transition-all duration-200 shadow-[0_10px_20px_-5px_rgba(79,70,229,0.4),inset_0_1px_1px_rgba(255,255,255,0.4)] border border-indigo-400/30 active:scale-95 cursor-pointer">
-          <lucide-icon [name]="icons.Plus" class="w-4 h-4"></lucide-icon>
-          <span>+ New Operation</span>
-        </button>
+          <button (click)="showAddRecordModal = true"
+                  class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-b from-indigo-600 via-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white text-xs font-black transition-all duration-200 shadow-[0_10px_20px_-5px_rgba(79,70,229,0.4),inset_0_1px_1px_rgba(255,255,255,0.4)] border border-indigo-400/30 active:scale-95 cursor-pointer">
+            <lucide-icon [name]="icons.Plus" class="w-4 h-4"></lucide-icon>
+            <span>+ New Operation</span>
+          </button>
+        </div>
       </div>
     </div>
 
     <!-- Live Executive Metrics (Bento KPI Grid) -->
-    <div class="mt-8 pt-6 border-t border-slate-100 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
       <div *ngFor="let kpi of activeBusiness.kpis"
-           class="p-4 rounded-2xl bg-gradient-to-b from-white via-white to-slate-50/80 border border-slate-200/90 shadow-[0_4px_14px_-2px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_24px_-4px_rgba(79,70,229,0.18)] hover:border-indigo-300 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group">
-        <p class="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 group-hover:text-indigo-600 transition-colors truncate">{{ kpi.label }}</p>
+           class="p-4 rounded-2xl scs-tile-3d flex flex-col justify-between group">
+        <p class="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 transition-colors truncate">{{ kpi.label }}</p>
         <p class="text-2xl font-black tracking-tight text-slate-900 mt-1 tabular-nums">{{ kpi.value }}</p>
         <p class="text-[11px] font-semibold text-slate-500 mt-1 truncate">{{ kpi.subtext }}</p>
       </div>
     </div>
-  </div>
+  </ng-container>
 
   <!-- ================================================= -->
   <!-- 2. BUSINESS CATALOG & SECTOR NAVIGATOR (iOS TABS) -->
@@ -83,7 +85,7 @@
         <lucide-icon [name]="icons.Search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></lucide-icon>
         <input [(ngModel)]="searchQuery"
                placeholder="Search businesses, modules (POS, Tax, EMR)..."
-               class="w-full pl-10 pr-4 py-2.5 text-xs rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium" />
+               class="w-full pl-10 pr-4 py-2.5 text-xs rounded-xl bg-white border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium" />
       </div>
     </div>
 
@@ -91,13 +93,15 @@
     <div class="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
       <button *ngFor="let s of sectors"
               (click)="selectedSector = s.id"
-              class="px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer"
+              class="px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer border"
               [class.bg-slate-900]="selectedSector === s.id"
+              [class.border-slate-900]="selectedSector === s.id"
               [class.text-white]="selectedSector === s.id"
               [class.shadow-sm]="selectedSector === s.id"
-              [class.bg-slate-100]="selectedSector !== s.id"
+              [class.bg-white]="selectedSector !== s.id"
+              [class.border-slate-200]="selectedSector !== s.id"
               [class.text-slate-600]="selectedSector !== s.id"
-              [class.hover:bg-slate-200]="selectedSector !== s.id">
+              [class.hover:bg-slate-50]="selectedSector !== s.id">
         {{ s.label }}
       </button>
     </div>
@@ -106,28 +110,18 @@
     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5 max-h-60 overflow-y-auto pr-1 sidebar-scroll">
       <button *ngFor="let b of filteredBusinesses; let i = index"
               (click)="selectBusiness(b.id)"
-              class="p-3 rounded-2xl text-left border text-xs transition-all duration-200 flex flex-col justify-between group cursor-pointer relative overflow-hidden shadow-2xs hover:-translate-y-0.5 active:translate-y-0"
-              [class.border-indigo-600]="activeBusiness.id === b.id"
-              [class.bg-indigo-50/90]="activeBusiness.id === b.id"
+              class="p-3 rounded-2xl text-left border text-xs flex flex-col justify-between group cursor-pointer relative overflow-hidden scs-tile-3d"
+              [class.border-slate-900]="activeBusiness.id === b.id"
               [class.ring-2]="activeBusiness.id === b.id"
-              [class.ring-indigo-500/20]="activeBusiness.id === b.id"
-              [class.shadow-md]="activeBusiness.id === b.id"
-              [class.shadow-indigo-500/10]="activeBusiness.id === b.id"
-              [class.border-slate-200/90]="activeBusiness.id !== b.id"
-              [class.bg-gradient-to-b]="activeBusiness.id !== b.id"
-              [class.from-white]="activeBusiness.id !== b.id"
-              [class.via-white]="activeBusiness.id !== b.id"
-              [class.to-slate-50/80]="activeBusiness.id !== b.id"
-              [class.hover:border-indigo-300]="activeBusiness.id !== b.id"
-              [class.hover:shadow-md]="activeBusiness.id !== b.id">
+              [class.ring-slate-200]="activeBusiness.id === b.id">
         <div>
           <div class="flex items-center justify-between mb-1.5">
-            <span class="text-[10px] font-mono font-bold text-slate-400 group-hover:text-indigo-600 transition-colors">
+            <span class="text-[10px] font-mono font-bold text-slate-400 transition-colors">
               #{{ b.id === 'travel_tourism' ? '16 ★' : (i + 1) }}
             </span>
             <span *ngIf="b.dedicatedHubView" class="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-emerald-200 shadow-2xs" title="Dedicated Hub Live"></span>
           </div>
-          <p class="font-extrabold text-slate-900 leading-tight line-clamp-1 group-hover:text-indigo-600 transition-colors">
+          <p class="font-extrabold text-slate-900 leading-tight line-clamp-1 transition-colors">
             {{ b.name }}
           </p>
         </div>
@@ -153,7 +147,7 @@
   <div *ngIf="activeBusiness" class="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] space-y-6">
     
     <!-- Integrated Enterprise Modules Badges -->
-    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-3">
+    <div class="bg-white p-4 rounded-2xl border border-slate-200/80 space-y-3">
       <div class="flex items-center justify-between text-xs font-bold text-slate-700">
         <div class="flex items-center gap-2">
           <lucide-icon [name]="icons.Boxes" class="w-4 h-4 text-indigo-600"></lucide-icon>
@@ -227,7 +221,7 @@
 
         <!-- Mobile Cards Grid (Mobile View) -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 md:hidden">
-          <div *ngFor="let rec of displayedRecords" class="rounded-2xl border border-slate-200/90 p-4 bg-gradient-to-b from-white via-white to-slate-50/80 shadow-[0_4px_14px_-2px_rgba(0,0,0,0.04)] hover:shadow-[0_10px_20px_-3px_rgba(79,70,229,0.15)] hover:border-indigo-300 hover:-translate-y-0.5 transition-all duration-300 space-y-3">
+          <div *ngFor="let rec of displayedRecords" class="rounded-2xl p-4 scs-tile-3d space-y-3">
             <div class="flex items-center justify-between gap-2">
               <span class="font-mono text-xs font-bold text-indigo-900 bg-indigo-50 px-2.5 py-0.5 rounded-lg border border-indigo-100">{{ rec.code }}</span>
               <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider"
@@ -250,7 +244,7 @@
               </p>
             </div>
 
-            <div class="grid grid-cols-2 gap-2 text-xs bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+            <div class="grid grid-cols-2 gap-2 text-xs bg-white p-2.5 rounded-xl border border-slate-200/80">
               <div>
                 <span class="text-[10px] text-slate-400 font-bold uppercase block">Value</span>
                 <span class="font-mono font-black text-slate-900">${{ rec.amount | number:'1.0-0' }}</span>
@@ -273,7 +267,7 @@
         <!-- Desktop Table (Desktop View) -->
         <div class="hidden md:block overflow-x-auto">
           <table class="w-full text-left text-xs text-slate-700">
-            <thead class="bg-slate-50 text-slate-500 font-extrabold uppercase text-[10px] tracking-wider border-b border-slate-200">
+            <thead class="bg-white text-slate-500 font-extrabold uppercase text-[10px] tracking-wider border-b border-slate-200">
               <tr>
                 <th class="px-4 py-3.5">Code / Ref</th>
                 <th class="px-4 py-3.5">Title / Subject</th>

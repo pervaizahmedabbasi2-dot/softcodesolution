@@ -1764,12 +1764,33 @@ input[type="password"]::-webkit-contacts-auto-fill-button {
 
 .superadmin-white-theme .scs-surface-3d,
 .superadmin-white-theme .scs-tile-3d,
-.superadmin-white-theme .apple-card:not(.modal-white-card):not([class*="from-"]):not([class*="bg-indigo-"]):not([class*="bg-emerald-"]):not([class*="bg-amber-"]):not([class*="bg-rose-"]),
+.superadmin-white-theme .apple-card:not(.modal-white-card):not([class*="rounded-[28px]"]):not([class*="from-"]):not([class*="bg-indigo-"]):not([class*="bg-emerald-"]):not([class*="bg-amber-"]):not([class*="bg-rose-"]),
 .school-white-theme .scs-surface-3d,
 .school-white-theme .scs-tile-3d,
-.school-white-theme .apple-card:not(.modal-white-card):not([class*="from-"]):not([class*="bg-slate-9"]):not([class*="bg-indigo-"]):not([class*="bg-emerald-"]):not([class*="bg-amber-"]):not([class*="bg-rose-"]) {
+.school-white-theme .apple-card:not(.modal-white-card):not([class*="rounded-[28px]"]):not([class*="from-"]):not([class*="bg-slate-9"]):not([class*="bg-indigo-"]):not([class*="bg-emerald-"]):not([class*="bg-amber-"]):not([class*="bg-rose-"]) {
   background: #ffffff !important;
-  border-color: rgba(226, 232, 240, 0.9);
+  background-color: #ffffff !important;
+}
+
+.superadmin-white-theme .scs-surface-3d,
+.school-white-theme .scs-surface-3d {
+  border-color: rgba(226, 232, 240, 0.9) !important;
+  box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.06),
+              0 1px 3px 0 rgba(0, 0, 0, 0.03) !important;
+}
+
+.superadmin-white-theme .scs-tile-3d:not([class*="ring-2"]),
+.school-white-theme .scs-tile-3d:not([class*="ring-2"]) {
+  border-color: rgba(226, 232, 240, 0.9) !important;
+  box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.06),
+              0 1px 3px 0 rgba(0, 0, 0, 0.03) !important;
+}
+
+.superadmin-white-theme .scs-tile-3d:not([class*="ring-2"]):hover,
+.school-white-theme .scs-tile-3d:not([class*="ring-2"]):hover {
+  border-color: rgba(203, 213, 225, 0.95) !important;
+  box-shadow: 0 14px 28px -4px rgba(15, 23, 42, 0.12),
+              0 4px 10px -2px rgba(15, 23, 42, 0.05) !important;
 }
 
 .superadmin-white-theme app-dashboard-business-suites thead,

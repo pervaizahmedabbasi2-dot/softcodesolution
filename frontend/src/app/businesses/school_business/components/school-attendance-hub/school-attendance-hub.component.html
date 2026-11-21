@@ -82,6 +82,7 @@
         }
       </div>
     </div>
+  </div>
 
     <!-- 3D HiOS Category Summary Strip (Students · Teachers · Staff · Principal) -->
     @if (portalContext() !== 'student' && !kioskFullscreen() && allowedCategories().length > 0) {
@@ -89,7 +90,7 @@
         @if (isOwner() || allowedCategories().includes('student')) {
           <!-- Students KPI Card -->
           <button type="button" (click)="setSubTab('students')"
-            class="text-left rounded-2xl p-4 bg-gradient-to-b from-white to-slate-50/75 border border-slate-200/90 shadow-[0_4px_16px_-2px_rgba(37,99,235,0.10),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_14px_28px_-6px_rgba(37,99,235,0.22)] hover:-translate-y-0.5 hover:border-blue-300/80 transition-all duration-200 cursor-pointer group space-y-3">
+            class="text-left rounded-2xl p-4 scs-tile-3d cursor-pointer group space-y-3">
             <div class="flex items-center gap-3.5">
               <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-600 via-blue-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-500/25 group-hover:scale-105 transition-transform border border-white/30">
                 <lucide-icon [name]="'graduation-cap'" class="w-5 h-5"></lucide-icon>
@@ -118,7 +119,7 @@
         @if (isOwner() || allowedCategories().includes('teacher')) {
           <!-- Teachers KPI Card -->
           <button type="button" (click)="setSubTab('teachers')"
-            class="text-left rounded-2xl p-4 bg-gradient-to-b from-white to-slate-50/75 border border-slate-200/90 shadow-[0_4px_16px_-2px_rgba(16,185,129,0.10),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_14px_28px_-6px_rgba(16,185,129,0.22)] hover:-translate-y-0.5 hover:border-emerald-300/80 transition-all duration-200 cursor-pointer group space-y-3">
+            class="text-left rounded-2xl p-4 scs-tile-3d cursor-pointer group space-y-3">
             <div class="flex items-center gap-3.5">
               <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-emerald-500 via-emerald-600 to-teal-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/25 group-hover:scale-105 transition-transform border border-white/30">
                 <lucide-icon [name]="'users'" class="w-5 h-5"></lucide-icon>
@@ -147,7 +148,7 @@
         @if (isOwner() || allowedCategories().includes('staff')) {
           <!-- Campus Staff KPI Card -->
           <button type="button" (click)="setSubTab('staff')"
-            class="text-left rounded-2xl p-4 bg-gradient-to-b from-white to-slate-50/75 border border-slate-200/90 shadow-[0_4px_16px_-2px_rgba(245,158,11,0.10),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_14px_28px_-6px_rgba(245,158,11,0.22)] hover:-translate-y-0.5 hover:border-amber-300/80 transition-all duration-200 cursor-pointer group space-y-3">
+            class="text-left rounded-2xl p-4 scs-tile-3d cursor-pointer group space-y-3">
             <div class="flex items-center gap-3.5">
               <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-500 via-amber-600 to-orange-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-amber-500/25 group-hover:scale-105 transition-transform border border-white/30">
                 <lucide-icon [name]="'briefcase'" class="w-5 h-5"></lucide-icon>
@@ -176,7 +177,7 @@
         @if (isOwner() || allowedCategories().includes('principal')) {
           <!-- Principal & VP KPI Card -->
           <button type="button" (click)="setSubTab('principals')"
-            class="text-left rounded-2xl p-4 bg-gradient-to-b from-white to-slate-50/75 border border-slate-200/90 shadow-[0_4px_16px_-2px_rgba(124,58,237,0.10),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_14px_28px_-6px_rgba(124,58,237,0.22)] hover:-translate-y-0.5 hover:border-violet-300/80 transition-all duration-200 cursor-pointer group space-y-3">
+            class="text-left rounded-2xl p-4 scs-tile-3d cursor-pointer group space-y-3">
             <div class="flex items-center gap-3.5">
               <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-violet-600 via-purple-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-violet-500/25 group-hover:scale-105 transition-transform border border-white/30">
                 <lucide-icon [name]="'shield-check'" class="w-5 h-5"></lucide-icon>
@@ -206,11 +207,11 @@
 
     <!-- Segmented HiOS Sub-Navigation -->
     @if (!kioskFullscreen()) {
-      <div class="p-1.5 rounded-2xl bg-slate-100/90 border border-slate-200/80 flex items-center gap-1 overflow-x-auto custom-scrollbar relative z-10">
+      <div class="p-1.5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs flex items-center gap-1 overflow-x-auto custom-scrollbar relative z-10">
         @if (canVerifyCameraCurrentPortal()) {
           <button type="button" (click)="setSubTab('terminal')"
             class="px-3.5 py-2 rounded-xl text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 transition-all"
-            [class]="activeSubTab() === 'terminal' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md shadow-emerald-600/20' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'">
+            [class]="activeSubTab() === 'terminal' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md shadow-emerald-600/20' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'">
             <lucide-icon [name]="'scan-face'" class="w-3.5 h-3.5"></lucide-icon>
             <span>Live Face Scanner</span>
           </button>
@@ -220,7 +221,7 @@
           @if (isOwner() || allowedCategories().includes('student')) {
             <button type="button" (click)="setSubTab('students')"
               class="px-3.5 py-2 rounded-xl text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 transition-all tabular-nums"
-              [class]="activeSubTab() === 'students' ? 'bg-white text-slate-900 shadow-sm border border-slate-200/70' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'">
+              [class]="activeSubTab() === 'students' ? 'bg-white text-slate-900 shadow-sm border border-slate-200/70' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'">
               <lucide-icon [name]="'graduation-cap'" class="w-3.5 h-3.5 text-blue-600"></lucide-icon>
               <span>Students ({{ categoryStats().student.total }})</span>
             </button>
@@ -229,7 +230,7 @@
           @if (isOwner() || allowedCategories().includes('teacher')) {
             <button type="button" (click)="setSubTab('teachers')"
               class="px-3.5 py-2 rounded-xl text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 transition-all tabular-nums"
-              [class]="activeSubTab() === 'teachers' ? 'bg-white text-slate-900 shadow-sm border border-slate-200/70' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'">
+              [class]="activeSubTab() === 'teachers' ? 'bg-white text-slate-900 shadow-sm border border-slate-200/70' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'">
               <lucide-icon [name]="'users'" class="w-3.5 h-3.5 text-emerald-600"></lucide-icon>
               <span>Teachers ({{ categoryStats().teacher.total }})</span>
             </button>
@@ -238,7 +239,7 @@
           @if (isOwner() || allowedCategories().includes('staff')) {
             <button type="button" (click)="setSubTab('staff')"
               class="px-3.5 py-2 rounded-xl text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 transition-all tabular-nums"
-              [class]="activeSubTab() === 'staff' ? 'bg-white text-slate-900 shadow-sm border border-slate-200/70' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'">
+              [class]="activeSubTab() === 'staff' ? 'bg-white text-slate-900 shadow-sm border border-slate-200/70' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'">
               <lucide-icon [name]="'briefcase'" class="w-3.5 h-3.5 text-amber-600"></lucide-icon>
               <span>Staff ({{ categoryStats().staff.total }})</span>
             </button>
@@ -247,7 +248,7 @@
           @if (isOwner() || allowedCategories().includes('principal')) {
             <button type="button" (click)="setSubTab('principals')"
               class="px-3.5 py-2 rounded-xl text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 transition-all tabular-nums"
-              [class]="activeSubTab() === 'principals' ? 'bg-white text-slate-900 shadow-sm border border-slate-200/70' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'">
+              [class]="activeSubTab() === 'principals' ? 'bg-white text-slate-900 shadow-sm border border-slate-200/70' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'">
               <lucide-icon [name]="'shield-check'" class="w-3.5 h-3.5 text-violet-600"></lucide-icon>
               <span>Principal ({{ categoryStats().principal.total }})</span>
             </button>
@@ -257,7 +258,7 @@
         @if (canEnrollCurrentPortal()) {
           <button type="button" (click)="setSubTab('enrollment')"
             class="px-3.5 py-2 rounded-xl text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 transition-all tabular-nums"
-            [class]="activeSubTab() === 'enrollment' ? 'bg-white text-slate-900 shadow-sm border border-slate-200/70' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'">
+            [class]="activeSubTab() === 'enrollment' ? 'bg-white text-slate-900 shadow-sm border border-slate-200/70' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'">
             <lucide-icon [name]="'user-plus'" class="w-3.5 h-3.5 text-indigo-600"></lucide-icon>
             <span>Face Registry ({{ totalEnrolledCount() }})</span>
           </button>
@@ -266,14 +267,13 @@
         @if (isOwner()) {
           <button type="button" (click)="setSubTab('setup')"
             class="px-3.5 py-2 rounded-xl text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 transition-all"
-            [class]="activeSubTab() === 'setup' ? 'bg-white text-slate-900 shadow-sm border border-slate-200/70' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'">
+            [class]="activeSubTab() === 'setup' ? 'bg-white text-slate-900 shadow-sm border border-slate-200/70' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'">
             <lucide-icon [name]="'sliders-horizontal'" class="w-3.5 h-3.5 text-slate-700"></lucide-icon>
             <span>Threshold &amp; Setup</span>
           </button>
         }
       </div>
     }
-  </div>
 
   <!-- ================================================================ -->
   <!-- SUB-TAB 1: CONTINUOUS LIVE FACE RECOGNITION SCANNING PLATFORM    -->
@@ -310,7 +310,7 @@
 
         <!-- Inline Quick Selfie Enroll Drawer -->
         @if (quickEnrollDrawerOpen() && canEnrollCurrentPortal()) {
-          <div class="p-4 rounded-2xl bg-gradient-to-br from-emerald-50/85 via-white to-teal-50/45 border border-emerald-200/80 shadow-xs space-y-3">
+          <div class="p-4 rounded-2xl scs-tile-3d space-y-3">
             <div class="flex items-center justify-between gap-2">
               <div class="flex items-center gap-2">
                 <div class="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center shadow-2xs">
@@ -698,8 +698,8 @@
           }
 
           @if (lastVerificationResult(); as res) {
-            <div class="p-4 rounded-2xl border space-y-2.5"
-              [class]="res.resultType === 'duplicate' ? 'bg-rose-50/90 border-rose-200' : (res.resultType === 'unclear' ? 'bg-amber-50/90 border-amber-200' : (res.matched ? 'bg-emerald-50/85 border-emerald-200' : 'bg-rose-50/90 border-rose-200'))">
+            <div class="p-4 rounded-2xl border bg-white space-y-2.5 shadow-2xs"
+              [class]="res.resultType === 'duplicate' ? 'border-rose-200' : (res.resultType === 'unclear' ? 'border-amber-200' : (res.matched ? 'border-emerald-200' : 'border-rose-200'))">
               <div class="flex items-center justify-between gap-2">
                 <span class="text-xs font-black inline-flex items-center gap-1.5"
                   [class]="res.resultType === 'duplicate' ? 'text-rose-900' : (res.resultType === 'unclear' ? 'text-amber-900' : (res.matched ? 'text-emerald-900' : 'text-rose-900'))">
@@ -1257,7 +1257,7 @@
 
         <!-- Enforcement Note -->
         @if (!canUseManualFallback()) {
-          <div class="px-4 py-2.5 rounded-2xl bg-emerald-50/60 border border-emerald-200/70 text-xs text-emerald-900 flex items-center justify-between flex-wrap gap-2">
+          <div class="px-4 py-2.5 rounded-2xl bg-white border border-slate-200/90 text-xs text-slate-800 flex items-center justify-between flex-wrap gap-2">
             <div class="flex items-center gap-2">
               <lucide-icon [name]="'shield-check'" class="w-4 h-4 text-emerald-600 shrink-0"></lucide-icon>
               <span>
@@ -1674,7 +1674,7 @@
             </div>
 
             @if (enrollSelectedMember(); as em) {
-              <div class="p-3 rounded-2xl bg-emerald-50/70 border border-emerald-200/80 grid grid-cols-2 sm:grid-cols-5 gap-2.5 text-[11px]">
+              <div class="p-3 rounded-2xl bg-white border border-slate-200/90 grid grid-cols-2 sm:grid-cols-5 gap-2.5 text-[11px]">
                 <div class="min-w-0">
                   <span class="text-[10px] font-bold uppercase text-slate-500 block">Full Name</span>
                   <span class="font-bold text-slate-900 truncate block">{{ em.name }}</span>
@@ -1900,8 +1900,8 @@
           <!-- Verification Strictness Mode Cards -->
           <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5">
             <button type="button" (click)="updateDraftMode('strict')"
-              class="p-4 rounded-2xl text-left cursor-pointer transition-all space-y-1.5"
-              [class]="policyDraft().verificationMode === 'strict' ? 'border bg-emerald-50/70 border-emerald-500 ring-1 ring-emerald-500/30 shadow-xs' : 'scs-tile-3d'">
+              class="p-4 rounded-2xl text-left cursor-pointer transition-all space-y-1.5 scs-tile-3d"
+              [class]="policyDraft().verificationMode === 'strict' ? 'border-emerald-500 ring-1 ring-emerald-500/30' : ''">
               <div class="flex items-center justify-between">
                 <span class="text-xs font-black text-slate-900 tracking-tight">Strict Face + Liveness</span>
                 @if (policyDraft().verificationMode === 'strict') {
@@ -1912,8 +1912,8 @@
             </button>
 
             <button type="button" (click)="updateDraftMode('standard')"
-              class="p-4 rounded-2xl text-left cursor-pointer transition-all space-y-1.5"
-              [class]="policyDraft().verificationMode === 'standard' ? 'border bg-emerald-50/70 border-emerald-500 ring-1 ring-emerald-500/30 shadow-xs' : 'scs-tile-3d'">
+              class="p-4 rounded-2xl text-left cursor-pointer transition-all space-y-1.5 scs-tile-3d"
+              [class]="policyDraft().verificationMode === 'standard' ? 'border-emerald-500 ring-1 ring-emerald-500/30' : ''">
               <div class="flex items-center justify-between">
                 <span class="text-xs font-black text-slate-900 tracking-tight">Standard Camera Face</span>
                 @if (policyDraft().verificationMode === 'standard') {
@@ -1924,8 +1924,8 @@
             </button>
 
             <button type="button" (click)="updateDraftMode('lite')"
-              class="p-4 rounded-2xl text-left cursor-pointer transition-all space-y-1.5"
-              [class]="policyDraft().verificationMode === 'lite' ? 'border bg-emerald-50/70 border-emerald-500 ring-1 ring-emerald-500/30 shadow-xs' : 'scs-tile-3d'">
+              class="p-4 rounded-2xl text-left cursor-pointer transition-all space-y-1.5 scs-tile-3d"
+              [class]="policyDraft().verificationMode === 'lite' ? 'border-emerald-500 ring-1 ring-emerald-500/30' : ''">
               <div class="flex items-center justify-between">
                 <span class="text-xs font-black text-slate-900 tracking-tight">Lite Quick-Verify Mode</span>
                 @if (policyDraft().verificationMode === 'lite') {

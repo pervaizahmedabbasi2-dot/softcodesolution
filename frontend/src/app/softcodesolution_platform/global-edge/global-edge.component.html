@@ -148,7 +148,7 @@
         </div>
 
         <div class="space-y-4">
-          <div *ngFor="let region of regions" class="group p-4 rounded-[20px] scs-tile-3d hover:border-emerald-300 transition-all cursor-pointer">
+          <div *ngFor="let region of regions" class="group p-4 rounded-[20px] scs-tile-3d transition-all cursor-pointer">
             <div class="flex items-center justify-between mb-3">
               <div class="flex items-center gap-2.5">
                 <div class="w-2.5 h-2.5 rounded-full shadow-sm" [class.bg-emerald-500]="region.status === 'healthy'" [class.bg-rose-500]="region.status === 'warning'" [class.shadow-emerald-400/50]="region.status === 'healthy'" [class.shadow-rose-500/50]="region.status === 'warning'"></div>

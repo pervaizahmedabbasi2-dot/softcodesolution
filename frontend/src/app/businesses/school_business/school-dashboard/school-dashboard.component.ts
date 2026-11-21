@@ -902,6 +902,49 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
+  getAdmissionsToolbarTitle(): string {
+    this.tableSchemaService.schemaRevision();
+    return this.tableSchemaService.getSchema('owner_admissions').customTitle || 'Admissions & Enrollment Inquiries';
+  }
+
+  getAdmissionsToolbarStats(): string {
+    this.tableSchemaService.schemaRevision();
+    const schema = this.tableSchemaService.getSchema('owner_admissions');
+    const detected = this.tableSchemaService.getDetectedHeadersForTable('owner_admissions');
+    const totalBuiltIn = detected.length > 0 ? detected.length : 27;
+    const hiddenSet = new Set(
+      (schema.hiddenColumns || []).filter((i) => i >= 0 && i < totalBuiltIn)
+    );
+    const hiddenLabels = new Set((schema.hiddenColumnLabels || []).map((l) => l.toLowerCase()));
+    for (const h of detected) {
+      if (hiddenLabels.has(h.originalLabel.trim().toLowerCase())) {
+        hiddenSet.add(h.index);
+      }
+    }
+    const hiddenCount = hiddenSet.size;
+    const visibleCount = Math.max(0, totalBuiltIn - hiddenCount);
+    const customCount = (schema.customColumns || []).filter(
+      (c) => !c.scope || c.scope === 'table' || c.scope === 'both'
+    ).length;
+    const customRowCount = (schema.customRows || []).length;
+    const customPart = customCount > 0 ? ` · +${customCount} custom` : '';
+    const hiddenPart = hiddenCount > 0 ? ` · ${hiddenCount} hidden` : '';
+    const rowPart = customRowCount > 0 ? ` · +${customRowCount} added rows` : '';
+    return `${visibleCount}/${totalBuiltIn} cols${customPart}${hiddenPart}${rowPart}`;
+  }
+
+  exportAdmissionsCsv(): void {
+    this.tableSchemaService.exportTableCsv('owner_admissions', 'Admissions & Enrollment Inquiries');
+  }
+
+  exportAdmissionsTablePdf(): void {
+    this.tableSchemaService.exportTablePdf('owner_admissions', 'Admissions & Enrollment Inquiries');
+  }
+
+  exportAdmissionsCardsPdf(): void {
+    this.tableSchemaService.exportTableCardsPdf('owner_admissions', 'Admissions & Enrollment Inquiries');
+  }
+
   transportViewMode: 'cards' | 'table' = 'table';
   setTransportViewMode(mode: 'cards' | 'table'): void {
     this.transportViewMode = mode;

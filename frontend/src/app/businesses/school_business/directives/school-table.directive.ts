@@ -31,6 +31,7 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
   readonly addRowLabel = input<string>('Add Record');
   readonly disableRowDetails = input<boolean>(false);
   readonly hideToolbarExports = input<boolean>(false);
+  readonly hideToolbar = input<boolean>(false);
 
   readonly addRowClicked = output<string>();
 
@@ -54,6 +55,7 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
       const addLabel = this.addRowLabel();
       const noDetails = this.disableRowDetails();
       const hideExports = this.hideToolbarExports();
+      const hideToolbar = this.hideToolbar();
       this.schemaService.portalRole();
       this.schemaService.isOwner();
       this.schemaService.schemaRevision();
@@ -63,6 +65,7 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
       void addLabel;
       void noDetails;
       void hideExports;
+      void hideToolbar;
       if (tableId && typeof document !== 'undefined') {
         this.scheduleApply();
       }
@@ -822,7 +825,7 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
     const showExports = !this.hideToolbarExports();
     const showAddBtn = isOwner && this.canAddRow();
 
-    if (!isOwner && !showExports && !showAddBtn) {
+    if (this.hideToolbar() || (!isOwner && !showExports && !showAddBtn)) {
       if (this.toolbarEl && this.toolbarEl.parentElement) {
         this.toolbarEl.parentElement.removeChild(this.toolbarEl);
         this.toolbarEl = null;

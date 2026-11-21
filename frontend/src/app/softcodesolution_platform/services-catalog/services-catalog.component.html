@@ -27,30 +27,30 @@
         Poll Service Mesh
       </button>
     </div>
+  </div>
 
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-7 pt-6 border-t border-slate-200/70">
-      <div class="scs-tile-3d rounded-2xl border-t-4 border-t-emerald-500 p-4">
-        <p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Mesh Health Index</p>
-        <p class="text-2xl font-black text-emerald-600 tabular-nums mt-1">99.992% <span class="text-xs text-slate-400 font-semibold">SLA</span></p>
-      </div>
-      <div class="scs-tile-3d rounded-2xl border-t-4 border-t-cyan-500 p-4">
-        <p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Avg P99 Latency</p>
-        <p class="text-2xl font-black text-cyan-700 tabular-nums mt-1">16.4 ms <span class="text-xs text-slate-400 font-semibold">Global</span></p>
-      </div>
-      <div class="scs-tile-3d rounded-2xl border-t-4 border-t-indigo-600 p-4">
-        <p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Total Throughput</p>
-        <p class="text-2xl font-black text-indigo-600 tabular-nums mt-1">182k <span class="text-xs text-slate-400 font-semibold">req/min</span></p>
-      </div>
-      <div class="scs-tile-3d rounded-2xl border-t-4 border-t-emerald-500 p-4">
-        <p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Circuit Breakers</p>
-        <p class="text-2xl font-black text-emerald-600 tabular-nums mt-1">0 Tripped <span class="text-xs text-slate-400 font-semibold">Nominal</span></p>
-      </div>
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+    <div class="scs-tile-3d rounded-2xl border border-slate-200/90 border-t-4 border-t-emerald-500 p-4">
+      <p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Mesh Health Index</p>
+      <p class="text-2xl font-black text-emerald-600 tabular-nums mt-1">99.992% <span class="text-xs text-slate-400 font-semibold">SLA</span></p>
+    </div>
+    <div class="scs-tile-3d rounded-2xl border border-slate-200/90 border-t-4 border-t-cyan-500 p-4">
+      <p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Avg P99 Latency</p>
+      <p class="text-2xl font-black text-cyan-700 tabular-nums mt-1">16.4 ms <span class="text-xs text-slate-400 font-semibold">Global</span></p>
+    </div>
+    <div class="scs-tile-3d rounded-2xl border border-slate-200/90 border-t-4 border-t-indigo-600 p-4">
+      <p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Total Throughput</p>
+      <p class="text-2xl font-black text-indigo-600 tabular-nums mt-1">182k <span class="text-xs text-slate-400 font-semibold">req/min</span></p>
+    </div>
+    <div class="scs-tile-3d rounded-2xl border border-slate-200/90 border-t-4 border-t-emerald-500 p-4">
+      <p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Circuit Breakers</p>
+      <p class="text-2xl font-black text-emerald-600 tabular-nums mt-1">0 Tripped <span class="text-xs text-slate-400 font-semibold">Nominal</span></p>
     </div>
   </div>
 
   <!-- Services Grid -->
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    <div *ngFor="let srv of services" class="scs-tile-3d rounded-[24px] border-t-4 border-t-indigo-500 p-6 hover:border-indigo-300 transition-all flex flex-col justify-between group">
+    <div *ngFor="let srv of services" class="scs-tile-3d rounded-[24px] border border-slate-200/90 border-t-4 border-t-indigo-500 p-6 transition-all flex flex-col justify-between group">
       <div>
         <div class="flex items-center justify-between gap-3 mb-4">
           <div class="flex items-center gap-3">

@@ -1947,7 +1947,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   get isSchoolPreviewActive(): boolean {
-    if (this.previewMode && this.activeSimulatedBusiness?.id === 'school_college') {
+    if (this.activeSimulatedBusiness?.id === 'school_college') {
       return true;
     }
     if (this.activeView === 'school-hub' || this.activeView.startsWith('school-') || this.activeView === 'school_college') {
