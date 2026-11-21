@@ -40,7 +40,7 @@
 
     <!-- Chromatic Invoice KPIs -->
     <div *ngIf="activeTab === 'invoices'" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      <div class="rounded-2xl bg-white p-5 border border-slate-200/90 border-t-4 border-t-indigo-600 shadow-xs flex items-center justify-between gap-4">
+      <div class="rounded-2xl scs-tile-3d p-5 border-t-4 border-t-indigo-600 flex items-center justify-between gap-4">
         <div>
           <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Collected Revenue</p>
           <p class="text-2xl font-black text-slate-900 tabular-nums mt-1">PKR 16,800</p>
@@ -50,7 +50,7 @@
           <lucide-icon [img]="myIcons.Activity" [size]="22" [strokeWidth]="2"></lucide-icon>
         </div>
       </div>
-      <div class="rounded-2xl bg-white p-5 border border-slate-200/90 border-t-4 border-t-purple-600 shadow-xs flex items-center justify-between gap-4">
+      <div class="rounded-2xl scs-tile-3d p-5 border-t-4 border-t-purple-600 flex items-center justify-between gap-4">
         <div>
           <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Monthly Recurring</p>
           <p class="text-2xl font-black text-slate-900 tabular-nums mt-1">PKR 23,100</p>
@@ -60,7 +60,7 @@
           <lucide-icon [img]="myIcons.CreditCard" [size]="22" [strokeWidth]="2"></lucide-icon>
         </div>
       </div>
-      <div class="rounded-2xl bg-white p-5 border border-slate-200/90 border-t-4 border-t-emerald-500 shadow-xs flex items-center justify-between gap-4">
+      <div class="rounded-2xl scs-tile-3d p-5 border-t-4 border-t-emerald-500 flex items-center justify-between gap-4">
         <div>
           <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Active Subscriptions</p>
           <p class="text-2xl font-black text-emerald-700 tabular-nums mt-1">5</p>
@@ -70,7 +70,7 @@
           <lucide-icon [img]="myIcons.CheckCircle2" [size]="22" [strokeWidth]="2"></lucide-icon>
         </div>
       </div>
-      <div class="rounded-2xl bg-white p-5 border border-slate-200/90 border-t-4 border-t-rose-500 shadow-xs flex items-center justify-between gap-4">
+      <div class="rounded-2xl scs-tile-3d p-5 border-t-4 border-t-rose-500 flex items-center justify-between gap-4">
         <div>
           <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Overdue Invoices</p>
           <p class="text-2xl font-black text-rose-700 tabular-nums mt-1">PKR 7,000</p>
@@ -83,7 +83,7 @@
     </div>
 
     <!-- Main Content -->
-    <div class="rounded-[24px] bg-white shadow-xs border border-slate-200/90 overflow-hidden">
+    <div class="rounded-[24px] scs-surface-3d overflow-hidden">
       <div class="flex flex-col gap-4 border-b border-slate-200/80 p-5 lg:flex-row lg:items-center lg:justify-between bg-slate-50/40">
         <div class="flex flex-wrap gap-1.5 p-1.5 rounded-2xl bg-slate-100/90 border border-slate-200/80 w-full lg:w-auto">
           <button (click)="setTab('gateways')" [class.bg-white]="activeTab === 'gateways'" [class.shadow-xs]="activeTab === 'gateways'" [class.text-indigo-700]="activeTab === 'gateways'" [class.text-slate-600]="activeTab !== 'gateways'" class="rounded-xl px-3.5 py-2 text-xs font-black uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer">
@@ -143,10 +143,8 @@
 
         <!-- 4 Gateway Cards Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div *ngFor="let gw of gateways" class="bg-white border rounded-2xl p-5 transition-all shadow-xs flex flex-col justify-between"
-               [class.border-indigo-300]="gw.enabled"
-               [class.border-slate-200]="!gw.enabled"
-               [class.bg-slate-50]="!gw.enabled">
+          <div *ngFor="let gw of gateways" class="scs-tile-3d rounded-2xl p-5 transition-all flex flex-col justify-between"
+               [class.border-indigo-300]="gw.enabled">
             <div>
               <div class="flex items-start justify-between gap-3 mb-3">
                 <div class="flex items-center gap-3">
@@ -223,14 +221,14 @@
         </div>
 
         <!-- Recent Customer Transactions Table -->
-        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-          <div class="p-4 bg-slate-50/70 border-b border-slate-200 flex items-center justify-between text-xs">
+        <div class="scs-surface-3d rounded-2xl overflow-hidden">
+          <div class="p-4 bg-white/45 border-b border-slate-200/70 flex items-center justify-between text-xs">
             <span class="font-bold text-slate-800">Recent Customer Gateway Transactions</span>
             <span class="text-slate-500 font-mono text-[11px]">{{ transactions.length }} Processed</span>
           </div>
           <!-- Mobile Transactions Cards (Mobile View) -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 md:hidden">
-            <div *ngFor="let tx of paginatedTransactions" class="apple-card rounded-2xl border border-slate-200/90 p-4 bg-white shadow-2xs space-y-3">
+            <div *ngFor="let tx of paginatedTransactions" class="apple-card rounded-2xl scs-tile-3d p-4 space-y-3">
               <div class="flex items-center justify-between gap-2">
                 <span class="font-mono text-xs font-black text-slate-900 bg-slate-100 px-2.5 py-0.5 rounded-md">{{ tx.invoiceNumber }}</span>
                 <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider"
@@ -271,7 +269,7 @@
           <!-- Desktop Transactions Table (Desktop View) -->
           <div class="hidden md:block overflow-x-auto">
             <table class="w-full text-left text-xs text-slate-600">
-              <thead class="bg-gradient-to-r from-emerald-50/90 via-slate-50 to-teal-50/80 border-b border-emerald-100/90 font-black uppercase text-[10px] tracking-wider text-slate-700">
+              <thead class="bg-slate-50 border-b border-slate-200/70 font-black uppercase text-[10px] tracking-wider text-slate-700">
                 <tr>
                   <th class="px-4 py-3.5">Invoice #</th>
                   <th class="px-4 py-3.5">Customer</th>
@@ -354,7 +352,7 @@
         <!-- Channel Status Cards -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <!-- WhatsApp Business Cloud API -->
-          <div class="bg-white border border-slate-200/90 border-t-4 border-t-emerald-500 rounded-2xl p-5 shadow-xs space-y-3">
+          <div class="scs-tile-3d border-t-4 border-t-emerald-500 rounded-2xl p-5 space-y-3">
             <div class="flex items-center justify-between">
               <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-md shadow-emerald-500/25 flex items-center justify-center">
                 <lucide-icon [img]="myIcons.MessageSquare" [size]="18"></lucide-icon>
@@ -372,7 +370,7 @@
           </div>
 
           <!-- High-Speed SMS Gateway -->
-          <div class="bg-white border border-slate-200/90 border-t-4 border-t-blue-500 rounded-2xl p-5 shadow-xs space-y-3">
+          <div class="scs-tile-3d border-t-4 border-t-blue-500 rounded-2xl p-5 space-y-3">
             <div class="flex items-center justify-between">
               <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-md shadow-blue-500/25 flex items-center justify-center">
                 <lucide-icon [img]="myIcons.Smartphone" [size]="18"></lucide-icon>
@@ -390,7 +388,7 @@
           </div>
 
           <!-- Transactional Email Gateway -->
-          <div class="bg-white border border-slate-200/90 border-t-4 border-t-purple-500 rounded-2xl p-5 shadow-xs space-y-3">
+          <div class="scs-tile-3d border-t-4 border-t-purple-500 rounded-2xl p-5 space-y-3">
             <div class="flex items-center justify-between">
               <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 text-white shadow-md shadow-purple-500/25 flex items-center justify-center">
                 <lucide-icon [img]="myIcons.Mail" [size]="18"></lucide-icon>
@@ -409,7 +407,7 @@
         </div>
 
         <!-- Interactive Test Notification Dispatcher Box -->
-        <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
+        <div class="scs-surface-3d rounded-2xl p-6 space-y-4">
           <div class="flex items-center justify-between pb-3 border-b border-slate-100">
             <div>
               <h4 class="text-sm font-extrabold text-slate-900">Test Multi-Channel Dispatcher</h4>
@@ -460,8 +458,8 @@
         </div>
 
         <!-- Live Dispatch Logs Table -->
-        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-          <div class="p-4 bg-slate-50/70 border-b border-slate-200 flex items-center justify-between text-xs">
+        <div class="scs-surface-3d rounded-2xl overflow-hidden">
+          <div class="p-4 bg-white/45 border-b border-slate-200/70 flex items-center justify-between text-xs">
             <div class="flex items-center gap-2">
               <lucide-icon [img]="myIcons.MessageSquare" [size]="15" class="text-indigo-600"></lucide-icon>
               <span class="font-bold text-slate-900">Live Multi-Channel Delivery Logs</span>
@@ -471,7 +469,7 @@
 
           <div class="overflow-x-auto">
             <table class="w-full text-left text-xs text-slate-600">
-              <thead class="bg-gradient-to-r from-emerald-50/90 via-slate-50 to-teal-50/80 border-b border-emerald-100/90 font-black uppercase text-[10px] tracking-wider text-slate-700">
+              <thead class="bg-slate-50 border-b border-slate-200/70 font-black uppercase text-[10px] tracking-wider text-slate-700">
                 <tr>
                   <th class="px-4 py-3.5">Channel</th>
                   <th class="px-4 py-3.5">Scope / Target</th>
@@ -546,7 +544,7 @@
         </div>
         <div *ngIf="invoices.length > 0" class="overflow-x-auto">
           <table class="w-full text-left text-sm whitespace-nowrap">
-            <thead class="bg-gradient-to-r from-emerald-50/90 via-slate-50 to-teal-50/80 border-b border-emerald-100/90 text-[10px] font-black uppercase tracking-wider text-slate-700">
+            <thead class="bg-slate-50 border-b border-slate-200/70 text-[10px] font-black uppercase tracking-wider text-slate-700">
               <tr>
                 <th class="px-6 py-4">Invoice No</th>
                 <th class="px-6 py-4">Tenant</th>
@@ -595,7 +593,7 @@
         </div>
         <div *ngIf="pendingApprovals.length > 0" class="overflow-x-auto">
           <table class="w-full text-left text-sm whitespace-nowrap">
-            <thead class="bg-gradient-to-r from-emerald-50/90 via-slate-50 to-teal-50/80 border-b border-emerald-100/90 text-[10px] font-black uppercase tracking-wider text-slate-700">
+            <thead class="bg-slate-50 border-b border-slate-200/70 text-[10px] font-black uppercase tracking-wider text-slate-700">
               <tr>
                 <th class="px-6 py-4">Tenant / Invoice</th>
                 <th class="px-6 py-4">Method</th>
@@ -638,7 +636,7 @@
         <div *ngIf="!walletBalance" class="text-center text-slate-400 p-8">
            <p>Enter a Tenant ID in search to view their wallet balance.</p>
         </div>
-        <div *ngIf="walletBalance" class="rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center max-w-md mx-auto">
+        <div *ngIf="walletBalance" class="rounded-2xl scs-tile-3d p-8 text-center max-w-md mx-auto">
           <lucide-icon [img]="myIcons.WalletCards" [size]="48" class="text-slate-300 mx-auto mb-4"></lucide-icon>
           <p class="text-sm font-bold uppercase tracking-widest text-slate-400 mb-2">Current Balance</p>
           <h2 class="text-4xl font-black text-slate-900">{{walletBalance?.currency || 'USD'}} {{walletBalance?.balance || 0}}</h2>
@@ -661,7 +659,7 @@
         </div>
         <div *ngIf="coupons.length > 0" class="overflow-x-auto">
           <table class="w-full text-left text-sm whitespace-nowrap">
-            <thead class="bg-gradient-to-r from-emerald-50/90 via-slate-50 to-teal-50/80 border-b border-emerald-100/90 text-[10px] font-black uppercase tracking-wider text-slate-700">
+            <thead class="bg-slate-50 border-b border-slate-200/70 text-[10px] font-black uppercase tracking-wider text-slate-700">
               <tr>
                 <th class="px-6 py-4">Code</th>
                 <th class="px-6 py-4">Type</th>
@@ -705,7 +703,7 @@
         </div>
         <div *ngIf="taxRules.length > 0" class="overflow-x-auto">
           <table class="w-full text-left text-sm whitespace-nowrap">
-            <thead class="bg-gradient-to-r from-emerald-50/90 via-slate-50 to-teal-50/80 border-b border-emerald-100/90 text-[10px] font-black uppercase tracking-wider text-slate-700">
+            <thead class="bg-slate-50 border-b border-slate-200/70 text-[10px] font-black uppercase tracking-wider text-slate-700">
               <tr>
                 <th class="px-6 py-4">Country / State</th>
                 <th class="px-6 py-4">Tax Name</th>
@@ -743,7 +741,7 @@
     <div class="relative flex flex-col w-full max-w-2xl max-h-[90vh] bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200 animate-scale-up" (click)="$event.stopPropagation()">
       
       <!-- Top Action Bar -->
-      <div class="px-6 py-4 bg-gradient-to-r from-emerald-50/90 via-white to-teal-50/80 border-b border-emerald-100/90 text-slate-900 flex items-center justify-between shrink-0">
+      <div class="px-6 py-4 bg-slate-50 border-b border-slate-200/70 text-slate-900 flex items-center justify-between shrink-0">
         <div class="flex items-center gap-2">
           <lucide-icon [img]="myIcons.Receipt" [size]="18" class="text-emerald-600"></lucide-icon>
           <span class="text-xs font-black uppercase tracking-wider text-slate-900">Official Tax Invoice & Receipt</span>

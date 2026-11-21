@@ -27,7 +27,7 @@
       </div>
     </div>
 
-    <div class="bg-white/85 rounded-2xl p-5 border border-slate-200/80 shadow-xs">
+    <div class="scs-surface-3d rounded-2xl p-5">
       <!-- CATALOG_GROUP_CHIPS_REAL -->
       <div class="mb-5">
         <div class="flex items-center justify-between gap-3 mb-3">
@@ -40,10 +40,8 @@
             [class.bg-emerald-600]="moduleCatalogCategory === 'all'"
             [class.border-emerald-600]="moduleCatalogCategory === 'all'"
             [class.text-white]="moduleCatalogCategory === 'all'"
-            [class.bg-white]="moduleCatalogCategory !== 'all'"
-            [class.border-slate-200]="moduleCatalogCategory !== 'all'"
-            [class.text-slate-700]="moduleCatalogCategory !== 'all'"
-            [class.hover:bg-slate-50]="moduleCatalogCategory !== 'all'">
+            [class.scs-tile-3d]="moduleCatalogCategory !== 'all'"
+            [class.text-slate-700]="moduleCatalogCategory !== 'all'">
             <span>All Modules</span>
             <span class="text-[10px] font-black px-1.5 py-0.5 rounded-lg tabular-nums"
                [class.bg-white/20]="moduleCatalogCategory === 'all'"
@@ -60,10 +58,8 @@
             [class.to-blue-600]="moduleCatalogCategory === cat"
             [class.border-indigo-600]="moduleCatalogCategory === cat"
             [class.text-white]="moduleCatalogCategory === cat"
-            [class.bg-white]="moduleCatalogCategory !== cat"
-            [class.border-slate-200]="moduleCatalogCategory !== cat"
-            [class.text-slate-700]="moduleCatalogCategory !== cat"
-            [class.hover:bg-slate-50]="moduleCatalogCategory !== cat">
+            [class.scs-tile-3d]="moduleCatalogCategory !== cat"
+            [class.text-slate-700]="moduleCatalogCategory !== cat">
             <span class="truncate max-w-[130px]">{{ formatModuleCategory(cat) }}</span>
             <span class="text-[10px] font-black px-1.5 py-0.5 rounded-lg tabular-nums"
                [class.bg-white/20]="moduleCatalogCategory === cat"
@@ -106,7 +102,7 @@
       </div>
 
       <div class="max-h-[360px] overflow-y-auto scrollbar-thin pr-1 space-y-2">
-        <div *ngFor="let m of filteredModuleCatalog" class="group flex items-center justify-between gap-4 p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs hover:shadow-md hover:border-indigo-300 transition-all">
+        <div *ngFor="let m of filteredModuleCatalog" class="group flex items-center justify-between gap-4 p-3.5 rounded-2xl scs-tile-3d hover:border-indigo-300 transition-all">
           <div class="flex items-center gap-3.5 min-w-0">
             <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-50 to-slate-100 border border-indigo-100/80 flex items-center justify-center shrink-0 group-hover:from-indigo-600 group-hover:to-blue-600 group-hover:text-white text-indigo-600 transition-all">
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>

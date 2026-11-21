@@ -47,7 +47,7 @@
       type="button"
       *ngFor="let link of page.quickLinks || []"
       (click)="openView(link.view)"
-      class="px-4 py-2.5 rounded-xl bg-white border border-slate-200/90 text-slate-700 text-xs font-black hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-700 transition-all shadow-2xs cursor-pointer">
+      class="px-4 py-2.5 rounded-xl scs-tile-3d text-slate-700 text-xs font-black hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-700 transition-all cursor-pointer">
       {{ link.title }} &rarr;
     </button>
   </div>
@@ -56,9 +56,9 @@
   <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5">
     <div
       *ngFor="let group of page.groups || []; let idx = index"
-      class="bg-white rounded-[24px] border border-slate-200/90 shadow-xs hover:shadow-md transition-all overflow-hidden flex flex-col">
+      class="scs-surface-3d rounded-[24px] hover:shadow-md transition-all overflow-hidden flex flex-col">
 
-      <div class="px-5 py-4 border-b border-slate-100 bg-slate-50/60 flex items-center justify-between gap-3">
+      <div class="px-5 py-4 border-b border-slate-100 bg-white flex items-center justify-between gap-3">
         <div class="flex items-center gap-3 min-w-0">
           <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-600 via-emerald-600 to-teal-600 text-white font-black text-xs flex items-center justify-center shrink-0 shadow-xs tabular-nums">
             0{{ idx + 1 }}

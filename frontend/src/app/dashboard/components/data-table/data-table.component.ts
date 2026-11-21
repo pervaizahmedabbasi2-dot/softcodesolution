@@ -17,7 +17,7 @@ export interface DataTableColumn {
   standalone: true,
   imports: [CommonModule, FormsModule, LucideAngularModule],
   template: `
-    <div class="apple-data-table-container rounded-[20px] bg-white border border-slate-200/80 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] overflow-hidden transition-all">
+    <div class="apple-data-table-container rounded-[20px] scs-surface-3d border border-slate-200/80 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] overflow-hidden transition-all">
       <!-- Table Header Bar: Search & Controls -->
       <div *ngIf="showControls" class="p-4 sm:p-5 border-b border-slate-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-gradient-to-b from-slate-50/50 to-white">
         <div class="flex items-center gap-3 flex-1">

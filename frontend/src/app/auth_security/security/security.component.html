@@ -42,7 +42,7 @@
 
   <!-- Chromatic 3D Metric Stat Cards -->
   <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-    <div class="bg-white rounded-2xl border border-slate-200/90 border-t-4 border-t-emerald-500 p-5 shadow-xs flex items-start justify-between gap-4 hover:shadow-md transition-shadow">
+    <div class="scs-tile-3d rounded-2xl border-t-4 border-t-emerald-500 p-5 flex items-start justify-between gap-4 hover:shadow-md transition-shadow">
       <div>
         <h3 class="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">Active Threats Blocked</h3>
         <p class="text-3xl font-black text-slate-900 tabular-nums mt-1">14,293</p>
@@ -53,7 +53,7 @@
       </div>
     </div>
 
-    <div class="bg-white rounded-2xl border border-slate-200/90 border-t-4 border-t-amber-500 p-5 shadow-xs flex items-start justify-between gap-4 hover:shadow-md transition-shadow">
+    <div class="scs-tile-3d rounded-2xl border-t-4 border-t-amber-500 p-5 flex items-start justify-between gap-4 hover:shadow-md transition-shadow">
       <div>
         <h3 class="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">Firewall Rules Enforced</h3>
         <p class="text-3xl font-black text-slate-900 tabular-nums mt-1">{{ ipRules.length }} Active</p>
@@ -64,7 +64,7 @@
       </div>
     </div>
 
-    <div class="bg-white rounded-2xl border border-slate-200/90 border-t-4 border-t-indigo-600 p-5 shadow-xs flex items-start justify-between gap-4 hover:shadow-md transition-shadow">
+    <div class="scs-tile-3d rounded-2xl border-t-4 border-t-indigo-600 p-5 flex items-start justify-between gap-4 hover:shadow-md transition-shadow">
       <div>
         <h3 class="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">DDoS Mitigation Status</h3>
         <p class="text-2xl font-black text-slate-900 mt-1">Normal Operation</p>
@@ -77,7 +77,7 @@
   </div>
 
   <!-- Intruder Detection & Security Lock Vault Section -->
-  <div class="bg-white rounded-[24px] border border-rose-200/90 shadow-xs p-6 space-y-6">
+  <div class="scs-surface-3d rounded-[24px] border-rose-200/90 p-6 space-y-6">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-rose-100">
       <div class="flex items-center gap-3.5">
         <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-rose-500 to-red-600 text-white shadow-md shadow-rose-500/25 flex items-center justify-center shrink-0">
@@ -109,7 +109,7 @@
 
     <div *ngIf="intruderLogs.length > 0" class="overflow-x-auto rounded-2xl border border-slate-200/80">
       <table class="w-full text-left border-collapse">
-        <thead class="bg-gradient-to-r from-emerald-50/90 via-slate-50 to-teal-50/80 text-slate-700 border-b border-emerald-100/90 text-[10px] font-black uppercase tracking-wider">
+        <thead class="bg-slate-50 text-slate-700 border-b border-slate-200/70 text-[10px] font-black uppercase tracking-wider">
           <tr>
             <th class="p-3.5">Camera Snapshot</th>
             <th class="p-3.5">Target Email & Owner</th>
@@ -274,8 +274,8 @@
   <!-- Two-Column Layout: IP Rules & Active Sessions -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
     <!-- IP Rules Firewall Manager -->
-    <div class="rounded-[24px] border border-white/80 bg-gradient-to-br from-white/95 via-emerald-50/35 to-slate-50/90 backdrop-blur-xl shadow-[0_14px_36px_-10px_rgba(16,185,129,0.16),0_4px_12px_-4px_rgba(0,0,0,0.04)] overflow-hidden space-y-0">
-      <div class="p-5 border-b border-emerald-100/90 flex items-center justify-between bg-gradient-to-r from-emerald-50/90 via-white to-teal-50/70 text-slate-900">
+    <div class="rounded-[24px] scs-surface-3d overflow-hidden space-y-0">
+      <div class="p-5 border-b border-slate-200/70 flex items-center justify-between bg-slate-50 text-slate-900">
         <div>
           <h3 class="text-sm font-black text-slate-900">IP Firewall & Access Control</h3>
           <p class="text-[11px] text-slate-500">Allow or quarantine incoming IP ranges.</p>
@@ -306,8 +306,8 @@
     </div>
 
     <!-- Active Sessions Viewer -->
-    <div class="rounded-[24px] border border-white/80 bg-gradient-to-br from-white/95 via-emerald-50/35 to-slate-50/90 backdrop-blur-xl shadow-[0_14px_36px_-10px_rgba(16,185,129,0.16),0_4px_12px_-4px_rgba(0,0,0,0.04)] overflow-hidden space-y-0">
-      <div class="p-5 border-b border-emerald-100/90 flex items-center justify-between bg-gradient-to-r from-emerald-50/90 via-white to-teal-50/70 text-slate-900">
+    <div class="rounded-[24px] scs-surface-3d overflow-hidden space-y-0">
+      <div class="p-5 border-b border-slate-200/70 flex items-center justify-between bg-slate-50 text-slate-900">
         <div>
           <h3 class="text-sm font-black text-slate-900">Active Administrative Sessions</h3>
           <p class="text-[11px] text-slate-500">Real-time authenticated operator tokens.</p>
@@ -417,7 +417,7 @@
         </button>
       </div>
 
-      <div class="bg-gradient-to-br from-emerald-50/80 via-white to-slate-50 border border-emerald-200/80 text-slate-700 p-4 rounded-xl font-mono text-[11px] space-y-1 shadow-2xs">
+      <div class="bg-slate-50 border border-slate-200/90 text-slate-700 p-4 rounded-xl font-mono text-[11px] space-y-1 shadow-2xs">
         <p class="text-emerald-700 font-bold">✓ Audit checksum: sha256:e8f9a28b...</p>
         <p class="text-slate-600">Total Entries: 14,293 events logged</p>
         <p class="text-slate-600">Timespan: Last 30 Days (Rolling Window)</p>

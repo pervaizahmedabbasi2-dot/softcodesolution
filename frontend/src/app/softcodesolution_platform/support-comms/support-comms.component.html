@@ -83,7 +83,7 @@
 
   <!-- Summary Metrics Strip (5 Chromatic Cards) -->
   <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
-    <div class="bg-white border border-slate-200/90 border-t-4 border-t-slate-800 rounded-2xl p-4 shadow-xs flex items-center justify-between gap-3">
+    <div class="scs-tile-3d border border-slate-200/90 border-t-4 border-t-slate-800 rounded-2xl p-4 flex items-center justify-between gap-3">
       <div>
         <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Total Tickets</p>
         <p class="text-2xl font-black text-slate-900 mt-1 tabular-nums">{{ stats().total }}</p>
@@ -93,7 +93,7 @@
         <lucide-icon [name]="icons.Inbox" class="w-4 h-4"></lucide-icon>
       </div>
     </div>
-    <div class="bg-white border border-slate-200/90 border-t-4 border-t-amber-500 rounded-2xl p-4 shadow-xs flex items-center justify-between gap-3">
+    <div class="scs-tile-3d border border-slate-200/90 border-t-4 border-t-amber-500 rounded-2xl p-4 flex items-center justify-between gap-3">
       <div>
         <p class="text-[10px] font-black uppercase tracking-wider text-amber-600">Open Queue</p>
         <p class="text-2xl font-black text-slate-900 mt-1 tabular-nums">{{ stats().open }}</p>
@@ -103,7 +103,7 @@
         <lucide-icon [name]="icons.Clock" class="w-4 h-4"></lucide-icon>
       </div>
     </div>
-    <div class="bg-white border border-slate-200/90 border-t-4 border-t-indigo-600 rounded-2xl p-4 shadow-xs flex items-center justify-between gap-3">
+    <div class="scs-tile-3d border border-slate-200/90 border-t-4 border-t-indigo-600 rounded-2xl p-4 flex items-center justify-between gap-3">
       <div>
         <p class="text-[10px] font-black uppercase tracking-wider text-indigo-600">Bot Handled</p>
         <p class="text-2xl font-black text-slate-900 mt-1 tabular-nums">{{ stats().botReplied }}</p>
@@ -113,7 +113,7 @@
         <lucide-icon [name]="icons.Bot" class="w-4 h-4"></lucide-icon>
       </div>
     </div>
-    <div class="bg-white border border-slate-200/90 border-t-4 border-t-sky-500 rounded-2xl p-4 shadow-xs flex items-center justify-between gap-3">
+    <div class="scs-tile-3d border border-slate-200/90 border-t-4 border-t-sky-500 rounded-2xl p-4 flex items-center justify-between gap-3">
       <div>
         <p class="text-[10px] font-black uppercase tracking-wider text-sky-600">Team Active</p>
         <p class="text-2xl font-black text-slate-900 mt-1 tabular-nums">{{ stats().inProgress }}</p>
@@ -123,7 +123,7 @@
         <lucide-icon [name]="icons.Users" class="w-4 h-4"></lucide-icon>
       </div>
     </div>
-    <div class="bg-white border border-slate-200/90 border-t-4 border-t-emerald-500 rounded-2xl p-4 shadow-xs flex items-center justify-between gap-3 col-span-2 md:col-span-1">
+    <div class="scs-tile-3d border border-slate-200/90 border-t-4 border-t-emerald-500 rounded-2xl p-4 flex items-center justify-between gap-3 col-span-2 md:col-span-1">
       <div>
         <p class="text-[10px] font-black uppercase tracking-wider text-emerald-600">Emails Dispatched</p>
         <p class="text-2xl font-black text-slate-900 mt-1 tabular-nums">{{ campaigns().length }}</p>
@@ -137,9 +137,9 @@
 
   <!-- TAB 1 & TAB 2: SUPPORT INBOX + LIVE CHAT ISSUES -->
   @if (activeTab() === 'inbox' || activeTab() === 'chats') {
-    <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
+    <div class="scs-surface-3d rounded-2xl overflow-hidden">
       <!-- Filter Toolbar -->
-      <form [formGroup]="filterForm" (ngSubmit)="loadTickets()" class="p-4 border-b border-slate-200 bg-slate-50/70 flex flex-wrap items-center gap-3">
+      <form [formGroup]="filterForm" (ngSubmit)="loadTickets()" class="p-4 border-b border-slate-200/80 bg-white/60 flex flex-wrap items-center gap-3">
         <div class="relative flex-1 min-w-[200px]">
           <lucide-icon [name]="icons.Search" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></lucide-icon>
           <input type="text" formControlName="q" placeholder="Search ticket ID, customer, email, or agent..."
@@ -221,10 +221,10 @@
         </div>
 
         <!-- Selected Ticket Thread + Reply Studio -->
-        <div class="lg:col-span-7 flex flex-col bg-slate-50/40">
+        <div class="lg:col-span-7 flex flex-col bg-slate-50/30">
           @if (selectedTicket(); as active) {
             <!-- Ticket Meta Header -->
-            <div class="p-5 bg-white border-b border-slate-200 space-y-4">
+            <div class="p-5 bg-white/75 border-b border-slate-200/80 space-y-4">
               <div class="flex flex-wrap items-start justify-between gap-3">
                 <div class="min-w-0">
                   <div class="flex flex-wrap items-center gap-2">
@@ -309,7 +309,7 @@
             </div>
 
             <!-- Direct Email & Portal Reply Composer -->
-            <form [formGroup]="replyForm" (ngSubmit)="sendTicketReply(false)" class="p-5 bg-white border-t border-slate-200 space-y-4">
+            <form [formGroup]="replyForm" (ngSubmit)="sendTicketReply(false)" class="p-5 bg-white/75 border-t border-slate-200/80 space-y-4">
               @if (replyBanner(); as banner) {
                 <div class="p-3 rounded-xl text-xs font-semibold border"
                      [class.bg-emerald-50]="banner.ok"
@@ -416,7 +416,7 @@
   @if (activeTab() === 'campaigns') {
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
       <!-- Composer -->
-      <form [formGroup]="campaignForm" (ngSubmit)="dispatchCampaign()" class="lg:col-span-7 bg-white border border-slate-200 rounded-2xl p-6 space-y-5 shadow-xs">
+      <form [formGroup]="campaignForm" (ngSubmit)="dispatchCampaign()" class="lg:col-span-7 scs-surface-3d rounded-2xl p-6 space-y-5">
         <div class="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-100">
           <div>
             <h2 class="text-lg font-extrabold text-slate-900">Manual Direct &amp; Promotional Email Studio</h2>
@@ -547,7 +547,7 @@
       </form>
 
       <!-- Outbox & Campaign Audit Trail -->
-      <div class="lg:col-span-5 bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs flex flex-col">
+      <div class="lg:col-span-5 scs-surface-3d rounded-2xl overflow-hidden flex flex-col">
         <div class="p-5 border-b border-slate-200 flex items-center justify-between">
           <div>
             <h3 class="text-sm font-extrabold text-slate-900">Email &amp; Campaign Outbox Log</h3>
@@ -592,7 +592,7 @@
   @if (activeTab() === 'bot-smtp') {
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
       <!-- Auto-Bot Controls -->
-      <form [formGroup]="botForm" (ngSubmit)="saveBotConfig()" class="lg:col-span-7 bg-white border border-slate-200 rounded-2xl p-6 space-y-5 shadow-xs">
+      <form [formGroup]="botForm" (ngSubmit)="saveBotConfig()" class="lg:col-span-7 scs-surface-3d rounded-2xl p-6 space-y-5">
         <div class="pb-4 border-b border-slate-100">
           <h2 class="text-lg font-extrabold text-slate-900">Auto-Bot Triage &amp; Automated Reply Engine</h2>
           <p class="text-xs text-slate-500">Configure instant responses for landing page forms and live website chat before human handover.</p>
@@ -605,7 +605,7 @@
         }
 
         <div class="space-y-3">
-          <label class="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer">
+          <label class="flex items-center justify-between p-3.5 rounded-xl scs-tile-3d cursor-pointer">
             <div>
               <p class="text-xs font-extrabold text-slate-900">Enable Auto-Bot Triage Engine</p>
               <p class="text-[11px] text-slate-500">Automatically post instant categorized guidance when tickets arrive.</p>
@@ -613,7 +613,7 @@
             <input type="checkbox" formControlName="botEnabled" class="w-4 h-4 accent-indigo-600">
           </label>
 
-          <label class="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer">
+          <label class="flex items-center justify-between p-3.5 rounded-xl scs-tile-3d cursor-pointer">
             <div>
               <p class="text-xs font-extrabold text-slate-900">Auto-Send Acknowledgment Email to Client</p>
               <p class="text-[11px] text-slate-500">Dispatch Ticket ID confirmation email immediately after form submit.</p>
@@ -621,7 +621,7 @@
             <input type="checkbox" formControlName="autoAckEmail" class="w-4 h-4 accent-indigo-600">
           </label>
 
-          <label class="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer">
+          <label class="flex items-center justify-between p-3.5 rounded-xl scs-tile-3d cursor-pointer">
             <div>
               <p class="text-xs font-extrabold text-slate-900">Enable Auto-Bot on Website Live Chat</p>
               <p class="text-[11px] text-slate-500">Answer common questions live until escalated to SuperAdmin or team.</p>
@@ -644,7 +644,7 @@
         <div class="space-y-3">
           <p class="text-xs font-bold text-slate-700 uppercase tracking-wider">Smart Category Auto-Reply Templates</p>
           @for (rule of botRules(); track rule.id) {
-            <div class="p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 space-y-2">
+            <div class="p-3.5 rounded-xl scs-tile-3d space-y-2">
               <div class="flex items-center justify-between gap-2">
                 <span class="text-xs font-extrabold text-slate-900">{{ rule.title }}</span>
                 <span class="text-[10px] font-mono text-slate-500">{{ rule.category }} · {{ rule.priority }}</span>
@@ -664,7 +664,7 @@
       </form>
 
       <!-- Live SMTP Mailer Credentials -->
-      <form [formGroup]="smtpForm" (ngSubmit)="saveSmtpConfig()" class="lg:col-span-5 bg-white border border-slate-200 rounded-2xl p-6 space-y-4 shadow-xs h-fit">
+      <form [formGroup]="smtpForm" (ngSubmit)="saveSmtpConfig()" class="lg:col-span-5 scs-surface-3d rounded-2xl p-6 space-y-4 h-fit">
         <div class="pb-4 border-b border-slate-100">
           <h2 class="text-lg font-extrabold text-slate-900">SMTP Live Email Transport</h2>
           <p class="text-xs text-slate-500">Encrypt and persist SMTP credentials so ticket replies and promos deliver directly to external inboxes.</p>

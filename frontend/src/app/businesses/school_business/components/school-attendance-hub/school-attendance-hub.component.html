@@ -249,7 +249,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
 
       <!-- Left 7 cols: Open-Once Continuous Face Camera Studio -->
-      <div class="lg:col-span-7 apple-card rounded-[24px] p-5 sm:p-6 bg-white space-y-4">
+      <div class="lg:col-span-7 apple-card scs-surface-3d rounded-[24px] p-5 sm:p-6 space-y-4">
         <div class="flex items-center justify-between flex-wrap gap-3">
           <div>
             <h3 class="text-base font-black text-slate-900 tracking-tight">Selfie &amp; Walk-Up Face Scanner</h3>
@@ -617,7 +617,7 @@
       <div class="lg:col-span-5 space-y-5">
 
         <!-- Recognition Match Engine Card (HiOS) -->
-        <div class="apple-card rounded-[24px] p-5 sm:p-6 bg-white space-y-4">
+        <div class="apple-card scs-surface-3d rounded-[24px] p-5 sm:p-6 space-y-4">
           <div class="flex items-center justify-between gap-2">
             <div class="flex items-center gap-2.5">
               <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-blue-600 text-white flex items-center justify-center shadow-sm shadow-indigo-500/25">
@@ -714,7 +714,7 @@
         </div>
 
         <!-- Live Attendance Ledger Card (HiOS) -->
-        <div class="apple-card rounded-[24px] p-5 sm:p-6 bg-white space-y-3.5">
+        <div class="apple-card scs-surface-3d rounded-[24px] p-5 sm:p-6 space-y-3.5">
           <div class="flex items-center justify-between gap-2 pb-2 border-b border-slate-100">
             <div class="flex items-center gap-2.5">
               <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-sm shadow-emerald-500/25">
@@ -761,7 +761,7 @@
 
     <!-- Marked Attendance Details Table (Strictly inside Attendance Hub, separate from Admissions) -->
     @if (!kioskFullscreen()) {
-      <div class="apple-card rounded-[24px] p-5 sm:p-6 bg-white space-y-4">
+      <div class="apple-card scs-surface-3d rounded-[24px] p-5 sm:p-6 space-y-4">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3.5">
           <div class="flex items-center gap-3">
             <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-sm border border-white/30 shrink-0">
@@ -788,7 +788,7 @@
           </div>
         </div>
 
-        <div class="overflow-x-auto border border-slate-200/80 rounded-2xl bg-white">
+        <div class="overflow-x-auto scs-tile-3d rounded-2xl">
           <table appSchoolTable="attendance_marked_details" tableTitle="Marked Attendance Details" class="w-full text-left border-collapse text-xs tabular-nums">
             <thead class="bg-slate-50/95 text-slate-500 uppercase font-bold tracking-wider text-[10px] border-b border-slate-200/80">
               <tr>
@@ -867,7 +867,7 @@
     <!-- SUB-TABS 2-5: SEPARATE ROSTERS (STUDENTS / TEACHERS / STAFF / PRINCIPAL) -->
     <!-- ====================================================================== -->
     @if (activeSubTab() === 'students' || activeSubTab() === 'teachers' || activeSubTab() === 'staff' || activeSubTab() === 'principals') {
-      <div class="apple-card rounded-[24px] p-5 sm:p-6 bg-white space-y-5">
+      <div class="apple-card scs-surface-3d rounded-[24px] p-5 sm:p-6 space-y-5">
 
         <!-- Section Header + Toolbar -->
         <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-4 border-b border-slate-100 pb-4">
@@ -948,7 +948,7 @@
 
         <!-- Customizable Fields & Dynamic PDF / CSV Export Selector Panel (Owner Only) -->
         @if (isOwner() && columnPickerOpen()) {
-          <div class="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-slate-50/95 via-white to-indigo-50/40 border border-indigo-200/75 shadow-inner space-y-4">
+          <div class="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-4">
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-200/70 pb-3">
               <div class="flex items-center gap-2.5">
                 <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-blue-600 text-white flex items-center justify-center shadow-xs shrink-0">
@@ -996,7 +996,7 @@
             <!-- Grouped Column Checkboxes -->
             <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3.5 text-xs">
               @for (grp of columnGroups; track grp.group) {
-                <div class="p-3 rounded-2xl bg-white border border-slate-200/80 shadow-2xs space-y-2">
+                <div class="p-3 rounded-2xl scs-tile-3d space-y-2">
                   <p class="text-[10px] font-black uppercase tracking-wider text-slate-500 border-b border-slate-100 pb-1.5">
                     {{ grp.group }}
                   </p>
@@ -1042,7 +1042,7 @@
 
         <!-- Inline Add Principal / Vice Principal Form -->
         @if (activeSubTab() === 'principals' && showAddPrincipalForm()) {
-          <div class="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-slate-50 to-white border border-slate-200/90 shadow-inner space-y-4">
+          <div class="p-4 sm:p-5 rounded-2xl scs-surface-3d space-y-4">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2.5">
                 <div class="w-7 h-7 rounded-xl bg-gradient-to-tr from-violet-500 to-indigo-600 text-white flex items-center justify-center shadow-xs">
@@ -1130,7 +1130,7 @@
 
         <!-- Inline Add Staff Form -->
         @if (activeSubTab() === 'staff' && showAddStaffForm()) {
-          <div class="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-slate-50 to-white border border-slate-200/90 shadow-inner space-y-4">
+          <div class="p-4 sm:p-5 rounded-2xl scs-surface-3d space-y-4">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2.5">
                 <div class="w-7 h-7 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 text-white flex items-center justify-center shadow-xs">
@@ -1270,7 +1270,7 @@
         </div>
 
         <!-- Full Dynamic Local + International Compliance & Punctuality Roster Table -->
-        <div class="overflow-x-auto border border-slate-200/80 rounded-2xl bg-white">
+        <div class="overflow-x-auto scs-tile-3d rounded-2xl">
           <table [appSchoolTable]="'attendance_roster_' + activeSubTab()" [tableTitle]="activeSubTab() + ' Attendance Roster'" class="w-full text-left border-collapse text-xs tabular-nums">
             <thead class="bg-slate-50/95 text-slate-500 uppercase font-bold tracking-wider text-[10px] border-b border-slate-200/80">
               <tr>
@@ -1598,7 +1598,7 @@
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
 
         <!-- Left 7 cols: Live Camera Capture for Face Registration -->
-        <div class="lg:col-span-7 apple-card rounded-[24px] p-5 sm:p-6 bg-white space-y-4">
+        <div class="lg:col-span-7 apple-card scs-surface-3d rounded-[24px] p-5 sm:p-6 space-y-4">
           <div class="flex items-center justify-between flex-wrap gap-3 border-b border-slate-100 pb-4">
             <div class="flex items-center gap-3">
               <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-500 text-white flex items-center justify-center shadow-sm border border-white/30 shrink-0">
@@ -1732,21 +1732,21 @@
           </div>
 
           @if (enrollExtraction(); as ex) {
-            <div class="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-slate-50 to-white border border-slate-200/90 space-y-3.5">
+            <div class="p-4 sm:p-5 rounded-2xl scs-tile-3d space-y-3.5">
               <div class="flex items-center justify-between text-xs">
                 <span class="font-black text-slate-900 tracking-tight">Captured Face Signature Metrics</span>
                 <span class="font-mono font-bold text-slate-500">{{ ex.hash }}</span>
               </div>
               <div class="grid grid-cols-3 gap-2.5 text-center text-xs tabular-nums">
-                <div class="p-2.5 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
+                <div class="p-2.5 rounded-xl scs-tile-3d">
                   <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Quality</span>
                   <strong class="text-sm font-black text-slate-900">{{ ex.qualityScore }}%</strong>
                 </div>
-                <div class="p-2.5 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
+                <div class="p-2.5 rounded-xl scs-tile-3d">
                   <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Brightness</span>
                   <strong class="text-sm font-black text-slate-900">{{ ex.brightness }}%</strong>
                 </div>
-                <div class="p-2.5 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
+                <div class="p-2.5 rounded-xl scs-tile-3d">
                   <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Sharpness</span>
                   <strong class="text-sm font-black text-slate-900">{{ ex.sharpness }}%</strong>
                 </div>
@@ -1777,7 +1777,7 @@
         </div>
 
         <!-- Right 5 cols: Enrolled Profiles Registry -->
-        <div class="lg:col-span-5 apple-card rounded-[24px] p-5 sm:p-6 bg-white space-y-4">
+        <div class="lg:col-span-5 apple-card scs-surface-3d rounded-[24px] p-5 sm:p-6 space-y-4">
           <div class="flex items-center justify-between border-b border-slate-100 pb-3.5">
             <div class="flex items-center gap-2.5">
               <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-sky-500 to-blue-600 text-white flex items-center justify-center shadow-xs border border-white/30 shrink-0">
@@ -1836,7 +1836,7 @@
       <div class="space-y-5">
 
         <!-- Section A: Verification Engine, Lite Mode & Camera Illumination -->
-        <div class="apple-card rounded-[24px] p-5 sm:p-6 bg-white space-y-5">
+        <div class="apple-card scs-surface-3d rounded-[24px] p-5 sm:p-6 space-y-5">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
             <div class="flex items-center gap-3">
               <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-500 text-white flex items-center justify-center shadow-sm border border-white/30 shrink-0">
@@ -1859,8 +1859,8 @@
           <!-- Verification Strictness Mode Cards -->
           <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5">
             <button type="button" (click)="updateDraftMode('strict')"
-              class="p-4 rounded-2xl border text-left cursor-pointer transition-all space-y-1.5"
-              [class]="policyDraft().verificationMode === 'strict' ? 'bg-emerald-50/70 border-emerald-500 ring-1 ring-emerald-500/30 shadow-xs' : 'bg-slate-50/70 border-slate-200/80 hover:bg-white hover:border-slate-300'">
+              class="p-4 rounded-2xl text-left cursor-pointer transition-all space-y-1.5"
+              [class]="policyDraft().verificationMode === 'strict' ? 'border bg-emerald-50/70 border-emerald-500 ring-1 ring-emerald-500/30 shadow-xs' : 'scs-tile-3d'">
               <div class="flex items-center justify-between">
                 <span class="text-xs font-black text-slate-900 tracking-tight">Strict Face + Liveness</span>
                 @if (policyDraft().verificationMode === 'strict') {
@@ -1871,8 +1871,8 @@
             </button>
 
             <button type="button" (click)="updateDraftMode('standard')"
-              class="p-4 rounded-2xl border text-left cursor-pointer transition-all space-y-1.5"
-              [class]="policyDraft().verificationMode === 'standard' ? 'bg-emerald-50/70 border-emerald-500 ring-1 ring-emerald-500/30 shadow-xs' : 'bg-slate-50/70 border-slate-200/80 hover:bg-white hover:border-slate-300'">
+              class="p-4 rounded-2xl text-left cursor-pointer transition-all space-y-1.5"
+              [class]="policyDraft().verificationMode === 'standard' ? 'border bg-emerald-50/70 border-emerald-500 ring-1 ring-emerald-500/30 shadow-xs' : 'scs-tile-3d'">
               <div class="flex items-center justify-between">
                 <span class="text-xs font-black text-slate-900 tracking-tight">Standard Camera Face</span>
                 @if (policyDraft().verificationMode === 'standard') {
@@ -1883,8 +1883,8 @@
             </button>
 
             <button type="button" (click)="updateDraftMode('lite')"
-              class="p-4 rounded-2xl border text-left cursor-pointer transition-all space-y-1.5"
-              [class]="policyDraft().verificationMode === 'lite' ? 'bg-emerald-50/70 border-emerald-500 ring-1 ring-emerald-500/30 shadow-xs' : 'bg-slate-50/70 border-slate-200/80 hover:bg-white hover:border-slate-300'">
+              class="p-4 rounded-2xl text-left cursor-pointer transition-all space-y-1.5"
+              [class]="policyDraft().verificationMode === 'lite' ? 'border bg-emerald-50/70 border-emerald-500 ring-1 ring-emerald-500/30 shadow-xs' : 'scs-tile-3d'">
               <div class="flex items-center justify-between">
                 <span class="text-xs font-black text-slate-900 tracking-tight">Lite Quick-Verify Mode</span>
                 @if (policyDraft().verificationMode === 'lite') {
@@ -1898,7 +1898,7 @@
           <!-- Feature Toggles & Sliders -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
             <div class="space-y-2.5">
-              <label class="p-3.5 rounded-2xl border border-slate-200/80 bg-slate-50/70 hover:bg-slate-50 flex items-center justify-between gap-3 cursor-pointer transition-colors select-none">
+              <label class="p-3.5 rounded-2xl scs-tile-3d flex items-center justify-between gap-3 cursor-pointer transition-all select-none">
                 <div>
                   <span class="font-bold text-slate-900 block">Allow Lite Verification Toggle</span>
                   <span class="text-[11px] text-slate-500">Permitted portals can switch on Lite Quick-Verify</span>
@@ -1911,7 +1911,7 @@
                 </div>
               </label>
 
-              <label class="p-3.5 rounded-2xl border border-slate-200/80 bg-slate-50/70 hover:bg-slate-50 flex items-center justify-between gap-3 cursor-pointer transition-colors select-none">
+              <label class="p-3.5 rounded-2xl scs-tile-3d flex items-center justify-between gap-3 cursor-pointer transition-all select-none">
                 <div>
                   <span class="font-bold text-slate-900 block">Camera Light Boost</span>
                   <span class="text-[11px] text-slate-500">Brightens screen border in dim light</span>
@@ -1924,7 +1924,7 @@
                 </div>
               </label>
 
-              <label class="p-3.5 rounded-2xl border border-slate-200/80 bg-slate-50/70 hover:bg-slate-50 flex items-center justify-between gap-3 cursor-pointer transition-colors select-none">
+              <label class="p-3.5 rounded-2xl scs-tile-3d flex items-center justify-between gap-3 cursor-pointer transition-all select-none">
                 <div>
                   <span class="font-bold text-slate-900 block">Auto-Scan Continuous Queue</span>
                   <span class="text-[11px] text-slate-500">Hands-free live detection &amp; save without button tap</span>
@@ -1937,7 +1937,7 @@
                 </div>
               </label>
 
-              <label class="p-3.5 rounded-2xl border border-slate-200/80 bg-slate-50/70 hover:bg-slate-50 flex items-center justify-between gap-3 cursor-pointer transition-colors select-none">
+              <label class="p-3.5 rounded-2xl scs-tile-3d flex items-center justify-between gap-3 cursor-pointer transition-all select-none">
                 <div>
                   <span class="font-bold text-slate-900 block">Two-Punch Shift (IN &amp; OUT)</span>
                   <span class="text-[11px] text-slate-500">Locks duplicates after IN until Check-Out time enables</span>
@@ -1950,7 +1950,7 @@
                 </div>
               </label>
 
-              <label class="p-3.5 rounded-2xl border border-slate-200/80 bg-slate-50/70 hover:bg-slate-50 flex items-center justify-between gap-3 cursor-pointer transition-colors select-none">
+              <label class="p-3.5 rounded-2xl scs-tile-3d flex items-center justify-between gap-3 cursor-pointer transition-all select-none">
                 <div>
                   <span class="font-bold text-slate-900 block">Enforce Camera-Only Attendance</span>
                   <span class="text-[11px] text-slate-500">Requires camera face verification across portals</span>
@@ -1963,7 +1963,7 @@
                 </div>
               </label>
 
-              <label class="p-3.5 rounded-2xl border border-slate-200/80 bg-slate-50/70 hover:bg-slate-50 flex items-center justify-between gap-3 cursor-pointer transition-colors select-none">
+              <label class="p-3.5 rounded-2xl scs-tile-3d flex items-center justify-between gap-3 cursor-pointer transition-all select-none">
                 <div>
                   <span class="font-bold text-slate-900 block">Motion Liveness Verification</span>
                   <span class="text-[11px] text-slate-500">Detects live frame delta in Strict mode</span>
@@ -1977,7 +1977,7 @@
               </label>
             </div>
 
-            <div class="space-y-4 p-4 sm:p-5 rounded-2xl border border-slate-200/80 bg-slate-50/70 flex flex-col justify-between">
+            <div class="space-y-4 p-4 sm:p-5 rounded-2xl scs-tile-3d flex flex-col justify-between">
               <div class="space-y-4">
                 <div>
                   <div class="flex items-center justify-between font-bold text-slate-800 mb-1.5">
@@ -2034,7 +2034,7 @@
         </div>
 
         <!-- Section B: Category Setup (Students | Teachers | Staff | Principal) -->
-        <div class="apple-card rounded-[24px] p-5 sm:p-6 bg-white space-y-4">
+        <div class="apple-card scs-surface-3d rounded-[24px] p-5 sm:p-6 space-y-4">
           <div class="flex items-center gap-3 border-b border-slate-100 pb-3.5">
             <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-sky-500 to-blue-600 text-white flex items-center justify-center shadow-sm border border-white/30 shrink-0">
               <lucide-icon [name]="'users'" class="w-4 h-4"></lucide-icon>
@@ -2048,7 +2048,7 @@
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3.5 text-xs">
             @for (cat of ['student', 'teacher', 'staff', 'principal']; track cat) {
               @let rule = getCategoryRule($any(cat));
-              <div class="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/80 space-y-3">
+              <div class="p-4 rounded-2xl scs-tile-3d space-y-3">
                 <div class="flex items-center justify-between border-b border-slate-200/70 pb-2">
                   <p class="font-black text-slate-900 tracking-tight text-xs uppercase">
                     {{ cat === 'student' ? 'Students' : (cat === 'teacher' ? 'Teachers' : (cat === 'staff' ? 'Campus Staff' : 'Principal')) }}
@@ -2102,7 +2102,7 @@
         </div>
 
         <!-- Section C: Role Access Control Matrix & Individual Operator Lite Toggles -->
-        <div class="apple-card rounded-[24px] p-5 sm:p-6 bg-white space-y-5">
+        <div class="apple-card scs-surface-3d rounded-[24px] p-5 sm:p-6 space-y-5">
           <div class="flex items-center gap-3 border-b border-slate-100 pb-3.5">
             <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-violet-500 to-indigo-600 text-white flex items-center justify-center shadow-sm border border-white/30 shrink-0">
               <lucide-icon [name]="'shield-check'" class="w-4 h-4"></lucide-icon>
@@ -2113,7 +2113,7 @@
             </div>
           </div>
 
-          <div class="overflow-x-auto border border-slate-200/80 rounded-2xl bg-white">
+          <div class="overflow-x-auto scs-tile-3d rounded-2xl">
             <table class="w-full text-left border-collapse text-xs">
               <thead class="bg-slate-50/90 text-slate-500 uppercase font-bold tracking-wider text-[10px] border-b border-slate-200/80">
                 <tr>
@@ -2215,7 +2215,7 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
               @for (op of getOperatorOverrideMembers(); track op.id) {
-                <div class="p-3.5 rounded-2xl bg-slate-50/80 border border-slate-200/80 flex items-center justify-between gap-2.5">
+                <div class="p-3.5 rounded-2xl scs-tile-3d flex items-center justify-between gap-2.5">
                   <div class="min-w-0">
                     <p class="font-bold text-slate-900 truncate">{{ op.name }}</p>
                     <p class="text-[11px] font-medium text-slate-500 truncate">{{ op.subLabel }}</p>

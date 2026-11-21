@@ -42,7 +42,7 @@ export type GrowthMetricType = 'health' | 'enrollment' | 'examSecurity' | 'civil
     <div class="space-y-6">
       
       <!-- Top Executive Overview & Filter Banner -->
-      <div class="apple-card rounded-3xl p-6 bg-white border border-slate-200/90 shadow-sm">
+      <div class="apple-card scs-surface-3d rounded-3xl p-6">
         <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-5 pb-5 border-b border-slate-100">
           
           <div class="flex items-start sm:items-center gap-3.5">
@@ -104,7 +104,7 @@ export type GrowthMetricType = 'health' | 'enrollment' | 'examSecurity' | 'civil
 
         <!-- 4-Metric Institutional Performance Strip -->
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-5">
-          <div class="p-4 rounded-2xl bg-slate-50/70 border border-slate-200/80 space-y-1">
+          <div class="p-4 rounded-2xl scs-tile-3d space-y-1">
             <div class="flex items-center justify-between text-[11px] font-bold text-slate-500 uppercase tracking-wider">
               <span>Cumulative Billed</span>
               <mat-icon class="text-xs text-indigo-600">receipt</mat-icon>
@@ -117,7 +117,7 @@ export type GrowthMetricType = 'health' | 'enrollment' | 'examSecurity' | 'civil
             </div>
           </div>
 
-          <div class="p-4 rounded-2xl bg-slate-50/70 border border-slate-200/80 space-y-1">
+          <div class="p-4 rounded-2xl scs-tile-3d space-y-1">
             <div class="flex items-center justify-between text-[11px] font-bold text-slate-500 uppercase tracking-wider">
               <span>Realized Collections</span>
               <mat-icon class="text-xs text-emerald-600">account_balance</mat-icon>
@@ -132,7 +132,7 @@ export type GrowthMetricType = 'health' | 'enrollment' | 'examSecurity' | 'civil
             </div>
           </div>
 
-          <div class="p-4 rounded-2xl bg-slate-50/70 border border-slate-200/80 space-y-1">
+          <div class="p-4 rounded-2xl scs-tile-3d space-y-1">
             <div class="flex items-center justify-between text-[11px] font-bold text-slate-500 uppercase tracking-wider">
               <span>Audit Growth Delta</span>
               <mat-icon class="text-xs text-cyan-600">trending_up</mat-icon>
@@ -145,7 +145,7 @@ export type GrowthMetricType = 'health' | 'enrollment' | 'examSecurity' | 'civil
             </div>
           </div>
 
-          <div class="p-4 rounded-2xl bg-slate-50/70 border border-slate-200/80 space-y-1">
+          <div class="p-4 rounded-2xl scs-tile-3d space-y-1">
             <div class="flex items-center justify-between text-[11px] font-bold text-slate-500 uppercase tracking-wider">
               <span>Reconciliation Variance</span>
               <mat-icon class="text-xs text-emerald-600">verified</mat-icon>
@@ -168,7 +168,7 @@ export type GrowthMetricType = 'health' | 'enrollment' | 'examSecurity' | 'civil
         <!-- ======================================================== -->
         <!-- CHART 1: D3-BASED LINE CHART FOR INSTITUTIONAL GROWTH -->
         <!-- ======================================================== -->
-        <div class="lg:col-span-7 apple-card rounded-3xl p-6 bg-white border border-slate-200/90 shadow-sm space-y-4">
+        <div class="lg:col-span-7 apple-card scs-surface-3d rounded-3xl p-6 space-y-4">
           
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
             <div>
@@ -365,7 +365,7 @@ export type GrowthMetricType = 'health' | 'enrollment' | 'examSecurity' | 'civil
         <!-- ======================================================== -->
         <!-- CHART 2: D3-BASED BAR CHART FOR MONTHLY FEE COLLECTION -->
         <!-- ======================================================== -->
-        <div class="lg:col-span-5 apple-card rounded-3xl p-6 bg-white border border-slate-200/90 shadow-sm space-y-4">
+        <div class="lg:col-span-5 apple-card scs-surface-3d rounded-3xl p-6 space-y-4">
           
           <div class="flex items-center justify-between pb-3 border-b border-slate-100">
             <div class="flex items-center gap-2">
@@ -493,7 +493,7 @@ export type GrowthMetricType = 'health' | 'enrollment' | 'examSecurity' | 'civil
       </div>
 
       <!-- DETAILED RECONCILIATION & AUDIT PERFORMANCE LEDGER -->
-      <div class="apple-card rounded-3xl p-6 bg-white border border-slate-200/90 shadow-sm space-y-4">
+      <div class="apple-card scs-surface-3d rounded-3xl p-6 space-y-4">
         <div class="flex items-center justify-between flex-wrap gap-3 pb-3 border-b border-slate-100">
           <div>
             <h3 class="font-black text-slate-900 text-sm flex items-center gap-2">

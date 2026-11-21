@@ -1291,20 +1291,86 @@ html[lang="vi"] p, html[lang="vi"] li, html[lang="ms"] p, html[lang="ms"] li, ht
    Cards: Consistent Rounded Corners (18-20px) & Depth Shadows
    ========================================================================== */
 
-.hios-card:not([class*="bg-"]), .apple-card:not([class*="bg-"]) {
-  background-color: #FFFFFF;
+.hios-card:not([class*="bg-"]) {
+  background: linear-gradient(180deg, #ffffff 0%, #ffffff 74%, rgba(248, 250, 252, 0.85) 100%);
 }
 
-.hios-card, .apple-card {
+.hios-card {
   border-radius: 20px;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  box-shadow: var(--shadow-depth-card);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.06),
+              0 1px 3px 0 rgba(0, 0, 0, 0.03);
   transition: box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.22s ease;
 }
 
-.hios-card:hover, .apple-card:hover {
-  box-shadow: var(--shadow-depth-card-hover);
-  border-color: rgba(0, 0, 0, 0.08);
+.hios-card:hover {
+  box-shadow: 0 14px 28px -4px rgba(15, 23, 42, 0.11),
+              0 4px 10px -2px rgba(15, 23, 42, 0.05);
+  border-color: rgba(203, 213, 225, 0.95);
+}
+
+/* Scoped Crisp White 3D Cards for School & SuperAdmin Dashboards */
+.apple-card:not(.modal-white-card):not([class*="from-"]):not([class*="bg-slate-9"]):not([class*="bg-indigo-"]):not([class*="bg-emerald-"]):not([class*="bg-amber-"]):not([class*="bg-rose-"]) {
+  background: linear-gradient(180deg, #ffffff 0%, #ffffff 74%, rgba(248, 250, 252, 0.85) 100%) !important;
+}
+
+.apple-card {
+  border-radius: 20px;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.06),
+              0 1px 3px 0 rgba(0, 0, 0, 0.03);
+  transition: box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.22s ease;
+}
+
+.apple-card:hover {
+  box-shadow: 0 14px 28px -4px rgba(15, 23, 42, 0.11),
+              0 4px 10px -2px rgba(15, 23, 42, 0.05);
+  border-color: rgba(203, 213, 225, 0.95);
+}
+
+@layer components {
+  .scs-canvas-3d {
+    background: #f8fafc;
+  }
+
+  .scs-surface-3d {
+    background: linear-gradient(180deg, #ffffff 0%, #ffffff 74%, rgba(248, 250, 252, 0.85) 100%);
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.06),
+                0 1px 3px 0 rgba(0, 0, 0, 0.03);
+  }
+
+  .scs-tile-3d {
+    background: linear-gradient(180deg, #ffffff 0%, #ffffff 74%, rgba(248, 250, 252, 0.85) 100%);
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.06),
+                0 1px 3px 0 rgba(0, 0, 0, 0.03);
+    transition: box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+  }
+
+  .scs-tile-3d:hover {
+    box-shadow: 0 14px 28px -4px rgba(15, 23, 42, 0.12),
+                0 4px 10px -2px rgba(15, 23, 42, 0.05);
+    border-color: rgba(203, 213, 225, 0.95);
+  }
+
+  .scs-nav-3d-idle {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+  }
+
+  .scs-nav-3d-idle:hover {
+    background: rgba(15, 23, 42, 0.04);
+    border: none;
+    box-shadow: none;
+    transform: none;
+  }
+
+  .scs-sidebar-hero-bg {
+    background-color: #f8fafc;
+    background-image: none;
+  }
 }
 
 /* Enhance all standard platform white cards with uniform HiOS depth */

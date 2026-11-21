@@ -36,19 +36,19 @@
 
     <!-- Chromatic Quick Telemetry KPIs -->
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-7 pt-6 border-t border-slate-200/70">
-      <div class="bg-white/90 rounded-2xl border border-slate-200/90 border-t-4 border-t-indigo-600 p-4 shadow-2xs">
+      <div class="scs-tile-3d rounded-2xl border-t-4 border-t-indigo-600 p-4">
         <p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Total Personnel</p>
         <p class="text-2xl font-black text-slate-900 tabular-nums mt-1">{{ members.length }} <span class="text-xs text-indigo-600 font-bold">Seats</span></p>
       </div>
-      <div class="bg-white/90 rounded-2xl border border-slate-200/90 border-t-4 border-t-emerald-500 p-4 shadow-2xs">
+      <div class="scs-tile-3d rounded-2xl border-t-4 border-t-emerald-500 p-4">
         <p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Hardware 2FA / MFA</p>
         <p class="text-2xl font-black text-emerald-600 tabular-nums mt-1">100% <span class="text-xs text-slate-500 font-semibold">Enforced</span></p>
       </div>
-      <div class="bg-white/90 rounded-2xl border border-slate-200/90 border-t-4 border-t-cyan-500 p-4 shadow-2xs">
+      <div class="scs-tile-3d rounded-2xl border-t-4 border-t-cyan-500 p-4">
         <p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Active Sessions</p>
         <p class="text-2xl font-black text-cyan-700 tabular-nums mt-1">18 <span class="text-xs text-slate-500 font-semibold">Encrypted</span></p>
       </div>
-      <div class="bg-white/90 rounded-2xl border border-slate-200/90 border-t-4 border-t-amber-500 p-4 shadow-2xs">
+      <div class="scs-tile-3d rounded-2xl border-t-4 border-t-amber-500 p-4">
         <p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Privileged Roles</p>
         <p class="text-2xl font-black text-amber-600 tabular-nums mt-1">5 <span class="text-xs text-slate-500 font-semibold">Tier-1 Profiles</span></p>
       </div>
@@ -56,7 +56,7 @@
   </div>
 
   <!-- Search & Filter Controls -->
-  <div class="bg-white rounded-2xl p-4 border border-slate-200/90 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
+  <div class="scs-surface-3d rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
     <div class="relative w-full sm:w-80">
       <lucide-icon [name]="icons.Search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></lucide-icon>
       <input 
@@ -85,10 +85,10 @@
   </div>
 
   <!-- Members Table -->
-  <div class="bg-white rounded-[24px] border border-slate-200/90 shadow-xs overflow-hidden">
+  <div class="scs-surface-3d rounded-[24px] overflow-hidden">
     <!-- Mobile Personnel Cards (Mobile View) -->
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 md:hidden">
-      <div *ngFor="let member of paginatedMembers" class="apple-card rounded-2xl border border-slate-200/90 p-4 bg-white shadow-2xs space-y-3">
+      <div *ngFor="let member of paginatedMembers" class="apple-card rounded-2xl scs-tile-3d p-4 space-y-3">
         <div class="flex items-center justify-between gap-2">
           <div class="flex items-center gap-3 min-w-0">
             <div class="w-10 h-10 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-700 font-black flex items-center justify-center text-xs shrink-0 shadow-2xs">
@@ -134,7 +134,7 @@
     <!-- Desktop Members Table (Desktop View) -->
     <div class="hidden md:block overflow-x-auto">
       <table class="w-full text-left text-xs text-slate-600">
-        <thead class="bg-gradient-to-r from-emerald-50/90 via-slate-50 to-teal-50/80 text-slate-700 border-b border-emerald-100/90 font-black uppercase tracking-wider text-[10px]">
+        <thead class="bg-slate-50 text-slate-700 border-b border-slate-200/80 font-black uppercase tracking-wider text-[10px]">
           <tr>
             <th class="px-6 py-4">Personnel</th>
             <th class="px-6 py-4">Department & Role</th>
@@ -212,7 +212,7 @@
   <!-- Provision Modal -->
   <div *ngIf="isInviteOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
     <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden transform transition-all">
-      <div class="px-6 py-5 bg-gradient-to-r from-emerald-50/90 via-white to-teal-50/80 border-b border-emerald-100/90 text-slate-900 flex items-center justify-between">
+      <div class="px-6 py-5 bg-white border-b border-slate-200/80 text-slate-900 flex items-center justify-between">
         <div>
           <h3 class="text-base font-black text-slate-900">Provision Enterprise Access</h3>
           <p class="text-xs text-slate-500 mt-0.5">Send cryptographically signed onboarding invitation</p>

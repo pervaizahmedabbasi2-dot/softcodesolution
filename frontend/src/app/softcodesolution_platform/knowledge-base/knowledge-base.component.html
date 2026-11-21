@@ -25,7 +25,7 @@
   </div>
 
   <!-- Search & Filter Controls -->
-  <div class="bg-white rounded-2xl p-4 border border-slate-200/90 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
+  <div class="scs-surface-3d rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
     <div class="relative w-full sm:w-80">
       <lucide-icon [name]="icons.Search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></lucide-icon>
       <input 
@@ -54,7 +54,7 @@
 
   <!-- Articles Grid -->
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-    <div *ngFor="let doc of filteredArticles" class="bg-white rounded-[24px] border border-slate-200/90 border-t-4 border-t-indigo-500 p-6 shadow-xs hover:shadow-md hover:border-indigo-300 transition-all flex flex-col justify-between">
+    <div *ngFor="let doc of filteredArticles" class="scs-tile-3d rounded-[24px] border-t-4 border-t-indigo-500 p-6 hover:border-indigo-300 transition-all flex flex-col justify-between">
       <div>
         <div class="flex items-center justify-between gap-3 mb-3">
           <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-100">
@@ -68,7 +68,7 @@
           {{ doc.description }}
         </p>
 
-        <div *ngIf="doc.codeSnippet" class="bg-gradient-to-br from-emerald-50/80 via-white to-slate-50 rounded-xl p-3.5 border border-emerald-200/80 font-mono text-[11px] text-emerald-900 overflow-x-auto mb-4 shadow-2xs">
+        <div *ngIf="doc.codeSnippet" class="bg-slate-50 rounded-xl p-3.5 border border-slate-200/90 font-mono text-[11px] text-slate-800 overflow-x-auto mb-4 shadow-2xs">
           <pre><code>{{ doc.codeSnippet }}</code></pre>
         </div>
       </div>

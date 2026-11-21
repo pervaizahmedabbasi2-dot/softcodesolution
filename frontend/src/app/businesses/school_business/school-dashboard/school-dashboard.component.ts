@@ -801,11 +801,13 @@ export interface PrincipalFeeCollectionRecord {
     }
 
     .apple-card {
-      background: linear-gradient(135deg, #ffffff 0%, #f4fbf8 55%, #f8fafc 100%);
-      border: 1px solid rgba(226, 232, 240, 0.85);
-      box-shadow: 0 12px 32px -12px rgba(16, 185, 129, 0.14),
-                  0 4px 12px -4px rgba(15, 23, 42, 0.04),
-                  inset 0 1px 0 rgba(255, 255, 255, 0.95);
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.97) 0%, rgba(248, 250, 252, 0.94) 55%, rgba(236, 253, 245, 0.35) 100%);
+      backdrop-filter: blur(20px) saturate(160%);
+      -webkit-backdrop-filter: blur(20px) saturate(160%);
+      border: 1px solid rgba(255, 255, 255, 0.92);
+      box-shadow: 0 14px 34px -10px rgba(15, 23, 42, 0.08),
+                  0 6px 16px -4px rgba(16, 185, 129, 0.10),
+                  inset 0 1px 2px rgba(255, 255, 255, 0.98);
     }
 
     .fixed .apple-card,

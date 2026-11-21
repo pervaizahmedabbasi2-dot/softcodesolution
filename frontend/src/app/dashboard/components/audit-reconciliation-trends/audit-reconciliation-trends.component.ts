@@ -28,7 +28,7 @@ export type ChartVisualizationType = 'area' | 'bar' | 'health' | 'composed';
   standalone: true,
   imports: [CommonModule, FormsModule, MatIconModule, LucideAngularModule],
   template: `
-    <div class="rounded-3xl bg-white border border-slate-200/90 shadow-sm overflow-hidden transition-all duration-300">
+    <div class="rounded-3xl scs-surface-3d border border-slate-200/90 shadow-sm overflow-hidden transition-all duration-300">
       
       <!-- Top Control & Header Strip -->
       <div class="p-5 sm:p-6 border-b border-slate-100 bg-gradient-to-r from-slate-50/70 via-white to-indigo-50/20">
@@ -140,7 +140,7 @@ export type ChartVisualizationType = 'area' | 'bar' | 'health' | 'composed';
 
         <!-- Metric KPI Ribbon -->
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5 mt-5">
-          <div class="p-3.5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs space-y-1">
+          <div class="p-3.5 rounded-2xl scs-tile-3d border border-slate-200/90 shadow-2xs space-y-1">
             <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Total Billed Fees</span>
             <div class="text-lg sm:text-xl font-black text-slate-900 font-mono">
               PKR {{ (totalBilled() / 1000000).toFixed(2) }}M
@@ -151,7 +151,7 @@ export type ChartVisualizationType = 'area' | 'bar' | 'health' | 'composed';
             </div>
           </div>
 
-          <div class="p-3.5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs space-y-1">
+          <div class="p-3.5 rounded-2xl scs-tile-3d border border-slate-200/90 shadow-2xs space-y-1">
             <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Bank Reconciled</span>
             <div class="text-lg sm:text-xl font-black text-emerald-600 font-mono">
               PKR {{ (totalCollected() / 1000000).toFixed(2) }}M
@@ -162,7 +162,7 @@ export type ChartVisualizationType = 'area' | 'bar' | 'health' | 'composed';
             </div>
           </div>
 
-          <div class="p-3.5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs space-y-1">
+          <div class="p-3.5 rounded-2xl scs-tile-3d border border-slate-200/90 shadow-2xs space-y-1">
             <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Unverified Variance</span>
             <div class="text-lg sm:text-xl font-black text-slate-900 font-mono"
                  [class.text-emerald-600]="totalVariance() === 0"
@@ -175,7 +175,7 @@ export type ChartVisualizationType = 'area' | 'bar' | 'health' | 'composed';
             </div>
           </div>
 
-          <div class="p-3.5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs space-y-1">
+          <div class="p-3.5 rounded-2xl scs-tile-3d border border-slate-200/90 shadow-2xs space-y-1">
             <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Average Audit Health</span>
             <div class="text-lg sm:text-xl font-black text-cyan-600 font-mono">
               {{ averageHealthScore().toFixed(1) }}%
@@ -429,7 +429,7 @@ export type ChartVisualizationType = 'area' | 'bar' | 'health' | 'composed';
         </div>
 
         <!-- Circular Health Progress Indicator & Compliance Summary -->
-        <div class="lg:col-span-4 p-5 rounded-2xl bg-gradient-to-b from-slate-50 to-indigo-50/30 border border-slate-200/80 flex flex-col items-center justify-center text-center space-y-4">
+        <div class="lg:col-span-4 p-5 rounded-2xl scs-tile-3d border border-slate-200/80 flex flex-col items-center justify-center text-center space-y-4">
           
           <div class="space-y-0.5">
             <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 block">Institutional Integrity</span>
@@ -471,7 +471,7 @@ export type ChartVisualizationType = 'area' | 'bar' | 'health' | 'composed';
 
           <!-- Channel Allocation Pill Badges -->
           <div class="w-full space-y-2 text-left pt-1">
-            <div class="p-2.5 rounded-xl bg-white border border-slate-200/80 space-y-1">
+            <div class="p-2.5 rounded-xl scs-tile-3d border border-slate-200/80 space-y-1">
               <div class="flex items-center justify-between text-[11px] font-bold">
                 <span class="text-slate-700">Meezan Bank (Main A/C)</span>
                 <span class="font-mono text-indigo-700">62% Collection</span>
@@ -481,7 +481,7 @@ export type ChartVisualizationType = 'area' | 'bar' | 'health' | 'composed';
               </div>
             </div>
 
-            <div class="p-2.5 rounded-xl bg-white border border-slate-200/80 space-y-1">
+            <div class="p-2.5 rounded-xl scs-tile-3d border border-slate-200/80 space-y-1">
               <div class="flex items-center justify-between text-[11px] font-bold">
                 <span class="text-slate-700">1Link KuickPay & Digital</span>
                 <span class="font-mono text-emerald-700">28% Collection</span>
@@ -491,7 +491,7 @@ export type ChartVisualizationType = 'area' | 'bar' | 'health' | 'composed';
               </div>
             </div>
 
-            <div class="p-2.5 rounded-xl bg-white border border-slate-200/80 space-y-1">
+            <div class="p-2.5 rounded-xl scs-tile-3d border border-slate-200/80 space-y-1">
               <div class="flex items-center justify-between text-[11px] font-bold">
                 <span class="text-slate-700">Cash Counter (Direct Desk)</span>
                 <span class="font-mono text-slate-700">10% Collection</span>

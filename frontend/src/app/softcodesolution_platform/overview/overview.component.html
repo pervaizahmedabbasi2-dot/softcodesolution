@@ -1,4 +1,4 @@
-<div *ngIf="activeView === 'home'" class="flex-1 bg-[#F8FAFC] min-h-full pb-24">
+<div *ngIf="activeView === 'home'" class="flex-1 scs-canvas-3d min-h-full pb-24">
   <ng-container *ngIf="userRole === 'SUPER_ADMIN'">
     <!-- Executive 3D Frosted SuperAdmin Hero Card -->
     <div class="max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 pt-5 sm:pt-6">
@@ -69,7 +69,7 @@
             <span class="w-2 h-2 rounded-full bg-indigo-600 animate-pulse"></span>
             <h2 class="text-xs font-black text-slate-900 uppercase tracking-wider">{{ loc.t('business_kpis') }}</h2>
           </div>
-          <div class="flex items-center gap-2 bg-white px-3 py-1 rounded-xl border border-slate-200/80 shadow-2xs">
+          <div class="flex items-center gap-2 scs-tile-3d px-3 py-1 rounded-xl">
             <span class="text-[9px] uppercase font-bold tracking-widest text-slate-400">{{ loc.t('syncing_in') }}</span>
             <span class="text-[10px] font-black text-indigo-600 tabular-nums">{{ autoRefreshCountdown }}s</span>
           </div>
@@ -77,7 +77,7 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <!-- KPI 1: TOTAL TENANTS (Indigo) -->
-          <div (click)="navigateTo('all-tenants')" class="rounded-2xl p-4 sm:p-5 flex items-center gap-4 border border-slate-200/90 shadow-[0_4px_16px_-2px_rgba(79,70,229,0.14),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_14px_28px_-4px_rgba(79,70,229,0.28),0_4px_10px_-2px_rgba(79,70,229,0.15)] hover:-translate-y-1 hover:border-indigo-300/80 transition-all duration-300 ease-out cursor-pointer bg-gradient-to-b from-white to-slate-50/70 group">
+          <div (click)="navigateTo('all-tenants')" class="rounded-2xl p-4 sm:p-5 flex items-center gap-4 scs-tile-3d hover:shadow-[0_14px_28px_-4px_rgba(79,70,229,0.28),0_4px_10px_-2px_rgba(79,70,229,0.15)] hover:-translate-y-1 hover:border-indigo-300/80 transition-all duration-300 ease-out cursor-pointer group">
             <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-600 to-blue-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-indigo-500/30 group-hover:scale-105 transition-all duration-300 border border-white/30">
               <lucide-icon [name]="icons.Users || 'users'" class="w-6 h-6 stroke-[2.2] drop-shadow-xs"></lucide-icon>
             </div>
@@ -92,7 +92,7 @@
           </div>
 
           <!-- KPI 2: ACTIVE WORKSPACES (Emerald) -->
-          <div (click)="navigateTo('all-tenants')" class="rounded-2xl p-4 sm:p-5 flex items-center gap-4 border border-slate-200/90 shadow-[0_4px_16px_-2px_rgba(16,185,129,0.14),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_14px_28px_-4px_rgba(16,185,129,0.28),0_4px_10px_-2px_rgba(16,185,129,0.15)] hover:-translate-y-1 hover:border-emerald-300/80 transition-all duration-300 ease-out cursor-pointer bg-gradient-to-b from-white to-slate-50/70 group">
+          <div (click)="navigateTo('all-tenants')" class="rounded-2xl p-4 sm:p-5 flex items-center gap-4 scs-tile-3d hover:shadow-[0_14px_28px_-4px_rgba(16,185,129,0.28),0_4px_10px_-2px_rgba(16,185,129,0.15)] hover:-translate-y-1 hover:border-emerald-300/80 transition-all duration-300 ease-out cursor-pointer group">
             <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-500 via-emerald-600 to-teal-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/30 group-hover:scale-105 transition-all duration-300 border border-white/30">
               <lucide-icon [name]="icons.CheckCircle2 || 'check-circle-2'" class="w-6 h-6 stroke-[2.2] drop-shadow-xs"></lucide-icon>
             </div>
@@ -109,7 +109,7 @@
           </div>
 
           <!-- KPI 3: PENDING APPROVALS (Amber) -->
-          <div (click)="navigateTo('all-tenants')" class="rounded-2xl p-4 sm:p-5 flex items-center gap-4 border border-slate-200/90 shadow-[0_4px_16px_-2px_rgba(245,158,11,0.14),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_14px_28px_-4px_rgba(245,158,11,0.28),0_4px_10px_-2px_rgba(245,158,11,0.15)] hover:-translate-y-1 hover:border-amber-300/80 transition-all duration-300 ease-out cursor-pointer bg-gradient-to-b from-white to-slate-50/70 group">
+          <div (click)="navigateTo('all-tenants')" class="rounded-2xl p-4 sm:p-5 flex items-center gap-4 scs-tile-3d hover:shadow-[0_14px_28px_-4px_rgba(245,158,11,0.28),0_4px_10px_-2px_rgba(245,158,11,0.15)] hover:-translate-y-1 hover:border-amber-300/80 transition-all duration-300 ease-out cursor-pointer group">
             <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 via-amber-600 to-orange-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-amber-500/30 group-hover:scale-105 transition-all duration-300 border border-white/30">
               <lucide-icon [name]="icons.Clock || 'clock'" class="w-6 h-6 stroke-[2.2] drop-shadow-xs"></lucide-icon>
             </div>
@@ -124,7 +124,7 @@
           </div>
 
           <!-- KPI 4: RESTRICTED / DENIED (Rose) -->
-          <div (click)="navigateTo('all-tenants')" class="rounded-2xl p-4 sm:p-5 flex items-center gap-4 border border-slate-200/90 shadow-[0_4px_16px_-2px_rgba(244,63,94,0.14),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_14px_28px_-4px_rgba(244,63,94,0.28),0_4px_10px_-2px_rgba(244,63,94,0.15)] hover:-translate-y-1 hover:border-rose-300/80 transition-all duration-300 ease-out cursor-pointer bg-gradient-to-b from-white to-slate-50/70 group">
+          <div (click)="navigateTo('all-tenants')" class="rounded-2xl p-4 sm:p-5 flex items-center gap-4 scs-tile-3d hover:shadow-[0_14px_28px_-4px_rgba(244,63,94,0.28),0_4px_10px_-2px_rgba(244,63,94,0.15)] hover:-translate-y-1 hover:border-rose-300/80 transition-all duration-300 ease-out cursor-pointer group">
             <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-rose-500 via-rose-600 to-pink-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-rose-500/30 group-hover:scale-105 transition-all duration-300 border border-white/30">
               <lucide-icon [name]="icons.XCircle || 'x-circle'" class="w-6 h-6 stroke-[2.2] drop-shadow-xs"></lucide-icon>
             </div>
@@ -151,7 +151,7 @@
 
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <!-- Action 1: Tenants -->
-            <button (click)="navigateTo('all-tenants')" class="rounded-2xl p-5 bg-gradient-to-b from-white via-white to-slate-50/80 border border-slate-200/90 hover:border-emerald-300 text-center transition-all duration-300 ease-out cursor-pointer shadow-[0_4px_16px_-2px_rgba(16,185,129,0.14),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_16px_32px_-4px_rgba(16,185,129,0.28),0_4px_10px_-2px_rgba(16,185,129,0.15)] hover:-translate-y-1.5 hover:scale-[1.02] active:translate-y-0 active:scale-[0.97] flex flex-col items-center justify-center space-y-2.5 min-h-[132px] group">
+            <button (click)="navigateTo('all-tenants')" class="rounded-2xl p-5 scs-tile-3d hover:border-emerald-300 text-center transition-all duration-300 ease-out cursor-pointer shadow-[0_4px_16px_-2px_rgba(16,185,129,0.14),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_16px_32px_-4px_rgba(16,185,129,0.28),0_4px_10px_-2px_rgba(16,185,129,0.15)] hover:-translate-y-1.5 hover:scale-[1.02] active:translate-y-0 active:scale-[0.97] flex flex-col items-center justify-center space-y-2.5 min-h-[132px] group">
               <div class="w-13 h-13 rounded-2xl bg-gradient-to-tr from-emerald-500 via-emerald-600 to-teal-500 text-white shadow-md shadow-emerald-500/30 flex items-center justify-center group-hover:scale-110 group-hover:-translate-y-0.5 transition-all duration-300 border border-white/30">
                 <lucide-icon [name]="icons.Plus || 'plus'" class="w-6 h-6 stroke-[2.2] drop-shadow-xs"></lucide-icon>
               </div>
@@ -162,7 +162,7 @@
             </button>
 
             <!-- Action 2: School LMS -->
-            <button (click)="navigateTo('school-hub')" class="rounded-2xl p-5 bg-gradient-to-b from-white via-white to-slate-50/80 border border-slate-200/90 hover:border-blue-300 text-center transition-all duration-300 ease-out cursor-pointer shadow-[0_4px_16px_-2px_rgba(37,99,235,0.14),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_16px_32px_-4px_rgba(37,99,235,0.28),0_4px_10px_-2px_rgba(37,99,235,0.15)] hover:-translate-y-1.5 hover:scale-[1.02] active:translate-y-0 active:scale-[0.97] flex flex-col items-center justify-center space-y-2.5 min-h-[132px] group">
+            <button (click)="navigateTo('school-hub')" class="rounded-2xl p-5 scs-tile-3d hover:border-blue-300 text-center transition-all duration-300 ease-out cursor-pointer shadow-[0_4px_16px_-2px_rgba(37,99,235,0.14),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_16px_32px_-4px_rgba(37,99,235,0.28),0_4px_10px_-2px_rgba(37,99,235,0.15)] hover:-translate-y-1.5 hover:scale-[1.02] active:translate-y-0 active:scale-[0.97] flex flex-col items-center justify-center space-y-2.5 min-h-[132px] group">
               <div class="w-13 h-13 rounded-2xl bg-gradient-to-tr from-blue-600 via-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/30 flex items-center justify-center group-hover:scale-110 group-hover:-translate-y-0.5 transition-all duration-300 border border-white/30">
                 <lucide-icon [name]="icons.GraduationCap || 'graduation-cap'" class="w-6 h-6 stroke-[2.2] drop-shadow-xs"></lucide-icon>
               </div>
@@ -173,7 +173,7 @@
             </button>
 
             <!-- Action 3: Business Suites -->
-            <button (click)="navigateTo('business-suites')" class="rounded-2xl p-5 bg-gradient-to-b from-white via-white to-slate-50/80 border border-slate-200/90 hover:border-indigo-300 text-center transition-all duration-300 ease-out cursor-pointer shadow-[0_4px_16px_-2px_rgba(79,70,229,0.14),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_16px_32px_-4px_rgba(79,70,229,0.28),0_4px_10px_-2px_rgba(79,70,229,0.15)] hover:-translate-y-1.5 hover:scale-[1.02] active:translate-y-0 active:scale-[0.97] flex flex-col items-center justify-center space-y-2.5 min-h-[132px] group">
+            <button (click)="navigateTo('business-suites')" class="rounded-2xl p-5 scs-tile-3d hover:border-indigo-300 text-center transition-all duration-300 ease-out cursor-pointer shadow-[0_4px_16px_-2px_rgba(79,70,229,0.14),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_16px_32px_-4px_rgba(79,70,229,0.28),0_4px_10px_-2px_rgba(79,70,229,0.15)] hover:-translate-y-1.5 hover:scale-[1.02] active:translate-y-0 active:scale-[0.97] flex flex-col items-center justify-center space-y-2.5 min-h-[132px] group">
               <div class="w-13 h-13 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-600 to-purple-600 text-white shadow-md shadow-indigo-500/30 flex items-center justify-center group-hover:scale-110 group-hover:-translate-y-0.5 transition-all duration-300 border border-white/30">
                 <lucide-icon [name]="icons.Briefcase || 'briefcase'" class="w-6 h-6 stroke-[2.2] drop-shadow-xs"></lucide-icon>
               </div>
@@ -184,7 +184,7 @@
             </button>
 
             <!-- Action 4: SaaS Control -->
-            <button (click)="navigateTo('saas-control')" class="rounded-2xl p-5 bg-gradient-to-b from-white via-white to-slate-50/80 border border-slate-200/90 hover:border-cyan-300 text-center transition-all duration-300 ease-out cursor-pointer shadow-[0_4px_16px_-2px_rgba(6,182,212,0.14),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_16px_32px_-4px_rgba(6,182,212,0.28),0_4px_10px_-2px_rgba(6,182,212,0.15)] hover:-translate-y-1.5 hover:scale-[1.02] active:translate-y-0 active:scale-[0.97] flex flex-col items-center justify-center space-y-2.5 min-h-[132px] group">
+            <button (click)="navigateTo('saas-control')" class="rounded-2xl p-5 scs-tile-3d hover:border-cyan-300 text-center transition-all duration-300 ease-out cursor-pointer shadow-[0_4px_16px_-2px_rgba(6,182,212,0.14),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_16px_32px_-4px_rgba(6,182,212,0.28),0_4px_10px_-2px_rgba(6,182,212,0.15)] hover:-translate-y-1.5 hover:scale-[1.02] active:translate-y-0 active:scale-[0.97] flex flex-col items-center justify-center space-y-2.5 min-h-[132px] group">
               <div class="w-13 h-13 rounded-2xl bg-gradient-to-tr from-cyan-500 via-cyan-600 to-blue-600 text-white shadow-md shadow-cyan-500/30 flex items-center justify-center group-hover:scale-110 group-hover:-translate-y-0.5 transition-all duration-300 border border-white/30">
                 <lucide-icon [name]="icons.Layers || 'layers'" class="w-6 h-6 stroke-[2.2] drop-shadow-xs"></lucide-icon>
               </div>
@@ -195,7 +195,7 @@
             </button>
 
             <!-- Action 5: Security NOC -->
-            <button (click)="navigateTo('security')" class="rounded-2xl p-5 bg-gradient-to-b from-white via-white to-slate-50/80 border border-slate-200/90 hover:border-amber-300 text-center transition-all duration-300 ease-out cursor-pointer shadow-[0_4px_16px_-2px_rgba(245,158,11,0.14),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_16px_32px_-4px_rgba(245,158,11,0.28),0_4px_10px_-2px_rgba(245,158,11,0.15)] hover:-translate-y-1.5 hover:scale-[1.02] active:translate-y-0 active:scale-[0.97] flex flex-col items-center justify-center space-y-2.5 min-h-[132px] group">
+            <button (click)="navigateTo('security')" class="rounded-2xl p-5 scs-tile-3d hover:border-amber-300 text-center transition-all duration-300 ease-out cursor-pointer shadow-[0_4px_16px_-2px_rgba(245,158,11,0.14),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_16px_32px_-4px_rgba(245,158,11,0.28),0_4px_10px_-2px_rgba(245,158,11,0.15)] hover:-translate-y-1.5 hover:scale-[1.02] active:translate-y-0 active:scale-[0.97] flex flex-col items-center justify-center space-y-2.5 min-h-[132px] group">
               <div class="w-13 h-13 rounded-2xl bg-gradient-to-tr from-amber-500 via-amber-600 to-orange-500 text-white shadow-md shadow-amber-500/30 flex items-center justify-center group-hover:scale-110 group-hover:-translate-y-0.5 transition-all duration-300 border border-white/30">
                 <lucide-icon [name]="icons.ShieldCheck || 'shield-check'" class="w-6 h-6 stroke-[2.2] drop-shadow-xs"></lucide-icon>
               </div>
@@ -206,7 +206,7 @@
             </button>
 
             <!-- Action 6: Payments -->
-            <button (click)="navigateTo('payments-sys-list')" class="rounded-2xl p-5 bg-gradient-to-b from-white via-white to-slate-50/80 border border-slate-200/90 hover:border-orange-300 text-center transition-all duration-300 ease-out cursor-pointer shadow-[0_4px_16px_-2px_rgba(249,115,22,0.14),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_16px_32px_-4px_rgba(249,115,22,0.28),0_4px_10px_-2px_rgba(249,115,22,0.15)] hover:-translate-y-1.5 hover:scale-[1.02] active:translate-y-0 active:scale-[0.97] flex flex-col items-center justify-center space-y-2.5 min-h-[132px] group">
+            <button (click)="navigateTo('payments-sys-list')" class="rounded-2xl p-5 scs-tile-3d hover:border-orange-300 text-center transition-all duration-300 ease-out cursor-pointer shadow-[0_4px_16px_-2px_rgba(249,115,22,0.14),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_16px_32px_-4px_rgba(249,115,22,0.28),0_4px_10px_-2px_rgba(249,115,22,0.15)] hover:-translate-y-1.5 hover:scale-[1.02] active:translate-y-0 active:scale-[0.97] flex flex-col items-center justify-center space-y-2.5 min-h-[132px] group">
               <div class="w-13 h-13 rounded-2xl bg-gradient-to-tr from-orange-500 via-orange-600 to-amber-500 text-white shadow-md shadow-orange-500/30 flex items-center justify-center group-hover:scale-110 group-hover:-translate-y-0.5 transition-all duration-300 border border-white/30">
                 <lucide-icon [name]="icons.CreditCard || 'credit-card'" class="w-6 h-6 stroke-[2.2] drop-shadow-xs"></lucide-icon>
               </div>
@@ -217,7 +217,7 @@
             </button>
 
             <!-- Action 7: RBAC Access -->
-            <button (click)="navigateTo('rbac')" class="rounded-2xl p-5 bg-gradient-to-b from-white via-white to-slate-50/80 border border-slate-200/90 hover:border-purple-300 text-center transition-all duration-300 ease-out cursor-pointer shadow-[0_4px_16px_-2px_rgba(147,51,234,0.14),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_16px_32px_-4px_rgba(147,51,234,0.28),0_4px_10px_-2px_rgba(147,51,234,0.15)] hover:-translate-y-1.5 hover:scale-[1.02] active:translate-y-0 active:scale-[0.97] flex flex-col items-center justify-center space-y-2.5 min-h-[132px] group">
+            <button (click)="navigateTo('rbac')" class="rounded-2xl p-5 scs-tile-3d hover:border-purple-300 text-center transition-all duration-300 ease-out cursor-pointer shadow-[0_4px_16px_-2px_rgba(147,51,234,0.14),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_16px_32px_-4px_rgba(147,51,234,0.28),0_4px_10px_-2px_rgba(147,51,234,0.15)] hover:-translate-y-1.5 hover:scale-[1.02] active:translate-y-0 active:scale-[0.97] flex flex-col items-center justify-center space-y-2.5 min-h-[132px] group">
               <div class="w-13 h-13 rounded-2xl bg-gradient-to-tr from-purple-600 via-purple-600 to-violet-600 text-white shadow-md shadow-purple-500/30 flex items-center justify-center group-hover:scale-110 group-hover:-translate-y-0.5 transition-all duration-300 border border-white/30">
                 <lucide-icon [name]="icons.Lock || 'lock'" class="w-6 h-6 stroke-[2.2] drop-shadow-xs"></lucide-icon>
               </div>
@@ -228,7 +228,7 @@
             </button>
 
             <!-- Action 8: Analytics Hub -->
-            <button (click)="navigateTo('analytics')" class="rounded-2xl p-5 bg-gradient-to-b from-white via-white to-slate-50/80 border border-slate-200/90 hover:border-teal-300 text-center transition-all duration-300 ease-out cursor-pointer shadow-[0_4px_16px_-2px_rgba(13,148,136,0.14),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_16px_32px_-4px_rgba(13,148,136,0.28),0_4px_10px_-2px_rgba(13,148,136,0.15)] hover:-translate-y-1.5 hover:scale-[1.02] active:translate-y-0 active:scale-[0.97] flex flex-col items-center justify-center space-y-2.5 min-h-[132px] group">
+            <button (click)="navigateTo('analytics')" class="rounded-2xl p-5 scs-tile-3d hover:border-teal-300 text-center transition-all duration-300 ease-out cursor-pointer shadow-[0_4px_16px_-2px_rgba(13,148,136,0.14),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_16px_32px_-4px_rgba(13,148,136,0.28),0_4px_10px_-2px_rgba(13,148,136,0.15)] hover:-translate-y-1.5 hover:scale-[1.02] active:translate-y-0 active:scale-[0.97] flex flex-col items-center justify-center space-y-2.5 min-h-[132px] group">
               <div class="w-13 h-13 rounded-2xl bg-gradient-to-tr from-teal-500 via-teal-600 to-emerald-600 text-white shadow-md shadow-teal-500/30 flex items-center justify-center group-hover:scale-110 group-hover:-translate-y-0.5 transition-all duration-300 border border-white/30">
                 <lucide-icon [name]="icons.BarChart3 || 'bar-chart-3'" class="w-6 h-6 stroke-[2.2] drop-shadow-xs"></lucide-icon>
               </div>
@@ -242,7 +242,7 @@
       </div>
 
       <!-- 2. ENTERPRISE BUSINESS SUITES & INDUSTRY VERTICALS (32 Verticals) -->
-      <div class="bg-white rounded-3xl border border-slate-200/90 shadow-xs p-5 sm:p-7 relative overflow-hidden">
+      <div class="scs-surface-3d rounded-3xl p-5 sm:p-7 relative overflow-hidden">
         <div class="absolute top-0 right-0 w-80 h-80 bg-gradient-to-bl from-indigo-100/50 via-indigo-50/20 to-transparent rounded-bl-full pointer-events-none"></div>
 
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 relative z-10">
@@ -255,7 +255,7 @@
             <h2 class="text-sm sm:text-base font-black text-slate-900 uppercase tracking-tight">{{ loc.t('business_suites_title') }}</h2>
             <p class="text-xs text-slate-500 font-medium mt-0.5">{{ loc.t('business_suites_desc') }}</p>
           </div>
-          <div class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200/90 shadow-2xs shrink-0">
+          <div class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl scs-tile-3d shrink-0">
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
             <span class="text-xs font-black text-slate-800">32 Consoles Active</span>
           </div>
@@ -263,7 +263,7 @@
 
         <!-- Stats Ribbon (4 3D White Cards) -->
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6 relative z-10">
-          <div class="rounded-2xl p-3.5 flex items-center gap-3.5 border border-slate-200/90 bg-gradient-to-b from-white to-slate-50/70 shadow-[0_4px_14px_-2px_rgba(79,70,229,0.12),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_10px_22px_-4px_rgba(79,70,229,0.22)] hover:-translate-y-1 hover:border-indigo-300 transition-all duration-300 ease-out group">
+          <div class="rounded-2xl p-3.5 flex items-center gap-3.5 scs-tile-3d hover:shadow-[0_10px_22px_-4px_rgba(79,70,229,0.22)] hover:-translate-y-1 hover:border-indigo-300 transition-all duration-300 ease-out group">
             <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-600 to-blue-600 text-white flex items-center justify-center font-black text-xs shadow-md shadow-indigo-500/30 group-hover:scale-105 transition-all duration-300 border border-white/30 shrink-0 tabular-nums">32</div>
             <div class="min-w-0">
               <p class="text-[9px] uppercase font-extrabold tracking-wider text-slate-400 group-hover:text-indigo-600 transition-colors truncate">Total Verticals</p>
@@ -271,7 +271,7 @@
             </div>
           </div>
 
-          <div class="rounded-2xl p-3.5 flex items-center gap-3.5 border border-slate-200/90 bg-gradient-to-b from-white to-slate-50/70 shadow-[0_4px_14px_-2px_rgba(16,185,129,0.12),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_10px_22px_-4px_rgba(16,185,129,0.22)] hover:-translate-y-1 hover:border-emerald-300 transition-all duration-300 ease-out group">
+          <div class="rounded-2xl p-3.5 flex items-center gap-3.5 scs-tile-3d hover:shadow-[0_10px_22px_-4px_rgba(16,185,129,0.22)] hover:-translate-y-1 hover:border-emerald-300 transition-all duration-300 ease-out group">
             <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 via-emerald-600 to-teal-600 text-white flex items-center justify-center font-black text-xs shadow-md shadow-emerald-500/30 group-hover:scale-105 transition-all duration-300 border border-white/30 shrink-0 tabular-nums">13</div>
             <div class="min-w-0">
               <p class="text-[9px] uppercase font-extrabold tracking-wider text-slate-400 group-hover:text-emerald-600 transition-colors truncate">Live Consoles</p>
@@ -279,7 +279,7 @@
             </div>
           </div>
 
-          <div class="rounded-2xl p-3.5 flex items-center gap-3.5 border border-slate-200/90 bg-gradient-to-b from-white to-slate-50/70 shadow-[0_4px_14px_-2px_rgba(6,182,212,0.12),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_10px_22px_-4px_rgba(6,182,212,0.22)] hover:-translate-y-1 hover:border-cyan-300 transition-all duration-300 ease-out group">
+          <div class="rounded-2xl p-3.5 flex items-center gap-3.5 scs-tile-3d hover:shadow-[0_10px_22px_-4px_rgba(6,182,212,0.22)] hover:-translate-y-1 hover:border-cyan-300 transition-all duration-300 ease-out group">
             <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 via-cyan-600 to-blue-600 text-white flex items-center justify-center font-black text-xs shadow-md shadow-cyan-500/30 group-hover:scale-105 transition-all duration-300 border border-white/30 shrink-0 tabular-nums">299</div>
             <div class="min-w-0">
               <p class="text-[9px] uppercase font-extrabold tracking-wider text-slate-400 group-hover:text-cyan-600 transition-colors truncate">Modules Matrix</p>
@@ -287,7 +287,7 @@
             </div>
           </div>
 
-          <div class="rounded-2xl p-3.5 flex items-center gap-3.5 border border-slate-200/90 bg-gradient-to-b from-white to-slate-50/70 shadow-[0_4px_14px_-2px_rgba(147,51,234,0.12),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_10px_22px_-4px_rgba(147,51,234,0.22)] hover:-translate-y-1 hover:border-purple-300 transition-all duration-300 ease-out group">
+          <div class="rounded-2xl p-3.5 flex items-center gap-3.5 scs-tile-3d hover:shadow-[0_10px_22px_-4px_rgba(147,51,234,0.22)] hover:-translate-y-1 hover:border-purple-300 transition-all duration-300 ease-out group">
             <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 via-purple-600 to-violet-600 text-white flex items-center justify-center font-black text-xs shadow-md shadow-purple-500/30 group-hover:scale-105 transition-all duration-300 border border-white/30 shrink-0 tabular-nums">100%</div>
             <div class="min-w-0">
               <p class="text-[9px] uppercase font-extrabold tracking-wider text-slate-400 group-hover:text-purple-600 transition-colors truncate">Multi-Tenancy</p>
@@ -300,7 +300,7 @@
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 relative z-10">
           <button *ngFor="let b of allBusinessesList"
                   (click)="onSelectBusiness(b)"
-                  class="rounded-2xl p-4 sm:p-5 bg-gradient-to-b from-white via-white to-slate-50/80 border border-slate-200/90 hover:border-indigo-300 text-center transition-all duration-300 ease-out cursor-pointer shadow-[0_4px_16px_-2px_rgba(79,70,229,0.10),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_16px_32px_-4px_rgba(79,70,229,0.22),0_4px_10px_-2px_rgba(79,70,229,0.12)] hover:-translate-y-1.5 hover:scale-[1.02] active:translate-y-0 active:scale-[0.97] flex flex-col items-center justify-between min-h-[148px] group relative overflow-hidden">
+                  class="rounded-2xl p-4 sm:p-5 scs-tile-3d hover:border-indigo-300 text-center transition-all duration-300 ease-out cursor-pointer hover:shadow-[0_16px_32px_-4px_rgba(79,70,229,0.22),0_4px_10px_-2px_rgba(79,70,229,0.12)] hover:-translate-y-1.5 hover:scale-[1.02] active:translate-y-0 active:scale-[0.97] flex flex-col items-center justify-between min-h-[148px] group relative overflow-hidden">
             <div class="w-full flex items-center justify-between text-[9px] font-black uppercase tracking-wider text-slate-400 mb-2">
               <span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 truncate max-w-[90px]">{{ b.sector || 'SUITE' }}</span>
               <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
@@ -324,7 +324,7 @@
       </div>
 
       <!-- 3. PLATFORM MODULES SUMMARY (Rich Inside-Card Details) -->
-      <div class="bg-white rounded-3xl border border-slate-200/90 shadow-xs p-5 sm:p-7 relative overflow-hidden">
+      <div class="scs-surface-3d rounded-3xl p-5 sm:p-7 relative overflow-hidden">
         <div class="absolute top-0 right-0 w-64 h-64 bg-indigo-50/40 rounded-bl-full -mr-10 -mt-10 pointer-events-none"></div>
 
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 relative z-10">
@@ -348,7 +348,7 @@
 
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5 relative z-10">
           <!-- Clients -->
-          <button (click)="navigateTo('all-tenants')" class="flex flex-col justify-between p-4 rounded-2xl bg-gradient-to-b from-white via-white to-slate-50/80 border border-slate-200/90 hover:border-indigo-300 shadow-2xs hover:shadow-[0_12px_24px_-4px_rgba(79,70,229,0.20)] hover:-translate-y-1 transition-all duration-300 group cursor-pointer active:scale-95 min-h-[126px] text-left">
+          <button (click)="navigateTo('all-tenants')" class="flex flex-col justify-between p-4 rounded-2xl scs-tile-3d hover:border-indigo-300 shadow-2xs hover:shadow-[0_12px_24px_-4px_rgba(79,70,229,0.20)] hover:-translate-y-1 transition-all duration-300 group cursor-pointer active:scale-95 min-h-[126px] text-left">
             <div class="w-full flex items-center justify-between">
               <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-600 to-blue-600 text-white shadow-md shadow-indigo-500/30 flex items-center justify-center group-hover:scale-110 transition-all border border-white/30">
                 <lucide-icon [name]="icons.Users || 'users'" class="w-5 h-5 stroke-[2.2]"></lucide-icon>
@@ -362,7 +362,7 @@
           </button>
 
           <!-- Security & NOC -->
-          <button (click)="navigateTo('security')" class="flex flex-col justify-between p-4 rounded-2xl bg-gradient-to-b from-white via-white to-slate-50/80 border border-slate-200/90 hover:border-emerald-300 shadow-2xs hover:shadow-[0_12px_24px_-4px_rgba(16,185,129,0.20)] hover:-translate-y-1 transition-all duration-300 group cursor-pointer active:scale-95 min-h-[126px] text-left">
+          <button (click)="navigateTo('security')" class="flex flex-col justify-between p-4 rounded-2xl scs-tile-3d hover:border-emerald-300 shadow-2xs hover:shadow-[0_12px_24px_-4px_rgba(16,185,129,0.20)] hover:-translate-y-1 transition-all duration-300 group cursor-pointer active:scale-95 min-h-[126px] text-left">
             <div class="w-full flex items-center justify-between">
               <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 via-emerald-600 to-teal-600 text-white shadow-md shadow-emerald-500/30 flex items-center justify-center group-hover:scale-110 transition-all border border-white/30">
                 <lucide-icon [name]="icons.ShieldCheck || 'shield-check'" class="w-5 h-5 stroke-[2.2]"></lucide-icon>
@@ -376,7 +376,7 @@
           </button>
 
           <!-- Access Control -->
-          <button (click)="navigateTo('rbac')" class="flex flex-col justify-between p-4 rounded-2xl bg-gradient-to-b from-white via-white to-slate-50/80 border border-slate-200/90 hover:border-blue-300 shadow-2xs hover:shadow-[0_12px_24px_-4px_rgba(37,99,235,0.20)] hover:-translate-y-1 transition-all duration-300 group cursor-pointer active:scale-95 min-h-[126px] text-left">
+          <button (click)="navigateTo('rbac')" class="flex flex-col justify-between p-4 rounded-2xl scs-tile-3d hover:border-blue-300 shadow-2xs hover:shadow-[0_12px_24px_-4px_rgba(37,99,235,0.20)] hover:-translate-y-1 transition-all duration-300 group cursor-pointer active:scale-95 min-h-[126px] text-left">
             <div class="w-full flex items-center justify-between">
               <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-blue-500 text-white shadow-md shadow-blue-500/30 flex items-center justify-center group-hover:scale-110 transition-all border border-white/30">
                 <lucide-icon [name]="icons.Shield || 'shield'" class="w-5 h-5 stroke-[2.2]"></lucide-icon>
@@ -390,7 +390,7 @@
           </button>
 
           <!-- API Gateway -->
-          <button (click)="navigateTo('api-gate-list')" class="flex flex-col justify-between p-4 rounded-2xl bg-gradient-to-b from-white via-white to-slate-50/80 border border-slate-200/90 hover:border-cyan-300 shadow-2xs hover:shadow-[0_12px_24px_-4px_rgba(6,182,212,0.20)] hover:-translate-y-1 transition-all duration-300 group cursor-pointer active:scale-95 min-h-[126px] text-left">
+          <button (click)="navigateTo('api-gate-list')" class="flex flex-col justify-between p-4 rounded-2xl scs-tile-3d hover:border-cyan-300 shadow-2xs hover:shadow-[0_12px_24px_-4px_rgba(6,182,212,0.20)] hover:-translate-y-1 transition-all duration-300 group cursor-pointer active:scale-95 min-h-[126px] text-left">
             <div class="w-full flex items-center justify-between">
               <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 via-cyan-600 to-blue-600 text-white shadow-md shadow-cyan-500/30 flex items-center justify-center group-hover:scale-110 transition-all border border-white/30">
                 <lucide-icon [name]="icons.Network || 'network'" class="w-5 h-5 stroke-[2.2]"></lucide-icon>
@@ -404,7 +404,7 @@
           </button>
 
           <!-- Feature Flags -->
-          <button (click)="navigateTo('feature-flags')" class="flex flex-col justify-between p-4 rounded-2xl bg-gradient-to-b from-white via-white to-slate-50/80 border border-slate-200/90 hover:border-rose-300 shadow-2xs hover:shadow-[0_12px_24px_-4px_rgba(244,63,94,0.20)] hover:-translate-y-1 transition-all duration-300 group cursor-pointer active:scale-95 min-h-[126px] text-left">
+          <button (click)="navigateTo('feature-flags')" class="flex flex-col justify-between p-4 rounded-2xl scs-tile-3d hover:border-rose-300 shadow-2xs hover:shadow-[0_12px_24px_-4px_rgba(244,63,94,0.20)] hover:-translate-y-1 transition-all duration-300 group cursor-pointer active:scale-95 min-h-[126px] text-left">
             <div class="w-full flex items-center justify-between">
               <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-rose-500 via-rose-600 to-pink-600 text-white shadow-md shadow-rose-500/30 flex items-center justify-center group-hover:scale-110 transition-all border border-white/30">
                 <lucide-icon [name]="icons.Activity || 'activity'" class="w-5 h-5 stroke-[2.2]"></lucide-icon>
@@ -418,7 +418,7 @@
           </button>
 
           <!-- Payments -->
-          <button (click)="navigateTo('payments-sys-list')" class="flex flex-col justify-between p-4 rounded-2xl bg-gradient-to-b from-white via-white to-slate-50/80 border border-slate-200/90 hover:border-purple-300 shadow-2xs hover:shadow-[0_12px_24px_-4px_rgba(168,85,247,0.20)] hover:-translate-y-1 transition-all duration-300 group cursor-pointer active:scale-95 min-h-[126px] text-left">
+          <button (click)="navigateTo('payments-sys-list')" class="flex flex-col justify-between p-4 rounded-2xl scs-tile-3d hover:border-purple-300 shadow-2xs hover:shadow-[0_12px_24px_-4px_rgba(168,85,247,0.20)] hover:-translate-y-1 transition-all duration-300 group cursor-pointer active:scale-95 min-h-[126px] text-left">
             <div class="w-full flex items-center justify-between">
               <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 via-purple-600 to-violet-600 text-white shadow-md shadow-purple-500/30 flex items-center justify-center group-hover:scale-110 transition-all border border-white/30">
                 <lucide-icon [name]="icons.CreditCard || 'credit-card'" class="w-5 h-5 stroke-[2.2]"></lucide-icon>
@@ -432,7 +432,7 @@
           </button>
 
           <!-- Analytics -->
-          <button (click)="navigateTo('analytics')" class="flex flex-col justify-between p-4 rounded-2xl bg-gradient-to-b from-white via-white to-slate-50/80 border border-slate-200/90 hover:border-orange-300 shadow-2xs hover:shadow-[0_12px_24px_-4px_rgba(249,115,22,0.20)] hover:-translate-y-1 transition-all duration-300 group cursor-pointer active:scale-95 min-h-[126px] text-left">
+          <button (click)="navigateTo('analytics')" class="flex flex-col justify-between p-4 rounded-2xl scs-tile-3d hover:border-orange-300 shadow-2xs hover:shadow-[0_12px_24px_-4px_rgba(249,115,22,0.20)] hover:-translate-y-1 transition-all duration-300 group cursor-pointer active:scale-95 min-h-[126px] text-left">
             <div class="w-full flex items-center justify-between">
               <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-orange-500 via-orange-600 to-amber-500 text-white shadow-md shadow-orange-500/30 flex items-center justify-center group-hover:scale-110 transition-all border border-white/30">
                 <lucide-icon [name]="icons.BarChart3 || 'bar-chart-3'" class="w-5 h-5 stroke-[2.2]"></lucide-icon>
@@ -446,7 +446,7 @@
           </button>
 
           <!-- Compliance -->
-          <button (click)="navigateTo('compliance')" class="flex flex-col justify-between p-4 rounded-2xl bg-gradient-to-b from-white via-white to-slate-50/80 border border-slate-200/90 hover:border-teal-300 shadow-2xs hover:shadow-[0_12px_24px_-4px_rgba(13,148,136,0.20)] hover:-translate-y-1 transition-all duration-300 group cursor-pointer active:scale-95 min-h-[126px] text-left">
+          <button (click)="navigateTo('compliance')" class="flex flex-col justify-between p-4 rounded-2xl scs-tile-3d hover:border-teal-300 shadow-2xs hover:shadow-[0_12px_24px_-4px_rgba(13,148,136,0.20)] hover:-translate-y-1 transition-all duration-300 group cursor-pointer active:scale-95 min-h-[126px] text-left">
             <div class="w-full flex items-center justify-between">
               <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-teal-500 via-teal-600 to-emerald-500 text-white shadow-md shadow-teal-500/30 flex items-center justify-center group-hover:scale-110 transition-all border border-white/30">
                 <lucide-icon [name]="icons.Globe || 'globe'" class="w-5 h-5 stroke-[2.2]"></lucide-icon>
@@ -460,7 +460,7 @@
           </button>
 
           <!-- Developer Hub -->
-          <button (click)="navigateTo('webhooks')" class="flex flex-col justify-between p-4 rounded-2xl bg-gradient-to-b from-white via-white to-slate-50/80 border border-slate-200/90 hover:border-slate-400 shadow-2xs hover:shadow-[0_12px_24px_-4px_rgba(15,23,42,0.20)] hover:-translate-y-1 transition-all duration-300 group cursor-pointer active:scale-95 min-h-[126px] text-left">
+          <button (click)="navigateTo('webhooks')" class="flex flex-col justify-between p-4 rounded-2xl scs-tile-3d hover:border-slate-400 shadow-2xs hover:shadow-[0_12px_24px_-4px_rgba(15,23,42,0.20)] hover:-translate-y-1 transition-all duration-300 group cursor-pointer active:scale-95 min-h-[126px] text-left">
             <div class="w-full flex items-center justify-between">
               <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 via-teal-600 to-cyan-600 text-white shadow-md shadow-emerald-600/25 flex items-center justify-center group-hover:scale-110 transition-all border border-white/30">
                 <lucide-icon [name]="icons.Package || 'package'" class="w-5 h-5 stroke-[2.2]"></lucide-icon>
@@ -474,7 +474,7 @@
           </button>
 
           <!-- Data Protection -->
-          <button (click)="navigateTo('data-protection')" class="flex flex-col justify-between p-4 rounded-2xl bg-gradient-to-b from-white via-white to-slate-50/80 border border-slate-200/90 hover:border-sky-300 shadow-2xs hover:shadow-[0_12px_24px_-4px_rgba(14,165,233,0.20)] hover:-translate-y-1 transition-all duration-300 group cursor-pointer active:scale-95 min-h-[126px] text-left">
+          <button (click)="navigateTo('data-protection')" class="flex flex-col justify-between p-4 rounded-2xl scs-tile-3d hover:border-sky-300 shadow-2xs hover:shadow-[0_12px_24px_-4px_rgba(14,165,233,0.20)] hover:-translate-y-1 transition-all duration-300 group cursor-pointer active:scale-95 min-h-[126px] text-left">
             <div class="w-full flex items-center justify-between">
               <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-500 via-sky-600 to-blue-600 text-white shadow-md shadow-sky-500/30 flex items-center justify-center group-hover:scale-110 transition-all border border-white/30">
                 <lucide-icon [name]="icons.Lock || 'lock'" class="w-5 h-5 stroke-[2.2]"></lucide-icon>
@@ -488,7 +488,7 @@
           </button>
 
           <!-- Backup Manager -->
-          <button (click)="navigateTo('backup-manager')" class="flex flex-col justify-between p-4 rounded-2xl bg-gradient-to-b from-white via-white to-slate-50/80 border border-slate-200/90 hover:border-amber-300 shadow-2xs hover:shadow-[0_12px_24px_-4px_rgba(245,158,11,0.20)] hover:-translate-y-1 transition-all duration-300 group cursor-pointer active:scale-95 min-h-[126px] text-left">
+          <button (click)="navigateTo('backup-manager')" class="flex flex-col justify-between p-4 rounded-2xl scs-tile-3d hover:border-amber-300 shadow-2xs hover:shadow-[0_12px_24px_-4px_rgba(245,158,11,0.20)] hover:-translate-y-1 transition-all duration-300 group cursor-pointer active:scale-95 min-h-[126px] text-left">
             <div class="w-full flex items-center justify-between">
               <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 via-amber-600 to-orange-500 text-white shadow-md shadow-amber-500/30 flex items-center justify-center group-hover:scale-110 transition-all border border-white/30">
                 <lucide-icon [name]="icons.Database || 'database'" class="w-5 h-5 stroke-[2.2]"></lucide-icon>
@@ -502,7 +502,7 @@
           </button>
 
           <!-- Global Edge -->
-          <button (click)="navigateTo('global-edge')" class="flex flex-col justify-between p-4 rounded-2xl bg-gradient-to-b from-white via-white to-slate-50/80 border border-slate-200/90 hover:border-fuchsia-300 shadow-2xs hover:shadow-[0_12px_24px_-4px_rgba(217,70,239,0.20)] hover:-translate-y-1 transition-all duration-300 group cursor-pointer active:scale-95 min-h-[126px] text-left">
+          <button (click)="navigateTo('global-edge')" class="flex flex-col justify-between p-4 rounded-2xl scs-tile-3d hover:border-fuchsia-300 shadow-2xs hover:shadow-[0_12px_24px_-4px_rgba(217,70,239,0.20)] hover:-translate-y-1 transition-all duration-300 group cursor-pointer active:scale-95 min-h-[126px] text-left">
             <div class="w-full flex items-center justify-between">
               <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-fuchsia-600 via-fuchsia-600 to-purple-600 text-white shadow-md shadow-fuchsia-500/30 flex items-center justify-center group-hover:scale-110 transition-all border border-white/30">
                 <lucide-icon [name]="icons.Server || 'server'" class="w-5 h-5 stroke-[2.2]"></lucide-icon>
@@ -516,7 +516,7 @@
           </button>
 
           <!-- License -->
-          <button (click)="navigateTo('license-list')" class="flex flex-col justify-between p-4 rounded-2xl bg-gradient-to-b from-white via-white to-slate-50/80 border border-slate-200/90 hover:border-yellow-400 shadow-2xs hover:shadow-[0_12px_24px_-4px_rgba(234,179,8,0.20)] hover:-translate-y-1 transition-all duration-300 group cursor-pointer active:scale-95 min-h-[126px] text-left">
+          <button (click)="navigateTo('license-list')" class="flex flex-col justify-between p-4 rounded-2xl scs-tile-3d hover:border-yellow-400 shadow-2xs hover:shadow-[0_12px_24px_-4px_rgba(234,179,8,0.20)] hover:-translate-y-1 transition-all duration-300 group cursor-pointer active:scale-95 min-h-[126px] text-left">
             <div class="w-full flex items-center justify-between">
               <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-yellow-500 via-amber-500 to-yellow-600 text-white shadow-md shadow-yellow-500/30 flex items-center justify-center group-hover:scale-110 transition-all border border-white/30">
                 <lucide-icon [name]="icons.Key || 'key'" class="w-5 h-5 stroke-[2.2]"></lucide-icon>
@@ -530,7 +530,7 @@
           </button>
 
           <!-- Settings -->
-          <button (click)="navigateTo('settings-list')" class="flex flex-col justify-between p-4 rounded-2xl bg-gradient-to-b from-white via-white to-slate-50/80 border border-slate-200/90 hover:border-slate-400 shadow-2xs hover:shadow-[0_12px_24px_-4px_rgba(71,85,105,0.20)] hover:-translate-y-1 transition-all duration-300 group cursor-pointer active:scale-95 min-h-[126px] text-left">
+          <button (click)="navigateTo('settings-list')" class="flex flex-col justify-between p-4 rounded-2xl scs-tile-3d hover:border-slate-400 shadow-2xs hover:shadow-[0_12px_24px_-4px_rgba(71,85,105,0.20)] hover:-translate-y-1 transition-all duration-300 group cursor-pointer active:scale-95 min-h-[126px] text-left">
             <div class="w-full flex items-center justify-between">
               <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-teal-600 via-emerald-600 to-emerald-500 text-white shadow-md shadow-emerald-600/25 flex items-center justify-center group-hover:scale-110 transition-all border border-white/30">
                 <lucide-icon [name]="icons.Settings || 'settings'" class="w-5 h-5 stroke-[2.2]"></lucide-icon>
@@ -544,7 +544,7 @@
           </button>
 
           <!-- School Campus LMS -->
-          <button (click)="navigateTo('school-hub')" class="flex flex-col justify-between p-4 rounded-2xl bg-gradient-to-b from-white via-white to-slate-50/80 border border-slate-200/90 hover:border-blue-300 shadow-2xs hover:shadow-[0_12px_24px_-4px_rgba(37,99,235,0.20)] hover:-translate-y-1 transition-all duration-300 group cursor-pointer active:scale-95 min-h-[126px] text-left">
+          <button (click)="navigateTo('school-hub')" class="flex flex-col justify-between p-4 rounded-2xl scs-tile-3d hover:border-blue-300 shadow-2xs hover:shadow-[0_12px_24px_-4px_rgba(37,99,235,0.20)] hover:-translate-y-1 transition-all duration-300 group cursor-pointer active:scale-95 min-h-[126px] text-left">
             <div class="w-full flex items-center justify-between">
               <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/30 flex items-center justify-center group-hover:scale-110 transition-all border border-white/30">
                 <lucide-icon [name]="icons.GraduationCap || 'graduation-cap'" class="w-5 h-5 stroke-[2.2]"></lucide-icon>
@@ -562,7 +562,7 @@
       <!-- 4. CHARTS ROW: MONTHLY PLATFORM MRR & ACTIVE TENANTS BY VERTICAL (Matched to School Charts) -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <!-- Left Chart: Monthly Platform MRR -->
-        <div class="rounded-[24px] p-5 border border-white/80 bg-gradient-to-br from-white/95 via-emerald-50/35 to-slate-50/90 backdrop-blur-xl shadow-[0_12px_30px_-8px_rgba(16,185,129,0.14),0_4px_12px_-4px_rgba(0,0,0,0.04),inset_0_1px_1px_rgba(255,255,255,0.9)] space-y-4">
+        <div class="rounded-[24px] p-5 scs-surface-3d space-y-4">
           <div class="flex items-center justify-between gap-2">
             <div class="flex items-center gap-2">
               <lucide-icon [name]="icons.TrendingUp || 'trending-up'" class="w-4 h-4 text-emerald-600"></lucide-icon>
@@ -574,7 +574,7 @@
             </button>
           </div>
 
-          <div class="pt-6 pb-3 px-4 flex items-end justify-around gap-4 sm:gap-6 h-52 bg-emerald-50/40 rounded-xl border border-emerald-100/80">
+          <div class="pt-6 pb-3 px-4 flex items-end justify-around gap-4 sm:gap-6 h-52 bg-slate-50 rounded-xl border border-slate-200/70">
             <div *ngFor="let col of monthlyMrrChartData" class="flex flex-col items-center gap-2 flex-1 h-full justify-end group">
               <span class="text-[10px] font-bold text-slate-700 bg-white border border-emerald-200/80 px-2 py-0.5 rounded-md shadow-2xs tabular-nums group-hover:border-emerald-300 group-hover:text-emerald-700 transition-colors whitespace-nowrap">{{ col.label }}</span>
               <div class="w-10 sm:w-14 bg-gradient-to-t from-emerald-600 via-teal-500 to-cyan-500 rounded-t-lg transition-all duration-300 hover:brightness-110 shadow-xs" [style.height.%]="col.heightPct"></div>
@@ -584,7 +584,7 @@
         </div>
 
         <!-- Right Chart: Tenants by Industry Vertical -->
-        <div class="rounded-[24px] p-5 border border-white/80 bg-gradient-to-br from-white/95 via-emerald-50/35 to-slate-50/90 backdrop-blur-xl shadow-[0_12px_30px_-8px_rgba(16,185,129,0.14),0_4px_12px_-4px_rgba(0,0,0,0.04),inset_0_1px_1px_rgba(255,255,255,0.9)] space-y-4">
+        <div class="rounded-[24px] p-5 scs-surface-3d space-y-4">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-2">
               <lucide-icon [name]="icons.Layers || 'layers'" class="w-4 h-4 text-slate-700"></lucide-icon>
@@ -610,8 +610,8 @@
       <!-- 5. SPLIT LIVE TABLES: RECENT TENANTS & SYSTEM ACTIVITY / HEALTH (Matched to School Split Row) -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <!-- Left Panel: Recent & Pending Tenants Directory -->
-        <div class="rounded-[24px] p-5 border border-white/80 bg-gradient-to-br from-white/95 via-emerald-50/35 to-slate-50/90 backdrop-blur-xl shadow-[0_12px_30px_-8px_rgba(16,185,129,0.14),0_4px_12px_-4px_rgba(0,0,0,0.04),inset_0_1px_1px_rgba(255,255,255,0.9)] space-y-3">
-          <div class="flex items-center justify-between pb-2.5 border-b border-emerald-100/80">
+        <div class="rounded-[24px] p-5 scs-surface-3d space-y-3">
+          <div class="flex items-center justify-between pb-2.5 border-b border-slate-200/70">
             <div class="flex items-center gap-2">
               <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
               <h3 class="font-black text-slate-900 text-sm tracking-tight">Recent &amp; Pending Tenants</h3>
@@ -621,9 +621,9 @@
             </button>
           </div>
 
-          <div class="overflow-x-auto rounded-xl border border-emerald-100/90">
+          <div class="overflow-x-auto rounded-xl border border-slate-200/70">
             <table class="w-full text-left text-xs">
-              <thead class="bg-gradient-to-r from-emerald-50/90 via-slate-50 to-teal-50/80 text-slate-700 border-b border-emerald-100/90 font-black uppercase text-[10px] tracking-wider">
+              <thead class="bg-slate-50 text-slate-700 border-b border-slate-200/70 font-black uppercase text-[10px] tracking-wider">
                 <tr>
                   <th class="py-2.5 px-3">Tenant / Company</th>
                   <th class="py-2.5 px-3">Vertical</th>
@@ -669,7 +669,7 @@
         </div>
 
         <!-- Right Panel: Live System Health & Platform Activity -->
-        <div class="rounded-[24px] p-5 border border-white/80 bg-gradient-to-br from-white/95 via-emerald-50/35 to-slate-50/90 backdrop-blur-xl shadow-[0_12px_30px_-8px_rgba(16,185,129,0.14),0_4px_12px_-4px_rgba(0,0,0,0.04),inset_0_1px_1px_rgba(255,255,255,0.9)] space-y-3">
+        <div class="rounded-[24px] p-5 scs-surface-3d space-y-3">
           <div class="flex items-center justify-between pb-2.5 border-b border-slate-100">
             <div class="flex items-center gap-2">
               <lucide-icon [name]="icons.Activity || 'activity'" class="w-4 h-4 text-emerald-600"></lucide-icon>
@@ -682,7 +682,7 @@
 
           <!-- Live Health Node Strip -->
           <div class="grid grid-cols-3 gap-2">
-            <div *ngFor="let h of getSystemHealth()" class="px-3 py-2 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between">
+            <div *ngFor="let h of getSystemHealth()" class="px-3 py-2 rounded-xl scs-tile-3d flex items-center justify-between">
               <span class="text-[11px] font-bold text-slate-700 truncate">{{ h.name }}</span>
               <span class="inline-flex items-center gap-1 text-[10px] font-black text-emerald-700">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -713,7 +713,7 @@
       <!-- 6. EXECUTIVE QUICK-LAUNCH CONSOLES (5-Card Chromatic 3D Grid Matching School Role Portals) -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         <!-- Console 1: Tenant Approvals (Amber/Gold) -->
-        <div class="rounded-2xl p-5 border border-slate-200/90 bg-gradient-to-b from-white via-white to-slate-50/80 shadow-[0_4px_16px_-2px_rgba(217,119,6,0.14),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_14px_28px_-4px_rgba(217,119,6,0.28),0_4px_10px_-2px_rgba(217,119,6,0.14)] hover:border-amber-300 hover:-translate-y-1 transition-all duration-300 ease-out space-y-3 flex flex-col justify-between group">
+        <div class="rounded-2xl p-5 scs-tile-3d shadow-[0_4px_16px_-2px_rgba(217,119,6,0.14),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_14px_28px_-4px_rgba(217,119,6,0.28),0_4px_10px_-2px_rgba(217,119,6,0.14)] hover:border-amber-300 hover:-translate-y-1 transition-all duration-300 ease-out space-y-3 flex flex-col justify-between group">
           <div>
             <div class="flex items-center justify-between mb-3">
               <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 via-amber-600 to-yellow-600 text-white flex items-center justify-center font-black shadow-md shadow-amber-500/30 group-hover:scale-105 transition-transform border border-white/30">
@@ -731,7 +731,7 @@
         </div>
 
         <!-- Console 2: Payments & Billing (Teal/Emerald) -->
-        <div class="rounded-2xl p-5 border border-slate-200/90 bg-gradient-to-b from-white via-white to-slate-50/80 shadow-[0_4px_16px_-2px_rgba(13,148,136,0.14),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_14px_28px_-4px_rgba(13,148,136,0.28),0_4px_10px_-2px_rgba(13,148,136,0.14)] hover:border-teal-300 hover:-translate-y-1 transition-all duration-300 ease-out space-y-3 flex flex-col justify-between group">
+        <div class="rounded-2xl p-5 scs-tile-3d shadow-[0_4px_16px_-2px_rgba(13,148,136,0.14),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_14px_28px_-4px_rgba(13,148,136,0.28),0_4px_10px_-2px_rgba(13,148,136,0.14)] hover:border-teal-300 hover:-translate-y-1 transition-all duration-300 ease-out space-y-3 flex flex-col justify-between group">
           <div>
             <div class="flex items-center justify-between mb-3">
               <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-teal-600 via-emerald-600 to-cyan-600 text-white flex items-center justify-center font-black shadow-md shadow-teal-500/30 group-hover:scale-105 transition-transform border border-white/30">
@@ -749,7 +749,7 @@
         </div>
 
         <!-- Console 3: SaaS Control & Plans (Indigo/Blue) -->
-        <div class="rounded-2xl p-5 border border-slate-200/90 bg-gradient-to-b from-white via-white to-slate-50/80 shadow-[0_4px_16px_-2px_rgba(79,70,229,0.14),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_14px_28px_-4px_rgba(79,70,229,0.28),0_4px_10px_-2px_rgba(79,70,229,0.14)] hover:border-indigo-300 hover:-translate-y-1 transition-all duration-300 ease-out space-y-3 flex flex-col justify-between group">
+        <div class="rounded-2xl p-5 scs-tile-3d shadow-[0_4px_16px_-2px_rgba(79,70,229,0.14),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_14px_28px_-4px_rgba(79,70,229,0.28),0_4px_10px_-2px_rgba(79,70,229,0.14)] hover:border-indigo-300 hover:-translate-y-1 transition-all duration-300 ease-out space-y-3 flex flex-col justify-between group">
           <div>
             <div class="flex items-center justify-between mb-3">
               <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 via-blue-600 to-sky-600 text-white flex items-center justify-center font-black shadow-md shadow-indigo-500/30 group-hover:scale-105 transition-transform border border-white/30">
@@ -767,7 +767,7 @@
         </div>
 
         <!-- Console 4: Security & Access NOC (Emerald) -->
-        <div class="rounded-2xl p-5 border border-slate-200/90 bg-gradient-to-b from-white via-white to-slate-50/80 shadow-[0_4px_16px_-2px_rgba(16,185,129,0.12),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_14px_28px_-4px_rgba(16,185,129,0.25),0_4px_10px_-2px_rgba(16,185,129,0.12)] hover:border-emerald-300 hover:-translate-y-1 transition-all duration-300 ease-out space-y-3 flex flex-col justify-between group">
+        <div class="rounded-2xl p-5 scs-tile-3d shadow-[0_4px_16px_-2px_rgba(16,185,129,0.12),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_14px_28px_-4px_rgba(16,185,129,0.25),0_4px_10px_-2px_rgba(16,185,129,0.12)] hover:border-emerald-300 hover:-translate-y-1 transition-all duration-300 ease-out space-y-3 flex flex-col justify-between group">
           <div>
             <div class="flex items-center justify-between mb-3">
               <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-500 via-emerald-600 to-teal-600 text-white flex items-center justify-center font-black shadow-md shadow-emerald-500/30 group-hover:scale-105 transition-transform border border-white/30">
@@ -785,7 +785,7 @@
         </div>
 
         <!-- Console 5: Analytics & Telemetry (Purple) -->
-        <div class="rounded-2xl p-5 border border-slate-200/90 bg-gradient-to-b from-white via-white to-slate-50/80 shadow-[0_4px_16px_-2px_rgba(147,51,234,0.12),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_14px_28px_-4px_rgba(147,51,234,0.25),0_4px_10px_-2px_rgba(147,51,234,0.12)] hover:border-purple-300 hover:-translate-y-1 transition-all duration-300 ease-out space-y-3 flex flex-col justify-between group">
+        <div class="rounded-2xl p-5 scs-tile-3d shadow-[0_4px_16px_-2px_rgba(147,51,234,0.12),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_14px_28px_-4px_rgba(147,51,234,0.25),0_4px_10px_-2px_rgba(147,51,234,0.12)] hover:border-purple-300 hover:-translate-y-1 transition-all duration-300 ease-out space-y-3 flex flex-col justify-between group">
           <div>
             <div class="flex items-center justify-between mb-3">
               <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-purple-600 via-purple-600 to-indigo-600 text-white flex items-center justify-center font-black shadow-md shadow-purple-500/30 group-hover:scale-105 transition-transform border border-white/30">
@@ -868,13 +868,13 @@
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
             <h2 class="text-xs font-black text-slate-900 uppercase tracking-wider">Business KPIs & Operations</h2>
           </div>
-          <div class="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-xl border border-slate-200/80 shadow-2xs">
+          <div class="flex items-center gap-1.5 scs-tile-3d px-2.5 py-1 rounded-xl">
              <span class="text-[9px] uppercase font-bold tracking-widest text-slate-400">Syncing in</span>
              <span class="text-[10px] font-black text-indigo-600 tabular-nums">{{ autoRefreshCountdown }}s</span>
           </div>
         </div>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-          <div *ngFor="let kpi of getClientKpis()" class="rounded-2xl p-4 sm:p-5 flex flex-col justify-between border border-slate-200/90 bg-gradient-to-b from-white via-white to-slate-50/80 shadow-[0_4px_16px_-2px_rgba(79,70,229,0.12),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_14px_28px_-4px_rgba(79,70,229,0.25),0_4px_10px_-2px_rgba(79,70,229,0.12)] hover:-translate-y-1 hover:border-indigo-300/80 transition-all duration-300 ease-out relative overflow-hidden group">
+          <div *ngFor="let kpi of getClientKpis()" class="rounded-2xl p-4 sm:p-5 flex flex-col justify-between scs-tile-3d hover:shadow-[0_14px_28px_-4px_rgba(79,70,229,0.25),0_4px_10px_-2px_rgba(79,70,229,0.12)] hover:-translate-y-1 hover:border-indigo-300/80 transition-all duration-300 ease-out relative overflow-hidden group">
             <div class="absolute -bottom-2 -right-2 p-3 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none">
               <lucide-icon [name]="kpi.icon" class="w-16 h-16 text-indigo-600"></lucide-icon>
             </div>
@@ -904,7 +904,7 @@
         <div class="xl:col-span-2 space-y-8">
           
           <!-- Assigned Client Modules (3D White Cards Grid) -->
-          <div class="bg-white rounded-3xl border border-slate-200/90 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 mb-8 relative overflow-hidden">
+          <div class="scs-surface-3d rounded-3xl p-6 mb-8 relative overflow-hidden">
             <div class="absolute top-0 right-0 w-80 h-80 bg-gradient-to-bl from-indigo-100/40 via-indigo-50/20 to-transparent rounded-bl-full pointer-events-none"></div>
 
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 relative z-10">
@@ -935,7 +935,7 @@
             <!-- Enhanced 3D White Card Module Grid -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 relative z-10">
               <div *ngFor="let cat of filteredCategories()"
-                class="rounded-2xl p-5 bg-gradient-to-b from-white via-white to-slate-50/80 border border-slate-200/90 shadow-[0_4px_14px_-2px_rgba(79,70,229,0.10),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_14px_28px_-4px_rgba(79,70,229,0.22),0_4px_10px_-2px_rgba(79,70,229,0.12)] hover:border-indigo-300 hover:-translate-y-1 transition-all duration-300 ease-out group flex flex-col justify-between">
+                class="rounded-2xl p-5 scs-tile-3d hover:shadow-[0_14px_28px_-4px_rgba(79,70,229,0.22),0_4px_10px_-2px_rgba(79,70,229,0.12)] hover:border-indigo-300 hover:-translate-y-1 transition-all duration-300 ease-out group flex flex-col justify-between">
                 <div>
                   <div class="flex items-start justify-between mb-3">
                     <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-50 to-indigo-100/80 border border-indigo-200/90 text-indigo-600 flex items-center justify-center group-hover:scale-105 group-hover:bg-gradient-to-tr group-hover:from-indigo-600 group-hover:to-indigo-700 group-hover:text-white transition-all shadow-2xs">
@@ -977,7 +977,7 @@
           </div>
 
           <!-- Business Performance & Activity Volume Chart (3D White Card) -->
-          <div class="bg-gradient-to-b from-white via-white to-slate-50/80 rounded-3xl border border-slate-200/90 shadow-[0_4px_16px_-2px_rgba(79,70,229,0.10),0_1px_3px_0_rgba(0,0,0,0.03)] hover:shadow-[0_12px_24px_-4px_rgba(79,70,229,0.18)] transition-all duration-300 p-6">
+          <div class="scs-surface-3d rounded-3xl transition-all duration-300 p-6">
             <div class="flex items-center justify-between mb-6">
               <div class="flex items-center gap-2.5">
                 <div class="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center shadow-2xs">
@@ -1010,7 +1010,7 @@
           </div>
 
           <!-- Recent Workspace Activity Log (3D White Card) -->
-          <div class="bg-gradient-to-b from-white via-white to-slate-50/80 rounded-3xl border border-slate-200/90 shadow-[0_4px_16px_-2px_rgba(0,0,0,0.05),0_1px_3px_0_rgba(0,0,0,0.02)] overflow-hidden">
+          <div class="scs-surface-3d rounded-3xl overflow-hidden">
             <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
                <div class="flex items-center gap-2.5">
                  <div class="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center shadow-2xs">
@@ -1049,7 +1049,7 @@
         <div class="space-y-6">
 
           <!-- Quick Business Actions (3D White Card) -->
-          <div class="bg-gradient-to-b from-white via-white to-slate-50/80 rounded-3xl border border-slate-200/90 shadow-[0_4px_16px_-2px_rgba(245,158,11,0.10),0_1px_3px_0_rgba(0,0,0,0.03)] p-6">
+          <div class="scs-surface-3d rounded-3xl p-6">
             <h3 class="text-sm font-black text-slate-900 uppercase tracking-wider mb-4 flex items-center gap-2">
               <div class="w-7 h-7 rounded-lg bg-amber-50 border border-amber-200 text-amber-500 flex items-center justify-center shadow-2xs">
                 <lucide-icon [name]="icons.Zap" class="w-4 h-4"></lucide-icon>
@@ -1057,7 +1057,7 @@
               <span>Quick Actions</span>
             </h3>
             <div class="space-y-2.5">
-              <button (click)="quickAddPrimaryRecord()" class="w-full flex items-center justify-between p-3.5 rounded-2xl border border-slate-200/90 bg-white hover:bg-indigo-50/60 hover:border-indigo-300 shadow-2xs hover:shadow-sm hover:-translate-y-0.5 text-slate-800 hover:text-indigo-900 transition-all cursor-pointer group active:scale-95">
+              <button (click)="quickAddPrimaryRecord()" class="w-full flex items-center justify-between p-3.5 rounded-2xl scs-tile-3d hover:border-indigo-300 hover:-translate-y-0.5 text-slate-800 hover:text-indigo-900 transition-all cursor-pointer group active:scale-95">
                 <div class="flex items-center gap-3">
                   <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-700 text-white flex items-center justify-center shadow-md shadow-indigo-500/25 group-hover:scale-105 transition-transform">
                     <lucide-icon [name]="icons.Plus" class="w-4 h-4"></lucide-icon>
@@ -1067,7 +1067,7 @@
                 <lucide-icon [name]="icons.ChevronRight" class="w-4 h-4 text-slate-400 group-hover:text-indigo-600 transition-colors"></lucide-icon>
               </button>
 
-              <button (click)="viewPrimaryRecords()" class="w-full flex items-center justify-between p-3.5 rounded-2xl border border-slate-200/90 bg-white hover:bg-emerald-50/60 hover:border-emerald-300 shadow-2xs hover:shadow-sm hover:-translate-y-0.5 text-slate-800 hover:text-emerald-900 transition-all cursor-pointer group active:scale-95">
+              <button (click)="viewPrimaryRecords()" class="w-full flex items-center justify-between p-3.5 rounded-2xl scs-tile-3d hover:border-emerald-300 hover:-translate-y-0.5 text-slate-800 hover:text-emerald-900 transition-all cursor-pointer group active:scale-95">
                 <div class="flex items-center gap-3">
                   <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-md shadow-emerald-500/25 group-hover:scale-105 transition-transform">
                     <lucide-icon [name]="icons.Files" class="w-4 h-4"></lucide-icon>
@@ -1077,7 +1077,7 @@
                 <lucide-icon [name]="icons.ChevronRight" class="w-4 h-4 text-slate-400 group-hover:text-emerald-600 transition-colors"></lucide-icon>
               </button>
 
-              <button (click)="navigateTo('reports')" class="w-full flex items-center justify-between p-3.5 rounded-2xl border border-slate-200/90 bg-white hover:bg-cyan-50/60 hover:border-cyan-300 shadow-2xs hover:shadow-sm hover:-translate-y-0.5 text-slate-800 hover:text-cyan-900 transition-all cursor-pointer group active:scale-95">
+              <button (click)="navigateTo('reports')" class="w-full flex items-center justify-between p-3.5 rounded-2xl scs-tile-3d hover:border-cyan-300 hover:-translate-y-0.5 text-slate-800 hover:text-cyan-900 transition-all cursor-pointer group active:scale-95">
                 <div class="flex items-center gap-3">
                   <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 text-white flex items-center justify-center shadow-md shadow-cyan-500/25 group-hover:scale-105 transition-transform">
                     <lucide-icon [name]="icons.BarChart3" class="w-4 h-4"></lucide-icon>
@@ -1090,26 +1090,25 @@
           </div>
 
           <!-- Business Workspace Security & SLA Status -->
-          <div class="rounded-[28px] p-6 border border-white/80 bg-gradient-to-br from-white/95 via-emerald-50/40 to-slate-50/90 backdrop-blur-2xl shadow-[0_20px_50px_-12px_rgba(16,185,129,0.18),0_8px_20px_-6px_rgba(0,0,0,0.06),inset_0_1px_2px_rgba(255,255,255,0.95)] relative overflow-hidden">
-             <div class="absolute -right-6 -top-6 w-32 h-32 bg-emerald-200/35 rounded-full blur-3xl pointer-events-none"></div>
+          <div class="rounded-[28px] p-6 scs-surface-3d relative overflow-hidden">
              <div class="relative z-10">
                <h3 class="text-sm font-black text-slate-900 uppercase tracking-wider mb-5 flex items-center gap-2">
                  <lucide-icon [name]="icons.ShieldCheck" class="w-4 h-4 text-emerald-600"></lucide-icon> Workspace Status
                </h3>
                
                <div class="space-y-3.5">
-                 <div class="flex items-center justify-between pb-2.5 border-b border-emerald-100/80">
+                 <div class="flex items-center justify-between pb-2.5 border-b border-slate-200/70">
                    <span class="text-xs font-medium text-slate-500">Account Tier</span>
                    <span class="text-xs font-bold text-emerald-700">Enterprise Client</span>
                  </div>
-                 <div class="flex items-center justify-between pb-2.5 border-b border-emerald-100/80">
+                 <div class="flex items-center justify-between pb-2.5 border-b border-slate-200/70">
                    <span class="text-xs font-medium text-slate-500">Data Storage</span>
                    <span class="text-xs font-bold text-emerald-700 flex items-center gap-1">
                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                      TLS 1.3 Encrypted
                    </span>
                  </div>
-                 <div class="flex items-center justify-between pb-2.5 border-b border-emerald-100/80">
+                 <div class="flex items-center justify-between pb-2.5 border-b border-slate-200/70">
                    <span class="text-xs font-medium text-slate-500">Daily Backup</span>
                    <span class="text-xs font-bold text-emerald-700">Automatic (02:00 UTC)</span>
                  </div>
@@ -1122,7 +1121,7 @@
           </div>
 
           <!-- Dedicated Client Support Card -->
-          <div class="rounded-[28px] p-6 border border-white/80 bg-gradient-to-br from-white/95 via-emerald-50/40 to-teal-50/70 backdrop-blur-2xl shadow-[0_20px_50px_-12px_rgba(16,185,129,0.18),0_8px_20px_-6px_rgba(0,0,0,0.06),inset_0_1px_2px_rgba(255,255,255,0.95)] text-slate-900">
+          <div class="rounded-[28px] p-6 scs-surface-3d text-slate-900">
             <h3 class="text-sm font-black uppercase tracking-wider mb-2 flex items-center gap-2 text-emerald-800">
               <lucide-icon [name]="icons.HelpCircle || icons.Briefcase" class="w-4 h-4 text-emerald-600"></lucide-icon> Client Support & Help
             </h3>

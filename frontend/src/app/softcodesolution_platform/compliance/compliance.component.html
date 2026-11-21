@@ -31,7 +31,7 @@
 
   <!-- Quick Summary KPIs -->
   <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-    <div class="bg-white rounded-2xl border border-slate-200/90 border-t-4 border-t-indigo-600 p-5 shadow-xs flex items-center justify-between gap-3">
+    <div class="scs-tile-3d rounded-2xl border border-slate-200/90 border-t-4 border-t-indigo-600 p-5 flex items-center justify-between gap-3">
       <div>
         <p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Pinned Storage Regions</p>
         <p class="text-3xl font-black text-slate-900 tabular-nums mt-1">{{ regions.length }}</p>
@@ -41,7 +41,7 @@
         <lucide-icon [name]="icons.Globe" class="w-5 h-5"></lucide-icon>
       </div>
     </div>
-    <div class="bg-white rounded-2xl border border-slate-200/90 border-t-4 border-t-emerald-500 p-5 shadow-xs flex items-center justify-between gap-3">
+    <div class="scs-tile-3d rounded-2xl border border-slate-200/90 border-t-4 border-t-emerald-500 p-5 flex items-center justify-between gap-3">
       <div>
         <p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Audited Frameworks</p>
         <p class="text-3xl font-black text-emerald-600 tabular-nums mt-1">{{ frameworks.length }}</p>
@@ -51,7 +51,7 @@
         <lucide-icon [name]="icons.ShieldCheck" class="w-5 h-5"></lucide-icon>
       </div>
     </div>
-    <div class="bg-white rounded-2xl border border-slate-200/90 border-t-4 border-t-emerald-600 p-5 shadow-xs flex items-center justify-between gap-3">
+    <div class="scs-tile-3d rounded-2xl border border-slate-200/90 border-t-4 border-t-emerald-600 p-5 flex items-center justify-between gap-3">
       <div>
         <p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Attestation Verdict</p>
         <p class="text-2xl font-black text-slate-900 mt-1">100% Compliant</p>
@@ -65,7 +65,7 @@
 
   <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
     <!-- Data Residency Regions -->
-    <div class="bg-white rounded-[24px] border border-slate-200/90 p-6 shadow-xs space-y-5">
+    <div class="scs-surface-3d rounded-[24px] p-6 space-y-5">
       <div class="flex items-center justify-between pb-4 border-b border-slate-100">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 to-blue-600 text-white flex items-center justify-center shadow-sm">
@@ -79,7 +79,7 @@
       </div>
 
       <div class="space-y-3">
-        <div *ngFor="let reg of regions" class="flex items-center justify-between p-4 rounded-2xl border border-slate-200/80 bg-slate-50/70 hover:bg-white hover:border-indigo-200 hover:shadow-sm transition-all">
+        <div *ngFor="let reg of regions" class="flex items-center justify-between p-4 rounded-2xl scs-tile-3d hover:border-indigo-200 transition-all">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl bg-white border border-slate-200/80 flex items-center justify-center text-xl shadow-2xs shrink-0">{{ reg.flag }}</div>
             <div>
@@ -98,7 +98,7 @@
     </div>
 
     <!-- Active Compliance Frameworks -->
-    <div class="bg-white rounded-[24px] border border-slate-200/90 p-6 shadow-xs space-y-5">
+    <div class="scs-surface-3d rounded-[24px] p-6 space-y-5">
       <div class="flex items-center justify-between pb-4 border-b border-slate-100">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-sm">
@@ -112,7 +112,7 @@
       </div>
 
       <div class="space-y-3">
-        <div *ngFor="let item of frameworks" class="flex items-center justify-between p-4 rounded-2xl border border-slate-200/80 bg-slate-50/70 hover:bg-white hover:border-emerald-200 hover:shadow-sm transition-all">
+        <div *ngFor="let item of frameworks" class="flex items-center justify-between p-4 rounded-2xl scs-tile-3d hover:border-emerald-200 transition-all">
           <div class="flex items-center gap-3">
             <div class="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-200/80 flex items-center justify-center shrink-0">
               <lucide-icon [name]="icons.CheckCircle2" class="w-4 h-4 text-emerald-600"></lucide-icon>

@@ -44,7 +44,7 @@
         <span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/80 text-[10px] font-black uppercase tracking-wider">HMAC-SHA256 Signed</span>
       </div>
 
-      <div *ngFor="let ep of endpoints" class="bg-white border border-slate-200/90 rounded-[22px] p-5 shadow-xs hover:border-indigo-200 hover:shadow-md transition-all space-y-3">
+      <div *ngFor="let ep of endpoints" class="scs-tile-3d rounded-[22px] p-5 hover:border-indigo-200 transition-all space-y-3">
         <div class="flex items-start justify-between">
           <div class="space-y-1">
             <div class="flex items-center gap-2">
@@ -83,7 +83,7 @@
 
     <!-- Topics Summary & Fast Metrics -->
     <div class="space-y-6">
-      <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-xs space-y-4">
+      <div class="scs-surface-3d rounded-2xl p-6 space-y-4">
         <h3 class="text-sm font-semibold text-slate-900">Standard Event Topics</h3>
         <p class="text-xs text-slate-500 leading-relaxed">Subscriptions listen to enterprise system events triggered by the multi-tenant core.</p>
 
@@ -95,7 +95,7 @@
         </div>
       </div>
 
-      <div class="rounded-[24px] border border-white/80 bg-gradient-to-br from-white/95 via-emerald-50/45 to-slate-50/90 backdrop-blur-xl text-slate-900 p-6 shadow-[0_14px_34px_-12px_rgba(16,185,129,0.18),0_4px_12px_-4px_rgba(0,0,0,0.05),inset_0_1px_2px_rgba(255,255,255,0.95)] space-y-3">
+      <div class="rounded-[24px] scs-surface-3d text-slate-900 p-6 space-y-3">
         <div class="flex items-center justify-between">
           <h4 class="text-xs font-black uppercase tracking-wider text-emerald-700">Security Guarantee</h4>
           <lucide-icon [name]="icons.ShieldCheck" class="w-4 h-4 text-emerald-600"></lucide-icon>
@@ -108,7 +108,7 @@
   </div>
 
   <!-- Recent Delivery History Table -->
-  <div class="bg-gradient-to-br from-white/95 via-emerald-50/25 to-slate-50/90 border border-white/80 rounded-[24px] overflow-hidden shadow-[0_14px_34px_-12px_rgba(16,185,129,0.14),0_4px_12px_-4px_rgba(0,0,0,0.05)] space-y-0">
+  <div class="scs-surface-3d rounded-[24px] overflow-hidden space-y-0">
     <div class="p-5 border-b border-emerald-100/90 flex items-center justify-between bg-gradient-to-r from-emerald-50/70 via-white to-teal-50/50">
       <div>
         <h3 class="text-sm font-black text-slate-900">Recent Webhook Deliveries</h3>
