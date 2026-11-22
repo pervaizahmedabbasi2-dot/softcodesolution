@@ -1967,6 +1967,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       items: [
         { id: 'overview', label: 'Dashboard Overview', icon: 'LayoutDashboard', badge: 'LIVE' },
         { id: 'principal', label: 'Principal Directorate', icon: 'Award', badge: '18 Live' },
+        { id: 'accountant', label: 'Accountant / Fee Desk', icon: 'Wallet', badge: 'Counter' },
       ]
     },
     {
@@ -1979,6 +1980,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         { id: 'alumni', label: 'Passed Out Archive', icon: 'Award', count: '450+' },
         { id: 'promotion', label: 'Promotion', icon: 'GraduationCap', badge: 'Promote' },
         { id: 'session_report', label: 'Session Report', icon: 'FileText', badge: '2026-27' },
+        { id: 'reports', label: 'Certificates & Transcripts', icon: 'FileText', badge: 'SLC/PDF' },
       ]
     },
     {
@@ -1996,6 +1998,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       title: 'ACADEMICS',
       badge: 'Routine',
       items: [
+        { id: 'stage_wise', label: 'Stage-Wise Operations', icon: 'Layers', badge: 'Nur-10' },
         { id: 'attendance', label: 'Attendance', icon: 'Clock', count: '95.3%' },
         { id: 'attendance_report', label: 'Attendance Report', icon: 'Calendar', badge: 'Biometric' },
         { id: 'exams', label: 'Exams', icon: 'Trophy', count: 'GPA 3.8' },
@@ -2010,8 +2013,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
       title: 'FINANCE',
       badge: 'PKR',
       items: [
+        { id: 'invoices', label: 'Invoices & Billing Hub', icon: 'Receipt', badge: 'PRO' },
         { id: 'expenses', label: 'Expenses', icon: 'Receipt', count: '42 Entries' },
-        { id: 'all_reports', label: 'All Reports', icon: 'FileText', badge: 'Reports' },
+        { id: 'all_reports', label: 'All Reports (P&L)', icon: 'FileText', badge: 'Reports' },
         { id: 'income_vs_expense', label: 'Income vs Expense', icon: 'BarChart3', badge: 'Balance' },
       ]
     },
@@ -2029,6 +2033,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
       badge: 'GPS',
       items: [
         { id: 'transport', label: 'School Bus & Transport', icon: 'Bus', badge: 'GPS' },
+        { id: 'hostel', label: 'Hostel & Boarding', icon: 'Building2', badge: 'Rooms' },
+        { id: 'labs', label: 'Computer & Science Labs', icon: 'Cpu', badge: '40 PCs' },
         { id: 'library', label: 'Library & Books', icon: 'BookOpen', count: '4,500' },
         { id: 'portals', label: 'Role Portals & RBAC', icon: 'ShieldCheck', count: '5 Portals' },
       ]
@@ -2043,9 +2049,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
       ]
     },
     {
-      title: 'ADMIN',
+      title: 'ADMIN & AUDIT',
       badge: 'System',
       items: [
+        { id: 'audit', label: 'Campus Audit Hub', icon: 'ShieldCheck', badge: '98.4%' },
+        { id: 'visitors', label: 'Security & Visitors', icon: 'ShieldCheck', badge: 'Gate' },
+        { id: 'assets', label: 'Assets & Inventory', icon: 'Layers', badge: 'Stock' },
         { id: 'admin_settings', label: 'Admin Settings', icon: 'SlidersHorizontal', badge: 'Setup' },
         { id: 'settings', label: 'Settings', icon: 'Settings', badge: 'Campus' },
       ]
@@ -2066,6 +2075,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
       badge: 'LIVE',
       items: [
         { id: 'principal-overview', label: 'Executive Command Center', icon: 'LayoutDashboard', badge: 'Director' },
+        { id: 'principal-stage_wise', label: 'Stage-Wise Operations', icon: 'Layers', badge: 'Nur-10' },
+        { id: 'principal-master_registries', label: 'Master Registries', icon: 'FileText', badge: 'Tables' },
         { id: 'principal-directives', label: 'Assembly Directives', icon: 'Bell', badge: 'Circular' },
         { id: 'principal-academic_reports', label: 'Academic Audit Export', icon: 'FileText', badge: 'JSON' },
       ]
@@ -2085,6 +2096,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       items: [
         { id: 'principal-supervision', label: 'Lesson Plan Approvals', icon: 'BookOpen', badge: 'Approve' },
         { id: 'principal-syllabus', label: 'Syllabus Tracker (Nur-10)', icon: 'Award', count: '84.5%' },
+        { id: 'principal-library', label: 'Library Oversight', icon: 'BookOpen', badge: 'Books' },
       ]
     },
     {
@@ -2149,15 +2161,24 @@ export class DashboardComponent implements OnInit, OnDestroy {
     { id: 'students', label: 'Active Students Roster', icon: 'Users', count: '1,240' },
     { id: 'teachers', label: 'Faculty & Teachers', icon: 'GraduationCap', count: '86' },
     { id: 'admissions', label: 'Admissions & Inquiries', icon: 'BookOpen', badge: 'New' },
+    { id: 'stage_wise', label: 'Stage-Wise Operations', icon: 'Layers', badge: 'Nur-10' },
     { id: 'attendance', label: 'Attendance & Biometrics', icon: 'Clock', count: '95.3%' },
     { id: 'finance', label: 'Fees & Finance Ledger', icon: 'CreditCard', badge: 'PKR' },
+    { id: 'invoices', label: 'Invoices & Billing Hub', icon: 'Receipt', badge: 'PRO' },
+    { id: 'expenses', label: 'School Expenses Ledger', icon: 'Receipt', badge: 'Bills' },
     { id: 'payment_gateway', label: 'Payment Gateway & Online Fees', icon: 'WalletCards', badge: 'Online Pay' },
     { id: 'transport', label: 'School Bus & Transport', icon: 'Bus', badge: 'GPS' },
+    { id: 'hostel', label: 'Hostel & Boarding', icon: 'Building2', badge: 'Rooms' },
+    { id: 'labs', label: 'Computer & Science Labs', icon: 'Cpu', badge: '40 PCs' },
     { id: 'library', label: 'Library & Book Register', icon: 'Library', count: '4,500' },
     { id: 'exams', label: 'Examinations & Marks', icon: 'Trophy', count: 'GPA 3.8' },
     { id: 'timetable', label: 'Timetable & Routine', icon: 'Calendar', count: '8 Periods' },
+    { id: 'alumni', label: 'Alumni & Graduate Archive', icon: 'Award', count: '450+' },
+    { id: 'visitors', label: 'Security & Visitors', icon: 'ShieldCheck', badge: 'Gate' },
+    { id: 'assets', label: 'Assets & Inventory', icon: 'Layers', badge: 'Stock' },
     { id: 'portals', label: 'Role Portals & RBAC', icon: 'ShieldCheck', count: '5 Portals' },
     { id: 'reports', label: 'Certificates & Transcripts', icon: 'FileText', badge: 'SLC/PDF' },
+    { id: 'audit', label: 'Institutional Audit Hub', icon: 'ShieldCheck', badge: '98.4%' },
     { id: 'settings', label: 'School Settings', icon: 'Settings' }
   ];
 
@@ -2182,10 +2203,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (role === 'principal') {
       return [
         { id: 'principal-overview', label: 'Executive Overview', icon: 'LayoutDashboard', badge: 'Director' },
+        { id: 'principal-stage_wise', label: 'Stage-Wise Operations', icon: 'Layers', badge: 'Nur-10' },
+        { id: 'principal-master_registries', label: 'Master Registries', icon: 'FileText', badge: 'Tables' },
         { id: 'principal-directives', label: 'Assembly Directives', icon: 'Bell', badge: 'Circular' },
         { id: 'principal-supervision', label: 'Lesson Plan Approvals', icon: 'BookOpen', badge: 'Approve' },
         { id: 'principal-substitutions', label: 'Period Substitutions', icon: 'Clock', count: 'Cover' },
         { id: 'principal-syllabus', label: 'Syllabus Tracker (Nur-10)', icon: 'Award', count: '84.5%' },
+        { id: 'principal-library', label: 'Library Oversight', icon: 'BookOpen', badge: 'Books' },
         { id: 'principal-inspections', label: 'Campus Walkthrough Log', icon: 'CheckSquare', count: 'Rounds' },
         { id: 'principal-discipline', label: 'Discipline & Hearings', icon: 'ShieldCheck', badge: 'Action' },
         { id: 'principal-appraisals', label: 'Teacher Appraisals', icon: 'GraduationCap', badge: 'KPI' },
@@ -2211,6 +2235,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         { id: 'teacher-lessons', label: 'Daily Lesson Planner', icon: 'BookOpen', badge: 'Plan' },
         { id: 'teacher-homework', label: 'Homework & Tasks', icon: 'FileText', count: '3 Due' },
         { id: 'teacher-students', label: 'My Students Roster', icon: 'Users', count: '38' },
+        { id: 'teacher-library', label: 'Campus Library & Books', icon: 'BookOpen', badge: 'Catalog' },
         { id: 'teacher-communication', label: 'Parent Council Chat', icon: 'MessageSquare', count: '2 New' }
       ];
     } else if (role === 'student') {
@@ -2222,7 +2247,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
         { id: 'student-academics', label: 'Grades & Report Card', icon: 'Award', badge: '3.92 GPA' },
         { id: 'student-homework', label: 'Homework Submissions', icon: 'FileText', badge: 'Due' },
         { id: 'student-attendance', label: 'RFID Attendance Log', icon: 'Clock', count: '98.5%' },
-        { id: 'student-fee', label: 'Fee Status & Challan', icon: 'CreditCard', count: 'Paid' }
+        { id: 'student-fee', label: 'Fee Status & Challan', icon: 'CreditCard', count: 'Paid' },
+        { id: 'student-library', label: 'Library Book Register', icon: 'BookOpen', badge: 'Books' }
       ];
     } else if (role === 'parent') {
       return [
@@ -2232,6 +2258,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         { id: 'parent-academics', label: 'Terminal Report Cards', icon: 'Award', count: 'A+' },
         { id: 'parent-attendance', label: 'Attendance History', icon: 'Clock', count: '98%' },
         { id: 'parent-fee', label: 'Fee Vouchers & Pay Online', icon: 'CreditCard', badge: 'Verified' },
+        { id: 'parent-library', label: 'Library & Reading Log', icon: 'BookOpen', badge: 'Books' },
         { id: 'parent-communication', label: 'Teacher Messaging', icon: 'MessageSquare', count: '1 New' },
         { id: 'parent-leave', label: 'Leave Applications', icon: 'FileText', badge: 'Apply' }
       ];
@@ -2283,6 +2310,22 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
+  private scrollMainCanvasToTop(): void {
+    if (typeof window === 'undefined') return;
+    const reset = () => {
+      const el =
+        document.getElementById('scs-main-scroll-canvas') ||
+        document.querySelector('main > .overflow-y-auto');
+      if (el) {
+        el.scrollTop = 0;
+      }
+      window.scrollTo(0, 0);
+    };
+    reset();
+    requestAnimationFrame(reset);
+    setTimeout(reset, 50);
+  }
+
   selectSchoolModule(modId: string): void {
     if (modId === 'logout') {
       if (this.previewMode) {
@@ -2292,21 +2335,34 @@ export class DashboardComponent implements OnInit, OnDestroy {
       }
       return;
     }
-    if (modId === 'principal' || modId === 'principal-portal' || modId.startsWith('principal-')) {
-      localStorage.setItem('activeSchoolRole', 'principal');
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('school-role-changed', { detail: { role: 'principal' } }));
-      }
-    } else if (modId === 'accountant' || modId === 'accountant-portal' || modId.startsWith('accountant-')) {
-      localStorage.setItem('activeSchoolRole', 'accountant');
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('school-role-changed', { detail: { role: 'accountant' } }));
-      }
-    } else if (modId === 'overview' && this.activeSchoolRole !== 'principal' && this.activeSchoolRole !== 'accountant') {
-      localStorage.setItem('activeSchoolRole', 'owner');
+    const lower = (modId || '').toLowerCase();
+    let targetRole: 'owner' | 'principal' | 'teacher' | 'student' | 'parent' | 'accountant' | null = null;
+    if (lower === 'principal' || lower === 'principal-portal' || lower.startsWith('principal-')) {
+      targetRole = 'principal';
+    } else if (lower === 'accountant' || lower === 'accountant-portal' || lower.startsWith('accountant-')) {
+      targetRole = 'accountant';
+    } else if (lower === 'teacher' || lower === 'teacher-portal' || lower.startsWith('teacher-')) {
+      targetRole = 'teacher';
+    } else if (lower === 'student' || lower === 'student-portal' || lower.startsWith('student-')) {
+      targetRole = 'student';
+    } else if (lower === 'parent' || lower === 'parent-portal' || lower.startsWith('parent-')) {
+      targetRole = 'parent';
+    } else if (
+      lower === 'owner' ||
+      lower === 'owner-portal' ||
+      (lower !== 'feed' && lower !== 'events' && this.schoolSidebarModules.some((m) => m.id === lower))
+    ) {
+      targetRole = 'owner';
     }
+
+    if (targetRole && typeof localStorage !== 'undefined') {
+      localStorage.setItem('activeSchoolRole', targetRole);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('school-role-changed', { detail: { role: targetRole } }));
+      }
+    }
+
     const wasAlreadyInSchoolHub = this.activeView === 'school-hub' || this.activeView.startsWith('school-') || this.activeView === 'school_college';
-    const subModuleChanged = this.activePreviewSubModule !== modId;
     this.activePreviewSubModule = modId;
     this.activeView = 'school-hub';
     if (this.isSidebarOpen && typeof window !== 'undefined' && window.innerWidth < 768) {
@@ -2315,9 +2371,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
     try {
       this.cdr.detectChanges();
     } catch {}
-    if (typeof window !== 'undefined' && (!wasAlreadyInSchoolHub || !subModuleChanged)) {
-      window.dispatchEvent(new CustomEvent('scs-school-action', { detail: modId }));
+    if (typeof window !== 'undefined') {
+      if (wasAlreadyInSchoolHub) {
+        window.dispatchEvent(new CustomEvent('scs-school-action', { detail: modId }));
+      } else {
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('scs-school-action', { detail: modId }));
+        }, 0);
+      }
     }
+    this.scrollMainCanvasToTop();
   }
 
   launchSchoolPreviewDirect(roleKey: RbacRoleKey = 'owner'): void {
@@ -3799,6 +3862,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.isOnline = false;
     this.cdr.detectChanges();
   };
+  private schoolRoleChangedHandler = () => {
+    try {
+      this.cdr.detectChanges();
+    } catch {}
+    this.scrollMainCanvasToTop();
+  };
   private countdownTimer: any = null;
   private clockTimer: any = null;
 
@@ -3881,6 +3950,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.isOnline = navigator.onLine;
     window.addEventListener('online', this.onlineHandler);
     window.addEventListener('offline', this.offlineHandler);
+    window.addEventListener('school-role-changed', this.schoolRoleChangedHandler);
     this.updateDateTime();
     this.clockTimer = setInterval(() => {
       this.updateDateTime();
@@ -3896,6 +3966,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     window.removeEventListener('online', this.onlineHandler);
     window.removeEventListener('offline', this.offlineHandler);
+    window.removeEventListener('school-role-changed', this.schoolRoleChangedHandler);
     if (this.countdownTimer) clearInterval(this.countdownTimer);
     if (this.clockTimer) clearInterval(this.clockTimer);
   }
@@ -4342,6 +4413,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     try {
       this.cdr.detectChanges();
     } catch {}
+    this.scrollMainCanvasToTop();
   }
 
   launchClientPreviewWithRole(client: SuperadminClient, roleKey: RbacRoleKey = 'owner'): void {
@@ -5573,6 +5645,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   async navigateTo(view: string): Promise<void> {
     this.closeSidebarOnMobile();
+    this.scrollMainCanvasToTop();
     let target = view;
     if (view === 'rbac-list' || view === 'rbac-add') target = 'rbac';
     else if (view === 'analytics-list' || view === 'analytics-add') target = 'analytics';

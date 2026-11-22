@@ -1474,11 +1474,11 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
   principalTab: 'overview' | 'stage_wise' | 'master_registries' | 'supervision' | 'substitutions' | 'syllabus' | 'inspections' | 'discipline' | 'directives' | 'appraisals' | 'exam_moderation' | 'academic_reports' | 'faculty_tasks' | 'teacher_leaves' | 'student_certificates' | 'ptm_interventions' | 'admissions_review' | 'fee_oversight' | 'parent_complaints' | 'safeguarding' | 'facilities_transport' | 'library' | 'biometric_attendance' = 'overview';
   teacherTab: 'schedule' | 'feed' | 'events' | 'attendance' | 'marks' | 'lessons' | 'homework' | 'students' | 'communication' | 'library' = 'schedule';
   studentTab: 'overview' | 'feed' | 'events' | 'routine' | 'academics' | 'attendance' | 'fee' | 'homework' | 'library' = 'overview';
-  parentTab: 'overview' | 'feed' | 'events' | 'attendance' | 'academics' | 'fee' | 'leave' | 'library' = 'overview';
+  parentTab: 'overview' | 'feed' | 'events' | 'attendance' | 'academics' | 'fee' | 'leave' | 'library' | 'communication' = 'overview';
   accountantTab: 'overview' | 'challans' | 'collect' | 'defaulters' | 'daily_closing' = 'overview';
   studentSubTab: 'directory' | 'medical' | 'disciplinary' = 'directory';
   teacherSubTab: 'directory' | 'payroll' | 'leaves' | 'lesson_plans' = 'directory';
-  financeSubTab: 'monitoring' | 'ledger' | 'class_wise' | 'defaulters' | 'teacher_arrears' | 'profit_loss' | 'accounts' | 'alerts_log' | 'daily_closing' = 'monitoring';
+  financeSubTab: 'monitoring' | 'ledger' | 'cashiering' | 'class_wise' | 'defaulters' | 'teacher_arrears' | 'profit_loss' | 'accounts' | 'alerts_log' | 'daily_closing' = 'monitoring';
   selectedProfitLossYear: string = '2025-2026';
 
   // Daily Cash Closing (Rooznama) State & Helpers
@@ -1703,21 +1703,35 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  setPrincipalTab(tab: 'overview' | 'stage_wise' | 'master_registries' | 'supervision' | 'substitutions' | 'syllabus' | 'inspections' | 'discipline' | 'directives' | 'appraisals' | 'exam_moderation' | 'academic_reports' | 'faculty_tasks' | 'teacher_leaves' | 'student_certificates' | 'ptm_interventions' | 'admissions_review' | 'fee_oversight' | 'parent_complaints' | 'safeguarding' | 'facilities_transport' | 'biometric_attendance'): void {
+  private resetScrollToTop(): void {
+    if (typeof window === 'undefined') return;
+    const scrollTopNow = () => {
+      const mainCanvas =
+        document.getElementById('scs-main-scroll-canvas') ||
+        document.querySelector('main > .overflow-y-auto') ||
+        document.querySelector('.scs-canvas-3d.overflow-y-auto');
+      if (mainCanvas) {
+        mainCanvas.scrollTop = 0;
+      }
+      window.scrollTo(0, 0);
+    };
+    scrollTopNow();
+    requestAnimationFrame(scrollTopNow);
+    setTimeout(scrollTopNow, 50);
+  }
+
+  setPrincipalTab(tab: 'overview' | 'stage_wise' | 'master_registries' | 'supervision' | 'substitutions' | 'syllabus' | 'inspections' | 'discipline' | 'directives' | 'appraisals' | 'exam_moderation' | 'academic_reports' | 'faculty_tasks' | 'teacher_leaves' | 'student_certificates' | 'ptm_interventions' | 'admissions_review' | 'fee_oversight' | 'parent_complaints' | 'safeguarding' | 'facilities_transport' | 'library' | 'biometric_attendance'): void {
     if (tab === 'biometric_attendance' && !this.canPrincipalUseAttendanceVerification) {
       this.showToast('Attendance Verification access is locked by School Owner Setup.', 'warning');
       return;
     }
     this.principalTab = tab;
+    if (tab === 'library') {
+      this.checkAndUpdateOverdueBooks();
+    }
     this.tabChanged.emit(tab);
     this.cdr.detectChanges();
-
-    if (typeof window !== 'undefined') {
-      const el = document.getElementById('principal-active-view') || document.getElementById('campus-updates-stream');
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }
+    this.resetScrollToTop();
   }
 
   openStageWiseView(stage: 'All' | 'Early Childhood' | 'Primary' | 'Middle' | 'Secondary' = 'All'): void {
@@ -1766,21 +1780,34 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
       case 'parent_complaints': return 'Parent Grievance Redressal & Complaint Tracker';
       case 'safeguarding': return 'Student Safeguarding, Welfare & Medical Health Alerts';
       case 'facilities_transport': return 'Campus Facilities Maintenance & Transport Supervision';
+      case 'library': return 'Library Resource Manager & Book Circulation';
       default: return 'Principal Executive Academic Command Center';
     }
   }
 
-  setParentTab(tab: 'overview' | 'feed' | 'events' | 'attendance' | 'academics' | 'fee' | 'leave' | 'library'): void {
+  get currentTeacherTabLabel(): string {
+    switch (this.teacherTab) {
+      case 'feed': return 'Campus Top Feed & Academic Notices';
+      case 'events': return 'School Events & Organizing Committees';
+      case 'attendance': return 'Class Attendance Roll Call & Verification';
+      case 'marks': return 'Student Gradebook & Marks Entry';
+      case 'lessons': return 'Daily Lesson Planner';
+      case 'homework': return 'Homework Tasks & Syllabus Upload';
+      case 'students': return 'Class 10-A Student Academic Roster';
+      case 'communication': return 'Parent Council Chat & Messaging';
+      case 'library': return 'Faculty Library Desk & Reference Catalog';
+      default: return 'My Teaching Lecture Schedule';
+    }
+  }
+
+  setParentTab(tab: 'overview' | 'feed' | 'events' | 'attendance' | 'academics' | 'fee' | 'leave' | 'library' | 'communication'): void {
     this.parentTab = tab;
+    if (tab === 'library') {
+      this.checkAndUpdateOverdueBooks();
+    }
     this.tabChanged.emit(tab);
     this.cdr.detectChanges();
-
-    if (typeof window !== 'undefined') {
-      const el = document.getElementById('parent-active-view');
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }
+    this.resetScrollToTop();
   }
 
   get currentParentTabLabel(): string {
@@ -1792,6 +1819,7 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
       case 'fee': return 'Tuition Fee & Bank Challan Vouchers';
       case 'leave': return 'Student Leave Applications';
       case 'library': return 'Child Library Clearance & Circulation Ledger';
+      case 'communication': return 'Direct Teacher Messaging & Council Chat';
       default: return 'Child Live Summary & Overview';
     }
   }
@@ -1812,15 +1840,12 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
 
   setStudentTab(tab: 'overview' | 'feed' | 'events' | 'routine' | 'academics' | 'attendance' | 'fee' | 'homework' | 'library'): void {
     this.studentTab = tab;
+    if (tab === 'library') {
+      this.checkAndUpdateOverdueBooks();
+    }
     this.tabChanged.emit(tab);
     this.cdr.detectChanges();
-
-    setTimeout(() => {
-      const el = document.getElementById('student-active-view') || document.getElementById('campus-updates-stream');
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }, 60);
+    this.resetScrollToTop();
   }
 
   setTeacherTab(tab: 'schedule' | 'feed' | 'events' | 'attendance' | 'marks' | 'lessons' | 'homework' | 'students' | 'communication' | 'library'): void {
@@ -1829,17 +1854,12 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
       return;
     }
     this.teacherTab = tab;
+    if (tab === 'library') {
+      this.checkAndUpdateOverdueBooks();
+    }
     this.tabChanged.emit(tab);
     this.cdr.detectChanges();
-
-    setTimeout(() => {
-      const el = document.getElementById('teacher-active-view') || 
-                 document.getElementById('teacher-workspace-' + tab) || 
-                 document.getElementById('campus-updates-stream');
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }, 60);
+    this.resetScrollToTop();
   }
 
   selectParentChild(childId: string): void {
@@ -2062,17 +2082,25 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
     const savedRole = (typeof localStorage !== 'undefined') ? localStorage.getItem('activeSchoolRole') : null;
 
     // 1. Role-specific explicit switches ONLY when the target explicitly dictates a portal
+    const ownerExplicitTabs = new Set([
+      'students', 'teachers', 'admissions', 'attendance', 'finance', 'payment_gateway',
+      'transport', 'exams', 'timetable', 'portals', 'reports', 'settings',
+      'hostel', 'labs', 'alumni', 'expenses', 'invoices', 'audit',
+      'lesson_plans', 'appraisals', 'inspections', 'exam_moderation',
+      'parent_complaints', 'substitutions', 'syllabus', 'safeguarding', 'directives'
+    ]);
+
     if (v.startsWith('principal-') || v === 'principal-portal' || v === 'principal') {
       this.currentPortalRole = 'principal';
     } else if (v.startsWith('accountant-') || v === 'accountant-portal' || v === 'accountant') {
       this.currentPortalRole = 'accountant';
-    } else if (v.startsWith('teacher-') || v === 'teacher-portal') {
+    } else if (v.startsWith('teacher-') || v === 'teacher-portal' || v === 'teacher') {
       this.currentPortalRole = 'teacher';
-    } else if (v.startsWith('student-') || v === 'student-portal') {
+    } else if (v.startsWith('student-') || v === 'student-portal' || v === 'student') {
       this.currentPortalRole = 'student';
-    } else if (v.startsWith('parent-') || v === 'parent-portal') {
+    } else if (v.startsWith('parent-') || v === 'parent-portal' || v === 'parent') {
       this.currentPortalRole = 'parent';
-    } else if (v === 'owner' || v === 'owner-portal') {
+    } else if (v === 'owner' || v === 'owner-portal' || (ownerExplicitTabs.has(v) && this.isOwnerSession && this.currentPortalRole !== 'principal')) {
       if (this.isOwnerSession) {
         this.currentPortalRole = 'owner';
       }
@@ -2082,10 +2110,15 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
       }
     }
 
-    // 2. Route tabs strictly within the CURRENT active portal role!
-    // Never switch portal role to 'owner' when navigating within principal, teacher, student, parent, or accountant portals!
+    // 2. Route tabs cleanly within the resolved active portal role!
     if (this.currentPortalRole === 'principal') {
-      if (v.includes('supervision') || v.includes('lesson')) this.principalTab = 'supervision';
+      if (v.includes('biometric')) {
+        if (this.canPrincipalUseAttendanceVerification) this.principalTab = 'biometric_attendance';
+        else this.principalTab = 'overview';
+      } else if (v.includes('stage')) this.principalTab = 'stage_wise';
+      else if (v.includes('master')) this.principalTab = 'master_registries';
+      else if (v.includes('library')) { this.principalTab = 'library'; this.checkAndUpdateOverdueBooks(); }
+      else if (v.includes('supervision') || v.includes('lesson')) this.principalTab = 'supervision';
       else if (v.includes('substitut') || v.includes('arrangement')) this.principalTab = 'substitutions';
       else if (v.includes('syllabus') || v.includes('curriculum')) this.principalTab = 'syllabus';
       else if (v.includes('inspection') || v.includes('round')) this.principalTab = 'inspections';
@@ -2108,17 +2141,21 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
       if (v.includes('challan')) this.accountantTab = 'challans';
       else if (v.includes('collect') || v.includes('receipt') || v.includes('cash')) this.accountantTab = 'collect';
       else if (v.includes('defaulter') || v.includes('reminder')) this.accountantTab = 'defaulters';
-      else if (v.includes('closing') || v.includes('reconcil') || v.includes('owner')) this.accountantTab = 'daily_closing';
-      else this.accountantTab = 'overview';
+      else if (v.includes('closing') || v.includes('reconcil') || v.includes('owner')) {
+        this.accountantTab = 'daily_closing';
+        this.populateAccountantClosingFromReceipts();
+      } else this.accountantTab = 'overview';
     } else if (this.currentPortalRole === 'teacher') {
       if (v.includes('feed') || v.includes('notice')) this.teacherTab = 'feed';
       else if (v.includes('event')) this.teacherTab = 'events';
-      else if (v.includes('attendance')) this.teacherTab = 'attendance';
-      else if (v.includes('mark') || v.includes('grade')) this.teacherTab = 'marks';
+      else if (v.includes('attendance')) {
+        if (this.canTeacherUseAttendanceVerification) this.teacherTab = 'attendance';
+      } else if (v.includes('mark') || v.includes('grade')) this.teacherTab = 'marks';
       else if (v.includes('lesson')) this.teacherTab = 'lessons';
       else if (v.includes('homework')) this.teacherTab = 'homework';
       else if (v.includes('student') || v.includes('roster')) this.teacherTab = 'students';
-      else if (v.includes('chat') || v.includes('communication') || v.includes('message')) this.teacherTab = 'communication';
+      else if (v.includes('chat') || v.includes('communicat') || v.includes('messag')) this.teacherTab = 'communication';
+      else if (v.includes('library')) { this.teacherTab = 'library'; this.checkAndUpdateOverdueBooks(); }
       else this.teacherTab = 'schedule';
     } else if (this.currentPortalRole === 'student') {
       if (v.includes('feed') || v.includes('notice')) this.studentTab = 'feed';
@@ -2128,6 +2165,7 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
       else if (v.includes('attendance')) this.studentTab = 'attendance';
       else if (v.includes('fee') || v.includes('challan')) this.studentTab = 'fee';
       else if (v.includes('homework')) this.studentTab = 'homework';
+      else if (v.includes('library')) { this.studentTab = 'library'; this.checkAndUpdateOverdueBooks(); }
       else this.studentTab = 'overview';
     } else if (this.currentPortalRole === 'parent') {
       if (v.includes('feed') || v.includes('notice') || v.includes('circular')) this.parentTab = 'feed';
@@ -2136,13 +2174,18 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
       else if (v.includes('academic') || v.includes('report') || v.includes('result')) this.parentTab = 'academics';
       else if (v.includes('fee') || v.includes('challan')) this.parentTab = 'fee';
       else if (v.includes('leave')) this.parentTab = 'leave';
+      else if (v.includes('chat') || v.includes('communicat') || v.includes('messag')) this.parentTab = 'communication';
+      else if (v.includes('library')) { this.parentTab = 'library'; this.checkAndUpdateOverdueBooks(); }
       else this.parentTab = 'overview';
     } else {
       // Owner ERP module tabs
       if (v === 'feed') this.currentTab = 'feed';
       else if (v === 'events' || v.includes('event')) this.currentTab = 'events';
+      else if (v === 'owner' || v === 'owner-portal' || v === 'overview' || v === 'school-hub') this.currentTab = 'overview';
       else this.handleSchoolAction(v);
     }
+    this.cdr.detectChanges();
+    this.resetScrollToTop();
   }
 
   alertTarget: {
@@ -4155,6 +4198,7 @@ INSTRUCTIONS:
     { id: 'students', label: 'Active Students', shortLabel: 'Students', icon: Users, count: 'Live' },
     { id: 'teachers', label: 'Faculty & Teachers', shortLabel: 'Faculty', icon: GraduationCap, count: 'Live' },
     { id: 'admissions', label: 'Admissions & Inquiries', shortLabel: 'Admissions', icon: BookOpen, badge: 'New' },
+    { id: 'stage_wise', label: 'Stage-Wise Operations', shortLabel: 'Stage-Wise', icon: Layers, badge: 'Nur-10' },
     { id: 'attendance', label: 'Attendance & Biometrics', shortLabel: 'Attendance', icon: Clock, count: 'Live' },
     { id: 'finance', label: 'Fees & Finance Ledger', shortLabel: 'Finance', icon: CreditCard, badge: 'PKR' },
     { id: 'invoices', label: 'Invoices & Billing Hub', shortLabel: 'Invoices', icon: Receipt, badge: 'PRO' },
@@ -4166,20 +4210,11 @@ INSTRUCTIONS:
     { id: 'library', label: 'Library & Book Register', shortLabel: 'Library', icon: Library, count: '4,500' },
     { id: 'exams', label: 'Examinations & Grades', shortLabel: 'Exams', icon: Trophy, count: 'GPA 3.8' },
     { id: 'timetable', label: 'Timetable & Routine', shortLabel: 'Timetable', icon: Calendar, count: '8 Periods' },
-    { id: 'lesson_plans', label: 'Lesson Plans & Quality Supervision', shortLabel: 'Lesson Plans', icon: BookOpen, badge: 'Approval' },
-    { id: 'appraisals', label: 'Faculty Appraisals & Scoring', shortLabel: 'Appraisals', icon: Award, badge: 'KPI' },
-    { id: 'inspections', label: 'Campus Walkthrough & Quality Audits', shortLabel: 'Inspections', icon: ClipboardCheck, badge: 'Daily' },
-    { id: 'exam_moderation', label: 'Exam Paper Moderation & Lock', shortLabel: 'Moderation', icon: Trophy, badge: 'Exams' },
-    { id: 'parent_complaints', label: 'Parent Grievance & Complaints Desk', shortLabel: 'Grievance', icon: MessageSquareWarning, badge: 'Desk' },
-    { id: 'substitutions', label: 'Period Substitutions & Cover Duty', shortLabel: 'Cover Duty', icon: Clock, badge: 'Daily' },
-    { id: 'syllabus', label: 'Syllabus Coverage Tracker', shortLabel: 'Syllabus', icon: BookOpen, badge: 'Pacing' },
-    { id: 'safeguarding', label: 'Child Safeguarding & Safety', shortLabel: 'Safeguarding', icon: ShieldCheck, badge: 'Safety' },
-    { id: 'directives', label: 'Executive Directives & Circulars', shortLabel: 'Directives', icon: FileText, badge: 'Official' },
     { id: 'alumni', label: 'Alumni & Graduate Archive', shortLabel: 'Alumni', icon: Award, count: '450+' },
     { id: 'visitors', label: 'Visitor Gate Passes', shortLabel: 'Visitors', icon: ShieldCheck, badge: 'Gate' },
     { id: 'assets', label: 'Assets & Inventory', shortLabel: 'Assets', icon: Layers, badge: 'Stock' },
-    { id: 'portals', label: 'Role Portals & RBAC', shortLabel: 'Portals', icon: ShieldCheck, count: '3 Portals' },
-    { id: 'reports', label: 'Certificates & Transcripts', shortLabel: 'Reports', icon: FileText, badge: 'SLC/PDF' },
+    { id: 'portals', label: 'Role Portals & RBAC', shortLabel: 'Portals', icon: ShieldCheck, count: '5 Portals' },
+    { id: 'reports', label: 'Certificates & Transcripts', shortLabel: 'Certs/PDF', icon: FileText, badge: 'SLC/PDF' },
     { id: 'audit', label: 'Institutional Audit & Compliance', shortLabel: 'Audit Hub', icon: ShieldCheck, badge: '98.4%' },
     { id: 'settings', label: 'School Settings', shortLabel: 'Settings', icon: Settings }
   ];
@@ -6742,6 +6777,7 @@ INSTRUCTIONS:
           this.currentPortalRole = ev.detail.role;
           this.syncPortalAttendanceTabAccess();
           this.cdr.detectChanges();
+          this.resetScrollToTop();
         }
       });
       window.addEventListener('scs-school-action', (ev: any) => {
@@ -6845,36 +6881,68 @@ INSTRUCTIONS:
     if (!actionId) return;
     const a = actionId.toLowerCase();
 
-    // Check if targeted Accountant / Fee Clerk action
-    if (a === 'accountant' || a === 'accountant-portal' || a.startsWith('accountant-') || (this.currentPortalRole === 'accountant' && !['logout', 'settings', 'password_change'].includes(a))) {
+    // 0. Explicit Owner switch shortcut
+    if ((a === 'owner' || a === 'owner-portal') && this.isOwnerSession) {
+      this.switchPortal('owner');
+      this.setTab('overview');
+      return;
+    }
+
+    const accountantSubTabs = new Set(['challans', 'collect', 'defaulters', 'daily_closing']);
+    const principalSubTabs = new Set([
+      'stage_wise', 'master_registries', 'supervision', 'substitutions', 'syllabus',
+      'inspections', 'discipline', 'directives', 'appraisals', 'exam_moderation',
+      'academic_reports', 'faculty_tasks', 'teacher_leaves', 'student_certificates',
+      'ptm_interventions', 'admissions_review', 'fee_oversight', 'parent_complaints',
+      'safeguarding', 'facilities_transport', 'biometric_attendance'
+    ]);
+
+    // 1. Accountant / Fee Clerk Desk
+    if (
+      a === 'accountant' ||
+      a === 'accountant-portal' ||
+      a.startsWith('accountant-') ||
+      (this.currentPortalRole === 'accountant' && (a === 'overview' || accountantSubTabs.has(a)))
+    ) {
       this.currentPortalRole = 'accountant';
       try { localStorage.setItem('activeSchoolRole', 'accountant'); } catch {}
       const sub = a.replace('accountant-', '').replace('accountant', '').trim();
       if (!sub || sub === 'portal' || sub === 'overview') {
-        this.accountantTab = 'overview';
+        this.setAccountantTab('overview');
       } else if (sub.includes('challan')) {
-        this.accountantTab = 'challans';
+        this.setAccountantTab('challans');
       } else if (sub.includes('collect') || sub.includes('receipt') || sub.includes('cash')) {
-        this.accountantTab = 'collect';
+        this.setAccountantTab('collect');
       } else if (sub.includes('defaulter') || sub.includes('reminder')) {
-        this.accountantTab = 'defaulters';
+        this.setAccountantTab('defaulters');
       } else if (sub.includes('closing') || sub.includes('reconcil') || sub.includes('owner')) {
-        this.accountantTab = 'daily_closing';
-        this.populateAccountantClosingFromReceipts();
+        this.setAccountantTab('daily_closing');
       } else {
-        this.accountantTab = 'overview';
+        this.setAccountantTab('overview');
       }
-      this.cdr.detectChanges();
       return;
     }
 
-    // Check if targeted principal action or principal role selected
-    if (a === 'principal' || a === 'principal-portal' || a.startsWith('principal-') || (this.currentPortalRole === 'principal' && !['logout', 'settings', 'password_change'].includes(a))) {
+    // 2. Principal & Academic Director Portal
+    if (
+      a === 'principal' ||
+      a === 'principal-portal' ||
+      a.startsWith('principal-') ||
+      (this.currentPortalRole === 'principal' && (a === 'overview' || a === 'library' || principalSubTabs.has(a)))
+    ) {
       this.currentPortalRole = 'principal';
       try { localStorage.setItem('activeSchoolRole', 'principal'); } catch {}
       const sub = a.replace('principal-', '').replace('principal', '').trim();
       if (!sub || sub === 'portal' || sub === 'overview') {
         this.setPrincipalTab('overview');
+      } else if (sub.includes('biometric')) {
+        this.setPrincipalTab('biometric_attendance');
+      } else if (sub.includes('stage')) {
+        this.setPrincipalTab('stage_wise');
+      } else if (sub.includes('master')) {
+        this.setPrincipalTab('master_registries');
+      } else if (sub.includes('library')) {
+        this.setPrincipalTab('library');
       } else if (sub.includes('supervision') || sub.includes('lesson')) {
         this.setPrincipalTab('supervision');
       } else if (sub.includes('substitut') || sub.includes('arrangement')) {
@@ -6914,140 +6982,105 @@ INSTRUCTIONS:
       } else {
         this.setPrincipalTab('overview');
       }
-      this.cdr.detectChanges();
       return;
     }
 
-    // Check if user is currently in Teacher Portal or targeted teacher action
-    if (this.currentPortalRole === 'teacher' || a.startsWith('teacher-')) {
-      if (a === 'feed' || a.includes('feed') || a.includes('notice')) {
-        this.teacherTab = 'feed';
-        this.cdr.detectChanges();
-        return;
+    // 3. Teacher & Faculty Portal
+    const isTeacherSub = this.currentPortalRole === 'teacher' && (
+      a === 'feed' || a === 'events' || a === 'schedule' || a === 'attendance' ||
+      a === 'marks' || a === 'lessons' || a === 'homework' || a === 'students' ||
+      a === 'communication' || a === 'library'
+    );
+    if (a === 'teacher' || a === 'teacher-portal' || a.startsWith('teacher-') || isTeacherSub) {
+      this.currentPortalRole = 'teacher';
+      try { localStorage.setItem('activeSchoolRole', 'teacher'); } catch {}
+      const sub = a.replace('teacher-', '').replace('teacher', '').trim();
+      if (sub === 'feed' || sub.includes('feed') || sub.includes('notice')) {
+        this.setTeacherTab('feed');
+      } else if (sub === 'events' || sub.includes('event')) {
+        this.setTeacherTab('events');
+      } else if (sub.includes('attendance')) {
+        this.setTeacherTab('attendance');
+      } else if (sub.includes('mark') || sub.includes('grade')) {
+        this.setTeacherTab('marks');
+      } else if (sub.includes('lesson')) {
+        this.setTeacherTab('lessons');
+      } else if (sub.includes('homework')) {
+        this.setTeacherTab('homework');
+      } else if (sub.includes('student') || sub.includes('roster')) {
+        this.setTeacherTab('students');
+      } else if (sub.includes('chat') || sub.includes('communicat') || sub.includes('messag')) {
+        this.setTeacherTab('communication');
+      } else if (sub.includes('library')) {
+        this.setTeacherTab('library');
+      } else {
+        this.setTeacherTab('schedule');
       }
-      if (a === 'events' || a.includes('event')) {
-        this.teacherTab = 'events';
-        this.cdr.detectChanges();
-        return;
-      }
-      if (a.includes('attendance')) {
-        this.teacherTab = 'attendance';
-        this.cdr.detectChanges();
-        return;
-      }
-      if (a.includes('mark') || a.includes('grade')) {
-        this.teacherTab = 'marks';
-        this.cdr.detectChanges();
-        return;
-      }
-      if (a.includes('lesson')) {
-        this.teacherTab = 'lessons';
-        this.cdr.detectChanges();
-        return;
-      }
-      if (a.includes('homework')) {
-        this.teacherTab = 'homework';
-        this.cdr.detectChanges();
-        return;
-      }
-      if (a.includes('student') || a.includes('roster')) {
-        this.teacherTab = 'students';
-        this.cdr.detectChanges();
-        return;
-      }
-      if (a.includes('chat') || a.includes('communication') || a.includes('message')) {
-        this.teacherTab = 'communication';
-        this.cdr.detectChanges();
-        return;
-      }
-      if (a.includes('schedule') || a === 'teacher-portal') {
-        this.teacherTab = 'schedule';
-        this.cdr.detectChanges();
-        return;
-      }
+      return;
     }
 
-    // Check if user is currently in Student Portal or targeted student action
-    if (this.currentPortalRole === 'student' || a.startsWith('student-')) {
-      if (a === 'feed' || a.includes('feed') || a.includes('notice')) {
-        this.studentTab = 'feed';
-        this.cdr.detectChanges();
-        return;
+    // 4. Student Academic Portal
+    const isStudentSub = this.currentPortalRole === 'student' && (
+      a === 'feed' || a === 'events' || a === 'overview' || a === 'routine' ||
+      a === 'timetable' || a === 'academics' || a === 'homework' ||
+      a === 'attendance' || a === 'fee' || a === 'library'
+    );
+    if (a === 'student' || a === 'student-portal' || a.startsWith('student-') || isStudentSub) {
+      this.currentPortalRole = 'student';
+      try { localStorage.setItem('activeSchoolRole', 'student'); } catch {}
+      const sub = a.replace('student-', '').replace('student', '').trim();
+      if (sub === 'feed' || sub.includes('feed') || sub.includes('notice')) {
+        this.setStudentTab('feed');
+      } else if (sub === 'events' || sub.includes('event')) {
+        this.setStudentTab('events');
+      } else if (sub.includes('timetable') || sub.includes('routine')) {
+        this.setStudentTab('routine');
+      } else if (sub.includes('academic') || sub.includes('grade') || sub.includes('card')) {
+        this.setStudentTab('academics');
+      } else if (sub.includes('homework')) {
+        this.setStudentTab('homework');
+      } else if (sub.includes('attendance')) {
+        this.setStudentTab('attendance');
+      } else if (sub.includes('fee')) {
+        this.setStudentTab('fee');
+      } else if (sub.includes('library')) {
+        this.setStudentTab('library');
+      } else {
+        this.setStudentTab('overview');
       }
-      if (a === 'events' || a.includes('event')) {
-        this.studentTab = 'events';
-        this.cdr.detectChanges();
-        return;
-      }
-      if (a.includes('timetable') || a.includes('routine')) {
-        this.studentTab = 'routine';
-        this.cdr.detectChanges();
-        return;
-      }
-      if (a.includes('academic') || a.includes('grade') || a.includes('card')) {
-        this.studentTab = 'academics';
-        this.cdr.detectChanges();
-        return;
-      }
-      if (a.includes('homework')) {
-        this.studentTab = 'homework';
-        this.cdr.detectChanges();
-        return;
-      }
-      if (a.includes('attendance')) {
-        this.studentTab = 'attendance';
-        this.cdr.detectChanges();
-        return;
-      }
-      if (a.includes('fee')) {
-        this.studentTab = 'fee';
-        this.cdr.detectChanges();
-        return;
-      }
-      if (a === 'student-portal') {
-        this.studentTab = 'overview';
-        this.cdr.detectChanges();
-        return;
-      }
+      return;
     }
 
-    // Check if user is currently in Parent Portal or targeted parent action
-    if (this.currentPortalRole === 'parent' || a.startsWith('parent-')) {
-      if (a === 'feed' || a.includes('feed') || a.includes('notice')) {
-        this.parentTab = 'feed';
-        this.cdr.detectChanges();
-        return;
+    // 5. Parent & Guardian Portal
+    const isParentSub = this.currentPortalRole === 'parent' && (
+      a === 'feed' || a === 'events' || a === 'overview' || a === 'academics' ||
+      a === 'attendance' || a === 'fee' || a === 'leave' || a === 'communication' ||
+      a === 'library'
+    );
+    if (a === 'parent' || a === 'parent-portal' || a.startsWith('parent-') || isParentSub) {
+      this.currentPortalRole = 'parent';
+      try { localStorage.setItem('activeSchoolRole', 'parent'); } catch {}
+      const sub = a.replace('parent-', '').replace('parent', '').trim();
+      if (sub === 'feed' || sub.includes('feed') || sub.includes('notice')) {
+        this.setParentTab('feed');
+      } else if (sub === 'events' || sub.includes('event')) {
+        this.setParentTab('events');
+      } else if (sub.includes('academic') || sub.includes('report') || sub.includes('card')) {
+        this.setParentTab('academics');
+      } else if (sub.includes('attendance')) {
+        this.setParentTab('attendance');
+      } else if (sub.includes('fee')) {
+        this.setParentTab('fee');
+      } else if (sub.includes('leave')) {
+        this.setParentTab('leave');
+      } else if (sub.includes('chat') || sub.includes('communicat') || sub.includes('messag')) {
+        this.setParentTab('communication');
+      } else if (sub.includes('library')) {
+        this.setParentTab('library');
+      } else {
+        this.setParentTab('overview');
       }
-      if (a === 'events' || a.includes('event')) {
-        this.parentTab = 'events';
-        this.cdr.detectChanges();
-        return;
-      }
-      if (a.includes('academic') || a.includes('report') || a.includes('card')) {
-        this.parentTab = 'academics';
-        this.cdr.detectChanges();
-        return;
-      }
-      if (a.includes('attendance')) {
-        this.parentTab = 'attendance';
-        this.cdr.detectChanges();
-        return;
-      }
-      if (a.includes('fee')) {
-        this.parentTab = 'fee';
-        this.cdr.detectChanges();
-        return;
-      }
-      if (a.includes('leave')) {
-        this.parentTab = 'leave';
-        this.cdr.detectChanges();
-        return;
-      }
-      if (a === 'parent-portal') {
-        this.parentTab = 'overview';
-        this.cdr.detectChanges();
-        return;
-      }
+      return;
     }
 
     if (a === 'feed') this.setTab('feed');
@@ -7078,44 +7111,98 @@ INSTRUCTIONS:
       this.openQuickFeeModal();
     }
     else if (a === 'whatsapp_reminder' || a === 'whatsapp-reminder') {
+      this.financeSubTab = 'alerts_log';
       this.setTab('finance');
-      this.showToast('WhatsApp Fee Reminder dialog opened', 'info');
+      this.showToast('WhatsApp & Fee Alerts History opened under Finance Ledger', 'info');
     }
     else if (a === 'fee_deletion_log' || a === 'fee-deletion-log') {
+      this.financeSubTab = 'ledger';
       this.setTab('finance');
       this.openFeeDeletionLogModal();
     }
     else if (a === 'payment_gateway') this.setTab('payment_gateway');
     else if (a === 'attendance' || a === 'attendance_report' || a === 'attendance-report') this.setTab('attendance');
-    else if (a === 'exams') this.setTab('exams');
-    else if (a === 'marks_entry' || a === 'marks-entry') this.setTab('exams');
-    else if (a === 'class_result' || a === 'class-result') this.setTab('reports');
-    else if (a === 'subjects') this.setTab('timetable');
+    else if (a === 'exams') {
+      this.examsSubTab = 'schedules';
+      this.setTab('exams');
+    }
+    else if (a === 'marks_entry' || a === 'marks-entry') {
+      this.examsSubTab = 'marks_entry';
+      this.setTab('exams');
+    }
+    else if (a === 'class_result' || a === 'class-result') {
+      this.examsSubTab = 'class_results';
+      this.setTab('exams');
+    }
+    else if (a === 'subjects') {
+      this.examsSubTab = 'subjects';
+      this.setTab('exams');
+    }
     else if (a === 'class_subject_map' || a === 'class-subject-map') {
-      this.setTab('timetable');
+      this.examsSubTab = 'subjects';
+      this.setTab('exams');
       this.openClassSubjectMapModal();
     }
-    else if (a === 'exam_schedule' || a === 'exam-schedule') this.setTab('timetable');
+    else if (a === 'exam_schedule' || a === 'exam-schedule') {
+      this.examsSubTab = 'schedules';
+      this.setTab('exams');
+    }
     else if (a === 'timetable') this.setTab('timetable');
     else if (a === 'expenses') this.setTab('expenses');
-    else if (a === 'all_reports' || a === 'all-reports') this.setTab('reports');
-    else if (a === 'income_vs_expense' || a === 'income-vs-expense') this.setTab('finance');
-    else if (a === 'teachers' || a === 'staff_management' || a === 'staff-management') this.setTab('teachers');
-    else if (a === 'salary_management' || a === 'salary-management') this.setTab('teachers');
-    else if (a === 'salary_report' || a === 'salary-report') this.setTab('finance');
+    else if (a === 'all_reports' || a === 'all-reports' || a === 'income_vs_expense' || a === 'income-vs-expense') {
+      this.financeSubTab = 'profit_loss';
+      this.setTab('finance');
+    }
+    else if (a === 'reports' || a === 'certificates') this.setTab('reports');
+    else if (a === 'teachers' || a === 'staff_management' || a === 'staff-management') {
+      this.teacherSubTab = 'directory';
+      this.setTab('teachers');
+    }
+    else if (a === 'salary_management' || a === 'salary-management') {
+      this.teacherSubTab = 'payroll';
+      this.setTab('teachers');
+    }
+    else if (a === 'salary_report' || a === 'salary-report') {
+      this.financeSubTab = 'teacher_arrears';
+      this.setTab('finance');
+    }
+    else if (a === 'stage_wise' || a === 'stage-wise') this.setTab('stage_wise');
+    else if (a === 'visitors') this.setTab('visitors');
+    else if (a === 'assets') this.setTab('assets');
+    else if (a === 'invoices') this.setTab('invoices');
+    else if (a === 'hostel') this.setTab('hostel');
+    else if (a === 'labs') this.setTab('labs');
     else if (a === 'transport') this.setTab('transport');
     else if (a === 'library') this.setTab('library');
     else if (a === 'portals') this.setTab('portals');
     else if (a === 'notices') this.openNoticeModal();
-    else if (a === 'lesson_plans' || a === 'lesson-plans' || a === 'lesson_plan' || a === 'supervision') this.setTab('lesson_plans');
-    else if (a === 'appraisals' || a === 'faculty-appraisals') this.setTab('appraisals');
-    else if (a === 'inspections' || a === 'walkthrough') this.setTab('inspections');
-    else if (a === 'exam_moderation' || a === 'moderation') this.setTab('exam_moderation');
-    else if (a === 'parent_complaints' || a === 'complaints') this.setTab('parent_complaints');
-    else if (a === 'substitutions' || a === 'period-cover') this.setTab('substitutions');
-    else if (a === 'syllabus') this.setTab('syllabus');
-    else if (a === 'safeguarding') this.setTab('safeguarding');
-    else if (a === 'directives') this.setTab('directives');
+    else if (
+      a === 'lesson_plans' || a === 'lesson-plans' || a === 'lesson_plan' || a === 'supervision' ||
+      a === 'appraisals' || a === 'faculty-appraisals' ||
+      a === 'inspections' || a === 'walkthrough' ||
+      a === 'exam_moderation' || a === 'moderation' ||
+      a === 'parent_complaints' || a === 'complaints' ||
+      a === 'substitutions' || a === 'period-cover' ||
+      a === 'syllabus' || a === 'safeguarding' || a === 'directives'
+    ) {
+      const targetPrincipalTab =
+        (a === 'lesson_plans' || a === 'lesson-plans' || a === 'lesson_plan' || a === 'supervision') ? 'supervision' :
+        (a === 'appraisals' || a === 'faculty-appraisals') ? 'appraisals' :
+        (a === 'inspections' || a === 'walkthrough') ? 'inspections' :
+        (a === 'exam_moderation' || a === 'moderation') ? 'exam_moderation' :
+        (a === 'parent_complaints' || a === 'complaints') ? 'parent_complaints' :
+        (a === 'substitutions' || a === 'period-cover') ? 'substitutions' :
+        a === 'syllabus' ? 'syllabus' :
+        a === 'safeguarding' ? 'safeguarding' : 'directives';
+      this.currentPortalRole = 'principal';
+      try {
+        localStorage.setItem('activeSchoolRole', 'principal');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('school-role-changed', { detail: { role: 'principal' } }));
+        }
+      } catch {}
+      this.setPrincipalTab(targetPrincipalTab);
+    }
     else if (a === 'audit' || a === 'school_audit' || a === 'school-audit' || a === 'compliance') this.setTab('audit');
     else if (a === 'admin_settings' || a === 'admin-settings' || a === 'settings') this.setTab('settings');
     else if (a === 'password_change' || a === 'password-change') this.openPasswordModal();
@@ -9817,6 +9904,7 @@ INSTRUCTIONS:
     };
     this.showToast(`Switched view to ${roleLabels[role as SchoolPortalRole] || role}`, 'info');
     this.cdr.detectChanges();
+    this.resetScrollToTop();
   }
 
   // --- TEACHER LESSON PLANNER METHODS ---
@@ -10268,8 +10356,42 @@ INSTRUCTIONS:
 
   // --- EXISTING OWNER ERP METHODS ---
   setTab(tab: SchoolDashboardTab | string): void {
+    const principalOnlyTabs: Record<string, 'supervision' | 'appraisals' | 'inspections' | 'exam_moderation' | 'parent_complaints' | 'substitutions' | 'syllabus' | 'safeguarding' | 'directives'> = {
+      lesson_plans: 'supervision',
+      appraisals: 'appraisals',
+      inspections: 'inspections',
+      exam_moderation: 'exam_moderation',
+      parent_complaints: 'parent_complaints',
+      substitutions: 'substitutions',
+      syllabus: 'syllabus',
+      safeguarding: 'safeguarding',
+      directives: 'directives'
+    };
+    if (principalOnlyTabs[tab]) {
+      this.currentPortalRole = 'principal';
+      try {
+        localStorage.setItem('activeSchoolRole', 'principal');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('school-role-changed', { detail: { role: 'principal' } }));
+        }
+      } catch {}
+      this.setPrincipalTab(principalOnlyTabs[tab]);
+      return;
+    }
     const nextTab = tab as SchoolDashboardTab;
+    if (this.currentPortalRole !== 'owner' && this.isOwnerSession) {
+      this.currentPortalRole = 'owner';
+      try {
+        localStorage.setItem('activeSchoolRole', 'owner');
+        localStorage.setItem('activeSchoolPortal', 'overview');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('school-role-changed', { detail: { role: 'owner' } }));
+        }
+      } catch {}
+    }
     if (this.currentTab === nextTab) {
+      this.cdr.detectChanges();
+      this.resetScrollToTop();
       return;
     }
     this.currentTab = nextTab;
@@ -10278,6 +10400,7 @@ INSTRUCTIONS:
     }
     this.tabChanged.emit(tab);
     this.cdr.detectChanges();
+    this.resetScrollToTop();
   }
 
   setPage(tab: SchoolDashboardTab, page: number) {
@@ -11082,6 +11205,26 @@ INSTRUCTIONS:
       const matchCategory = this.selectedAssetCategoryFilter === 'All' || a.category === this.selectedAssetCategoryFilter;
       return matchQuery && matchCategory;
     });
+  }
+
+  getActiveVisitorsInSchoolCount(): number {
+    return this.visitorGatePasses.filter((v: VisitorGatePassRecord) => v.status === 'In-School').length;
+  }
+
+  getCheckedOutVisitorsCount(): number {
+    return this.visitorGatePasses.filter((v: VisitorGatePassRecord) => v.status === 'Checked-Out').length;
+  }
+
+  getTotalAssetValuation(): number {
+    return this.schoolAssets.reduce((sum: number, a: SchoolAssetRecord) => sum + ((Number(a.quantity) || 0) * (Number(a.unitValue) || 0)), 0);
+  }
+
+  getTotalAssetUnitsCount(): number {
+    return this.schoolAssets.reduce((sum: number, a: SchoolAssetRecord) => sum + (Number(a.quantity) || 0), 0);
+  }
+
+  getAssetsNeedingRepairCount(): number {
+    return this.schoolAssets.filter((a: SchoolAssetRecord) => a.condition === 'Needs Repair' || a.condition === 'Retired').length;
   }
 
   get filteredStaffPayrolls(): StaffPayrollRecord[] {
@@ -17947,7 +18090,9 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       this.populateAccountantClosingFromReceipts();
       this.syncClosingPettyExpensesFromVouchers();
     }
+    this.tabChanged.emit(tab);
     this.cdr.detectChanges();
+    this.resetScrollToTop();
   }
 
   get filteredAccountantChallans(): any[] {
