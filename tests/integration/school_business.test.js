@@ -1207,4 +1207,158 @@ test('School Table & Form Customization: Canonical Mirroring, Strict Owner RBAC,
   assert.equal(ownerDelPlan.status, 200);
 });
 
+test('School Events, Principal Forms, Exam Schedules & Non-Owner Workspace Guard: Owner-only Customization + Cross-Portal Sync & Submission', async () => {
+  const tenantId = `tenant-forms-sync-${Date.now()}`;
+  const ownerHeaders = { 'Content-Type': 'application/json', 'x-tenant-id': tenantId, 'x-user-role': 'owner', 'x-user-name': 'Owner Executive' };
+  const principalHeaders = { 'Content-Type': 'application/json', 'x-tenant-id': tenantId, 'x-user-role': 'principal', 'x-user-name': 'Dr. Tariq' };
+  const teacherHeaders = { 'Content-Type': 'application/json', 'x-tenant-id': tenantId, 'x-user-role': 'teacher', 'x-user-name': 'Ms. Ayesha' };
+  const accountantHeaders = { 'Content-Type': 'application/json', 'x-tenant-id': tenantId, 'x-user-role': 'accountant', 'x-user-name': 'Mr. Bilal' };
+
+  // 1. Owner adds custom fields on events_calendar, principal_inspections, and owner_exams
+  const putEventSchema = await fetch(`${baseUrl}/api/school/table-schemas/events_calendar`, {
+    method: 'PUT',
+    headers: ownerHeaders,
+    body: JSON.stringify({
+      customTitle: 'Campus Events & Gala Planner',
+      hiddenFormFields: ['ev_guest'],
+      customColumns: [
+        {
+          id: 'col_event_sponsor',
+          label: 'Primary Sponsor',
+          type: 'text',
+          defaultValue: '',
+          insertAfterColumn: 'built:Venue',
+          insertAfterFormField: 'ev_venue',
+          scope: 'both'
+        }
+      ]
+    })
+  });
+  assert.equal(putEventSchema.status, 200);
+
+  const putInspectionSchema = await fetch(`${baseUrl}/api/school/table-schemas/principal_inspections`, {
+    method: 'PUT',
+    headers: ownerHeaders,
+    body: JSON.stringify({
+      customColumns: [
+        {
+          id: 'col_safety_rating',
+          label: 'Safety & Hygiene Index',
+          type: 'select',
+          defaultValue: 'A+',
+          options: ['A+', 'A', 'B', 'Needs Attention'],
+          insertAfterFormField: 'ins_scores',
+          scope: 'both'
+        }
+      ]
+    })
+  });
+  assert.equal(putInspectionSchema.status, 200);
+
+  const putExamSchema = await fetch(`${baseUrl}/api/school/table-schemas/owner_exams`, {
+    method: 'PUT',
+    headers: ownerHeaders,
+    body: JSON.stringify({
+      customColumns: [
+        {
+          id: 'col_exam_controller',
+          label: 'Exam Controller',
+          type: 'text',
+          defaultValue: 'Board Wing',
+          insertAfterFormField: 'status',
+          scope: 'both'
+        }
+      ]
+    })
+  });
+  assert.equal(putExamSchema.status, 200);
+
+  // 2. Non-owner portals CANNOT mutate schemas via PUT /table-schemas
+  for (const hdr of [principalHeaders, teacherHeaders, accountantHeaders]) {
+    const blockedEventPut = await fetch(`${baseUrl}/api/school/table-schemas/events_calendar`, {
+      method: 'PUT',
+      headers: hdr,
+      body: JSON.stringify({ customTitle: 'Tampered Events' })
+    });
+    assert.equal(blockedEventPut.status, 403);
+    assert.equal((await blockedEventPut.json()).error, 'OWNER_ONLY_FORBIDDEN');
+  }
+
+  // 3. Cross-portal read: Principal, Teacher & Accountant automatically receive Owner schemas
+  for (const hdr of [principalHeaders, teacherHeaders, accountantHeaders]) {
+    const readRes = await fetch(`${baseUrl}/api/school/table-schemas`, { headers: hdr });
+    assert.equal(readRes.status, 200);
+    const { schemas } = await readRes.json();
+    assert.equal(schemas.events_calendar?.customColumns?.[0]?.id, 'col_event_sponsor');
+    assert.deepEqual(schemas.events_calendar?.hiddenFormFields, ['ev_guest']);
+    assert.equal(schemas.principal_inspections?.customColumns?.[0]?.id, 'col_safety_rating');
+    assert.equal(schemas.owner_exams?.customColumns?.[0]?.id, 'col_exam_controller');
+  }
+
+  // 4. Non-owner portals submit custom form values into synced table rows via canonical/alias tableIds
+  const submitEventRes = await fetch(`${baseUrl}/api/school/table-schemas/owner_events/rows`, {
+    method: 'POST',
+    headers: teacherHeaders,
+    body: JSON.stringify({
+      cells: [{ rowKey: 'EVT-101', colId: 'col_event_sponsor', value: 'Al-Huda Alumni Trust' }]
+    })
+  });
+  assert.equal(submitEventRes.status, 201);
+  const syncedEventJson = await submitEventRes.json();
+  assert.equal(syncedEventJson.tableId, 'events_calendar');
+  assert.equal(syncedEventJson.schema.customCells['EVT-101']?.col_event_sponsor, 'Al-Huda Alumni Trust');
+
+  const submitInspectionRes = await fetch(`${baseUrl}/api/school/table-schemas/principal_inspections/rows`, {
+    method: 'POST',
+    headers: principalHeaders,
+    body: JSON.stringify({
+      cells: [{ rowKey: 'INS-101', colId: 'col_safety_rating', value: 'A' }]
+    })
+  });
+  assert.equal(submitInspectionRes.status, 201);
+  assert.equal((await submitInspectionRes.json()).schema.customCells['INS-101']?.col_safety_rating, 'A');
+
+  const submitExamRes = await fetch(`${baseUrl}/api/school/table-schemas/owner_exams/rows`, {
+    method: 'POST',
+    headers: accountantHeaders,
+    body: JSON.stringify({
+      cells: [{ rowKey: 'EXM-101', colId: 'col_exam_controller', value: 'Prof. Kamran' }]
+    })
+  });
+  assert.equal(submitExamRes.status, 201);
+  assert.equal((await submitExamRes.json()).schema.customCells['EXM-101']?.col_exam_controller, 'Prof. Kamran');
+
+  // 5. Non-owner PUT /workspace attempting to inject/tamper tableSchemas MUST NOT overwrite Owner's schemas
+  const tamperedWsPut = await fetch(`${baseUrl}/api/school/workspace`, {
+    method: 'PUT',
+    headers: principalHeaders,
+    body: JSON.stringify({
+      schoolName: 'Al-Huda Campus',
+      tableSchemas: {
+        events_calendar: {
+          tableId: 'events_calendar',
+          customTitle: 'Hijacked Workspace Schema',
+          customColumns: [{ id: 'col_fake', label: 'Fake', type: 'text', defaultValue: '' }]
+        }
+      }
+    })
+  });
+  assert.equal(tamperedWsPut.status, 200);
+
+  const rawWsRow = runtime.sqliteDb
+    .prepare('SELECT payload_json FROM local_school_workspaces WHERE tenant_id = ?')
+    .get(tenantId);
+  const storedWsPayload = JSON.parse(rawWsRow.payload_json);
+  assert.equal(storedWsPayload.tableSchemas, undefined, 'Non-owner PUT /workspace must strip tableSchemas before persistence');
+
+  const wsGetAfterTamper = await fetch(`${baseUrl}/api/school/workspace`, { headers: ownerHeaders });
+  assert.equal(wsGetAfterTamper.status, 200);
+  const wsData = (await wsGetAfterTamper.json()).workspace;
+  assert.equal(wsData.schoolName, 'Al-Huda Campus');
+  assert.equal(wsData.tableSchemas?.events_calendar?.customColumns?.[0]?.id, 'col_event_sponsor');
+  assert.equal(wsData.tableSchemas?.events_calendar?.customCells?.['EVT-101']?.col_event_sponsor, 'Al-Huda Alumni Trust');
+  assert.equal(wsData.tableSchemas?.events_calendar?.customColumns?.some((c) => c.id === 'col_fake'), false);
+});
+
+
 

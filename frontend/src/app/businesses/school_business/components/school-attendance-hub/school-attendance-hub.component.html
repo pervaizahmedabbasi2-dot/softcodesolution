@@ -846,7 +846,7 @@
             </thead>
             <tbody class="divide-y divide-slate-100">
               @for (row of markedAttendanceTableRows(); track row.key) {
-                <tr class="hover:bg-slate-50/80 transition-colors">
+                <tr [attr.data-row-key]="row.key" class="hover:bg-slate-50/80 transition-colors">
                   <td class="px-3.5 py-3 font-mono text-[11px] font-semibold text-slate-600 whitespace-nowrap">{{ row.date }}</td>
                   <td class="px-3.5 py-3 font-mono font-bold text-slate-700 whitespace-nowrap">{{ row.code }}</td>
                   <td class="px-3.5 py-3">

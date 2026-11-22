@@ -1726,6 +1726,9 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
       return;
     }
     this.principalTab = tab;
+    if (!this.isOwnerPortal) {
+      void this.tableSchemaService.loadFromBackend();
+    }
     if (tab === 'library') {
       this.checkAndUpdateOverdueBooks();
     }
@@ -1802,6 +1805,9 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
 
   setParentTab(tab: 'overview' | 'feed' | 'events' | 'attendance' | 'academics' | 'fee' | 'leave' | 'library' | 'communication'): void {
     this.parentTab = tab;
+    if (!this.isOwnerPortal) {
+      void this.tableSchemaService.loadFromBackend();
+    }
     if (tab === 'library') {
       this.checkAndUpdateOverdueBooks();
     }
@@ -1840,6 +1846,9 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
 
   setStudentTab(tab: 'overview' | 'feed' | 'events' | 'routine' | 'academics' | 'attendance' | 'fee' | 'homework' | 'library'): void {
     this.studentTab = tab;
+    if (!this.isOwnerPortal) {
+      void this.tableSchemaService.loadFromBackend();
+    }
     if (tab === 'library') {
       this.checkAndUpdateOverdueBooks();
     }
@@ -1854,6 +1863,9 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
       return;
     }
     this.teacherTab = tab;
+    if (!this.isOwnerPortal) {
+      void this.tableSchemaService.loadFromBackend();
+    }
     if (tab === 'library') {
       this.checkAndUpdateOverdueBooks();
     }
@@ -6716,17 +6728,17 @@ INSTRUCTIONS:
   };
 
   ngOnInit(): void {
+    const savedRole = typeof localStorage !== 'undefined' ? localStorage.getItem('activeSchoolRole') : null;
+    if (savedRole && ['owner', 'principal', 'teacher', 'student', 'parent', 'accountant'].includes(savedRole)) {
+      this.currentPortalRole = savedRole as SchoolPortalRole;
+    }
+
     this.tableSchemaService.setTenantId(this.activeTenantId);
     this.tableSchemaService.setPortalRole(this.currentPortalRole);
     this.loadStateFromStorage();
     this.loadOfflineQueue();
     void this.loadStateFromBackend();
     this.loadStateFromCloud();
-
-    const savedRole = localStorage.getItem('activeSchoolRole');
-    if (savedRole && ['owner', 'principal', 'teacher', 'student', 'parent', 'accountant'].includes(savedRole)) {
-      this.currentPortalRole = savedRole as SchoolPortalRole;
-    }
 
     if (typeof window !== 'undefined') {
       try {
@@ -6744,6 +6756,7 @@ INSTRUCTIONS:
           this.studentTab = 'attendance';
           if (isKiosk && (this.currentPortalRole === 'parent' || this.currentPortalRole === 'accountant')) {
             this.currentPortalRole = 'owner';
+            this.tableSchemaService.setPortalRole(this.currentPortalRole);
           }
         }
       } catch {}
@@ -6775,6 +6788,10 @@ INSTRUCTIONS:
       window.addEventListener('school-role-changed', (ev: any) => {
         if (ev.detail?.role) {
           this.currentPortalRole = ev.detail.role;
+          this.tableSchemaService.setPortalRole(this.currentPortalRole);
+          if (!this.isOwnerPortal) {
+            void this.tableSchemaService.loadFromBackend();
+          }
           this.syncPortalAttendanceTabAccess();
           this.cdr.detectChanges();
           this.resetScrollToTop();
@@ -9878,6 +9895,10 @@ INSTRUCTIONS:
     }
 
     this.currentPortalRole = role as SchoolPortalRole;
+    this.tableSchemaService.setPortalRole(this.currentPortalRole);
+    if (!this.isOwnerPortal) {
+      void this.tableSchemaService.loadFromBackend();
+    }
     this.syncPortalAttendanceTabAccess();
     if (personaId) {
       if (role === 'teacher') this.activeTeacherId = personaId;
@@ -10369,6 +10390,7 @@ INSTRUCTIONS:
     };
     if (principalOnlyTabs[tab]) {
       this.currentPortalRole = 'principal';
+      this.tableSchemaService.setPortalRole('principal');
       try {
         localStorage.setItem('activeSchoolRole', 'principal');
         if (typeof window !== 'undefined') {
@@ -10381,6 +10403,7 @@ INSTRUCTIONS:
     const nextTab = tab as SchoolDashboardTab;
     if (this.currentPortalRole !== 'owner' && this.isOwnerSession) {
       this.currentPortalRole = 'owner';
+      this.tableSchemaService.setPortalRole('owner');
       try {
         localStorage.setItem('activeSchoolRole', 'owner');
         localStorage.setItem('activeSchoolPortal', 'overview');
@@ -16507,6 +16530,17 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       assignedBy: 'Dr. Tahir Malik (Principal)'
     };
     this.substituteArrangements.unshift(newSub);
+    this.tableSchemaService.submitFormCustomInputs(
+      'principal_substitutions',
+      [newSub.id],
+      this.formCustomValues['principalSubstitution'],
+      {
+        rowLabel: `${newSub.substituteTeacher} -> ${newSub.absentTeacher}`,
+        submittedByName: 'Dr. Tahir Malik (Principal)',
+        submittedByRole: this.currentPortalRole
+      }
+    );
+    this.formCustomValues['principalSubstitution'] = {};
     this.saveStateToStorage();
     this.showToast(`Substitute period assigned! ${newSub.substituteTeacher} assigned to ${newSub.grade} (${newSub.period}).`, 'success');
     this.triggerAdmissionAlert({
@@ -16538,6 +16572,17 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       actionRequired: this.newInspectionForm.actionRequired || 'None - Routine Inspection'
     };
     this.dailyInspectionLogs.unshift(log);
+    this.tableSchemaService.submitFormCustomInputs(
+      'principal_inspections',
+      [log.id],
+      this.formCustomValues['principalInspection'],
+      {
+        rowLabel: log.location,
+        submittedByName: 'Dr. Tahir Malik (Principal)',
+        submittedByRole: this.currentPortalRole
+      }
+    );
+    this.formCustomValues['principalInspection'] = {};
     this.saveStateToStorage();
     this.showToast(`Daily Inspection Log #${log.id} recorded for ${log.location}!`, 'success');
   }
@@ -16594,6 +16639,17 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       readReceipts: []
     };
     this.campusFeedPosts.unshift(newPost);
+    this.tableSchemaService.submitFormCustomInputs(
+      'campus_notices_feed',
+      [newPost.id],
+      this.formCustomValues['principalDirective'],
+      {
+        rowLabel: newPost.title,
+        submittedByName: 'Dr. Tahir Malik (Principal)',
+        submittedByRole: this.currentPortalRole
+      }
+    );
+    this.formCustomValues['principalDirective'] = {};
     this.newDirectiveForm = {
       title: '',
       content: '',
@@ -16612,6 +16668,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       return;
     }
     this.substituteArrangements = this.substituteArrangements.filter(s => s.id !== subId);
+    this.tableSchemaService.clearRowCustomData('principal_substitutions', [subId]);
     this.saveStateToStorage();
     this.showToast(`Substitution record #${subId} removed.`, 'info');
   }
@@ -16622,6 +16679,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       return;
     }
     this.dailyInspectionLogs = this.dailyInspectionLogs.filter(l => l.id !== logId);
+    this.tableSchemaService.clearRowCustomData('principal_inspections', [logId]);
     this.saveStateToStorage();
     this.showToast(`Inspection log #${logId} deleted.`, 'info');
   }
@@ -16774,6 +16832,17 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       status: 'Approved'
     };
     this.facultyAppraisalList.unshift(newRecord);
+    this.tableSchemaService.submitFormCustomInputs(
+      'principal_appraisals',
+      [newRecord.id],
+      this.formCustomValues['principalAppraisal'],
+      {
+        rowLabel: newRecord.teacherName,
+        submittedByName: 'Dr. Tahir Malik (Principal)',
+        submittedByRole: this.currentPortalRole
+      }
+    );
+    this.formCustomValues['principalAppraisal'] = {};
     this.saveStateToStorage();
     this.showToast(`Faculty appraisal recorded for ${newRecord.teacherName}!`, 'success');
   }
@@ -17005,6 +17074,17 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       assignedBy: 'Dr. Tahir Malik (Principal)'
     };
     this.facultyTaskList.unshift(newTask);
+    this.tableSchemaService.submitFormCustomInputs(
+      'principal_faculty_tasks',
+      [newTask.id],
+      this.formCustomValues['principalTask'],
+      {
+        rowLabel: newTask.taskTitle,
+        submittedByName: 'Dr. Tahir Malik (Principal)',
+        submittedByRole: this.currentPortalRole
+      }
+    );
+    this.formCustomValues['principalTask'] = {};
     this.saveStateToStorage();
     this.showToast(`Official task "${newTask.taskTitle}" delegated to ${newTask.assignedTeacher}!`, 'success');
   }
@@ -18086,6 +18166,9 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
 
   setAccountantTab(tab: 'overview' | 'challans' | 'collect' | 'defaulters' | 'daily_closing'): void {
     this.accountantTab = tab;
+    if (!this.isOwnerPortal) {
+      void this.tableSchemaService.loadFromBackend();
+    }
     if (tab === 'daily_closing') {
       this.populateAccountantClosingFromReceipts();
       this.syncClosingPettyExpensesFromVouchers();
@@ -18266,11 +18349,25 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     });
     const createdList = res?.challans || res?.generated;
     if (res?.ok && Array.isArray(createdList)) {
+      const bulkVals = this.formCustomValues['accountantBulk'];
       for (const ch of createdList) {
         if (!this.accountantGeneratedChallans.some(existing => existing.challanNo === ch.challanNo)) {
           this.accountantGeneratedChallans.unshift(ch);
         }
+        if (bulkVals && Object.keys(bulkVals).length > 0) {
+          this.tableSchemaService.submitFormCustomInputs(
+            'fee_challans_invoices',
+            [ch.id, ch.challanNo].filter(Boolean),
+            bulkVals,
+            {
+              rowLabel: `${ch.challanNo || ch.id} - ${ch.studentName || 'Student'}`,
+              submittedByName: 'Accountant Desk',
+              submittedByRole: this.currentPortalRole
+            }
+          );
+        }
       }
+      this.formCustomValues['accountantBulk'] = {};
       this.saveStateToStorage();
       this.showToast(`Generated ${res.count || createdList.length} fee challans for ${this.accountantBulkForm.month}.`, 'success');
     } else {
@@ -18622,7 +18719,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
         ownerAttendancePolicy: this.ownerAttendancePolicy,
         faceVerificationLogs: this.faceVerificationLogs,
         auditWaiversList: this.auditWaiversList,
-        tableSchemas: this.tableSchemaService.exportSchemas()
+        ...(this.isOwnerPortal ? { tableSchemas: this.tableSchemaService.exportSchemas() } : {})
       };
       const ok = await this.firebaseDb.saveSchoolData(this.activeTenantId, payload);
       this.lastCloudSyncTimestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -18765,7 +18862,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
         }
         if (cloudData.tableSchemas && typeof cloudData.tableSchemas === 'object') {
           const currentLocal = this.tableSchemaService.exportSchemas();
-          if (Object.keys(currentLocal).length === 0) {
+          if (!this.isOwnerPortal || Object.keys(currentLocal).length === 0) {
             this.tableSchemaService.importSchemas(cloudData.tableSchemas, true);
           }
         }

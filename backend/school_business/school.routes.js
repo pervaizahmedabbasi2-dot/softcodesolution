@@ -3572,7 +3572,9 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     principal_slc: 'slc_certificates',
     // Library circulation
     owner_library_circulation: 'library_circulation',
+    principal_library_circulation: 'library_circulation',
     student_library_loans: 'library_circulation',
+    parent_library_loans: 'library_circulation',
     // Academics & gradebook
     owner_marks_entry: 'academics_gradebook_results',
     owner_class_results: 'academics_gradebook_results',
@@ -4024,15 +4026,20 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     const callerName = String(req.headers['x-user-name'] || body.submittedByName || callerRole || 'Portal User').trim();
     const now = new Date().toISOString();
 
-    const rowsToSave = Array.isArray(body.rows)
+    const cellsList = Array.isArray(body.cells) ? body.cells : [];
+    const hasExplicitRows = Array.isArray(body.rows);
+    const hasSingleRowPayload = Boolean(body.rowKey) || (body.values && typeof body.values === 'object' && Object.keys(body.values).length > 0);
+    const rowsToSave = hasExplicitRows
       ? body.rows
-      : [{
-          rowKey: body.rowKey || (`row_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`),
-          rowLabel: body.rowLabel || '',
-          insertAfterRowKey: body.insertAfterRowKey || '',
-          values: body.values || {},
-          isStandaloneRow: body.isStandaloneRow !== false && !body.cellsOnly
-        }];
+      : hasSingleRowPayload
+        ? [{
+            rowKey: body.rowKey || (`row_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`),
+            rowLabel: body.rowLabel || '',
+            insertAfterRowKey: body.insertAfterRowKey || '',
+            values: body.values || {},
+            isStandaloneRow: body.isStandaloneRow !== false && !body.cellsOnly
+          }]
+        : [];
 
     if (sqliteDb) {
       ensureSchemaRowExists(tid, canonical, callerName);
@@ -4060,6 +4067,15 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
           if (String(key).startsWith('col_') && val !== undefined && val !== null) {
             upsertCell.run(tid, canonical, rk, key, String(val), callerName, callerRole, now);
           }
+        }
+      }
+
+      for (const c of cellsList) {
+        if (!c || typeof c !== 'object') continue;
+        const rk = String(c.rowKey || '').trim();
+        const colId = String(c.colId || '').trim();
+        if (rk && colId.startsWith('col_') && c.value !== undefined && c.value !== null) {
+          upsertCell.run(tid, canonical, rk, colId, String(c.value), callerName, callerRole, now);
         }
       }
     }
@@ -4227,8 +4243,13 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
   router.put('/workspace', rejectRestrictedRole(['student', 'parent']), async (req, res) => {
     const tid = resolveTenantId(req);
     const body = req.body || {};
-    const schoolName = String(body.schoolName || '');
-    const serialized = JSON.stringify(body);
+    const isOwner = OWNER_ROLES.has(resolveUserRole(req));
+    const { tableSchemas: incomingSchemas, ...restBody } = body;
+    const workspacePayload = isOwner && incomingSchemas !== undefined
+      ? { ...restBody, tableSchemas: incomingSchemas }
+      : restBody;
+    const schoolName = String(workspacePayload.schoolName || '');
+    const serialized = JSON.stringify(workspacePayload);
     if (sqliteDb) {
       sqliteDb.prepare(`
         INSERT OR REPLACE INTO local_school_workspaces (tenant_id, school_name, payload_json, updated_at)
@@ -4239,24 +4260,24 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       try {
         const ref = doc(db, 'school_workspaces', tid);
         const now = new Date().toISOString();
-        if (body.tableSchemas && typeof body.tableSchemas === 'object') {
+        if (isOwner && incomingSchemas && typeof incomingSchemas === 'object') {
           try {
             await updateDoc(ref, {
-              ...body,
-              tableSchemas: body.tableSchemas,
+              ...workspacePayload,
+              tableSchemas: incomingSchemas,
               tenant_id: tid,
               updatedAt: now
             });
           } catch {
             await setDoc(ref, {
-              ...body,
+              ...workspacePayload,
               tenant_id: tid,
               updatedAt: now
             }, { merge: true });
           }
         } else {
           await setDoc(ref, {
-            ...body,
+            ...workspacePayload,
             tenant_id: tid,
             updatedAt: now
           }, { merge: true });

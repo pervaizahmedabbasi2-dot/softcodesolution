@@ -193,7 +193,9 @@ export const SCHOOL_TABLE_FAMILY_MAP: Record<string, string> = {
   principal_slc: 'slc_certificates',
   // Library circulation
   owner_library_circulation: 'library_circulation',
+  principal_library_circulation: 'library_circulation',
   student_library_loans: 'library_circulation',
+  parent_library_loans: 'library_circulation',
   // Academics & gradebook
   owner_marks_entry: 'academics_gradebook_results',
   owner_class_results: 'academics_gradebook_results',
@@ -329,7 +331,28 @@ export const SCHOOL_TABLE_CATALOG: TableCatalogItem[] = [
     canonicalId: 'principal_substitutions',
     title: 'Substitute Period Arrangements',
     portals: 'Principal, Teacher',
-    defaultHeaders: ['Absent Teacher', 'Substitute', 'Class & Subject', 'Period', 'Status']
+    defaultHeaders: ['Ref #', 'Date', 'Absent Faculty', 'Assigned Substitute', 'Class & Subject', 'Period & Room', 'Status']
+  },
+  {
+    tableId: 'principal_inspections',
+    canonicalId: 'principal_inspections',
+    title: 'Campus & Classroom Inspection Rounds',
+    portals: 'Principal',
+    defaultHeaders: ['Log #', 'Time', 'Campus Location', 'Uniform & Cleanliness', 'Teacher Punctuality', 'Notes & Action Items']
+  },
+  {
+    tableId: 'principal_appraisals',
+    canonicalId: 'principal_appraisals',
+    title: 'Faculty Performance Appraisals',
+    portals: 'Principal',
+    defaultHeaders: ['Appraisal #', 'Faculty Member', 'Subject & Dept', 'Observation Score', 'Punctuality & Compliance', 'Observation Remarks', 'Status']
+  },
+  {
+    tableId: 'principal_faculty_tasks',
+    canonicalId: 'principal_faculty_tasks',
+    title: 'Faculty Task Delegation & Duty Roster',
+    portals: 'Principal',
+    defaultHeaders: ['Task #', 'Assigned Faculty', 'Duty Title & Scope', 'Priority', 'Target Date', 'Status', 'Principal Verification']
   },
   {
     tableId: 'academics_gradebook_results',
@@ -683,6 +706,17 @@ export const SCHOOL_FORM_FIELD_ANCHORS: Record<string, FormFieldAnchorOption[]> 
     { key: 'discount', label: 'Discount (PKR)' },
     { key: 'status', label: 'Status' }
   ],
+  library_circulation: [
+    { key: 'issueNo', label: 'Issue Ref #' },
+    { key: 'bookTitle', label: 'Book Title' },
+    { key: 'isbn', label: 'ISBN' },
+    { key: 'borrowerName', label: 'Borrower Name' },
+    { key: 'borrowerId', label: 'Borrower ID / Roll #' },
+    { key: 'gradeOrDept', label: 'Class / Department' },
+    { key: 'dueDate', label: 'Due Date' },
+    { key: 'fineAmount', label: 'Fine (PKR)' },
+    { key: 'status', label: 'Status' }
+  ],
   owner_library_circulation: [
     { key: 'issueNo', label: 'Issue Ref #' },
     { key: 'bookTitle', label: 'Book Title' },
@@ -852,6 +886,28 @@ export const SCHOOL_FORM_FIELD_ANCHORS: Record<string, FormFieldAnchorOption[]> 
     { key: 'ev_coordinator', label: 'Coordinator Teacher' },
     { key: 'ev_budget', label: 'Allocated Budget (PKR)' },
     { key: 'ev_desc', label: 'Description & Notes' }
+  ],
+  owner_payment_gateway: [
+    { key: 'pg_title', label: 'Gateway Fee Title & Amount' },
+    { key: 'pg_details', label: 'Gateway Channel & Reference' }
+  ],
+  principal_substitutions: [
+    { key: 'sub_teachers', label: 'Absent Teacher & Assigned Substitute' },
+    { key: 'sub_class', label: 'Class, Subject, Period & Room' }
+  ],
+  principal_inspections: [
+    { key: 'ins_location', label: 'Location / Wing & Uniform Rating' },
+    { key: 'ins_scores', label: 'Cleanliness Rating & Faculty Punctuality' },
+    { key: 'ins_notes', label: 'Inspection Notes & Corrective Action' }
+  ],
+  principal_appraisals: [
+    { key: 'apr_teacher', label: 'Faculty Member & Department' },
+    { key: 'apr_metrics', label: 'Punctuality, Compliance & Score' },
+    { key: 'apr_remarks', label: 'Observation Remarks' }
+  ],
+  principal_faculty_tasks: [
+    { key: 'tsk_meta', label: 'Assigned Faculty, Title & Priority' },
+    { key: 'tsk_details', label: 'Target Date & Scope Instructions' }
   ],
   attendance_roster_staff: [
     { key: 'st_name', label: 'Full Name' },
@@ -1977,6 +2033,154 @@ export class SchoolTableSchemaService {
         pr_dept: 'built:Role / Dept',
         pr_phone: 'built:Mobile / Phone',
         pr_gender: 'built:Gender'
+      },
+      principal_substitutions: {
+        sub_teachers: 'built:Assigned Substitute',
+        sub_class: 'built:Period & Room'
+      },
+      principal_inspections: {
+        ins_location: 'built:Campus Location',
+        ins_scores: 'built:Teacher Punctuality',
+        ins_notes: 'built:Notes & Action Items'
+      },
+      principal_appraisals: {
+        apr_teacher: 'built:Subject & Dept',
+        apr_metrics: 'built:Punctuality & Compliance',
+        apr_remarks: 'built:Observation Remarks'
+      },
+      principal_faculty_tasks: {
+        tsk_meta: 'built:Duty Title & Scope',
+        tsk_details: 'built:Target Date'
+      },
+      owner_subjects: {
+        code: 'built:Subject Code',
+        title: 'built:Subject Name',
+        grade: 'built:Assigned Class',
+        creditHours: 'built:Weekly Periods',
+        teacher: 'built:Lead Teacher',
+        passMarks: 'built:Total / Passing Marks',
+        totalMarks: 'built:Total / Passing Marks'
+      },
+      owner_exams: {
+        examName: 'built:Exam Title',
+        class: 'built:Class',
+        startDate: 'built:Start Date',
+        averageGPA: 'built:Average GPA',
+        status: 'built:Status'
+      },
+      owner_timetable: {
+        period: 'built:Period & Time',
+        time: 'built:Period & Time',
+        grade: 'built:Class',
+        subject: 'built:Subject',
+        teacher: 'built:Faculty Teacher',
+        room: 'built:Classroom / Lab'
+      },
+      owner_labs_schedule: {
+        day: 'built:Day & Period',
+        period: 'built:Day & Period',
+        lab: 'built:Laboratory',
+        grade: 'built:Class',
+        subject: 'built:Subject',
+        experimentTopic: 'built:Practical Experiment Topic',
+        teacher: 'built:Supervising Teacher'
+      },
+      owner_library_catalog: {
+        isbn: 'built:ISBN',
+        title: 'built:Book Title & Author',
+        author: 'built:Book Title & Author',
+        category: 'built:Category / Genre',
+        genre: 'built:Category / Genre',
+        academicGradeLevel: 'built:Grade Level',
+        rackNo: 'built:Rack Location',
+        totalCopies: 'built:Copies (Avail / Total)',
+        availableCopies: 'built:Copies (Avail / Total)'
+      },
+      library_circulation: {
+        issueNo: 'built:Issue #',
+        bookTitle: 'built:Book Title',
+        isbn: 'built:ISBN',
+        borrowerName: 'built:Borrower',
+        borrowerId: 'built:Borrower',
+        gradeOrDept: 'built:Class / Dept',
+        dueDate: 'built:Due Date',
+        fineAmount: 'built:Fine',
+        status: 'built:Status'
+      },
+      slc_certificates: {
+        certificateNo: 'built:Certificate No.',
+        studentName: 'built:Student Name',
+        grade: 'built:Class',
+        admissionDate: 'built:Admission Date',
+        leavingDate: 'built:Leaving Date',
+        reasonForLeaving: 'built:Reason for Leaving',
+        conductRating: 'built:Conduct & Standing',
+        achievement: 'built:Achievement',
+        status: 'built:Status'
+      },
+      campus_notices_feed: {
+        feed_target: 'built:Target & Urgency',
+        feed_priority: 'built:Target & Urgency',
+        feed_title: 'built:Notice Title',
+        feed_body: 'built:Notice Content'
+      },
+      owner_medical: {
+        rollNo: 'built:Roll #',
+        studentName: 'built:Student',
+        grade: 'built:Student',
+        bloodGroup: 'built:Blood Group',
+        vaccinationStatus: 'built:Vaccination',
+        allergies: 'built:Allergies',
+        chronicConditions: 'built:Chronic Conditions',
+        emergencyContact: 'built:Emergency',
+        doctorName: 'built:Physician'
+      },
+      owner_discipline: {
+        rollNo: 'built:Student',
+        studentName: 'built:Student',
+        grade: 'built:Student',
+        category: 'built:Category',
+        severity: 'built:Severity',
+        description: 'built:Description',
+        actionTaken: 'built:Action Taken',
+        fineAmount: 'built:Fine',
+        status: 'built:Status'
+      },
+      owner_payroll: {
+        staffName: 'built:Staff Member',
+        role: 'built:Staff Member',
+        month: 'built:Month',
+        baseSalary: 'built:Base Salary',
+        allowances: 'built:Allowances',
+        deductions: 'built:Deductions',
+        status: 'built:Status'
+      },
+      owner_staff_leaves: {
+        staffName: 'built:Staff Member',
+        leaveType: 'built:Leave Type',
+        fromDate: 'built:Dates',
+        toDate: 'built:Dates',
+        totalDays: 'built:Days',
+        reason: 'built:Reason',
+        status: 'built:Status'
+      },
+      fee_challans_invoices: {
+        ch_student: 'built:Student',
+        ch_amounts: 'built:Due Date',
+        invoiceNo: 'built:Invoice #',
+        type: 'built:Challan Type',
+        recipientName: 'built:Student / Recipient',
+        title: 'built:Billing Title',
+        issueDate: 'built:Due Date',
+        dueDate: 'built:Due Date',
+        amount: 'built:Net Payable',
+        discount: 'built:Net Payable',
+        status: 'built:Status'
+      },
+      fee_receipts_cashiering: {
+        fee_student: 'built:Student Details',
+        fee_payment: 'built:Fee & Channel',
+        fee_notes: 'built:Ref / Notes'
       }
     };
 
