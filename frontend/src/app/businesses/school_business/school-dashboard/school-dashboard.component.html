@@ -3865,40 +3865,66 @@
           
           <!-- Financial Balance Overview Grid -->
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="apple-card rounded-2xl p-5 border-l-4 border-emerald-600 space-y-1.5 scs-tile-3d min-w-0">
-              <span class="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">Total Income (Aamdani)</span>
-              <div class="flex items-baseline justify-between gap-2 flex-wrap">
-                <span class="text-xl sm:text-2xl font-black text-slate-900 tabular">PKR {{ formatCurrency(totalFinanceIncome) }}</span>
-                <span class="text-xs font-bold text-emerald-600">+14.2%</span>
+            <!-- Card 1: Total Income (Aamdani) -->
+            <div (click)="financeSubTab = 'ledger'" class="rounded-2xl p-5 sm:p-6 flex items-center gap-4 border border-slate-200/90 hover:-translate-y-1.5 transition-all duration-300 ease-out cursor-pointer bg-white group scs-tile-3d min-w-0">
+              <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-500 via-emerald-600 to-teal-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/30 group-hover:scale-105 group-hover:shadow-emerald-500/40 transition-all duration-300 border border-white/30">
+                <lucide-icon [name]="'wallet-cards'" class="w-7 h-7 text-white stroke-[2.2] drop-shadow-xs"></lucide-icon>
               </div>
-              <p class="text-[11px] text-slate-400">Tuition fees, admissions &amp; canteen leases</p>
+              <div class="min-w-0 flex-1">
+                <span class="text-xl sm:text-2xl font-black text-slate-900 tabular-nums block leading-none tracking-tight">PKR {{ formatCurrency(totalFinanceIncome) }}</span>
+                <p class="text-xs font-bold text-slate-600 mt-1">Total Income (Aamdani)</p>
+                <div class="mt-1 flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600 flex-wrap">
+                  <lucide-icon [name]="'trending-up'" class="w-3.5 h-3.5 shrink-0"></lucide-icon>
+                  <span class="font-bold">+14.2%</span>
+                  <span class="text-slate-400 font-medium truncate">· Tuition fees, admissions &amp; leases</span>
+                </div>
+              </div>
             </div>
 
-            <div class="apple-card rounded-2xl p-5 border-l-4 border-rose-600 space-y-1.5 scs-tile-3d min-w-0">
-              <span class="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">Total Expenses (Kharcha)</span>
-              <div class="flex items-baseline justify-between gap-2 flex-wrap">
-                <span class="text-xl sm:text-2xl font-black text-slate-900 tabular">PKR {{ formatCurrency(totalFinanceExpense) }}</span>
-                <span class="text-xs font-bold text-slate-500">Fixed &amp; Variable</span>
+            <!-- Card 2: Total Expenses (Kharcha) -->
+            <div (click)="financeSubTab = 'ledger'" class="rounded-2xl p-5 sm:p-6 flex items-center gap-4 border border-slate-200/90 hover:-translate-y-1.5 transition-all duration-300 ease-out cursor-pointer bg-white group scs-tile-3d min-w-0">
+              <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-rose-500 via-rose-600 to-red-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-rose-500/30 group-hover:scale-105 group-hover:shadow-rose-500/40 transition-all duration-300 border border-white/30">
+                <lucide-icon [name]="'receipt'" class="w-7 h-7 text-white stroke-[2.2] drop-shadow-xs"></lucide-icon>
               </div>
-              <p class="text-[11px] text-slate-400">Salaries, utility bills &amp; maintenance</p>
+              <div class="min-w-0 flex-1">
+                <span class="text-xl sm:text-2xl font-black text-slate-900 tabular-nums block leading-none tracking-tight">PKR {{ formatCurrency(totalFinanceExpense) }}</span>
+                <p class="text-xs font-bold text-slate-600 mt-1">Total Expenses (Kharcha)</p>
+                <div class="mt-1 text-[11px] font-semibold text-rose-600 truncate">
+                  Fixed &amp; Variable · <span class="text-slate-400 font-medium">Salaries, bills &amp; maintenance</span>
+                </div>
+              </div>
             </div>
 
-            <div class="apple-card rounded-2xl p-5 border-l-4 border-indigo-600 space-y-1.5 scs-tile-3d min-w-0">
-              <span class="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">Net Cash Balance (Khata Balance)</span>
-              <div class="flex items-baseline justify-between gap-2 flex-wrap">
-                <span class="text-xl sm:text-2xl font-black text-indigo-700 tabular">PKR {{ formatCurrency(netFinanceBalance) }}</span>
-                <span class="text-xs font-bold text-emerald-600">Reconciled</span>
+            <!-- Card 3: Net Cash Balance (Khata Balance) -->
+            <div (click)="financeSubTab = 'accounts'" class="rounded-2xl p-5 sm:p-6 flex items-center gap-4 border border-slate-200/90 hover:-translate-y-1.5 transition-all duration-300 ease-out cursor-pointer bg-white group scs-tile-3d min-w-0">
+              <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-indigo-700 text-white flex items-center justify-center shrink-0 shadow-md shadow-indigo-500/30 group-hover:scale-105 group-hover:shadow-indigo-500/40 transition-all duration-300 border border-white/30">
+                <lucide-icon [name]="'banknote'" class="w-7 h-7 text-white stroke-[2.2] drop-shadow-xs"></lucide-icon>
               </div>
-              <p class="text-[11px] text-slate-400">Meezan Bank, HBL &amp; Cash Vault</p>
+              <div class="min-w-0 flex-1">
+                <span class="text-xl sm:text-2xl font-black text-indigo-700 tabular-nums block leading-none tracking-tight">PKR {{ formatCurrency(netFinanceBalance) }}</span>
+                <p class="text-xs font-bold text-slate-600 mt-1">Net Cash Balance (Khata Balance)</p>
+                <div class="mt-1 flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600 truncate">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+                  <span class="font-bold">Reconciled</span>
+                  <span class="text-slate-400 font-medium truncate">· Meezan Bank, HBL &amp; Cash Vault</span>
+                </div>
+              </div>
             </div>
 
-            <div class="apple-card rounded-2xl p-5 border-l-4 border-amber-500 space-y-1.5 scs-tile-3d min-w-0">
-              <span class="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">Pending Dues (Bakaya Khata)</span>
-              <div class="flex items-baseline justify-between gap-2 flex-wrap">
-                <span class="text-xl sm:text-2xl font-black text-amber-700 tabular">PKR {{ formatCurrency(totalUncollectedDues) }}</span>
-                <span class="text-xs font-bold text-amber-600 tabular-nums">{{ filteredAccountantDefaulters.length }} Students</span>
+            <!-- Card 4: Pending Dues (Bakaya Khata) -->
+            <div (click)="financeSubTab = 'defaulters'" class="rounded-2xl p-5 sm:p-6 flex items-center gap-4 border border-slate-200/90 hover:-translate-y-1.5 transition-all duration-300 ease-out cursor-pointer bg-white group scs-tile-3d min-w-0">
+              <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500 via-amber-600 to-orange-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-amber-500/30 group-hover:scale-105 group-hover:shadow-amber-500/40 transition-all duration-300 border border-white/30">
+                <lucide-icon [name]="'alert-circle'" class="w-7 h-7 text-white stroke-[2.2] drop-shadow-xs"></lucide-icon>
               </div>
-              <p class="text-[11px] text-slate-400">Uncollected fee vouchers</p>
+              <div class="min-w-0 flex-1">
+                <span class="text-xl sm:text-2xl font-black text-amber-700 tabular-nums block leading-none tracking-tight">PKR {{ formatCurrency(totalUncollectedDues) }}</span>
+                <p class="text-xs font-bold text-slate-600 mt-1">Pending Dues (Bakaya Khata)</p>
+                <div class="mt-1 flex items-center gap-1.5 text-[11px] font-semibold text-amber-600 truncate">
+                  <span class="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0"></span>
+                  <span class="font-bold tabular-nums">{{ filteredAccountantDefaulters.length }} Students</span>
+                  <span class="text-slate-400 font-medium truncate">· Uncollected fee vouchers</span>
+                </div>
+              </div>
             </div>
           </div>
 

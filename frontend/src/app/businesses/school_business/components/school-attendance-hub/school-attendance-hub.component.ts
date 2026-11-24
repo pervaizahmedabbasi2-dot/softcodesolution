@@ -48,7 +48,10 @@ export type ScannerCategoryFilter = 'all' | AttendanceMemberCategory;
   selector: 'app-school-attendance-hub',
   imports: [CommonModule, LucideAngularModule, SchoolTableDirective, SchoolCustomFormFieldsComponent],
   templateUrl: './school-attendance-hub.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    '(document:keydown.escape)': 'onEscapeKey()'
+  }
 })
 export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   private readonly faceVerifier = inject(FaceVerificationService);
@@ -1300,7 +1303,24 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   }
 
   toggleKioskFullscreen(): void {
-    this.kioskFullscreen.update((v) => !v);
+    const next = !this.kioskFullscreen();
+    if (next && !this.canVerifyCameraCurrentPortal()) {
+      return;
+    }
+    this.kioskFullscreen.set(next);
+    if (next) {
+      if (this.activeSubTab() !== 'terminal') {
+        this.setSubTab('terminal');
+      } else if (!this.cameraActive()) {
+        void this.startCamera('verify', true);
+      }
+    }
+  }
+
+  onEscapeKey(): void {
+    if (this.kioskFullscreen()) {
+      this.kioskFullscreen.set(false);
+    }
   }
 
   openQuickEnrollPanel(prefillFromLive: boolean = false): void {
