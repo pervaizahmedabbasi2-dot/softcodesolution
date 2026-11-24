@@ -59,6 +59,9 @@ export class LoginComponent implements OnInit {
   loginForm!: FormGroup;
   isLoading = false;
   isPasskeyLoading = false;
+  passkeyBlockedInIframe = false;
+  readonly isInIframe = typeof window !== 'undefined' && window.self !== window.top;
+  readonly standaloneUrl = typeof window !== 'undefined' ? window.location.href : '/login';
   showSuccessPopup = false;
   showLoginError = false;
   loginErrorMessage = 'Invalid credentials. Please verify your details.';
@@ -527,9 +530,14 @@ export class LoginComponent implements OnInit {
     }
   }
 
+  private isIpHostname(hostname: string): boolean {
+    return /^\d{1,3}(\.\d{1,3}){3}$/.test(hostname) || hostname.includes(':');
+  }
+
   private base64UrlToArrayBuffer(b64u: string): ArrayBuffer {
-    const padLen = (4 - (b64u.length % 4)) % 4;
-    const base64 = (b64u + '='.repeat(padLen)).replace(/-/g, '+').replace(/_/g, '/');
+    const clean = String(b64u || '').trim().replace(/-/g, '+').replace(/_/g, '/');
+    const padLen = (4 - (clean.length % 4)) % 4;
+    const base64 = clean + '='.repeat(padLen);
     const binary = atob(base64);
     const bytes = new Uint8Array(binary.length);
     for (let i = 0; i < binary.length; i++) {
@@ -549,6 +557,7 @@ export class LoginComponent implements OnInit {
 
   async onPasskeyLogin(): Promise<void> {
     this.showLoginError = false;
+    this.passkeyBlockedInIframe = false;
     this.isAccountLocked = false;
     this.remainingAttempts = null;
 
@@ -584,11 +593,16 @@ export class LoginComponent implements OnInit {
 
       const publicKeyRequest: PublicKeyCredentialRequestOptions = {
         challenge: this.base64UrlToArrayBuffer(optData.challenge),
-        rpId: window.location.hostname,
-        allowCredentials,
         userVerification: 'preferred',
         timeout: 60000
       };
+      const hostname = window.location.hostname;
+      if (hostname && !this.isIpHostname(hostname)) {
+        publicKeyRequest.rpId = hostname;
+      }
+      if (allowCredentials.length > 0) {
+        publicKeyRequest.allowCredentials = allowCredentials;
+      }
 
       const assertion = (await navigator.credentials.get({ publicKey: publicKeyRequest })) as PublicKeyCredential | null;
       if (!assertion) {
@@ -596,12 +610,13 @@ export class LoginComponent implements OnInit {
       }
 
       const resp = assertion.response as AuthenticatorAssertionResponse;
+      const credentialId = this.bufferToBase64Url(assertion.rawId) || assertion.id;
       const verifyResp = await fetch('/api/auth/passkey/login-verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           challengeToken: optData.challengeToken,
-          credentialId: assertion.id || this.bufferToBase64Url(assertion.rawId),
+          credentialId,
           clientDataJSON: this.bufferToBase64Url(resp.clientDataJSON),
           authenticatorData: this.bufferToBase64Url(resp.authenticatorData),
           signature: this.bufferToBase64Url(resp.signature)
@@ -659,7 +674,12 @@ export class LoginComponent implements OnInit {
       this.showLoginError = true;
       const errName = String(err?.name || '');
       if (errName === 'NotAllowedError' || errName === 'SecurityError') {
-        this.loginErrorMessage = 'Passkey sign-in cancelled or blocked in preview iframe. Open in a full browser tab or use your password.';
+        if (this.isInIframe) {
+          this.passkeyBlockedInIframe = true;
+          this.loginErrorMessage = 'Biometric Passkey sign-in is blocked inside this preview frame. Open in a full browser tab or sign in with your password.';
+        } else {
+          this.loginErrorMessage = 'No matching Passkey found on this device or prompt was cancelled. Enter your email or sign in with password.';
+        }
       } else {
         this.loginErrorMessage = err?.message || 'Passkey sign-in failed. Please use your password.';
       }

@@ -644,7 +644,17 @@
                 </label>
               </div>
               @if (passkeyError) {
-                <p class="text-[11px] text-amber-700 font-medium mt-2">{{ passkeyError }}</p>
+                <div class="mt-2 flex flex-wrap items-center justify-between gap-2">
+                  <p class="text-[11px] text-amber-700 font-medium">{{ passkeyError }}</p>
+                  @if (passkeyBlockedInIframe) {
+                    <a [href]="standaloneUrl"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-[11px] font-bold">
+                      <span>Open Full Browser Tab</span>
+                    </a>
+                  }
+                </div>
               }
             </div>
           </div>

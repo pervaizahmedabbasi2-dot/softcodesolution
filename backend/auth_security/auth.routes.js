@@ -441,11 +441,44 @@ export function createAuthRouter(sqliteDb, db) {
       let cloudSynced = false;
 
       const enablePasskeyFlag = (data.enable_passkey === true || data.enablePasskey === true || Boolean(data.passkeyCredential?.credentialId)) ? 1 : 0;
-      let passkeyCredId = sanitizeStr(data.passkeyCredential?.credentialId || '');
-      if (passkeyCredId && data.passkeyCredential?.challengeToken) {
-        const pkCheck = consumePasskeyChallenge(data.passkeyCredential.challengeToken, 'register', data.passkeyCredential.clientDataJSON);
+      let passkeyCredId = normalizeBase64Url(sanitizeStr(data.passkeyCredential?.credentialId || ''));
+      let passkeySpki = '';
+      if (passkeyCredId) {
+        if (!data.passkeyCredential?.challengeToken) {
+          return res.status(400).json({
+            ok: false,
+            code: 'PASSKEY_CHALLENGE_INVALID',
+            message: 'Passkey setup challenge missing. Please toggle Create Passkey again.'
+          });
+        }
+        const pkCheck = consumePasskeyChallenge(
+          data.passkeyCredential.challengeToken,
+          'register',
+          data.passkeyCredential.clientDataJSON,
+          req.headers.origin
+        );
         if (!pkCheck.ok) {
-          passkeyCredId = '';
+          return res.status(400).json({
+            ok: false,
+            code: 'PASSKEY_CHALLENGE_INVALID',
+            message: pkCheck.message
+          });
+        }
+        const spkiRes = resolveValidSpki(
+          data.passkeyCredential?.publicKeySpki,
+          data.passkeyCredential?.attestationObject,
+          passkeyCredId
+        );
+        if (!spkiRes.ok || !spkiRes.publicKeySpki) {
+          return res.status(400).json({
+            ok: false,
+            code: 'PASSKEY_KEY_INVALID',
+            message: spkiRes.message || 'Passkey public key could not be verified. Please re-create your Passkey.'
+          });
+        }
+        passkeySpki = spkiRes.publicKeySpki;
+        if (spkiRes.credentialId) {
+          passkeyCredId = spkiRes.credentialId;
         }
       }
 
@@ -491,17 +524,14 @@ export function createAuthRouter(sqliteDb, db) {
           );
           sqliteSaved = true;
 
-          if (passkeyCredId) {
+          if (passkeyCredId && passkeySpki) {
             try {
               const pkId = 'pk-' + Date.now() + '-' + crypto.randomBytes(3).toString('hex');
-              const spkiBase64 = typeof data.passkeyCredential?.publicKeySpki === 'string'
-                ? data.passkeyCredential.publicKeySpki.slice(0, 4096)
-                : '';
               const deviceLabel = sanitizeStr(data.passkeyCredential?.deviceLabel || 'Device Passkey') || 'Device Passkey';
               sqliteDb.prepare(`
                 INSERT OR REPLACE INTO auth_passkeys (id, credential_id, tenant_id, user_id, email, email_blind_idx, public_key_spki, device_label, role, portal_type, is_synced, created_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'client_admin', 'platform', 0, ?)
-              `).run(pkId, passkeyCredId, tenantId, docId, encEmail, emailBlindIdx, spkiBase64, deviceLabel, nowIso);
+              `).run(pkId, passkeyCredId, tenantId, docId, encEmail, emailBlindIdx, passkeySpki, deviceLabel, nowIso);
 
               if (db) {
                 setDoc(doc(db, 'passkeys', pkId), {
@@ -511,7 +541,7 @@ export function createAuthRouter(sqliteDb, db) {
                   user_id: docId,
                   email: encEmail,
                   email_blind_idx: emailBlindIdx,
-                  public_key_spki: spkiBase64,
+                  public_key_spki: passkeySpki,
                   device_label: deviceLabel,
                   role: 'client_admin',
                   portal_type: 'platform',
@@ -1064,14 +1094,281 @@ export function createAuthRouter(sqliteDb, db) {
   // =========================================================================
   // UNIFIED PASSKEY (WEBAUTHN) ENROLLMENT, PROFILE MANAGEMENT & LOGIN
   // =========================================================================
+  const SUPERADMIN_ALIASES = new Set([
+    'pervaizahmedabbasi786@gmail.com',
+    'superadmin@softcodesolution.local',
+    'admin@softcodesolution.com',
+    'admin',
+    'superadmin'
+  ]);
+
+  function normalizeBase64Url(str) {
+    if (typeof str !== 'string') return '';
+    return str.trim().replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+
+  function normalizeOrigin(originStr) {
+    if (!originStr || typeof originStr !== 'string') return '';
+    try {
+      return new URL(originStr.trim()).origin;
+    } catch {
+      return '';
+    }
+  }
+
+  // Minimal RFC 8949 CBOR decoder for WebAuthn attestationObject & COSE_Key
+  function decodeCborValue(buf, offset = 0) {
+    if (offset >= buf.length) throw new Error('CBOR unexpected end of buffer');
+    const initial = buf[offset];
+    const major = initial >> 5;
+    const ai = initial & 0x1f;
+    let pos = offset + 1;
+
+    const readLength = () => {
+      if (ai < 24) return ai;
+      if (ai === 24) {
+        const v = buf.readUInt8(pos);
+        pos += 1;
+        return v;
+      }
+      if (ai === 25) {
+        const v = buf.readUInt16BE(pos);
+        pos += 2;
+        return v;
+      }
+      if (ai === 26) {
+        const v = buf.readUInt32BE(pos);
+        pos += 4;
+        return v;
+      }
+      if (ai === 27) {
+        const hi = buf.readUInt32BE(pos);
+        const lo = buf.readUInt32BE(pos + 4);
+        pos += 8;
+        return hi * 0x100000000 + lo;
+      }
+      if (ai === 31) return -1; // indefinite length
+      throw new Error(`Unsupported CBOR additional info: ${ai}`);
+    };
+
+    if (major === 0) {
+      return { value: readLength(), nextOffset: pos };
+    }
+    if (major === 1) {
+      return { value: -1 - readLength(), nextOffset: pos };
+    }
+    if (major === 2) {
+      const len = readLength();
+      if (len === -1) {
+        const chunks = [];
+        while (pos < buf.length && buf[pos] !== 0xff) {
+          const item = decodeCborValue(buf, pos);
+          chunks.push(Buffer.isBuffer(item.value) ? item.value : Buffer.from(item.value));
+          pos = item.nextOffset;
+        }
+        return { value: Buffer.concat(chunks), nextOffset: pos + 1 };
+      }
+      const slice = buf.subarray(pos, pos + len);
+      return { value: Buffer.from(slice), nextOffset: pos + len };
+    }
+    if (major === 3) {
+      const len = readLength();
+      if (len === -1) {
+        let text = '';
+        while (pos < buf.length && buf[pos] !== 0xff) {
+          const item = decodeCborValue(buf, pos);
+          text += String(item.value);
+          pos = item.nextOffset;
+        }
+        return { value: text, nextOffset: pos + 1 };
+      }
+      const text = buf.subarray(pos, pos + len).toString('utf8');
+      return { value: text, nextOffset: pos + len };
+    }
+    if (major === 4) {
+      const len = readLength();
+      const arr = [];
+      if (len === -1) {
+        while (pos < buf.length && buf[pos] !== 0xff) {
+          const item = decodeCborValue(buf, pos);
+          arr.push(item.value);
+          pos = item.nextOffset;
+        }
+        return { value: arr, nextOffset: pos + 1 };
+      }
+      for (let i = 0; i < len; i++) {
+        const item = decodeCborValue(buf, pos);
+        arr.push(item.value);
+        pos = item.nextOffset;
+      }
+      return { value: arr, nextOffset: pos };
+    }
+    if (major === 5) {
+      const len = readLength();
+      const map = new Map();
+      if (len === -1) {
+        while (pos < buf.length && buf[pos] !== 0xff) {
+          const k = decodeCborValue(buf, pos);
+          const v = decodeCborValue(buf, k.nextOffset);
+          map.set(k.value, v.value);
+          pos = v.nextOffset;
+        }
+        return { value: map, nextOffset: pos + 1 };
+      }
+      for (let i = 0; i < len; i++) {
+        const k = decodeCborValue(buf, pos);
+        const v = decodeCborValue(buf, k.nextOffset);
+        map.set(k.value, v.value);
+        pos = v.nextOffset;
+      }
+      return { value: map, nextOffset: pos };
+    }
+    if (major === 6) {
+      readLength();
+      return decodeCborValue(buf, pos);
+    }
+    if (major === 7) {
+      if (ai === 20) return { value: false, nextOffset: pos };
+      if (ai === 21) return { value: true, nextOffset: pos };
+      if (ai === 22) return { value: null, nextOffset: pos };
+      if (ai === 23) return { value: undefined, nextOffset: pos };
+      if (ai === 25) return { value: 0, nextOffset: pos + 2 };
+      if (ai === 26) return { value: buf.readFloatBE(pos), nextOffset: pos + 4 };
+      if (ai === 27) return { value: buf.readDoubleBE(pos), nextOffset: pos + 8 };
+      return { value: null, nextOffset: pos };
+    }
+    throw new Error(`Unsupported CBOR major type: ${major}`);
+  }
+
+  function coseKeyToSpkiBase64Url(coseMap) {
+    if (!(coseMap instanceof Map)) return '';
+    const kty = coseMap.get(1);
+    let jwk = null;
+
+    if (kty === 2) {
+      // EC2: crv (-1): 1=P-256, 2=P-384, 3=P-521
+      const crvCode = coseMap.get(-1);
+      const crv = crvCode === 1 ? 'P-256' : crvCode === 2 ? 'P-384' : crvCode === 3 ? 'P-521' : '';
+      const x = coseMap.get(-2);
+      const y = coseMap.get(-3);
+      if (crv && Buffer.isBuffer(x) && Buffer.isBuffer(y)) {
+        jwk = {
+          kty: 'EC',
+          crv,
+          x: x.toString('base64url'),
+          y: y.toString('base64url')
+        };
+      }
+    } else if (kty === 3) {
+      // RSA
+      const n = coseMap.get(-1);
+      const e = coseMap.get(-2);
+      if (Buffer.isBuffer(n) && Buffer.isBuffer(e)) {
+        jwk = {
+          kty: 'RSA',
+          n: n.toString('base64url'),
+          e: e.toString('base64url')
+        };
+      }
+    } else if (kty === 1) {
+      // OKP (Ed25519 / Ed448)
+      const crvCode = coseMap.get(-1);
+      const crv = crvCode === 6 ? 'Ed25519' : crvCode === 7 ? 'Ed448' : '';
+      const x = coseMap.get(-2);
+      if (crv && Buffer.isBuffer(x)) {
+        jwk = {
+          kty: 'OKP',
+          crv,
+          x: x.toString('base64url')
+        };
+      }
+    }
+
+    if (!jwk) return '';
+    const keyObj = crypto.createPublicKey({ key: jwk, format: 'jwk' });
+    return keyObj.export({ format: 'der', type: 'spki' }).toString('base64url');
+  }
+
+  function extractAttestationDetails(attestationObjectB64u) {
+    if (!attestationObjectB64u || typeof attestationObjectB64u !== 'string') return null;
+    try {
+      const attBuf = Buffer.from(normalizeBase64Url(attestationObjectB64u), 'base64url');
+      if (!attBuf.length) return null;
+      const decoded = decodeCborValue(attBuf, 0).value;
+      if (!(decoded instanceof Map)) return null;
+      const authData = decoded.get('authData');
+      if (!Buffer.isBuffer(authData) || authData.length < 55) return null;
+      const flags = authData[32];
+      // UP flag (0x01) & Attested Credential Data flag (0x40)
+      if ((flags & 0x01) === 0 || (flags & 0x40) === 0) return null;
+
+      const credIdLen = authData.readUInt16BE(53);
+      const credIdEnd = 55 + credIdLen;
+      if (authData.length <= credIdEnd) return null;
+
+      const credIdBuf = authData.subarray(55, credIdEnd);
+      const coseDecoded = decodeCborValue(authData, credIdEnd).value;
+      const publicKeySpki = coseKeyToSpkiBase64Url(coseDecoded);
+
+      return {
+        credentialId: credIdBuf.toString('base64url'),
+        publicKeySpki,
+        rpIdHash: authData.subarray(0, 32)
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  function resolveValidSpki(rawPublicKeySpki, attestationObjectB64u, expectedCredId) {
+    let extractedCredId = '';
+    if (attestationObjectB64u) {
+      const att = extractAttestationDetails(attestationObjectB64u);
+      if (att && att.publicKeySpki) {
+        if (expectedCredId && att.credentialId && normalizeBase64Url(expectedCredId) !== att.credentialId) {
+          return { ok: false, publicKeySpki: '', message: 'Passkey credential ID mismatch with attestation object.' };
+        }
+        extractedCredId = att.credentialId;
+        return { ok: true, publicKeySpki: att.publicKeySpki, credentialId: extractedCredId };
+      }
+    }
+
+    const normalizedSpki = normalizeBase64Url(typeof rawPublicKeySpki === 'string' ? rawPublicKeySpki.slice(0, 4096) : '');
+    if (normalizedSpki) {
+      try {
+        const spkiDer = Buffer.from(normalizedSpki, 'base64url');
+        const keyObj = crypto.createPublicKey({ key: spkiDer, format: 'der', type: 'spki' });
+        const canonicalSpki = keyObj.export({ format: 'der', type: 'spki' }).toString('base64url');
+        return { ok: true, publicKeySpki: canonicalSpki, credentialId: normalizeBase64Url(expectedCredId || '') };
+      } catch {}
+    }
+
+    return { ok: false, publicKeySpki: '', message: 'Passkey public key missing or unsupported format.' };
+  }
+
+  function verifyWebAuthnAssertionSignature(spkiStr, signedPayload, sigBuf) {
+    const spkiDer = Buffer.from(normalizeBase64Url(spkiStr), 'base64url');
+    const keyObj = crypto.createPublicKey({ key: spkiDer, format: 'der', type: 'spki' });
+    const keyType = keyObj.asymmetricKeyType;
+    if (keyType === 'ed25519' || keyType === 'ed448') {
+      return crypto.verify(null, signedPayload, keyObj, sigBuf);
+    }
+    const curve = keyObj.asymmetricKeyDetails?.namedCurve || '';
+    let alg = 'sha256';
+    if (curve === 'secp384r1' || curve === 'P-384') alg = 'sha384';
+    else if (curve === 'secp521r1' || curve === 'P-521') alg = 'sha512';
+    return crypto.verify(alg, signedPayload, keyObj, sigBuf);
+  }
+
   function issuePasskeyChallenge(purpose) {
     const challengeBytes = crypto.randomBytes(32);
     const challenge = challengeBytes.toString('base64url');
     const tokenId = crypto.randomBytes(16).toString('hex');
+    const ttlMs = purpose === 'register' ? 15 * 60 * 1000 : CHALLENGE_TTL_MS;
     PASSKEY_CHALLENGES.set(tokenId, {
       challenge,
       purpose,
-      expiresAt: Date.now() + CHALLENGE_TTL_MS
+      expiresAt: Date.now() + ttlMs
     });
     return { challenge, challengeToken: tokenId };
   }
@@ -1085,21 +1382,24 @@ export function createAuthRouter(sqliteDb, db) {
     if (!entry || entry.expiresAt < Date.now() || entry.purpose !== expectedPurpose) {
       return { ok: false, message: 'Passkey challenge expired. Please try again.' };
     }
+    let parsedOrigin = '';
     if (clientDataJSONB64) {
       try {
-        const parsed = JSON.parse(Buffer.from(clientDataJSONB64, 'base64url').toString('utf8'));
+        const parsed = JSON.parse(Buffer.from(normalizeBase64Url(clientDataJSONB64), 'base64url').toString('utf8'));
         const expectedType = expectedPurpose === 'register' ? 'webauthn.create' : 'webauthn.get';
-        if (parsed.type !== expectedType || parsed.challenge !== entry.challenge) {
+        if (parsed.type !== expectedType || normalizeBase64Url(parsed.challenge) !== entry.challenge) {
           return { ok: false, message: 'Passkey cryptographic challenge mismatch.' };
         }
-        if (reqOrigin && parsed.origin && parsed.origin !== reqOrigin) {
+        parsedOrigin = normalizeOrigin(parsed.origin);
+        const expectedOrigin = normalizeOrigin(reqOrigin);
+        if (expectedOrigin && parsedOrigin && parsedOrigin !== expectedOrigin) {
           return { ok: false, message: 'Passkey origin mismatch rejected.' };
         }
       } catch {
         return { ok: false, message: 'Invalid passkey client data.' };
       }
     }
-    return { ok: true, challenge: entry.challenge };
+    return { ok: true, challenge: entry.challenge, origin: parsedOrigin };
   }
 
   function resolvePasskeyTargetScope(session, rawEmail, rawTenantId) {
@@ -1121,10 +1421,34 @@ export function createAuthRouter(sqliteDb, db) {
 
   router.post('/passkey/register-options', (req, res) => {
     const body = req.body || {};
-    const cleanEmail = sanitizeStr(body.email || '').toLowerCase() || ('user-' + Date.now() + '@softcodesolution.local');
+    const session = verifySessionRequest(req);
+    const cleanEmail = sanitizeStr(body.email || session?.email || '').toLowerCase() || ('user-' + Date.now() + '@softcodesolution.local');
     const cleanName = sanitizeStr(body.fullName || body.full_name || '') || cleanEmail;
     const { challenge, challengeToken } = issuePasskeyChallenge('register');
     const userId = crypto.createHash('sha256').update(cleanEmail).digest().subarray(0, 16).toString('base64url');
+
+    const excludeCredentials = [];
+    if (session && sqliteDb) {
+      const scope = resolvePasskeyTargetScope(session, cleanEmail, body.tenantId);
+      if (scope.allowed) {
+        try {
+          const emailBlindIdx = vault.blindIndex(scope.email, 'email');
+          const existing = sqliteDb.prepare(`
+            SELECT credential_id, public_key_spki FROM auth_passkeys
+            WHERE email_blind_idx = ? AND tenant_id = ?
+          `).all(emailBlindIdx, scope.tenantId);
+          for (const row of existing) {
+            if (row.credential_id && row.public_key_spki) {
+              excludeCredentials.push({
+                type: 'public-key',
+                id: normalizeBase64Url(row.credential_id)
+              });
+            }
+          }
+        } catch {}
+      }
+    }
+
     res.json({
       ok: true,
       challenge,
@@ -1134,7 +1458,13 @@ export function createAuthRouter(sqliteDb, db) {
         id: userId,
         name: cleanEmail,
         displayName: cleanName
-      }
+      },
+      pubKeyCredParams: [
+        { type: 'public-key', alg: -7 },
+        { type: 'public-key', alg: -257 },
+        { type: 'public-key', alg: -8 }
+      ],
+      excludeCredentials
     });
   });
 
@@ -1153,7 +1483,7 @@ export function createAuthRouter(sqliteDb, db) {
       let rows = [];
       if (sqliteDb) {
         rows = sqliteDb.prepare(`
-          SELECT id, credential_id, tenant_id, user_id, device_label, role, portal_type, is_synced, created_at, last_used_at
+          SELECT id, credential_id, tenant_id, user_id, public_key_spki, device_label, role, portal_type, is_synced, created_at, last_used_at
           FROM auth_passkeys
           WHERE email_blind_idx = ? AND tenant_id = ?
           ORDER BY created_at DESC
@@ -1169,9 +1499,10 @@ export function createAuthRouter(sqliteDb, db) {
             if (!d || (d.tenant_id && d.tenant_id !== scope.tenantId)) return;
             cloudRows.push({
               id: d.id || docSnap.id,
-              credential_id: d.credential_id,
+              credential_id: normalizeBase64Url(d.credential_id || ''),
               tenant_id: d.tenant_id || scope.tenantId,
               user_id: d.user_id || session.uid,
+              public_key_spki: d.public_key_spki || '',
               device_label: d.device_label || 'Cloud Synced Passkey',
               role: d.role || 'client_admin',
               portal_type: d.portal_type || 'platform',
@@ -1186,7 +1517,7 @@ export function createAuthRouter(sqliteDb, db) {
                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
                 `).run(
                   d.id || docSnap.id,
-                  d.credential_id,
+                  normalizeBase64Url(d.credential_id),
                   d.tenant_id || scope.tenantId,
                   d.user_id || session.uid,
                   d.email || vault.encryptField(scope.tenantId, scope.email),
@@ -1217,6 +1548,7 @@ export function createAuthRouter(sqliteDb, db) {
           deviceLabel: r.device_label || 'Device Passkey',
           role: r.role || 'client_admin',
           portalType: r.portal_type || 'platform',
+          hasPublicKey: Boolean(r.public_key_spki && String(r.public_key_spki).trim().length > 10),
           isSynced: Number(r.is_synced) === 1,
           createdAt: r.created_at,
           lastUsedAt: r.last_used_at
@@ -1244,13 +1576,24 @@ export function createAuthRouter(sqliteDb, db) {
         return res.status(400).json({ ok: false, code: 'PASSKEY_CHALLENGE_INVALID', message: check.message });
       }
 
-      const credId = sanitizeStr(body.credentialId || '');
-      const spkiBase64 = typeof body.publicKeySpki === 'string' ? body.publicKeySpki.slice(0, 4096) : '';
+      let credId = normalizeBase64Url(sanitizeStr(body.credentialId || ''));
       if (!credId) {
         return res.status(400).json({ ok: false, code: 'PASSKEY_INVALID', message: 'Credential ID missing from authenticator.' });
       }
 
-      const pkId = 'pk-' + Date.now() + '-' + crypto.randomBytes(4).toString('hex');
+      const spkiResult = resolveValidSpki(body.publicKeySpki, body.attestationObject, credId);
+      if (!spkiResult.ok || !spkiResult.publicKeySpki) {
+        return res.status(400).json({
+          ok: false,
+          code: 'PASSKEY_KEY_INVALID',
+          message: spkiResult.message || 'Authenticator did not provide a valid public key. Please try again.'
+        });
+      }
+      const spkiBase64 = spkiResult.publicKeySpki;
+      if (spkiResult.credentialId) {
+        credId = spkiResult.credentialId;
+      }
+
       const nowIso = new Date().toISOString();
       const targetUserId = sanitizeStr(body.userId || '') || session.uid || ('usr-' + crypto.randomBytes(4).toString('hex'));
       const targetRole = sanitizeStr(body.role || '') || session.role || 'client_admin';
@@ -1260,13 +1603,31 @@ export function createAuthRouter(sqliteDb, db) {
       vault.ensureTenantKey(scope.tenantId);
       const encEmail = vault.encryptField(scope.tenantId, scope.email);
 
+      let pkId = 'pk-' + Date.now() + '-' + crypto.randomBytes(4).toString('hex');
       let sqliteSaved = false;
       if (sqliteDb) {
         try {
-          sqliteDb.prepare(`
-            INSERT OR REPLACE INTO auth_passkeys (id, credential_id, tenant_id, user_id, email, email_blind_idx, public_key_spki, device_label, role, portal_type, is_synced, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
-          `).run(pkId, credId, scope.tenantId, targetUserId, encEmail, emailBlindIdx, spkiBase64, deviceLabel, targetRole, targetPortalType, nowIso);
+          const existingCred = sqliteDb.prepare('SELECT id, tenant_id, email_blind_idx FROM auth_passkeys WHERE credential_id = ? LIMIT 1').get(credId);
+          if (existingCred) {
+            if (existingCred.email_blind_idx !== emailBlindIdx || existingCred.tenant_id !== scope.tenantId) {
+              return res.status(409).json({
+                ok: false,
+                code: 'PASSKEY_CREDENTIAL_IN_USE',
+                message: 'This Passkey credential is already linked to another account.'
+              });
+            }
+            pkId = existingCred.id;
+            sqliteDb.prepare(`
+              UPDATE auth_passkeys
+              SET public_key_spki = ?, device_label = ?, user_id = ?, role = ?, portal_type = ?, is_synced = 0
+              WHERE id = ?
+            `).run(spkiBase64, deviceLabel, targetUserId, targetRole, targetPortalType, pkId);
+          } else {
+            sqliteDb.prepare(`
+              INSERT INTO auth_passkeys (id, credential_id, tenant_id, user_id, email, email_blind_idx, public_key_spki, device_label, role, portal_type, is_synced, created_at)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
+            `).run(pkId, credId, scope.tenantId, targetUserId, encEmail, emailBlindIdx, spkiBase64, deviceLabel, targetRole, targetPortalType, nowIso);
+          }
           sqliteDb.prepare('UPDATE local_tenants SET enable_passkey = 1, biometric_hash = COALESCE(biometric_hash, ?) WHERE email_blind_idx = ?').run(credId, emailBlindIdx);
           sqliteSaved = true;
         } catch (sqlErr) {
@@ -1315,6 +1676,7 @@ export function createAuthRouter(sqliteDb, db) {
           deviceLabel,
           role: targetRole,
           portalType: targetPortalType,
+          hasPublicKey: true,
           isSynced: cloudSynced,
           createdAt: nowIso
         }
@@ -1379,30 +1741,41 @@ export function createAuthRouter(sqliteDb, db) {
     const seen = new Set();
 
     if (cleanEmail) {
-      const emailBlindIdx = vault.blindIndex(cleanEmail, 'email');
-      if (sqliteDb) {
+      const candidateEmails = SUPERADMIN_ALIASES.has(cleanEmail)
+        ? Array.from(SUPERADMIN_ALIASES)
+        : [cleanEmail];
+      const blindIndexes = candidateEmails.map((em) => vault.blindIndex(em, 'email')).filter(Boolean);
+
+      if (sqliteDb && blindIndexes.length > 0) {
         try {
-          const rows = sqliteDb.prepare('SELECT credential_id FROM auth_passkeys WHERE email_blind_idx = ?').all(emailBlindIdx);
+          const placeholders = blindIndexes.map(() => '?').join(', ');
+          const rows = sqliteDb.prepare(
+            `SELECT credential_id FROM auth_passkeys WHERE email_blind_idx IN (${placeholders}) AND public_key_spki IS NOT NULL AND public_key_spki != ''`
+          ).all(...blindIndexes);
           for (const r of rows) {
-            if (r.credential_id && !seen.has(r.credential_id)) {
-              seen.add(r.credential_id);
-              allowCredentials.push({ type: 'public-key', id: r.credential_id });
+            const normId = normalizeBase64Url(r.credential_id || '');
+            if (normId && !seen.has(normId)) {
+              seen.add(normId);
+              allowCredentials.push({ type: 'public-key', id: normId });
             }
           }
         } catch {}
       }
       if (allowCredentials.length === 0 && db) {
-        try {
-          const snap = await getDocs(query(collection(db, 'passkeys'), where('email_blind_idx', '==', emailBlindIdx)));
-          snap.forEach((docSnap) => {
-            const d = docSnap.data();
-            if (d?.credential_id && !seen.has(d.credential_id)) {
-              seen.add(d.credential_id);
-              allowCredentials.push({ type: 'public-key', id: d.credential_id });
-            }
-          });
-        } catch (err) {
-          handleFirestoreError(err, 'list', 'passkeys');
+        for (const bIdx of blindIndexes) {
+          try {
+            const snap = await getDocs(query(collection(db, 'passkeys'), where('email_blind_idx', '==', bIdx)));
+            snap.forEach((docSnap) => {
+              const d = docSnap.data();
+              const normId = normalizeBase64Url(d?.credential_id || '');
+              if (normId && d?.public_key_spki && !seen.has(normId)) {
+                seen.add(normId);
+                allowCredentials.push({ type: 'public-key', id: normId });
+              }
+            });
+          } catch (err) {
+            handleFirestoreError(err, 'list', 'passkeys');
+          }
         }
       }
     }
@@ -1423,7 +1796,8 @@ export function createAuthRouter(sqliteDb, db) {
         return res.status(401).json({ ok: false, code: 'PASSKEY_CHALLENGE_INVALID', message: check.message });
       }
 
-      const credId = sanitizeStr(credentialId || '');
+      const rawCredId = sanitizeStr(credentialId || '');
+      const credId = normalizeBase64Url(rawCredId);
       if (!credId) {
         return res.status(401).json({ ok: false, code: 'PASSKEY_NOT_FOUND', message: 'No matching Passkey found on this server.' });
       }
@@ -1431,7 +1805,7 @@ export function createAuthRouter(sqliteDb, db) {
       let passkeyRow = null;
       if (sqliteDb) {
         try {
-          passkeyRow = sqliteDb.prepare('SELECT * FROM auth_passkeys WHERE credential_id = ? LIMIT 1').get(credId);
+          passkeyRow = sqliteDb.prepare('SELECT * FROM auth_passkeys WHERE credential_id = ? OR credential_id = ? LIMIT 1').get(credId, rawCredId);
         } catch {}
       }
 
@@ -1443,7 +1817,7 @@ export function createAuthRouter(sqliteDb, db) {
             const d = docSnap.data();
             passkeyRow = {
               id: d.id || docSnap.id,
-              credential_id: d.credential_id,
+              credential_id: normalizeBase64Url(d.credential_id || credId),
               tenant_id: d.tenant_id || 'tenant-root-platform',
               user_id: d.user_id || '',
               email: d.email || '',
@@ -1484,14 +1858,35 @@ export function createAuthRouter(sqliteDb, db) {
         return res.status(401).json({ ok: false, code: 'PASSKEY_NOT_FOUND', message: 'Passkey is not registered to any account yet. Please sign in with password or add a Passkey in Account Settings.' });
       }
 
-      // Strict WebAuthn Assertion Signature & User-Present Flag Verification
+      // Strict WebAuthn Assertion Signature, rpIdHash & User-Present Flag Verification
       if (!authenticatorData || !clientDataJSON || !signature) {
         return res.status(401).json({ ok: false, code: 'PASSKEY_SIGNATURE_MISSING', message: 'Passkey cryptographic assertion incomplete.' });
       }
 
-      const authDataBuf = Buffer.from(authenticatorData, 'base64url');
+      const authDataBuf = Buffer.from(normalizeBase64Url(authenticatorData), 'base64url');
       if (authDataBuf.length < 37 || (authDataBuf[32] & 0x01) === 0) {
         return res.status(401).json({ ok: false, code: 'PASSKEY_USER_NOT_PRESENT', message: 'Passkey user presence check failed.' });
+      }
+
+      if (check.origin) {
+        try {
+          const originHost = new URL(check.origin).hostname.toLowerCase();
+          const gotRpHash = authDataBuf.subarray(0, 32);
+          const labels = originHost.split('.');
+          let rpMatched = false;
+          for (let i = 0; i < labels.length; i++) {
+            const candidate = labels.slice(i).join('.');
+            if (!candidate) continue;
+            const expectedHash = crypto.createHash('sha256').update(candidate).digest();
+            if (crypto.timingSafeEqual(gotRpHash, expectedHash)) {
+              rpMatched = true;
+              break;
+            }
+          }
+          if (!rpMatched) {
+            return res.status(401).json({ ok: false, code: 'PASSKEY_RP_MISMATCH', message: 'Passkey domain verification failed.' });
+          }
+        } catch {}
       }
 
       if (!passkeyRow.public_key_spki) {
@@ -1499,12 +1894,10 @@ export function createAuthRouter(sqliteDb, db) {
       }
 
       try {
-        const spkiDer = Buffer.from(passkeyRow.public_key_spki, 'base64url');
-        const keyObj = crypto.createPublicKey({ key: spkiDer, format: 'der', type: 'spki' });
-        const clientDataHash = crypto.createHash('sha256').update(Buffer.from(clientDataJSON, 'base64url')).digest();
+        const clientDataHash = crypto.createHash('sha256').update(Buffer.from(normalizeBase64Url(clientDataJSON), 'base64url')).digest();
         const signedPayload = Buffer.concat([authDataBuf, clientDataHash]);
-        const sigBuf = Buffer.from(signature, 'base64url');
-        const verified = crypto.verify('sha256', signedPayload, keyObj, sigBuf);
+        const sigBuf = Buffer.from(normalizeBase64Url(signature), 'base64url');
+        const verified = verifyWebAuthnAssertionSignature(passkeyRow.public_key_spki, signedPayload, sigBuf);
         if (!verified) {
           return res.status(401).json({ ok: false, code: 'PASSKEY_SIGNATURE_INVALID', message: 'Passkey cryptographic signature verification failed.' });
         }
@@ -1518,7 +1911,7 @@ export function createAuthRouter(sqliteDb, db) {
       let role = passkeyRow.role || 'client_admin';
       let userObj = null;
 
-      if (role === 'super_admin' || portalType === 'superadmin' || emailLower === 'pervaizahmedabbasi786@gmail.com') {
+      if (role === 'super_admin' || portalType === 'superadmin' || SUPERADMIN_ALIASES.has(emailLower)) {
         role = 'super_admin';
         userObj = {
           id: passkeyRow.user_id || 'superadmin-root-01',
