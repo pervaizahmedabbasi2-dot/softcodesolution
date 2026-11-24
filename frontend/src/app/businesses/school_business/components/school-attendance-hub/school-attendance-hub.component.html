@@ -88,7 +88,7 @@
 
     <!-- 3D HiOS Category Summary Strip (Students · Teachers · Staff · Principal) -->
     @if (portalContext() !== 'student' && !kioskFullscreen() && allowedCategories().length > 0) {
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 relative z-10">
+      <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3.5 relative z-10">
         @if (isOwner() || allowedCategories().includes('student')) {
           <!-- Students KPI Card -->
           <button type="button" (click)="setSubTab('students')"
@@ -2107,7 +2107,7 @@
             </div>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3.5 text-xs">
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3.5 text-xs">
             @for (cat of ['student', 'teacher', 'staff', 'principal']; track cat) {
               @let rule = getCategoryRule($any(cat));
               <div class="p-4 rounded-2xl scs-tile-3d space-y-3">

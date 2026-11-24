@@ -562,60 +562,60 @@
 
 
           <!-- 1. TOP 4 METRIC CARDS (3D Animated White Cards with Matching Ambient Shadows) -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3.5 sm:gap-4">
             <!-- Card 1: Active Students -->
-            <div (click)="setTab('students')" class="rounded-2xl p-5 sm:p-6 flex items-center gap-4 border border-slate-200/90 hover:-translate-y-1.5 transition-all duration-300 ease-out cursor-pointer bg-white group scs-tile-3d">
-              <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 via-blue-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-500/30 group-hover:scale-105 group-hover:shadow-blue-500/40 transition-all duration-300 border border-white/30">
-                <lucide-icon [name]="'users'" class="w-7 h-7 text-white stroke-[2.2] drop-shadow-xs"></lucide-icon>
+            <div (click)="setTab('students')" class="rounded-2xl p-4 sm:p-5 flex items-center gap-3 sm:gap-3.5 border border-slate-200/90 hover:-translate-y-1.5 transition-all duration-300 ease-out cursor-pointer bg-white group scs-tile-3d min-w-0 overflow-hidden">
+              <div class="w-11 h-11 sm:w-12 sm:h-12 2xl:w-14 2xl:h-14 rounded-2xl bg-gradient-to-tr from-blue-600 via-blue-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-500/30 group-hover:scale-105 group-hover:shadow-blue-500/40 transition-all duration-300 border border-white/30">
+                <lucide-icon [name]="'users'" class="w-5 h-5 sm:w-6 sm:h-6 2xl:w-7 2xl:h-7 text-white stroke-[2.2] drop-shadow-xs"></lucide-icon>
               </div>
               <div class="min-w-0 flex-1">
-                <span class="text-2xl sm:text-3xl font-black text-slate-900 tabular-nums block leading-none tracking-tight">{{ formatCurrency(activeStudents.length) }}</span>
-                <p class="text-xs font-bold text-slate-600 mt-1">Active Students</p>
+                <span class="text-lg sm:text-xl 2xl:text-2xl font-black text-slate-900 tabular-nums block leading-tight tracking-tight break-words">{{ formatCurrency(activeStudents.length) }}</span>
+                <p class="text-xs font-bold text-slate-600 mt-1 truncate">Active Students</p>
                 <div class="mt-1 flex items-center gap-1 text-[11px] font-semibold text-blue-600">
-                  <lucide-icon [name]="'trending-up'" class="w-3.5 h-3.5"></lucide-icon>
-                  <span>+10 this month</span>
+                  <lucide-icon [name]="'trending-up'" class="w-3.5 h-3.5 shrink-0"></lucide-icon>
+                  <span class="truncate">+10 this month</span>
                 </div>
               </div>
             </div>
 
             <!-- Card 2: Total Collected -->
-            <div (click)="setTab('finance')" class="rounded-2xl p-5 sm:p-6 flex items-center gap-4 border border-slate-200/90 hover:-translate-y-1.5 transition-all duration-300 ease-out cursor-pointer bg-white group scs-tile-3d">
-              <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-500 via-emerald-600 to-teal-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/30 group-hover:scale-105 group-hover:shadow-emerald-500/40 transition-all duration-300 border border-white/30">
-                <lucide-icon [name]="'wallet-cards'" class="w-7 h-7 text-white stroke-[2.2] drop-shadow-xs"></lucide-icon>
+            <div (click)="setTab('finance')" class="rounded-2xl p-4 sm:p-5 flex items-center gap-3 sm:gap-3.5 border border-slate-200/90 hover:-translate-y-1.5 transition-all duration-300 ease-out cursor-pointer bg-white group scs-tile-3d min-w-0 overflow-hidden">
+              <div class="w-11 h-11 sm:w-12 sm:h-12 2xl:w-14 2xl:h-14 rounded-2xl bg-gradient-to-tr from-emerald-500 via-emerald-600 to-teal-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/30 group-hover:scale-105 group-hover:shadow-emerald-500/40 transition-all duration-300 border border-white/30">
+                <lucide-icon [name]="'wallet-cards'" class="w-5 h-5 sm:w-6 sm:h-6 2xl:w-7 2xl:h-7 text-white stroke-[2.2] drop-shadow-xs"></lucide-icon>
               </div>
               <div class="min-w-0 flex-1">
-                <span class="text-2xl sm:text-3xl font-black text-slate-900 tabular-nums block leading-none tracking-tight">PKR {{ formatCurrency(totalRevenue) }}</span>
-                <p class="text-xs font-bold text-slate-600 mt-1">Total Collected</p>
-                <div class="mt-1 text-[11px] font-semibold text-emerald-600">
+                <span class="text-lg sm:text-xl 2xl:text-2xl font-black text-slate-900 tabular-nums block leading-tight tracking-tight break-words">PKR {{ formatCurrency(totalRevenue) }}</span>
+                <p class="text-xs font-bold text-slate-600 mt-1 truncate">Total Collected</p>
+                <div class="mt-1 text-[11px] font-semibold text-emerald-600 truncate">
                   Today: <span class="font-bold tabular-nums">PKR {{ formatCurrency(todayCollected) }}</span>
                 </div>
               </div>
             </div>
 
             <!-- Card 3: Pending Fees -->
-            <div (click)="setTab('finance')" class="rounded-2xl p-5 sm:p-6 flex items-center gap-4 border border-slate-200/90 hover:-translate-y-1.5 transition-all duration-300 ease-out cursor-pointer bg-white group scs-tile-3d">
-              <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-rose-500 via-rose-600 to-red-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-rose-500/30 group-hover:scale-105 group-hover:shadow-rose-500/40 transition-all duration-300 border border-white/30">
-                <lucide-icon [name]="'alert-circle'" class="w-7 h-7 text-white stroke-[2.2] drop-shadow-xs"></lucide-icon>
+            <div (click)="setTab('finance')" class="rounded-2xl p-4 sm:p-5 flex items-center gap-3 sm:gap-3.5 border border-slate-200/90 hover:-translate-y-1.5 transition-all duration-300 ease-out cursor-pointer bg-white group scs-tile-3d min-w-0 overflow-hidden">
+              <div class="w-11 h-11 sm:w-12 sm:h-12 2xl:w-14 2xl:h-14 rounded-2xl bg-gradient-to-tr from-rose-500 via-rose-600 to-red-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-rose-500/30 group-hover:scale-105 group-hover:shadow-rose-500/40 transition-all duration-300 border border-white/30">
+                <lucide-icon [name]="'alert-circle'" class="w-5 h-5 sm:w-6 sm:h-6 2xl:w-7 2xl:h-7 text-white stroke-[2.2] drop-shadow-xs"></lucide-icon>
               </div>
               <div class="min-w-0 flex-1">
-                <span class="text-2xl sm:text-3xl font-black text-rose-600 tabular-nums block leading-none tracking-tight">PKR {{ formatCurrency(totalPendingFees) }}</span>
-                <p class="text-xs font-bold text-slate-600 mt-1">Pending Fees</p>
+                <span class="text-lg sm:text-xl 2xl:text-2xl font-black text-rose-600 tabular-nums block leading-tight tracking-tight break-words">PKR {{ formatCurrency(totalPendingFees) }}</span>
+                <p class="text-xs font-bold text-slate-600 mt-1 truncate">Pending Fees</p>
                 <div class="mt-1 flex items-center gap-1.5 text-[11px] font-semibold text-rose-500">
-                  <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
-                  <span>Needs collection · {{ defaulters.length }} Due</span>
+                  <span class="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0"></span>
+                  <span class="truncate">Needs collection · {{ defaulters.length }} Due</span>
                 </div>
               </div>
             </div>
 
             <!-- Card 4: Total Expenses -->
-            <div (click)="setTab('expenses')" class="rounded-2xl p-5 sm:p-6 flex items-center gap-4 border border-slate-200/90 hover:-translate-y-1.5 transition-all duration-300 ease-out cursor-pointer bg-white group scs-tile-3d">
-              <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500 via-amber-600 to-orange-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-amber-500/30 group-hover:scale-105 group-hover:shadow-amber-500/40 transition-all duration-300 border border-white/30">
-                <lucide-icon [name]="'receipt'" class="w-7 h-7 text-white stroke-[2.2] drop-shadow-xs"></lucide-icon>
+            <div (click)="setTab('expenses')" class="rounded-2xl p-4 sm:p-5 flex items-center gap-3 sm:gap-3.5 border border-slate-200/90 hover:-translate-y-1.5 transition-all duration-300 ease-out cursor-pointer bg-white group scs-tile-3d min-w-0 overflow-hidden">
+              <div class="w-11 h-11 sm:w-12 sm:h-12 2xl:w-14 2xl:h-14 rounded-2xl bg-gradient-to-tr from-amber-500 via-amber-600 to-orange-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-amber-500/30 group-hover:scale-105 group-hover:shadow-amber-500/40 transition-all duration-300 border border-white/30">
+                <lucide-icon [name]="'receipt'" class="w-5 h-5 sm:w-6 sm:h-6 2xl:w-7 2xl:h-7 text-white stroke-[2.2] drop-shadow-xs"></lucide-icon>
               </div>
               <div class="min-w-0 flex-1">
-                <span class="text-2xl sm:text-3xl font-black text-slate-900 tabular-nums block leading-none tracking-tight">PKR {{ formatCurrency(totalExpenses) }}</span>
-                <p class="text-xs font-bold text-slate-600 mt-1">Total Expenses</p>
-                <div class="mt-1 text-[11px] font-semibold text-amber-600">
+                <span class="text-lg sm:text-xl 2xl:text-2xl font-black text-slate-900 tabular-nums block leading-tight tracking-tight break-words">PKR {{ formatCurrency(totalExpenses) }}</span>
+                <p class="text-xs font-bold text-slate-600 mt-1 truncate">Total Expenses</p>
+                <div class="mt-1 text-[11px] font-semibold text-amber-600 truncate">
                   All time · <span class="font-bold tabular-nums">{{ schoolExpenses.length }} records</span>
                 </div>
               </div>
@@ -623,59 +623,59 @@
           </div>
 
           <!-- 1B. INSTITUTIONAL REGISTRY SNAPSHOT KPI CARDS (STUDENTS, FACULTY, GUARDIANS) -->
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-4">
             <!-- KPI: Students Registry -->
             <button type="button" (click)="setTab('students')"
-              class="p-4 rounded-2xl text-left transition-all duration-300 cursor-pointer flex items-center justify-between group border bg-white border-slate-200/90 hover:-translate-y-1 scs-tile-3d">
-              <div class="pr-2">
-                <span class="text-[10px] font-black uppercase tracking-wider block text-indigo-600/90 mb-0.5">Students Registry</span>
-                <span class="font-black text-slate-900 text-base leading-tight block transition-colors">Students</span>
-                <span class="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-600 mt-1.5 bg-white px-2.5 py-0.5 rounded-md border border-slate-200/60 tabular-nums">
-                  <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
-                  <span>{{ activeStudents.length }} Active Enrolled</span>
+              class="p-4 rounded-2xl text-left transition-all duration-300 cursor-pointer flex items-center justify-between gap-2 group border bg-white border-slate-200/90 hover:-translate-y-1 scs-tile-3d min-w-0 overflow-hidden">
+              <div class="pr-1 min-w-0 flex-1">
+                <span class="text-[10px] font-black uppercase tracking-wider block text-indigo-600/90 mb-0.5 truncate">Students Registry</span>
+                <span class="font-black text-slate-900 text-base leading-tight block transition-colors truncate">Students</span>
+                <span class="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-600 mt-1.5 bg-white px-2.5 py-0.5 rounded-md border border-slate-200/60 tabular-nums max-w-full">
+                  <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0"></span>
+                  <span class="truncate">{{ activeStudents.length }} Active Enrolled</span>
                 </span>
               </div>
-              <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-blue-500 text-white shadow-md shadow-indigo-500/30 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
-                <lucide-icon [name]="'backpack'" class="w-6 h-6 stroke-[2.5]"></lucide-icon>
+              <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-blue-500 text-white shadow-md shadow-indigo-500/30 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
+                <lucide-icon [name]="'backpack'" class="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]"></lucide-icon>
               </div>
             </button>
 
             <!-- KPI: Faculty Registry -->
             <button type="button" (click)="setTab('teachers')"
-              class="p-4 rounded-2xl text-left transition-all duration-300 cursor-pointer flex items-center justify-between group border bg-white border-slate-200/90 hover:-translate-y-1 scs-tile-3d">
-              <div class="pr-2">
-                <span class="text-[10px] font-black uppercase tracking-wider block text-emerald-600/90 mb-0.5">Faculty Registry</span>
-                <span class="font-black text-slate-900 text-base leading-tight block transition-colors">Teachers</span>
-                <span class="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-600 mt-1.5 bg-white px-2.5 py-0.5 rounded-md border border-slate-200/60 tabular-nums">
-                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                  <span>{{ teachers.length }} Staff Members</span>
+              class="p-4 rounded-2xl text-left transition-all duration-300 cursor-pointer flex items-center justify-between gap-2 group border bg-white border-slate-200/90 hover:-translate-y-1 scs-tile-3d min-w-0 overflow-hidden">
+              <div class="pr-1 min-w-0 flex-1">
+                <span class="text-[10px] font-black uppercase tracking-wider block text-emerald-600/90 mb-0.5 truncate">Faculty Registry</span>
+                <span class="font-black text-slate-900 text-base leading-tight block transition-colors truncate">Teachers</span>
+                <span class="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-600 mt-1.5 bg-white px-2.5 py-0.5 rounded-md border border-slate-200/60 tabular-nums max-w-full">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+                  <span class="truncate">{{ teachers.length }} Staff Members</span>
                 </span>
               </div>
-              <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-600 via-teal-500 to-emerald-400 text-white shadow-md shadow-emerald-500/30 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
-                <lucide-icon [name]="'users'" class="w-6 h-6 stroke-[2.5]"></lucide-icon>
+              <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-tr from-emerald-600 via-teal-500 to-emerald-400 text-white shadow-md shadow-emerald-500/30 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
+                <lucide-icon [name]="'users'" class="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]"></lucide-icon>
               </div>
             </button>
 
             <!-- KPI: Guardians Directory -->
             <button type="button" (click)="setTab('students')"
-              class="p-4 rounded-2xl text-left transition-all duration-300 cursor-pointer flex items-center justify-between group border bg-white border-slate-200/90 hover:-translate-y-1 scs-tile-3d">
-              <div class="pr-2">
-                <span class="text-[10px] font-black uppercase tracking-wider block text-purple-600/90 mb-0.5">Guardians Directory</span>
-                <span class="font-black text-slate-900 text-base leading-tight block transition-colors">Parents</span>
-                <span class="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-600 mt-1.5 bg-white px-2.5 py-0.5 rounded-md border border-slate-200/60 tabular-nums">
-                  <span class="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
-                  <span>{{ getParentsDirectory().length }} Families</span>
+              class="p-4 rounded-2xl text-left transition-all duration-300 cursor-pointer flex items-center justify-between gap-2 group border bg-white border-slate-200/90 hover:-translate-y-1 scs-tile-3d min-w-0 overflow-hidden">
+              <div class="pr-1 min-w-0 flex-1">
+                <span class="text-[10px] font-black uppercase tracking-wider block text-purple-600/90 mb-0.5 truncate">Guardians Directory</span>
+                <span class="font-black text-slate-900 text-base leading-tight block transition-colors truncate">Parents</span>
+                <span class="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-600 mt-1.5 bg-white px-2.5 py-0.5 rounded-md border border-slate-200/60 tabular-nums max-w-full">
+                  <span class="w-1.5 h-1.5 rounded-full bg-purple-500 shrink-0"></span>
+                  <span class="truncate">{{ getParentsDirectory().length }} Families</span>
                 </span>
               </div>
-              <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-purple-600 via-fuchsia-500 to-pink-500 text-white shadow-md shadow-purple-500/30 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
-                <lucide-icon [name]="'heart'" class="w-6 h-6 stroke-[2.5]"></lucide-icon>
+              <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-tr from-purple-600 via-fuchsia-500 to-pink-500 text-white shadow-md shadow-purple-500/30 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
+                <lucide-icon [name]="'heart'" class="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]"></lucide-icon>
               </div>
             </button>
           </div>
 
           <!-- 2. QUICK ACTIONS (White 3D Animated Cards with Matching Ambient Chromatic Glows) -->
           <div class="space-y-2.5">
-            <div class="flex items-center justify-between">
+            <div class="flex items-center justify-between gap-2 flex-wrap">
               <div class="flex items-center gap-2">
                 <lucide-icon [name]="'zap'" class="w-4 h-4 text-amber-500 fill-amber-500"></lucide-icon>
                 <h3 class="font-bold text-slate-900 text-sm tracking-tight">Quick Actions</h3>
@@ -754,24 +754,24 @@
           <!-- 3. CHARTS ROW: MONTHLY FEE COLLECTION & STUDENTS BY CLASS -->
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <!-- Left Chart: Monthly Fee Collection -->
-            <div class="apple-card rounded-2xl p-5 scs-surface-3d space-y-4">
-              <div class="flex items-center justify-between gap-2">
-                <div class="flex items-center gap-2">
-                  <lucide-icon [name]="'trending-up'" class="w-4 h-4 text-indigo-600"></lucide-icon>
+            <div class="apple-card rounded-2xl p-4 sm:p-5 scs-surface-3d space-y-4 min-w-0 overflow-hidden">
+              <div class="flex items-center justify-between gap-2 flex-wrap">
+                <div class="flex items-center gap-2 min-w-0">
+                  <lucide-icon [name]="'trending-up'" class="w-4 h-4 text-indigo-600 shrink-0"></lucide-icon>
                   <h3 class="font-bold text-slate-900 text-sm tracking-tight">Monthly Fee Collection</h3>
                 </div>
-                <button (click)="openFinancialMonitoring()" class="text-[11px] font-bold text-indigo-600 hover:text-indigo-700 cursor-pointer flex items-center gap-1">
+                <button (click)="openFinancialMonitoring()" class="text-[11px] font-bold text-indigo-600 hover:text-indigo-700 cursor-pointer flex items-center gap-1 shrink-0">
                   <span>Live Cash Flow &amp; Charts</span>
                   <lucide-icon [name]="'arrow-up-right'" class="w-3.5 h-3.5"></lucide-icon>
                 </button>
               </div>
 
               <!-- Bar Chart Visual (Refined Enterprise Indigo/Slate Gradient) -->
-              <div class="pt-6 pb-3 px-4 flex items-end justify-around gap-6 h-52 bg-white rounded-xl border border-slate-100">
+              <div class="pt-6 pb-3 px-2.5 sm:px-4 flex items-end justify-around gap-2.5 sm:gap-5 h-52 bg-white rounded-xl border border-slate-100 overflow-x-auto custom-scrollbar">
                 @for (col of monthlyFeeChartData; track col.month) {
-                  <div class="flex flex-col items-center gap-2 flex-1 h-full justify-end group">
-                    <span class="text-[10px] font-bold text-slate-700 bg-white border border-slate-200/80 px-2 py-0.5 rounded-md shadow-2xs tabular-nums group-hover:border-indigo-200 transition-colors">PKR {{ col.label }}</span>
-                    <div class="w-12 sm:w-16 bg-gradient-to-t from-emerald-600 via-teal-500 to-emerald-400 rounded-t-lg transition-all duration-300 hover:brightness-110 shadow-xs" [style.height.%]="col.heightPct"></div>
+                  <div class="flex flex-col items-center gap-2 flex-1 min-w-[52px] h-full justify-end group">
+                    <span class="text-[10px] font-bold text-slate-700 bg-white border border-slate-200/80 px-1.5 sm:px-2 py-0.5 rounded-md shadow-2xs tabular-nums whitespace-nowrap group-hover:border-indigo-200 transition-colors">PKR {{ col.label }}</span>
+                    <div class="w-10 sm:w-14 bg-gradient-to-t from-emerald-600 via-teal-500 to-emerald-400 rounded-t-lg transition-all duration-300 hover:brightness-110 shadow-xs" [style.height.%]="col.heightPct"></div>
                     <span class="text-[11px] font-semibold text-slate-500">{{ col.month }}</span>
                   </div>
                 }
@@ -779,8 +779,8 @@
             </div>
 
             <!-- Right Chart: Students by Class -->
-            <div class="apple-card rounded-2xl p-5 scs-surface-3d space-y-4">
-              <div class="flex items-center justify-between">
+            <div class="apple-card rounded-2xl p-4 sm:p-5 scs-surface-3d space-y-4 min-w-0 overflow-hidden">
+              <div class="flex items-center justify-between gap-2 flex-wrap">
                 <div class="flex items-center gap-2">
                   <lucide-icon [name]="'pie-chart'" class="w-4 h-4 text-slate-700"></lucide-icon>
                   <h3 class="font-bold text-slate-900 text-sm tracking-tight">Students by Class</h3>
@@ -808,7 +808,7 @@
           <!-- 4. SPLIT TABLES: TOP FEE DEFAULTERS & RECENT PAYMENTS (Exact Match to Image) -->
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <!-- Left Table: Top Fee Defaulters -->
-            <div class="apple-card rounded-2xl p-5 scs-surface-3d space-y-3">
+            <div class="apple-card rounded-2xl p-4 sm:p-5 scs-surface-3d space-y-3 min-w-0 overflow-hidden">
               <div class="flex items-center justify-between pb-2 border-b border-slate-100">
                 <div class="flex items-center gap-2">
                   <span class="w-2 h-2 rounded-full bg-rose-500"></span>
@@ -849,7 +849,7 @@
             </div>
 
             <!-- Right Table: Recent Payments -->
-            <div class="apple-card rounded-2xl p-5 scs-surface-3d space-y-3">
+            <div class="apple-card rounded-2xl p-4 sm:p-5 scs-surface-3d space-y-3 min-w-0 overflow-hidden">
               <div class="flex items-center justify-between pb-2 border-b border-slate-100">
                 <div class="flex items-center gap-2">
                   <lucide-icon [name]="'clock'" class="w-4 h-4 text-slate-700"></lucide-icon>
@@ -889,37 +889,37 @@
           </div>
 
           <!-- 5. LATEST NOTICES (Exact from User Image) -->
-          <div class="apple-card rounded-2xl p-5 scs-surface-3d space-y-3">
-            <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+          <div class="apple-card rounded-2xl p-4 sm:p-5 scs-surface-3d space-y-3 min-w-0 overflow-hidden">
+            <div class="flex items-center justify-between gap-2 pb-2 border-b border-slate-100">
               <div class="flex items-center gap-2">
-                <lucide-icon [name]="'bell'" class="w-4 h-4 text-amber-500"></lucide-icon>
+                <lucide-icon [name]="'bell'" class="w-4 h-4 text-amber-500 shrink-0"></lucide-icon>
                 <h3 class="font-black text-slate-900 text-sm">Latest Notices</h3>
               </div>
-              <button (click)="openNoticeModal()" class="text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline cursor-pointer">
+              <button (click)="openNoticeModal()" class="text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline cursor-pointer shrink-0">
                 Manage
               </button>
             </div>
 
             <div class="space-y-2">
-              <div class="p-3 rounded-xl bg-white border border-slate-100 hover:bg-white transition-colors">
-                <div class="flex items-center gap-2">
-                  <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+              <div class="p-3 rounded-xl bg-white border border-slate-100 hover:bg-white transition-colors min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="w-2 h-2 rounded-full bg-amber-500 shrink-0"></span>
                   <h4 class="font-black text-slate-900 text-xs">Leave on Monday</h4>
                   <span class="text-[10px] text-slate-400">All • 2026-09-23</span>
                 </div>
-                <p class="text-xs text-slate-600 mt-1 pl-4">
+                <p class="text-xs text-slate-600 mt-1 pl-4 break-words">
                   Hello student and teacher aaj leave hai. Regular academic classes will resume on Tuesday as per timetable.
                 </p>
               </div>
 
               @for (ann of announcements.slice(0, 2); track ann.id) {
-                <div class="p-3 rounded-xl bg-white border border-slate-100 hover:bg-white transition-colors">
-                  <div class="flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                <div class="p-3 rounded-xl bg-white border border-slate-100 hover:bg-white transition-colors min-w-0">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="w-2 h-2 rounded-full bg-indigo-500 shrink-0"></span>
                     <h4 class="font-black text-slate-900 text-xs">{{ ann.title }}</h4>
                     <span class="text-[10px] text-slate-400">{{ ann.target }} • {{ ann.date }}</span>
                   </div>
-                  <p class="text-xs text-slate-600 mt-1 pl-4">{{ ann.content }}</p>
+                  <p class="text-xs text-slate-600 mt-1 pl-4 break-words">{{ ann.content }}</p>
                 </div>
               }
             </div>
@@ -1028,38 +1028,6 @@
       <!-- DEDICATED STAGE-WISE ACADEMIC OPERATIONS & STUDENT MAINTENANCE WORKSPACE -->
       @if (currentTab === 'stage_wise') {
         <div class="space-y-6">
-          
-          <!-- Top Return to Overview Navigation Bar -->
-          <div class="rounded-2xl p-4 scs-surface-3d flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div class="flex items-center gap-3">
-              <button (click)="setTab('overview')" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 hover:from-emerald-100 hover:to-teal-100 text-emerald-900 border border-emerald-200 font-black text-xs cursor-pointer shadow-sm flex items-center gap-1.5 active:scale-95 transition-all">
-                <lucide-icon [name]="'arrow-left'" class="w-4 h-4"></lucide-icon>
-                <span>← Return to Overview</span>
-              </button>
-              <div class="h-6 w-px bg-slate-200 hidden sm:block"></div>
-              <div>
-                <h2 class="text-base font-black text-slate-900 tracking-tight flex items-center gap-2">
-                  <span>Stage-Wise Academic Operations & Student Maintenance</span>
-                  <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-black bg-indigo-50 text-indigo-700 border border-indigo-200">
-                    {{ ownerSelectedStage }}
-                  </span>
-                </h2>
-                <p class="text-xs text-slate-500 font-medium">Focused student records, class grade placement, fee status & academic management: Nursery through Class 10</p>
-              </div>
-            </div>
-
-            <div class="flex items-center gap-2 flex-wrap">
-              <button (click)="openAddStudentForStage(ownerSelectedStage)" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs cursor-pointer flex items-center gap-1.5 shadow-md transition-all active:scale-95">
-                <lucide-icon [name]="'user-plus'" class="w-4 h-4"></lucide-icon>
-                <span>+ Add Student to {{ ownerSelectedStage === 'All' ? 'School' : ownerSelectedStage }}</span>
-              </button>
-              <button (click)="exportStageStudentsCSV(ownerSelectedStage)" class="px-3.5 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs cursor-pointer flex items-center gap-1 transition-colors">
-                <lucide-icon [name]="'download'" class="w-4 h-4"></lucide-icon>
-                <span>Export CSV</span>
-              </button>
-            </div>
-          </div>
-
           <!-- Dedicated Full Workspace Card containing Header Badges, Context & Table -->
           <div class="apple-card rounded-2xl p-5 sm:p-6 scs-surface-3d space-y-4">
 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
@@ -3864,15 +3832,15 @@
         <div class="space-y-6 min-w-0 w-full max-w-full">
           
           <!-- Financial Balance Overview Grid -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3.5 sm:gap-4">
             <!-- Card 1: Total Income (Aamdani) -->
-            <div (click)="financeSubTab = 'ledger'" class="rounded-2xl p-5 sm:p-6 flex items-center gap-4 border border-slate-200/90 hover:-translate-y-1.5 transition-all duration-300 ease-out cursor-pointer bg-white group scs-tile-3d min-w-0">
-              <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-500 via-emerald-600 to-teal-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/30 group-hover:scale-105 group-hover:shadow-emerald-500/40 transition-all duration-300 border border-white/30">
-                <lucide-icon [name]="'wallet-cards'" class="w-7 h-7 text-white stroke-[2.2] drop-shadow-xs"></lucide-icon>
+            <div (click)="financeSubTab = 'ledger'" class="rounded-2xl p-4 sm:p-5 flex items-center gap-3 sm:gap-3.5 border border-slate-200/90 hover:-translate-y-1.5 transition-all duration-300 ease-out cursor-pointer bg-white group scs-tile-3d min-w-0 overflow-hidden">
+              <div class="w-11 h-11 sm:w-12 sm:h-12 2xl:w-14 2xl:h-14 rounded-2xl bg-gradient-to-tr from-emerald-500 via-emerald-600 to-teal-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/30 group-hover:scale-105 group-hover:shadow-emerald-500/40 transition-all duration-300 border border-white/30">
+                <lucide-icon [name]="'wallet-cards'" class="w-5 h-5 sm:w-6 sm:h-6 2xl:w-7 2xl:h-7 text-white stroke-[2.2] drop-shadow-xs"></lucide-icon>
               </div>
               <div class="min-w-0 flex-1">
-                <span class="text-xl sm:text-2xl font-black text-slate-900 tabular-nums block leading-none tracking-tight">PKR {{ formatCurrency(totalFinanceIncome) }}</span>
-                <p class="text-xs font-bold text-slate-600 mt-1">Total Income (Aamdani)</p>
+                <span class="text-lg sm:text-xl 2xl:text-2xl font-black text-slate-900 tabular-nums block leading-tight tracking-tight break-words">PKR {{ formatCurrency(totalFinanceIncome) }}</span>
+                <p class="text-xs font-bold text-slate-600 mt-1 truncate">Total Income (Aamdani)</p>
                 <div class="mt-1 flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600 flex-wrap">
                   <lucide-icon [name]="'trending-up'" class="w-3.5 h-3.5 shrink-0"></lucide-icon>
                   <span class="font-bold">+14.2%</span>
@@ -3882,13 +3850,13 @@
             </div>
 
             <!-- Card 2: Total Expenses (Kharcha) -->
-            <div (click)="financeSubTab = 'ledger'" class="rounded-2xl p-5 sm:p-6 flex items-center gap-4 border border-slate-200/90 hover:-translate-y-1.5 transition-all duration-300 ease-out cursor-pointer bg-white group scs-tile-3d min-w-0">
-              <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-rose-500 via-rose-600 to-red-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-rose-500/30 group-hover:scale-105 group-hover:shadow-rose-500/40 transition-all duration-300 border border-white/30">
-                <lucide-icon [name]="'receipt'" class="w-7 h-7 text-white stroke-[2.2] drop-shadow-xs"></lucide-icon>
+            <div (click)="financeSubTab = 'ledger'" class="rounded-2xl p-4 sm:p-5 flex items-center gap-3 sm:gap-3.5 border border-slate-200/90 hover:-translate-y-1.5 transition-all duration-300 ease-out cursor-pointer bg-white group scs-tile-3d min-w-0 overflow-hidden">
+              <div class="w-11 h-11 sm:w-12 sm:h-12 2xl:w-14 2xl:h-14 rounded-2xl bg-gradient-to-tr from-rose-500 via-rose-600 to-red-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-rose-500/30 group-hover:scale-105 group-hover:shadow-rose-500/40 transition-all duration-300 border border-white/30">
+                <lucide-icon [name]="'receipt'" class="w-5 h-5 sm:w-6 sm:h-6 2xl:w-7 2xl:h-7 text-white stroke-[2.2] drop-shadow-xs"></lucide-icon>
               </div>
               <div class="min-w-0 flex-1">
-                <span class="text-xl sm:text-2xl font-black text-slate-900 tabular-nums block leading-none tracking-tight">PKR {{ formatCurrency(totalFinanceExpense) }}</span>
-                <p class="text-xs font-bold text-slate-600 mt-1">Total Expenses (Kharcha)</p>
+                <span class="text-lg sm:text-xl 2xl:text-2xl font-black text-slate-900 tabular-nums block leading-tight tracking-tight break-words">PKR {{ formatCurrency(totalFinanceExpense) }}</span>
+                <p class="text-xs font-bold text-slate-600 mt-1 truncate">Total Expenses (Kharcha)</p>
                 <div class="mt-1 text-[11px] font-semibold text-rose-600 truncate">
                   Fixed &amp; Variable · <span class="text-slate-400 font-medium">Salaries, bills &amp; maintenance</span>
                 </div>
@@ -3896,13 +3864,13 @@
             </div>
 
             <!-- Card 3: Net Cash Balance (Khata Balance) -->
-            <div (click)="financeSubTab = 'accounts'" class="rounded-2xl p-5 sm:p-6 flex items-center gap-4 border border-slate-200/90 hover:-translate-y-1.5 transition-all duration-300 ease-out cursor-pointer bg-white group scs-tile-3d min-w-0">
-              <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-indigo-700 text-white flex items-center justify-center shrink-0 shadow-md shadow-indigo-500/30 group-hover:scale-105 group-hover:shadow-indigo-500/40 transition-all duration-300 border border-white/30">
-                <lucide-icon [name]="'banknote'" class="w-7 h-7 text-white stroke-[2.2] drop-shadow-xs"></lucide-icon>
+            <div (click)="financeSubTab = 'accounts'" class="rounded-2xl p-4 sm:p-5 flex items-center gap-3 sm:gap-3.5 border border-slate-200/90 hover:-translate-y-1.5 transition-all duration-300 ease-out cursor-pointer bg-white group scs-tile-3d min-w-0 overflow-hidden">
+              <div class="w-11 h-11 sm:w-12 sm:h-12 2xl:w-14 2xl:h-14 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-indigo-700 text-white flex items-center justify-center shrink-0 shadow-md shadow-indigo-500/30 group-hover:scale-105 group-hover:shadow-indigo-500/40 transition-all duration-300 border border-white/30">
+                <lucide-icon [name]="'banknote'" class="w-5 h-5 sm:w-6 sm:h-6 2xl:w-7 2xl:h-7 text-white stroke-[2.2] drop-shadow-xs"></lucide-icon>
               </div>
               <div class="min-w-0 flex-1">
-                <span class="text-xl sm:text-2xl font-black text-indigo-700 tabular-nums block leading-none tracking-tight">PKR {{ formatCurrency(netFinanceBalance) }}</span>
-                <p class="text-xs font-bold text-slate-600 mt-1">Net Cash Balance (Khata Balance)</p>
+                <span class="text-lg sm:text-xl 2xl:text-2xl font-black text-indigo-700 tabular-nums block leading-tight tracking-tight break-words">PKR {{ formatCurrency(netFinanceBalance) }}</span>
+                <p class="text-xs font-bold text-slate-600 mt-1 truncate">Net Cash Balance (Khata Balance)</p>
                 <div class="mt-1 flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600 truncate">
                   <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
                   <span class="font-bold">Reconciled</span>
@@ -3912,13 +3880,13 @@
             </div>
 
             <!-- Card 4: Pending Dues (Bakaya Khata) -->
-            <div (click)="financeSubTab = 'defaulters'" class="rounded-2xl p-5 sm:p-6 flex items-center gap-4 border border-slate-200/90 hover:-translate-y-1.5 transition-all duration-300 ease-out cursor-pointer bg-white group scs-tile-3d min-w-0">
-              <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500 via-amber-600 to-orange-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-amber-500/30 group-hover:scale-105 group-hover:shadow-amber-500/40 transition-all duration-300 border border-white/30">
-                <lucide-icon [name]="'alert-circle'" class="w-7 h-7 text-white stroke-[2.2] drop-shadow-xs"></lucide-icon>
+            <div (click)="financeSubTab = 'defaulters'" class="rounded-2xl p-4 sm:p-5 flex items-center gap-3 sm:gap-3.5 border border-slate-200/90 hover:-translate-y-1.5 transition-all duration-300 ease-out cursor-pointer bg-white group scs-tile-3d min-w-0 overflow-hidden">
+              <div class="w-11 h-11 sm:w-12 sm:h-12 2xl:w-14 2xl:h-14 rounded-2xl bg-gradient-to-tr from-amber-500 via-amber-600 to-orange-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-amber-500/30 group-hover:scale-105 group-hover:shadow-amber-500/40 transition-all duration-300 border border-white/30">
+                <lucide-icon [name]="'alert-circle'" class="w-5 h-5 sm:w-6 sm:h-6 2xl:w-7 2xl:h-7 text-white stroke-[2.2] drop-shadow-xs"></lucide-icon>
               </div>
               <div class="min-w-0 flex-1">
-                <span class="text-xl sm:text-2xl font-black text-amber-700 tabular-nums block leading-none tracking-tight">PKR {{ formatCurrency(totalUncollectedDues) }}</span>
-                <p class="text-xs font-bold text-slate-600 mt-1">Pending Dues (Bakaya Khata)</p>
+                <span class="text-lg sm:text-xl 2xl:text-2xl font-black text-amber-700 tabular-nums block leading-tight tracking-tight break-words">PKR {{ formatCurrency(totalUncollectedDues) }}</span>
+                <p class="text-xs font-bold text-slate-600 mt-1 truncate">Pending Dues (Bakaya Khata)</p>
                 <div class="mt-1 flex items-center gap-1.5 text-[11px] font-semibold text-amber-600 truncate">
                   <span class="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0"></span>
                   <span class="font-bold tabular-nums">{{ filteredAccountantDefaulters.length }} Students</span>
@@ -4070,37 +4038,37 @@
                 }
 
                 <!-- Real-Time Cash Flow KPI Strip (4 Unified White 3D Cards) -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div class="rounded-2xl p-4 sm:p-5 scs-tile-3d space-y-1.5">
+                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3.5 sm:gap-4">
+                  <div class="rounded-2xl p-4 sm:p-5 scs-tile-3d space-y-1.5 min-w-0 overflow-hidden">
                     <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Gross Fee Inflow</span>
-                    <div class="text-xl sm:text-2xl font-black text-slate-950 tabular-nums">PKR {{ formatCurrency(monitoringCashFlowSummary.grossRevenue) }}</div>
-                    <p class="text-[11px] text-slate-500 font-medium tabular-nums">
+                    <div class="text-lg sm:text-xl 2xl:text-2xl font-black text-slate-950 tabular-nums leading-tight break-words">PKR {{ formatCurrency(monitoringCashFlowSummary.grossRevenue) }}</div>
+                    <p class="text-[11px] text-slate-500 font-medium tabular-nums break-words">
                       Clerk {{ formatCurrency(monitoringCashFlowSummary.accInflow) }} · Principal {{ formatCurrency(monitoringCashFlowSummary.prinInflow) }}
                     </p>
                   </div>
 
-                  <div class="rounded-2xl p-4 sm:p-5 scs-tile-3d space-y-1.5">
+                  <div class="rounded-2xl p-4 sm:p-5 scs-tile-3d space-y-1.5 min-w-0 overflow-hidden">
                     <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Net Real-Time Cash Flow</span>
-                    <div class="text-xl sm:text-2xl font-black text-emerald-700 tabular-nums">PKR {{ formatCurrency(monitoringCashFlowSummary.netCashFlow) }}</div>
-                    <p class="text-[11px] text-rose-600 font-semibold tabular-nums">
+                    <div class="text-lg sm:text-xl 2xl:text-2xl font-black text-emerald-700 tabular-nums leading-tight break-words">PKR {{ formatCurrency(monitoringCashFlowSummary.netCashFlow) }}</div>
+                    <p class="text-[11px] text-rose-600 font-semibold tabular-nums break-words">
                       After -PKR {{ formatCurrency(monitoringCashFlowSummary.pettyOutflow) }} petty vouchers
                     </p>
                   </div>
 
-                  <div class="rounded-2xl p-4 sm:p-5 scs-tile-3d space-y-1.5">
+                  <div class="rounded-2xl p-4 sm:p-5 scs-tile-3d space-y-1.5 min-w-0 overflow-hidden">
                     <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Vault Cash On Hand</span>
-                    <div class="text-xl sm:text-2xl font-black text-indigo-700 tabular-nums">PKR {{ formatCurrency(monitoringCashFlowSummary.vaultCashOnHand) }}</div>
-                    <p class="text-[11px] text-slate-500 font-medium tabular-nums">
+                    <div class="text-lg sm:text-xl 2xl:text-2xl font-black text-indigo-700 tabular-nums leading-tight break-words">PKR {{ formatCurrency(monitoringCashFlowSummary.vaultCashOnHand) }}</div>
+                    <p class="text-[11px] text-slate-500 font-medium tabular-nums break-words">
                       Opening {{ formatCurrency(monitoringCashFlowSummary.openingVault) }} + Cash Counter
                     </p>
                   </div>
 
-                  <div class="rounded-2xl p-4 sm:p-5 scs-tile-3d space-y-2">
-                    <div class="flex items-center justify-between">
+                  <div class="rounded-2xl p-4 sm:p-5 scs-tile-3d space-y-2 min-w-0 overflow-hidden">
+                    <div class="flex items-center justify-between gap-2 flex-wrap">
                       <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Pending Bakaya</span>
                       <span class="text-[11px] font-black text-emerald-700 tabular-nums">{{ monitoringCashFlowSummary.recoveryRatePct }}% Recovered</span>
                     </div>
-                    <div class="text-xl sm:text-2xl font-black text-amber-700 tabular-nums">PKR {{ formatCurrency(monitoringCashFlowSummary.pendingBakaya) }}</div>
+                    <div class="text-lg sm:text-xl 2xl:text-2xl font-black text-amber-700 tabular-nums leading-tight break-words">PKR {{ formatCurrency(monitoringCashFlowSummary.pendingBakaya) }}</div>
                     <div class="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
                       <div class="h-full rounded-full bg-emerald-600 transition-all duration-500" [style.width.%]="monitoringCashFlowSummary.recoveryRatePct"></div>
                     </div>
@@ -4175,10 +4143,10 @@
                           <span class="text-[11px] font-bold uppercase tracking-wider text-indigo-700">Selected Day Breakdown</span>
                           <span class="font-mono text-xs font-bold text-slate-600">{{ day.date }}</span>
                         </div>
-                        <div class="rounded-xl p-3.5 scs-tile-3d space-y-1">
+                        <div class="rounded-xl p-3.5 scs-tile-3d space-y-1 min-w-0 overflow-hidden">
                           <span class="text-[11px] font-semibold text-slate-500 block">Gross Daily Revenue ({{ day.label }})</span>
-                          <span class="text-2xl font-black text-slate-950 tabular-nums">PKR {{ formatCurrency(day.totalRevenue) }}</span>
-                          <div class="flex items-center justify-between text-[11px] pt-1">
+                          <span class="text-xl sm:text-2xl font-black text-slate-950 tabular-nums block leading-tight break-words">PKR {{ formatCurrency(day.totalRevenue) }}</span>
+                          <div class="flex items-center justify-between gap-2 flex-wrap text-[11px] pt-1">
                             <span class="font-semibold text-emerald-700 tabular-nums">Net Cash Flow: PKR {{ formatCurrency(day.netCashFlow) }}</span>
                             <span class="font-semibold text-rose-600 tabular-nums">-{{ formatCurrency(day.pettyOutflow) }} Petty</span>
                           </div>
@@ -5183,31 +5151,31 @@
 
                 <!-- COLLECTOR DESK SPLIT SUMMARY (Accountant vs Principal vs Online) -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div class="rounded-2xl p-4 scs-tile-3d space-y-1">
-                    <div class="flex items-center justify-between">
+                  <div class="rounded-2xl p-4 scs-tile-3d space-y-1 min-w-0 overflow-hidden">
+                    <div class="flex items-center justify-between gap-1.5 flex-wrap">
                       <span class="text-[11px] font-black text-teal-800 uppercase tracking-wider">Accountant / Fee Clerk Desk</span>
-                      <span class="px-2 py-0.5 rounded-md bg-teal-600 text-white text-[9px] font-black">6th Role Counter</span>
+                      <span class="px-2 py-0.5 rounded-md bg-teal-600 text-white text-[9px] font-black shrink-0">6th Role Counter</span>
                     </div>
-                    <span class="text-xl font-black text-slate-900 font-mono block">PKR {{ formatCurrency(accountantCollectedTotal) }}</span>
-                    <p class="text-[10px] text-teal-700 font-medium">Receipts collected directly at Fee Counter & submitted in Rooznama</p>
+                    <span class="text-lg sm:text-xl font-black text-slate-900 font-mono block leading-tight break-words">PKR {{ formatCurrency(accountantCollectedTotal) }}</span>
+                    <p class="text-[10px] text-teal-700 font-medium">Receipts collected directly at Fee Counter &amp; submitted in Rooznama</p>
                   </div>
 
-                  <div class="rounded-2xl p-4 scs-tile-3d space-y-1">
-                    <div class="flex items-center justify-between">
+                  <div class="rounded-2xl p-4 scs-tile-3d space-y-1 min-w-0 overflow-hidden">
+                    <div class="flex items-center justify-between gap-1.5 flex-wrap">
                       <span class="text-[11px] font-black text-amber-800 uppercase tracking-wider">Principal Desk Collection</span>
-                      <span class="px-2 py-0.5 rounded-md bg-amber-600 text-white text-[9px] font-black">Synced Intact</span>
+                      <span class="px-2 py-0.5 rounded-md bg-amber-600 text-white text-[9px] font-black shrink-0">Synced Intact</span>
                     </div>
-                    <span class="text-xl font-black text-slate-900 font-mono block">PKR {{ formatCurrency(principalCollectedTotal) }}</span>
-                    <p class="text-[10px] text-amber-700 font-medium">Payments received via Principal Desk remain logged & reconciled here</p>
+                    <span class="text-lg sm:text-xl font-black text-slate-900 font-mono block leading-tight break-words">PKR {{ formatCurrency(principalCollectedTotal) }}</span>
+                    <p class="text-[10px] text-amber-700 font-medium">Payments received via Principal Desk remain logged &amp; reconciled here</p>
                   </div>
 
-                  <div class="rounded-2xl p-4 scs-tile-3d space-y-1">
-                    <div class="flex items-center justify-between">
+                  <div class="rounded-2xl p-4 scs-tile-3d space-y-1 min-w-0 overflow-hidden">
+                    <div class="flex items-center justify-between gap-1.5 flex-wrap">
                       <span class="text-[11px] font-black text-indigo-800 uppercase tracking-wider">Owner / Online Transfers</span>
-                      <span class="px-2 py-0.5 rounded-md bg-indigo-600 text-white text-[9px] font-black">Direct</span>
+                      <span class="px-2 py-0.5 rounded-md bg-indigo-600 text-white text-[9px] font-black shrink-0">Direct</span>
                     </div>
-                    <span class="text-xl font-black text-slate-900 font-mono block">PKR {{ formatCurrency(ownerOnlineCollectedTotal) }}</span>
-                    <p class="text-[10px] text-indigo-700 font-medium">Direct Owner & online digital settlements recorded in master ledger</p>
+                    <span class="text-lg sm:text-xl font-black text-slate-900 font-mono block leading-tight break-words">PKR {{ formatCurrency(ownerOnlineCollectedTotal) }}</span>
+                    <p class="text-[10px] text-indigo-700 font-medium">Direct Owner &amp; online digital settlements recorded in master ledger</p>
                   </div>
                 </div>
 
@@ -5314,32 +5282,32 @@
                 </div>
 
                 <!-- 4 High-Precision Closing Metric Cards -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3.5 sm:gap-4">
                   <!-- Opening Vault -->
-                  <div class="rounded-2xl p-4 scs-tile-3d space-y-1">
+                  <div class="rounded-2xl p-4 scs-tile-3d space-y-1 min-w-0 overflow-hidden">
                     <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Opening Vault Cash</span>
-                    <span class="text-xl font-black text-slate-900 font-mono block">PKR {{ formatCurrency(dailyOpeningVaultCash) }}</span>
+                    <span class="text-lg sm:text-xl font-black text-slate-900 font-mono block leading-tight break-words">PKR {{ formatCurrency(dailyOpeningVaultCash) }}</span>
                     <p class="text-[10px] text-slate-400">Carried forward from yesterday closing</p>
                   </div>
 
                   <!-- Today's Inflow -->
-                  <div class="rounded-2xl p-4 scs-tile-3d space-y-1">
+                  <div class="rounded-2xl p-4 scs-tile-3d space-y-1 min-w-0 overflow-hidden">
                     <span class="text-[11px] font-bold text-emerald-800 uppercase tracking-wider block">Today's Total Cash Inflow</span>
-                    <span class="text-xl font-black text-emerald-700 font-mono block">+ PKR {{ formatCurrency((todayFeeCashCollections + todayAdmissionCashCollections)) }}</span>
+                    <span class="text-lg sm:text-xl font-black text-emerald-700 font-mono block leading-tight break-words">+ PKR {{ formatCurrency((todayFeeCashCollections + todayAdmissionCashCollections)) }}</span>
                     <p class="text-[10px] text-emerald-600 font-medium">Counter Fee Cash + Admissions</p>
                   </div>
 
                   <!-- Today's Outflow -->
-                  <div class="rounded-2xl p-4 scs-tile-3d space-y-1">
+                  <div class="rounded-2xl p-4 scs-tile-3d space-y-1 min-w-0 overflow-hidden">
                     <span class="text-[11px] font-bold text-rose-800 uppercase tracking-wider block">Total Cash Outflow</span>
-                    <span class="text-xl font-black text-rose-700 font-mono block">- PKR {{ formatCurrency(totalCashOutflow) }}</span>
+                    <span class="text-lg sm:text-xl font-black text-rose-700 font-mono block leading-tight break-words">- PKR {{ formatCurrency(totalCashOutflow) }}</span>
                     <p class="text-[10px] text-rose-600 font-medium">Petty Exp (18.5k) + Bank Deposit (200k)</p>
                   </div>
 
                   <!-- Physical Cash in Hand -->
-                  <div class="rounded-2xl p-4 scs-tile-3d space-y-1">
+                  <div class="rounded-2xl p-4 scs-tile-3d space-y-1 min-w-0 overflow-hidden">
                     <span class="text-[11px] font-black text-indigo-900 uppercase tracking-wider block">Physical Cash in Vault</span>
-                    <span class="text-2xl font-black text-indigo-700 font-mono block">PKR {{ formatCurrency(netPhysicalCashInHand) }}</span>
+                    <span class="text-lg sm:text-xl 2xl:text-2xl font-black text-indigo-700 font-mono block leading-tight break-words">PKR {{ formatCurrency(netPhysicalCashInHand) }}</span>
                     <p class="text-[10px] text-indigo-600 font-bold">100% Reconciled Cash Count</p>
                   </div>
                 </div>
@@ -5517,39 +5485,39 @@
           </div>
 
           <!-- Top 4 Revenue & Billing Metrics -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="rounded-2xl p-5 scs-tile-3d space-y-1">
+          <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3.5 sm:gap-4">
+            <div class="rounded-2xl p-4 sm:p-5 scs-tile-3d space-y-1.5 min-w-0 overflow-hidden">
               <span class="text-[11px] font-black uppercase tracking-wider text-slate-400">Total Billed Invoices</span>
-              <div class="flex items-baseline justify-between">
-                <span class="text-2xl font-black text-slate-900 tabular-nums">PKR {{ formatCurrency(totalInvoicesBilledAmount) }}</span>
-                <span class="text-xs font-extrabold text-indigo-600">{{ masterInvoices.length }} Invoices</span>
+              <div class="flex items-baseline justify-between flex-wrap gap-1.5">
+                <span class="text-lg sm:text-xl 2xl:text-2xl font-black text-slate-900 tabular-nums leading-tight break-words">PKR {{ formatCurrency(totalInvoicesBilledAmount) }}</span>
+                <span class="text-xs font-extrabold text-indigo-600 shrink-0">{{ masterInvoices.length }} Invoices</span>
               </div>
               <p class="text-[11px] text-slate-500 font-medium">Gross revenue across all channels</p>
             </div>
 
-            <div class="rounded-2xl p-5 scs-tile-3d space-y-1">
+            <div class="rounded-2xl p-4 sm:p-5 scs-tile-3d space-y-1.5 min-w-0 overflow-hidden">
               <span class="text-[11px] font-black uppercase tracking-wider text-emerald-600">Cleared & Disbursed</span>
-              <div class="flex items-baseline justify-between">
-                <span class="text-2xl font-black text-emerald-700 tabular-nums">PKR {{ formatCurrency(totalInvoicesPaidAmount) }}</span>
-                <span class="text-xs font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">83.6% Cleared</span>
+              <div class="flex items-baseline justify-between flex-wrap gap-1.5">
+                <span class="text-lg sm:text-xl 2xl:text-2xl font-black text-emerald-700 tabular-nums leading-tight break-words">PKR {{ formatCurrency(totalInvoicesPaidAmount) }}</span>
+                <span class="text-xs font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md shrink-0">83.6% Cleared</span>
               </div>
               <p class="text-[11px] text-slate-500 font-medium">Verified bank deposits & 1Link payments</p>
             </div>
 
-            <div class="rounded-2xl p-5 scs-tile-3d space-y-1">
+            <div class="rounded-2xl p-4 sm:p-5 scs-tile-3d space-y-1.5 min-w-0 overflow-hidden">
               <span class="text-[11px] font-black uppercase tracking-wider text-amber-600">Pending Receivables</span>
-              <div class="flex items-baseline justify-between">
-                <span class="text-2xl font-black text-amber-700 tabular-nums">PKR {{ formatCurrency(totalInvoicesPendingAmount) }}</span>
-                <span class="text-xs font-extrabold text-amber-600">Active Queue</span>
+              <div class="flex items-baseline justify-between flex-wrap gap-1.5">
+                <span class="text-lg sm:text-xl 2xl:text-2xl font-black text-amber-700 tabular-nums leading-tight break-words">PKR {{ formatCurrency(totalInvoicesPendingAmount) }}</span>
+                <span class="text-xs font-extrabold text-amber-600 shrink-0">Active Queue</span>
               </div>
               <p class="text-[11px] text-slate-500 font-medium">Fee challans awaiting student deposit</p>
             </div>
 
-            <div class="rounded-2xl p-5 scs-tile-3d space-y-1">
+            <div class="rounded-2xl p-4 sm:p-5 scs-tile-3d space-y-1.5 min-w-0 overflow-hidden">
               <span class="text-[11px] font-black uppercase tracking-wider text-rose-600">Overdue & Recovery</span>
-              <div class="flex items-baseline justify-between">
-                <span class="text-2xl font-black text-rose-700 tabular-nums">PKR {{ formatCurrency(totalInvoicesOverdueAmount) }}</span>
-                <span class="text-xs font-black text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md">Urgent Notice</span>
+              <div class="flex items-baseline justify-between flex-wrap gap-1.5">
+                <span class="text-lg sm:text-xl 2xl:text-2xl font-black text-rose-700 tabular-nums leading-tight break-words">PKR {{ formatCurrency(totalInvoicesOverdueAmount) }}</span>
+                <span class="text-xs font-black text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md shrink-0">Urgent Notice</span>
               </div>
               <p class="text-[11px] text-slate-500 font-medium">Dispatched with 1-click WhatsApp reminder</p>
             </div>
@@ -5763,12 +5731,12 @@
           </div>
 
           <!-- Top Expense Stats (Executive 3D White Cards with Squircle Icons) -->
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
             
-            <div class="rounded-2xl p-4 scs-surface-3d transition-all flex items-center justify-between gap-3 group">
-              <div class="space-y-0.5 min-w-0">
+            <div class="rounded-2xl p-4 scs-surface-3d transition-all flex items-center justify-between gap-3 group min-w-0 overflow-hidden">
+              <div class="space-y-0.5 min-w-0 flex-1">
                 <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Total Expenses</span>
-                <p class="text-base sm:text-xl font-black text-slate-900 tabular">PKR {{ formatCurrency(totalExpenses) }}</p>
+                <p class="text-base sm:text-lg xl:text-xl font-black text-slate-900 tabular-nums leading-tight break-words">PKR {{ formatCurrency(totalExpenses) }}</p>
                 <span class="text-[10px] font-semibold text-slate-500 block">{{ schoolExpenses.length }} Recorded Vouchers</span>
               </div>
               <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-emerald-500 via-emerald-600 to-teal-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-emerald-600/20 border border-white/20 group-hover:scale-105 transition-transform">
@@ -5776,10 +5744,10 @@
               </div>
             </div>
 
-            <div class="rounded-2xl p-4 scs-surface-3d border border-slate-200/90 transition-all flex items-center justify-between gap-3 group">
-              <div class="space-y-0.5 min-w-0">
+            <div class="rounded-2xl p-4 scs-surface-3d border border-slate-200/90 transition-all flex items-center justify-between gap-3 group min-w-0 overflow-hidden">
+              <div class="space-y-0.5 min-w-0 flex-1">
                 <span class="text-[10px] font-extrabold text-amber-700 uppercase tracking-wider block">Utility Bills</span>
-                <p class="text-base sm:text-xl font-black text-slate-900 tabular">PKR 167,000</p>
+                <p class="text-base sm:text-lg xl:text-xl font-black text-slate-900 tabular-nums leading-tight break-words">PKR 167,000</p>
                 <span class="text-[10px] font-semibold text-amber-700 block">WAPDA & Internet</span>
               </div>
               <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-amber-500/20 border border-white/20 group-hover:scale-105 transition-transform">
@@ -5787,10 +5755,10 @@
               </div>
             </div>
 
-            <div class="rounded-2xl p-4 scs-surface-3d border border-slate-200/90 transition-all flex items-center justify-between gap-3 group">
-              <div class="space-y-0.5 min-w-0">
+            <div class="rounded-2xl p-4 scs-surface-3d border border-slate-200/90 transition-all flex items-center justify-between gap-3 group min-w-0 overflow-hidden">
+              <div class="space-y-0.5 min-w-0 flex-1">
                 <span class="text-[10px] font-extrabold text-blue-700 uppercase tracking-wider block">Maintenance & Fuel</span>
-                <p class="text-base sm:text-xl font-black text-slate-900 tabular">PKR 82,500</p>
+                <p class="text-base sm:text-lg xl:text-xl font-black text-slate-900 tabular-nums leading-tight break-words">PKR 82,500</p>
                 <span class="text-[10px] font-semibold text-blue-700 block">Generator & Transport</span>
               </div>
               <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-700 text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-500/20 border border-white/20 group-hover:scale-105 transition-transform">
@@ -5798,10 +5766,10 @@
               </div>
             </div>
 
-            <div class="rounded-2xl p-4 scs-surface-3d border border-slate-200/90 transition-all flex items-center justify-between gap-3 group">
-              <div class="space-y-0.5 min-w-0">
+            <div class="rounded-2xl p-4 scs-surface-3d border border-slate-200/90 transition-all flex items-center justify-between gap-3 group min-w-0 overflow-hidden">
+              <div class="space-y-0.5 min-w-0 flex-1">
                 <span class="text-[10px] font-extrabold text-purple-700 uppercase tracking-wider block">Academic & Lab</span>
-                <p class="text-base sm:text-xl font-black text-slate-900 tabular">PKR 67,500</p>
+                <p class="text-base sm:text-lg xl:text-xl font-black text-slate-900 tabular-nums leading-tight break-words">PKR 67,500</p>
                 <span class="text-[10px] font-semibold text-purple-700 block">Exam Papers & Science</span>
               </div>
               <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-purple-600 to-pink-700 text-white flex items-center justify-center shrink-0 shadow-md shadow-purple-500/20 border border-white/20 group-hover:scale-105 transition-transform">
@@ -7682,41 +7650,41 @@
           </div>
 
           <!-- Active Gateway Merchant Cards -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="apple-card scs-tile-3d rounded-2xl p-4 space-y-2 border-l-4 border-l-rose-500">
-              <div class="flex items-center justify-between">
+          <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3.5 sm:gap-4">
+            <div class="apple-card scs-tile-3d rounded-2xl p-4 space-y-2 border-l-4 border-l-rose-500 min-w-0 overflow-hidden">
+              <div class="flex items-center justify-between gap-2 flex-wrap">
                 <span class="text-xs font-black text-slate-900">JazzCash Merchant</span>
-                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700">CONNECTED</span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 shrink-0">CONNECTED</span>
               </div>
               <p class="text-xs text-slate-500">Auto Voucher Matching via API</p>
-              <p class="text-base font-black text-slate-900 font-mono">PKR 18,450,000 <span class="text-[10px] text-slate-400 font-normal">This Month</span></p>
+              <p class="text-base font-black text-slate-900 font-mono break-words">PKR 18,450,000 <span class="text-[10px] text-slate-400 font-normal">This Month</span></p>
             </div>
 
-            <div class="apple-card scs-tile-3d rounded-2xl p-4 space-y-2 border-l-4 border-l-emerald-500">
-              <div class="flex items-center justify-between">
+            <div class="apple-card scs-tile-3d rounded-2xl p-4 space-y-2 border-l-4 border-l-emerald-500 min-w-0 overflow-hidden">
+              <div class="flex items-center justify-between gap-2 flex-wrap">
                 <span class="text-xs font-black text-slate-900">EasyPaisa Direct</span>
-                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700">CONNECTED</span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 shrink-0">CONNECTED</span>
               </div>
               <p class="text-xs text-slate-500">Instant Wallet & QR Collection</p>
-              <p class="text-base font-black text-slate-900 font-mono">PKR 12,180,000 <span class="text-[10px] text-slate-400 font-normal">This Month</span></p>
+              <p class="text-base font-black text-slate-900 font-mono break-words">PKR 12,180,000 <span class="text-[10px] text-slate-400 font-normal">This Month</span></p>
             </div>
 
-            <div class="apple-card scs-tile-3d rounded-2xl p-4 space-y-2 border-l-4 border-l-indigo-500">
-              <div class="flex items-center justify-between">
+            <div class="apple-card scs-tile-3d rounded-2xl p-4 space-y-2 border-l-4 border-l-indigo-500 min-w-0 overflow-hidden">
+              <div class="flex items-center justify-between gap-2 flex-wrap">
                 <span class="text-xs font-black text-slate-900">1Bill / Bank Transfer</span>
-                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700">ACTIVE</span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 shrink-0">ACTIVE</span>
               </div>
               <p class="text-xs text-slate-500">Consumer ID 6-Digit Matching</p>
-              <p class="text-base font-black text-slate-900 font-mono">PKR 4,210,000 <span class="text-[10px] text-slate-400 font-normal">This Month</span></p>
+              <p class="text-base font-black text-slate-900 font-mono break-words">PKR 4,210,000 <span class="text-[10px] text-slate-400 font-normal">This Month</span></p>
             </div>
 
-            <div class="apple-card scs-tile-3d rounded-2xl p-4 space-y-2 border-l-4 border-l-purple-500">
-              <div class="flex items-center justify-between">
+            <div class="apple-card scs-tile-3d rounded-2xl p-4 space-y-2 border-l-4 border-l-purple-500 min-w-0 overflow-hidden">
+              <div class="flex items-center justify-between gap-2 flex-wrap">
                 <span class="text-xs font-black text-slate-900">Visa / MasterCard</span>
-                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700">STRIPE LIVE</span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 shrink-0">STRIPE LIVE</span>
               </div>
               <p class="text-xs text-slate-500">International Debit & Credit</p>
-              <p class="text-base font-black text-slate-900 font-mono">PKR 500,000 <span class="text-[10px] text-slate-400 font-normal">This Month</span></p>
+              <p class="text-base font-black text-slate-900 font-mono break-words">PKR 500,000 <span class="text-[10px] text-slate-400 font-normal">This Month</span></p>
             </div>
           </div>
 
@@ -7963,26 +7931,26 @@
           </div>
 
           <!-- Top Stats Ribbon -->
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div class="p-3.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs">
-              <span class="text-[10px] font-extrabold text-slate-400 uppercase">Total Rooms</span>
-              <p class="text-xl font-black text-slate-900 mt-1 tabular">{{ hostelRooms.length }} Rooms</p>
-              <span class="text-[10px] text-slate-500 font-medium">Wing A & Wing B</span>
+          <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+            <div class="p-3.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs min-w-0 overflow-hidden">
+              <span class="text-[10px] font-extrabold text-slate-400 uppercase block truncate">Total Rooms</span>
+              <p class="text-lg sm:text-xl font-black text-slate-900 mt-1 tabular leading-tight break-words">{{ hostelRooms.length }} Rooms</p>
+              <span class="text-[10px] text-slate-500 font-medium">Wing A &amp; Wing B</span>
             </div>
-            <div class="p-3.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs">
-              <span class="text-[10px] font-extrabold text-indigo-700 uppercase">Resident Students</span>
-              <p class="text-xl font-black text-indigo-900 mt-1 tabular">9 Boarders</p>
+            <div class="p-3.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs min-w-0 overflow-hidden">
+              <span class="text-[10px] font-extrabold text-indigo-700 uppercase block truncate">Resident Students</span>
+              <p class="text-lg sm:text-xl font-black text-indigo-900 mt-1 tabular leading-tight break-words">9 Boarders</p>
               <span class="text-[10px] text-indigo-600 font-medium">Class 7 to Class 10</span>
             </div>
-            <div class="p-3.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs">
-              <span class="text-[10px] font-extrabold text-emerald-700 uppercase">Occupancy Rate</span>
-              <p class="text-xl font-black text-emerald-900 mt-1 tabular">75% Capacity</p>
+            <div class="p-3.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs min-w-0 overflow-hidden">
+              <span class="text-[10px] font-extrabold text-emerald-700 uppercase block truncate">Occupancy Rate</span>
+              <p class="text-lg sm:text-xl font-black text-emerald-900 mt-1 tabular leading-tight break-words">75% Capacity</p>
               <span class="text-[10px] text-emerald-600 font-medium">4 Beds Available</span>
             </div>
-            <div class="p-3.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs">
-              <span class="text-[10px] font-extrabold text-amber-700 uppercase">Mess Fee (Monthly)</span>
-              <p class="text-xl font-black text-amber-900 mt-1 tabular">PKR 12,000</p>
-              <span class="text-[10px] text-amber-700 font-medium">Includes Dining & Laundry</span>
+            <div class="p-3.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs min-w-0 overflow-hidden">
+              <span class="text-[10px] font-extrabold text-amber-700 uppercase block truncate">Mess Fee (Monthly)</span>
+              <p class="text-lg sm:text-xl font-black text-amber-900 mt-1 tabular leading-tight break-words">PKR 12,000</p>
+              <span class="text-[10px] text-amber-700 font-medium">Includes Dining &amp; Laundry</span>
             </div>
           </div>
 
@@ -8744,22 +8712,22 @@
           </div>
 
           <!-- Event KPI Summary Cards -->
-          <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
-            <div class="apple-card rounded-2xl p-4 scs-tile-3d space-y-1">
-              <span class="text-[10px] font-black uppercase tracking-wider text-slate-400">Total Events Planned</span>
-              <div class="text-xl font-black text-slate-900">{{ schoolEventsList.length }} Events</div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3.5 sm:gap-4">
+            <div class="apple-card rounded-2xl p-4 scs-tile-3d space-y-1 min-w-0 overflow-hidden">
+              <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 block truncate">Total Events Planned</span>
+              <div class="text-lg sm:text-xl font-black text-slate-900 leading-tight break-words">{{ schoolEventsList.length }} Events</div>
             </div>
-            <div class="apple-card rounded-2xl p-4 scs-tile-3d space-y-1">
-              <span class="text-[10px] font-black uppercase tracking-wider text-slate-400">Total Allocated Budget</span>
-              <div class="text-xl font-black text-indigo-600">PKR 550,000</div>
+            <div class="apple-card rounded-2xl p-4 scs-tile-3d space-y-1 min-w-0 overflow-hidden">
+              <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 block truncate">Total Allocated Budget</span>
+              <div class="text-lg sm:text-xl font-black text-indigo-600 leading-tight break-words">PKR 550,000</div>
             </div>
-            <div class="apple-card rounded-2xl p-4 scs-tile-3d space-y-1">
-              <span class="text-[10px] font-black uppercase tracking-wider text-slate-400">Total Sponsor & Ticket Fund</span>
-              <div class="text-xl font-black text-emerald-600">PKR 310,000</div>
+            <div class="apple-card rounded-2xl p-4 scs-tile-3d space-y-1 min-w-0 overflow-hidden">
+              <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 block truncate">Total Sponsor &amp; Ticket Fund</span>
+              <div class="text-lg sm:text-xl font-black text-emerald-600 leading-tight break-words">PKR 310,000</div>
             </div>
-            <div class="apple-card rounded-2xl p-4 scs-tile-3d space-y-1">
-              <span class="text-[10px] font-black uppercase tracking-wider text-slate-400">Net Event Financial Surplus</span>
-              <div class="text-xl font-black text-emerald-700">+ PKR 400,000</div>
+            <div class="apple-card rounded-2xl p-4 scs-tile-3d space-y-1 min-w-0 overflow-hidden">
+              <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 block truncate">Net Event Financial Surplus</span>
+              <div class="text-lg sm:text-xl font-black text-emerald-700 leading-tight break-words">+ PKR 400,000</div>
             </div>
           </div>
 
@@ -9051,26 +9019,26 @@
             </div>
 
             <!-- Key Audit Metrics Grid -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-6 pt-6 border-t border-slate-200/80 text-xs relative z-10">
-              <div class="scs-tile-3d rounded-xl p-3">
-                <div class="text-[10px] uppercase font-bold text-slate-500">Campus Audit Rating</div>
-                <div class="text-xl font-black text-emerald-600 font-mono mt-1">98.4%</div>
-                <div class="text-[11px] text-slate-500 mt-0.5">Grade A+ Institutional Health</div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 mt-6 pt-6 border-t border-slate-200/80 text-xs relative z-10">
+              <div class="scs-tile-3d rounded-xl p-3.5 min-w-0 overflow-hidden">
+                <div class="text-[10px] uppercase font-bold text-slate-500 truncate">Campus Audit Rating</div>
+                <div class="text-lg sm:text-xl font-black text-emerald-600 font-mono mt-1 leading-tight break-words">98.4%</div>
+                <div class="text-[11px] text-slate-500 mt-0.5 truncate">Grade A+ Institutional Health</div>
               </div>
-              <div class="scs-tile-3d rounded-xl p-3">
-                <div class="text-[10px] uppercase font-bold text-slate-500">Reconciliation Variance</div>
-                <div class="text-xl font-black text-emerald-600 font-mono mt-1">PKR 0</div>
-                <div class="text-[11px] text-slate-500 mt-0.5">Balanced (Meezan/HBL/Cash)</div>
+              <div class="scs-tile-3d rounded-xl p-3.5 min-w-0 overflow-hidden">
+                <div class="text-[10px] uppercase font-bold text-slate-500 truncate">Reconciliation Variance</div>
+                <div class="text-lg sm:text-xl font-black text-emerald-600 font-mono mt-1 leading-tight break-words">PKR 0</div>
+                <div class="text-[11px] text-slate-500 mt-0.5 truncate">Balanced (Meezan/HBL/Cash)</div>
               </div>
-              <div class="scs-tile-3d rounded-xl p-3">
-                <div class="text-[10px] uppercase font-bold text-slate-500">Authorized Concessions</div>
-                <div class="text-xl font-black text-amber-600 font-mono mt-1">PKR 48,500<span class="text-xs text-slate-400 font-normal">/mo</span></div>
-                <div class="text-[11px] text-slate-500 mt-0.5">Verified by BOG Committee</div>
+              <div class="scs-tile-3d rounded-xl p-3.5 min-w-0 overflow-hidden">
+                <div class="text-[10px] uppercase font-bold text-slate-500 truncate">Authorized Concessions</div>
+                <div class="text-lg sm:text-xl font-black text-amber-600 font-mono mt-1 leading-tight break-words">PKR 48,500<span class="text-xs text-slate-400 font-normal">/mo</span></div>
+                <div class="text-[11px] text-slate-500 mt-0.5 truncate">Verified by BOG Committee</div>
               </div>
-              <div class="scs-tile-3d rounded-xl p-3">
-                <div class="text-[10px] uppercase font-bold text-slate-500">Official SLCs Issued</div>
-                <div class="text-xl font-black text-slate-900 font-mono mt-1">{{ studentLeavingCertificates.length }}</div>
-                <div class="text-[11px] text-slate-500 mt-0.5">Cryptographically Sealed</div>
+              <div class="scs-tile-3d rounded-xl p-3.5 min-w-0 overflow-hidden">
+                <div class="text-[10px] uppercase font-bold text-slate-500 truncate">Official SLCs Issued</div>
+                <div class="text-lg sm:text-xl font-black text-slate-900 font-mono mt-1 leading-tight break-words">{{ studentLeavingCertificates.length }}</div>
+                <div class="text-[11px] text-slate-500 mt-0.5 truncate">Cryptographically Sealed</div>
               </div>
             </div>
           </div>
@@ -9868,22 +9836,22 @@
           </div>
 
           <!-- KPI Summary Strip -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="scs-tile-3d rounded-2xl p-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3.5 sm:gap-4">
+            <div class="scs-tile-3d rounded-2xl p-4 min-w-0 overflow-hidden">
               <span class="text-[10px] font-black uppercase tracking-wider text-slate-500 block">Registered Asset Lines</span>
-              <span class="text-2xl font-black text-slate-900 tabular-nums mt-1 block">{{ schoolAssets.length }}</span>
+              <span class="text-xl sm:text-2xl font-black text-slate-900 tabular-nums mt-1 block">{{ schoolAssets.length }}</span>
             </div>
-            <div class="scs-tile-3d rounded-2xl p-4">
+            <div class="scs-tile-3d rounded-2xl p-4 min-w-0 overflow-hidden">
               <span class="text-[10px] font-black uppercase tracking-wider text-indigo-700 block">Total Physical Units</span>
-              <span class="text-2xl font-black text-indigo-700 tabular-nums mt-1 block">{{ getTotalAssetUnitsCount() }}</span>
+              <span class="text-xl sm:text-2xl font-black text-indigo-700 tabular-nums mt-1 block">{{ getTotalAssetUnitsCount() }}</span>
             </div>
-            <div class="scs-tile-3d rounded-2xl p-4">
+            <div class="scs-tile-3d rounded-2xl p-4 min-w-0 overflow-hidden">
               <span class="text-[10px] font-black uppercase tracking-wider text-emerald-700 block">Estimated Asset Value</span>
-              <span class="text-xl font-black text-emerald-700 font-mono tabular-nums mt-1 block">PKR {{ formatCurrency(getTotalAssetValuation()) }}</span>
+              <span class="text-lg sm:text-xl font-black text-emerald-700 font-mono tabular-nums mt-1 block leading-tight break-words">PKR {{ formatCurrency(getTotalAssetValuation()) }}</span>
             </div>
-            <div class="scs-tile-3d rounded-2xl p-4">
+            <div class="scs-tile-3d rounded-2xl p-4 min-w-0 overflow-hidden">
               <span class="text-[10px] font-black uppercase tracking-wider text-amber-700 block">Needs Repair / Retired</span>
-              <span class="text-2xl font-black text-amber-700 tabular-nums mt-1 block">{{ getAssetsNeedingRepairCount() }}</span>
+              <span class="text-xl sm:text-2xl font-black text-amber-700 tabular-nums mt-1 block">{{ getAssetsNeedingRepairCount() }}</span>
             </div>
           </div>
 
@@ -10540,63 +10508,63 @@
         <div class="space-y-6">
           
           <!-- 1. TOP 4 EXECUTIVE KPI CARDS (3D White Cards with Chromatic Ambient Glow) -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3.5 sm:gap-4">
             <!-- Card 1: Faculty On-Duty Presence -->
-            <div (click)="setPrincipalTab('substitutions')" class="rounded-2xl p-5 sm:p-6 flex items-center gap-4 border border-slate-200/90 hover:-translate-y-1.5 transition-all duration-300 ease-out cursor-pointer bg-white group scs-tile-3d">
-              <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-600 to-blue-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-indigo-500/30 group-hover:scale-105 group-hover:shadow-indigo-500/40 transition-all duration-300 border border-white/30">
-                <lucide-icon [name]="'users'" class="w-7 h-7 text-white stroke-[2.2] drop-shadow-xs"></lucide-icon>
+            <div (click)="setPrincipalTab('substitutions')" class="rounded-2xl p-4 sm:p-5 flex items-center gap-3 sm:gap-3.5 border border-slate-200/90 hover:-translate-y-1.5 transition-all duration-300 ease-out cursor-pointer bg-white group scs-tile-3d min-w-0 overflow-hidden">
+              <div class="w-11 h-11 sm:w-12 sm:h-12 2xl:w-14 2xl:h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-600 to-blue-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-indigo-500/30 group-hover:scale-105 group-hover:shadow-indigo-500/40 transition-all duration-300 border border-white/30">
+                <lucide-icon [name]="'users'" class="w-5 h-5 sm:w-6 sm:h-6 2xl:w-7 2xl:h-7 text-white stroke-[2.2] drop-shadow-xs"></lucide-icon>
               </div>
               <div class="min-w-0 flex-1">
-                <span class="text-2xl sm:text-3xl font-black text-slate-900 tabular-nums block leading-none tracking-tight">28 / 30</span>
-                <p class="text-xs font-bold text-slate-600 mt-1">Faculty On-Duty Presence</p>
-                <div class="mt-1 flex items-center gap-1.5 text-[11px] font-bold text-indigo-700">
+                <span class="text-lg sm:text-xl 2xl:text-2xl font-black text-slate-900 tabular-nums block leading-tight tracking-tight break-words">28 / 30</span>
+                <p class="text-xs font-bold text-slate-600 mt-1 truncate">Faculty On-Duty Presence</p>
+                <div class="mt-1 flex items-center gap-1.5 flex-wrap text-[11px] font-bold text-indigo-700">
                   <span class="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 text-[10px] font-black">93.3% On-Duty</span>
-                  <span>· 2 Substitutes</span>
+                  <span class="truncate">· 2 Substitutes</span>
                 </div>
               </div>
             </div>
 
             <!-- Card 2: Average Syllabus Covered -->
-            <div (click)="setPrincipalTab('syllabus')" class="rounded-2xl p-5 sm:p-6 flex items-center gap-4 border border-slate-200/90 hover:-translate-y-1.5 transition-all duration-300 ease-out cursor-pointer bg-white group scs-tile-3d">
-              <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-500 via-emerald-600 to-teal-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/30 group-hover:scale-105 group-hover:shadow-emerald-500/40 transition-all duration-300 border border-white/30">
-                <lucide-icon [name]="'book-open-check'" class="w-7 h-7 text-white stroke-[2.2] drop-shadow-xs"></lucide-icon>
+            <div (click)="setPrincipalTab('syllabus')" class="rounded-2xl p-4 sm:p-5 flex items-center gap-3 sm:gap-3.5 border border-slate-200/90 hover:-translate-y-1.5 transition-all duration-300 ease-out cursor-pointer bg-white group scs-tile-3d min-w-0 overflow-hidden">
+              <div class="w-11 h-11 sm:w-12 sm:h-12 2xl:w-14 2xl:h-14 rounded-2xl bg-gradient-to-tr from-emerald-500 via-emerald-600 to-teal-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/30 group-hover:scale-105 group-hover:shadow-emerald-500/40 transition-all duration-300 border border-white/30">
+                <lucide-icon [name]="'book-open-check'" class="w-5 h-5 sm:w-6 sm:h-6 2xl:w-7 2xl:h-7 text-white stroke-[2.2] drop-shadow-xs"></lucide-icon>
               </div>
               <div class="min-w-0 flex-1">
-                <span class="text-2xl sm:text-3xl font-black text-slate-900 tabular-nums block leading-none tracking-tight">84.5%</span>
-                <p class="text-xs font-bold text-slate-600 mt-1">Average Syllabus Covered</p>
-                <div class="mt-1 flex items-center gap-1.5 text-[11px] font-bold text-emerald-700">
+                <span class="text-lg sm:text-xl 2xl:text-2xl font-black text-slate-900 tabular-nums block leading-tight tracking-tight break-words">84.5%</span>
+                <p class="text-xs font-bold text-slate-600 mt-1 truncate">Average Syllabus Covered</p>
+                <div class="mt-1 flex items-center gap-1.5 flex-wrap text-[11px] font-bold text-emerald-700">
                   <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black">On Schedule</span>
-                  <span>· Mid-Term II</span>
+                  <span class="truncate">· Mid-Term II</span>
                 </div>
               </div>
             </div>
 
             <!-- Card 3: Pending Lesson Plans -->
-            <div (click)="setPrincipalTab('supervision')" class="rounded-2xl p-5 sm:p-6 flex items-center gap-4 border border-slate-200/90 hover:-translate-y-1.5 transition-all duration-300 ease-out cursor-pointer bg-white group scs-tile-3d">
-              <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500 via-amber-600 to-orange-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-amber-500/30 group-hover:scale-105 group-hover:shadow-amber-500/40 transition-all duration-300 border border-white/30">
-                <lucide-icon [name]="'file-check-2'" class="w-7 h-7 text-white stroke-[2.2] drop-shadow-xs"></lucide-icon>
+            <div (click)="setPrincipalTab('supervision')" class="rounded-2xl p-4 sm:p-5 flex items-center gap-3 sm:gap-3.5 border border-slate-200/90 hover:-translate-y-1.5 transition-all duration-300 ease-out cursor-pointer bg-white group scs-tile-3d min-w-0 overflow-hidden">
+              <div class="w-11 h-11 sm:w-12 sm:h-12 2xl:w-14 2xl:h-14 rounded-2xl bg-gradient-to-tr from-amber-500 via-amber-600 to-orange-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-amber-500/30 group-hover:scale-105 group-hover:shadow-amber-500/40 transition-all duration-300 border border-white/30">
+                <lucide-icon [name]="'file-check-2'" class="w-5 h-5 sm:w-6 sm:h-6 2xl:w-7 2xl:h-7 text-white stroke-[2.2] drop-shadow-xs"></lucide-icon>
               </div>
               <div class="min-w-0 flex-1">
-                <span class="text-2xl sm:text-3xl font-black text-slate-900 tabular-nums block leading-none tracking-tight">2 Pending</span>
-                <p class="text-xs font-bold text-slate-600 mt-1">Pending Lesson Plans</p>
-                <div class="mt-1 flex items-center gap-1.5 text-[11px] font-bold text-amber-700">
+                <span class="text-lg sm:text-xl 2xl:text-2xl font-black text-slate-900 tabular-nums block leading-tight tracking-tight break-words">2 Pending</span>
+                <p class="text-xs font-bold text-slate-600 mt-1 truncate">Pending Lesson Plans</p>
+                <div class="mt-1 flex items-center gap-1.5 flex-wrap text-[11px] font-bold text-amber-700">
                   <span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-black">Review Needed</span>
-                  <span>· Science Dept</span>
+                  <span class="truncate">· Science Dept</span>
                 </div>
               </div>
             </div>
 
             <!-- Card 4: Campus Walkthrough Log -->
-            <div (click)="setPrincipalTab('inspections')" class="rounded-2xl p-5 sm:p-6 flex items-center gap-4 border border-slate-200/90 hover:-translate-y-1.5 transition-all duration-300 ease-out cursor-pointer bg-white group scs-tile-3d">
-              <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-600 via-purple-600 to-indigo-800 text-white flex items-center justify-center shrink-0 shadow-md shadow-purple-500/30 group-hover:scale-105 group-hover:shadow-purple-500/40 transition-all duration-300 border border-white/30">
-                <lucide-icon [name]="'clipboard-check'" class="w-7 h-7 text-white stroke-[2.2] drop-shadow-xs"></lucide-icon>
+            <div (click)="setPrincipalTab('inspections')" class="rounded-2xl p-4 sm:p-5 flex items-center gap-3 sm:gap-3.5 border border-slate-200/90 hover:-translate-y-1.5 transition-all duration-300 ease-out cursor-pointer bg-white group scs-tile-3d min-w-0 overflow-hidden">
+              <div class="w-11 h-11 sm:w-12 sm:h-12 2xl:w-14 2xl:h-14 rounded-2xl bg-gradient-to-tr from-purple-600 via-purple-600 to-indigo-800 text-white flex items-center justify-center shrink-0 shadow-md shadow-purple-500/30 group-hover:scale-105 group-hover:shadow-purple-500/40 transition-all duration-300 border border-white/30">
+                <lucide-icon [name]="'clipboard-check'" class="w-5 h-5 sm:w-6 sm:h-6 2xl:w-7 2xl:h-7 text-white stroke-[2.2] drop-shadow-xs"></lucide-icon>
               </div>
               <div class="min-w-0 flex-1">
-                <span class="text-2xl sm:text-3xl font-black text-slate-900 tabular-nums block leading-none tracking-tight">2 Rounds</span>
-                <p class="text-xs font-bold text-slate-600 mt-1">Campus Walkthrough Log</p>
-                <div class="mt-1 flex items-center gap-1.5 text-[11px] font-bold text-purple-700">
+                <span class="text-lg sm:text-xl 2xl:text-2xl font-black text-slate-900 tabular-nums block leading-tight tracking-tight break-words">2 Rounds</span>
+                <p class="text-xs font-bold text-slate-600 mt-1 truncate">Campus Walkthrough Log</p>
+                <div class="mt-1 flex items-center gap-1.5 flex-wrap text-[11px] font-bold text-purple-700">
                   <span class="px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 text-[10px] font-black">Completed</span>
-                  <span>· Morning Inspection</span>
+                  <span class="truncate">· Morning Inspection</span>
                 </div>
               </div>
             </div>
@@ -13989,13 +13957,13 @@
 
       <!-- TOP 4 FACULTY KPI METRIC CARDS (Displayed on Teacher Hub Home so selected sub-tools open at the top) -->
       @if (teacherTab === 'schedule') {
-        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-3.5 sm:gap-5">
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3.5 sm:gap-4">
         
         <!-- KPI 1: Assigned Classes -->
-        <div (click)="setTeacherTab('schedule')" class="apple-card rounded-2xl p-3.5 sm:p-5 cursor-pointer transition-all duration-300 flex items-start justify-between gap-2.5 min-h-[110px] scs-tile-3d group border">
+        <div (click)="setTeacherTab('schedule')" class="apple-card rounded-2xl p-4 sm:p-5 cursor-pointer transition-all duration-300 flex items-start justify-between gap-2.5 min-h-[110px] scs-tile-3d group border min-w-0 overflow-hidden">
           <div class="space-y-0.5 min-w-0 flex-1">
-            <span class="text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-slate-400 block leading-tight">Today's Schedule</span>
-            <div class="text-base sm:text-xl md:text-2xl font-black text-slate-900 transition-colors leading-tight">6 Periods</div>
+            <span class="text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-slate-400 block leading-tight truncate">Today's Schedule</span>
+            <div class="text-lg sm:text-xl 2xl:text-2xl font-black text-slate-900 transition-colors leading-tight break-words">6 Periods</div>
             <span class="inline-flex px-1.5 sm:px-2 py-0.5 rounded-md text-[9px] sm:text-[10px] font-black bg-indigo-50 text-indigo-700 max-w-full truncate">Class 10-A, 10-B, 9-B</span>
           </div>
           <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-indigo-600 to-indigo-700 text-white flex items-center justify-center shrink-0 shadow-md shadow-indigo-600/20 border border-white/30 group-hover:scale-105 transition-transform">
@@ -14005,10 +13973,10 @@
 
         @if (canTeacherUseAttendanceVerification) {
           <!-- KPI 2: Roll Call Status -->
-          <div (click)="setTeacherTab('attendance')" class="apple-card rounded-2xl p-3.5 sm:p-5 cursor-pointer transition-all duration-300 flex items-start justify-between gap-2.5 min-h-[110px] scs-tile-3d group border">
+          <div (click)="setTeacherTab('attendance')" class="apple-card rounded-2xl p-4 sm:p-5 cursor-pointer transition-all duration-300 flex items-start justify-between gap-2.5 min-h-[110px] scs-tile-3d group border min-w-0 overflow-hidden">
             <div class="space-y-0.5 min-w-0 flex-1">
-              <span class="text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-slate-400 block leading-tight">Attendance Roll Call</span>
-              <div class="text-base sm:text-xl md:text-2xl font-black text-emerald-600 leading-tight">Marked 100%</div>
+              <span class="text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-slate-400 block leading-tight truncate">Attendance Roll Call</span>
+              <div class="text-lg sm:text-xl 2xl:text-2xl font-black text-emerald-600 leading-tight break-words">Marked 100%</div>
               <span class="inline-flex px-1.5 sm:px-2 py-0.5 rounded-md text-[9px] sm:text-[10px] font-black bg-emerald-50 text-emerald-700 max-w-full truncate">38 Present / 2 Absent</span>
             </div>
             <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-700 text-white flex items-center justify-center shrink-0 shadow-md shadow-emerald-600/20 border border-white/30 group-hover:scale-105 transition-transform">
@@ -14018,10 +13986,10 @@
         }
 
         <!-- KPI 3: Syllabus Covered -->
-        <div (click)="setTeacherTab('homework')" class="apple-card rounded-2xl p-3.5 sm:p-5 cursor-pointer transition-all duration-300 flex items-start justify-between gap-2.5 min-h-[110px] scs-tile-3d group border">
+        <div (click)="setTeacherTab('homework')" class="apple-card rounded-2xl p-4 sm:p-5 cursor-pointer transition-all duration-300 flex items-start justify-between gap-2.5 min-h-[110px] scs-tile-3d group border min-w-0 overflow-hidden">
           <div class="space-y-0.5 min-w-0 flex-1">
-            <span class="text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-slate-400 block leading-tight">Syllabus Covered</span>
-            <div class="text-base sm:text-xl md:text-2xl font-black text-slate-900 transition-colors leading-tight whitespace-nowrap">82% Covered</div>
+            <span class="text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-slate-400 block leading-tight truncate">Syllabus Covered</span>
+            <div class="text-lg sm:text-xl 2xl:text-2xl font-black text-slate-900 transition-colors leading-tight break-words">82% Covered</div>
             <span class="inline-flex px-1.5 sm:px-2 py-0.5 rounded-md text-[9px] sm:text-[10px] font-black bg-blue-50 text-blue-700 max-w-full truncate">Ch. 8 Vector Calculus</span>
           </div>
           <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-blue-600 to-cyan-700 text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-600/20 border border-white/30 group-hover:scale-105 transition-transform">
@@ -14030,10 +13998,10 @@
         </div>
 
         <!-- KPI 4: Pending Exam Grading -->
-        <div (click)="setTeacherTab('marks')" class="apple-card rounded-2xl p-3.5 sm:p-5 cursor-pointer transition-all duration-300 flex items-start justify-between gap-2.5 min-h-[110px] scs-tile-3d group border">
+        <div (click)="setTeacherTab('marks')" class="apple-card rounded-2xl p-4 sm:p-5 cursor-pointer transition-all duration-300 flex items-start justify-between gap-2.5 min-h-[110px] scs-tile-3d group border min-w-0 overflow-hidden">
           <div class="space-y-0.5 min-w-0 flex-1">
-            <span class="text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-slate-400 block leading-tight">Pending Grading</span>
-            <div class="text-base sm:text-xl md:text-2xl font-black text-amber-600 leading-tight whitespace-nowrap">Mid-Term</div>
+            <span class="text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-slate-400 block leading-tight truncate">Pending Grading</span>
+            <div class="text-lg sm:text-xl 2xl:text-2xl font-black text-amber-600 leading-tight break-words">Mid-Term</div>
             <span class="inline-flex px-1.5 sm:px-2 py-0.5 rounded-md text-[9px] sm:text-[10px] font-black bg-amber-50 text-amber-800 max-w-full truncate">12 Copies Left</span>
           </div>
           <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-amber-600 to-orange-700 text-white flex items-center justify-center shrink-0 shadow-md shadow-amber-600/20 border border-white/30 group-hover:scale-105 transition-transform">
@@ -16377,21 +16345,21 @@
             </div>
 
             <!-- Quick Metrics Grid -->
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 relative z-10">
-              <div class="p-3.5 rounded-2xl scs-tile-3d">
-                <div class="text-[10px] font-black uppercase text-slate-500">Active Books Checked Out</div>
-                <div class="text-xl font-black text-slate-900 mt-1 tabular-nums">{{ studentLibraryCirculations.length }} Books</div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 pt-2 relative z-10">
+              <div class="p-3.5 rounded-2xl scs-tile-3d min-w-0 overflow-hidden">
+                <div class="text-[10px] font-black uppercase text-slate-500 truncate">Active Books Checked Out</div>
+                <div class="text-lg sm:text-xl font-black text-slate-900 mt-1 tabular-nums leading-tight break-words">{{ studentLibraryCirculations.length }} Books</div>
               </div>
-              <div class="p-3.5 rounded-2xl scs-tile-3d">
-                <div class="text-[10px] font-black uppercase text-slate-500">Overdue Books</div>
-                <div class="text-xl font-black text-amber-600 mt-1 tabular-nums">{{ studentOverdueCirculationsCount }} Titles</div>
+              <div class="p-3.5 rounded-2xl scs-tile-3d min-w-0 overflow-hidden">
+                <div class="text-[10px] font-black uppercase text-slate-500 truncate">Overdue Books</div>
+                <div class="text-lg sm:text-xl font-black text-amber-600 mt-1 tabular-nums leading-tight break-words">{{ studentOverdueCirculationsCount }} Titles</div>
               </div>
-              <div class="p-3.5 rounded-2xl scs-tile-3d">
-                <div class="text-[10px] font-black uppercase text-slate-500">Accrued Late Fine Dues</div>
-                <div class="text-xl font-black text-rose-600 mt-1 tabular-nums">PKR {{ studentTotalLibraryFines }}</div>
+              <div class="p-3.5 rounded-2xl scs-tile-3d min-w-0 overflow-hidden">
+                <div class="text-[10px] font-black uppercase text-slate-500 truncate">Accrued Late Fine Dues</div>
+                <div class="text-lg sm:text-xl font-black text-rose-600 mt-1 tabular-nums leading-tight break-words">PKR {{ studentTotalLibraryFines }}</div>
               </div>
-              <div class="p-3.5 rounded-2xl scs-tile-3d">
-                <div class="text-[10px] font-black uppercase text-slate-500">SLC Library Clearance</div>
+              <div class="p-3.5 rounded-2xl scs-tile-3d min-w-0 overflow-hidden">
+                <div class="text-[10px] font-black uppercase text-slate-500 truncate">SLC Library Clearance</div>
                 <div class="text-xs font-black text-emerald-700 mt-2 flex items-center gap-1">
                   <span>{{ studentTotalLibraryFines === 0 && studentOverdueCirculationsCount === 0 ? '✓ Cleared' : '⚠️ Pending Return' }}</span>
                 </div>
@@ -16400,9 +16368,9 @@
           </div>
 
           <!-- Active Issued Books Table -->
-          <div class="apple-card rounded-2xl p-5 scs-surface-3d space-y-3">
-            <h3 class="text-sm font-black text-slate-900 flex items-center justify-between">
-              <span>My Borrowed Books & Loan Due Dates</span>
+          <div class="apple-card rounded-2xl p-4 sm:p-5 scs-surface-3d space-y-3 min-w-0 overflow-hidden">
+            <h3 class="text-sm font-black text-slate-900 flex items-center justify-between gap-2 flex-wrap">
+              <span>My Borrowed Books &amp; Loan Due Dates</span>
               <span class="text-xs text-slate-500 font-bold">Standard 14-Day Institutional Loan Period</span>
             </h3>
             <div class="overflow-x-auto custom-scrollbar border border-slate-200/80 rounded-2xl">
@@ -17253,13 +17221,13 @@
               </div>
 
               <!-- TOP 4 PARENT KPI METRIC CARDS (INSIDE OVERVIEW) -->
-              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-5">
+              <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3.5 sm:gap-4">
                 
                 <!-- KPI 1: Gate Live Status -->
-                <div (click)="setParentTab('overview')" class="rounded-2xl p-3.5 sm:p-5 cursor-pointer transition-all duration-300 flex items-start justify-between gap-2.5 min-h-[110px] scs-tile-3d border group">
+                <div (click)="setParentTab('overview')" class="rounded-2xl p-4 sm:p-5 cursor-pointer transition-all duration-300 flex items-start justify-between gap-2.5 min-h-[110px] scs-tile-3d border group min-w-0 overflow-hidden">
                   <div class="space-y-1 min-w-0 flex-1">
                     <span class="text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-slate-400 block truncate">Live Gate Status</span>
-                    <div class="text-base sm:text-xl font-black text-emerald-600 leading-tight truncate">{{ selectedParentChild?.status || 'In Campus' }}</div>
+                    <div class="text-base sm:text-lg 2xl:text-xl font-black text-emerald-600 leading-tight break-words">{{ selectedParentChild?.status || 'In Campus' }}</div>
                     <span class="inline-block px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-50 text-emerald-700 truncate max-w-full">Entered {{ selectedParentChild?.checkInTime || '07:48 AM' }}</span>
                   </div>
                   <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-700 text-white flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
@@ -17268,10 +17236,10 @@
                 </div>
 
                 <!-- KPI 2: Child Academic GPA -->
-                <div (click)="setParentTab('academics')" class="rounded-2xl p-3.5 sm:p-5 cursor-pointer transition-all duration-300 flex items-start justify-between gap-2.5 min-h-[110px] scs-tile-3d border group">
+                <div (click)="setParentTab('academics')" class="rounded-2xl p-4 sm:p-5 cursor-pointer transition-all duration-300 flex items-start justify-between gap-2.5 min-h-[110px] scs-tile-3d border group min-w-0 overflow-hidden">
                   <div class="space-y-1 min-w-0 flex-1">
                     <span class="text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-slate-400 block truncate">Academic GPA</span>
-                    <div class="text-base sm:text-xl font-black text-slate-900 transition-colors leading-tight truncate">GPA {{ selectedParentChild?.gpa || '3.92' }}</div>
+                    <div class="text-base sm:text-lg 2xl:text-xl font-black text-slate-900 transition-colors leading-tight break-words">GPA {{ selectedParentChild?.gpa || '3.92' }}</div>
                     <span class="inline-block px-2 py-0.5 rounded-md text-[10px] font-black bg-purple-50 text-purple-700 truncate max-w-full">{{ selectedParentChild?.gradeLabel || 'Grade A+' }}</span>
                   </div>
                   <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-700 text-white flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
@@ -17280,10 +17248,10 @@
                 </div>
 
                 <!-- KPI 3: Fee Ledger Clearance -->
-                <div (click)="setParentTab('fee')" class="rounded-2xl p-3.5 sm:p-5 cursor-pointer transition-all duration-300 flex items-start justify-between gap-2.5 min-h-[110px] scs-tile-3d border group">
+                <div (click)="setParentTab('fee')" class="rounded-2xl p-4 sm:p-5 cursor-pointer transition-all duration-300 flex items-start justify-between gap-2.5 min-h-[110px] scs-tile-3d border group min-w-0 overflow-hidden">
                   <div class="space-y-1 min-w-0 flex-1">
                     <span class="text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-slate-400 block truncate">Fee Ledger</span>
-                    <div class="text-base sm:text-xl font-black text-slate-900 transition-colors leading-tight truncate">
+                    <div class="text-base sm:text-lg 2xl:text-xl font-black text-slate-900 transition-colors leading-tight break-words">
                       {{ selectedParentChild?.feeStatus === 'Paid' ? 'All Clear' : 'Fee Due' }}
                     </div>
                     <span class="inline-block px-2 py-0.5 rounded-md text-[10px] font-black bg-teal-50 text-teal-700 truncate max-w-full">
@@ -17296,10 +17264,10 @@
                 </div>
 
                 <!-- KPI 4: Transport Bus Tracking -->
-                <div (click)="setParentTab('overview')" class="rounded-2xl p-3.5 sm:p-5 cursor-pointer transition-all duration-300 flex items-start justify-between gap-2.5 min-h-[110px] scs-tile-3d border group">
+                <div (click)="setParentTab('overview')" class="rounded-2xl p-4 sm:p-5 cursor-pointer transition-all duration-300 flex items-start justify-between gap-2.5 min-h-[110px] scs-tile-3d border group min-w-0 overflow-hidden">
                   <div class="space-y-1 min-w-0 flex-1">
                     <span class="text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-slate-400 block truncate">School Bus</span>
-                    <div class="text-base sm:text-xl font-black text-amber-600 leading-tight truncate">{{ selectedParentChild?.busRoute || 'Bus Route #04' }}</div>
+                    <div class="text-base sm:text-lg 2xl:text-xl font-black text-amber-600 leading-tight break-words">{{ selectedParentChild?.busRoute || 'Bus Route #04' }}</div>
                     <span class="inline-block px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-50 text-amber-800 truncate max-w-full">Driver: {{ selectedParentChild?.busDriver || 'Ch. Aslam' }}</span>
                   </div>
                   <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-tr from-amber-600 to-orange-700 text-white flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
@@ -18006,21 +17974,21 @@
               <p class="text-xs text-slate-600 font-medium">Track child's issued library books, return due dates, overdue fines, and study resources.</p>
             </div>
 
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div class="p-3.5 rounded-2xl scs-tile-3d">
-                <div class="text-[10px] font-black uppercase text-slate-500">Checked Out Books</div>
-                <div class="text-xl font-black text-slate-900 mt-1 tabular-nums">{{ studentLibraryCirculations.length }} Books</div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+              <div class="p-3.5 rounded-2xl scs-tile-3d min-w-0 overflow-hidden">
+                <div class="text-[10px] font-black uppercase text-slate-500 truncate">Checked Out Books</div>
+                <div class="text-lg sm:text-xl font-black text-slate-900 mt-1 tabular-nums leading-tight break-words">{{ studentLibraryCirculations.length }} Books</div>
               </div>
-              <div class="p-3.5 rounded-2xl scs-tile-3d">
-                <div class="text-[10px] font-black uppercase text-slate-500">Overdue Titles</div>
-                <div class="text-xl font-black text-amber-600 mt-1 tabular-nums">{{ studentOverdueCirculationsCount }} Titles</div>
+              <div class="p-3.5 rounded-2xl scs-tile-3d min-w-0 overflow-hidden">
+                <div class="text-[10px] font-black uppercase text-slate-500 truncate">Overdue Titles</div>
+                <div class="text-lg sm:text-xl font-black text-amber-600 mt-1 tabular-nums leading-tight break-words">{{ studentOverdueCirculationsCount }} Titles</div>
               </div>
-              <div class="p-3.5 rounded-2xl scs-tile-3d">
-                <div class="text-[10px] font-black uppercase text-slate-500">Late Fine Dues</div>
-                <div class="text-xl font-black text-rose-600 mt-1 tabular-nums">PKR {{ studentTotalLibraryFines }}</div>
+              <div class="p-3.5 rounded-2xl scs-tile-3d min-w-0 overflow-hidden">
+                <div class="text-[10px] font-black uppercase text-slate-500 truncate">Late Fine Dues</div>
+                <div class="text-lg sm:text-xl font-black text-rose-600 mt-1 tabular-nums leading-tight break-words">PKR {{ studentTotalLibraryFines }}</div>
               </div>
-              <div class="p-3.5 rounded-2xl scs-tile-3d">
-                <div class="text-[10px] font-black uppercase text-slate-500">Clearance Status</div>
+              <div class="p-3.5 rounded-2xl scs-tile-3d min-w-0 overflow-hidden">
+                <div class="text-[10px] font-black uppercase text-slate-500 truncate">Clearance Status</div>
                 <div class="text-xs font-black text-emerald-700 mt-2">
                   {{ studentTotalLibraryFines === 0 && studentOverdueCirculationsCount === 0 ? '✓ Cleared' : '⚠️ Pending Return' }}
                 </div>
@@ -18226,26 +18194,26 @@
           <!-- ACCOUNTANT TAB 1: OVERVIEW -->
           @if (accountantTab === 'overview') {
             <div class="space-y-6">
-              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="rounded-2xl p-4 scs-tile-3d border border-slate-200/90 space-y-1">
-                  <span class="text-[11px] font-bold text-teal-700 uppercase tracking-wider block">Accountant Counter Collected</span>
-                  <span class="text-xl font-black text-slate-900 font-mono block">PKR {{ formatCurrency(accountantCollectedTotal) }}</span>
-                  <p class="text-[10px] text-slate-500 font-medium">Tagged to Accountant Desk</p>
+              <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3.5 sm:gap-4">
+                <div class="rounded-2xl p-4 scs-tile-3d border border-slate-200/90 space-y-1 min-w-0 overflow-hidden">
+                  <span class="text-[11px] font-bold text-teal-700 uppercase tracking-wider block truncate">Accountant Counter Collected</span>
+                  <span class="text-lg sm:text-xl 2xl:text-2xl font-black text-slate-900 font-mono block leading-tight break-words">PKR {{ formatCurrency(accountantCollectedTotal) }}</span>
+                  <p class="text-[10px] text-slate-500 font-medium truncate">Tagged to Accountant Desk</p>
                 </div>
-                <div class="rounded-2xl p-4 scs-tile-3d border border-slate-200/90 space-y-1">
-                  <span class="text-[11px] font-bold text-amber-700 uppercase tracking-wider block">Principal Desk Synced</span>
-                  <span class="text-xl font-black text-slate-900 font-mono block">PKR {{ formatCurrency(principalCollectedTotal) }}</span>
-                  <p class="text-[10px] text-slate-500 font-medium">Also synced cleanly to Owner</p>
+                <div class="rounded-2xl p-4 scs-tile-3d border border-slate-200/90 space-y-1 min-w-0 overflow-hidden">
+                  <span class="text-[11px] font-bold text-amber-700 uppercase tracking-wider block truncate">Principal Desk Synced</span>
+                  <span class="text-lg sm:text-xl 2xl:text-2xl font-black text-slate-900 font-mono block leading-tight break-words">PKR {{ formatCurrency(principalCollectedTotal) }}</span>
+                  <p class="text-[10px] text-slate-500 font-medium truncate">Also synced cleanly to Owner</p>
                 </div>
-                <div class="rounded-2xl p-4 scs-tile-3d space-y-1">
-                  <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Generated Challans</span>
-                  <span class="text-xl font-black text-indigo-700 font-mono block">{{ accountantGeneratedChallans.length }}</span>
-                  <p class="text-[10px] text-slate-500 font-medium">3-Copy Bank Vouchers</p>
+                <div class="rounded-2xl p-4 scs-tile-3d space-y-1 min-w-0 overflow-hidden">
+                  <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block truncate">Generated Challans</span>
+                  <span class="text-lg sm:text-xl 2xl:text-2xl font-black text-indigo-700 font-mono block leading-tight break-words">{{ accountantGeneratedChallans.length }}</span>
+                  <p class="text-[10px] text-slate-500 font-medium truncate">3-Copy Bank Vouchers</p>
                 </div>
-                <div class="rounded-2xl p-4 scs-tile-3d border border-slate-200/90 space-y-1">
-                  <span class="text-[11px] font-bold text-rose-700 uppercase tracking-wider block">Pending Owner Review</span>
-                  <span class="text-xl font-black text-rose-700 font-mono block">{{ pendingOwnerClosingsCount }} Closings</span>
-                  <p class="text-[10px] text-slate-500 font-medium">Awaiting School Owner sign-off</p>
+                <div class="rounded-2xl p-4 scs-tile-3d border border-slate-200/90 space-y-1 min-w-0 overflow-hidden">
+                  <span class="text-[11px] font-bold text-rose-700 uppercase tracking-wider block truncate">Pending Owner Review</span>
+                  <span class="text-lg sm:text-xl 2xl:text-2xl font-black text-rose-700 font-mono block leading-tight break-words">{{ pendingOwnerClosingsCount }} Closings</span>
+                  <p class="text-[10px] text-slate-500 font-medium truncate">Awaiting School Owner sign-off</p>
                 </div>
               </div>
 
@@ -25350,22 +25318,22 @@
         </div>
 
         <div class="space-y-3 text-xs">
-          <div class="grid grid-cols-2 gap-3">
-            <div class="p-3 bg-white rounded-xl border border-slate-200">
-              <span class="text-[10px] text-slate-400 uppercase font-bold">Total Students</span>
-              <p class="text-xl font-black text-slate-900 mt-0.5">{{ activeStudents.length }} Active</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="p-3 bg-white rounded-xl border border-slate-200 min-w-0 overflow-hidden">
+              <span class="text-[10px] text-slate-400 uppercase font-bold block truncate">Total Students</span>
+              <p class="text-lg sm:text-xl font-black text-slate-900 mt-0.5 leading-tight break-words">{{ activeStudents.length }} Active</p>
             </div>
-            <div class="p-3 bg-white rounded-xl border border-slate-200/90">
-              <span class="text-[10px] text-emerald-700 uppercase font-bold">Board Passing Rate</span>
-              <p class="text-xl font-black text-emerald-800 mt-0.5">97.8%</p>
+            <div class="p-3 bg-white rounded-xl border border-slate-200/90 min-w-0 overflow-hidden">
+              <span class="text-[10px] text-emerald-700 uppercase font-bold block truncate">Board Passing Rate</span>
+              <p class="text-lg sm:text-xl font-black text-emerald-800 mt-0.5 leading-tight break-words">97.8%</p>
             </div>
-            <div class="p-3 bg-white rounded-xl border border-slate-200/90">
-              <span class="text-[10px] text-blue-700 uppercase font-bold">Total Fee Revenue</span>
-              <p class="text-xl font-black text-blue-800 mt-0.5">PKR {{ formatCurrency(totalRevenue) }}</p>
+            <div class="p-3 bg-white rounded-xl border border-slate-200/90 min-w-0 overflow-hidden">
+              <span class="text-[10px] text-blue-700 uppercase font-bold block truncate">Total Fee Revenue</span>
+              <p class="text-lg sm:text-xl font-black text-blue-800 mt-0.5 leading-tight break-words">PKR {{ formatCurrency(totalRevenue) }}</p>
             </div>
-            <div class="p-3 bg-white rounded-xl border border-slate-200/90">
-              <span class="text-[10px] text-amber-700 uppercase font-bold">Staff Faculty</span>
-              <p class="text-xl font-black text-amber-800 mt-0.5">86 Teachers</p>
+            <div class="p-3 bg-white rounded-xl border border-slate-200/90 min-w-0 overflow-hidden">
+              <span class="text-[10px] text-amber-700 uppercase font-bold block truncate">Staff Faculty</span>
+              <p class="text-lg sm:text-xl font-black text-amber-800 mt-0.5 leading-tight break-words">86 Teachers</p>
             </div>
           </div>
         </div>
@@ -26982,28 +26950,30 @@
             <!-- PARTICULAR LINE ITEMS TABLE (Borderless inside the same single card) -->
             <div class="space-y-2">
               <h4 class="text-[10px] font-black uppercase tracking-wider text-slate-400">Itemized Particulars</h4>
-              <table class="w-full text-left text-xs border-collapse">
-                <thead>
-                  <tr class="font-black uppercase text-[10px] tracking-wider text-slate-500">
-                    <th class="py-2">Sr #</th>
-                    <th class="py-2">Particular Description</th>
-                    <th class="py-2 text-center">Qty</th>
-                    <th class="py-2 text-right">Unit Rate (PKR)</th>
-                    <th class="py-2 text-right">Total (PKR)</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 font-medium">
-                  @for (item of selectedInvoiceForView.lineItems; track $index) {
-                    <tr>
-                      <td class="py-2 font-mono font-bold text-slate-400">{{ $index + 1 }}</td>
-                      <td class="py-2 font-bold text-slate-950">{{ item.description }}</td>
-                      <td class="py-2 text-center font-bold text-slate-700">{{ item.qty }}</td>
-                      <td class="py-2 text-right font-mono text-slate-800">{{ formatCurrency(item.unitPrice) }}</td>
-                      <td class="py-2 text-right font-mono font-black text-slate-950">{{ formatCurrency(item.total) }}</td>
+              <div class="overflow-x-auto custom-scrollbar">
+                <table class="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr class="font-black uppercase text-[10px] tracking-wider text-slate-500">
+                      <th class="py-2 pr-2 whitespace-nowrap">Sr #</th>
+                      <th class="py-2 pr-2">Particular Description</th>
+                      <th class="py-2 px-2 text-center whitespace-nowrap">Qty</th>
+                      <th class="py-2 px-2 text-right whitespace-nowrap">Unit Rate (PKR)</th>
+                      <th class="py-2 pl-2 text-right whitespace-nowrap">Total (PKR)</th>
                     </tr>
-                  }
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100 font-medium">
+                    @for (item of selectedInvoiceForView.lineItems; track $index) {
+                      <tr>
+                        <td class="py-2 pr-2 font-mono font-bold text-slate-400">{{ $index + 1 }}</td>
+                        <td class="py-2 pr-2 font-bold text-slate-950">{{ item.description }}</td>
+                        <td class="py-2 px-2 text-center font-bold text-slate-700">{{ item.qty }}</td>
+                        <td class="py-2 px-2 text-right font-mono text-slate-800 whitespace-nowrap">{{ formatCurrency(item.unitPrice) }}</td>
+                        <td class="py-2 pl-2 text-right font-mono font-black text-slate-950 whitespace-nowrap">{{ formatCurrency(item.total) }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             <!-- SINGLE COHESIVE HIGHLIGHT FOR 1LINK PAYMENT & NET PAYABLE -->
@@ -28290,29 +28260,29 @@
           </div>
 
           <!-- Executive Summary Metrics Cards Grid -->
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs tabular-nums">
-            <div class="p-3.5 rounded-2xl bg-white border border-slate-200">
-              <div class="text-[10px] font-black uppercase text-slate-500">Total Catalog Titles</div>
-              <div class="text-lg font-black text-slate-900 mt-0.5">{{ libraryCirculationStats.totalTitles }} Titles</div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs tabular-nums">
+            <div class="p-3.5 rounded-2xl bg-white border border-slate-200 min-w-0 overflow-hidden">
+              <div class="text-[10px] font-black uppercase text-slate-500 truncate">Total Catalog Titles</div>
+              <div class="text-base sm:text-lg font-black text-slate-900 mt-0.5 leading-tight break-words">{{ libraryCirculationStats.totalTitles }} Titles</div>
             </div>
-            <div class="p-3.5 rounded-2xl bg-white border border-slate-200/90">
-              <div class="text-[10px] font-black uppercase text-blue-800">In Active Circulation</div>
-              <div class="text-lg font-black text-blue-950 mt-0.5">{{ libraryCirculationStats.activeCheckoutsCount }} Books</div>
+            <div class="p-3.5 rounded-2xl bg-white border border-slate-200/90 min-w-0 overflow-hidden">
+              <div class="text-[10px] font-black uppercase text-blue-800 truncate">In Active Circulation</div>
+              <div class="text-base sm:text-lg font-black text-blue-950 mt-0.5 leading-tight break-words">{{ libraryCirculationStats.activeCheckoutsCount }} Books</div>
             </div>
-            <div class="p-3.5 rounded-2xl bg-white border border-slate-200/90">
-              <div class="text-[10px] font-black uppercase text-rose-800">Overdue Checkouts</div>
-              <div class="text-lg font-black text-rose-950 mt-0.5">{{ libraryCirculationStats.overdueCheckoutsCount }} Overdue</div>
+            <div class="p-3.5 rounded-2xl bg-white border border-slate-200/90 min-w-0 overflow-hidden">
+              <div class="text-[10px] font-black uppercase text-rose-800 truncate">Overdue Checkouts</div>
+              <div class="text-base sm:text-lg font-black text-rose-950 mt-0.5 leading-tight break-words">{{ libraryCirculationStats.overdueCheckoutsCount }} Overdue</div>
             </div>
-            <div class="p-3.5 rounded-2xl bg-white border border-slate-200/90">
-              <div class="text-[10px] font-black uppercase text-amber-800">Accumulated Overdue Fines</div>
-              <div class="text-lg font-black text-amber-950 mt-0.5">PKR {{ formatCurrency(libraryCirculationStats.totalFinesAccrued) }}</div>
+            <div class="p-3.5 rounded-2xl bg-white border border-slate-200/90 min-w-0 overflow-hidden">
+              <div class="text-[10px] font-black uppercase text-amber-800 truncate">Accumulated Overdue Fines</div>
+              <div class="text-base sm:text-lg font-black text-amber-950 mt-0.5 leading-tight break-words">PKR {{ formatCurrency(libraryCirculationStats.totalFinesAccrued) }}</div>
             </div>
           </div>
 
           <!-- Detailed Circulation Ledger Table -->
           <div class="space-y-2">
             <h3 class="text-xs font-black uppercase tracking-wider text-slate-700">Official Borrower Circulation Ledger</h3>
-            <div class="border border-slate-300 rounded-xl overflow-hidden">
+            <div class="border border-slate-300 rounded-xl overflow-x-auto custom-scrollbar">
               <table class="w-full text-left text-[11px] border-collapse tabular-nums">
                 <thead class="bg-white text-slate-900 uppercase font-black tracking-wider text-[9px] border-b border-slate-300">
                   <tr>
@@ -28558,28 +28528,28 @@
           </div>
 
           <!-- Student & Guardian Information -->
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs bg-white p-3.5 rounded-2xl border border-slate-200 font-medium">
-            <div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs bg-white p-3.5 rounded-2xl border border-slate-200 font-medium">
+            <div class="min-w-0">
               <span class="text-[10px] font-black uppercase text-slate-500 block">Student Name</span>
-              <span class="font-black text-slate-900 text-sm">{{ selectedPromissoryDefaulter.studentName }}</span>
+              <span class="font-black text-slate-900 text-sm break-words">{{ selectedPromissoryDefaulter.studentName }}</span>
             </div>
-            <div>
-              <span class="text-[10px] font-black uppercase text-slate-500 block">Roll # & Class</span>
-              <span class="font-bold text-indigo-700">{{ selectedPromissoryDefaulter.rollNo }} · {{ selectedPromissoryDefaulter.grade }}</span>
+            <div class="min-w-0">
+              <span class="text-[10px] font-black uppercase text-slate-500 block">Roll # &amp; Class</span>
+              <span class="font-bold text-indigo-700 break-words">{{ selectedPromissoryDefaulter.rollNo }} · {{ selectedPromissoryDefaulter.grade }}</span>
             </div>
-            <div>
+            <div class="min-w-0">
               <span class="text-[10px] font-black uppercase text-slate-500 block">Guardian / Father</span>
-              <span class="font-bold text-slate-900">{{ selectedPromissoryDefaulter.guardianName }}</span>
+              <span class="font-bold text-slate-900 break-words">{{ selectedPromissoryDefaulter.guardianName }}</span>
             </div>
-            <div>
+            <div class="min-w-0">
               <span class="text-[10px] font-black uppercase text-slate-500 block">Guardian CNIC</span>
-              <span class="font-mono font-bold text-slate-800">{{ promissoryForm.cnicNo }}</span>
+              <span class="font-mono font-bold text-slate-800 break-words">{{ promissoryForm.cnicNo }}</span>
             </div>
           </div>
 
           <!-- Legal Commitment Affidavit Text -->
           <div class="p-4 rounded-2xl bg-white border border-slate-200/90 text-xs text-slate-800 leading-relaxed font-serif space-y-2">
-            <h4 class="font-black font-sans text-slate-900 text-xs uppercase tracking-wider">Solemn Declaration & Binding Undertaking:</h4>
+            <h4 class="font-black font-sans text-slate-900 text-xs uppercase tracking-wider">Solemn Declaration &amp; Binding Undertaking:</h4>
             <p>
               I, <strong class="text-slate-900">{{ selectedPromissoryDefaulter.guardianName }}</strong> (CNIC # <span class="font-mono font-bold">{{ promissoryForm.cnicNo }}</span>), parent/guardian of <strong class="text-slate-900">{{ selectedPromissoryDefaulter.studentName }}</strong>, hereby acknowledge the total outstanding fee arrears of <strong>PKR {{ formatCurrency(selectedPromissoryDefaulter.totalRemainingBakaya) }}</strong> for {{ selectedPromissoryDefaulter.unpaidMonthsCount }} unpaid months ({{ selectedPromissoryDefaulter.unpaidMonthsList.join(', ') }}).
             </p>
@@ -28591,7 +28561,7 @@
           <!-- Installment Schedule Table -->
           <div class="space-y-2">
             <h4 class="text-xs font-black uppercase tracking-wider text-slate-700">Restructured Payment Installment Schedule</h4>
-            <div class="border border-slate-300 rounded-xl overflow-hidden">
+            <div class="border border-slate-300 rounded-xl overflow-x-auto custom-scrollbar">
               <table class="w-full text-left text-xs border-collapse tabular-nums">
                 <thead class="bg-white text-slate-900 uppercase font-black tracking-wider text-[9px] border-b border-slate-200/80">
                   <tr>
@@ -28718,25 +28688,25 @@
           </div>
 
           <!-- Summary Metrics -->
-          <div class="grid grid-cols-3 gap-3 text-xs">
-            <div class="p-3 rounded-2xl bg-white border border-slate-200">
-              <div class="text-[10px] font-black uppercase text-slate-500">Absent Faculty Today</div>
-              <div class="text-base font-black text-rose-700 mt-0.5">{{ substituteArrangements.length }} Teachers</div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+            <div class="p-3 rounded-2xl bg-white border border-slate-200 min-w-0 overflow-hidden">
+              <div class="text-[10px] font-black uppercase text-slate-500 truncate">Absent Faculty Today</div>
+              <div class="text-base font-black text-rose-700 mt-0.5 leading-tight break-words">{{ substituteArrangements.length }} Teachers</div>
             </div>
-            <div class="p-3 rounded-2xl bg-white border border-slate-200/90">
-              <div class="text-[10px] font-black uppercase text-indigo-800">Assigned Replacements</div>
-              <div class="text-base font-black text-indigo-950 mt-0.5">{{ substituteArrangements.length }} Periods Covered</div>
+            <div class="p-3 rounded-2xl bg-white border border-slate-200/90 min-w-0 overflow-hidden">
+              <div class="text-[10px] font-black uppercase text-indigo-800 truncate">Assigned Replacements</div>
+              <div class="text-base font-black text-indigo-950 mt-0.5 leading-tight break-words">{{ substituteArrangements.length }} Periods Covered</div>
             </div>
-            <div class="p-3 rounded-2xl bg-white border border-slate-200/90">
-              <div class="text-[10px] font-black uppercase text-emerald-800">Academic Continuity Status</div>
-              <div class="text-base font-black text-emerald-950 mt-0.5">100% Classes Covered</div>
+            <div class="p-3 rounded-2xl bg-white border border-slate-200/90 min-w-0 overflow-hidden">
+              <div class="text-[10px] font-black uppercase text-emerald-800 truncate">Academic Continuity Status</div>
+              <div class="text-base font-black text-emerald-950 mt-0.5 leading-tight break-words">100% Classes Covered</div>
             </div>
           </div>
 
           <!-- Substitution Roster Table -->
           <div class="space-y-2">
             <h4 class="text-xs font-black uppercase tracking-wider text-slate-700">Official Daily Faculty Substitution Duty Roster</h4>
-            <div class="border border-slate-300 rounded-xl overflow-hidden">
+            <div class="border border-slate-300 rounded-xl overflow-x-auto custom-scrollbar">
               <table class="w-full text-left text-xs border-collapse tabular-nums">
                 <thead class="bg-white text-slate-900 uppercase font-black tracking-wider text-[9px] border-b border-slate-300">
                   <tr>
