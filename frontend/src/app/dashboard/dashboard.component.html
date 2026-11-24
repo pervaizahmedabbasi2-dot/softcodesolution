@@ -1,55 +1,42 @@
-<!-- SCS_ENTERPRISE_DYNAMIC_ISLAND_HUD_V2_ULTRA_PREMIUM -->
-<div *ngIf="dynamicIsland.show" class="fixed top-2 sm:top-4 inset-x-0 z-[100000] flex justify-center pointer-events-none px-2.5 sm:px-4 animate-fade-in transition-all duration-300">
-  <div class="pointer-events-auto flex items-center gap-3 rounded-2xl sm:rounded-full bg-gradient-to-br from-white/95 via-emerald-50/75 to-slate-50/95 backdrop-blur-2xl text-slate-900 px-3.5 py-2.5 sm:px-5 sm:py-3 border border-emerald-200/80 shadow-[0_20px_50px_-10px_rgba(16,185,129,0.28),0_8px_20px_-6px_rgba(0,0,0,0.08),inset_0_1px_2px_rgba(255,255,255,0.95)] transition-all hover:scale-[1.01] max-w-full sm:max-w-xl w-auto min-w-0">
-    
-    <!-- Dynamic Glowing Icon Badge -->
-    <div class="relative shrink-0 flex items-center justify-center">
-      <div *ngIf="dynamicIsland.type === 'launch'"
-           class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl sm:rounded-full bg-gradient-to-tr from-emerald-600 via-teal-500 to-emerald-400 text-white flex items-center justify-center shadow-md shadow-emerald-500/30 ring-2 ring-emerald-400/40 animate-pulse">
-        <lucide-icon [name]="icons.Rocket" class="w-4 h-4 sm:w-4.5 sm:h-4.5"></lucide-icon>
-      </div>
-
-      <div *ngIf="dynamicIsland.type === 'success'"
-           class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl sm:rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center shadow-md shadow-emerald-500/30 ring-2 ring-emerald-400/40">
-        <lucide-icon [name]="icons.Sparkles" class="w-4 h-4 sm:w-4.5 sm:h-4.5"></lucide-icon>
-      </div>
-
-      <div *ngIf="dynamicIsland.type === 'alert'"
-           class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl sm:rounded-full bg-gradient-to-tr from-rose-500 to-amber-500 text-white flex items-center justify-center shadow-md shadow-rose-500/30 ring-2 ring-rose-400/40">
-        <lucide-icon [name]="icons.AlertTriangle" class="w-4 h-4 sm:w-4.5 sm:h-4.5"></lucide-icon>
-      </div>
-
-      <!-- Live Pulsing Status Dot -->
-      <span class="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
-        <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
-              [class.bg-emerald-400]="dynamicIsland.ok" [class.bg-rose-400]="!dynamicIsland.ok"></span>
-        <span class="relative inline-flex rounded-full h-2.5 w-2.5"
-              [class.bg-emerald-500]="dynamicIsland.ok" [class.bg-rose-500]="!dynamicIsland.ok"></span>
-      </span>
+<!-- SCS_CAMERA_STYLE_NOTICE_POPUP_V1 -->
+@if (dynamicIsland.show) {
+  <div class="fixed top-5 right-5 z-[100000] max-w-md w-[calc(100vw-2.5rem)] sm:w-full p-4 rounded-2xl shadow-2xl backdrop-blur-2xl border flex items-start gap-3.5 animate-in slide-in-from-top-4 fade-in duration-300"
+       [class]="(dynamicIsland.type === 'success' || dynamicIsland.type === 'launch') && dynamicIsland.ok
+         ? 'bg-gradient-to-br from-white/95 via-emerald-50/80 to-slate-50/95 text-slate-900 border-emerald-200/90 ring-1 ring-emerald-400/20 shadow-[0_20px_50px_-12px_rgba(16,185,129,0.22)]'
+         : (dynamicIsland.type === 'alert' || !dynamicIsland.ok
+           ? 'bg-gradient-to-br from-white/95 via-amber-50/70 to-slate-50/95 text-slate-900 border-amber-200/90 ring-1 ring-amber-400/20 shadow-[0_20px_50px_-12px_rgba(245,158,11,0.18)]'
+           : 'bg-gradient-to-br from-white/95 via-emerald-50/60 to-slate-50/95 text-slate-900 border-indigo-200/90 ring-1 ring-indigo-400/20 shadow-[0_20px_50px_-12px_rgba(79,70,229,0.18)]')">
+    <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-xs"
+         [class]="(dynamicIsland.type === 'success' || dynamicIsland.type === 'launch') && dynamicIsland.ok
+           ? 'bg-emerald-100 text-emerald-700'
+           : (dynamicIsland.type === 'alert' || !dynamicIsland.ok
+             ? 'bg-amber-100 text-amber-700'
+             : 'bg-indigo-100 text-indigo-700')">
+      @if ((dynamicIsland.type === 'success' || dynamicIsland.type === 'launch') && dynamicIsland.ok) {
+        <lucide-icon [name]="icons.Check" class="w-5 h-5"></lucide-icon>
+      } @else if (dynamicIsland.type === 'alert' || !dynamicIsland.ok) {
+        <lucide-icon [name]="icons.AlertCircle" class="w-5 h-5"></lucide-icon>
+      } @else {
+        <lucide-icon [name]="icons.Bell" class="w-5 h-5"></lucide-icon>
+      }
     </div>
-
-    <!-- Message Content & Title Badge -->
-    <div class="flex-1 min-w-0 pr-1 space-y-0.5">
-      <div class="flex items-center gap-1.5 min-w-0">
-        <span class="text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md bg-emerald-100/80 text-emerald-800 border border-emerald-200/80 shrink-0">
-          {{ dynamicIsland.title }}
-        </span>
-        <span class="text-[10px] font-mono text-emerald-700 font-bold shrink-0 truncate">● ACTIVE</span>
-      </div>
-      <p class="text-xs sm:text-sm font-extrabold tracking-tight text-slate-900 leading-tight truncate">
-        {{ dynamicIsland.message }}
+    <div class="flex-1 min-w-0 pr-1">
+      <p class="font-extrabold text-xs tracking-tight"
+         [class]="(dynamicIsland.type === 'success' || dynamicIsland.type === 'launch') && dynamicIsland.ok
+           ? 'text-emerald-700'
+           : (dynamicIsland.type === 'alert' || !dynamicIsland.ok
+             ? 'text-amber-700'
+             : 'text-indigo-700')">
+        {{ dynamicIsland.title }}
       </p>
+      <p class="text-xs text-slate-600 mt-0.5 leading-relaxed font-medium break-words">{{ dynamicIsland.message }}</p>
     </div>
-
-    <!-- Close Button -->
-    <button (click)="closeDynamicIsland()"
-            title="Dismiss notification"
-            class="ml-1 w-6 h-6 rounded-full bg-slate-100 hover:bg-emerald-100 active:scale-90 text-slate-500 hover:text-emerald-800 transition-all flex items-center justify-center shrink-0 cursor-pointer border border-slate-200">
-      <lucide-icon [name]="icons.X" class="w-3.5 h-3.5"></lucide-icon>
+    <button type="button" (click)="closeDynamicIsland()" class="text-slate-400 hover:text-slate-700 p-1 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer" title="Dismiss Notification">
+      <lucide-icon [name]="icons.X" class="w-4 h-4"></lucide-icon>
     </button>
-
   </div>
-</div>
+}
+
 
 <!-- SCS_PREVIEW_ADMIN_BAR_V1 -->
 <div *ngIf="previewMode && !isSchoolPreviewActive" class="bg-gradient-to-r from-white/95 via-emerald-50/70 to-teal-50/80 backdrop-blur-xl text-slate-900 px-4 py-2 flex items-center justify-between z-[2000] border-b border-emerald-200/80 shadow-[0_8px_24px_-8px_rgba(16,185,129,0.2)] shrink-0">

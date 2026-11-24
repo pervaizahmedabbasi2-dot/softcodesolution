@@ -597,8 +597,15 @@ export interface TeacherHomeworkRecord {
   title: string;
   subject: string;
   grade: string;
+  section?: string;
+  chapterTopic?: string;
   dueDate: string;
+  dueTime?: string;
   assignedDate: string;
+  submissionMode?: string;
+  priority?: 'Normal' | 'Important' | 'Mandatory Graded' | string;
+  estimatedMinutes?: number;
+  externalLink?: string;
   submissionsCount: number;
   totalCount: number;
   description: string;
@@ -607,7 +614,7 @@ export interface TeacherHomeworkRecord {
   attachmentName?: string;
   attachmentType?: string;
   attachmentData?: string;
-  resourceKind?: 'Homework' | 'Worksheet' | 'Class Notes' | string;
+  resourceKind?: 'Homework' | 'Worksheet' | 'Class Notes' | 'Project / Lab' | 'Oral / Reading' | 'Test Prep' | string;
   maxMarks?: number;
   status?: 'Active' | 'Closed' | string;
 }
@@ -4268,9 +4275,18 @@ INSTRUCTIONS:
     title: '',
     subject: 'Mathematics',
     grade: 'Class 10-A',
-    dueDate: 'Oct 22, 2026',
+    customGradeInput: '',
+    section: 'All Sections',
+    chapterTopic: '',
+    assignedDate: new Date().toISOString().split('T')[0],
+    dueDate: new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0],
+    dueTime: '08:00 AM',
+    submissionMode: 'Online Upload + Written',
+    priority: 'Normal' as 'Normal' | 'Important' | 'Mandatory Graded' | string,
+    estimatedMinutes: 30,
+    externalLink: '',
     description: '',
-    resourceKind: 'Homework' as 'Homework' | 'Worksheet' | 'Class Notes' | string,
+    resourceKind: 'Homework' as 'Homework' | 'Worksheet' | 'Class Notes' | 'Project / Lab' | 'Oral / Reading' | 'Test Prep' | string,
     maxMarks: 10,
     status: 'Active' as 'Active' | 'Closed' | string,
     attachmentName: '',
@@ -4293,9 +4309,14 @@ INSTRUCTIONS:
   };
 
   // Teacher & Two-Way Student Portal Interactive State
+  customSchoolClasses: string[] = [];
   homeworkSubTab: 'assignments' | 'materials' = 'assignments';
   homeworkClassFilter: string = 'All';
   homeworkKindFilter: string = 'All';
+  homeworkSearchQuery: string = '';
+  studentHomeworkScopeFilter: 'my_class' | 'all' = 'my_class';
+  studentHomeworkSubjectFilter: string = 'All';
+  studentHomeworkStatusFilter: string = 'All';
   teacherScheduleDayFilter: string = 'Wednesday';
   teacherRosterSearch: string = '';
   teacherRosterGradeFilter: string = 'All';
@@ -4326,6 +4347,7 @@ INSTRUCTIONS:
     title: '',
     subject: 'Mathematics',
     grade: 'Class 10-A',
+    customGradeInput: '',
     materialType: 'Class Notes' as 'Class Notes' | 'Worksheet' | 'Past Paper' | 'Lab Manual' | string,
     description: '',
     externalUrl: '',
@@ -7600,6 +7622,14 @@ INSTRUCTIONS:
         this.rolePermissions = this.getInitialRolePermissions();
       }
 
+      const savedCustomClasses = this.getScopedItem('scs_school_custom_classes_v1');
+      if (savedCustomClasses) {
+        try {
+          const parsedCls = JSON.parse(savedCustomClasses);
+          if (Array.isArray(parsedCls)) this.customSchoolClasses = parsedCls.filter((c) => typeof c === 'string' && c.trim());
+        } catch {}
+      }
+
       if (savedHw) this.teacherHomeworks = JSON.parse(savedHw);
       else this.teacherHomeworks = this.getInitialHomeworks();
 
@@ -8427,6 +8457,7 @@ INSTRUCTIONS:
       this.setScopedItem('scs_school_portal_users_v1', JSON.stringify(this.portalUsers));
       this.setScopedItem('scs_school_role_perms_v1', JSON.stringify(this.rolePermissions));
       this.setScopedItem('scs_school_homeworks_v1', JSON.stringify(this.teacherHomeworks));
+      this.setScopedItem('scs_school_custom_classes_v1', JSON.stringify(this.customSchoolClasses));
       this.setScopedItem('scs_school_hw_submissions_v1', JSON.stringify(this.homeworkSubmissions));
       this.setScopedItem('scs_school_study_materials_v1', JSON.stringify(this.teacherStudyMaterials));
       this.setScopedItem('scs_school_teacher_schedule_v1', JSON.stringify(this.teacherSelfSchedule));
@@ -9981,9 +10012,72 @@ INSTRUCTIONS:
 
   getInitialHomeworks(): TeacherHomeworkRecord[] {
     return [
-      { id: 'HW-201', title: 'Quadratic Equations & Complex Roots Worksheet', subject: 'Mathematics', grade: 'Class 10-A', dueDate: 'Oct 20, 2026', assignedDate: 'Oct 15, 2026', submissionsCount: 2, totalCount: 28, description: 'Solve exercises 4.1 to 4.4 and show step-by-step discriminant calculations.', teacherName: 'Prof. Tariq Mehmood', resourceKind: 'Homework', maxMarks: 20, status: 'Active' },
-      { id: 'HW-202', title: 'Newton Laws of Motion & Momentum Lab Report', subject: 'Physics', grade: 'Class 10-A', dueDate: 'Oct 22, 2026', assignedDate: 'Oct 14, 2026', submissionsCount: 1, totalCount: 28, description: 'Submit formal laboratory write-up including graph of force versus acceleration.', teacherName: 'Dr. Rehan Alvi', resourceKind: 'Worksheet', maxMarks: 15, status: 'Active' },
-      { id: 'HW-203', title: 'Critical Essay on Shakespearean Drama Techniques', subject: 'English', grade: 'Class 9-C', dueDate: 'Oct 24, 2026', assignedDate: 'Oct 13, 2026', submissionsCount: 0, totalCount: 25, description: 'Write an analytical essay of 750 words evaluating character motives in Macbeth Act 2.', teacherName: 'Ms. Sarah Jenkins', resourceKind: 'Homework', maxMarks: 25, status: 'Active' }
+      {
+        id: 'HW-201',
+        title: 'Quadratic Equations & Complex Roots Worksheet',
+        subject: 'Mathematics',
+        grade: 'Class 10-A',
+        section: 'Section A',
+        chapterTopic: 'Ch 4 • Discriminant & Nature of Roots',
+        dueDate: '2026-10-20',
+        dueTime: '08:00 AM',
+        assignedDate: '2026-10-15',
+        submissionMode: 'Online Upload + Written',
+        priority: 'Mandatory Graded',
+        estimatedMinutes: 45,
+        externalLink: '',
+        submissionsCount: 2,
+        totalCount: 28,
+        description: 'Solve exercises 4.1 to 4.4 (Q1–Q12) in neat homework copy and show complete discriminant calculations.',
+        teacherName: 'Prof. Tariq Mehmood',
+        resourceKind: 'Homework',
+        maxMarks: 20,
+        status: 'Active'
+      },
+      {
+        id: 'HW-202',
+        title: 'Newton Laws of Motion & Momentum Lab Report',
+        subject: 'Physics',
+        grade: 'Class 10-A',
+        section: 'All Sections',
+        chapterTopic: 'Unit 3 • Dynamics & Conservation of Momentum',
+        dueDate: '2026-10-22',
+        dueTime: '11:30 AM',
+        assignedDate: '2026-10-14',
+        submissionMode: 'PDF / Photo Upload',
+        priority: 'Important',
+        estimatedMinutes: 40,
+        externalLink: '',
+        submissionsCount: 1,
+        totalCount: 28,
+        description: 'Submit formal laboratory write-up including apparatus diagram and graph of force versus acceleration.',
+        teacherName: 'Dr. Rehan Alvi',
+        resourceKind: 'Worksheet',
+        maxMarks: 15,
+        status: 'Active'
+      },
+      {
+        id: 'HW-203',
+        title: 'Critical Essay on Shakespearean Drama Techniques',
+        subject: 'English',
+        grade: 'Class 9-C',
+        section: 'Section C',
+        chapterTopic: 'Literature • Macbeth Act II Analysis',
+        dueDate: '2026-10-24',
+        dueTime: '09:00 AM',
+        assignedDate: '2026-10-13',
+        submissionMode: 'Written Text Answer',
+        priority: 'Normal',
+        estimatedMinutes: 35,
+        externalLink: '',
+        submissionsCount: 0,
+        totalCount: 25,
+        description: 'Write an analytical essay of 750 words evaluating character motives and dramatic irony in Macbeth Act 2.',
+        teacherName: 'Ms. Sarah Jenkins',
+        resourceKind: 'Homework',
+        maxMarks: 25,
+        status: 'Active'
+      }
     ];
   }
 
@@ -10889,27 +10983,267 @@ INSTRUCTIONS:
     this.cdr.detectChanges();
   }
 
+  // --- DYNAMIC REAL SCHOOL CLASSES & HOMEWORK CLASS MATCHING ---
+  private normalizeSchoolClassLabel(raw: string): string {
+    return String(raw || '')
+      .replace(/\s*\([^)]*\)\s*$/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  private getClassSortRank(label: string): [number, number, string] {
+    const low = label.toLowerCase().trim();
+    if (low.includes('playgroup') || low === 'pg') return [0, 0, low];
+    if (low.includes('nursery')) return [1, 0, low];
+    if (low.includes('prep')) return [2, 1, low];
+    if (low === 'kg' || low.startsWith('kg-') || low.startsWith('kg ') || low.includes('class kg') || low.includes('kindergarten')) return [2, 0, low];
+    const numMatch = /(?:class|grade|std)\s*(\d{1,2})/i.exec(low) || /^(\d{1,2})(?:st|nd|rd|th)?\b/i.exec(low);
+    if (numMatch) {
+      return [3, Number(numMatch[1]), low];
+    }
+    return [4, 999, low];
+  }
+
+  get dynamicSchoolClasses(): string[] {
+    const map = new Map<string, string>();
+    const addLabel = (raw?: string | null) => {
+      if (!raw) return;
+      const cleaned = this.normalizeSchoolClassLabel(raw);
+      if (!cleaned) return;
+      const low = cleaned.toLowerCase();
+      if (
+        low === 'all' ||
+        low === 'all classes' ||
+        low.startsWith('all classes') ||
+        low.includes('custom class name write-in') ||
+        low === 'class 1 to class 10 all sections'
+      ) {
+        return;
+      }
+      if (!map.has(low)) {
+        map.set(low, cleaned);
+      }
+    };
+
+    const baseline = [
+      'Nursery',
+      'KG',
+      'Class 1',
+      'Class 2',
+      'Class 3',
+      'Class 4',
+      'Class 5',
+      'Class 6',
+      'Class 7',
+      'Class 8',
+      'Class 9',
+      'Class 10'
+    ];
+    for (const b of baseline) addLabel(b);
+    for (const c of this.customSchoolClasses || []) addLabel(c);
+    for (const s of this.activeStudents || []) addLabel(s.grade);
+    for (const a of this.admissionsList || []) addLabel(a.appliedFor);
+    for (const ar of this.admissionReviewList || []) addLabel(ar.appliedGrade);
+    for (const t of this.teachers || []) {
+      addLabel((t as any).assignedGrade);
+      addLabel((t as any).inchargeClass);
+    }
+    for (const sub of this.schoolSubjectsList || []) addLabel(sub.grade);
+    for (const tt of this.timetables || []) addLabel(tt.grade);
+    for (const ex of this.examsList || []) addLabel(ex.class);
+    for (const hw of this.teacherHomeworks || []) addLabel(hw.grade);
+    for (const mat of this.teacherStudyMaterials || []) addLabel(mat.grade);
+    for (const p of this.teacherSelfSchedule || []) addLabel(p.grade);
+
+    return Array.from(map.values()).sort((a, b) => {
+      const [ga, na, sa] = this.getClassSortRank(a);
+      const [gb, nb, sb] = this.getClassSortRank(b);
+      if (ga !== gb) return ga - gb;
+      if (na !== nb) return na - nb;
+      return sa.localeCompare(sb);
+    });
+  }
+
+  get dynamicSchoolClassFilters(): string[] {
+    return ['All', ...this.dynamicSchoolClasses];
+  }
+
+  get dynamicSchoolSections(): string[] {
+    const base = ['All Sections', 'Section A', 'Section B', 'Section C', 'Morning', 'Science', 'Arts'];
+    const map = new Map<string, string>();
+    for (const b of base) map.set(b.toLowerCase(), b);
+    for (const s of this.activeStudents || []) {
+      const sec = String(s.section || '').trim();
+      if (sec && !map.has(sec.toLowerCase())) map.set(sec.toLowerCase(), sec);
+    }
+    for (const hw of this.teacherHomeworks || []) {
+      const sec = String(hw.section || '').trim();
+      if (sec && !map.has(sec.toLowerCase())) map.set(sec.toLowerCase(), sec);
+    }
+    return Array.from(map.values());
+  }
+
+  get dynamicSchoolSubjects(): string[] {
+    const base = ['Mathematics', 'Advanced Mathematics', 'English', 'Urdu', 'Physics', 'Chemistry', 'Biology', 'Computer Science', 'General Science', 'Social Studies', 'Islamiat', 'Pakistan Studies', 'Phonics & Reading', 'Art & Drawing'];
+    const map = new Map<string, string>();
+    for (const b of base) map.set(b.toLowerCase(), b);
+    for (const sub of this.schoolSubjectsList || []) {
+      const title = String(sub.title || '').trim();
+      if (title && !map.has(title.toLowerCase())) map.set(title.toLowerCase(), title);
+    }
+    for (const hw of this.teacherHomeworks || []) {
+      const s = String(hw.subject || '').trim();
+      if (s && !map.has(s.toLowerCase())) map.set(s.toLowerCase(), s);
+    }
+    return Array.from(map.values());
+  }
+
+  private registerCustomSchoolClass(gradeName?: string): void {
+    const cleaned = this.normalizeSchoolClassLabel(gradeName || '');
+    if (!cleaned) return;
+    const low = cleaned.toLowerCase();
+    if (low === 'all' || low.startsWith('all classes') || low.includes('custom class name write-in')) return;
+    if (!this.customSchoolClasses.some((c) => c.toLowerCase() === low)) {
+      this.customSchoolClasses = [...this.customSchoolClasses, cleaned];
+    }
+  }
+
+  private parseClassIdentity(rawClass?: string, rawSection?: string): { base: string; section: string } {
+    const norm = this.normalizeSchoolClassLabel(rawClass || '').toLowerCase();
+    let base = norm.replace(/^(?:class|grade)\s+/i, '').trim();
+    let section = String(rawSection || '').trim().toLowerCase().replace(/^section\s+/i, '');
+
+    if (base.includes('-')) {
+      const parts = base.split('-');
+      const tail = (parts[parts.length - 1] || '').trim();
+      if (tail.length > 0 && tail.length <= 12) {
+        if (!section || section === 'all sections' || section === 'all') {
+          section = tail;
+        }
+        base = parts.slice(0, -1).join('-').trim();
+      }
+    }
+    if (base === 'kindergarten' || base === 'prep' || base === 'kg / prep') base = 'kg';
+    return { base, section: section === 'all sections' || section === 'all' ? '' : section };
+  }
+
+  doesHomeworkMatchClass(hwGrade?: string, targetClass?: string, hwSection?: string): boolean {
+    const hwNorm = String(hwGrade || '').trim().toLowerCase();
+    const targetNorm = String(targetClass || '').trim().toLowerCase();
+    if (!targetNorm || targetNorm === 'all' || targetNorm.startsWith('all classes')) return true;
+    if (!hwNorm || hwNorm.startsWith('all classes')) return true;
+
+    const hwId = this.parseClassIdentity(hwGrade, hwSection);
+    const targetId = this.parseClassIdentity(targetClass);
+    if (!hwId.base || !targetId.base) return hwNorm === targetNorm;
+    if (hwId.base !== targetId.base) return false;
+    if (targetId.section && hwId.section && targetId.section !== hwId.section) {
+      return false;
+    }
+    return true;
+  }
+
+  getHomeworkCustomColumns(): SchoolCustomColumn[] {
+    this.tableSchemaService.schemaRevision();
+    return (this.tableSchemaService.getSchema('owner_homework_log').customColumns || []).filter(
+      (c) => !c.scope || c.scope === 'table' || c.scope === 'both'
+    );
+  }
+
+  getHomeworkCustomCellValue(hwId: string, colId: string): string {
+    this.tableSchemaService.schemaRevision();
+    const schema = this.tableSchemaService.getSchema('owner_homework_log');
+    return schema.customCells?.[hwId]?.[colId] ?? '';
+  }
+
   // --- TEACHER HOMEWORK CRUD + SUBMISSIONS REVIEW ---
   getFilteredTeacherHomeworks(): TeacherHomeworkRecord[] {
+    const q = (this.homeworkSearchQuery || '').trim().toLowerCase();
     return (this.teacherHomeworks || []).filter((hw) => {
-      if (this.homeworkClassFilter !== 'All' && !String(hw.grade || '').toLowerCase().includes(this.homeworkClassFilter.toLowerCase().replace('class ', ''))) {
+      if (this.homeworkClassFilter !== 'All' && !this.doesHomeworkMatchClass(hw.grade, this.homeworkClassFilter, hw.section)) {
         return false;
       }
       if (this.homeworkKindFilter !== 'All' && (hw.resourceKind || 'Homework') !== this.homeworkKindFilter) {
         return false;
       }
+      if (q) {
+        const hay = `${hw.title} ${hw.subject} ${hw.chapterTopic || ''} ${hw.grade} ${hw.section || ''} ${hw.teacherName || ''} ${hw.description}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
       return true;
     });
   }
 
+  getFilteredStudentHomeworks(): TeacherHomeworkRecord[] {
+    const stuGrade = this.currentStudentProfile?.grade || 'Class 10-A';
+    const stuSection = this.currentStudentProfile?.section || '';
+    return (this.teacherHomeworks || []).filter((hw) => {
+      if (this.studentHomeworkScopeFilter === 'my_class') {
+        const target = stuSection && !stuGrade.includes('-') ? `${stuGrade}-${stuSection}` : stuGrade;
+        if (!this.doesHomeworkMatchClass(hw.grade, target, hw.section)) {
+          return false;
+        }
+      }
+      if (this.studentHomeworkSubjectFilter !== 'All' && String(hw.subject || '').toLowerCase() !== this.studentHomeworkSubjectFilter.toLowerCase()) {
+        return false;
+      }
+      if (this.studentHomeworkStatusFilter !== 'All') {
+        const sub = this.getStudentSubmissionForHomework(hw.id);
+        const derived = sub ? sub.status : 'Pending';
+        if (this.studentHomeworkStatusFilter === 'Pending' && sub) return false;
+        if (this.studentHomeworkStatusFilter !== 'Pending' && derived !== this.studentHomeworkStatusFilter) return false;
+      }
+      return true;
+    });
+  }
+
+  getStudentHomeworkSubjects(): string[] {
+    const subjects = new Set<string>();
+    for (const hw of this.teacherHomeworks || []) {
+      if (hw.subject) subjects.add(hw.subject);
+    }
+    return ['All', ...Array.from(subjects)];
+  }
+
+  getFilteredParentChildHomeworks(): TeacherHomeworkRecord[] {
+    const childGrade = this.selectedParentChild?.grade || 'Class 10-A';
+    return (this.teacherHomeworks || []).filter((hw) =>
+      this.doesHomeworkMatchClass(hw.grade, childGrade, hw.section)
+    );
+  }
+
+  getFilteredStudentStudyMaterials(): TeacherStudyMaterialRecord[] {
+    const stuGrade = this.currentStudentProfile?.grade || 'Class 10-A';
+    return (this.teacherStudyMaterials || []).filter((mat) =>
+      this.doesHomeworkMatchClass(mat.grade, stuGrade)
+    );
+  }
+
+  getFilteredParentStudyMaterials(): TeacherStudyMaterialRecord[] {
+    const childGrade = this.selectedParentChild?.grade || 'Class 10-A';
+    return (this.teacherStudyMaterials || []).filter((mat) =>
+      this.doesHomeworkMatchClass(mat.grade, childGrade)
+    );
+  }
+
   openTeacherHomeworkModal(hw?: TeacherHomeworkRecord) {
     if (hw) {
+      if (hw.grade) this.registerCustomSchoolClass(hw.grade);
       this.teacherHomeworkForm = {
         id: hw.id,
         title: hw.title,
         subject: hw.subject,
         grade: hw.grade,
+        customGradeInput: '',
+        section: hw.section || 'All Sections',
+        chapterTopic: hw.chapterTopic || '',
+        assignedDate: hw.assignedDate || new Date().toISOString().split('T')[0],
         dueDate: hw.dueDate,
+        dueTime: hw.dueTime || '08:00 AM',
+        submissionMode: hw.submissionMode || 'Online Upload + Written',
+        priority: hw.priority || 'Normal',
+        estimatedMinutes: Number(hw.estimatedMinutes ?? 30),
+        externalLink: hw.externalLink || '',
         description: hw.description,
         resourceKind: hw.resourceKind || 'Homework',
         maxMarks: Number(hw.maxMarks ?? 10),
@@ -10921,12 +11255,23 @@ INSTRUCTIONS:
       const existingCells = this.tableSchemaService.getSchema('owner_homework_log').customCells[hw.id] || {};
       this.formCustomValues['teacherHomework'] = { ...existingCells };
     } else {
+      const defaultGrade = this.normalizeSchoolClassLabel(this.currentTeacherProfile?.assignedGrade || this.dynamicSchoolClasses[0] || 'Class 10-A');
+      this.registerCustomSchoolClass(defaultGrade);
       this.teacherHomeworkForm = {
         id: '',
         title: '',
         subject: this.currentTeacherProfile?.subject || 'Mathematics',
-        grade: this.currentTeacherProfile?.assignedGrade || 'Class 10-A',
+        grade: defaultGrade,
+        customGradeInput: '',
+        section: 'All Sections',
+        chapterTopic: '',
+        assignedDate: new Date().toISOString().split('T')[0],
         dueDate: new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0],
+        dueTime: '08:00 AM',
+        submissionMode: 'Online Upload + Written',
+        priority: 'Normal',
+        estimatedMinutes: 30,
+        externalLink: '',
         description: '',
         resourceKind: 'Homework',
         maxMarks: 10,
@@ -10947,22 +11292,49 @@ INSTRUCTIONS:
   }
 
   saveTeacherHomework() {
-    if (!this.teacherHomeworkForm.title || !this.teacherHomeworkForm.description) {
-      this.showToast('Please provide Assignment Title and Instructions.', 'warning');
+    if (!this.teacherHomeworkForm.title.trim() || !this.teacherHomeworkForm.description.trim()) {
+      this.showToast('Please provide Assignment Title and Detailed Instructions.', 'warning');
       return;
     }
+    if (this.teacherHomeworkForm.externalLink.trim() && !/^https?:\/\//i.test(this.teacherHomeworkForm.externalLink.trim())) {
+      this.showToast('Reference link must start with https:// or http://', 'warning');
+      return;
+    }
+    const finalGrade = (this.teacherHomeworkForm.grade === '__custom__' && this.teacherHomeworkForm.customGradeInput?.trim())
+      ? this.teacherHomeworkForm.customGradeInput.trim()
+      : (this.teacherHomeworkForm.grade || 'Class 10-A');
+    if (this.teacherHomeworkForm.grade === '__custom__' && !this.teacherHomeworkForm.customGradeInput?.trim()) {
+      this.showToast('Please type the custom Class / Grade name.', 'warning');
+      return;
+    }
+    this.registerCustomSchoolClass(finalGrade);
+
     const maxMarks = Math.max(1, Math.min(1000, Number(this.teacherHomeworkForm.maxMarks) || 10));
+    const estMins = Math.max(5, Math.min(600, Number(this.teacherHomeworkForm.estimatedMinutes) || 30));
+    const gradeStudentsCount = (this.activeStudents || []).filter((s) =>
+      this.doesHomeworkMatchClass(finalGrade, s.grade, this.teacherHomeworkForm.section)
+    ).length || 28;
+
     if (this.teacherHomeworkForm.id) {
       const existing = this.teacherHomeworks.find((h) => h.id === this.teacherHomeworkForm.id);
       if (existing) {
-        existing.title = this.teacherHomeworkForm.title;
-        existing.subject = this.teacherHomeworkForm.subject;
-        existing.grade = this.teacherHomeworkForm.grade;
+        existing.title = this.teacherHomeworkForm.title.trim();
+        existing.subject = this.teacherHomeworkForm.subject.trim() || 'General';
+        existing.grade = finalGrade;
+        existing.section = this.teacherHomeworkForm.section || 'All Sections';
+        existing.chapterTopic = this.teacherHomeworkForm.chapterTopic.trim();
+        existing.assignedDate = this.teacherHomeworkForm.assignedDate || existing.assignedDate;
         existing.dueDate = this.teacherHomeworkForm.dueDate;
-        existing.description = this.teacherHomeworkForm.description;
+        existing.dueTime = this.teacherHomeworkForm.dueTime || '11:59 PM';
+        existing.submissionMode = this.teacherHomeworkForm.submissionMode || 'Online Upload + Written';
+        existing.priority = this.teacherHomeworkForm.priority || 'Normal';
+        existing.estimatedMinutes = estMins;
+        existing.externalLink = this.teacherHomeworkForm.externalLink.trim();
+        existing.description = this.teacherHomeworkForm.description.trim();
         existing.resourceKind = this.teacherHomeworkForm.resourceKind;
         existing.maxMarks = maxMarks;
         existing.status = this.teacherHomeworkForm.status;
+        existing.totalCount = gradeStudentsCount;
         existing.attachmentName = this.teacherHomeworkForm.attachmentName;
         existing.attachmentType = this.teacherHomeworkForm.attachmentType;
         existing.attachmentData = this.teacherHomeworkForm.attachmentData;
@@ -10975,30 +11347,33 @@ INSTRUCTIONS:
         );
         this.saveStateToStorage();
         this.closeTeacherHomeworkModal();
-        this.showToast(`Updated ${existing.resourceKind || 'Assignment'} for ${existing.grade}.`, 'success');
+        this.showToast(`Updated ${existing.resourceKind || 'Assignment'} for ${existing.grade} (${existing.section}).`, 'success');
         return;
       }
     }
 
-    const gradeStudentsCount = (this.activeStudents || []).filter((s) =>
-      String(s.grade || '').toLowerCase().includes(String(this.teacherHomeworkForm.grade || '').toLowerCase().replace('class ', '').split('-')[0].trim())
-    ).length || 28;
-
     const newHw: TeacherHomeworkRecord = {
-      id: `HW-${Math.floor(200 + Math.random() * 700)}`,
-      title: this.teacherHomeworkForm.title,
-      subject: this.teacherHomeworkForm.subject,
-      grade: this.teacherHomeworkForm.grade,
+      id: `HW-${Math.floor(200 + Math.random() * 700)}-${Date.now().toString().slice(-3)}`,
+      title: this.teacherHomeworkForm.title.trim(),
+      subject: this.teacherHomeworkForm.subject.trim() || 'General',
+      grade: finalGrade,
+      section: this.teacherHomeworkForm.section || 'All Sections',
+      chapterTopic: this.teacherHomeworkForm.chapterTopic.trim(),
       dueDate: this.teacherHomeworkForm.dueDate,
-      assignedDate: new Date().toISOString().split('T')[0],
+      dueTime: this.teacherHomeworkForm.dueTime || '11:59 PM',
+      assignedDate: this.teacherHomeworkForm.assignedDate || new Date().toISOString().split('T')[0],
+      submissionMode: this.teacherHomeworkForm.submissionMode || 'Online Upload + Written',
+      priority: this.teacherHomeworkForm.priority || 'Normal',
+      estimatedMinutes: estMins,
+      externalLink: this.teacherHomeworkForm.externalLink.trim(),
       submissionsCount: 0,
       totalCount: gradeStudentsCount,
-      description: this.teacherHomeworkForm.description,
+      description: this.teacherHomeworkForm.description.trim(),
       teacherName: this.currentTeacherProfile.name,
       teacherId: this.currentTeacherProfile.id,
       resourceKind: this.teacherHomeworkForm.resourceKind,
       maxMarks,
-      status: 'Active',
+      status: this.teacherHomeworkForm.status || 'Active',
       attachmentName: this.teacherHomeworkForm.attachmentName,
       attachmentType: this.teacherHomeworkForm.attachmentType,
       attachmentData: this.teacherHomeworkForm.attachmentData
@@ -11018,7 +11393,7 @@ INSTRUCTIONS:
     this.formCustomValues['teacherHomework'] = {};
     this.saveStateToStorage();
     this.closeTeacherHomeworkModal();
-    this.showToast(`Posted ${newHw.resourceKind} to ${newHw.grade} student & parent portals!`, 'success');
+    this.showToast(`Posted ${newHw.resourceKind} to ${newHw.grade} (${newHw.section}) Student & Parent portals!`, 'success');
   }
 
   toggleHomeworkStatus(hw: TeacherHomeworkRecord) {
@@ -11047,11 +11422,9 @@ INSTRUCTIONS:
 
   getPendingStudentsForHomework(hw: TeacherHomeworkRecord): StudentRecord[] {
     const submittedIds = new Set(this.getSubmissionsForHomework(hw.id).map((s) => s.studentId));
-    const gradeNum = String(hw.grade || '').toLowerCase().replace('class ', '').replace('grade ', '').split('-')[0].trim();
     return (this.activeStudents || []).filter((s) => {
       if (submittedIds.has(s.id)) return false;
-      if (!gradeNum) return true;
-      return String(s.grade || '').toLowerCase().includes(gradeNum);
+      return this.doesHomeworkMatchClass(hw.grade, s.grade, hw.section);
     });
   }
 
@@ -11200,11 +11573,13 @@ INSTRUCTIONS:
 
   // --- TEACHER STUDY MATERIALS / CLASS NOTES ---
   openStudyMaterialModal() {
+    const defaultGrade = this.normalizeSchoolClassLabel(this.currentTeacherProfile?.assignedGrade || this.dynamicSchoolClasses[0] || 'Class 10-A');
     this.studyMaterialForm = {
       id: '',
       title: '',
       subject: this.currentTeacherProfile?.subject || 'Mathematics',
-      grade: this.currentTeacherProfile?.assignedGrade || 'Class 10-A',
+      grade: defaultGrade,
+      customGradeInput: '',
       materialType: 'Class Notes',
       description: '',
       externalUrl: '',
@@ -11230,6 +11605,17 @@ INSTRUCTIONS:
       this.showToast('External link must start with https:// or http://', 'warning');
       return;
     }
+    const finalGrade = (this.studyMaterialForm.grade === '__custom__' && this.studyMaterialForm.customGradeInput?.trim())
+      ? this.studyMaterialForm.customGradeInput.trim()
+      : (this.studyMaterialForm.grade.trim() || 'Class 10-A');
+    if (this.studyMaterialForm.grade === '__custom__' && !this.studyMaterialForm.customGradeInput?.trim()) {
+      this.showToast('Please enter custom Class / Grade name.', 'warning');
+      return;
+    }
+    if (finalGrade !== 'All Classes') {
+      this.registerCustomSchoolClass(finalGrade);
+    }
+
     const sizeKb = this.studyMaterialForm.attachmentData
       ? Math.max(1, Math.round((this.studyMaterialForm.attachmentData.length * 0.75) / 1024))
       : 0;
@@ -11237,7 +11623,7 @@ INSTRUCTIONS:
       id: `MAT-${Date.now()}`,
       title: this.studyMaterialForm.title.trim(),
       subject: this.studyMaterialForm.subject.trim(),
-      grade: this.studyMaterialForm.grade.trim() || 'Class 10-A',
+      grade: finalGrade,
       materialType: this.studyMaterialForm.materialType,
       description: this.studyMaterialForm.description.trim(),
       attachmentName: this.studyMaterialForm.attachmentName,
@@ -11254,7 +11640,7 @@ INSTRUCTIONS:
     void this.backend.saveStudyMaterial(item);
     this.saveStateToStorage();
     this.closeStudyMaterialModal();
-    this.showToast(`Published '${item.title}' to Student & Parent Study Resources!`, 'success');
+    this.showToast(`Published '${item.title}' to ${item.grade} Student & Parent Study Resources!`, 'success');
   }
 
   deleteStudyMaterial(mat: TeacherStudyMaterialRecord) {
@@ -20871,8 +21257,13 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
         this.openAddReconciliationModal();
         break;
       case 'owner_events':
+      case 'teacher_events':
       case 'events_calendar':
         this.openEventModal();
+        break;
+      case 'owner_homework_log':
+      case 'teacher_homework':
+        this.openTeacherHomeworkModal();
         break;
       case 'owner_transport':
         this.openAddTransportModal();

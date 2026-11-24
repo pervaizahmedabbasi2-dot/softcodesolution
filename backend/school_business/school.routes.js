@@ -418,7 +418,14 @@ function ensureColumnMigrations(sqliteDb) {
       ['attachment_data', 'TEXT'],
       ['resource_kind', "TEXT DEFAULT 'Homework'"],
       ['max_marks', 'REAL DEFAULT 10'],
-      ['status', "TEXT DEFAULT 'Active'"]
+      ['status', "TEXT DEFAULT 'Active'"],
+      ['section', "TEXT DEFAULT 'All Sections'"],
+      ['chapter_topic', 'TEXT'],
+      ['due_time', "TEXT DEFAULT '11:59 PM'"],
+      ['submission_mode', "TEXT DEFAULT 'Online Upload + Written'"],
+      ['priority', "TEXT DEFAULT 'Normal'"],
+      ['estimated_minutes', 'INTEGER DEFAULT 30'],
+      ['external_link', 'TEXT']
     ];
     for (const [c, d] of hwCols) safeAddCol('local_school_homework', c, d);
 
@@ -2818,8 +2825,15 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
         title: r.title,
         subject: r.subject,
         grade: r.grade,
+        section: r.section || 'All Sections',
+        chapterTopic: r.chapter_topic || '',
         assignedDate: r.assigned_date,
         dueDate: r.due_date,
+        dueTime: r.due_time || '11:59 PM',
+        submissionMode: r.submission_mode || 'Online Upload + Written',
+        priority: r.priority || 'Normal',
+        estimatedMinutes: Number(r.estimated_minutes ?? 30),
+        externalLink: r.external_link || '',
         description: r.description,
         teacherName: r.teacher_name,
         teacherId: r.teacher_id || '',
@@ -2844,18 +2858,33 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     const att = sanitizeAttachment(h);
     if (!att.ok) return res.status(400).json({ ok: false, message: att.message });
 
+    const safeLink = h.externalLink ? sanitizeSafeExternalUrl(h.externalLink) : '';
+    if (safeLink === null) {
+      return res.status(400).json({ ok: false, message: 'Reference link must start with https:// or http://' });
+    }
+
     const maxMarks = Number(h.maxMarks ?? 10);
     if (!Number.isFinite(maxMarks) || maxMarks <= 0 || maxMarks > 1000) {
       return res.status(400).json({ ok: false, message: 'maxMarks must be between 1 and 1000.' });
     }
 
+    const estMinsRaw = Number(h.estimatedMinutes ?? 30);
+    const estimatedMinutes = Number.isFinite(estMinsRaw) && estMinsRaw >= 5 && estMinsRaw <= 600 ? Math.round(estMinsRaw) : 30;
+
     const item = {
       id: h.id || ('HW-' + Date.now()),
       title: String(h.title).trim(),
       subject: String(h.subject).trim(),
-      grade: String(h.grade || 'Class 10-A'),
+      grade: String(h.grade || 'Class 10-A').trim(),
+      section: String(h.section || 'All Sections').trim(),
+      chapterTopic: String(h.chapterTopic || '').trim(),
       assignedDate: String(h.assignedDate || new Date().toISOString().split('T')[0]),
       dueDate: String(h.dueDate || new Date(Date.now() + 86400000).toISOString().split('T')[0]),
+      dueTime: String(h.dueTime || '11:59 PM').trim(),
+      submissionMode: String(h.submissionMode || 'Online Upload + Written').trim(),
+      priority: String(h.priority || 'Normal').trim(),
+      estimatedMinutes,
+      externalLink: safeLink || '',
       description: String(h.description).trim(),
       teacherName: String(h.teacherName || 'Faculty'),
       teacherId: String(h.teacherId || ''),
@@ -2871,10 +2900,11 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     if (sqliteDb) {
       sqliteDb.prepare(`
         INSERT OR REPLACE INTO local_school_homework
-        (id, tenant_id, title, subject, grade, assigned_date, due_date, description, teacher_name, teacher_id, attachment_name, attachment_type, attachment_data, resource_kind, max_marks, status, submissions_count, total_count)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (id, tenant_id, title, subject, grade, section, chapter_topic, assigned_date, due_date, due_time, submission_mode, priority, estimated_minutes, external_link, description, teacher_name, teacher_id, attachment_name, attachment_type, attachment_data, resource_kind, max_marks, status, submissions_count, total_count)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
-        item.id, tid, item.title, item.subject, item.grade, item.assignedDate, item.dueDate,
+        item.id, tid, item.title, item.subject, item.grade, item.section, item.chapterTopic,
+        item.assignedDate, item.dueDate, item.dueTime, item.submissionMode, item.priority, item.estimatedMinutes, item.externalLink,
         item.description, item.teacherName, item.teacherId,
         item.attachmentName, item.attachmentType, item.attachmentData,
         item.resourceKind, item.maxMarks, item.status,
@@ -2896,12 +2926,31 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       : { ok: true, attachmentName: existing.attachment_name || '', attachmentType: existing.attachment_type || '', attachmentData: existing.attachment_data || '' };
     if (!att.ok) return res.status(400).json({ ok: false, message: att.message });
 
+    const safeLink = h.externalLink !== undefined
+      ? (h.externalLink ? sanitizeSafeExternalUrl(h.externalLink) : '')
+      : (existing.external_link || '');
+    if (safeLink === null) {
+      return res.status(400).json({ ok: false, message: 'Reference link must start with https:// or http://' });
+    }
+
+    const estMinsRaw = Number(h.estimatedMinutes ?? existing.estimated_minutes ?? 30);
+    const estimatedMinutes = Number.isFinite(estMinsRaw) && estMinsRaw >= 5 && estMinsRaw <= 600 ? Math.round(estMinsRaw) : 30;
+
     const next = {
       title: String(h.title ?? existing.title).trim(),
       subject: String(h.subject ?? existing.subject).trim(),
       grade: String(h.grade ?? existing.grade).trim(),
+      section: String(h.section ?? existing.section ?? 'All Sections').trim(),
+      chapterTopic: String(h.chapterTopic ?? existing.chapter_topic ?? '').trim(),
+      assignedDate: String(h.assignedDate ?? existing.assigned_date ?? '').trim(),
       dueDate: String(h.dueDate ?? existing.due_date).trim(),
+      dueTime: String(h.dueTime ?? existing.due_time ?? '11:59 PM').trim(),
+      submissionMode: String(h.submission_mode ?? h.submissionMode ?? existing.submission_mode ?? 'Online Upload + Written').trim(),
+      priority: String(h.priority ?? existing.priority ?? 'Normal').trim(),
+      estimatedMinutes,
+      externalLink: safeLink || '',
       description: String(h.description ?? existing.description).trim(),
+      teacherName: String(h.teacherName ?? existing.teacher_name ?? 'Faculty').trim(),
       resourceKind: String(h.resourceKind ?? existing.resource_kind ?? 'Homework'),
       maxMarks: Number(h.maxMarks ?? existing.max_marks ?? 10),
       status: String(h.status ?? existing.status ?? 'Active'),
@@ -2912,10 +2961,12 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
     sqliteDb.prepare(`
       UPDATE local_school_homework
-      SET title = ?, subject = ?, grade = ?, due_date = ?, description = ?, resource_kind = ?, max_marks = ?, status = ?, attachment_name = ?, attachment_type = ?, attachment_data = ?
+      SET title = ?, subject = ?, grade = ?, section = ?, chapter_topic = ?, assigned_date = ?, due_date = ?, due_time = ?, submission_mode = ?, priority = ?, estimated_minutes = ?, external_link = ?, description = ?, teacher_name = ?, resource_kind = ?, max_marks = ?, status = ?, attachment_name = ?, attachment_type = ?, attachment_data = ?
       WHERE id = ? AND tenant_id = ?
     `).run(
-      next.title, next.subject, next.grade, next.dueDate, next.description,
+      next.title, next.subject, next.grade, next.section, next.chapterTopic,
+      next.assignedDate, next.dueDate, next.dueTime, next.submissionMode, next.priority, next.estimatedMinutes, next.externalLink,
+      next.description, next.teacherName,
       next.resourceKind, next.maxMarks, next.status,
       next.attachmentName, next.attachmentType, next.attachmentData,
       req.params.id, tid

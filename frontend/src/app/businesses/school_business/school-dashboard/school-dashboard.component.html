@@ -10455,54 +10455,6 @@
             </div>
           }
 
-          @if (principalTab !== 'overview') {
-            <div id="principal-active-view" class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 scs-surface-3d rounded-2xl p-3.5 scroll-mt-24">
-              <div class="flex items-center gap-3 min-w-0 flex-wrap">
-                <button (click)="setPrincipalTab('overview')"
-                  class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs cursor-pointer transition-all shadow-2xs active:scale-95 border border-indigo-200/60 shrink-0">
-                  <lucide-icon [name]="'arrow-left'" class="w-4 h-4"></lucide-icon>
-                  <span>Back to Executive Overview</span>
-                </button>
-                <div class="h-4 w-px bg-slate-200 hidden sm:block"></div>
-                <div class="flex items-center gap-2 text-xs min-w-0 flex-wrap">
-                  <span class="text-slate-400 font-medium">Principal Portal</span>
-                  <span class="text-slate-300">/</span>
-                  <span class="font-extrabold text-slate-900">{{ currentPrincipalTabLabel }}</span>
-                </div>
-              </div>
-              <div class="flex items-center gap-2 shrink-0">
-                <select [value]="principalTab" (change)="setPrincipalTab($any($event.target).value)"
-                        class="w-full sm:w-64 px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-900 font-bold text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer shadow-2xs">
-                  <option value="overview">Executive Command Center &amp; KPIs</option>
-                  @if (canPrincipalUseAttendanceVerification) {
-                    <option value="biometric_attendance">Biometric Attendance Gate</option>
-                  }
-                  <option value="stage_wise">Stage-Wise Academics (Nur-10)</option>
-                  <option value="master_registries">Master Data Registries</option>
-                  <option value="directives">Morning Assembly Directives</option>
-                  <option value="supervision">Faculty Lesson Plan Approvals</option>
-                  <option value="syllabus">Syllabus Completion Tracker</option>
-                  <option value="exam_moderation">Exam Paper Moderation</option>
-                  <option value="inspections">Campus Walkthrough Log</option>
-                  <option value="library">Library Resource Manager</option>
-                  <option value="faculty_tasks">Faculty Duty &amp; Tasks Roster</option>
-                  <option value="teacher_leaves">Teacher Leave Approvals</option>
-                  <option value="substitutions">Period Substitutions Duty</option>
-                  <option value="appraisals">Teacher Appraisals</option>
-                  <option value="admissions_review">New Admissions Review</option>
-                  <option value="student_certificates">TC &amp; Character Certificates</option>
-                  <option value="discipline">Discipline &amp; Leave Clearance</option>
-                  <option value="ptm_interventions">PTM &amp; Weak Student Remedial</option>
-                  <option value="safeguarding">Safeguarding &amp; Health Alerts</option>
-                  <option value="fee_oversight">Fee Concessions &amp; Hardship</option>
-                  <option value="parent_complaints">Parent Grievance Redressal</option>
-                  <option value="facilities_transport">Facilities &amp; Transport Log</option>
-                  <option value="academic_reports">Academic Audit Export</option>
-                </select>
-              </div>
-            </div>
-          }
-
       <!-- PRINCIPAL TAB 1: EXECUTIVE OVERVIEW (MATCHING SCHOOL OWNER DASHBOARD QUALITY) -->
       @if (principalTab === 'overview') {
         <div class="space-y-6">
@@ -14409,29 +14361,6 @@
         </div>
       </div>
 
-      @if (teacherTab !== 'schedule') {
-        <div class="flex items-center justify-between scs-surface-3d rounded-2xl p-3.5">
-          <div class="flex items-center gap-3 flex-wrap">
-            <button (click)="setTeacherTab('schedule')"
-              class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-xs cursor-pointer transition-all shadow-2xs active:scale-95 border border-emerald-200/60">
-              <lucide-icon [name]="'arrow-left'" class="w-4 h-4"></lucide-icon>
-              <span>Back to Teacher Hub</span>
-            </button>
-            <div class="h-4 w-px bg-slate-200"></div>
-            <div class="flex items-center gap-2 text-xs flex-wrap">
-              <span class="text-slate-400 font-medium">Teacher Portal</span>
-              <span class="text-slate-300">/</span>
-              <span class="font-extrabold text-slate-900">{{ currentTeacherTabLabel }}</span>
-              <span class="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-md border border-emerald-200/60">{{ currentTeacherProfile.name }}</span>
-            </div>
-          </div>
-          <button (click)="setTeacherTab('schedule')" class="text-xs text-slate-500 hover:text-slate-800 font-bold flex items-center gap-1.5 cursor-pointer shrink-0">
-            <lucide-icon [name]="'layout-grid'" class="w-3.5 h-3.5 text-slate-400"></lucide-icon>
-            <span class="hidden sm:inline">All Faculty Actions</span>
-          </button>
-        </div>
-      }
-
       <!-- TEACHER TAB: CAMPUS TOP FEED & NOTICE MANAGEMENT SYSTEM -->
       @if (teacherTab === 'feed') {
         <div id="campus-updates-stream" class="space-y-5 scroll-mt-24">
@@ -14773,6 +14702,21 @@
                 </button>
               </div>
 
+              <div class="inline-flex items-center p-1 bg-white rounded-xl border border-slate-200/80 shrink-0">
+                <button type="button" (click)="setEventsViewMode('cards')"
+                  class="px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-all"
+                  [class]="eventsViewMode === 'cards' ? 'bg-amber-50 text-amber-800 font-black' : 'text-slate-600 hover:text-slate-900'">
+                  <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">view_agenda</mat-icon>
+                  <span>Cards</span>
+                </button>
+                <button type="button" (click)="setEventsViewMode('table')"
+                  class="px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-all"
+                  [class]="eventsViewMode === 'table' ? 'bg-amber-50 text-amber-800 font-black' : 'text-slate-600 hover:text-slate-900'">
+                  <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">table_chart</mat-icon>
+                  <span>Table (Row &amp; Col)</span>
+                </button>
+              </div>
+
               <!-- Plan Event Button -->
               <button (click)="openEventModal()" class="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-black text-xs shadow-md shadow-amber-600/20 border border-amber-400/30 cursor-pointer transition-all active:scale-95 flex items-center gap-2 shrink-0">
                 <lucide-icon [name]="'plus'" class="w-4 h-4"></lucide-icon>
@@ -14781,94 +14725,108 @@
             </div>
           </div>
 
-          <!-- Standardized Data Table -->
-          <div class="overflow-x-auto custom-scrollbar border border-slate-200/80 rounded-[16px]">
-            <table appSchoolTable="teacher_events" tableTitle="Teacher School Events" class="w-full text-left border-collapse text-xs">
-              <thead class="bg-white text-slate-600 uppercase font-black tracking-wider text-[10px] border-b border-slate-200 select-none">
-                <tr>
-                  <th class="px-4 py-3.5">Event Title & Category</th>
-                  <th class="px-4 py-3.5">Date & Venue</th>
-                  <th class="px-4 py-3.5">Faculty Coordinator</th>
-                  <th class="px-4 py-3.5 text-center">Status & Passes</th>
-                  <th class="px-4 py-3.5 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-slate-100 font-medium">
-                @for (evt of paginatedSchoolEvents; track evt.id) {
-                  <tr [attr.data-row-key]="evt.id" class="hover:bg-slate-50/70 transition-colors group">
-                    <!-- Title & Category -->
-                    <td class="px-4 py-3.5">
-                      <div class="space-y-1">
+          @if (eventsViewMode === 'cards') {
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              @for (evt of paginatedSchoolEvents; track evt.id) {
+                <div class="apple-card rounded-2xl p-4 scs-surface-3d space-y-3 flex flex-col justify-between">
+                  <div class="space-y-2">
+                    <div class="flex items-center justify-between gap-2 flex-wrap">
+                      <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-50 text-amber-800 border border-amber-200">{{ evt.category }}</span>
+                      <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black border"
+                        [class]="evt.status === 'Published' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-white text-slate-700 border-slate-200'">
+                        {{ evt.status }}
+                      </span>
+                    </div>
+                    <h4 class="font-black text-slate-900 text-sm leading-snug">{{ evt.title }}</h4>
+                    <p class="text-xs text-slate-600 font-medium leading-relaxed">{{ evt.description }}</p>
+                    <div class="p-3 rounded-xl bg-white border border-slate-200/80 text-[11px] space-y-1 font-bold text-slate-700">
+                      <div>Date &amp; Time: <strong>{{ evt.eventDate }}</strong> ({{ evt.eventTime }})</div>
+                      <div>Venue: <strong>{{ evt.venue }}</strong></div>
+                      <div>Organizer: <strong>{{ evt.organizerName || 'Campus Committee' }}</strong> • Coordinator: <strong>{{ evt.coordinatorTeacher }}</strong></div>
+                      @if (evt.chiefGuest) {
+                        <div class="text-purple-700">Chief Guest: <strong>{{ evt.chiefGuest }}</strong></div>
+                      }
+                    </div>
+                  </div>
+                  <div class="pt-2.5 border-t border-slate-100 flex items-center justify-end gap-2">
+                    <button (click)="viewEventDetails(evt)" class="px-3 py-1.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 font-extrabold text-xs cursor-pointer flex items-center gap-1">
+                      <lucide-icon [name]="'eye'" class="w-3.5 h-3.5 text-indigo-600"></lucide-icon>
+                      <span>View</span>
+                    </button>
+                    @if (canEditEvent(evt) && !evt.isPublishedToPortals) {
+                      <button (click)="publishEventToPortals(evt)" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs cursor-pointer flex items-center gap-1">
+                        <lucide-icon [name]="'send'" class="w-3.5 h-3.5"></lucide-icon>
+                        <span>Publish</span>
+                      </button>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          }
+
+          @if (eventsViewMode === 'table') {
+            <!-- Standardized Data Table aligned with events_calendar schema -->
+            <div data-scs-table-scroll="1" class="overflow-x-auto custom-scrollbar border border-slate-200/80 rounded-[16px]">
+              <table appSchoolTable="teacher_events" tableTitle="Events & Campus Calendar" [canAddRow]="isOwnerPortal" addRowLabel="Plan New Event" class="w-max min-w-full text-left border-collapse text-xs tabular-nums">
+                <thead class="bg-white text-slate-600 uppercase font-black tracking-wider text-[10px] border-b border-slate-200 select-none">
+                  <tr>
+                    <th class="px-4 py-3.5 whitespace-nowrap">Event Title</th>
+                    <th class="px-3.5 py-3.5 whitespace-nowrap">Category</th>
+                    <th class="px-3.5 py-3.5 whitespace-nowrap">Date</th>
+                    <th class="px-3.5 py-3.5 whitespace-nowrap">Time</th>
+                    <th class="px-3.5 py-3.5 whitespace-nowrap">Venue</th>
+                    <th class="px-3.5 py-3.5 whitespace-nowrap">Chief Guest</th>
+                    <th class="px-3.5 py-3.5 whitespace-nowrap">Organizer</th>
+                    <th class="px-3.5 py-3.5 whitespace-nowrap">Coordinator</th>
+                    <th class="px-3.5 py-3.5 whitespace-nowrap">Budget (PKR)</th>
+                    <th class="px-3.5 py-3.5 text-center whitespace-nowrap">Status</th>
+                    <th class="px-4 py-3.5 whitespace-nowrap">Description</th>
+                    <th class="px-4 py-3.5 text-right whitespace-nowrap">Actions</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 font-medium bg-white text-slate-800">
+                  @for (evt of paginatedSchoolEvents; track evt.id) {
+                    <tr [attr.data-row-key]="evt.id" class="hover:bg-slate-50/70 transition-colors group">
+                      <td class="px-4 py-3.5 font-black text-slate-900 whitespace-nowrap">
                         <div class="flex items-center gap-2">
-                          <span class="font-black text-slate-900 text-xs">{{ evt.title }}</span>
-                          <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-800 border border-amber-200 shrink-0">
-                            {{ evt.category }}
-                          </span>
-                        </div>
-                        <p class="text-[11px] text-slate-500 font-medium line-clamp-1 max-w-md">{{ evt.description }}</p>
-                      </div>
-                    </td>
-
-                    <!-- Date & Venue -->
-                    <td class="px-4 py-3.5">
-                      <div class="space-y-1 text-slate-700 font-bold">
-                        <div class="flex items-center gap-1.5">
-                          <lucide-icon [name]="'calendar'" class="w-3.5 h-3.5 text-amber-600 shrink-0"></lucide-icon>
-                          <span>{{ evt.eventDate }} <span class="text-slate-400 font-normal">({{ evt.eventTime }})</span></span>
-                        </div>
-                        <div class="flex items-center gap-1.5 text-slate-500 font-medium">
-                          <lucide-icon [name]="'building-2'" class="w-3.5 h-3.5 text-indigo-500 shrink-0"></lucide-icon>
-                          <span class="truncate max-w-[180px]">{{ evt.venue }}</span>
-                        </div>
-                      </div>
-                    </td>
-
-                    <!-- Faculty Coordinator -->
-                    <td class="px-4 py-3.5">
-                      <div class="space-y-0.5">
-                        <div class="flex items-center gap-1.5 font-black text-indigo-950">
-                          <lucide-icon [name]="'graduation-cap'" class="w-3.5 h-3.5 text-indigo-600 shrink-0"></lucide-icon>
-                          <span>{{ evt.coordinatorTeacher }}</span>
-                        </div>
-                        <div class="flex items-center gap-1 text-[10px] font-bold text-slate-400">
-                          <span>Org: {{ evt.organizerName }}</span>
+                          <span>{{ evt.title }}</span>
                           @if (canEditEvent(evt)) {
-                            <span class="px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 text-[9px] font-black">Post Owner</span>
+                            <span class="px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 text-[9px] font-black">Post Owner</span>
                           }
                         </div>
-                      </div>
-                    </td>
-
-                    <!-- Status & Passes -->
-                    <td class="px-4 py-3.5 text-center">
-                      <div class="inline-flex flex-col items-center gap-1">
-                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black border"
-                              [class]="evt.status === 'Published' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-white text-slate-700 border-slate-200'">
-                          {{ evt.status }}
-                        </span>
-                        @if (evt.isPublishedToPortals) {
-                          <span class="text-[9px] font-extrabold text-emerald-600 flex items-center gap-1">
-                            <lucide-icon [name]="'check-circle-2'" class="w-3 h-3"></lucide-icon>
-                            Passes Live
+                      </td>
+                      <td class="px-3.5 py-3.5 whitespace-nowrap">
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-800 border border-amber-200">{{ evt.category }}</span>
+                      </td>
+                      <td class="px-3.5 py-3.5 font-mono text-slate-700 whitespace-nowrap">{{ evt.eventDate }}</td>
+                      <td class="px-3.5 py-3.5 font-mono text-slate-600 whitespace-nowrap">{{ evt.eventTime }}</td>
+                      <td class="px-3.5 py-3.5 font-bold text-slate-800 whitespace-nowrap">{{ evt.venue }}</td>
+                      <td class="px-3.5 py-3.5 text-purple-700 font-semibold whitespace-nowrap">{{ evt.chiefGuest || '—' }}</td>
+                      <td class="px-3.5 py-3.5 text-slate-700 whitespace-nowrap">{{ evt.organizerName || 'Campus Committee' }}</td>
+                      <td class="px-3.5 py-3.5 font-bold text-indigo-950 whitespace-nowrap">{{ evt.coordinatorTeacher }}</td>
+                      <td class="px-3.5 py-3.5 font-mono font-black text-slate-900 whitespace-nowrap">PKR {{ evt.allocatedBudget | number }}</td>
+                      <td class="px-3.5 py-3.5 text-center whitespace-nowrap">
+                        <div class="inline-flex flex-col items-center gap-1">
+                          <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black border"
+                                [class]="evt.status === 'Published' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-white text-slate-700 border-slate-200'">
+                            {{ evt.status }}
                           </span>
-                        }
-                      </div>
-                    </td>
-
-                    <!-- Actions Column with Strict Ownership Isolation -->
-                    <td class="px-4 py-3.5 text-right">
-                      <div class="flex items-center justify-end gap-2">
-                        <!-- View Button (ALWAYS Available for Read) -->
-                        <button (click)="viewEventDetails(evt)"
-                                title="View event details & budget"
-                                class="px-3 py-1.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 font-extrabold text-xs transition-colors cursor-pointer flex items-center gap-1.5">
-                          <lucide-icon [name]="'eye'" class="w-3.5 h-3.5 text-indigo-600"></lucide-icon>
-                          <span>View</span>
-                        </button>
-
-                        <!-- Owner-only Publish Pass Button -->
-                        @if (canEditEvent(evt)) {
-                          @if (!evt.isPublishedToPortals) {
+                          @if (evt.isPublishedToPortals) {
+                            <span class="text-[9px] font-extrabold text-emerald-600">Passes Live</span>
+                          }
+                        </div>
+                      </td>
+                      <td class="px-4 py-3.5 text-slate-600 max-w-[260px] truncate">{{ evt.description }}</td>
+                      <td class="px-4 py-3.5 text-right whitespace-nowrap">
+                        <div class="flex items-center justify-end gap-2">
+                          <button (click)="viewEventDetails(evt)"
+                                  title="View event details & budget"
+                                  class="px-3 py-1.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 font-extrabold text-xs transition-colors cursor-pointer flex items-center gap-1.5">
+                            <lucide-icon [name]="'eye'" class="w-3.5 h-3.5 text-indigo-600"></lucide-icon>
+                            <span>View</span>
+                          </button>
+                          @if (canEditEvent(evt) && !evt.isPublishedToPortals) {
                             <button (click)="publishEventToPortals(evt)"
                                     title="Publish event passes to student & parent portals"
                                     class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow-xs transition-colors cursor-pointer flex items-center gap-1.5">
@@ -14876,23 +14834,22 @@
                               <span>Publish</span>
                             </button>
                           }
-                        }
-                      </div>
-                    </td>
-                  </tr>
-                }
-
-                @if (paginatedSchoolEvents.length === 0) {
-                  <tr>
-                    <td colspan="5" class="px-4 py-10 text-center text-slate-400">
-                      <p class="text-xs font-bold text-slate-600">No events found matching "{{ eventSearchQuery }}"</p>
-                      <p class="text-[11px] text-slate-400 mt-1">Try searching by title or clear the search query.</p>
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                  @if (paginatedSchoolEvents.length === 0) {
+                    <tr>
+                      <td colspan="12" class="px-4 py-10 text-center text-slate-400">
+                        <p class="text-xs font-bold text-slate-600">No events found matching "{{ eventSearchQuery }}"</p>
+                        <p class="text-[11px] text-slate-400 mt-1">Try searching by title or clear the search query.</p>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
 
           <!-- Pagination Footer with Page Numbers -->
           <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 text-xs">
@@ -15253,18 +15210,24 @@
           @if (homeworkSubTab === 'assignments') {
             <div class="flex items-center justify-between flex-wrap gap-2.5 p-3 rounded-2xl bg-slate-50/80 border border-slate-200/80">
               <div class="flex items-center gap-2 flex-wrap">
+                <div class="relative">
+                  <lucide-icon [name]="'search'" class="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></lucide-icon>
+                  <input type="text" [(ngModel)]="homeworkSearchQuery" placeholder="Search title, topic, subject..."
+                    class="pl-8 pr-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700 w-48 sm:w-56">
+                </div>
                 <select [(ngModel)]="homeworkClassFilter" class="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700">
-                  <option value="All">All Classes</option>
-                  <option value="Class 10">Class 10</option>
-                  <option value="Class 9">Class 9</option>
-                  <option value="Class 8">Class 8</option>
-                  <option value="Class 7">Class 7</option>
+                  @for (cls of dynamicSchoolClassFilters; track cls) {
+                    <option [value]="cls">{{ cls === 'All' ? 'All Classes (' + dynamicSchoolClasses.length + ')' : cls }}</option>
+                  }
                 </select>
                 <select [(ngModel)]="homeworkKindFilter" class="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700">
                   <option value="All">All Types</option>
                   <option value="Homework">Homework</option>
                   <option value="Worksheet">Worksheet</option>
                   <option value="Class Notes">Class Notes</option>
+                  <option value="Project / Lab">Project / Lab</option>
+                  <option value="Oral / Reading">Oral / Reading</option>
+                  <option value="Test Prep">Test Prep</option>
                 </select>
               </div>
               <div class="inline-flex items-center p-1 bg-white rounded-xl border border-slate-200/80">
@@ -15289,9 +15252,15 @@
                   <div class="apple-card scs-surface-3d rounded-2xl p-4 space-y-3 flex flex-col justify-between">
                     <div class="space-y-2.5">
                       <div class="flex items-center justify-between gap-2 flex-wrap">
-                        <div class="flex items-center gap-1.5">
+                        <div class="flex items-center gap-1.5 flex-wrap">
                           <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-indigo-50 text-indigo-700 border border-indigo-200">{{ hw.grade }}</span>
+                          @if (hw.section && hw.section !== 'All Sections') {
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-slate-100 text-slate-700 border border-slate-200">{{ hw.section }}</span>
+                          }
                           <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-blue-50 text-blue-700 border border-blue-200">{{ hw.resourceKind || 'Homework' }}</span>
+                          @if (hw.priority && hw.priority !== 'Normal') {
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-rose-50 text-rose-700 border border-rose-200">{{ hw.priority }}</span>
+                          }
                         </div>
                         <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase"
                           [class]="hw.status === 'Closed' ? 'bg-slate-200 text-slate-700' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'">
@@ -15300,17 +15269,54 @@
                       </div>
                       <div>
                         <h4 class="font-black text-slate-900 text-sm leading-snug">{{ hw.title }}</h4>
-                        <p class="text-[11px] font-bold text-indigo-600 mt-0.5">{{ hw.subject }} • Max {{ hw.maxMarks || 10 }} Marks • <span class="text-rose-600">Due: {{ hw.dueDate }}</span></p>
+                        <p class="text-[11px] font-bold text-indigo-600 mt-0.5">{{ hw.subject }} @if (hw.chapterTopic) { • {{ hw.chapterTopic }} }</p>
+                      </div>
+                      <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200/70 text-[11px] space-y-1 font-medium text-slate-700">
+                        <div class="flex items-center justify-between gap-2">
+                          <span>Assigned: <strong class="text-slate-900">{{ hw.assignedDate }}</strong></span>
+                          <span class="text-rose-700 font-bold">Due: {{ hw.dueDate }} ({{ hw.dueTime || '11:59 PM' }})</span>
+                        </div>
+                        <div class="flex items-center justify-between gap-2">
+                          <span>Mode: <strong class="text-slate-900">{{ hw.submissionMode || 'Online Upload + Written' }}</strong></span>
+                          <span>Max: <strong class="text-slate-900">{{ hw.maxMarks || 10 }} Marks</strong></span>
+                        </div>
+                        <div class="flex items-center justify-between gap-2">
+                          <span>Teacher: <strong class="text-slate-900">{{ hw.teacherName || currentTeacherProfile.name }}</strong></span>
+                          <span>Est: <strong class="text-slate-900">{{ hw.estimatedMinutes || 30 }} mins</strong></span>
+                        </div>
                       </div>
                       <p class="text-xs text-slate-600 font-medium leading-relaxed">{{ hw.description }}</p>
 
-                      @if (hw.attachmentData && isSafeAttachmentUrl(hw.attachmentData)) {
-                        <button type="button" (click)="openAttachmentPreview(hw.attachmentName || hw.title, hw.attachmentType || '', hw.attachmentData)"
-                          class="w-full px-3 py-1.5 rounded-xl bg-indigo-50/80 hover:bg-indigo-100 border border-indigo-200 text-indigo-800 text-[11px] font-bold flex items-center justify-between cursor-pointer">
-                          <span class="truncate">Attachment: {{ hw.attachmentName || 'View File' }}</span>
-                          <lucide-icon [name]="'eye'" class="w-3.5 h-3.5 shrink-0"></lucide-icon>
-                        </button>
+                      @if (getHomeworkCustomColumns().length > 0) {
+                        <div class="grid grid-cols-2 gap-1.5 pt-1">
+                          @for (col of getHomeworkCustomColumns(); track col.id) {
+                            @let cellVal = getHomeworkCustomCellValue(hw.id, col.id);
+                            @if (cellVal) {
+                              <div class="px-2 py-1 rounded-lg bg-indigo-50/50 border border-indigo-100 text-[10px]">
+                                <span class="text-slate-500 font-bold block truncate">{{ col.label }}</span>
+                                <span class="text-slate-900 font-extrabold truncate block">{{ cellVal }}</span>
+                              </div>
+                            }
+                          }
+                        </div>
                       }
+
+                      <div class="space-y-1.5">
+                        @if (hw.attachmentData && isSafeAttachmentUrl(hw.attachmentData)) {
+                          <button type="button" (click)="openAttachmentPreview(hw.attachmentName || hw.title, hw.attachmentType || '', hw.attachmentData)"
+                            class="w-full px-3 py-1.5 rounded-xl bg-indigo-50/80 hover:bg-indigo-100 border border-indigo-200 text-indigo-800 text-[11px] font-bold flex items-center justify-between cursor-pointer">
+                            <span class="truncate">Attachment: {{ hw.attachmentName || 'View File' }}</span>
+                            <lucide-icon [name]="'eye'" class="w-3.5 h-3.5 shrink-0"></lucide-icon>
+                          </button>
+                        }
+                        @if (hw.externalLink && isSafeAttachmentUrl(hw.externalLink)) {
+                          <button type="button" (click)="openAttachmentPreview(hw.title + ' Reference Link', 'external', hw.externalLink)"
+                            class="w-full px-3 py-1.5 rounded-xl bg-blue-50/80 hover:bg-blue-100 border border-blue-200 text-blue-800 text-[11px] font-bold flex items-center justify-between cursor-pointer">
+                            <span class="truncate">Reference Link: {{ hw.externalLink }}</span>
+                            <lucide-icon [name]="'external-link'" class="w-3.5 h-3.5 shrink-0"></lucide-icon>
+                          </button>
+                        }
+                      </div>
                     </div>
 
                     <div class="pt-3 border-t border-slate-100 space-y-2.5">
@@ -15340,6 +15346,11 @@
                     </div>
                   </div>
                 }
+                @if (getFilteredTeacherHomeworks().length === 0) {
+                  <div class="col-span-full p-6 text-center rounded-2xl bg-white border border-slate-200 text-xs font-bold text-slate-500">
+                    No homework assignments match the selected class or filter. Click "Post Homework" to assign one.
+                  </div>
+                }
               </div>
             }
 
@@ -15352,19 +15363,24 @@
                     <span class="px-2 py-0.5 rounded-md bg-emerald-100/80 text-[10px] font-mono text-emerald-800 border border-emerald-200/70 whitespace-nowrap">{{ getFilteredTeacherHomeworks().length }} Tasks</span>
                   </div>
                   <div class="text-[11px] text-slate-500">
-                    Swipe horizontally for all fields · Click Check to grade student uploads
+                    Swipe horizontally for all fields · Same complete columns synced live to Student &amp; Parent Portals
                   </div>
                 </div>
                 <div data-scs-table-scroll="1" class="w-full overflow-x-auto custom-scrollbar">
-                  <table appSchoolTable="owner_homework_log" tableTitle="Teacher Homework Assignments" class="w-max min-w-full text-left border-collapse text-xs tabular-nums">
+                  <table appSchoolTable="owner_homework_log" tableTitle="Teacher Homework Assignments" [canAddRow]="isOwnerPortal" addRowLabel="Post Homework" class="w-max min-w-full text-left border-collapse text-xs tabular-nums">
                     <thead class="bg-white text-slate-600 uppercase font-black tracking-wider text-[10px] border-b border-slate-200 select-none">
                       <tr>
                         <th class="px-4 py-3.5 whitespace-nowrap">Title &amp; Type</th>
                         <th class="px-3.5 py-3.5 whitespace-nowrap">Subject</th>
-                        <th class="px-3.5 py-3.5 whitespace-nowrap">Grade</th>
-                        <th class="px-3.5 py-3.5 whitespace-nowrap">Due Date</th>
+                        <th class="px-3.5 py-3.5 whitespace-nowrap">Topic / Chapter</th>
+                        <th class="px-3.5 py-3.5 whitespace-nowrap">Class &amp; Section</th>
+                        <th class="px-3.5 py-3.5 whitespace-nowrap">Teacher</th>
+                        <th class="px-3.5 py-3.5 whitespace-nowrap">Assigned Date</th>
+                        <th class="px-3.5 py-3.5 whitespace-nowrap">Due Date &amp; Time</th>
+                        <th class="px-3.5 py-3.5 whitespace-nowrap">Submission Mode</th>
                         <th class="px-3.5 py-3.5 whitespace-nowrap">Max Marks</th>
-                        <th class="px-3.5 py-3.5 whitespace-nowrap">Uploads</th>
+                        <th class="px-3.5 py-3.5 whitespace-nowrap">Files &amp; Links</th>
+                        <th class="px-3.5 py-3.5 whitespace-nowrap">Status</th>
                         <th class="px-3.5 py-3.5 whitespace-nowrap text-right">Actions</th>
                       </tr>
                     </thead>
@@ -15373,15 +15389,56 @@
                         <tr [attr.data-row-key]="hw.id" class="hover:bg-indigo-50/40 transition-colors">
                           <td class="px-4 py-3.5 whitespace-nowrap">
                             <div class="font-black text-slate-900">{{ hw.title }}</div>
-                            <div class="text-[11px] text-slate-500 max-w-[280px] truncate">{{ hw.resourceKind || 'Homework' }} • {{ hw.description }}</div>
+                            <div class="text-[11px] text-slate-500 max-w-[280px] truncate">
+                              <span class="font-bold text-blue-700">{{ hw.resourceKind || 'Homework' }}</span>
+                              @if (hw.priority && hw.priority !== 'Normal') { • <span class="text-rose-600 font-bold">{{ hw.priority }}</span> }
+                              • {{ hw.description }}
+                            </div>
                           </td>
                           <td class="px-3.5 py-3.5 font-bold text-indigo-700 whitespace-nowrap">{{ hw.subject }}</td>
+                          <td class="px-3.5 py-3.5 text-slate-700 whitespace-nowrap max-w-[200px] truncate">{{ hw.chapterTopic || '—' }}</td>
                           <td class="px-3.5 py-3.5 whitespace-nowrap">
                             <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-indigo-50 text-indigo-700 border border-indigo-200">{{ hw.grade }}</span>
+                            <span class="ml-1 text-[11px] text-slate-500 font-semibold">{{ hw.section || 'All Sections' }}</span>
                           </td>
-                          <td class="px-3.5 py-3.5 font-mono font-bold text-rose-600 whitespace-nowrap">{{ hw.dueDate }}</td>
+                          <td class="px-3.5 py-3.5 text-slate-700 font-semibold whitespace-nowrap">{{ hw.teacherName || currentTeacherProfile.name }}</td>
+                          <td class="px-3.5 py-3.5 font-mono text-slate-600 whitespace-nowrap">{{ hw.assignedDate }}</td>
+                          <td class="px-3.5 py-3.5 font-mono font-bold text-rose-600 whitespace-nowrap">
+                            {{ hw.dueDate }} <span class="text-[10px] text-slate-500 font-normal">({{ hw.dueTime || '11:59 PM' }})</span>
+                          </td>
+                          <td class="px-3.5 py-3.5 whitespace-nowrap">
+                            <div class="font-bold text-slate-800">{{ hw.submissionMode || 'Online Upload + Written' }}</div>
+                            <div class="text-[10px] text-slate-500">Est. {{ hw.estimatedMinutes || 30 }} mins</div>
+                          </td>
                           <td class="px-3.5 py-3.5 font-mono font-bold text-slate-700 whitespace-nowrap">{{ hw.maxMarks || 10 }}</td>
-                          <td class="px-3.5 py-3.5 font-bold text-emerald-700 whitespace-nowrap">{{ getLiveHomeworkSubmissionCount(hw) }} / {{ hw.totalCount }}</td>
+                          <td class="px-3.5 py-3.5 whitespace-nowrap">
+                            <div class="inline-flex items-center gap-1.5">
+                              @if (hw.attachmentData && isSafeAttachmentUrl(hw.attachmentData)) {
+                                <button type="button" (click)="openAttachmentPreview(hw.attachmentName || hw.title, hw.attachmentType || '', hw.attachmentData)"
+                                  class="px-2 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-[10px] cursor-pointer">
+                                  File
+                                </button>
+                              }
+                              @if (hw.externalLink && isSafeAttachmentUrl(hw.externalLink)) {
+                                <button type="button" (click)="openAttachmentPreview(hw.title + ' Reference', 'external', hw.externalLink)"
+                                  class="px-2 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-[10px] cursor-pointer">
+                                  Link
+                                </button>
+                              }
+                              @if (!hw.attachmentData && !hw.externalLink) {
+                                <span class="text-[11px] text-slate-400">None</span>
+                              }
+                            </div>
+                          </td>
+                          <td class="px-3.5 py-3.5 whitespace-nowrap">
+                            <div class="flex flex-col gap-0.5">
+                              <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase w-fit"
+                                [class]="hw.status === 'Closed' ? 'bg-slate-200 text-slate-700' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'">
+                                {{ hw.status || 'Active' }}
+                              </span>
+                              <span class="text-[10px] font-bold text-emerald-700">{{ getLiveHomeworkSubmissionCount(hw) }}/{{ hw.totalCount }} uploads</span>
+                            </div>
+                          </td>
                           <td class="px-3.5 py-3.5 whitespace-nowrap text-right">
                             <div class="inline-flex items-center gap-1.5">
                               <button type="button" (click)="openHomeworkSubmissionsModal(hw)" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] cursor-pointer">
@@ -15390,6 +15447,13 @@
                               <button type="button" (click)="openTeacherHomeworkModal(hw)" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] cursor-pointer">Edit</button>
                               <button type="button" (click)="deleteTeacherHomework(hw)" class="px-2 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-[11px] cursor-pointer">Delete</button>
                             </div>
+                          </td>
+                        </tr>
+                      }
+                      @if (getFilteredTeacherHomeworks().length === 0) {
+                        <tr>
+                          <td colspan="12" class="px-4 py-8 text-center text-slate-500 font-bold text-xs">
+                            No homework assignments match your selected class or filter.
                           </td>
                         </tr>
                       }
@@ -16251,30 +16315,6 @@
             </div>
           </div>
 
-          <!-- Active Workspace Header & Direct Back to Student Hub Bar -->
-          @if (studentTab !== 'overview') {
-            <div class="flex items-center justify-between scs-surface-3d rounded-2xl p-3.5">
-              <div class="flex items-center gap-3">
-                <button (click)="setStudentTab('overview')" 
-                  class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-700 font-bold text-xs cursor-pointer transition-all shadow-2xs active:scale-95 border border-sky-200/60">
-                  <lucide-icon [name]="'arrow-left'" class="w-4 h-4"></lucide-icon>
-                  <span>Back to Student Hub</span>
-                </button>
-                <div class="h-4 w-px bg-slate-200"></div>
-                <div class="flex items-center gap-2 text-xs flex-wrap">
-                  <span class="text-slate-400 font-medium">Student Portal</span>
-                  <span class="text-slate-300">/</span>
-                  <span class="font-extrabold text-slate-900">{{ currentStudentTabLabel }}</span>
-                  <span class="text-[11px] font-bold text-sky-600 bg-sky-50 px-2.5 py-0.5 rounded-md border border-sky-200/60">{{ currentStudentProfile.grade }} · {{ currentStudentProfile.name }}</span>
-                </div>
-              </div>
-              <button (click)="setStudentTab('overview')" class="text-xs text-slate-500 hover:text-slate-800 font-bold flex items-center gap-1.5 cursor-pointer">
-                <lucide-icon [name]="'layout-grid'" class="w-3.5 h-3.5 text-slate-400"></lucide-icon>
-                <span class="hidden sm:inline">All Hub Actions</span>
-              </button>
-            </div>
-          }
-
           <!-- Student Fast Actions Grid (Only on Overview Hub) -->
           @if (studentTab === 'overview') {
             <div class="space-y-2.5">
@@ -16710,54 +16750,131 @@
         <div class="apple-card scs-surface-3d rounded-2xl p-5 space-y-4">
           <div class="flex items-center justify-between flex-wrap gap-3">
             <div>
-              <h3 class="font-black text-slate-900 text-base">Current Assigned Homework & Tasks</h3>
-              <span class="text-xs font-bold text-slate-500">Active Syllabus</span>
+              <h3 class="font-black text-slate-900 text-base">Class Homework &amp; Teacher Assignments</h3>
+              <p class="text-xs font-bold text-slate-500">
+                Active Class: <span class="text-indigo-700">{{ currentStudentProfile?.grade || 'Class 10-A' }}</span> • Showing complete teacher details, instructions, files &amp; links
+              </p>
             </div>
-            <div class="inline-flex items-center p-1 bg-white rounded-xl border border-slate-200/80">
-              <button type="button" (click)="setHomeworkViewMode('cards')"
-                class="px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-all"
-                [class]="homeworkViewMode === 'cards' ? 'bg-white text-indigo-700 shadow-2xs font-black' : 'text-slate-600 hover:text-slate-900'">
-                <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">view_agenda</mat-icon>
-                <span>Cards</span>
-              </button>
-              <button type="button" (click)="setHomeworkViewMode('table')"
-                class="px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-all"
-                [class]="homeworkViewMode === 'table' ? 'bg-white text-indigo-700 shadow-2xs font-black' : 'text-slate-600 hover:text-slate-900'">
-                <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">table_chart</mat-icon>
-                <span>Table (Row &amp; Col)</span>
-              </button>
+            <div class="flex items-center gap-2 flex-wrap">
+              <div class="inline-flex items-center p-1 bg-white rounded-xl border border-slate-200/80">
+                <button type="button" (click)="studentHomeworkScopeFilter = 'my_class'"
+                  class="px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer transition-all"
+                  [class]="studentHomeworkScopeFilter === 'my_class' ? 'bg-emerald-600 text-white font-black' : 'text-slate-600 hover:text-slate-900'">
+                  My Class ({{ currentStudentProfile?.grade || 'Class 10-A' }})
+                </button>
+                <button type="button" (click)="studentHomeworkScopeFilter = 'all'"
+                  class="px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer transition-all"
+                  [class]="studentHomeworkScopeFilter === 'all' ? 'bg-indigo-600 text-white font-black' : 'text-slate-600 hover:text-slate-900'">
+                  All Classes ({{ teacherHomeworks.length }})
+                </button>
+              </div>
+              <select [(ngModel)]="studentHomeworkSubjectFilter" class="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700">
+                @for (sub of getStudentHomeworkSubjects(); track sub) {
+                  <option [value]="sub">{{ sub === 'All' ? 'All Subjects' : sub }}</option>
+                }
+              </select>
+              <select [(ngModel)]="studentHomeworkStatusFilter" class="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700">
+                <option value="All">All Status</option>
+                <option value="Pending">Pending</option>
+                <option value="Submitted">Submitted</option>
+                <option value="Checked">Checked</option>
+                <option value="Needs Revision">Needs Revision</option>
+              </select>
+              <div class="inline-flex items-center p-1 bg-white rounded-xl border border-slate-200/80">
+                <button type="button" (click)="setHomeworkViewMode('cards')"
+                  class="px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-all"
+                  [class]="homeworkViewMode === 'cards' ? 'bg-white text-indigo-700 shadow-2xs font-black' : 'text-slate-600 hover:text-slate-900'">
+                  <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">view_agenda</mat-icon>
+                  <span>Cards</span>
+                </button>
+                <button type="button" (click)="setHomeworkViewMode('table')"
+                  class="px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-all"
+                  [class]="homeworkViewMode === 'table' ? 'bg-white text-indigo-700 shadow-2xs font-black' : 'text-slate-600 hover:text-slate-900'">
+                  <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">table_chart</mat-icon>
+                  <span>Table (Row &amp; Col)</span>
+                </button>
+              </div>
             </div>
           </div>
 
           @if (homeworkViewMode === 'cards') {
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              @for (hw of teacherHomeworks; track hw.id) {
+              @for (hw of getFilteredStudentHomeworks(); track hw.id) {
                 @let stuSub = getStudentSubmissionForHomework(hw.id);
-                <div class="p-4 rounded-2xl border border-slate-200 bg-white space-y-2.5 flex flex-col justify-between">
-                  <div class="space-y-2">
+                <div class="p-4 rounded-2xl border border-slate-200 bg-white space-y-3 flex flex-col justify-between">
+                  <div class="space-y-2.5">
                     <div class="flex items-center justify-between gap-2 flex-wrap">
-                      <div class="flex items-center gap-1.5">
-                        <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-indigo-50 text-indigo-700">{{ hw.subject }}</span>
+                      <div class="flex items-center gap-1.5 flex-wrap">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-indigo-50 text-indigo-700 border border-indigo-200">{{ hw.grade }}</span>
+                        @if (hw.section && hw.section !== 'All Sections') {
+                          <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-slate-100 text-slate-700">{{ hw.section }}</span>
+                        }
                         <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-blue-50 text-blue-700">{{ hw.resourceKind || 'Homework' }}</span>
+                        @if (hw.priority && hw.priority !== 'Normal') {
+                          <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-rose-50 text-rose-700 border border-rose-200">{{ hw.priority }}</span>
+                        }
                       </div>
-                      <span class="text-xs text-rose-600 font-bold">Due: {{ hw.dueDate }}</span>
+                      <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase"
+                        [class]="hw.status === 'Closed' ? 'bg-slate-200 text-slate-700' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'">
+                        {{ hw.status || 'Active' }}
+                      </span>
                     </div>
-                    <h4 class="font-black text-slate-900 text-sm">{{ hw.title }} <span class="text-[11px] font-bold text-slate-500">({{ hw.maxMarks || 10 }} Marks)</span></h4>
+                    <div>
+                      <h4 class="font-black text-slate-900 text-sm">{{ hw.title }}</h4>
+                      <p class="text-[11px] font-bold text-indigo-600 mt-0.5">{{ hw.subject }} @if (hw.chapterTopic) { • {{ hw.chapterTopic }} }</p>
+                    </div>
+                    <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200/70 text-[11px] space-y-1 font-medium text-slate-700">
+                      <div class="flex items-center justify-between gap-2">
+                        <span>Assigned By: <strong class="text-slate-900">{{ hw.teacherName || 'Subject Teacher' }}</strong></span>
+                        <span>Max Marks: <strong class="text-slate-900">{{ hw.maxMarks || 10 }}</strong></span>
+                      </div>
+                      <div class="flex items-center justify-between gap-2">
+                        <span>Assigned: <strong class="text-slate-900">{{ hw.assignedDate }}</strong></span>
+                        <span class="text-rose-600 font-bold">Due: {{ hw.dueDate }} ({{ hw.dueTime || '11:59 PM' }})</span>
+                      </div>
+                      <div class="flex items-center justify-between gap-2">
+                        <span>Mode: <strong class="text-slate-900">{{ hw.submissionMode || 'Online Upload + Written' }}</strong></span>
+                        <span>Est. Time: <strong class="text-slate-900">{{ hw.estimatedMinutes || 30 }} mins</strong></span>
+                      </div>
+                    </div>
                     <p class="text-xs text-slate-600 font-medium leading-relaxed">{{ hw.description }}</p>
 
-                    @if (hw.attachmentData && isSafeAttachmentUrl(hw.attachmentData)) {
-                      <button type="button" (click)="openAttachmentPreview(hw.attachmentName || hw.title, hw.attachmentType || '', hw.attachmentData)"
-                        class="w-full px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-800 text-[11px] font-bold flex items-center justify-between cursor-pointer">
-                        <span class="truncate">Teacher File: {{ hw.attachmentName || 'Download / View' }}</span>
-                        <lucide-icon [name]="'eye'" class="w-3.5 h-3.5 shrink-0"></lucide-icon>
-                      </button>
+                    @if (getHomeworkCustomColumns().length > 0) {
+                      <div class="grid grid-cols-2 gap-1.5 pt-1">
+                        @for (col of getHomeworkCustomColumns(); track col.id) {
+                          @let cellVal = getHomeworkCustomCellValue(hw.id, col.id);
+                          @if (cellVal) {
+                            <div class="px-2 py-1 rounded-lg bg-indigo-50/50 border border-indigo-100 text-[10px]">
+                              <span class="text-slate-500 font-bold block truncate">{{ col.label }}</span>
+                              <span class="text-slate-900 font-extrabold truncate block">{{ cellVal }}</span>
+                            </div>
+                          }
+                        }
+                      </div>
                     }
+
+                    <div class="space-y-1.5">
+                      @if (hw.attachmentData && isSafeAttachmentUrl(hw.attachmentData)) {
+                        <button type="button" (click)="openAttachmentPreview(hw.attachmentName || hw.title, hw.attachmentType || '', hw.attachmentData)"
+                          class="w-full px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-800 text-[11px] font-bold flex items-center justify-between cursor-pointer">
+                          <span class="truncate">Teacher File: {{ hw.attachmentName || 'Download / View' }}</span>
+                          <lucide-icon [name]="'eye'" class="w-3.5 h-3.5 shrink-0"></lucide-icon>
+                        </button>
+                      }
+                      @if (hw.externalLink && isSafeAttachmentUrl(hw.externalLink)) {
+                        <button type="button" (click)="openAttachmentPreview(hw.title + ' Reference Link', 'external', hw.externalLink)"
+                          class="w-full px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-800 text-[11px] font-bold flex items-center justify-between cursor-pointer">
+                          <span class="truncate">Reference Link: {{ hw.externalLink }}</span>
+                          <lucide-icon [name]="'external-link'" class="w-3.5 h-3.5 shrink-0"></lucide-icon>
+                        </button>
+                      }
+                    </div>
 
                     @if (stuSub) {
                       <div class="p-2.5 rounded-xl border text-[11px] space-y-1"
                         [class]="stuSub.status === 'Checked' ? 'bg-emerald-50/80 border-emerald-200 text-emerald-900' : (stuSub.status === 'Needs Revision' ? 'bg-amber-50 border-amber-200 text-amber-900' : 'bg-blue-50/80 border-blue-200 text-blue-900')">
                         <div class="flex items-center justify-between font-black">
-                          <span>Status: {{ stuSub.status }}</span>
+                          <span>My Status: {{ stuSub.status }}</span>
                           @if (stuSub.marksObtained !== null && stuSub.marksObtained !== undefined) {
                             <span>Score: {{ stuSub.marksObtained }} / {{ stuSub.maxMarks }}</span>
                           }
@@ -16780,28 +16897,76 @@
                   </div>
                 </div>
               }
+              @if (getFilteredStudentHomeworks().length === 0) {
+                <div class="col-span-full p-6 text-center rounded-2xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-500">
+                  No homework assigned for {{ currentStudentProfile?.grade || 'your class' }} in this filter. Switch to "All Classes" to browse campus-wide tasks.
+                </div>
+              }
             </div>
           }
 
           @if (homeworkViewMode === 'table') {
-            <div class="overflow-x-auto custom-scrollbar rounded-2xl scs-surface-3d">
-              <table appSchoolTable="owner_homework_log" tableTitle="Assigned Homework & Tasks" class="w-full text-left border-collapse text-xs tabular-nums">
+            <div data-scs-table-scroll="1" class="overflow-x-auto custom-scrollbar rounded-2xl scs-surface-3d">
+              <table appSchoolTable="owner_homework_log" tableTitle="Assigned Homework & Tasks" class="w-max min-w-full text-left border-collapse text-xs tabular-nums">
                 <thead class="bg-white text-slate-600 uppercase font-black tracking-wider text-[10px] border-b border-slate-200 select-none">
                   <tr>
-                    <th class="px-4 py-3 whitespace-nowrap">Title</th>
+                    <th class="px-4 py-3 whitespace-nowrap">Title &amp; Type</th>
                     <th class="px-3.5 py-3 whitespace-nowrap">Subject</th>
-                    <th class="px-3.5 py-3 whitespace-nowrap">Due Date</th>
-                    <th class="px-3.5 py-3 whitespace-nowrap">My Status</th>
+                    <th class="px-3.5 py-3 whitespace-nowrap">Topic / Chapter</th>
+                    <th class="px-3.5 py-3 whitespace-nowrap">Class &amp; Section</th>
+                    <th class="px-3.5 py-3 whitespace-nowrap">Teacher</th>
+                    <th class="px-3.5 py-3 whitespace-nowrap">Assigned Date</th>
+                    <th class="px-3.5 py-3 whitespace-nowrap">Due Date &amp; Time</th>
+                    <th class="px-3.5 py-3 whitespace-nowrap">Submission Mode</th>
+                    <th class="px-3.5 py-3 whitespace-nowrap">Max Marks</th>
+                    <th class="px-3.5 py-3 whitespace-nowrap">Files &amp; Links</th>
+                    <th class="px-3.5 py-3 whitespace-nowrap">Status</th>
                     <th class="px-3.5 py-3 whitespace-nowrap text-right">Action</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 font-medium bg-white text-slate-800">
-                  @for (hw of teacherHomeworks; track hw.id) {
+                  @for (hw of getFilteredStudentHomeworks(); track hw.id) {
                     @let stuSub = getStudentSubmissionForHomework(hw.id);
                     <tr [attr.data-row-key]="hw.id" class="hover:bg-indigo-50/40 transition-colors">
-                      <td class="px-4 py-3 font-black text-slate-900 whitespace-nowrap">{{ hw.title }}</td>
+                      <td class="px-4 py-3 whitespace-nowrap">
+                        <div class="font-black text-slate-900">{{ hw.title }}</div>
+                        <div class="text-[11px] text-slate-500 max-w-[260px] truncate">{{ hw.resourceKind || 'Homework' }} • {{ hw.description }}</div>
+                      </td>
                       <td class="px-3.5 py-3 font-bold text-indigo-700 whitespace-nowrap">{{ hw.subject }}</td>
-                      <td class="px-3.5 py-3 font-mono font-bold text-rose-600 whitespace-nowrap">{{ hw.dueDate }}</td>
+                      <td class="px-3.5 py-3 text-slate-700 whitespace-nowrap max-w-[180px] truncate">{{ hw.chapterTopic || '—' }}</td>
+                      <td class="px-3.5 py-3 whitespace-nowrap">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-indigo-50 text-indigo-700 border border-indigo-200">{{ hw.grade }}</span>
+                        <span class="ml-1 text-[11px] text-slate-500">{{ hw.section || 'All Sections' }}</span>
+                      </td>
+                      <td class="px-3.5 py-3 text-slate-700 font-semibold whitespace-nowrap">{{ hw.teacherName || 'Faculty' }}</td>
+                      <td class="px-3.5 py-3 font-mono text-slate-600 whitespace-nowrap">{{ hw.assignedDate }}</td>
+                      <td class="px-3.5 py-3 font-mono font-bold text-rose-600 whitespace-nowrap">
+                        {{ hw.dueDate }} <span class="text-[10px] text-slate-500 font-normal">({{ hw.dueTime || '11:59 PM' }})</span>
+                      </td>
+                      <td class="px-3.5 py-3 whitespace-nowrap">
+                        <div class="font-bold text-slate-800">{{ hw.submissionMode || 'Online Upload + Written' }}</div>
+                        <div class="text-[10px] text-slate-500">Est. {{ hw.estimatedMinutes || 30 }} mins</div>
+                      </td>
+                      <td class="px-3.5 py-3 font-mono font-bold text-slate-700 whitespace-nowrap">{{ hw.maxMarks || 10 }}</td>
+                      <td class="px-3.5 py-3 whitespace-nowrap">
+                        <div class="inline-flex items-center gap-1.5">
+                          @if (hw.attachmentData && isSafeAttachmentUrl(hw.attachmentData)) {
+                            <button type="button" (click)="openAttachmentPreview(hw.attachmentName || hw.title, hw.attachmentType || '', hw.attachmentData)"
+                              class="px-2 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-[10px] cursor-pointer">
+                              File
+                            </button>
+                          }
+                          @if (hw.externalLink && isSafeAttachmentUrl(hw.externalLink)) {
+                            <button type="button" (click)="openAttachmentPreview(hw.title + ' Reference', 'external', hw.externalLink)"
+                              class="px-2 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-[10px] cursor-pointer">
+                              Link
+                            </button>
+                          }
+                          @if (!hw.attachmentData && !hw.externalLink) {
+                            <span class="text-[11px] text-slate-400">None</span>
+                          }
+                        </div>
+                      </td>
                       <td class="px-3.5 py-3 whitespace-nowrap">
                         <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase"
                           [class]="stuSub?.status === 'Checked' ? 'bg-emerald-100 text-emerald-800' : (stuSub ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800')">
@@ -16812,6 +16977,13 @@
                         <button type="button" (click)="openStudentHomeworkSubmitModal(hw)" class="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] cursor-pointer">
                           {{ stuSub ? 'Update' : 'Submit' }}
                         </button>
+                      </td>
+                    </tr>
+                  }
+                  @if (getFilteredStudentHomeworks().length === 0) {
+                    <tr>
+                      <td colspan="12" class="px-4 py-8 text-center text-slate-500 font-bold text-xs">
+                        No homework assigned for {{ currentStudentProfile?.grade || 'your class' }} in this filter.
                       </td>
                     </tr>
                   }
@@ -16919,10 +17091,10 @@
           <div class="apple-card rounded-2xl p-5 scs-surface-3d space-y-3">
             <div class="flex items-center justify-between flex-wrap gap-2">
               <h3 class="text-sm font-black text-slate-900">Teacher-Uploaded Class Notes, Worksheets &amp; Past Papers</h3>
-              <span class="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-black uppercase">{{ teacherStudyMaterials.length }} Files Synced</span>
+              <span class="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-black uppercase">{{ getFilteredStudentStudyMaterials().length }} Files Synced</span>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              @for (mat of teacherStudyMaterials; track mat.id) {
+              @for (mat of getFilteredStudentStudyMaterials(); track mat.id) {
                 <div class="p-3.5 rounded-2xl bg-white border border-slate-200 flex flex-col justify-between space-y-2 transition-all">
                   <div>
                     <div class="flex items-center justify-between text-[10px] font-black uppercase text-emerald-700">
@@ -17239,7 +17411,21 @@
               </div>
               <p class="text-xs text-slate-600 font-medium">View institutional sports festivals, science fairs, annual functions and download official QR event admission passes.</p>
             </div>
-            <div class="flex items-center gap-2 relative z-10">
+            <div class="flex items-center gap-2 relative z-10 flex-wrap">
+              <div class="inline-flex items-center p-1 bg-white rounded-xl border border-slate-200/80">
+                <button type="button" (click)="setEventsViewMode('cards')"
+                  class="px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-all"
+                  [class]="eventsViewMode === 'cards' ? 'bg-amber-50 text-amber-800 font-black' : 'text-slate-600 hover:text-slate-900'">
+                  <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">view_agenda</mat-icon>
+                  <span>Cards</span>
+                </button>
+                <button type="button" (click)="setEventsViewMode('table')"
+                  class="px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-all"
+                  [class]="eventsViewMode === 'table' ? 'bg-amber-50 text-amber-800 font-black' : 'text-slate-600 hover:text-slate-900'">
+                  <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">table_chart</mat-icon>
+                  <span>Table (Row &amp; Col)</span>
+                </button>
+              </div>
               <span class="px-3.5 py-1.5 rounded-2xl bg-emerald-500/15 text-emerald-700 text-xs font-black border border-emerald-300/70 flex items-center gap-1.5 shadow-2xs">
                 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                 <span>Active Events Hub</span>
@@ -17247,75 +17433,120 @@
             </div>
           </div>
 
-          <!-- Published Events Grid for Students -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-            @for (evt of schoolEventsList; track evt.id) {
-              <div class="apple-card rounded-3xl p-6 scs-surface-3d transition-all space-y-4 flex flex-col justify-between">
-                
-                <div class="space-y-3">
-                  <div class="flex items-center justify-between gap-2 flex-wrap">
-                    <span class="px-3 py-1 rounded-full text-xs font-black bg-amber-50 text-amber-800 border border-amber-200">
-                      {{ evt.category }}
-                    </span>
-                    <span class="px-3 py-1 rounded-full text-[11px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                      {{ evt.status }}
-                    </span>
-                  </div>
-
-                  <h3 class="text-base font-black text-slate-900 leading-snug">{{ evt.title }}</h3>
-                  <p class="text-xs text-slate-600 font-medium leading-relaxed">{{ evt.description }}</p>
-
-                  <!-- Host Faculty & Institutional Patronage Banner -->
-                  <div class="p-3 rounded-2xl bg-white border border-slate-200/80 space-y-1 text-xs">
-                    <div class="flex items-center gap-2 text-amber-950 font-bold">
-                      <lucide-icon [name]="'user-check'" class="w-3.5 h-3.5 text-amber-700 shrink-0"></lucide-icon>
-                      <span>Organized by: <strong class="text-amber-900">{{ evt.organizerName || 'Sports Department' }}</strong></span>
+          @if (eventsViewMode === 'cards') {
+            <!-- Published Events Grid for Students -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+              @for (evt of schoolEventsList; track evt.id) {
+                <div class="apple-card rounded-3xl p-6 scs-surface-3d transition-all space-y-4 flex flex-col justify-between">
+                  <div class="space-y-3">
+                    <div class="flex items-center justify-between gap-2 flex-wrap">
+                      <span class="px-3 py-1 rounded-full text-xs font-black bg-amber-50 text-amber-800 border border-amber-200">{{ evt.category }}</span>
+                      <span class="px-3 py-1 rounded-full text-[11px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">{{ evt.status }}</span>
                     </div>
-                    <div class="flex items-center gap-2 text-slate-600 text-[11px]">
-                      <lucide-icon [name]="'shield'" class="w-3 h-3 text-indigo-600 shrink-0"></lucide-icon>
-                      <span>Patron: <strong>Dr. Tahir Malik (Principal & Academic Director)</strong></span>
-                    </div>
-                  </div>
-
-                  <div class="p-3.5 rounded-2xl bg-white border border-slate-100 text-xs space-y-1.5 font-bold text-slate-700">
-                    <div class="flex items-center gap-2">
-                      <lucide-icon [name]="'calendar'" class="w-3.5 h-3.5 text-amber-600 shrink-0"></lucide-icon>
-                      <span>Date & Time: <strong>{{ evt.eventDate }}</strong> ({{ evt.eventTime }})</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                      <lucide-icon [name]="'building-2'" class="w-3.5 h-3.5 text-indigo-600 shrink-0"></lucide-icon>
-                      <span>Venue: <strong>{{ evt.venue }}</strong></span>
-                    </div>
-                    @if (evt.chiefGuest) {
-                      <div class="flex items-center gap-2 text-purple-700">
-                        <lucide-icon [name]="'award'" class="w-3.5 h-3.5 text-purple-600 shrink-0"></lucide-icon>
-                        <span>Chief Guest: <strong>{{ evt.chiefGuest }}</strong></span>
+                    <h3 class="text-base font-black text-slate-900 leading-snug">{{ evt.title }}</h3>
+                    <p class="text-xs text-slate-600 font-medium leading-relaxed">{{ evt.description }}</p>
+                    <div class="p-3 rounded-2xl bg-white border border-slate-200/80 space-y-1 text-xs">
+                      <div class="flex items-center gap-2 text-amber-950 font-bold">
+                        <lucide-icon [name]="'user-check'" class="w-3.5 h-3.5 text-amber-700 shrink-0"></lucide-icon>
+                        <span>Organized by: <strong class="text-amber-900">{{ evt.organizerName || 'Sports Department' }}</strong></span>
                       </div>
-                    }
-                    <div class="flex items-center gap-2 text-emerald-700 pt-0.5">
-                      <lucide-icon [name]="'users'" class="w-3.5 h-3.5 text-emerald-600 shrink-0"></lucide-icon>
-                      <span>Student RSVPs: <strong>{{ evt.attendingStudentsCount }} Students Confirmed</strong></span>
+                      <div class="flex items-center gap-2 text-slate-600 text-[11px]">
+                        <lucide-icon [name]="'shield'" class="w-3 h-3 text-indigo-600 shrink-0"></lucide-icon>
+                        <span>Patron: <strong>Dr. Tahir Malik (Principal &amp; Academic Director)</strong></span>
+                      </div>
+                    </div>
+                    <div class="p-3.5 rounded-2xl bg-white border border-slate-100 text-xs space-y-1.5 font-bold text-slate-700">
+                      <div class="flex items-center gap-2">
+                        <lucide-icon [name]="'calendar'" class="w-3.5 h-3.5 text-amber-600 shrink-0"></lucide-icon>
+                        <span>Date &amp; Time: <strong>{{ evt.eventDate }}</strong> ({{ evt.eventTime }})</span>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <lucide-icon [name]="'building-2'" class="w-3.5 h-3.5 text-indigo-600 shrink-0"></lucide-icon>
+                        <span>Venue: <strong>{{ evt.venue }}</strong></span>
+                      </div>
+                      @if (evt.chiefGuest) {
+                        <div class="flex items-center gap-2 text-purple-700">
+                          <lucide-icon [name]="'award'" class="w-3.5 h-3.5 text-purple-600 shrink-0"></lucide-icon>
+                          <span>Chief Guest: <strong>{{ evt.chiefGuest }}</strong></span>
+                        </div>
+                      }
+                      <div class="flex items-center gap-2 text-emerald-700 pt-0.5">
+                        <lucide-icon [name]="'users'" class="w-3.5 h-3.5 text-emerald-600 shrink-0"></lucide-icon>
+                        <span>Student RSVPs: <strong>{{ evt.attendingStudentsCount }} Students Confirmed</strong></span>
+                      </div>
                     </div>
                   </div>
+                  <div class="pt-4 border-t border-slate-100 flex items-center justify-between gap-2 flex-wrap">
+                    <button (click)="rsvpEvent(evt, 'student')"
+                            class="px-4 py-2 rounded-xl font-extrabold text-xs transition-all cursor-pointer flex items-center gap-1.5"
+                            [class]="evt.studentRsvpd ? 'bg-emerald-600 text-white shadow-xs' : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200'">
+                      <lucide-icon [name]="evt.studentRsvpd ? 'check-circle' : 'check'" class="w-3.5 h-3.5"></lucide-icon>
+                      <span>{{ evt.studentRsvpd ? '✓ Your Seat Confirmed' : 'Confirm RSVP Attendance' }}</span>
+                    </button>
+                    <button (click)="downloadEventPass(evt, 'student')" class="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-extrabold text-xs shadow-xs transition-all cursor-pointer flex items-center gap-1.5 active:scale-95">
+                      <lucide-icon [name]="'download'" class="w-3.5 h-3.5"></lucide-icon>
+                      <span>Download QR Entry Pass</span>
+                    </button>
+                  </div>
                 </div>
+              }
+            </div>
+          }
 
-                <div class="pt-4 border-t border-slate-100 flex items-center justify-between gap-2 flex-wrap">
-                  <button (click)="rsvpEvent(evt, 'student')" 
-                          class="px-4 py-2 rounded-xl font-extrabold text-xs transition-all cursor-pointer flex items-center gap-1.5"
-                          [class]="evt.studentRsvpd ? 'bg-emerald-600 text-white shadow-xs' : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200'">
-                    <lucide-icon [name]="evt.studentRsvpd ? 'check-circle' : 'check'" class="w-3.5 h-3.5"></lucide-icon>
-                    <span>{{ evt.studentRsvpd ? '✓ Your Seat Confirmed' : 'Confirm RSVP Attendance' }}</span>
-                  </button>
-
-                  <button (click)="downloadEventPass(evt, 'student')" class="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-extrabold text-xs shadow-xs transition-all cursor-pointer flex items-center gap-1.5 active:scale-95">
-                    <lucide-icon [name]="'download'" class="w-3.5 h-3.5"></lucide-icon>
-                    <span>Download QR Entry Pass</span>
-                  </button>
-                </div>
-
+          @if (eventsViewMode === 'table') {
+            <div class="rounded-[20px] scs-surface-3d overflow-hidden">
+              <div data-scs-table-scroll="1" class="w-full overflow-x-auto custom-scrollbar">
+                <table appSchoolTable="student_events" tableTitle="Events & Campus Calendar" class="w-max min-w-full text-left border-collapse text-xs tabular-nums">
+                  <thead class="bg-white text-slate-600 uppercase font-black tracking-wider text-[10px] border-b border-slate-200 select-none">
+                    <tr>
+                      <th class="px-4 py-3.5 whitespace-nowrap">Event Title</th>
+                      <th class="px-3.5 py-3.5 whitespace-nowrap">Category</th>
+                      <th class="px-3.5 py-3.5 whitespace-nowrap">Date</th>
+                      <th class="px-3.5 py-3.5 whitespace-nowrap">Time</th>
+                      <th class="px-3.5 py-3.5 whitespace-nowrap">Venue</th>
+                      <th class="px-3.5 py-3.5 whitespace-nowrap">Chief Guest</th>
+                      <th class="px-3.5 py-3.5 whitespace-nowrap">Organizer</th>
+                      <th class="px-3.5 py-3.5 whitespace-nowrap">Coordinator</th>
+                      <th class="px-3.5 py-3.5 text-center whitespace-nowrap">Status</th>
+                      <th class="px-4 py-3.5 whitespace-nowrap">Description</th>
+                      <th class="px-4 py-3.5 text-right whitespace-nowrap">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100 font-medium bg-white text-slate-800">
+                    @for (evt of schoolEventsList; track evt.id) {
+                      <tr [attr.data-row-key]="evt.id" class="hover:bg-indigo-50/40 transition-colors">
+                        <td class="px-4 py-3.5 font-black text-slate-900 whitespace-nowrap">{{ evt.title }}</td>
+                        <td class="px-3.5 py-3.5 whitespace-nowrap">
+                          <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-50 text-amber-800 border border-amber-200">{{ evt.category }}</span>
+                        </td>
+                        <td class="px-3.5 py-3.5 font-mono text-slate-700 whitespace-nowrap">{{ evt.eventDate }}</td>
+                        <td class="px-3.5 py-3.5 font-mono text-slate-600 whitespace-nowrap">{{ evt.eventTime }}</td>
+                        <td class="px-3.5 py-3.5 text-slate-800 font-bold whitespace-nowrap">{{ evt.venue }}</td>
+                        <td class="px-3.5 py-3.5 text-purple-700 font-semibold whitespace-nowrap">{{ evt.chiefGuest || '—' }}</td>
+                        <td class="px-3.5 py-3.5 text-slate-700 whitespace-nowrap">{{ evt.organizerName || 'Campus Committee' }}</td>
+                        <td class="px-3.5 py-3.5 font-bold text-slate-900 whitespace-nowrap">{{ evt.coordinatorTeacher }}</td>
+                        <td class="px-3.5 py-3.5 text-center whitespace-nowrap">
+                          <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">{{ evt.status }}</span>
+                        </td>
+                        <td class="px-4 py-3.5 text-slate-600 max-w-[260px] truncate">{{ evt.description }}</td>
+                        <td class="px-4 py-3.5 text-right whitespace-nowrap">
+                          <div class="inline-flex items-center gap-1.5">
+                            <button type="button" (click)="rsvpEvent(evt, 'student')" class="px-2.5 py-1 rounded-lg font-bold text-[11px] cursor-pointer"
+                              [class]="evt.studentRsvpd ? 'bg-emerald-600 text-white' : 'bg-amber-50 text-amber-900 border border-amber-200'">
+                              {{ evt.studentRsvpd ? 'Confirmed' : 'RSVP' }}
+                            </button>
+                            <button type="button" (click)="downloadEventPass(evt, 'student')" class="px-2.5 py-1 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-bold text-[11px] cursor-pointer">
+                              QR Pass
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
               </div>
-            }
-          </div>
+            </div>
+          }
         </div>
       }
 
@@ -17637,30 +17868,6 @@
             </div>
           </div>
 
-          <!-- Active Workspace Header & Direct Back to Hub Bar -->
-          @if (parentTab !== 'overview') {
-            <div class="flex items-center justify-between scs-surface-3d rounded-2xl p-3.5">
-              <div class="flex items-center gap-3">
-                <button (click)="setParentTab('overview')" 
-                  class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-xs cursor-pointer transition-all shadow-2xs active:scale-95 border border-purple-200/60">
-                  <lucide-icon [name]="'arrow-left'" class="w-4 h-4"></lucide-icon>
-                  <span>Back to Parent Hub</span>
-                </button>
-                <div class="h-4 w-px bg-slate-200"></div>
-                <div class="flex items-center gap-2 text-xs flex-wrap">
-                  <span class="text-slate-400 font-medium">Guardian Portal</span>
-                  <span class="text-slate-300">/</span>
-                  <span class="font-extrabold text-slate-900">{{ currentParentTabLabel }}</span>
-                  <span class="text-[11px] font-bold text-purple-600 bg-purple-50 px-2.5 py-0.5 rounded-md border border-purple-200/60">Child: {{ selectedParentChild?.name }} ({{ selectedParentChild?.grade }})</span>
-                </div>
-              </div>
-              <button (click)="setParentTab('overview')" class="text-xs text-slate-500 hover:text-slate-800 font-bold flex items-center gap-1.5 cursor-pointer">
-                <lucide-icon [name]="'layout-grid'" class="w-3.5 h-3.5 text-slate-400"></lucide-icon>
-                <span class="hidden sm:inline">All Hub Actions</span>
-              </button>
-            </div>
-          }
-
           <!-- PARENT TAB 1: OVERVIEW & RFID LOG -->
           @if (parentTab === 'overview') {
             <div class="space-y-6">
@@ -17858,28 +18065,49 @@
           <div class="flex items-center justify-between flex-wrap gap-2">
             <div class="flex items-center gap-2">
               <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              <h4 class="font-black text-slate-900 text-sm">Today's Digital School Diary & Assigned Tasks</h4>
+              <h4 class="font-black text-slate-900 text-sm">Today's Digital School Diary &amp; Assigned Tasks</h4>
               <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-200">Live Broadcast</span>
             </div>
-            <span class="text-xs font-bold text-slate-500">Student: <strong>{{ selectedParentChild?.name || 'Zayan Ahmed Khan' }}</strong> (Class 10-A)</span>
+            <span class="text-xs font-bold text-slate-500">Student: <strong>{{ selectedParentChild?.name || 'Zayan Ahmed Khan' }}</strong> ({{ selectedParentChild?.grade || 'Class 10-A' }})</span>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-            @for (hw of teacherHomeworks; track hw.id) {
+            @for (hw of getFilteredParentChildHomeworks(); track hw.id) {
               @let childSub = getStudentSubmissionForHomework(hw.id, selectedParentChild?.id);
               <div class="p-3.5 rounded-xl scs-tile-3d space-y-2">
-                <div class="flex items-center justify-between text-xs gap-2">
-                  <span class="px-2 py-0.5 rounded-md font-black bg-indigo-50 text-indigo-700 text-[10px] uppercase border border-indigo-100">{{ hw.subject }} • {{ hw.resourceKind || 'Homework' }}</span>
-                  <span class="font-bold text-rose-600 text-[11px]">Due: {{ hw.dueDate }}</span>
+                <div class="flex items-center justify-between text-xs gap-2 flex-wrap">
+                  <div class="flex items-center gap-1.5 flex-wrap">
+                    <span class="px-2 py-0.5 rounded-md font-black bg-indigo-50 text-indigo-700 text-[10px] uppercase border border-indigo-100">{{ hw.subject }} • {{ hw.resourceKind || 'Homework' }}</span>
+                    <span class="px-2 py-0.5 rounded-md font-black bg-slate-100 text-slate-700 text-[10px] uppercase">{{ hw.grade }} @if (hw.section && hw.section !== 'All Sections') { ({{ hw.section }}) }</span>
+                  </div>
+                  <span class="font-bold text-rose-600 text-[11px]">Due: {{ hw.dueDate }} ({{ hw.dueTime || '11:59 PM' }})</span>
                 </div>
                 <h5 class="font-black text-slate-900 text-xs">{{ hw.title }}</h5>
-                <p class="text-slate-600 text-[11px] leading-relaxed">{{ hw.description }}</p>
-                @if (hw.attachmentData && isSafeAttachmentUrl(hw.attachmentData)) {
-                  <button type="button" (click)="openAttachmentPreview(hw.attachmentName || hw.title, hw.attachmentType || '', hw.attachmentData)"
-                    class="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-[10px] font-bold inline-flex items-center gap-1 cursor-pointer">
-                    <lucide-icon [name]="'eye'" class="w-3 h-3"></lucide-icon>
-                    <span>View Attachment ({{ hw.attachmentName || 'File' }})</span>
-                  </button>
+                @if (hw.chapterTopic) {
+                  <p class="text-[10px] font-bold text-indigo-700">{{ hw.chapterTopic }}</p>
                 }
+                <p class="text-slate-600 text-[11px] leading-relaxed">{{ hw.description }}</p>
+                <div class="text-[10px] text-slate-500 font-semibold flex flex-wrap gap-x-3 gap-y-0.5">
+                  <span>Teacher: <strong class="text-slate-800">{{ hw.teacherName || 'Faculty' }}</strong></span>
+                  <span>Assigned: <strong class="text-slate-800">{{ hw.assignedDate }}</strong></span>
+                  <span>Mode: <strong class="text-slate-800">{{ hw.submissionMode || 'Online Upload + Written' }}</strong></span>
+                  <span>Max: <strong class="text-slate-800">{{ hw.maxMarks || 10 }} Marks</strong></span>
+                </div>
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  @if (hw.attachmentData && isSafeAttachmentUrl(hw.attachmentData)) {
+                    <button type="button" (click)="openAttachmentPreview(hw.attachmentName || hw.title, hw.attachmentType || '', hw.attachmentData)"
+                      class="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-[10px] font-bold inline-flex items-center gap-1 cursor-pointer">
+                      <lucide-icon [name]="'eye'" class="w-3 h-3"></lucide-icon>
+                      <span>View Attachment ({{ hw.attachmentName || 'File' }})</span>
+                    </button>
+                  }
+                  @if (hw.externalLink && isSafeAttachmentUrl(hw.externalLink)) {
+                    <button type="button" (click)="openAttachmentPreview(hw.title + ' Reference Link', 'external', hw.externalLink)"
+                      class="px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-[10px] font-bold inline-flex items-center gap-1 cursor-pointer">
+                      <lucide-icon [name]="'external-link'" class="w-3 h-3"></lucide-icon>
+                      <span>Reference Link</span>
+                    </button>
+                  }
+                </div>
                 <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] flex-wrap gap-2">
                   <span class="text-slate-500 font-bold">
                     Child Submission:
@@ -17900,16 +18128,21 @@
                 }
               </div>
             }
+            @if (getFilteredParentChildHomeworks().length === 0) {
+              <div class="col-span-full p-4 rounded-xl bg-slate-50 border border-slate-200 text-center text-xs font-bold text-slate-500">
+                No homework currently assigned for {{ selectedParentChild?.grade || 'this class' }}.
+              </div>
+            }
           </div>
 
-          @if (teacherStudyMaterials.length > 0) {
+          @if (getFilteredParentStudyMaterials().length > 0) {
             <div class="pt-3 border-t border-slate-200/80 space-y-2">
               <h5 class="text-xs font-black text-slate-800 uppercase tracking-wider">Teacher Shared Class Notes &amp; Study Material</h5>
               <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-                @for (mat of teacherStudyMaterials; track mat.id) {
+                @for (mat of getFilteredParentStudyMaterials(); track mat.id) {
                   <div class="p-3 rounded-xl bg-white border border-slate-200 flex items-center justify-between gap-2">
                     <div class="min-w-0">
-                      <span class="text-[10px] font-black text-indigo-700 uppercase block">{{ mat.materialType }} • {{ mat.subject }}</span>
+                      <span class="text-[10px] font-black text-indigo-700 uppercase block">{{ mat.materialType }} • {{ mat.subject }} ({{ mat.grade }})</span>
                       <p class="text-xs font-bold text-slate-900 truncate">{{ mat.title }}</p>
                     </div>
                     <button type="button" (click)="downloadStudyMaterial(mat)" class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-[10px] font-bold cursor-pointer shrink-0">Open</button>
@@ -18346,18 +18579,33 @@
                 </div>
               </div>
 
-              <!-- Search -->
-              <div class="relative w-full sm:w-64">
-                <lucide-icon [name]="'search'" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></lucide-icon>
-                <input type="text" [(ngModel)]="eventSearchQuery" placeholder="Search events, venues..." 
-                       class="w-full pl-9 pr-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-800 focus:outline-amber-600 shadow-2xs">
+              <div class="flex items-center gap-2.5 flex-wrap w-full sm:w-auto">
+                <div class="relative flex-1 sm:w-64">
+                  <lucide-icon [name]="'search'" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></lucide-icon>
+                  <input type="text" [(ngModel)]="eventSearchQuery" placeholder="Search events, venues..."
+                         class="w-full pl-9 pr-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-800 focus:outline-amber-600 shadow-2xs">
+                </div>
+                <div class="inline-flex items-center p-1 bg-white rounded-xl border border-slate-200/80">
+                  <button type="button" (click)="setEventsViewMode('cards')"
+                    class="px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-all"
+                    [class]="eventsViewMode === 'cards' ? 'bg-amber-50 text-amber-800 font-black' : 'text-slate-600 hover:text-slate-900'">
+                    <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">view_agenda</mat-icon>
+                    <span>Cards</span>
+                  </button>
+                  <button type="button" (click)="setEventsViewMode('table')"
+                    class="px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-all"
+                    [class]="eventsViewMode === 'table' ? 'bg-amber-50 text-amber-800 font-black' : 'text-slate-600 hover:text-slate-900'">
+                    <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">table_chart</mat-icon>
+                    <span>Table (Row &amp; Col)</span>
+                  </button>
+                </div>
               </div>
             </div>
 
             <!-- Category Filter Pills -->
             <div class="flex items-center gap-2 overflow-x-auto custom-scrollbar pt-2 border-t border-slate-100">
               @for (cat of ['All', 'Sports & Athletics', 'Academic Competition', 'Cultural Festival', 'Exhibition', 'Annual Function', 'Parent-Teacher Meeting']; track cat) {
-                <button (click)="selectedEventCategoryFilter = cat" 
+                <button (click)="selectedEventCategoryFilter = cat"
                         class="px-3.5 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap shrink-0"
                         [class]="selectedEventCategoryFilter === cat ? 'bg-amber-600 text-white shadow-xs' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'">
                   {{ cat }}
@@ -18366,112 +18614,148 @@
             </div>
           </div>
 
-          <!-- Published Events Cards Grid -->
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-            @for (evt of filteredSchoolEvents; track evt.id) {
-              <div class="apple-card rounded-3xl p-6 border scs-surface-3d transition-all duration-300 flex flex-col justify-between space-y-5">
-                
-                <div class="space-y-4">
-                  <!-- Header badges -->
-                  <div class="flex items-center justify-between gap-2 flex-wrap">
-                    <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-50 text-amber-800 border border-amber-200">
-                      {{ evt.category }}
-                    </span>
-                    <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
-                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                      <span>{{ evt.status }}</span>
-                    </span>
-                  </div>
-
-                  <!-- Title & Description -->
-                  <div>
-                    <h4 class="text-base sm:text-lg font-black text-slate-900 leading-snug">{{ evt.title }}</h4>
-                    <p class="text-xs text-slate-600 font-medium mt-1 leading-relaxed">{{ evt.description }}</p>
-                  </div>
-
-                  <!-- Event Metrics & Logistics Grid -->
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 rounded-2xl bg-white border border-slate-200/80 text-xs">
-                    <div class="flex items-center gap-2.5">
-                      <div class="w-7 h-7 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
-                        <lucide-icon [name]="'calendar'" class="w-4 h-4"></lucide-icon>
+          @if (eventsViewMode === 'cards') {
+            <!-- Published Events Cards Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+              @for (evt of filteredSchoolEvents; track evt.id) {
+                <div class="apple-card rounded-3xl p-6 border scs-surface-3d transition-all duration-300 flex flex-col justify-between space-y-5">
+                  <div class="space-y-4">
+                    <div class="flex items-center justify-between gap-2 flex-wrap">
+                      <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-50 text-amber-800 border border-amber-200">{{ evt.category }}</span>
+                      <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span>{{ evt.status }}</span>
+                      </span>
+                    </div>
+                    <div>
+                      <h4 class="text-base sm:text-lg font-black text-slate-900 leading-snug">{{ evt.title }}</h4>
+                      <p class="text-xs text-slate-600 font-medium mt-1 leading-relaxed">{{ evt.description }}</p>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 rounded-2xl bg-white border border-slate-200/80 text-xs">
+                      <div class="flex items-center gap-2.5">
+                        <div class="w-7 h-7 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
+                          <lucide-icon [name]="'calendar'" class="w-4 h-4"></lucide-icon>
+                        </div>
+                        <div>
+                          <span class="text-[10px] text-slate-400 font-bold block uppercase">Date &amp; Time</span>
+                          <strong class="text-slate-800 text-[11px]">{{ evt.eventDate }} • {{ evt.eventTime }}</strong>
+                        </div>
                       </div>
-                      <div>
-                        <span class="text-[10px] text-slate-400 font-bold block uppercase">Date & Time</span>
-                        <strong class="text-slate-800 text-[11px]">{{ evt.eventDate }} • {{ evt.eventTime }}</strong>
+                      <div class="flex items-center gap-2.5">
+                        <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
+                          <lucide-icon [name]="'map-pin'" class="w-4 h-4"></lucide-icon>
+                        </div>
+                        <div class="min-w-0">
+                          <span class="text-[10px] text-slate-400 font-bold block uppercase">Campus Venue</span>
+                          <strong class="text-slate-800 text-[11px] truncate block">{{ evt.venue }}</strong>
+                        </div>
+                      </div>
+                      <div class="flex items-center gap-2.5">
+                        <div class="w-7 h-7 rounded-lg bg-purple-100 text-purple-800 flex items-center justify-center shrink-0">
+                          <lucide-icon [name]="'award'" class="w-4 h-4"></lucide-icon>
+                        </div>
+                        <div class="min-w-0">
+                          <span class="text-[10px] text-slate-400 font-bold block uppercase">Chief Guest</span>
+                          <strong class="text-slate-800 text-[11px] truncate block">{{ evt.chiefGuest || 'Institutional Dignitaries' }}</strong>
+                        </div>
+                      </div>
+                      <div class="flex items-center gap-2.5">
+                        <div class="w-7 h-7 rounded-lg bg-blue-100 text-blue-800 flex items-center justify-center shrink-0">
+                          <lucide-icon [name]="'user-check'" class="w-4 h-4"></lucide-icon>
+                        </div>
+                        <div class="min-w-0">
+                          <span class="text-[10px] text-slate-400 font-bold block uppercase">Lead Faculty</span>
+                          <strong class="text-slate-800 text-[11px] truncate block">{{ evt.coordinatorTeacher }}</strong>
+                        </div>
                       </div>
                     </div>
-
-                    <div class="flex items-center gap-2.5">
-                      <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
-                        <lucide-icon [name]="'map-pin'" class="w-4 h-4"></lucide-icon>
+                    <div class="p-3 rounded-2xl bg-white border border-slate-200/80 text-xs space-y-1">
+                      <div class="flex items-center gap-2 text-amber-950 font-bold">
+                        <lucide-icon [name]="'mail'" class="w-3.5 h-3.5 text-amber-700 shrink-0"></lucide-icon>
+                        <span>Cordially Invited by: <strong class="text-amber-900">{{ evt.organizerName || 'Sports Department' }}</strong></span>
                       </div>
-                      <div class="min-w-0">
-                        <span class="text-[10px] text-slate-400 font-bold block uppercase">Campus Venue</span>
-                        <strong class="text-slate-800 text-[11px] truncate block">{{ evt.venue }}</strong>
-                      </div>
-                    </div>
-
-                    <div class="flex items-center gap-2.5">
-                      <div class="w-7 h-7 rounded-lg bg-purple-100 text-purple-800 flex items-center justify-center shrink-0">
-                        <lucide-icon [name]="'award'" class="w-4 h-4"></lucide-icon>
-                      </div>
-                      <div class="min-w-0">
-                        <span class="text-[10px] text-slate-400 font-bold block uppercase">Chief Guest</span>
-                        <strong class="text-slate-800 text-[11px] truncate block">{{ evt.chiefGuest || 'Institutional Dignitaries' }}</strong>
+                      <div class="flex items-center justify-between text-[11px] text-slate-600 font-medium">
+                        <span>Patron: <strong>Dr. Tahir Malik (Principal &amp; Academic Director)</strong></span>
+                        <span class="text-amber-800 font-bold">Dress Code: Formal / Traditional</span>
                       </div>
                     </div>
-
-                    <div class="flex items-center gap-2.5">
-                      <div class="w-7 h-7 rounded-lg bg-blue-100 text-blue-800 flex items-center justify-center shrink-0">
-                        <lucide-icon [name]="'user-check'" class="w-4 h-4"></lucide-icon>
-                      </div>
-                      <div class="min-w-0">
-                        <span class="text-[10px] text-slate-400 font-bold block uppercase">Lead Faculty</span>
-                        <strong class="text-slate-800 text-[11px] truncate block">{{ evt.coordinatorTeacher }}</strong>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Official Family Invitation Protocol (Anti-Leak) -->
-                  <div class="p-3 rounded-2xl bg-white border border-slate-200/80 text-xs space-y-1">
-                    <div class="flex items-center gap-2 text-amber-950 font-bold">
-                      <lucide-icon [name]="'mail'" class="w-3.5 h-3.5 text-amber-700 shrink-0"></lucide-icon>
-                      <span>Cordially Invited by: <strong class="text-amber-900">{{ evt.organizerName || 'Sports Department' }}</strong></span>
-                    </div>
-                    <div class="flex items-center justify-between text-[11px] text-slate-600 font-medium">
-                      <span>Patron: <strong>Dr. Tahir Malik (Principal & Academic Director)</strong></span>
-                      <span class="text-amber-800 font-bold">Dress Code: Formal / Traditional</span>
+                    <div class="flex items-center justify-between text-xs text-slate-500 font-medium px-1">
+                      <span>Confirmed Campus Attendance:</span>
+                      <span class="font-extrabold text-slate-800">{{ evt.attendingParentsCount }} Parents • {{ evt.attendingStudentsCount }} Students</span>
                     </div>
                   </div>
-
-                  <!-- Attendance stats -->
-                  <div class="flex items-center justify-between text-xs text-slate-500 font-medium px-1">
-                    <span>Confirmed Campus Attendance:</span>
-                    <span class="font-extrabold text-slate-800">
-                      {{ evt.attendingParentsCount }} Parents • {{ evt.attendingStudentsCount }} Students
-                    </span>
+                  <div class="flex items-center gap-3 pt-3 border-t border-slate-100 flex-wrap">
+                    <button (click)="rsvpEvent(evt, 'parent')"
+                            class="flex-1 py-2.5 px-4 rounded-xl font-extrabold text-xs cursor-pointer shadow-xs flex items-center justify-center gap-2 transition-all active:scale-95"
+                            [class]="evt.parentRsvpd ? 'bg-emerald-600 text-white' : 'bg-amber-600 hover:bg-amber-500 text-white'">
+                      <lucide-icon [name]="evt.parentRsvpd ? 'check-circle' : 'calendar-check'" class="w-4 h-4"></lucide-icon>
+                      <span>{{ evt.parentRsvpd ? '✓ Family RSVP Confirmed' : 'Confirm Family Attendance RSVP' }}</span>
+                    </button>
+                    <button (click)="downloadEventPass(evt, 'parent')"
+                            class="py-2.5 px-4 rounded-xl bg-white hover:bg-slate-50 text-slate-800 font-extrabold text-xs border border-slate-200 shadow-2xs flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer">
+                      <lucide-icon [name]="'ticket'" class="w-4 h-4 text-purple-600"></lucide-icon>
+                      <span>Download Family Pass</span>
+                    </button>
                   </div>
                 </div>
+              }
+            </div>
+          }
 
-                <!-- Footer Action Buttons: RSVP & Download Entry Pass -->
-                <div class="flex items-center gap-3 pt-3 border-t border-slate-100 flex-wrap">
-                  <button (click)="rsvpEvent(evt, 'parent')" 
-                          class="flex-1 py-2.5 px-4 rounded-xl font-extrabold text-xs cursor-pointer shadow-xs flex items-center justify-center gap-2 transition-all active:scale-95"
-                          [class]="evt.parentRsvpd ? 'bg-emerald-600 text-white' : 'bg-amber-600 hover:bg-amber-500 text-white'">
-                    <lucide-icon [name]="evt.parentRsvpd ? 'check-circle' : 'calendar-check'" class="w-4 h-4"></lucide-icon>
-                    <span>{{ evt.parentRsvpd ? '✓ Family RSVP Confirmed' : 'Confirm Family Attendance RSVP' }}</span>
-                  </button>
-
-                  <button (click)="downloadEventPass(evt, 'parent')" 
-                          class="py-2.5 px-4 rounded-xl bg-white hover:bg-slate-50 text-slate-800 font-extrabold text-xs border border-slate-200 shadow-2xs flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer">
-                    <lucide-icon [name]="'ticket'" class="w-4 h-4 text-purple-600"></lucide-icon>
-                    <span>Download Family Pass</span>
-                  </button>
-                </div>
-
+          @if (eventsViewMode === 'table') {
+            <div class="rounded-[20px] scs-surface-3d overflow-hidden">
+              <div data-scs-table-scroll="1" class="w-full overflow-x-auto custom-scrollbar">
+                <table appSchoolTable="parent_events" tableTitle="Events & Campus Calendar" class="w-max min-w-full text-left border-collapse text-xs tabular-nums">
+                  <thead class="bg-white text-slate-600 uppercase font-black tracking-wider text-[10px] border-b border-slate-200 select-none">
+                    <tr>
+                      <th class="px-4 py-3.5 whitespace-nowrap">Event Title</th>
+                      <th class="px-3.5 py-3.5 whitespace-nowrap">Category</th>
+                      <th class="px-3.5 py-3.5 whitespace-nowrap">Date</th>
+                      <th class="px-3.5 py-3.5 whitespace-nowrap">Time</th>
+                      <th class="px-3.5 py-3.5 whitespace-nowrap">Venue</th>
+                      <th class="px-3.5 py-3.5 whitespace-nowrap">Chief Guest</th>
+                      <th class="px-3.5 py-3.5 whitespace-nowrap">Organizer</th>
+                      <th class="px-3.5 py-3.5 whitespace-nowrap">Coordinator</th>
+                      <th class="px-3.5 py-3.5 text-center whitespace-nowrap">Status</th>
+                      <th class="px-4 py-3.5 whitespace-nowrap">Description</th>
+                      <th class="px-4 py-3.5 text-right whitespace-nowrap">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100 font-medium bg-white text-slate-800">
+                    @for (evt of filteredSchoolEvents; track evt.id) {
+                      <tr [attr.data-row-key]="evt.id" class="hover:bg-indigo-50/40 transition-colors">
+                        <td class="px-4 py-3.5 font-black text-slate-900 whitespace-nowrap">{{ evt.title }}</td>
+                        <td class="px-3.5 py-3.5 whitespace-nowrap">
+                          <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-50 text-amber-800 border border-amber-200">{{ evt.category }}</span>
+                        </td>
+                        <td class="px-3.5 py-3.5 font-mono text-slate-700 whitespace-nowrap">{{ evt.eventDate }}</td>
+                        <td class="px-3.5 py-3.5 font-mono text-slate-600 whitespace-nowrap">{{ evt.eventTime }}</td>
+                        <td class="px-3.5 py-3.5 text-slate-800 font-bold whitespace-nowrap">{{ evt.venue }}</td>
+                        <td class="px-3.5 py-3.5 text-purple-700 font-semibold whitespace-nowrap">{{ evt.chiefGuest || '—' }}</td>
+                        <td class="px-3.5 py-3.5 text-slate-700 whitespace-nowrap">{{ evt.organizerName || 'Campus Committee' }}</td>
+                        <td class="px-3.5 py-3.5 font-bold text-slate-900 whitespace-nowrap">{{ evt.coordinatorTeacher }}</td>
+                        <td class="px-3.5 py-3.5 text-center whitespace-nowrap">
+                          <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">{{ evt.status }}</span>
+                        </td>
+                        <td class="px-4 py-3.5 text-slate-600 max-w-[260px] truncate">{{ evt.description }}</td>
+                        <td class="px-4 py-3.5 text-right whitespace-nowrap">
+                          <div class="inline-flex items-center gap-1.5">
+                            <button type="button" (click)="rsvpEvent(evt, 'parent')" class="px-2.5 py-1 rounded-lg font-bold text-[11px] cursor-pointer"
+                              [class]="evt.parentRsvpd ? 'bg-emerald-600 text-white' : 'bg-amber-600 text-white'">
+                              {{ evt.parentRsvpd ? 'Confirmed' : 'Family RSVP' }}
+                            </button>
+                            <button type="button" (click)="downloadEventPass(evt, 'parent')" class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-800 font-bold text-[11px] cursor-pointer">
+                              Family Pass
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
               </div>
-            }
-          </div>
+            </div>
+          }
 
         </div>
       }
@@ -19700,11 +19984,14 @@
   <!-- 2. TEACHER POST / EDIT HOMEWORK MODAL -->
   @if (isTeacherHomeworkModalOpen) {
     <div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-      <div class="apple-card rounded-3xl max-w-lg w-full p-6 space-y-4 max-h-[92vh] overflow-y-auto custom-scrollbar">
-        <div class="flex items-center justify-between">
-          <h3 class="font-black text-slate-900 text-base">
-            {{ teacherHomeworkForm.id ? 'Edit Homework / Assignment' : 'Post Homework Assignment' }}
-          </h3>
+      <div class="apple-card rounded-3xl max-w-2xl w-full p-6 space-y-4 max-h-[92vh] overflow-y-auto custom-scrollbar">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+          <div>
+            <span class="text-[10px] font-black uppercase tracking-wider text-emerald-700">Real-Time Student &amp; Parent Sync</span>
+            <h3 class="font-black text-slate-900 text-base">
+              {{ teacherHomeworkForm.id ? 'Edit Homework / Assignment' : 'Post Class-Wise Homework Assignment' }}
+            </h3>
+          </div>
           <button (click)="closeTeacherHomeworkModal()" class="p-1 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer">
             <lucide-icon [name]="'x'" class="w-5 h-5"></lucide-icon>
           </button>
@@ -19719,10 +20006,24 @@
               [allowSchemaEdit]="isOwnerPortal"
               (valuesChange)="updateFormCustomValues('teacherHomework', $event)" />
           }
+
           @if (!isFormFieldHidden('owner_homework_log', 'hw_title')) {
-            <div>
-              <label class="block font-bold text-slate-700 mb-1">Assignment Title</label>
-              <input type="text" [(ngModel)]="teacherHomeworkForm.title" placeholder="e.g. Quadratic Roots Chapter 4" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold focus:bg-white focus:outline-emerald-600">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div class="sm:col-span-2">
+                <label class="block font-bold text-slate-700 mb-1">Assignment Title *</label>
+                <input type="text" [(ngModel)]="teacherHomeworkForm.title" placeholder="e.g. Quadratic Roots Chapter 4 Worksheet" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold focus:bg-white focus:outline-emerald-600">
+              </div>
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Task / Resource Type</label>
+                <select [(ngModel)]="teacherHomeworkForm.resourceKind" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+                  <option value="Homework">Homework</option>
+                  <option value="Worksheet">Worksheet</option>
+                  <option value="Class Notes">Class Notes</option>
+                  <option value="Project / Lab">Project / Lab</option>
+                  <option value="Oral / Reading">Oral / Reading</option>
+                  <option value="Test Prep">Test Prep</option>
+                </select>
+              </div>
             </div>
           }
           @if (hasCustomFieldsAtSlot('owner_homework_log', 'hw_title')) {
@@ -19733,67 +20034,158 @@
               [allowSchemaEdit]="isOwnerPortal"
               (valuesChange)="updateFormCustomValues('teacherHomework', $event)" />
           }
-          @if (!isFormFieldHidden('owner_homework_log', 'hw_meta')) {
-            <div class="grid grid-cols-2 gap-3">
+
+          @if (!isFormFieldHidden('owner_homework_log', 'hw_subject')) {
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label class="block font-bold text-slate-700 mb-1">Subject</label>
-                <input type="text" [(ngModel)]="teacherHomeworkForm.subject" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+                <label class="block font-bold text-slate-700 mb-1">Subject *</label>
+                <input type="text" [(ngModel)]="teacherHomeworkForm.subject" list="schoolHomeworkSubjectsList" placeholder="Mathematics, English, Phonics..." class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+                <datalist id="schoolHomeworkSubjectsList">
+                  @for (sub of dynamicSchoolSubjects; track sub) {
+                    <option [value]="sub"></option>
+                  }
+                </datalist>
               </div>
               <div>
-                <label class="block font-bold text-slate-700 mb-1">Class / Grade</label>
-                <select [(ngModel)]="teacherHomeworkForm.grade" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
-                  <option value="Class 10-A">Class 10-A</option>
-                  <option value="Class 10-B">Class 10-B</option>
-                  <option value="Class 9-B">Class 9-B</option>
-                  <option value="Class 8-A">Class 8-A</option>
-                  <option value="Class 7-C">Class 7-C</option>
-                </select>
-              </div>
-              <div>
-                <label class="block font-bold text-slate-700 mb-1">Resource Type</label>
-                <select [(ngModel)]="teacherHomeworkForm.resourceKind" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
-                  <option value="Homework">Homework</option>
-                  <option value="Worksheet">Worksheet</option>
-                  <option value="Class Notes">Class Notes</option>
-                </select>
-              </div>
-              <div class="grid grid-cols-2 gap-2">
-                <div>
-                  <label class="block font-bold text-slate-700 mb-1">Due Date</label>
-                  <input type="text" [(ngModel)]="teacherHomeworkForm.dueDate" class="w-full px-2.5 py-2 rounded-xl bg-white border border-slate-200 font-bold">
-                </div>
-                <div>
-                  <label class="block font-bold text-slate-700 mb-1">Max Marks</label>
-                  <input type="number" min="1" max="1000" [(ngModel)]="teacherHomeworkForm.maxMarks" class="w-full px-2.5 py-2 rounded-xl bg-white border border-slate-200 font-mono font-bold">
-                </div>
+                <label class="block font-bold text-slate-700 mb-1">Chapter / Unit / Topic</label>
+                <input type="text" [(ngModel)]="teacherHomeworkForm.chapterTopic" placeholder="e.g. Unit 4 • Factorization & Discriminant" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
               </div>
             </div>
           }
-          @if (hasCustomFieldsAtSlot('owner_homework_log', 'hw_meta')) {
+          @if (hasCustomFieldsAtSlot('owner_homework_log', 'hw_subject')) {
             <app-school-custom-form-fields
               [tableId]="'owner_homework_log'"
-              [slotAnchor]="'hw_meta'"
+              [slotAnchor]="'hw_subject'"
               [values]="formCustomValues['teacherHomework']"
               [allowSchemaEdit]="isOwnerPortal"
               (valuesChange)="updateFormCustomValues('teacherHomework', $event)" />
           }
-          @if (!isFormFieldHidden('owner_homework_log', 'hw_desc')) {
-            <div>
-              <label class="block font-bold text-slate-700 mb-1">Instructions &amp; Problem Set</label>
-              <textarea [(ngModel)]="teacherHomeworkForm.description" rows="3" placeholder="Solve exercise 4.1 to 4.4 in homework notebook..." class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-medium focus:bg-white focus:outline-emerald-600"></textarea>
+
+          @if (!isFormFieldHidden('owner_homework_log', 'hw_class')) {
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Target Class / Grade * (Real School Classes)</label>
+                <select [(ngModel)]="teacherHomeworkForm.grade" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+                  @for (cls of dynamicSchoolClasses; track cls) {
+                    <option [value]="cls">{{ cls }}</option>
+                  }
+                  <option value="All Classes">All Classes (Whole Campus)</option>
+                  <option value="__custom__">+ Custom Class Name Write-In...</option>
+                </select>
+                @if (teacherHomeworkForm.grade === '__custom__') {
+                  <input type="text" [(ngModel)]="teacherHomeworkForm.customGradeInput" placeholder="Type Class (e.g. Nursery-B, Prep-Red, Grade 11)..."
+                    class="w-full mt-2 px-3 py-2 rounded-xl bg-teal-50/80 border border-teal-300 font-bold text-slate-900">
+                }
+              </div>
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Section / Group</label>
+                <select [(ngModel)]="teacherHomeworkForm.section" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+                  @for (sec of dynamicSchoolSections; track sec) {
+                    <option [value]="sec">{{ sec }}</option>
+                  }
+                </select>
+              </div>
             </div>
           }
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">Attach Worksheet / PDF / Image (Max 3.5 MB)</label>
-            <input type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,.gif,.txt,.doc,.docx" (change)="onTeacherHomeworkFileSelected($event)"
-              class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium cursor-pointer">
-            @if (teacherHomeworkForm.attachmentName) {
-              <div class="mt-1.5 flex items-center justify-between px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 font-bold">
-                <span class="truncate">Attached: {{ teacherHomeworkForm.attachmentName }}</span>
-                <button type="button" (click)="teacherHomeworkForm.attachmentName = ''; teacherHomeworkForm.attachmentType = ''; teacherHomeworkForm.attachmentData = ''" class="text-rose-600 font-black ml-2 cursor-pointer">Remove</button>
+          @if (hasCustomFieldsAtSlot('owner_homework_log', 'hw_class')) {
+            <app-school-custom-form-fields
+              [tableId]="'owner_homework_log'"
+              [slotAnchor]="'hw_class'"
+              [values]="formCustomValues['teacherHomework']"
+              [allowSchemaEdit]="isOwnerPortal"
+              (valuesChange)="updateFormCustomValues('teacherHomework', $event)" />
+          }
+
+          @if (!isFormFieldHidden('owner_homework_log', 'hw_dates')) {
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Assigned Date</label>
+                <input type="date" [(ngModel)]="teacherHomeworkForm.assignedDate" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
               </div>
-            }
-          </div>
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Due Date *</label>
+                <input type="date" [(ngModel)]="teacherHomeworkForm.dueDate" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+              </div>
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Deadline Time</label>
+                <input type="text" [(ngModel)]="teacherHomeworkForm.dueTime" placeholder="08:00 AM" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+              </div>
+            </div>
+          }
+          @if (hasCustomFieldsAtSlot('owner_homework_log', 'hw_dates')) {
+            <app-school-custom-form-fields
+              [tableId]="'owner_homework_log'"
+              [slotAnchor]="'hw_dates'"
+              [values]="formCustomValues['teacherHomework']"
+              [allowSchemaEdit]="isOwnerPortal"
+              (valuesChange)="updateFormCustomValues('teacherHomework', $event)" />
+          }
+
+          @if (!isFormFieldHidden('owner_homework_log', 'hw_submission_mode')) {
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Submission Mode</label>
+                <select [(ngModel)]="teacherHomeworkForm.submissionMode" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+                  <option value="Online Upload + Written">Online Upload + Written</option>
+                  <option value="Notebook Check in Class">Notebook Check in Class</option>
+                  <option value="PDF / Photo Upload">PDF / Photo Upload</option>
+                  <option value="Written Text Answer">Written Text Answer</option>
+                  <option value="External Link / Doc">External Link / Doc</option>
+                </select>
+              </div>
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Priority Level</label>
+                <select [(ngModel)]="teacherHomeworkForm.priority" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+                  <option value="Normal">Normal</option>
+                  <option value="Important">Important</option>
+                  <option value="Mandatory Graded">Mandatory Graded</option>
+                </select>
+              </div>
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Est. Study Time (Mins)</label>
+                <input type="number" min="5" max="600" [(ngModel)]="teacherHomeworkForm.estimatedMinutes" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-mono font-bold">
+              </div>
+            </div>
+          }
+          @if (hasCustomFieldsAtSlot('owner_homework_log', 'hw_submission_mode')) {
+            <app-school-custom-form-fields
+              [tableId]="'owner_homework_log'"
+              [slotAnchor]="'hw_submission_mode'"
+              [values]="formCustomValues['teacherHomework']"
+              [allowSchemaEdit]="isOwnerPortal"
+              (valuesChange)="updateFormCustomValues('teacherHomework', $event)" />
+          }
+
+          @if (!isFormFieldHidden('owner_homework_log', 'hw_marks')) {
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Max Marks</label>
+                <input type="number" min="1" max="1000" [(ngModel)]="teacherHomeworkForm.maxMarks" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-mono font-bold">
+              </div>
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Assignment Status</label>
+                <select [(ngModel)]="teacherHomeworkForm.status" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+                  <option value="Active">Active (Open for Students)</option>
+                  <option value="Closed">Closed</option>
+                </select>
+              </div>
+            </div>
+          }
+          @if (hasCustomFieldsAtSlot('owner_homework_log', 'hw_marks')) {
+            <app-school-custom-form-fields
+              [tableId]="'owner_homework_log'"
+              [slotAnchor]="'hw_marks'"
+              [values]="formCustomValues['teacherHomework']"
+              [allowSchemaEdit]="isOwnerPortal"
+              (valuesChange)="updateFormCustomValues('teacherHomework', $event)" />
+          }
+
+          @if (!isFormFieldHidden('owner_homework_log', 'hw_desc')) {
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Detailed Instructions, Book Pages &amp; Problem Set *</label>
+              <textarea [(ngModel)]="teacherHomeworkForm.description" rows="3" placeholder="e.g. Read pages 42-45, solve Exercise 4.1 Q1-Q10 in neat homework notebook..." class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-medium focus:bg-white focus:outline-emerald-600"></textarea>
+            </div>
+          }
           @if (hasCustomFieldsAtSlot('owner_homework_log', 'hw_desc')) {
             <app-school-custom-form-fields
               [tableId]="'owner_homework_log'"
@@ -19802,6 +20194,35 @@
               [allowSchemaEdit]="isOwnerPortal"
               (valuesChange)="updateFormCustomValues('teacherHomework', $event)" />
           }
+
+          @if (!isFormFieldHidden('owner_homework_log', 'hw_attachment')) {
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Attach Worksheet / PDF / Photo (Max 3.5 MB)</label>
+                <input type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,.gif,.txt,.doc,.docx" (change)="onTeacherHomeworkFileSelected($event)"
+                  class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium cursor-pointer">
+                @if (teacherHomeworkForm.attachmentName) {
+                  <div class="mt-1.5 flex items-center justify-between px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 font-bold">
+                    <span class="truncate">Attached: {{ teacherHomeworkForm.attachmentName }}</span>
+                    <button type="button" (click)="teacherHomeworkForm.attachmentName = ''; teacherHomeworkForm.attachmentType = ''; teacherHomeworkForm.attachmentData = ''" class="text-rose-600 font-black ml-2 cursor-pointer">Remove</button>
+                  </div>
+                }
+              </div>
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Optional Reference / Video Link (https://)</label>
+                <input type="url" [(ngModel)]="teacherHomeworkForm.externalLink" placeholder="https://..." class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+              </div>
+            </div>
+          }
+          @if (hasCustomFieldsAtSlot('owner_homework_log', 'hw_attachment')) {
+            <app-school-custom-form-fields
+              [tableId]="'owner_homework_log'"
+              [slotAnchor]="'hw_attachment'"
+              [values]="formCustomValues['teacherHomework']"
+              [allowSchemaEdit]="isOwnerPortal"
+              (valuesChange)="updateFormCustomValues('teacherHomework', $event)" />
+          }
+
           <app-school-custom-form-fields
             [tableId]="'owner_homework_log'"
             [values]="formCustomValues['teacherHomework']"
@@ -20068,12 +20489,38 @@
       <div class="apple-card rounded-3xl max-w-lg w-full p-6 space-y-4 max-h-[92vh] overflow-y-auto custom-scrollbar">
         <div class="flex items-center justify-between">
           <div>
-            <span class="text-[10px] font-black uppercase text-indigo-600">{{ selectedHomeworkForSubmit.subject }} • Max {{ selectedHomeworkForSubmit.maxMarks || 10 }} Marks</span>
+            <span class="text-[10px] font-black uppercase text-indigo-600">{{ selectedHomeworkForSubmit.subject }} • {{ selectedHomeworkForSubmit.grade }} @if (selectedHomeworkForSubmit.section && selectedHomeworkForSubmit.section !== 'All Sections') { ({{ selectedHomeworkForSubmit.section }}) } • Max {{ selectedHomeworkForSubmit.maxMarks || 10 }} Marks</span>
             <h3 class="font-black text-slate-900 text-base">Submit Homework: {{ selectedHomeworkForSubmit.title }}</h3>
           </div>
           <button type="button" (click)="closeStudentHomeworkSubmitModal()" class="p-1 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer">
             <lucide-icon [name]="'x'" class="w-5 h-5"></lucide-icon>
           </button>
+        </div>
+
+        <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200 text-[11px] space-y-1.5">
+          <div class="flex items-center justify-between gap-2 font-bold text-slate-700">
+            <span>Teacher: <strong class="text-slate-900">{{ selectedHomeworkForSubmit.teacherName || 'Subject Teacher' }}</strong></span>
+            <span class="text-rose-600">Due: {{ selectedHomeworkForSubmit.dueDate }} ({{ selectedHomeworkForSubmit.dueTime || '11:59 PM' }})</span>
+          </div>
+          @if (selectedHomeworkForSubmit.chapterTopic) {
+            <div class="font-bold text-indigo-700">Topic: {{ selectedHomeworkForSubmit.chapterTopic }}</div>
+          }
+          <div class="font-semibold text-slate-600">Mode: {{ selectedHomeworkForSubmit.submissionMode || 'Online Upload + Written' }}</div>
+          <p class="text-slate-700 leading-relaxed">{{ selectedHomeworkForSubmit.description }}</p>
+          <div class="flex items-center gap-2 flex-wrap pt-1">
+            @if (selectedHomeworkForSubmit.attachmentData && isSafeAttachmentUrl(selectedHomeworkForSubmit.attachmentData)) {
+              <button type="button" (click)="openAttachmentPreview(selectedHomeworkForSubmit.attachmentName || selectedHomeworkForSubmit.title, selectedHomeworkForSubmit.attachmentType || '', selectedHomeworkForSubmit.attachmentData)"
+                class="px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-800 font-bold text-[10px] cursor-pointer">
+                View Teacher File ({{ selectedHomeworkForSubmit.attachmentName || 'Worksheet' }})
+              </button>
+            }
+            @if (selectedHomeworkForSubmit.externalLink && isSafeAttachmentUrl(selectedHomeworkForSubmit.externalLink)) {
+              <button type="button" (click)="openAttachmentPreview(selectedHomeworkForSubmit.title + ' Link', 'external', selectedHomeworkForSubmit.externalLink)"
+                class="px-2.5 py-1 rounded-lg bg-blue-100 text-blue-800 font-bold text-[10px] cursor-pointer">
+                Open Reference Link
+              </button>
+            }
+          </div>
         </div>
 
         <div class="space-y-3 text-xs">
@@ -20126,20 +20573,24 @@
             <label class="block font-bold text-slate-700 mb-1">Title</label>
             <input type="text" [(ngModel)]="studyMaterialForm.title" placeholder="e.g. Ch 4 Quadratic Solved Notes" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
           </div>
-          <div class="grid grid-cols-3 gap-2.5">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
             <div>
               <label class="block font-bold text-slate-700 mb-1">Subject</label>
-              <input type="text" [(ngModel)]="studyMaterialForm.subject" class="w-full px-2.5 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+              <input type="text" [(ngModel)]="studyMaterialForm.subject" list="schoolHomeworkSubjectsList" class="w-full px-2.5 py-2 rounded-xl bg-white border border-slate-200 font-bold">
             </div>
             <div>
               <label class="block font-bold text-slate-700 mb-1">Class / Grade</label>
               <select [(ngModel)]="studyMaterialForm.grade" class="w-full px-2.5 py-2 rounded-xl bg-white border border-slate-200 font-bold">
-                <option value="Class 10-A">Class 10-A</option>
-                <option value="Class 10-B">Class 10-B</option>
-                <option value="Class 9-B">Class 9-B</option>
-                <option value="Class 8-A">Class 8-A</option>
+                @for (cls of dynamicSchoolClasses; track cls) {
+                  <option [value]="cls">{{ cls }}</option>
+                }
                 <option value="All Classes">All Classes</option>
+                <option value="__custom__">+ Custom Class Write-In...</option>
               </select>
+              @if (studyMaterialForm.grade === '__custom__') {
+                <input type="text" [(ngModel)]="studyMaterialForm.customGradeInput" placeholder="Type Class (e.g. Nursery-B)..."
+                  class="w-full mt-1.5 px-2.5 py-1.5 rounded-xl bg-teal-50/80 border border-teal-300 font-bold text-slate-900">
+              }
             </div>
             <div>
               <label class="block font-bold text-slate-700 mb-1">Material Type</label>
@@ -27235,7 +27686,7 @@
             }
           </div>
 
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             @if (!isFormFieldHidden('events_calendar', 'ev_guest')) {
               <div>
                 <label class="block font-bold text-slate-700 mb-1">Chief Guest Protocol</label>
@@ -27246,6 +27697,20 @@
               <app-school-custom-form-fields
                 [tableId]="'events_calendar'"
                 [slotAnchor]="'ev_guest'"
+                [values]="formCustomValues['event']"
+                [allowSchemaEdit]="isOwnerPortal"
+                (valuesChange)="updateFormCustomValues('event', $event)" />
+            }
+            @if (!isFormFieldHidden('events_calendar', 'ev_organizer')) {
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Organizer / Department</label>
+                <input type="text" [(ngModel)]="eventForm.organizerName" placeholder="e.g. Sports & Co-Curricular Board" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold text-slate-900">
+              </div>
+            }
+            @if (hasCustomFieldsAtSlot('events_calendar', 'ev_organizer')) {
+              <app-school-custom-form-fields
+                [tableId]="'events_calendar'"
+                [slotAnchor]="'ev_organizer'"
                 [values]="formCustomValues['event']"
                 [allowSchemaEdit]="isOwnerPortal"
                 (valuesChange)="updateFormCustomValues('event', $event)" />

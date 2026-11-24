@@ -1400,7 +1400,20 @@ test('Teacher-Student-Parent Two-Way Homework, Study Materials, Messaging, Valid
   });
   assert.equal(studentCreateHw.status, 403);
 
-  // 2. Teacher creates valid homework with PDF attachment
+  // 2. Teacher creates valid homework with PDF attachment and realistic classroom metadata; unsafe reference link rejected
+  const badHwLinkRes = await fetch(`${baseUrl}/api/school/homework`, {
+    method: 'POST',
+    headers: teacherHeaders,
+    body: JSON.stringify({
+      title: 'Unsafe Reference Link Test',
+      subject: 'Mathematics',
+      grade: 'Grade 10-A',
+      description: 'Should reject javascript URL.',
+      externalLink: 'javascript:alert(1)'
+    })
+  });
+  assert.equal(badHwLinkRes.status, 400);
+
   const createHwRes = await fetch(`${baseUrl}/api/school/homework`, {
     method: 'POST',
     headers: teacherHeaders,
@@ -1408,7 +1421,15 @@ test('Teacher-Student-Parent Two-Way Homework, Study Materials, Messaging, Valid
       title: 'Quadratic Equations Worksheet',
       subject: 'Mathematics',
       grade: 'Grade 10-A',
+      section: 'Section A',
+      chapterTopic: 'Ch 4 - Factorization',
+      assignedDate: '2026-11-24',
       dueDate: '2026-12-05',
+      dueTime: '02:30 PM',
+      submissionMode: 'Online Upload + Written',
+      priority: 'High',
+      estimatedMinutes: 35,
+      externalLink: 'https://khanacademy.org/algebra-quadratics',
       description: 'Solve Q1-Q10 and upload your steps.',
       teacherName: 'Ms. Ayesha Khan',
       teacherId: 'TCH-01',
@@ -1424,6 +1445,26 @@ test('Teacher-Student-Parent Two-Way Homework, Study Materials, Messaging, Valid
   assert.ok(createdHw?.id);
   assert.equal(createdHw.maxMarks, 20);
   assert.equal(createdHw.resourceKind, 'Worksheet');
+  assert.equal(createdHw.section, 'Section A');
+  assert.equal(createdHw.chapterTopic, 'Ch 4 - Factorization');
+  assert.equal(createdHw.dueTime, '02:30 PM');
+  assert.equal(createdHw.submissionMode, 'Online Upload + Written');
+  assert.equal(createdHw.priority, 'High');
+  assert.equal(createdHw.estimatedMinutes, 35);
+  assert.equal(createdHw.externalLink, 'https://khanacademy.org/algebra-quadratics');
+
+  // Verify student portal GET /api/school/homework receives the exact same full teacher fields
+  const studentListHwRes = await fetch(`${baseUrl}/api/school/homework`, { headers: studentHeaders });
+  assert.equal(studentListHwRes.status, 200);
+  const studentListedHw = (await studentListHwRes.json()).homework.find((h) => h.id === createdHw.id);
+  assert.ok(studentListedHw);
+  assert.equal(studentListedHw.section, 'Section A');
+  assert.equal(studentListedHw.chapterTopic, 'Ch 4 - Factorization');
+  assert.equal(studentListedHw.dueTime, '02:30 PM');
+  assert.equal(studentListedHw.submissionMode, 'Online Upload + Written');
+  assert.equal(studentListedHw.priority, 'High');
+  assert.equal(studentListedHw.estimatedMinutes, 35);
+  assert.equal(studentListedHw.externalLink, 'https://khanacademy.org/algebra-quadratics');
 
   // Teacher edits homework
   const updateHwRes = await fetch(`${baseUrl}/api/school/homework/${createdHw.id}`, {
@@ -1431,11 +1472,16 @@ test('Teacher-Student-Parent Two-Way Homework, Study Materials, Messaging, Valid
     headers: teacherHeaders,
     body: JSON.stringify({
       description: 'Solve Q1-Q12 and upload neat workings.',
+      priority: 'Urgent',
+      estimatedMinutes: 45,
       status: 'Active'
     })
   });
   assert.equal(updateHwRes.status, 200);
-  assert.equal((await updateHwRes.json()).homework.description, 'Solve Q1-Q12 and upload neat workings.');
+  const updatedHwJson = (await updateHwRes.json()).homework;
+  assert.equal(updatedHwJson.description, 'Solve Q1-Q12 and upload neat workings.');
+  assert.equal(updatedHwJson.priority, 'Urgent');
+  assert.equal(updatedHwJson.estimatedMinutes, 45);
 
   // 3. Student submits homework: unsafe link rejected, accountant blocked, valid submission persisted & encrypted
   const unsafeLinkRes = await fetch(`${baseUrl}/api/school/homework/${createdHw.id}/submit`, {

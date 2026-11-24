@@ -419,21 +419,7 @@
 <!-- Legal Modal (Full Privacy & Terms) -->
 <app-legal [isOpen]="showLegalModal" [activeTab]="legalActiveTab" (closeEvent)="closeLegalModal()"></app-legal>
 
-<!-- ✅ Success Popup -->
-<div *ngIf="showSuccessPopup" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
-  <div class="relative bg-white w-full max-w-sm p-8 rounded-2xl shadow-xl text-center border border-slate-100">
-    <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-5">
-      <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="20 6 9 17 4 12" />
-      </svg>
-    </div>
-    <h2 class="text-xl font-bold text-slate-900">Access Granted</h2>
-    <p class="text-slate-600 mt-2 text-sm">Welcome back! Entering your enterprise dashboard securely.</p>
-    <button (click)="finishLogin()" class="mt-6 w-full bg-indigo-600 text-white font-semibold py-3 rounded-xl hover:bg-indigo-700 transition-colors shadow-sm text-sm cursor-pointer">
-      Enter Dashboard
-    </button>
-  </div>
-</div>
+<!-- Global camera-style login notifications render via NotificationService in root shell -->
 
 <!-- ✅ Forgot Password Popup -->
 <div *ngIf="showForgotPopup" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">

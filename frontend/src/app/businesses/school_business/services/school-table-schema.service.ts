@@ -188,6 +188,12 @@ export const SCHOOL_TABLE_FAMILY_MAP: Record<string, string> = {
   // Events calendar
   owner_events: 'events_calendar',
   teacher_events: 'events_calendar',
+  student_events: 'events_calendar',
+  parent_events: 'events_calendar',
+  // Homework
+  teacher_homework: 'owner_homework_log',
+  student_homework: 'owner_homework_log',
+  parent_homework: 'owner_homework_log',
   // SLC
   owner_audit_slc: 'slc_certificates',
   principal_slc: 'slc_certificates',
@@ -316,7 +322,7 @@ export const SCHOOL_TABLE_CATALOG: TableCatalogItem[] = [
     tableId: 'events_calendar',
     canonicalId: 'events_calendar',
     title: 'Events & Campus Calendar',
-    portals: 'Owner, Teacher',
+    portals: 'Owner, Teacher, Student, Parent',
     defaultHeaders: ['Event Title', 'Category', 'Date', 'Time', 'Venue', 'Chief Guest', 'Organizer', 'Coordinator', 'Budget (PKR)', 'Status', 'Description']
   },
   {
@@ -518,9 +524,21 @@ export const SCHOOL_TABLE_CATALOG: TableCatalogItem[] = [
   {
     tableId: 'owner_homework_log',
     canonicalId: 'owner_homework_log',
-    title: 'Teacher Homework Assignments',
+    title: 'Teacher & Student Homework Register',
     portals: 'Teacher, Student, Parent',
-    defaultHeaders: ['Title', 'Subject', 'Grade', 'Due Date']
+    defaultHeaders: [
+      'Title & Type',
+      'Subject',
+      'Topic / Chapter',
+      'Class & Section',
+      'Teacher',
+      'Assigned Date',
+      'Due Date & Time',
+      'Submission Mode',
+      'Max Marks',
+      'Files & Links',
+      'Status'
+    ]
   },
   {
     tableId: 'owner_student_leaves',
@@ -634,9 +652,14 @@ export const SCHOOL_FORM_FIELD_ANCHORS: Record<string, FormFieldAnchorOption[]> 
     { key: 'pv_fields', label: 'Voucher Category, Payee, Description & Amount' }
   ],
   owner_homework_log: [
-    { key: 'hw_title', label: 'Assignment Title' },
-    { key: 'hw_meta', label: 'Subject & Due Date' },
-    { key: 'hw_desc', label: 'Instructions & Problem Set' }
+    { key: 'hw_title', label: 'Assignment Title & Type' },
+    { key: 'hw_subject', label: 'Subject & Topic / Chapter' },
+    { key: 'hw_class', label: 'Class / Grade & Section' },
+    { key: 'hw_dates', label: 'Assigned Date, Due Date & Time' },
+    { key: 'hw_submission_mode', label: 'Submission Mode, Priority & Est. Time' },
+    { key: 'hw_marks', label: 'Max Marks & Status' },
+    { key: 'hw_desc', label: 'Instructions & Problem Set' },
+    { key: 'hw_attachment', label: 'Worksheet File & Reference Link' }
   ],
   owner_student_leaves: [
     { key: 'lv_child', label: 'Selected Child' },
@@ -1967,6 +1990,17 @@ export class SchoolTableSchemaService {
         ev_coordinator: 'built:Coordinator',
         ev_budget: 'built:Budget (PKR)',
         ev_desc: 'built:Description'
+      },
+      owner_homework_log: {
+        hw_title: 'built:Title & Type',
+        hw_subject: 'built:Subject',
+        hw_meta: 'built:Subject',
+        hw_class: 'built:Class & Section',
+        hw_dates: 'built:Due Date & Time',
+        hw_submission_mode: 'built:Submission Mode',
+        hw_marks: 'built:Max Marks',
+        hw_desc: 'built:Title & Type',
+        hw_attachment: 'built:Files & Links'
       },
       owner_transport: {
         tr_route: 'built:Route Name',

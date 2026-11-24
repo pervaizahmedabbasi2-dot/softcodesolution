@@ -309,6 +309,7 @@ export class LoginComponent implements OnInit {
       this.humanShieldError = true;
       this.showLoginError = true;
       this.loginErrorMessage = 'Please complete the Anti-Bot Human Verification check below before signing in.';
+      this.notification.warning?.(this.loginErrorMessage, 'Notice');
       this.cdr.detectChanges();
       return;
     }
@@ -317,6 +318,7 @@ export class LoginComponent implements OnInit {
     if (rawInput.includes('@') && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(rawInput)) {
       this.showLoginError = true;
       this.loginErrorMessage = 'Please enter a valid email format (e.g. name@company.com).';
+      this.notification.warning?.(this.loginErrorMessage, 'Notice');
       this.cdr.detectChanges();
       return;
     }
@@ -379,7 +381,7 @@ export class LoginComponent implements OnInit {
       if (matchedPortalUser.status === 'Suspended') {
         this.showLoginError = true;
         this.isLoading = false;
-        this.notification.error?.('Portal Access Suspended: Please contact school administration.');
+        this.notification.error?.('Portal Access Suspended: Please contact school administration.', 'Notice');
         this.cdr.detectChanges();
         return;
       }
@@ -457,7 +459,7 @@ export class LoginComponent implements OnInit {
         this.remainingAttempts = typeof result?.remainingAttempts === 'number' ? result.remainingAttempts : null;
         const errMsg = result?.message || 'Invalid credentials. Please verify your details.';
         this.loginErrorMessage = errMsg;
-        this.notification.error?.(errMsg);
+        this.notification.error?.(errMsg, 'Notice');
         localStorage.removeItem('user_data');
         localStorage.removeItem('scs_auth_session');
         localStorage.removeItem('scs_auth_mock');
@@ -488,8 +490,12 @@ export class LoginComponent implements OnInit {
       
       const isSuperAdminRole = result.user?.role === 'super_admin' || result.redirect === '/superadmin';
       const targetUrl = isSuperAdminRole ? '/superadmin' : '/dashboard';
-      
-      this.notification.success?.(`Welcome back, ${result.user?.full_name || result.user?.company_name || 'User'}! Access granted.`);
+      const displayName = result.user?.full_name || result.user?.company_name || (isSuperAdminRole ? 'Super Admin' : 'User');
+
+      this.notification.success?.(
+        `Welcome back, ${displayName}! Access granted.`,
+        isSuperAdminRole ? 'Super Admin Login' : 'Login Successful'
+      );
       this.isLoading = false;
       this.cdr.detectChanges();
 
@@ -509,7 +515,7 @@ export class LoginComponent implements OnInit {
       this.botPowNonce = 0;
       this.showLoginError = true;
       this.isLoading = false;
-      this.notification.error?.('Invalid credentials. Please verify your details.');
+      this.notification.error?.('Invalid credentials. Please verify your details.', 'Notice');
       localStorage.removeItem('user_data');
       localStorage.removeItem('scs_auth_session');
       localStorage.removeItem('scs_auth_mock');
@@ -549,6 +555,7 @@ export class LoginComponent implements OnInit {
     if (typeof window === 'undefined' || !window.PublicKeyCredential || !navigator.credentials?.get) {
       this.showLoginError = true;
       this.loginErrorMessage = 'Passkey is not supported in this browser. Please sign in with your password.';
+      this.notification.warning?.(this.loginErrorMessage, 'Notice');
       this.cdr.detectChanges();
       return;
     }
@@ -605,6 +612,7 @@ export class LoginComponent implements OnInit {
       if (!verifyResp.ok || !result?.ok) {
         this.showLoginError = true;
         this.loginErrorMessage = result?.message || 'Passkey verification failed. Please sign in with your password.';
+        this.notification.error?.(this.loginErrorMessage, 'Notice');
         this.cdr.detectChanges();
         return;
       }
@@ -631,7 +639,11 @@ export class LoginComponent implements OnInit {
 
       const isSuperAdminRole = result.user?.role === 'super_admin' || result.redirect === '/superadmin';
       const targetUrl = isSuperAdminRole ? '/superadmin' : '/dashboard';
-      this.notification.success?.(`Welcome back, ${result.user?.full_name || result.user?.company_name || 'User'}! Passkey verified.`);
+      const displayName = result.user?.full_name || result.user?.company_name || (isSuperAdminRole ? 'Super Admin' : 'User');
+      this.notification.success?.(
+        `Welcome back, ${displayName}! Passkey verified.`,
+        isSuperAdminRole ? 'Super Admin Login' : 'Login Successful'
+      );
 
       if (this.isCheckoutRedirect && !isSuperAdminRole) {
         const suiteParam = this.checkoutSuiteParam || this.checkoutPlanParam || 'active';
@@ -651,6 +663,7 @@ export class LoginComponent implements OnInit {
       } else {
         this.loginErrorMessage = err?.message || 'Passkey sign-in failed. Please use your password.';
       }
+      this.notification.warning?.(this.loginErrorMessage, 'Notice');
       this.cdr.detectChanges();
     } finally {
       this.isPasskeyLoading = false;

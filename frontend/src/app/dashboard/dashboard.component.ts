@@ -57,6 +57,7 @@ import { Router } from '@angular/router';
 import { DashboardApiService } from './services/dashboard-api.service';
 import { ModuleRegistryService } from './services/module-registry.service';
 import { BackendService } from '../services/backend.service';
+import { NotificationService } from '../services/notification.service';
 import { SupportCommsComponent } from '../softcodesolution_platform/support-comms/support-comms.component';
 import { PasskeyManagerComponent } from '../auth_security/passkey-manager/passkey-manager.component';
 import {
@@ -3852,7 +3853,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     Phone,
     Send,
     SlidersHorizontal,
+    AlertCircle,
   };
+  private notification = inject(NotificationService);
 
   private onlineHandler = () => {
     this.isOnline = true;
@@ -5829,6 +5832,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   showDynamicIsland(message: string, ok = true, type?: 'success' | 'alert' | 'launch' | 'info'): void {
     if (this.dynamicIsland.timer) clearTimeout(this.dynamicIsland.timer);
+    try { this.notification.clear(); } catch {}
 
     let derivedType = type;
     if (!derivedType) {
@@ -5841,10 +5845,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
       }
     }
 
-    let title = 'SYSTEM HUD';
-    if (derivedType === 'launch') title = 'LIVE WORKSPACE LAUNCHED';
-    else if (derivedType === 'alert') title = 'SECURITY & ACCESS NOTICE';
-    else if (derivedType === 'success') title = 'ACTION COMPLETED';
+    let title = 'Notification';
+    if (derivedType === 'launch') title = 'Workspace Notice';
+    else if (derivedType === 'alert' || !ok) title = 'Notice';
+    else if (derivedType === 'success') title = 'Action Completed';
 
     this.dynamicIsland.message = message;
     this.dynamicIsland.title = title;
