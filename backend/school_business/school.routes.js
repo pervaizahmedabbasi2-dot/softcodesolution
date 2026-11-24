@@ -411,6 +411,79 @@ function ensureColumnMigrations(sqliteDb) {
     try {
       sqliteDb.exec("ALTER TABLE local_school_table_schemas ADD COLUMN hidden_form_fields_json TEXT DEFAULT '[]'");
     } catch {}
+    const hwCols = [
+      ['teacher_id', 'TEXT'],
+      ['attachment_name', 'TEXT'],
+      ['attachment_type', 'TEXT'],
+      ['attachment_data', 'TEXT'],
+      ['resource_kind', "TEXT DEFAULT 'Homework'"],
+      ['max_marks', 'REAL DEFAULT 10'],
+      ['status', "TEXT DEFAULT 'Active'"]
+    ];
+    for (const [c, d] of hwCols) safeAddCol('local_school_homework', c, d);
+
+    sqliteDb.exec(`
+      CREATE TABLE IF NOT EXISTS local_school_homework_submissions (
+        id TEXT PRIMARY KEY,
+        tenant_id TEXT DEFAULT 'tenant-root-platform',
+        homework_id TEXT NOT NULL,
+        student_id TEXT NOT NULL,
+        roll_no TEXT,
+        student_name TEXT NOT NULL,
+        grade TEXT,
+        answer_text TEXT,
+        attachment_name TEXT,
+        attachment_type TEXT,
+        attachment_data TEXT,
+        external_link TEXT,
+        status TEXT DEFAULT 'Submitted',
+        marks_obtained REAL,
+        max_marks REAL DEFAULT 10,
+        teacher_remarks TEXT,
+        reviewed_by TEXT,
+        reviewed_at TEXT,
+        submitted_at TEXT,
+        is_synced INTEGER DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE TABLE IF NOT EXISTS local_school_study_materials (
+        id TEXT PRIMARY KEY,
+        tenant_id TEXT DEFAULT 'tenant-root-platform',
+        title TEXT NOT NULL,
+        subject TEXT NOT NULL,
+        grade TEXT NOT NULL,
+        material_type TEXT DEFAULT 'Class Notes',
+        description TEXT,
+        attachment_name TEXT,
+        attachment_type TEXT,
+        attachment_data TEXT,
+        external_url TEXT,
+        file_size TEXT,
+        uploaded_by TEXT,
+        teacher_id TEXT,
+        downloads_count INTEGER DEFAULT 0,
+        is_synced INTEGER DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE TABLE IF NOT EXISTS local_school_messages (
+        id TEXT PRIMARY KEY,
+        tenant_id TEXT DEFAULT 'tenant-root-platform',
+        sender TEXT NOT NULL,
+        sender_role TEXT DEFAULT 'parent',
+        recipient TEXT NOT NULL,
+        child_id TEXT,
+        student_name TEXT,
+        subject TEXT NOT NULL,
+        message TEXT NOT NULL,
+        date TEXT,
+        reply TEXT,
+        reply_by TEXT,
+        reply_date TEXT,
+        status TEXT DEFAULT 'Open',
+        is_synced INTEGER DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
   } catch {}
 }
 
@@ -2673,18 +2746,91 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     });
   });
 
+  const ALLOWED_ATTACHMENT_MIME = new Set([
+    'application/pdf',
+    'image/png',
+    'image/jpeg',
+    'image/jpg',
+    'image/webp',
+    'image/gif',
+    'text/plain',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  ]);
+  const MAX_ATTACHMENT_DATA_CHARS = 4800000; // ~3.5MB file after base64 overhead
+
+  const sanitizeSafeExternalUrl = (raw) => {
+    const val = String(raw || '').trim();
+    if (!val) return '';
+    try {
+      const parsed = new URL(val);
+      if (parsed.protocol === 'https:' || parsed.protocol === 'http:') {
+        return parsed.toString();
+      }
+    } catch {}
+    return null;
+  };
+
+  const sanitizeAttachment = (input = {}) => {
+    const name = String(input.attachmentName || '').trim().replace(/[\r\n<>:"/\\|?*]/g, '_').slice(0, 140);
+    const type = String(input.attachmentType || '').trim().toLowerCase();
+    const data = String(input.attachmentData || '').trim();
+    if (!data && !name) {
+      return { ok: true, attachmentName: '', attachmentType: '', attachmentData: '' };
+    }
+    if (data) {
+      if (data.length > MAX_ATTACHMENT_DATA_CHARS) {
+        return { ok: false, message: 'Attachment size exceeds 3.5 MB limit. Please upload a smaller file.' };
+      }
+      const match = /^data:([a-z0-9.+/-]+);base64,[A-Za-z0-9+/=]+$/i.exec(data);
+      if (!match) {
+        return { ok: false, message: 'Invalid attachment payload format.' };
+      }
+      const detectedMime = match[1].toLowerCase();
+      if (!ALLOWED_ATTACHMENT_MIME.has(detectedMime)) {
+        return { ok: false, message: `Unsupported attachment type (${detectedMime}). Allowed: PDF, PNG, JPG, WEBP, TXT, DOC/DOCX.` };
+      }
+      return { ok: true, attachmentName: name || 'attachment', attachmentType: detectedMime, attachmentData: data };
+    }
+    if (type && !ALLOWED_ATTACHMENT_MIME.has(type)) {
+      return { ok: false, message: `Unsupported attachment type (${type}).` };
+    }
+    return { ok: true, attachmentName: name, attachmentType: type, attachmentData: '' };
+  };
+
   // =========================================================================
-  // HOMEWORK, LEAVES, CONCESSIONS, COMPLAINTS, LESSON PLANS, SUBSTITUTIONS
+  // HOMEWORK, SUBMISSIONS, STUDY MATERIALS, MESSAGES, LEAVES, CONCESSIONS
   // =========================================================================
   router.get('/homework', (req, res) => {
     const tid = resolveTenantId(req);
     const rows = sqliteDb ? sqliteDb.prepare('SELECT * FROM local_school_homework WHERE tenant_id = ? ORDER BY created_at DESC').all(tid) : [];
+    const countMap = new Map();
+    if (sqliteDb) {
+      try {
+        const subCounts = sqliteDb.prepare('SELECT homework_id, COUNT(*) AS cnt FROM local_school_homework_submissions WHERE tenant_id = ? GROUP BY homework_id').all(tid);
+        for (const sc of subCounts) countMap.set(sc.homework_id, Number(sc.cnt || 0));
+      } catch {}
+    }
     res.json({
       ok: true,
       homework: rows.map((r) => ({
-        id: r.id, title: r.title, subject: r.subject, grade: r.grade,
-        assignedDate: r.assigned_date, dueDate: r.due_date, description: r.description,
-        teacherName: r.teacher_name, submissionsCount: r.submissions_count, totalCount: r.total_count
+        id: r.id,
+        title: r.title,
+        subject: r.subject,
+        grade: r.grade,
+        assignedDate: r.assigned_date,
+        dueDate: r.due_date,
+        description: r.description,
+        teacherName: r.teacher_name,
+        teacherId: r.teacher_id || '',
+        attachmentName: r.attachment_name || '',
+        attachmentType: r.attachment_type || '',
+        attachmentData: r.attachment_data || '',
+        resourceKind: r.resource_kind || 'Homework',
+        maxMarks: Number(r.max_marks ?? 10),
+        status: r.status || 'Active',
+        submissionsCount: Math.max(Number(r.submissions_count || 0), countMap.get(r.id) || 0),
+        totalCount: Number(r.total_count || 30)
       }))
     });
   });
@@ -2695,33 +2841,416 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     if (!String(h.title || '').trim() || !String(h.subject || '').trim() || !String(h.description || '').trim()) {
       return res.status(400).json({ ok: false, message: 'Homework title, subject, and description are required.' });
     }
+    const att = sanitizeAttachment(h);
+    if (!att.ok) return res.status(400).json({ ok: false, message: att.message });
+
+    const maxMarks = Number(h.maxMarks ?? 10);
+    if (!Number.isFinite(maxMarks) || maxMarks <= 0 || maxMarks > 1000) {
+      return res.status(400).json({ ok: false, message: 'maxMarks must be between 1 and 1000.' });
+    }
+
     const item = {
       id: h.id || ('HW-' + Date.now()),
       title: String(h.title).trim(),
       subject: String(h.subject).trim(),
-      grade: String(h.grade || 'Grade 10'),
+      grade: String(h.grade || 'Class 10-A'),
       assignedDate: String(h.assignedDate || new Date().toISOString().split('T')[0]),
       dueDate: String(h.dueDate || new Date(Date.now() + 86400000).toISOString().split('T')[0]),
       description: String(h.description).trim(),
       teacherName: String(h.teacherName || 'Faculty'),
+      teacherId: String(h.teacherId || ''),
+      attachmentName: att.attachmentName,
+      attachmentType: att.attachmentType,
+      attachmentData: att.attachmentData,
+      resourceKind: String(h.resourceKind || 'Homework'),
+      maxMarks,
+      status: String(h.status || 'Active'),
       submissionsCount: Number(h.submissionsCount || 0),
       totalCount: Number(h.totalCount || 30)
     };
     if (sqliteDb) {
       sqliteDb.prepare(`
         INSERT OR REPLACE INTO local_school_homework
-        (id, tenant_id, title, subject, grade, assigned_date, due_date, description, teacher_name, submissions_count, total_count)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `).run(item.id, tid, item.title, item.subject, item.grade, item.assignedDate, item.dueDate, item.description, item.teacherName, item.submissionsCount, item.totalCount);
+        (id, tenant_id, title, subject, grade, assigned_date, due_date, description, teacher_name, teacher_id, attachment_name, attachment_type, attachment_data, resource_kind, max_marks, status, submissions_count, total_count)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        item.id, tid, item.title, item.subject, item.grade, item.assignedDate, item.dueDate,
+        item.description, item.teacherName, item.teacherId,
+        item.attachmentName, item.attachmentType, item.attachmentData,
+        item.resourceKind, item.maxMarks, item.status,
+        item.submissionsCount, item.totalCount
+      );
     }
     res.status(201).json({ ok: true, homework: item });
+  });
+
+  router.put('/homework/:id', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
+    const tid = resolveTenantId(req);
+    if (!sqliteDb) return res.status(503).json({ ok: false });
+    const existing = sqliteDb.prepare('SELECT * FROM local_school_homework WHERE id = ? AND tenant_id = ?').get(req.params.id, tid);
+    if (!existing) return res.status(404).json({ ok: false, message: 'Homework not found' });
+
+    const h = req.body || {};
+    const att = (h.attachmentData !== undefined || h.attachmentName !== undefined)
+      ? sanitizeAttachment(h)
+      : { ok: true, attachmentName: existing.attachment_name || '', attachmentType: existing.attachment_type || '', attachmentData: existing.attachment_data || '' };
+    if (!att.ok) return res.status(400).json({ ok: false, message: att.message });
+
+    const next = {
+      title: String(h.title ?? existing.title).trim(),
+      subject: String(h.subject ?? existing.subject).trim(),
+      grade: String(h.grade ?? existing.grade).trim(),
+      dueDate: String(h.dueDate ?? existing.due_date).trim(),
+      description: String(h.description ?? existing.description).trim(),
+      resourceKind: String(h.resourceKind ?? existing.resource_kind ?? 'Homework'),
+      maxMarks: Number(h.maxMarks ?? existing.max_marks ?? 10),
+      status: String(h.status ?? existing.status ?? 'Active'),
+      attachmentName: att.attachmentName,
+      attachmentType: att.attachmentType,
+      attachmentData: att.attachmentData
+    };
+
+    sqliteDb.prepare(`
+      UPDATE local_school_homework
+      SET title = ?, subject = ?, grade = ?, due_date = ?, description = ?, resource_kind = ?, max_marks = ?, status = ?, attachment_name = ?, attachment_type = ?, attachment_data = ?
+      WHERE id = ? AND tenant_id = ?
+    `).run(
+      next.title, next.subject, next.grade, next.dueDate, next.description,
+      next.resourceKind, next.maxMarks, next.status,
+      next.attachmentName, next.attachmentType, next.attachmentData,
+      req.params.id, tid
+    );
+    res.json({ ok: true, id: req.params.id, homework: { id: req.params.id, ...next } });
   });
 
   router.delete('/homework/:id', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
     const tid = resolveTenantId(req);
     if (!sqliteDb) return res.status(503).json({ ok: false });
+    sqliteDb.prepare('DELETE FROM local_school_homework_submissions WHERE homework_id = ? AND tenant_id = ?').run(req.params.id, tid);
     sqliteDb.prepare('DELETE FROM local_school_homework WHERE id = ? AND tenant_id = ?').run(req.params.id, tid);
     res.json({ ok: true, id: req.params.id });
+  });
+
+  // Two-Way Homework Submissions (Student Submit + Teacher Review/Grading)
+  const mapSubmissionRow = (r, tid) => ({
+    id: r.id,
+    homeworkId: r.homework_id,
+    studentId: r.student_id,
+    rollNo: r.roll_no || '',
+    studentName: dec(tid, r.student_name),
+    grade: r.grade || '',
+    answerText: r.answer_text || '',
+    attachmentName: r.attachment_name || '',
+    attachmentType: r.attachment_type || '',
+    attachmentData: r.attachment_data || '',
+    externalLink: r.external_link || '',
+    status: r.status || 'Submitted',
+    marksObtained: r.marks_obtained !== null && r.marks_obtained !== undefined ? Number(r.marks_obtained) : null,
+    maxMarks: Number(r.max_marks ?? 10),
+    teacherRemarks: r.teacher_remarks || '',
+    reviewedBy: r.reviewed_by || '',
+    reviewedAt: r.reviewed_at || '',
+    submittedAt: r.submitted_at || ''
+  });
+
+  router.get('/homework-submissions', (req, res) => {
+    const tid = resolveTenantId(req);
+    if (!sqliteDb) return res.json({ ok: true, submissions: [] });
+    const hwId = String(req.query?.homeworkId || '').trim();
+    const stuId = String(req.query?.studentId || '').trim();
+    let rows = [];
+    if (hwId) {
+      rows = sqliteDb.prepare('SELECT * FROM local_school_homework_submissions WHERE tenant_id = ? AND homework_id = ? ORDER BY created_at DESC').all(tid, hwId);
+    } else if (stuId) {
+      rows = sqliteDb.prepare('SELECT * FROM local_school_homework_submissions WHERE tenant_id = ? AND student_id = ? ORDER BY created_at DESC').all(tid, stuId);
+    } else {
+      rows = sqliteDb.prepare('SELECT * FROM local_school_homework_submissions WHERE tenant_id = ? ORDER BY created_at DESC').all(tid);
+    }
+    res.json({ ok: true, submissions: rows.map((r) => mapSubmissionRow(r, tid)) });
+  });
+
+  router.get('/homework/:id/submissions', (req, res) => {
+    const tid = resolveTenantId(req);
+    const rows = sqliteDb
+      ? sqliteDb.prepare('SELECT * FROM local_school_homework_submissions WHERE tenant_id = ? AND homework_id = ? ORDER BY created_at DESC').all(tid, req.params.id)
+      : [];
+    res.json({ ok: true, submissions: rows.map((r) => mapSubmissionRow(r, tid)) });
+  });
+
+  router.post('/homework/:id/submit', rejectRestrictedRole(['accountant']), (req, res) => {
+    const tid = resolveTenantId(req);
+    const homeworkId = String(req.params.id || '').trim();
+    const b = req.body || {};
+    const studentId = String(b.studentId || '').trim();
+    const studentName = String(b.studentName || '').trim();
+    if (!homeworkId || !studentId || !studentName) {
+      return res.status(400).json({ ok: false, message: 'homeworkId, studentId, and studentName are required.' });
+    }
+    if (!String(b.answerText || '').trim() && !String(b.attachmentData || '').trim() && !String(b.externalLink || '').trim()) {
+      return res.status(400).json({ ok: false, message: 'Please provide homework text answer, file attachment, or submission link.' });
+    }
+    const att = sanitizeAttachment(b);
+    if (!att.ok) return res.status(400).json({ ok: false, message: att.message });
+
+    const safeLink = b.externalLink ? sanitizeSafeExternalUrl(b.externalLink) : '';
+    if (safeLink === null) {
+      return res.status(400).json({ ok: false, message: 'External link must start with https:// or http://' });
+    }
+
+    let existingSub = null;
+    if (sqliteDb) {
+      existingSub = sqliteDb.prepare(
+        'SELECT id FROM local_school_homework_submissions WHERE tenant_id = ? AND homework_id = ? AND student_id = ?'
+      ).get(tid, homeworkId, studentId);
+    }
+
+    const subId = existingSub?.id || b.id || ('HSUB-' + Date.now() + '-' + Math.floor(10 + Math.random() * 90));
+    const submittedAt = new Date().toISOString();
+    const hwRow = sqliteDb ? sqliteDb.prepare('SELECT max_marks FROM local_school_homework WHERE id = ? AND tenant_id = ?').get(homeworkId, tid) : null;
+    const maxMarks = Number(b.maxMarks ?? hwRow?.max_marks ?? 10);
+
+    const submission = {
+      id: subId,
+      homeworkId,
+      studentId,
+      rollNo: String(b.rollNo || '').trim(),
+      studentName,
+      grade: String(b.grade || '').trim(),
+      answerText: String(b.answerText || '').trim(),
+      attachmentName: att.attachmentName,
+      attachmentType: att.attachmentType,
+      attachmentData: att.attachmentData,
+      externalLink: safeLink || '',
+      status: 'Submitted',
+      marksObtained: null,
+      maxMarks,
+      teacherRemarks: '',
+      reviewedBy: '',
+      reviewedAt: '',
+      submittedAt
+    };
+
+    if (sqliteDb) {
+      sqliteDb.prepare(`
+        INSERT OR REPLACE INTO local_school_homework_submissions
+        (id, tenant_id, homework_id, student_id, roll_no, student_name, grade, answer_text, attachment_name, attachment_type, attachment_data, external_link, status, marks_obtained, max_marks, teacher_remarks, reviewed_by, reviewed_at, submitted_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Submitted', NULL, ?, '', '', '', ?)
+      `).run(
+        submission.id, tid, homeworkId, studentId, submission.rollNo, enc(tid, studentName),
+        submission.grade, submission.answerText, submission.attachmentName, submission.attachmentType,
+        submission.attachmentData, submission.externalLink, maxMarks, submittedAt
+      );
+      const cntRow = sqliteDb.prepare(
+        'SELECT COUNT(*) AS cnt FROM local_school_homework_submissions WHERE tenant_id = ? AND homework_id = ?'
+      ).get(tid, homeworkId);
+      sqliteDb.prepare('UPDATE local_school_homework SET submissions_count = ? WHERE id = ? AND tenant_id = ?')
+        .run(Number(cntRow?.cnt || 1), homeworkId, tid);
+    }
+
+    res.status(201).json({ ok: true, submission });
+  });
+
+  router.put('/homework/submissions/:subId/review', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
+    const tid = resolveTenantId(req);
+    if (!sqliteDb) return res.status(503).json({ ok: false });
+    const existing = sqliteDb.prepare('SELECT * FROM local_school_homework_submissions WHERE id = ? AND tenant_id = ?').get(req.params.subId, tid);
+    if (!existing) return res.status(404).json({ ok: false, message: 'Submission record not found' });
+
+    const b = req.body || {};
+    const status = ['Checked', 'Approved', 'Needs Revision', 'Submitted'].includes(String(b.status))
+      ? String(b.status)
+      : 'Checked';
+    const maxMarks = Number(b.maxMarks ?? existing.max_marks ?? 10);
+    let marksObtained = null;
+    if (b.marksObtained !== null && b.marksObtained !== undefined && b.marksObtained !== '') {
+      const m = Number(b.marksObtained);
+      if (!Number.isFinite(m) || m < 0 || m > maxMarks) {
+        return res.status(400).json({ ok: false, message: `marksObtained must be between 0 and ${maxMarks}.` });
+      }
+      marksObtained = m;
+    }
+    const teacherRemarks = String(b.teacherRemarks || '').trim();
+    const reviewedBy = String(b.reviewedBy || req.headers['x-user-name'] || 'Subject Faculty').trim();
+    const reviewedAt = new Date().toISOString();
+
+    sqliteDb.prepare(`
+      UPDATE local_school_homework_submissions
+      SET status = ?, marks_obtained = ?, teacher_remarks = ?, reviewed_by = ?, reviewed_at = ?
+      WHERE id = ? AND tenant_id = ?
+    `).run(status, marksObtained, teacherRemarks, reviewedBy, reviewedAt, req.params.subId, tid);
+
+    res.json({
+      ok: true,
+      submission: {
+        ...mapSubmissionRow(existing, tid),
+        status,
+        marksObtained,
+        teacherRemarks,
+        reviewedBy,
+        reviewedAt
+      }
+    });
+  });
+
+  // Teacher Uploaded Study Notes, Worksheets & Past Papers
+  router.get('/study-materials', (req, res) => {
+    const tid = resolveTenantId(req);
+    const rows = sqliteDb
+      ? sqliteDb.prepare('SELECT * FROM local_school_study_materials WHERE tenant_id = ? ORDER BY created_at DESC').all(tid)
+      : [];
+    res.json({
+      ok: true,
+      materials: rows.map((r) => ({
+        id: r.id,
+        title: r.title,
+        subject: r.subject,
+        grade: r.grade,
+        materialType: r.material_type || 'Class Notes',
+        description: r.description || '',
+        attachmentName: r.attachment_name || '',
+        attachmentType: r.attachment_type || '',
+        attachmentData: r.attachment_data || '',
+        externalUrl: r.external_url || '',
+        fileSize: r.file_size || '',
+        uploadedBy: r.uploaded_by || 'Faculty',
+        teacherId: r.teacher_id || '',
+        downloadsCount: Number(r.downloads_count || 0),
+        createdAt: r.created_at || ''
+      }))
+    });
+  });
+
+  router.post('/study-materials', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
+    const tid = resolveTenantId(req);
+    const m = req.body || {};
+    if (!String(m.title || '').trim() || !String(m.subject || '').trim()) {
+      return res.status(400).json({ ok: false, message: 'Material title and subject are required.' });
+    }
+    const att = sanitizeAttachment(m);
+    if (!att.ok) return res.status(400).json({ ok: false, message: att.message });
+    const safeUrl = m.externalUrl ? sanitizeSafeExternalUrl(m.externalUrl) : '';
+    if (safeUrl === null) {
+      return res.status(400).json({ ok: false, message: 'Resource URL must start with https:// or http://' });
+    }
+    const item = {
+      id: m.id || ('MAT-' + Date.now()),
+      title: String(m.title).trim(),
+      subject: String(m.subject).trim(),
+      grade: String(m.grade || 'Class 10-A').trim(),
+      materialType: String(m.materialType || 'Class Notes'),
+      description: String(m.description || '').trim(),
+      attachmentName: att.attachmentName,
+      attachmentType: att.attachmentType,
+      attachmentData: att.attachmentData,
+      externalUrl: safeUrl || '',
+      fileSize: String(m.fileSize || (att.attachmentData ? `${Math.max(1, Math.round(att.attachmentData.length * 0.75 / 1024))} KB` : 'Link')),
+      uploadedBy: String(m.uploadedBy || req.headers['x-user-name'] || 'Faculty'),
+      teacherId: String(m.teacherId || ''),
+      downloadsCount: Number(m.downloadsCount || 0),
+      createdAt: new Date().toISOString().split('T')[0]
+    };
+    if (sqliteDb) {
+      sqliteDb.prepare(`
+        INSERT OR REPLACE INTO local_school_study_materials
+        (id, tenant_id, title, subject, grade, material_type, description, attachment_name, attachment_type, attachment_data, external_url, file_size, uploaded_by, teacher_id, downloads_count)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        item.id, tid, item.title, item.subject, item.grade, item.materialType, item.description,
+        item.attachmentName, item.attachmentType, item.attachmentData, item.externalUrl,
+        item.fileSize, item.uploadedBy, item.teacherId, item.downloadsCount
+      );
+    }
+    res.status(201).json({ ok: true, material: item });
+  });
+
+  router.put('/study-materials/:id/download', (req, res) => {
+    const tid = resolveTenantId(req);
+    if (!sqliteDb) return res.json({ ok: true });
+    sqliteDb.prepare('UPDATE local_school_study_materials SET downloads_count = COALESCE(downloads_count, 0) + 1 WHERE id = ? AND tenant_id = ?')
+      .run(req.params.id, tid);
+    res.json({ ok: true, id: req.params.id });
+  });
+
+  router.delete('/study-materials/:id', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
+    const tid = resolveTenantId(req);
+    if (!sqliteDb) return res.status(503).json({ ok: false });
+    sqliteDb.prepare('DELETE FROM local_school_study_materials WHERE id = ? AND tenant_id = ?').run(req.params.id, tid);
+    res.json({ ok: true, id: req.params.id });
+  });
+
+  // Two-Way Parent <-> Teacher Messaging
+  router.get('/messages', (req, res) => {
+    const tid = resolveTenantId(req);
+    const rows = sqliteDb
+      ? sqliteDb.prepare('SELECT * FROM local_school_messages WHERE tenant_id = ? ORDER BY created_at DESC').all(tid)
+      : [];
+    res.json({
+      ok: true,
+      messages: rows.map((r) => ({
+        id: r.id,
+        sender: dec(tid, r.sender),
+        senderRole: r.sender_role || 'parent',
+        recipient: dec(tid, r.recipient),
+        childId: r.child_id || '',
+        studentName: dec(tid, r.student_name),
+        subject: r.subject,
+        message: dec(tid, r.message),
+        date: r.date || '',
+        reply: r.reply ? dec(tid, r.reply) : '',
+        replyBy: r.reply_by || '',
+        replyDate: r.reply_date || '',
+        status: r.status || 'Open'
+      }))
+    });
+  });
+
+  router.post('/messages', rejectRestrictedRole(['accountant']), (req, res) => {
+    const tid = resolveTenantId(req);
+    const b = req.body || {};
+    if (!String(b.subject || '').trim() || !String(b.message || '').trim()) {
+      return res.status(400).json({ ok: false, message: 'Message subject and body are required.' });
+    }
+    const item = {
+      id: b.id || ('MSG-' + Date.now()),
+      sender: String(b.sender || 'Portal User').trim(),
+      senderRole: String(b.senderRole || resolveUserRole(req) || 'parent'),
+      recipient: String(b.recipient || 'Faculty').trim(),
+      childId: String(b.childId || '').trim(),
+      studentName: String(b.studentName || '').trim(),
+      subject: String(b.subject).trim(),
+      message: String(b.message).trim(),
+      date: String(b.date || new Date().toISOString().split('T')[0]),
+      reply: String(b.reply || '').trim(),
+      replyBy: String(b.replyBy || '').trim(),
+      replyDate: String(b.replyDate || '').trim(),
+      status: String(b.reply ? 'Replied' : 'Open')
+    };
+    if (sqliteDb) {
+      sqliteDb.prepare(`
+        INSERT OR REPLACE INTO local_school_messages
+        (id, tenant_id, sender, sender_role, recipient, child_id, student_name, subject, message, date, reply, reply_by, reply_date, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        item.id, tid, enc(tid, item.sender), item.senderRole, enc(tid, item.recipient),
+        item.childId, enc(tid, item.studentName), item.subject, enc(tid, item.message),
+        item.date, item.reply ? enc(tid, item.reply) : '', item.replyBy, item.replyDate, item.status
+      );
+    }
+    res.status(201).json({ ok: true, message: item });
+  });
+
+  router.put('/messages/:id/reply', rejectRestrictedRole(['student', 'accountant']), (req, res) => {
+    const tid = resolveTenantId(req);
+    if (!sqliteDb) return res.status(503).json({ ok: false });
+    const reply = String(req.body?.reply || '').trim();
+    if (!reply) return res.status(400).json({ ok: false, message: 'Reply text is required.' });
+    const replyBy = String(req.body?.replyBy || req.headers['x-user-name'] || 'Faculty').trim();
+    const replyDate = new Date().toISOString().split('T')[0];
+    const info = sqliteDb.prepare(
+      'UPDATE local_school_messages SET reply = ?, reply_by = ?, reply_date = ?, status = ? WHERE id = ? AND tenant_id = ?'
+    ).run(enc(tid, reply), replyBy, replyDate, 'Replied', req.params.id, tid);
+    if (!info.changes) return res.status(404).json({ ok: false, message: 'Message not found' });
+    res.json({ ok: true, id: req.params.id, reply, replyBy, replyDate, status: 'Replied' });
   });
 
   router.get('/leaves', (req, res) => {

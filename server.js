@@ -411,7 +411,7 @@ app.use((req, res, next) => {
 });
 
 app.use(cors());
-app.use(express.json({ limit: '2mb' }));
+app.use(express.json({ limit: '8mb' }));
 
 // Prototype-Pollution & Null-Byte Payload Sanitizer
 function scrubDangerousKeys(obj, depth = 0) {

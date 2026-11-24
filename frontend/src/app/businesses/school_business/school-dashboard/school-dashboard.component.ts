@@ -64,7 +64,7 @@ import {
   MessageSquareWarning
 } from 'lucide-angular';
 import { MatIconModule } from '@angular/material/icon';
-import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import { DomSanitizer, SafeUrl, SafeResourceUrl } from '@angular/platform-browser';
 import { FirebaseDbService } from '../../../services/firebase-db.service';
 import { BackendService } from '../../../services/backend.service';
 import { SchoolAttendanceHubComponent } from '../components/school-attendance-hub/school-attendance-hub.component';
@@ -602,6 +602,65 @@ export interface TeacherHomeworkRecord {
   submissionsCount: number;
   totalCount: number;
   description: string;
+  teacherName?: string;
+  teacherId?: string;
+  attachmentName?: string;
+  attachmentType?: string;
+  attachmentData?: string;
+  resourceKind?: 'Homework' | 'Worksheet' | 'Class Notes' | string;
+  maxMarks?: number;
+  status?: 'Active' | 'Closed' | string;
+}
+
+export interface HomeworkSubmissionRecord {
+  id: string;
+  homeworkId: string;
+  studentId: string;
+  rollNo: string;
+  studentName: string;
+  grade: string;
+  answerText: string;
+  attachmentName?: string;
+  attachmentType?: string;
+  attachmentData?: string;
+  externalLink?: string;
+  status: 'Submitted' | 'Checked' | 'Approved' | 'Needs Revision' | string;
+  marksObtained?: number | null;
+  maxMarks: number;
+  teacherRemarks?: string;
+  reviewedBy?: string;
+  reviewedAt?: string;
+  submittedAt: string;
+}
+
+export interface TeacherStudyMaterialRecord {
+  id: string;
+  title: string;
+  subject: string;
+  grade: string;
+  materialType: 'Class Notes' | 'Worksheet' | 'Past Paper' | 'Lab Manual' | string;
+  description: string;
+  attachmentName?: string;
+  attachmentType?: string;
+  attachmentData?: string;
+  externalUrl?: string;
+  fileSize?: string;
+  uploadedBy: string;
+  teacherId?: string;
+  downloadsCount: number;
+  createdAt: string;
+}
+
+export interface TeacherPeriodScheduleRecord {
+  id: string;
+  day: 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | string;
+  periodCode: string;
+  timeSlot: string;
+  subject: string;
+  grade: string;
+  room: string;
+  topic: string;
+  status: 'Completed' | 'Current' | 'Upcoming' | string;
 }
 
 export interface StudentSubjectResult {
@@ -628,11 +687,17 @@ export interface ParentLeaveRecord {
 export interface ParentMessageRecord {
   id: string;
   sender: string;
+  senderRole?: string;
   recipient: string;
+  childId?: string;
+  studentName?: string;
   subject: string;
   message: string;
   date: string;
   reply?: string;
+  replyBy?: string;
+  replyDate?: string;
+  status?: 'Open' | 'Replied' | string;
 }
 
 export interface TeacherLessonPlan {
@@ -1432,6 +1497,51 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
     };
   }
 
+  get teacherTodayPeriods(): TeacherPeriodScheduleRecord[] {
+    const day = this.teacherScheduleDayFilter || 'Wednesday';
+    return (this.teacherSelfSchedule || []).filter((p) => p.day === day);
+  }
+
+  get teacherAllTodayPeriodsCount(): number {
+    return this.teacherTodayPeriods.length;
+  }
+
+  get teacherHeldPeriodsCount(): number {
+    return this.teacherTodayPeriods.filter((p) => p.status === 'Completed').length;
+  }
+
+  get teacherAssignedGradesSummary(): string {
+    const grades = Array.from(new Set(this.teacherTodayPeriods.map((p) => p.grade))).filter(Boolean);
+    return grades.length > 0 ? grades.join(', ') : (this.currentTeacherProfile?.assignedGrade || 'Class 10-A');
+  }
+
+  get teacherAverageSyllabusPercentage(): number {
+    if (!this.syllabusTracker || this.syllabusTracker.length === 0) return 0;
+    const sum = this.syllabusTracker.reduce((acc, s) => acc + Number(s.percentage ?? s.completedPercentage ?? 0), 0);
+    return Math.round(sum / this.syllabusTracker.length);
+  }
+
+  get teacherPendingSubmissionsToReviewCount(): number {
+    return (this.homeworkSubmissions || []).filter((s) => s.status === 'Submitted').length;
+  }
+
+  get teacherRosterPresentCounts(): { present: number; absent: number; total: number; rate: string } {
+    const list = this.getFilteredTeacherRosterStudents();
+    const total = list.length;
+    if (total === 0) return { present: 0, absent: 0, total: 0, rate: '0%' };
+    const present = list.filter((s) => s.status === 'Present' || s.status === 'Late').length;
+    const absent = total - present;
+    const rate = `${Math.round((present / total) * 100)}%`;
+    return { present, absent, total, rate };
+  }
+
+  get teacherPendingLeavesAndDutiesCount(): number {
+    const stuLeaves = (this.parentLeaveRequests || []).filter((l) => l.status === 'Pending').length;
+    const subDuties = (this.substituteArrangements || []).filter((s) => s.status === 'Assigned').length;
+    const tasks = (this.facultyTaskList || []).filter((t) => t.status !== 'Completed & Verified').length;
+    return stuLeaves + subDuties + tasks;
+  }
+
   get currentStudentProfile(): any {
     const found = (this.activeStudents || []).find(s => s.id === this.activeStudentId || s.rollNo === this.activeStudentId)
       || this.activeStudentPersona;
@@ -1472,7 +1582,7 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
   }
   currentTab: SchoolDashboardTab = 'overview';
   principalTab: 'overview' | 'stage_wise' | 'master_registries' | 'supervision' | 'substitutions' | 'syllabus' | 'inspections' | 'discipline' | 'directives' | 'appraisals' | 'exam_moderation' | 'academic_reports' | 'faculty_tasks' | 'teacher_leaves' | 'student_certificates' | 'ptm_interventions' | 'admissions_review' | 'fee_oversight' | 'parent_complaints' | 'safeguarding' | 'facilities_transport' | 'library' | 'biometric_attendance' = 'overview';
-  teacherTab: 'schedule' | 'feed' | 'events' | 'attendance' | 'marks' | 'lessons' | 'homework' | 'students' | 'communication' | 'library' = 'schedule';
+  teacherTab: 'schedule' | 'feed' | 'events' | 'attendance' | 'marks' | 'lessons' | 'homework' | 'students' | 'duties' | 'communication' | 'library' = 'schedule';
   studentTab: 'overview' | 'feed' | 'events' | 'routine' | 'academics' | 'attendance' | 'fee' | 'homework' | 'library' = 'overview';
   parentTab: 'overview' | 'feed' | 'events' | 'attendance' | 'academics' | 'fee' | 'leave' | 'library' | 'communication' = 'overview';
   accountantTab: 'overview' | 'challans' | 'collect' | 'defaulters' | 'daily_closing' = 'overview';
@@ -1794,9 +1904,10 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
       case 'events': return 'School Events & Organizing Committees';
       case 'attendance': return 'Class Attendance Roll Call & Verification';
       case 'marks': return 'Student Gradebook & Marks Entry';
-      case 'lessons': return 'Daily Lesson Planner';
-      case 'homework': return 'Homework Tasks & Syllabus Upload';
-      case 'students': return 'Class 10-A Student Academic Roster';
+      case 'lessons': return 'Daily Lesson Planner & Syllabus Tracker';
+      case 'homework': return 'Homework Tasks, Submissions & Study Notes';
+      case 'students': return `${this.currentTeacherProfile?.assignedGrade || 'Class'} Student Academic Roster`;
+      case 'duties': return 'My Leaves, Substitute Duties & Principal Tasks';
       case 'communication': return 'Parent Council Chat & Messaging';
       case 'library': return 'Faculty Library Desk & Reference Catalog';
       default: return 'My Teaching Lecture Schedule';
@@ -1857,7 +1968,7 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
     this.resetScrollToTop();
   }
 
-  setTeacherTab(tab: 'schedule' | 'feed' | 'events' | 'attendance' | 'marks' | 'lessons' | 'homework' | 'students' | 'communication' | 'library'): void {
+  setTeacherTab(tab: 'schedule' | 'feed' | 'events' | 'attendance' | 'marks' | 'lessons' | 'homework' | 'students' | 'duties' | 'communication' | 'library'): void {
     if (tab === 'attendance' && !this.canTeacherUseAttendanceVerification) {
       this.showToast('Class Attendance Verification access is disabled by School Owner Setup.', 'warning');
       return;
@@ -2166,6 +2277,7 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
       else if (v.includes('lesson')) this.teacherTab = 'lessons';
       else if (v.includes('homework')) this.teacherTab = 'homework';
       else if (v.includes('student') || v.includes('roster')) this.teacherTab = 'students';
+      else if (v.includes('dut') || v.includes('leave') || v.includes('task') || v.includes('sub')) this.teacherTab = 'duties';
       else if (v.includes('chat') || v.includes('communicat') || v.includes('messag')) this.teacherTab = 'communication';
       else if (v.includes('library')) { this.teacherTab = 'library'; this.checkAndUpdateOverdueBooks(); }
       else this.teacherTab = 'schedule';
@@ -4152,11 +4264,18 @@ INSTRUCTIONS:
   };
 
   teacherHomeworkForm = {
+    id: '',
     title: '',
     subject: 'Mathematics',
     grade: 'Class 10-A',
     dueDate: 'Oct 22, 2026',
-    description: ''
+    description: '',
+    resourceKind: 'Homework' as 'Homework' | 'Worksheet' | 'Class Notes' | string,
+    maxMarks: 10,
+    status: 'Active' as 'Active' | 'Closed' | string,
+    attachmentName: '',
+    attachmentType: '',
+    attachmentData: ''
   };
 
   parentLeaveForm = {
@@ -4172,6 +4291,97 @@ INSTRUCTIONS:
     subject: 'Class Participation & Progress',
     message: ''
   };
+
+  // Teacher & Two-Way Student Portal Interactive State
+  homeworkSubTab: 'assignments' | 'materials' = 'assignments';
+  homeworkClassFilter: string = 'All';
+  homeworkKindFilter: string = 'All';
+  teacherScheduleDayFilter: string = 'Wednesday';
+  teacherRosterSearch: string = '';
+  teacherRosterGradeFilter: string = 'All';
+  gradebookClassFilter: string = 'All';
+  gradebookSubjectFilter: string = 'Advanced Mathematics';
+  gradebookExamFilter: string = 'Mid-Term 2026';
+  parentMessageReplyDrafts: Record<string, string> = {};
+  teacherMessageTargetType: 'parent' | 'class' = 'parent';
+
+  isHomeworkSubmissionsModalOpen: boolean = false;
+  selectedHomeworkForReview: TeacherHomeworkRecord | null = null;
+  submissionReviewFilter: 'all' | 'submitted' | 'pending' | 'checked' = 'all';
+  submissionReviewDrafts: Record<string, { status: string; marksObtained: string | number; teacherRemarks: string }> = {};
+
+  isStudentHomeworkSubmitModalOpen: boolean = false;
+  selectedHomeworkForSubmit: TeacherHomeworkRecord | null = null;
+  studentHomeworkForm = {
+    answerText: '',
+    externalLink: '',
+    attachmentName: '',
+    attachmentType: '',
+    attachmentData: ''
+  };
+
+  isStudyMaterialModalOpen: boolean = false;
+  studyMaterialForm = {
+    id: '',
+    title: '',
+    subject: 'Mathematics',
+    grade: 'Class 10-A',
+    materialType: 'Class Notes' as 'Class Notes' | 'Worksheet' | 'Past Paper' | 'Lab Manual' | string,
+    description: '',
+    externalUrl: '',
+    attachmentName: '',
+    attachmentType: '',
+    attachmentData: ''
+  };
+
+  isTeacherPeriodModalOpen: boolean = false;
+  teacherPeriodForm = {
+    day: 'Wednesday',
+    periodCode: 'P6',
+    timeSlot: '12:15 PM - 01:00 PM',
+    subject: 'Advanced Mathematics',
+    grade: 'Class 10-A',
+    room: 'Room 204',
+    topic: ''
+  };
+
+  isTeacherLeaveModalOpen: boolean = false;
+  teacherLeaveForm = {
+    leaveType: 'Casual Leave',
+    fromDate: new Date().toISOString().split('T')[0],
+    toDate: new Date().toISOString().split('T')[0],
+    totalDays: 1,
+    reason: '',
+    substituteTeacherAssigned: 'Dr. Rehan Alvi'
+  };
+
+  isTeacherInterventionModalOpen: boolean = false;
+  teacherInterventionForm = {
+    mode: 'remedial' as 'remedial' | 'behavior',
+    studentId: '',
+    studentName: '',
+    rollNo: '',
+    grade: 'Class 10-A',
+    subject: 'Advanced Mathematics',
+    weaknessArea: '',
+    actionPlan: 'Special After-School Remedial Classes',
+    currentMarksPercentage: 50,
+    behaviorCategory: 'Academic Violation' as 'Late Arrival' | 'Uniform Violation' | 'Misbehavior' | 'Academic Violation',
+    severity: 'Medium' as 'Low' | 'Medium' | 'High',
+    description: '',
+    actionTaken: 'Parent Advisory Note & Counseling'
+  };
+
+  isAttachmentPreviewModalOpen: boolean = false;
+  attachmentPreviewData: {
+    name: string;
+    type: string;
+    dataUrl: string;
+    safeUrl: SafeUrl | null;
+    safeResourceUrl: SafeResourceUrl | null;
+    textContent?: string;
+    isExternal?: boolean;
+  } | null = null;
 
   // Settings Form Model
   settingsForm = {
@@ -4530,6 +4740,9 @@ INSTRUCTIONS:
   portalUsers: PortalUserRecord[] = [];
   rolePermissions: RoleModulePermission[] = [];
   teacherHomeworks: TeacherHomeworkRecord[] = [];
+  homeworkSubmissions: HomeworkSubmissionRecord[] = [];
+  teacherStudyMaterials: TeacherStudyMaterialRecord[] = [];
+  teacherSelfSchedule: TeacherPeriodScheduleRecord[] = [];
   parentLeaveRequests: ParentLeaveRecord[] = [];
   parentMessages: ParentMessageRecord[] = [];
   transportRoutes: TransportRouteRecord[] = [];
@@ -5685,6 +5898,10 @@ INSTRUCTIONS:
         submittedByRole: this.currentPortalRole
       }
     );
+    const savedPlan = this.teacherLessonPlans.find(p => p.id === targetPlanId);
+    if (savedPlan) {
+      void this.backend.saveSchoolLessonPlan(savedPlan);
+    }
     this.formCustomValues['lessonPlan'] = {};
     this.saveStateToStorage();
     this.closeLessonPlanModal();
@@ -5715,10 +5932,9 @@ INSTRUCTIONS:
       const actor = (this.currentPortalRole === 'owner' || this.isOwnerSession) ? 'School Owner / Directorate' : 'Principal Office';
       plan.principalRemarks = `Approved by ${actor}`;
       plan.approvedAt = new Date().toISOString();
+      void this.backend.approveSchoolLessonPlan(planId, 'Approved', plan.principalRemarks);
+      this.saveStateToStorage();
       this.showToast(`✓ Lesson Plan [${planId}] approved by ${actor}!`, 'success');
-      try {
-        localStorage.setItem('scs_school_lessons_v1', JSON.stringify(this.teacherLessonPlans));
-      } catch {}
     }
   }
 
@@ -5728,10 +5944,9 @@ INSTRUCTIONS:
       plan.status = 'Revision Requested';
       const actor = (this.currentPortalRole === 'owner' || this.isOwnerSession) ? 'School Owner / Directorate' : 'Principal Office';
       plan.principalRemarks = `Revision requested by ${actor}.`;
+      void this.backend.approveSchoolLessonPlan(planId, 'Revision Requested', plan.principalRemarks);
+      this.saveStateToStorage();
       this.showToast(`⚠️ Revision requested for Lesson Plan [${planId}]`, 'warning');
-      try {
-        localStorage.setItem('scs_school_lessons_v1', JSON.stringify(this.teacherLessonPlans));
-      } catch {}
     }
   }
 
@@ -7388,6 +7603,59 @@ INSTRUCTIONS:
       if (savedHw) this.teacherHomeworks = JSON.parse(savedHw);
       else this.teacherHomeworks = this.getInitialHomeworks();
 
+      const savedHwSubs = this.getScopedItem('scs_school_hw_submissions_v1');
+      if (savedHwSubs) {
+        try { this.homeworkSubmissions = JSON.parse(savedHwSubs); } catch { this.homeworkSubmissions = this.getInitialHomeworkSubmissions(); }
+      } else {
+        this.homeworkSubmissions = this.getInitialHomeworkSubmissions();
+      }
+
+      const savedStudyMats = this.getScopedItem('scs_school_study_materials_v1');
+      if (savedStudyMats) {
+        try { this.teacherStudyMaterials = JSON.parse(savedStudyMats); } catch { this.teacherStudyMaterials = this.getInitialStudyMaterials(); }
+      } else {
+        this.teacherStudyMaterials = this.getInitialStudyMaterials();
+      }
+
+      const savedTeacherSched = this.getScopedItem('scs_school_teacher_schedule_v1');
+      if (savedTeacherSched) {
+        try { this.teacherSelfSchedule = JSON.parse(savedTeacherSched); } catch { this.teacherSelfSchedule = this.getInitialTeacherSchedule(); }
+      } else {
+        this.teacherSelfSchedule = this.getInitialTeacherSchedule();
+      }
+
+      const savedSyllabus = this.getScopedItem('scs_school_syllabus_v1');
+      if (savedSyllabus) {
+        try {
+          const parsedSyl = JSON.parse(savedSyllabus);
+          if (Array.isArray(parsedSyl) && parsedSyl.length > 0) this.syllabusTracker = parsedSyl;
+        } catch {}
+      }
+
+      const savedFacultyTasks = this.getScopedItem('scs_school_faculty_tasks_v1');
+      if (savedFacultyTasks) {
+        try {
+          const parsedTasks = JSON.parse(savedFacultyTasks);
+          if (Array.isArray(parsedTasks) && parsedTasks.length > 0) this.facultyTaskList = parsedTasks;
+        } catch {}
+      }
+
+      const savedTeacherLeaves = this.getScopedItem('scs_school_teacher_leaves_v1');
+      if (savedTeacherLeaves) {
+        try {
+          const parsedTlv = JSON.parse(savedTeacherLeaves);
+          if (Array.isArray(parsedTlv) && parsedTlv.length > 0) this.teacherLeaveRequests = parsedTlv;
+        } catch {}
+      }
+
+      const savedWeakRem = this.getScopedItem('scs_school_weak_remedials_v1');
+      if (savedWeakRem) {
+        try {
+          const parsedWr = JSON.parse(savedWeakRem);
+          if (Array.isArray(parsedWr) && parsedWr.length > 0) this.weakStudentInterventions = parsedWr;
+        } catch {}
+      }
+
       if (savedLeaves) this.parentLeaveRequests = JSON.parse(savedLeaves);
       else this.parentLeaveRequests = this.getInitialLeaves();
 
@@ -7734,13 +8002,16 @@ INSTRUCTIONS:
   async loadStateFromBackend(): Promise<void> {
     try {
       await this.flushOfflineSyncQueue();
-      const [wsRes, stuRes, tchRes, admRes, feeRes, hwRes, lvRes, conRes, cmpRes, lpRes, subRes, audRes, recRes, pvRes, monRes, stfRes, priRes, polRes, fpRes, attRes] = await Promise.all([
+      const [wsRes, stuRes, tchRes, admRes, feeRes, hwRes, hwSubRes, matRes, msgRes, lvRes, conRes, cmpRes, lpRes, subRes, audRes, recRes, pvRes, monRes, stfRes, priRes, polRes, fpRes, attRes] = await Promise.all([
         this.backend.getSchoolWorkspace().catch(() => null),
         this.backend.getSchoolStudents().catch(() => null),
         this.backend.getSchoolTeachers().catch(() => null),
         this.backend.getSchoolAdmissions().catch(() => null),
         this.backend.getSchoolFees().catch(() => null),
         this.backend.getSchoolHomework().catch(() => null),
+        this.backend.getHomeworkSubmissions().catch(() => null),
+        this.backend.getStudyMaterials().catch(() => null),
+        this.backend.getSchoolMessages().catch(() => null),
         this.backend.getSchoolLeaves().catch(() => null),
         this.backend.getSchoolConcessions().catch(() => null),
         this.backend.getSchoolComplaints().catch(() => null),
@@ -7787,6 +8058,11 @@ INSTRUCTIONS:
         if (Array.isArray(w.studentLeavingCertificates) && w.studentLeavingCertificates.length > 0) this.studentLeavingCertificates = w.studentLeavingCertificates;
         if (Array.isArray(w.complianceAuditList) && w.complianceAuditList.length > 0) this.complianceAuditList = w.complianceAuditList;
         if (Array.isArray(w.auditWaiversList) && w.auditWaiversList.length > 0) this.auditWaiversList = w.auditWaiversList;
+        if (Array.isArray(w.teacherSelfSchedule) && w.teacherSelfSchedule.length > 0) this.teacherSelfSchedule = w.teacherSelfSchedule;
+        if (Array.isArray(w.syllabusTracker) && w.syllabusTracker.length > 0) this.syllabusTracker = w.syllabusTracker;
+        if (Array.isArray(w.facultyTaskList) && w.facultyTaskList.length > 0) this.facultyTaskList = w.facultyTaskList;
+        if (Array.isArray(w.teacherLeaveRequests) && w.teacherLeaveRequests.length > 0) this.teacherLeaveRequests = w.teacherLeaveRequests;
+        if (Array.isArray(w.weakStudentInterventions) && w.weakStudentInterventions.length > 0) this.weakStudentInterventions = w.weakStudentInterventions;
       }
 
       if (stuRes?.ok && Array.isArray(stuRes.students) && stuRes.students.length > 0) {
@@ -7936,6 +8212,33 @@ INSTRUCTIONS:
           if (!mapHw.has(local.id)) mapHw.set(local.id, local);
         }
         this.teacherHomeworks = Array.from(mapHw.values());
+      }
+
+      if (hwSubRes?.ok && Array.isArray(hwSubRes.submissions) && hwSubRes.submissions.length > 0) {
+        const mapSubm = new Map<string, HomeworkSubmissionRecord>();
+        for (const sub of hwSubRes.submissions) mapSubm.set(sub.id, sub);
+        for (const local of this.homeworkSubmissions) {
+          if (!mapSubm.has(local.id)) mapSubm.set(local.id, local);
+        }
+        this.homeworkSubmissions = Array.from(mapSubm.values());
+      }
+
+      if (matRes?.ok && Array.isArray(matRes.materials) && matRes.materials.length > 0) {
+        const mapMat = new Map<string, TeacherStudyMaterialRecord>();
+        for (const mat of matRes.materials) mapMat.set(mat.id, mat);
+        for (const local of this.teacherStudyMaterials) {
+          if (!mapMat.has(local.id)) mapMat.set(local.id, local);
+        }
+        this.teacherStudyMaterials = Array.from(mapMat.values());
+      }
+
+      if (msgRes?.ok && Array.isArray(msgRes.messages) && msgRes.messages.length > 0) {
+        const mapMsg = new Map<string, ParentMessageRecord>();
+        for (const m of msgRes.messages) mapMsg.set(m.id, m);
+        for (const local of this.parentMessages) {
+          if (!mapMsg.has(local.id)) mapMsg.set(local.id, local);
+        }
+        this.parentMessages = Array.from(mapMsg.values());
       }
 
       if (lvRes?.ok && Array.isArray(lvRes.leaves) && lvRes.leaves.length > 0) {
@@ -8124,6 +8427,13 @@ INSTRUCTIONS:
       this.setScopedItem('scs_school_portal_users_v1', JSON.stringify(this.portalUsers));
       this.setScopedItem('scs_school_role_perms_v1', JSON.stringify(this.rolePermissions));
       this.setScopedItem('scs_school_homeworks_v1', JSON.stringify(this.teacherHomeworks));
+      this.setScopedItem('scs_school_hw_submissions_v1', JSON.stringify(this.homeworkSubmissions));
+      this.setScopedItem('scs_school_study_materials_v1', JSON.stringify(this.teacherStudyMaterials));
+      this.setScopedItem('scs_school_teacher_schedule_v1', JSON.stringify(this.teacherSelfSchedule));
+      this.setScopedItem('scs_school_syllabus_v1', JSON.stringify(this.syllabusTracker));
+      this.setScopedItem('scs_school_faculty_tasks_v1', JSON.stringify(this.facultyTaskList));
+      this.setScopedItem('scs_school_teacher_leaves_v1', JSON.stringify(this.teacherLeaveRequests));
+      this.setScopedItem('scs_school_weak_remedials_v1', JSON.stringify(this.weakStudentInterventions));
       this.setScopedItem('scs_school_leaves_v1', JSON.stringify(this.parentLeaveRequests));
       this.setScopedItem('scs_school_msgs_v1', JSON.stringify(this.parentMessages));
       this.setScopedItem('scs_school_lessons_v1', JSON.stringify(this.teacherLessonPlans));
@@ -8197,7 +8507,12 @@ INSTRUCTIONS:
         campusFeedPosts: this.campusFeedPosts,
         studentLeavingCertificates: this.studentLeavingCertificates,
         complianceAuditList: this.complianceAuditList,
-        auditWaiversList: this.auditWaiversList
+        auditWaiversList: this.auditWaiversList,
+        teacherSelfSchedule: this.teacherSelfSchedule,
+        syllabusTracker: this.syllabusTracker,
+        facultyTaskList: this.facultyTaskList,
+        teacherLeaveRequests: this.teacherLeaveRequests,
+        weakStudentInterventions: this.weakStudentInterventions
       });
       this.syncToCloud(false);
     } catch {}
@@ -9666,9 +9981,122 @@ INSTRUCTIONS:
 
   getInitialHomeworks(): TeacherHomeworkRecord[] {
     return [
-      { id: 'HW-201', title: 'Quadratic Equations & Complex Roots Worksheet', subject: 'Mathematics', grade: 'Class 10-A', dueDate: 'Oct 20, 2026', assignedDate: 'Oct 15, 2026', submissionsCount: 22, totalCount: 28, description: 'Solve exercises 4.1 to 4.4 and show step-by-step discriminant calculations.' },
-      { id: 'HW-202', title: 'Newton Laws of Motion & Momentum Lab Report', subject: 'Physics', grade: 'Class 10-A', dueDate: 'Oct 22, 2026', assignedDate: 'Oct 14, 2026', submissionsCount: 25, totalCount: 28, description: 'Submit formal laboratory write-up including graph of force versus acceleration.' },
-      { id: 'HW-203', title: 'Critical Essay on Shakespearean Drama Techniques', subject: 'English', grade: 'Class 9-C', dueDate: 'Oct 24, 2026', assignedDate: 'Oct 13, 2026', submissionsCount: 19, totalCount: 25, description: 'Write an analytical essay of 750 words evaluating character motives in Macbeth Act 2.' }
+      { id: 'HW-201', title: 'Quadratic Equations & Complex Roots Worksheet', subject: 'Mathematics', grade: 'Class 10-A', dueDate: 'Oct 20, 2026', assignedDate: 'Oct 15, 2026', submissionsCount: 2, totalCount: 28, description: 'Solve exercises 4.1 to 4.4 and show step-by-step discriminant calculations.', teacherName: 'Prof. Tariq Mehmood', resourceKind: 'Homework', maxMarks: 20, status: 'Active' },
+      { id: 'HW-202', title: 'Newton Laws of Motion & Momentum Lab Report', subject: 'Physics', grade: 'Class 10-A', dueDate: 'Oct 22, 2026', assignedDate: 'Oct 14, 2026', submissionsCount: 1, totalCount: 28, description: 'Submit formal laboratory write-up including graph of force versus acceleration.', teacherName: 'Dr. Rehan Alvi', resourceKind: 'Worksheet', maxMarks: 15, status: 'Active' },
+      { id: 'HW-203', title: 'Critical Essay on Shakespearean Drama Techniques', subject: 'English', grade: 'Class 9-C', dueDate: 'Oct 24, 2026', assignedDate: 'Oct 13, 2026', submissionsCount: 0, totalCount: 25, description: 'Write an analytical essay of 750 words evaluating character motives in Macbeth Act 2.', teacherName: 'Ms. Sarah Jenkins', resourceKind: 'Homework', maxMarks: 25, status: 'Active' }
+    ];
+  }
+
+  getInitialHomeworkSubmissions(): HomeworkSubmissionRecord[] {
+    return [
+      {
+        id: 'HSUB-501',
+        homeworkId: 'HW-201',
+        studentId: 'ST-1002',
+        rollNo: '1002',
+        studentName: 'Amna Salman',
+        grade: 'Class 10-A',
+        answerText: 'Solved all discriminant roots for Exercises 4.1-4.4 with complete factorization proofs attached.',
+        attachmentName: 'Amna_Quadratic_Solutions.txt',
+        attachmentType: 'text/plain',
+        attachmentData: 'data:text/plain;base64,U29sdmluZyBFeGVyY2lzZSA0LjEgLSBEaXNjcmltaW5hbnQgPSBiXjIgLSA0YWMgPSAyNSAtIDE2ID0gOSA+IDAgKHJlYWwgcm9vdHMpLg==',
+        status: 'Submitted',
+        marksObtained: null,
+        maxMarks: 20,
+        teacherRemarks: '',
+        submittedAt: '2026-10-16T09:15:00.000Z'
+      },
+      {
+        id: 'HSUB-502',
+        homeworkId: 'HW-201',
+        studentId: 'ST-1004',
+        rollNo: '1004',
+        studentName: 'Fatima Zahra Abbasi',
+        grade: 'Class 10-A',
+        answerText: 'Completed all problems including bonus complex root verification.',
+        status: 'Checked',
+        marksObtained: 19,
+        maxMarks: 20,
+        teacherRemarks: 'Clean derivation steps and accurate root classification.',
+        reviewedBy: 'Prof. Tariq Mehmood',
+        reviewedAt: '2026-10-16T11:30:00.000Z',
+        submittedAt: '2026-10-15T18:20:00.000Z'
+      },
+      {
+        id: 'HSUB-503',
+        homeworkId: 'HW-202',
+        studentId: 'ST-1001',
+        rollNo: '1001',
+        studentName: 'Zayan Ahmed Khan',
+        grade: 'Class 10-A',
+        answerText: 'Lab momentum readings & velocity-time graph completed.',
+        status: 'Checked',
+        marksObtained: 15,
+        maxMarks: 15,
+        teacherRemarks: 'Excellent error-margin analysis!',
+        reviewedBy: 'Dr. Rehan Alvi',
+        reviewedAt: '2026-10-15T14:00:00.000Z',
+        submittedAt: '2026-10-15T10:00:00.000Z'
+      }
+    ];
+  }
+
+  getInitialStudyMaterials(): TeacherStudyMaterialRecord[] {
+    return [
+      {
+        id: 'MAT-301',
+        title: 'Chapter 4: Quadratic Equations Solved Formula Sheet & Examples',
+        subject: 'Advanced Mathematics',
+        grade: 'Class 10-A',
+        materialType: 'Class Notes',
+        description: 'Complete summary of discriminant cases, symmetric roots, and past board questions.',
+        attachmentName: 'Ch4_Quadratic_Formula_Sheet.txt',
+        attachmentType: 'text/plain',
+        attachmentData: 'data:text/plain;base64,UXVhZHJhdGljIEZvcm11bGE6IHggPSAoLWIgKy8tIHNxcnQoYl4yIC0gNGFjKSkgLyAyYQpTdW0gb2Ygcm9vdHMgPSAtYi9hClByb2R1Y3Qgb2Ygcm9vdHMgPSBjL2E=',
+        fileSize: '4 KB',
+        uploadedBy: 'Prof. Tariq Mehmood',
+        downloadsCount: 44,
+        createdAt: '2026-10-15'
+      },
+      {
+        id: 'MAT-302',
+        title: 'Vector Calculus & Coordinate Geometry Practice Worksheet',
+        subject: 'Calculus & Vector Analysis',
+        grade: 'Class 10-B',
+        materialType: 'Worksheet',
+        description: '20 graded practice numericals covering dot products, cross products & plane normals.',
+        fileSize: '12 KB',
+        uploadedBy: 'Prof. Tariq Mehmood',
+        downloadsCount: 31,
+        createdAt: '2026-10-14'
+      },
+      {
+        id: 'MAT-303',
+        title: 'Physics Practical Viva & Momentum Lab Observation Guide',
+        subject: 'Physics',
+        grade: 'Class 10-A',
+        materialType: 'Lab Manual',
+        description: 'Apparatus setup checklist, tabular readings template & examiner viva questions.',
+        fileSize: '18 KB',
+        uploadedBy: 'Dr. Rehan Alvi',
+        downloadsCount: 57,
+        createdAt: '2026-10-13'
+      }
+    ];
+  }
+
+  getInitialTeacherSchedule(): TeacherPeriodScheduleRecord[] {
+    return [
+      { id: 'SCH-01', day: 'Monday', periodCode: 'P1', timeSlot: '08:00 AM - 08:45 AM', subject: 'Advanced Mathematics', grade: 'Class 10-A', room: 'Hall 204', topic: 'Quadratic Equations & Roots', status: 'Completed' },
+      { id: 'SCH-02', day: 'Monday', periodCode: 'P3', timeSlot: '09:30 AM - 10:15 AM', subject: 'Calculus & Vector Analysis', grade: 'Class 10-B', room: 'Lecture Hall 3', topic: '3D Dot Products', status: 'Upcoming' },
+      { id: 'SCH-03', day: 'Tuesday', periodCode: 'P2', timeSlot: '08:45 AM - 09:30 AM', subject: 'Statistics & Probability', grade: 'Class 8-A', room: 'Room 108', topic: 'Random Variables & Variance', status: 'Upcoming' },
+      { id: 'SCH-04', day: 'Tuesday', periodCode: 'P4', timeSlot: '10:30 AM - 11:15 AM', subject: 'Applied Mathematics', grade: 'Class 9-B', room: 'Math Lab 1', topic: 'Matrix Determinants', status: 'Upcoming' },
+      { id: 'SCH-05', day: 'Wednesday', periodCode: 'P1', timeSlot: '08:00 AM - 08:45 AM', subject: 'Advanced Mathematics (Quadratic Theory)', grade: 'Class 10-A', room: 'Hall 204', topic: 'Discriminant & Complex Roots', status: 'Completed' },
+      { id: 'SCH-06', day: 'Wednesday', periodCode: 'P3', timeSlot: '09:30 AM - 10:15 AM', subject: 'Calculus & Vector Analysis', grade: 'Class 10-B', room: 'Lecture Hall 3', topic: 'Vector Projections & Planes', status: 'Current' },
+      { id: 'SCH-07', day: 'Wednesday', periodCode: 'P5', timeSlot: '11:30 AM - 12:15 PM', subject: 'Applied Mathematics Lab Session', grade: 'Class 9-B', room: 'Math Lab 1', topic: '3x3 Linear Systems', status: 'Upcoming' },
+      { id: 'SCH-08', day: 'Thursday', periodCode: 'P2', timeSlot: '08:45 AM - 09:30 AM', subject: 'Advanced Mathematics', grade: 'Class 10-A', room: 'Hall 204', topic: 'Synthetic Division Drills', status: 'Upcoming' },
+      { id: 'SCH-09', day: 'Friday', periodCode: 'P1', timeSlot: '08:00 AM - 08:45 AM', subject: 'Weekly Math Olympiad Prep', grade: 'Class 10-A', room: 'Seminar Room 2', topic: 'Past Olympiad Papers', status: 'Upcoming' },
+      { id: 'SCH-10', day: 'Saturday', periodCode: 'P2', timeSlot: '09:00 AM - 10:00 AM', subject: 'Weak Student Remedial Clinic', grade: 'Class 10-A', room: 'Hall 204', topic: 'Extra Algebra & PTM Review', status: 'Upcoming' }
     ];
   }
 
@@ -9935,9 +10363,10 @@ INSTRUCTIONS:
 
 
   toggleLessonPlanStatus(lp: TeacherLessonPlan) {
-    const statuses = ['Planned', 'In Progress', 'Completed', 'Review Needed', 'Approved', 'Revision Requested'];
+    const statuses = ['Planned', 'In Progress', 'Completed', 'Review Needed'];
     const currentIdx = statuses.indexOf(lp.status);
     lp.status = statuses[(currentIdx + 1) % statuses.length] as any;
+    void this.backend.saveSchoolLessonPlan(lp);
     this.saveStateToStorage();
     this.showToast(`Lesson '${lp.topic}' marked as ${lp.status}`, 'info');
   }
@@ -10210,7 +10639,7 @@ INSTRUCTIONS:
     this.showToast(`${user.name} is now ${user.status}`, 'info');
   }
 
-  // --- TEACHER ACTIONS ---
+  // --- TEACHER ACTIONS & TWO-WAY ACADEMIC WORKFLOWS ---
   markTeacherAttendance(student: StudentRecord, status: 'Present' | 'Late' | 'Absent') {
     student.status = status;
     void this.backend.saveSchoolAttendance({ studentId: student.id, status });
@@ -10235,15 +10664,279 @@ INSTRUCTIONS:
     this.showToast(`Marks updated to ${newMarks} (Grade ${subject.grade})`, 'success');
   }
 
-  openTeacherHomeworkModal() {
-    this.teacherHomeworkForm = {
-      title: '',
-      subject: 'Mathematics',
-      grade: 'Grade 10-A',
-      dueDate: 'Oct 22, 2026',
-      description: ''
+  updateTeacherGradeRemarks(student: TeacherGradeRecord, remarks: string) {
+    student.remarks = String(remarks || '');
+    this.saveStateToStorage();
+  }
+
+  async saveGradebookToBackend() {
+    const records = this.getFilteredGradebook();
+    if (records.length === 0) {
+      this.showToast('No gradebook rows to save.', 'warning');
+      return;
+    }
+    const examId = this.gradebookExamFilter || 'EXM-101';
+    for (const rec of records) {
+      const obtained = Number(rec.obtainedMarks ?? 0);
+      const total = Number(rec.maxMarks ?? 100) || 100;
+      const pct = Math.round((obtained / total) * 100);
+      const gradeLetter = pct >= 90 ? 'A+' : pct >= 80 ? 'A' : pct >= 70 ? 'B+' : pct >= 60 ? 'B' : pct >= 50 ? 'C' : 'F';
+      rec.grade = gradeLetter;
+      void this.backend.saveSchoolExamResult({
+        id: `RES-${examId}-${rec.studentId}-${(rec.subject || 'MTH').slice(0, 4).toUpperCase()}`,
+        examId,
+        studentId: rec.studentId,
+        rollNo: rec.rollNo,
+        studentName: rec.name,
+        grade: this.gradebookClassFilter === 'All' ? (this.currentTeacherProfile?.assignedGrade || 'Class 10-A') : this.gradebookClassFilter,
+        subject: rec.subject,
+        marksObtained: obtained,
+        totalMarks: total,
+        remarks: rec.remarks || ''
+      });
+      if (rec.studentId === this.currentStudentProfile?.id) {
+        const stuSub = this.studentSubjects.find((s) => s.name.toLowerCase().includes((rec.subject || '').toLowerCase().split(' ')[0]));
+        if (stuSub) {
+          stuSub.marksObtained = obtained;
+          stuSub.grade = gradeLetter;
+          stuSub.remarks = rec.remarks || stuSub.remarks;
+        }
+      }
+    }
+    // Recompute rank cleanly
+    const sorted = [...this.teacherGradebook].sort((a, b) => Number(b.obtainedMarks || 0) - Number(a.obtainedMarks || 0));
+    sorted.forEach((row, idx) => { row.rank = idx + 1; });
+    this.saveStateToStorage();
+    this.showToast(`Official marks & remarks saved to database for ${records.length} students!`, 'success');
+  }
+
+  exportTeacherGradebookCsv() {
+    const rows = this.getFilteredGradebook();
+    const esc = (v: any) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const headers = ['Roll #', 'Student ID', 'Student Name', 'Subject', 'Max Marks', 'Obtained Marks', 'Grade', 'Rank', 'Remarks'];
+    const csv = [
+      headers.map(esc).join(','),
+      ...rows.map((r) => [r.rollNo, r.studentId, r.name, r.subject, r.maxMarks, r.obtainedMarks, r.grade, r.rank, r.remarks].map(esc).join(','))
+    ].join('\n');
+    if (typeof document !== 'undefined') {
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `gradebook_${(this.gradebookSubjectFilter || 'subject').replace(/\s+/g, '_')}.csv`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+    this.showToast('Gradebook exported as CSV.', 'success');
+  }
+
+  syncGradebookFromActiveRoster() {
+    const existingIds = new Set(this.teacherGradebook.map((g) => g.studentId));
+    let added = 0;
+    for (const st of this.activeStudents || []) {
+      if (!existingIds.has(st.id)) {
+        this.teacherGradebook.push({
+          rollNo: st.rollNo || st.id,
+          studentId: st.id,
+          name: st.name,
+          image: st.image || '',
+          subject: this.gradebookSubjectFilter || this.currentTeacherProfile?.subject || 'Advanced Mathematics',
+          maxMarks: 100,
+          obtainedMarks: 0,
+          grade: 'N/A',
+          remarks: 'Awaiting marks entry',
+          rank: this.teacherGradebook.length + 1
+        });
+        added++;
+      }
+    }
+    if (added > 0) {
+      this.saveStateToStorage();
+      this.showToast(`Synced ${added} additional student(s) from active roster into Gradebook.`, 'success');
+    } else {
+      this.showToast('All active students are already in Gradebook.', 'info');
+    }
+  }
+
+  // --- SAFE ATTACHMENT VALIDATION & PREVIEW ---
+  isSafeAttachmentUrl(raw: string | undefined | null): boolean {
+    const val = String(raw || '').trim();
+    if (!val) return false;
+    const lower = val.toLowerCase();
+    if (lower.startsWith('https://') || lower.startsWith('http://')) return true;
+    return (
+      lower.startsWith('data:image/png;base64,') ||
+      lower.startsWith('data:image/jpeg;base64,') ||
+      lower.startsWith('data:image/jpg;base64,') ||
+      lower.startsWith('data:image/webp;base64,') ||
+      lower.startsWith('data:image/gif;base64,') ||
+      lower.startsWith('data:application/pdf;base64,') ||
+      lower.startsWith('data:text/plain;base64,') ||
+      lower.startsWith('data:application/msword;base64,') ||
+      lower.startsWith('data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64,')
+    );
+  }
+
+  private readValidatedFile(
+    event: Event,
+    onSuccess: (fileMeta: { name: string; type: string; dataUrl: string; sizeLabel: string }) => void
+  ) {
+    const input = event.target as HTMLInputElement;
+    const file = input?.files?.[0];
+    if (!file) return;
+    const maxBytes = 3.5 * 1024 * 1024;
+    if (file.size > maxBytes) {
+      this.showToast('File size must be under 3.5 MB.', 'warning');
+      input.value = '';
+      return;
+    }
+    const allowedTypes = new Set([
+      'application/pdf',
+      'image/png',
+      'image/jpeg',
+      'image/jpg',
+      'image/webp',
+      'image/gif',
+      'text/plain',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ]);
+    const mime = (file.type || '').toLowerCase();
+    if (mime && !allowedTypes.has(mime)) {
+      this.showToast('Unsupported file type. Upload PDF, Image (PNG/JPG/WEBP), TXT, or Word DOC/DOCX.', 'warning');
+      input.value = '';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = String(reader.result || '');
+      if (!this.isSafeAttachmentUrl(dataUrl)) {
+        this.showToast('Invalid or unsafe file format rejected.', 'warning');
+        return;
+      }
+      const sizeKb = Math.max(1, Math.round(file.size / 1024));
+      const sizeLabel = sizeKb >= 1024 ? `${(sizeKb / 1024).toFixed(1)} MB` : `${sizeKb} KB`;
+      onSuccess({
+        name: file.name,
+        type: mime || 'application/octet-stream',
+        dataUrl,
+        sizeLabel
+      });
+      this.cdr.detectChanges();
     };
-    this.formCustomValues['teacherHomework'] = {};
+    reader.readAsDataURL(file);
+  }
+
+  onTeacherHomeworkFileSelected(event: Event) {
+    this.readValidatedFile(event, (meta) => {
+      this.teacherHomeworkForm.attachmentName = meta.name;
+      this.teacherHomeworkForm.attachmentType = meta.type;
+      this.teacherHomeworkForm.attachmentData = meta.dataUrl;
+      this.showToast(`Attached ${meta.name} (${meta.sizeLabel})`, 'info');
+    });
+  }
+
+  onStudentHomeworkFileSelected(event: Event) {
+    this.readValidatedFile(event, (meta) => {
+      this.studentHomeworkForm.attachmentName = meta.name;
+      this.studentHomeworkForm.attachmentType = meta.type;
+      this.studentHomeworkForm.attachmentData = meta.dataUrl;
+      this.showToast(`Attached ${meta.name} (${meta.sizeLabel})`, 'info');
+    });
+  }
+
+  onStudyMaterialFileSelected(event: Event) {
+    this.readValidatedFile(event, (meta) => {
+      this.studyMaterialForm.attachmentName = meta.name;
+      this.studyMaterialForm.attachmentType = meta.type;
+      this.studyMaterialForm.attachmentData = meta.dataUrl;
+      this.showToast(`Attached ${meta.name} (${meta.sizeLabel})`, 'info');
+    });
+  }
+
+  openAttachmentPreview(name: string, type: string, dataUrl: string) {
+    if (!this.isSafeAttachmentUrl(dataUrl)) {
+      this.showToast('Attachment URL is invalid or unsafe.', 'warning');
+      return;
+    }
+    const lower = dataUrl.toLowerCase();
+    const isExternal = lower.startsWith('http://') || lower.startsWith('https://');
+    let textContent = '';
+    if (lower.startsWith('data:text/plain;base64,')) {
+      try {
+        const b64 = dataUrl.split(',')[1] || '';
+        textContent = atob(b64);
+      } catch {
+        textContent = 'Preview unavailable. Use Download button.';
+      }
+    }
+    this.attachmentPreviewData = {
+      name: name || 'Document',
+      type: type || (lower.includes('application/pdf') ? 'application/pdf' : lower.includes('image/') ? 'image/png' : 'text/plain'),
+      dataUrl,
+      safeUrl: this.sanitizer.bypassSecurityTrustUrl(dataUrl),
+      safeResourceUrl: this.sanitizer.bypassSecurityTrustResourceUrl(dataUrl),
+      textContent,
+      isExternal
+    };
+    this.isAttachmentPreviewModalOpen = true;
+    this.cdr.detectChanges();
+  }
+
+  closeAttachmentPreview() {
+    this.isAttachmentPreviewModalOpen = false;
+    this.attachmentPreviewData = null;
+    this.cdr.detectChanges();
+  }
+
+  // --- TEACHER HOMEWORK CRUD + SUBMISSIONS REVIEW ---
+  getFilteredTeacherHomeworks(): TeacherHomeworkRecord[] {
+    return (this.teacherHomeworks || []).filter((hw) => {
+      if (this.homeworkClassFilter !== 'All' && !String(hw.grade || '').toLowerCase().includes(this.homeworkClassFilter.toLowerCase().replace('class ', ''))) {
+        return false;
+      }
+      if (this.homeworkKindFilter !== 'All' && (hw.resourceKind || 'Homework') !== this.homeworkKindFilter) {
+        return false;
+      }
+      return true;
+    });
+  }
+
+  openTeacherHomeworkModal(hw?: TeacherHomeworkRecord) {
+    if (hw) {
+      this.teacherHomeworkForm = {
+        id: hw.id,
+        title: hw.title,
+        subject: hw.subject,
+        grade: hw.grade,
+        dueDate: hw.dueDate,
+        description: hw.description,
+        resourceKind: hw.resourceKind || 'Homework',
+        maxMarks: Number(hw.maxMarks ?? 10),
+        status: hw.status || 'Active',
+        attachmentName: hw.attachmentName || '',
+        attachmentType: hw.attachmentType || '',
+        attachmentData: hw.attachmentData || ''
+      };
+      const existingCells = this.tableSchemaService.getSchema('owner_homework_log').customCells[hw.id] || {};
+      this.formCustomValues['teacherHomework'] = { ...existingCells };
+    } else {
+      this.teacherHomeworkForm = {
+        id: '',
+        title: '',
+        subject: this.currentTeacherProfile?.subject || 'Mathematics',
+        grade: this.currentTeacherProfile?.assignedGrade || 'Class 10-A',
+        dueDate: new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0],
+        description: '',
+        resourceKind: 'Homework',
+        maxMarks: 10,
+        status: 'Active',
+        attachmentName: '',
+        attachmentType: '',
+        attachmentData: ''
+      };
+      this.formCustomValues['teacherHomework'] = {};
+    }
     this.isTeacherHomeworkModalOpen = true;
     this.cdr.detectChanges();
   }
@@ -10255,22 +10948,63 @@ INSTRUCTIONS:
 
   saveTeacherHomework() {
     if (!this.teacherHomeworkForm.title || !this.teacherHomeworkForm.description) {
-      this.showToast('Please provide Homework Title and Instructions.', 'warning');
+      this.showToast('Please provide Assignment Title and Instructions.', 'warning');
       return;
     }
+    const maxMarks = Math.max(1, Math.min(1000, Number(this.teacherHomeworkForm.maxMarks) || 10));
+    if (this.teacherHomeworkForm.id) {
+      const existing = this.teacherHomeworks.find((h) => h.id === this.teacherHomeworkForm.id);
+      if (existing) {
+        existing.title = this.teacherHomeworkForm.title;
+        existing.subject = this.teacherHomeworkForm.subject;
+        existing.grade = this.teacherHomeworkForm.grade;
+        existing.dueDate = this.teacherHomeworkForm.dueDate;
+        existing.description = this.teacherHomeworkForm.description;
+        existing.resourceKind = this.teacherHomeworkForm.resourceKind;
+        existing.maxMarks = maxMarks;
+        existing.status = this.teacherHomeworkForm.status;
+        existing.attachmentName = this.teacherHomeworkForm.attachmentName;
+        existing.attachmentType = this.teacherHomeworkForm.attachmentType;
+        existing.attachmentData = this.teacherHomeworkForm.attachmentData;
+        void this.backend.updateSchoolHomework(existing.id, existing);
+        this.tableSchemaService.submitFormCustomInputs(
+          'owner_homework_log',
+          [existing.id, existing.title],
+          this.formCustomValues['teacherHomework'],
+          { rowLabel: existing.title, submittedByName: this.currentTeacherProfile.name, submittedByRole: this.currentPortalRole }
+        );
+        this.saveStateToStorage();
+        this.closeTeacherHomeworkModal();
+        this.showToast(`Updated ${existing.resourceKind || 'Assignment'} for ${existing.grade}.`, 'success');
+        return;
+      }
+    }
+
+    const gradeStudentsCount = (this.activeStudents || []).filter((s) =>
+      String(s.grade || '').toLowerCase().includes(String(this.teacherHomeworkForm.grade || '').toLowerCase().replace('class ', '').split('-')[0].trim())
+    ).length || 28;
+
     const newHw: TeacherHomeworkRecord = {
       id: `HW-${Math.floor(200 + Math.random() * 700)}`,
       title: this.teacherHomeworkForm.title,
       subject: this.teacherHomeworkForm.subject,
       grade: this.teacherHomeworkForm.grade,
       dueDate: this.teacherHomeworkForm.dueDate,
-      assignedDate: 'Oct 15, 2026',
+      assignedDate: new Date().toISOString().split('T')[0],
       submissionsCount: 0,
-      totalCount: 28,
-      description: this.teacherHomeworkForm.description
+      totalCount: gradeStudentsCount,
+      description: this.teacherHomeworkForm.description,
+      teacherName: this.currentTeacherProfile.name,
+      teacherId: this.currentTeacherProfile.id,
+      resourceKind: this.teacherHomeworkForm.resourceKind,
+      maxMarks,
+      status: 'Active',
+      attachmentName: this.teacherHomeworkForm.attachmentName,
+      attachmentType: this.teacherHomeworkForm.attachmentType,
+      attachmentData: this.teacherHomeworkForm.attachmentData
     };
     this.teacherHomeworks.unshift(newHw);
-    void this.backend.saveSchoolHomework({ ...newHw, teacherId: this.currentTeacherProfile.id });
+    void this.backend.saveSchoolHomework(newHw);
     this.tableSchemaService.submitFormCustomInputs(
       'owner_homework_log',
       [newHw.id, newHw.title],
@@ -10284,10 +11018,486 @@ INSTRUCTIONS:
     this.formCustomValues['teacherHomework'] = {};
     this.saveStateToStorage();
     this.closeTeacherHomeworkModal();
-    this.showToast(`Posted assignment to ${newHw.grade} student portals!`, 'success');
+    this.showToast(`Posted ${newHw.resourceKind} to ${newHw.grade} student & parent portals!`, 'success');
   }
 
-  // --- PARENT ACTIONS ---
+  toggleHomeworkStatus(hw: TeacherHomeworkRecord) {
+    hw.status = hw.status === 'Closed' ? 'Active' : 'Closed';
+    void this.backend.updateSchoolHomework(hw.id, { status: hw.status });
+    this.saveStateToStorage();
+    this.showToast(`Assignment '${hw.title}' marked ${hw.status}.`, 'info');
+  }
+
+  deleteTeacherHomework(hw: TeacherHomeworkRecord) {
+    this.teacherHomeworks = this.teacherHomeworks.filter((x) => x.id !== hw.id);
+    this.homeworkSubmissions = this.homeworkSubmissions.filter((s) => s.homeworkId !== hw.id);
+    void this.backend.deleteSchoolHomework(hw.id);
+    this.saveStateToStorage();
+    this.showToast(`Deleted assignment '${hw.title}'.`, 'info');
+  }
+
+  getSubmissionsForHomework(hwId: string): HomeworkSubmissionRecord[] {
+    return (this.homeworkSubmissions || []).filter((s) => s.homeworkId === hwId);
+  }
+
+  getLiveHomeworkSubmissionCount(hw: TeacherHomeworkRecord): number {
+    const live = this.getSubmissionsForHomework(hw.id).length;
+    return Math.max(live, Number(hw.submissionsCount || 0));
+  }
+
+  getPendingStudentsForHomework(hw: TeacherHomeworkRecord): StudentRecord[] {
+    const submittedIds = new Set(this.getSubmissionsForHomework(hw.id).map((s) => s.studentId));
+    const gradeNum = String(hw.grade || '').toLowerCase().replace('class ', '').replace('grade ', '').split('-')[0].trim();
+    return (this.activeStudents || []).filter((s) => {
+      if (submittedIds.has(s.id)) return false;
+      if (!gradeNum) return true;
+      return String(s.grade || '').toLowerCase().includes(gradeNum);
+    });
+  }
+
+  openHomeworkSubmissionsModal(hw: TeacherHomeworkRecord) {
+    this.selectedHomeworkForReview = hw;
+    this.submissionReviewFilter = 'all';
+    const subs = this.getSubmissionsForHomework(hw.id);
+    for (const s of subs) {
+      this.submissionReviewDrafts[s.id] = {
+        status: s.status === 'Submitted' ? 'Checked' : s.status,
+        marksObtained: s.marksObtained ?? (hw.maxMarks || 10),
+        teacherRemarks: s.teacherRemarks || ''
+      };
+    }
+    this.isHomeworkSubmissionsModalOpen = true;
+    this.cdr.detectChanges();
+  }
+
+  closeHomeworkSubmissionsModal() {
+    this.isHomeworkSubmissionsModalOpen = false;
+    this.selectedHomeworkForReview = null;
+    this.cdr.detectChanges();
+  }
+
+  getFilteredModalSubmissions(): HomeworkSubmissionRecord[] {
+    if (!this.selectedHomeworkForReview) return [];
+    const subs = this.getSubmissionsForHomework(this.selectedHomeworkForReview.id);
+    if (this.submissionReviewFilter === 'submitted') return subs.filter((s) => s.status === 'Submitted');
+    if (this.submissionReviewFilter === 'checked') return subs.filter((s) => s.status === 'Checked' || s.status === 'Approved' || s.status === 'Needs Revision');
+    return subs;
+  }
+
+  submitHomeworkReview(sub: HomeworkSubmissionRecord, forcedStatus?: 'Checked' | 'Needs Revision') {
+    const draft = this.submissionReviewDrafts[sub.id] || {
+      status: forcedStatus || 'Checked',
+      marksObtained: sub.marksObtained ?? sub.maxMarks,
+      teacherRemarks: sub.teacherRemarks || ''
+    };
+    const nextStatus = forcedStatus || (draft.status as any) || 'Checked';
+    const maxM = Number(sub.maxMarks || this.selectedHomeworkForReview?.maxMarks || 10);
+    const marksNum = Number(draft.marksObtained);
+    if (nextStatus === 'Checked' && (!Number.isFinite(marksNum) || marksNum < 0 || marksNum > maxM)) {
+      this.showToast(`Marks must be between 0 and ${maxM}.`, 'warning');
+      return;
+    }
+    sub.status = nextStatus;
+    sub.marksObtained = nextStatus === 'Needs Revision' && !Number.isFinite(marksNum) ? null : marksNum;
+    sub.teacherRemarks = String(draft.teacherRemarks || '').trim();
+    sub.reviewedBy = this.currentTeacherProfile.name;
+    sub.reviewedAt = new Date().toISOString();
+
+    void this.backend.reviewHomeworkSubmission(sub.id, {
+      status: sub.status,
+      marksObtained: sub.marksObtained,
+      maxMarks: maxM,
+      teacherRemarks: sub.teacherRemarks,
+      reviewedBy: sub.reviewedBy
+    });
+    this.notificationsList.unshift({
+      id: `NOTIF-HW-${Date.now()}`,
+      title: `Homework ${sub.status}: ${this.selectedHomeworkForReview?.title || 'Assignment'}`,
+      message: `${sub.studentName} received ${sub.marksObtained ?? '-'}/${maxM}. Remarks: ${sub.teacherRemarks || 'Reviewed by Faculty'}`,
+      type: 'feed',
+      targetRole: 'student',
+      createdAt: 'Just now',
+      isUnread: true,
+      linkTab: 'homework'
+    });
+    this.saveStateToStorage();
+    this.showToast(`${sub.studentName}'s submission marked ${sub.status}!`, 'success');
+    this.cdr.detectChanges();
+  }
+
+  // --- STUDENT TWO-WAY HOMEWORK SUBMISSION ---
+  getStudentSubmissionForHomework(hwId: string, studentId?: string): HomeworkSubmissionRecord | undefined {
+    const stuId = studentId || this.currentStudentProfile?.id || 'ST-1001';
+    return (this.homeworkSubmissions || []).find((s) => s.homeworkId === hwId && s.studentId === stuId);
+  }
+
+  openStudentHomeworkSubmitModal(hw: TeacherHomeworkRecord) {
+    this.selectedHomeworkForSubmit = hw;
+    const existing = this.getStudentSubmissionForHomework(hw.id);
+    this.studentHomeworkForm = {
+      answerText: existing?.answerText || '',
+      externalLink: existing?.externalLink || '',
+      attachmentName: existing?.attachmentName || '',
+      attachmentType: existing?.attachmentType || '',
+      attachmentData: existing?.attachmentData || ''
+    };
+    this.isStudentHomeworkSubmitModalOpen = true;
+    this.cdr.detectChanges();
+  }
+
+  closeStudentHomeworkSubmitModal() {
+    this.isStudentHomeworkSubmitModalOpen = false;
+    this.selectedHomeworkForSubmit = null;
+    this.cdr.detectChanges();
+  }
+
+  submitStudentHomework() {
+    if (!this.selectedHomeworkForSubmit) return;
+    const hw = this.selectedHomeworkForSubmit;
+    if (
+      !this.studentHomeworkForm.answerText.trim() &&
+      !this.studentHomeworkForm.attachmentData &&
+      !this.studentHomeworkForm.externalLink.trim()
+    ) {
+      this.showToast('Please write an answer, upload your solved file/photo, or attach an https link.', 'warning');
+      return;
+    }
+    if (this.studentHomeworkForm.externalLink.trim() && !/^https?:\/\//i.test(this.studentHomeworkForm.externalLink.trim())) {
+      this.showToast('External link must start with https:// or http://', 'warning');
+      return;
+    }
+    const stu = this.currentStudentProfile;
+    const existingIdx = this.homeworkSubmissions.findIndex((s) => s.homeworkId === hw.id && s.studentId === stu.id);
+    const subRecord: HomeworkSubmissionRecord = {
+      id: existingIdx >= 0 ? this.homeworkSubmissions[existingIdx].id : `HSUB-${Date.now()}`,
+      homeworkId: hw.id,
+      studentId: stu.id,
+      rollNo: stu.rollNo || '',
+      studentName: stu.name || 'Student',
+      grade: stu.grade || hw.grade,
+      answerText: this.studentHomeworkForm.answerText.trim(),
+      attachmentName: this.studentHomeworkForm.attachmentName,
+      attachmentType: this.studentHomeworkForm.attachmentType,
+      attachmentData: this.studentHomeworkForm.attachmentData,
+      externalLink: this.studentHomeworkForm.externalLink.trim(),
+      status: 'Submitted',
+      marksObtained: null,
+      maxMarks: Number(hw.maxMarks || 10),
+      teacherRemarks: '',
+      submittedAt: new Date().toISOString()
+    };
+    if (existingIdx >= 0) {
+      this.homeworkSubmissions[existingIdx] = subRecord;
+    } else {
+      this.homeworkSubmissions.unshift(subRecord);
+    }
+    hw.submissionsCount = this.getLiveHomeworkSubmissionCount(hw);
+    void this.backend.submitStudentHomework(hw.id, subRecord);
+    this.saveStateToStorage();
+    this.closeStudentHomeworkSubmitModal();
+    this.showToast(`Homework submitted to ${hw.teacherName || 'Teacher'} for checking!`, 'success');
+  }
+
+  // --- TEACHER STUDY MATERIALS / CLASS NOTES ---
+  openStudyMaterialModal() {
+    this.studyMaterialForm = {
+      id: '',
+      title: '',
+      subject: this.currentTeacherProfile?.subject || 'Mathematics',
+      grade: this.currentTeacherProfile?.assignedGrade || 'Class 10-A',
+      materialType: 'Class Notes',
+      description: '',
+      externalUrl: '',
+      attachmentName: '',
+      attachmentType: '',
+      attachmentData: ''
+    };
+    this.isStudyMaterialModalOpen = true;
+    this.cdr.detectChanges();
+  }
+
+  closeStudyMaterialModal() {
+    this.isStudyMaterialModalOpen = false;
+    this.cdr.detectChanges();
+  }
+
+  saveStudyMaterial() {
+    if (!this.studyMaterialForm.title.trim() || !this.studyMaterialForm.subject.trim()) {
+      this.showToast('Please enter Notes / Worksheet Title and Subject.', 'warning');
+      return;
+    }
+    if (this.studyMaterialForm.externalUrl.trim() && !/^https?:\/\//i.test(this.studyMaterialForm.externalUrl.trim())) {
+      this.showToast('External link must start with https:// or http://', 'warning');
+      return;
+    }
+    const sizeKb = this.studyMaterialForm.attachmentData
+      ? Math.max(1, Math.round((this.studyMaterialForm.attachmentData.length * 0.75) / 1024))
+      : 0;
+    const item: TeacherStudyMaterialRecord = {
+      id: `MAT-${Date.now()}`,
+      title: this.studyMaterialForm.title.trim(),
+      subject: this.studyMaterialForm.subject.trim(),
+      grade: this.studyMaterialForm.grade.trim() || 'Class 10-A',
+      materialType: this.studyMaterialForm.materialType,
+      description: this.studyMaterialForm.description.trim(),
+      attachmentName: this.studyMaterialForm.attachmentName,
+      attachmentType: this.studyMaterialForm.attachmentType,
+      attachmentData: this.studyMaterialForm.attachmentData,
+      externalUrl: this.studyMaterialForm.externalUrl.trim(),
+      fileSize: sizeKb > 0 ? (sizeKb >= 1024 ? `${(sizeKb / 1024).toFixed(1)} MB` : `${sizeKb} KB`) : 'Link / Text',
+      uploadedBy: this.currentTeacherProfile?.name || 'Faculty',
+      teacherId: this.currentTeacherProfile?.id || '',
+      downloadsCount: 0,
+      createdAt: new Date().toISOString().split('T')[0]
+    };
+    this.teacherStudyMaterials.unshift(item);
+    void this.backend.saveStudyMaterial(item);
+    this.saveStateToStorage();
+    this.closeStudyMaterialModal();
+    this.showToast(`Published '${item.title}' to Student & Parent Study Resources!`, 'success');
+  }
+
+  deleteStudyMaterial(mat: TeacherStudyMaterialRecord) {
+    this.teacherStudyMaterials = this.teacherStudyMaterials.filter((m) => m.id !== mat.id);
+    void this.backend.deleteStudyMaterial(mat.id);
+    this.saveStateToStorage();
+    this.showToast(`Removed study material '${mat.title}'.`, 'info');
+  }
+
+  downloadStudyMaterial(mat: TeacherStudyMaterialRecord) {
+    mat.downloadsCount = Number(mat.downloadsCount || 0) + 1;
+    void this.backend.trackStudyMaterialDownload(mat.id);
+    this.saveStateToStorage();
+    if (mat.attachmentData && this.isSafeAttachmentUrl(mat.attachmentData)) {
+      this.openAttachmentPreview(mat.attachmentName || mat.title, mat.attachmentType || '', mat.attachmentData);
+    } else if (mat.externalUrl && this.isSafeAttachmentUrl(mat.externalUrl)) {
+      this.openAttachmentPreview(mat.title, 'external', mat.externalUrl);
+    } else {
+      this.showToast(`${mat.title}: ${mat.description || 'Study note marked viewed.'}`, 'info');
+    }
+  }
+
+  // --- TEACHER WEEKLY SCHEDULE ---
+  markTeacherPeriodCompleted(period: TeacherPeriodScheduleRecord) {
+    period.status = period.status === 'Completed' ? 'Current' : 'Completed';
+    this.saveStateToStorage();
+    this.showToast(`${period.periodCode} (${period.subject}) marked ${period.status}.`, 'success');
+  }
+
+  openTeacherPeriodModal() {
+    this.teacherPeriodForm = {
+      day: this.teacherScheduleDayFilter || 'Wednesday',
+      periodCode: `P${this.teacherTodayPeriods.length + 1}`,
+      timeSlot: '12:15 PM - 01:00 PM',
+      subject: this.currentTeacherProfile?.subject || 'Advanced Mathematics',
+      grade: this.currentTeacherProfile?.assignedGrade || 'Class 10-A',
+      room: 'Room 204',
+      topic: ''
+    };
+    this.isTeacherPeriodModalOpen = true;
+    this.cdr.detectChanges();
+  }
+
+  closeTeacherPeriodModal() {
+    this.isTeacherPeriodModalOpen = false;
+    this.cdr.detectChanges();
+  }
+
+  addTeacherPeriod() {
+    if (!this.teacherPeriodForm.subject.trim() || !this.teacherPeriodForm.grade.trim()) {
+      this.showToast('Subject and Class/Grade are required.', 'warning');
+      return;
+    }
+    const newPeriod: TeacherPeriodScheduleRecord = {
+      id: `SCH-${Date.now()}`,
+      day: this.teacherPeriodForm.day,
+      periodCode: this.teacherPeriodForm.periodCode || 'P1',
+      timeSlot: this.teacherPeriodForm.timeSlot || '08:00 AM - 08:45 AM',
+      subject: this.teacherPeriodForm.subject.trim(),
+      grade: this.teacherPeriodForm.grade.trim(),
+      room: this.teacherPeriodForm.room.trim() || 'Room 204',
+      topic: this.teacherPeriodForm.topic.trim() || 'Core Lecture',
+      status: 'Upcoming'
+    };
+    this.teacherSelfSchedule.push(newPeriod);
+    this.teacherScheduleDayFilter = newPeriod.day;
+    this.saveStateToStorage();
+    this.closeTeacherPeriodModal();
+    this.showToast(`Added ${newPeriod.periodCode} (${newPeriod.subject}) to ${newPeriod.day} schedule!`, 'success');
+  }
+
+  assignHomeworkFromPeriod(period: TeacherPeriodScheduleRecord) {
+    this.setTeacherTab('homework');
+    this.openTeacherHomeworkModal();
+    this.teacherHomeworkForm.subject = period.subject;
+    this.teacherHomeworkForm.grade = period.grade;
+    this.teacherHomeworkForm.title = `${period.topic || period.subject} Practice Task`;
+  }
+
+  // --- TEACHER ROSTER, INTERVENTIONS & LEAVE/DUTY WORKFLOWS ---
+  getFilteredTeacherRosterStudents(): StudentRecord[] {
+    let list = [...(this.activeStudents || [])];
+    if (this.teacherRosterGradeFilter && this.teacherRosterGradeFilter !== 'All') {
+      const cleanG = this.teacherRosterGradeFilter.toLowerCase().replace('class ', '').replace('grade ', '').split('-')[0].trim();
+      list = list.filter((s) => String(s.grade || '').toLowerCase().includes(cleanG));
+    }
+    if (this.teacherRosterSearch.trim()) {
+      const q = this.teacherRosterSearch.toLowerCase().trim();
+      list = list.filter((s) =>
+        (s.name || '').toLowerCase().includes(q) ||
+        (s.rollNo || '').toLowerCase().includes(q) ||
+        (s.guardian || '').toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }
+
+  getPendingLeaveForStudent(student: StudentRecord): ParentLeaveRecord | undefined {
+    return (this.parentLeaveRequests || []).find(
+      (l) => l.status === 'Pending' && (l.childId === student.id || l.childName === student.name)
+    );
+  }
+
+  approveStudentLeaveFromTeacher(leave: ParentLeaveRecord, nextStatus: 'Approved' | 'Rejected') {
+    leave.status = nextStatus;
+    void this.backend.updateSchoolLeave(leave.id, nextStatus);
+    this.saveStateToStorage();
+    this.showToast(`Student leave for ${leave.childName} ${nextStatus}.`, nextStatus === 'Approved' ? 'success' : 'info');
+  }
+
+  openTeacherInterventionModal(student: StudentRecord, mode: 'remedial' | 'behavior') {
+    this.teacherInterventionForm = {
+      mode,
+      studentId: student.id,
+      studentName: student.name,
+      rollNo: student.rollNo || '',
+      grade: student.grade || 'Class 10-A',
+      subject: this.currentTeacherProfile?.subject || 'Advanced Mathematics',
+      weaknessArea: '',
+      actionPlan: 'Special After-School Remedial Classes',
+      currentMarksPercentage: 48,
+      behaviorCategory: 'Academic Violation',
+      severity: 'Medium',
+      description: '',
+      actionTaken: 'Parent Advisory Note & Counseling'
+    };
+    this.isTeacherInterventionModalOpen = true;
+    this.cdr.detectChanges();
+  }
+
+  closeTeacherInterventionModal() {
+    this.isTeacherInterventionModalOpen = false;
+    this.cdr.detectChanges();
+  }
+
+  submitTeacherIntervention() {
+    const f = this.teacherInterventionForm;
+    if (f.mode === 'remedial') {
+      if (!f.weaknessArea.trim()) {
+        this.showToast('Please specify weakness / remedial focus area.', 'warning');
+        return;
+      }
+      this.weakStudentInterventions.unshift({
+        id: `REM-${Date.now()}`,
+        studentName: f.studentName,
+        grade: f.grade,
+        subject: f.subject,
+        reportedByTeacher: this.currentTeacherProfile.name,
+        currentMarksPercentage: Number(f.currentMarksPercentage) || 50,
+        weaknessArea: f.weaknessArea.trim(),
+        actionPlan: f.actionPlan,
+        ptmDate: 'Next Saturday (10:00 AM)',
+        status: 'Active Remedial Care',
+        principalInstructions: `Flagged by ${this.currentTeacherProfile.name} for remedial support.`
+      });
+      this.saveStateToStorage();
+      this.closeTeacherInterventionModal();
+      this.showToast(`Flagged ${f.studentName} for Remedial / PTM Care (Synced with Principal).`, 'success');
+    } else {
+      if (!f.description.trim()) {
+        this.showToast('Please enter incident description.', 'warning');
+        return;
+      }
+      this.disciplinaryIncidents.unshift({
+        id: `DISC-${Date.now()}`,
+        studentId: f.studentId,
+        studentName: f.studentName,
+        rollNo: f.rollNo,
+        grade: f.grade,
+        date: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+        category: f.behaviorCategory,
+        description: f.description.trim(),
+        severity: f.severity,
+        actionTaken: f.actionTaken,
+        fineAmount: 0,
+        parentNotified: true,
+        status: 'Open'
+      });
+      this.saveStateToStorage();
+      this.closeTeacherInterventionModal();
+      this.showToast(`Behavior / Discipline note logged for ${f.studentName} & Principal notified.`, 'success');
+    }
+  }
+
+  openTeacherLeaveModal() {
+    this.teacherLeaveForm = {
+      leaveType: 'Casual Leave',
+      fromDate: new Date().toISOString().split('T')[0],
+      toDate: new Date().toISOString().split('T')[0],
+      totalDays: 1,
+      reason: '',
+      substituteTeacherAssigned: (this.teachers.find((t) => t.name !== this.currentTeacherProfile?.name)?.name) || 'Dr. Rehan Alvi'
+    };
+    this.isTeacherLeaveModalOpen = true;
+    this.cdr.detectChanges();
+  }
+
+  closeTeacherLeaveModal() {
+    this.isTeacherLeaveModalOpen = false;
+    this.cdr.detectChanges();
+  }
+
+  submitTeacherOwnLeave() {
+    if (!this.teacherLeaveForm.reason.trim()) {
+      this.showToast('Please enter reason for faculty leave.', 'warning');
+      return;
+    }
+    const newLeave = {
+      id: `TLV-${Date.now()}`,
+      teacherId: this.currentTeacherProfile.id,
+      teacherName: this.currentTeacherProfile.name,
+      department: this.currentTeacherProfile.subject || 'Faculty',
+      leaveType: this.teacherLeaveForm.leaveType,
+      fromDate: this.teacherLeaveForm.fromDate,
+      toDate: this.teacherLeaveForm.toDate,
+      totalDays: Number(this.teacherLeaveForm.totalDays) || 1,
+      reason: this.teacherLeaveForm.reason.trim(),
+      substituteTeacherAssigned: this.teacherLeaveForm.substituteTeacherAssigned,
+      status: 'Pending Approval'
+    };
+    this.teacherLeaveRequests.unshift(newLeave);
+    void this.backend.saveSchoolLeave({
+      id: newLeave.id,
+      childId: newLeave.teacherId,
+      childName: `${newLeave.teacherName} (Faculty)`,
+      guardianName: newLeave.substituteTeacherAssigned,
+      fromDate: newLeave.fromDate,
+      toDate: newLeave.toDate,
+      reason: `[${newLeave.leaveType}] ${newLeave.reason}`,
+      status: 'Pending'
+    });
+    this.saveStateToStorage();
+    this.closeTeacherLeaveModal();
+    this.showToast('Faculty leave request submitted to Principal Office!', 'success');
+  }
+
+  markSubstituteCovered(sub: SubstituteArrangementRecord) {
+    sub.status = 'Completed';
+    this.saveStateToStorage();
+    this.showToast(`Substitute period ${sub.period} (${sub.grade}) marked Covered!`, 'success');
+  }
+
+  // --- PARENT & TEACHER TWO-WAY MESSAGING ---
   openParentLeaveModal() {
     this.parentLeaveForm = {
       childId: this.activeParentChildId,
@@ -10340,12 +11550,22 @@ INSTRUCTIONS:
   }
 
   openParentMessageModal() {
-    this.parentMessageForm = {
-      childId: this.activeParentChildId,
-      recipient: `${this.currentTeacherProfile.name} (${this.currentTeacherProfile.subject})`,
-      subject: '',
-      message: ''
-    };
+    if (this.currentPortalRole === 'teacher') {
+      const firstParent = (this.activeStudents || [])[0];
+      this.parentMessageForm = {
+        childId: firstParent?.id || 'ST-1001',
+        recipient: firstParent ? `${firstParent.guardian || 'Parent'} (Guardian of ${firstParent.name})` : 'Parents of Class 10-A',
+        subject: '',
+        message: ''
+      };
+    } else {
+      this.parentMessageForm = {
+        childId: this.activeParentChildId,
+        recipient: `${this.currentTeacherProfile.name} (${this.currentTeacherProfile.subject})`,
+        subject: '',
+        message: ''
+      };
+    }
     this.isParentMessageModalOpen = true;
     this.cdr.detectChanges();
   }
@@ -10356,23 +11576,47 @@ INSTRUCTIONS:
   }
 
   sendParentMessage() {
-    if (!this.parentMessageForm.subject || !this.parentMessageForm.message) {
+    if (!this.parentMessageForm.subject.trim() || !this.parentMessageForm.message.trim()) {
       this.showToast('Please fill subject and message.', 'warning');
       return;
     }
+    const isTeacher = this.currentPortalRole === 'teacher';
+    const child = (this.activeStudents || []).find(s => s.id === this.parentMessageForm.childId) || this.selectedParentChild;
     const newMsg: ParentMessageRecord = {
-      id: `MSG-${Math.floor(300 + Math.random() * 699)}`,
-      sender: `${this.currentGuardianProfile.name} (Guardian)`,
+      id: `MSG-${Date.now()}`,
+      sender: isTeacher ? `${this.currentTeacherProfile.name} (Faculty)` : `${this.currentGuardianProfile.name} (Guardian)`,
+      senderRole: this.currentPortalRole,
       recipient: this.parentMessageForm.recipient,
-      subject: this.parentMessageForm.subject,
-      message: this.parentMessageForm.message,
-      date: 'Today at 08:30 AM',
-      reply: 'Thank you for reaching out. We will address this promptly in today’s faculty review.'
+      childId: this.parentMessageForm.childId,
+      studentName: child?.name || '',
+      subject: this.parentMessageForm.subject.trim(),
+      message: this.parentMessageForm.message.trim(),
+      date: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+      reply: '',
+      status: 'Open'
     };
     this.parentMessages.unshift(newMsg);
+    void this.backend.saveSchoolMessage(newMsg);
     this.saveStateToStorage();
     this.closeParentMessageModal();
-    this.showToast('Message sent to teacher.', 'success');
+    this.showToast(isTeacher ? 'Message sent to Parent Portal!' : 'Message sent to Class Teacher!', 'success');
+  }
+
+  replyToParentMessage(msg: ParentMessageRecord) {
+    const replyText = String(this.parentMessageReplyDrafts[msg.id] || '').trim();
+    if (!replyText) {
+      this.showToast('Please type a reply before sending.', 'warning');
+      return;
+    }
+    const actor = this.currentPortalRole === 'teacher' ? `${this.currentTeacherProfile.name} (Faculty)` : `${this.currentGuardianProfile.name} (Guardian)`;
+    msg.reply = replyText;
+    msg.replyBy = actor;
+    msg.replyDate = new Date().toISOString().split('T')[0];
+    msg.status = 'Replied';
+    this.parentMessageReplyDrafts[msg.id] = '';
+    void this.backend.replySchoolMessage(msg.id, replyText, actor);
+    this.saveStateToStorage();
+    this.showToast(`Reply posted on ${msg.id}!`, 'success');
   }
 
   // --- EXISTING OWNER ERP METHODS ---

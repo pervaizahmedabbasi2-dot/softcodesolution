@@ -1360,5 +1360,313 @@ test('School Events, Principal Forms, Exam Schedules & Non-Owner Workspace Guard
   assert.equal(wsData.tableSchemas?.events_calendar?.customColumns?.some((c) => c.id === 'col_fake'), false);
 });
 
+test('Teacher-Student-Parent Two-Way Homework, Study Materials, Messaging, Validation & Tenant Isolation', async () => {
+  const tenantA = `tenant-teacher-flow-a-${Date.now()}`;
+  const tenantB = `tenant-teacher-flow-b-${Date.now()}`;
+  const teacherHeaders = { 'Content-Type': 'application/json', 'x-tenant-id': tenantA, 'x-user-role': 'teacher', 'x-user-name': 'Ms. Ayesha Khan' };
+  const studentHeaders = { 'Content-Type': 'application/json', 'x-tenant-id': tenantA, 'x-user-role': 'student', 'x-user-name': 'Zainab Ali' };
+  const parentHeaders = { 'Content-Type': 'application/json', 'x-tenant-id': tenantA, 'x-user-role': 'parent', 'x-user-name': 'Tariq Ali' };
+  const accountantHeaders = { 'Content-Type': 'application/json', 'x-tenant-id': tenantA, 'x-user-role': 'accountant', 'x-user-name': 'Mr. Bilal' };
+  const tenantBTeacherHeaders = { 'Content-Type': 'application/json', 'x-tenant-id': tenantB, 'x-user-role': 'teacher', 'x-user-name': 'Other Campus Teacher' };
+
+  const samplePdfData = 'data:application/pdf;base64,' + Buffer.from('%PDF-1.4 test worksheet').toString('base64');
+  const samplePngData = 'data:image/png;base64,' + Buffer.from('fake-png-bytes').toString('base64');
+
+  // 1. Homework creation rejects bad MIME and blocks restricted roles
+  const badMimeHw = await fetch(`${baseUrl}/api/school/homework`, {
+    method: 'POST',
+    headers: teacherHeaders,
+    body: JSON.stringify({
+      title: 'Invalid HTML Upload',
+      subject: 'Physics',
+      grade: 'Grade 10-A',
+      description: 'Should reject HTML payload',
+      attachmentName: 'evil.html',
+      attachmentType: 'text/html',
+      attachmentData: 'data:text/html;base64,' + Buffer.from('<script>alert(1)</script>').toString('base64')
+    })
+  });
+  assert.equal(badMimeHw.status, 400);
+
+  const studentCreateHw = await fetch(`${baseUrl}/api/school/homework`, {
+    method: 'POST',
+    headers: studentHeaders,
+    body: JSON.stringify({
+      title: 'Unauthorized HW',
+      subject: 'Math',
+      grade: 'Grade 10-A',
+      description: 'Student cannot assign homework'
+    })
+  });
+  assert.equal(studentCreateHw.status, 403);
+
+  // 2. Teacher creates valid homework with PDF attachment
+  const createHwRes = await fetch(`${baseUrl}/api/school/homework`, {
+    method: 'POST',
+    headers: teacherHeaders,
+    body: JSON.stringify({
+      title: 'Quadratic Equations Worksheet',
+      subject: 'Mathematics',
+      grade: 'Grade 10-A',
+      dueDate: '2026-12-05',
+      description: 'Solve Q1-Q10 and upload your steps.',
+      teacherName: 'Ms. Ayesha Khan',
+      teacherId: 'TCH-01',
+      resourceKind: 'Worksheet',
+      maxMarks: 20,
+      attachmentName: 'quadratics-sheet.pdf',
+      attachmentType: 'application/pdf',
+      attachmentData: samplePdfData
+    })
+  });
+  assert.equal(createHwRes.status, 201);
+  const createdHw = (await createHwRes.json()).homework;
+  assert.ok(createdHw?.id);
+  assert.equal(createdHw.maxMarks, 20);
+  assert.equal(createdHw.resourceKind, 'Worksheet');
+
+  // Teacher edits homework
+  const updateHwRes = await fetch(`${baseUrl}/api/school/homework/${createdHw.id}`, {
+    method: 'PUT',
+    headers: teacherHeaders,
+    body: JSON.stringify({
+      description: 'Solve Q1-Q12 and upload neat workings.',
+      status: 'Active'
+    })
+  });
+  assert.equal(updateHwRes.status, 200);
+  assert.equal((await updateHwRes.json()).homework.description, 'Solve Q1-Q12 and upload neat workings.');
+
+  // 3. Student submits homework: unsafe link rejected, accountant blocked, valid submission persisted & encrypted
+  const unsafeLinkRes = await fetch(`${baseUrl}/api/school/homework/${createdHw.id}/submit`, {
+    method: 'POST',
+    headers: studentHeaders,
+    body: JSON.stringify({
+      studentId: 'STU-901',
+      rollNo: '10A-04',
+      studentName: 'Zainab Ali',
+      grade: 'Grade 10-A',
+      answerText: 'Completed solutions',
+      externalLink: 'javascript:alert(1)'
+    })
+  });
+  assert.equal(unsafeLinkRes.status, 400);
+
+  const accountantSubmitRes = await fetch(`${baseUrl}/api/school/homework/${createdHw.id}/submit`, {
+    method: 'POST',
+    headers: accountantHeaders,
+    body: JSON.stringify({
+      studentId: 'STU-901',
+      studentName: 'Zainab Ali',
+      answerText: 'Accountant cannot submit'
+    })
+  });
+  assert.equal(accountantSubmitRes.status, 403);
+
+  const validSubmitRes = await fetch(`${baseUrl}/api/school/homework/${createdHw.id}/submit`, {
+    method: 'POST',
+    headers: studentHeaders,
+    body: JSON.stringify({
+      studentId: 'STU-901',
+      rollNo: '10A-04',
+      studentName: 'Zainab Ali',
+      grade: 'Grade 10-A',
+      answerText: 'Solved all 12 equations in notebook.',
+      attachmentName: 'zainab-steps.png',
+      attachmentType: 'image/png',
+      attachmentData: samplePngData,
+      externalLink: 'https://docs.example.com/zainab-hw'
+    })
+  });
+  assert.equal(validSubmitRes.status, 201);
+  const submitted = (await validSubmitRes.json()).submission;
+  assert.ok(submitted?.id);
+  assert.equal(submitted.status, 'Submitted');
+
+  // Verify student_name encrypted at rest in SQLite
+  const rawSubRow = runtime.sqliteDb
+    .prepare('SELECT student_name FROM local_school_homework_submissions WHERE id = ? AND tenant_id = ?')
+    .get(submitted.id, tenantA);
+  assert.ok(rawSubRow?.student_name?.startsWith('enc:v1:'), 'Submission student_name must be encrypted at rest');
+
+  // 4. Teacher views submissions and grades submission; student cannot grade; invalid marks rejected
+  const listSubsRes = await fetch(`${baseUrl}/api/school/homework/${createdHw.id}/submissions`, { headers: teacherHeaders });
+  assert.equal(listSubsRes.status, 200);
+  const subsList = (await listSubsRes.json()).submissions;
+  assert.equal(subsList.length, 1);
+  assert.equal(subsList[0].studentName, 'Zainab Ali');
+
+  const studentReviewRes = await fetch(`${baseUrl}/api/school/homework/submissions/${submitted.id}/review`, {
+    method: 'PUT',
+    headers: studentHeaders,
+    body: JSON.stringify({ status: 'Checked', marksObtained: 20 })
+  });
+  assert.equal(studentReviewRes.status, 403);
+
+  const overMarksRes = await fetch(`${baseUrl}/api/school/homework/submissions/${submitted.id}/review`, {
+    method: 'PUT',
+    headers: teacherHeaders,
+    body: JSON.stringify({ status: 'Checked', marksObtained: 25 })
+  });
+  assert.equal(overMarksRes.status, 400);
+
+  const validReviewRes = await fetch(`${baseUrl}/api/school/homework/submissions/${submitted.id}/review`, {
+    method: 'PUT',
+    headers: teacherHeaders,
+    body: JSON.stringify({
+      status: 'Checked',
+      marksObtained: 18,
+      teacherRemarks: 'Clean factorization steps. Keep it up!',
+      reviewedBy: 'Ms. Ayesha Khan'
+    })
+  });
+  assert.equal(validReviewRes.status, 200);
+  const reviewedJson = (await validReviewRes.json()).submission;
+  assert.equal(reviewedJson.status, 'Checked');
+  assert.equal(reviewedJson.marksObtained, 18);
+  assert.equal(reviewedJson.teacherRemarks, 'Clean factorization steps. Keep it up!');
+
+  // Parent reads student's reviewed submission
+  const parentSubsRes = await fetch(`${baseUrl}/api/school/homework-submissions?studentId=STU-901`, { headers: parentHeaders });
+  assert.equal(parentSubsRes.status, 200);
+  const parentSubs = (await parentSubsRes.json()).submissions;
+  assert.equal(parentSubs[0]?.status, 'Checked');
+  assert.equal(parentSubs[0]?.marksObtained, 18);
+
+  // 5. Study Materials upload, download counter & delete
+  const badUrlMatRes = await fetch(`${baseUrl}/api/school/study-materials`, {
+    method: 'POST',
+    headers: teacherHeaders,
+    body: JSON.stringify({
+      title: 'Bad Link Note',
+      subject: 'Mathematics',
+      externalUrl: 'ftp://insecure.example.com/file.pdf'
+    })
+  });
+  assert.equal(badUrlMatRes.status, 400);
+
+  const createMatRes = await fetch(`${baseUrl}/api/school/study-materials`, {
+    method: 'POST',
+    headers: teacherHeaders,
+    body: JSON.stringify({
+      title: 'Trigonometry Revision Guide',
+      subject: 'Mathematics',
+      grade: 'Grade 10-A',
+      materialType: 'Past Paper',
+      description: '2021-2025 solved past paper formulas.',
+      attachmentName: 'trig-guide.pdf',
+      attachmentType: 'application/pdf',
+      attachmentData: samplePdfData
+    })
+  });
+  assert.equal(createMatRes.status, 201);
+  const material = (await createMatRes.json()).material;
+  assert.ok(material?.id);
+
+  const dlMatRes = await fetch(`${baseUrl}/api/school/study-materials/${material.id}/download`, {
+    method: 'PUT',
+    headers: studentHeaders
+  });
+  assert.equal(dlMatRes.status, 200);
+
+  const listMatRes = await fetch(`${baseUrl}/api/school/study-materials`, { headers: studentHeaders });
+  assert.equal(listMatRes.status, 200);
+  const listedMat = (await listMatRes.json()).materials.find((m) => m.id === material.id);
+  assert.equal(listedMat?.downloadsCount, 1);
+
+  const studentDelMatRes = await fetch(`${baseUrl}/api/school/study-materials/${material.id}`, {
+    method: 'DELETE',
+    headers: studentHeaders
+  });
+  assert.equal(studentDelMatRes.status, 403);
+
+  // 6. Two-way Parent <-> Teacher Messages with encryption at rest
+  const createMsgRes = await fetch(`${baseUrl}/api/school/messages`, {
+    method: 'POST',
+    headers: parentHeaders,
+    body: JSON.stringify({
+      sender: 'Tariq Ali',
+      senderRole: 'parent',
+      recipient: 'Ms. Ayesha Khan',
+      childId: 'STU-901',
+      studentName: 'Zainab Ali',
+      subject: 'Extra Math Practice Request',
+      message: 'Please share extra worksheet for Quadratic Word Problems.'
+    })
+  });
+  assert.equal(createMsgRes.status, 201);
+  const msg = (await createMsgRes.json()).message;
+  assert.ok(msg?.id);
+
+  const rawMsgRow = runtime.sqliteDb
+    .prepare('SELECT sender, message FROM local_school_messages WHERE id = ? AND tenant_id = ?')
+    .get(msg.id, tenantA);
+  assert.ok(rawMsgRow?.sender?.startsWith('enc:v1:'), 'Message sender must be encrypted at rest');
+  assert.ok(rawMsgRow?.message?.startsWith('enc:v1:'), 'Message body must be encrypted at rest');
+
+  const studentReplyBlocked = await fetch(`${baseUrl}/api/school/messages/${msg.id}/reply`, {
+    method: 'PUT',
+    headers: studentHeaders,
+    body: JSON.stringify({ reply: 'Student cannot reply to parent messages' })
+  });
+  assert.equal(studentReplyBlocked.status, 403);
+
+  const teacherReplyRes = await fetch(`${baseUrl}/api/school/messages/${msg.id}/reply`, {
+    method: 'PUT',
+    headers: teacherHeaders,
+    body: JSON.stringify({
+      reply: 'Uploaded Trigonometry & Quadratic practice guide in Library.',
+      replyBy: 'Ms. Ayesha Khan'
+    })
+  });
+  assert.equal(teacherReplyRes.status, 200);
+  const repliedJson = await teacherReplyRes.json();
+  assert.equal(repliedJson.status, 'Replied');
+
+  const listMsgsRes = await fetch(`${baseUrl}/api/school/messages`, { headers: parentHeaders });
+  assert.equal(listMsgsRes.status, 200);
+  const fetchedMsg = (await listMsgsRes.json()).messages.find((m) => m.id === msg.id);
+  assert.equal(fetchedMsg?.status, 'Replied');
+  assert.equal(fetchedMsg?.reply, 'Uploaded Trigonometry & Quadratic practice guide in Library.');
+
+  // 7. Strict Multi-Tenant Isolation across Tenant B
+  const tenantBHw = await fetch(`${baseUrl}/api/school/homework`, { headers: tenantBTeacherHeaders });
+  assert.equal((await tenantBHw.json()).homework.some((h) => h.id === createdHw.id), false);
+
+  const tenantBSubs = await fetch(`${baseUrl}/api/school/homework/${createdHw.id}/submissions`, { headers: tenantBTeacherHeaders });
+  assert.equal((await tenantBSubs.json()).submissions.length, 0);
+
+  const tenantBReview = await fetch(`${baseUrl}/api/school/homework/submissions/${submitted.id}/review`, {
+    method: 'PUT',
+    headers: tenantBTeacherHeaders,
+    body: JSON.stringify({ status: 'Checked', marksObtained: 10 })
+  });
+  assert.equal(tenantBReview.status, 404);
+
+  const tenantBMats = await fetch(`${baseUrl}/api/school/study-materials`, { headers: tenantBTeacherHeaders });
+  assert.equal((await tenantBMats.json()).materials.some((m) => m.id === material.id), false);
+
+  const tenantBMsgReply = await fetch(`${baseUrl}/api/school/messages/${msg.id}/reply`, {
+    method: 'PUT',
+    headers: tenantBTeacherHeaders,
+    body: JSON.stringify({ reply: 'Cross-tenant hijack attempt' })
+  });
+  assert.equal(tenantBMsgReply.status, 404);
+
+  // Cleanup delete works for Teacher on Tenant A
+  const delMatRes = await fetch(`${baseUrl}/api/school/study-materials/${material.id}`, {
+    method: 'DELETE',
+    headers: teacherHeaders
+  });
+  assert.equal(delMatRes.status, 200);
+
+  const delHwRes = await fetch(`${baseUrl}/api/school/homework/${createdHw.id}`, {
+    method: 'DELETE',
+    headers: teacherHeaders
+  });
+  assert.equal(delHwRes.status, 200);
+});
+
+
 
 

@@ -976,6 +976,139 @@ export class BackendService {
     } catch { return { ok: false }; }
   }
 
+  async updateSchoolHomework(id: string, payload: any) {
+    try {
+      const res = await fetch(`/api/school/homework/${encodeURIComponent(id)}`, {
+        method: 'PUT',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async deleteSchoolHomework(id: string) {
+    try {
+      const res = await fetch(`/api/school/homework/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        headers: this.getSchoolHeaders(false),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async getHomeworkSubmissions(homeworkId?: string, studentId?: string) {
+    try {
+      const params = new URLSearchParams();
+      if (homeworkId) params.set('homeworkId', homeworkId);
+      if (studentId) params.set('studentId', studentId);
+      const q = params.toString() ? `?${params.toString()}` : '';
+      const res = await fetch(`/api/school/homework-submissions${q}`, {
+        headers: this.getSchoolHeaders(false),
+        credentials: 'include'
+      });
+      return await res.json().catch(() => ({ ok: false, submissions: [] }));
+    } catch { return { ok: false, submissions: [] }; }
+  }
+
+  async submitStudentHomework(homeworkId: string, payload: any) {
+    try {
+      const res = await fetch(`/api/school/homework/${encodeURIComponent(homeworkId)}/submit`, {
+        method: 'POST',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async reviewHomeworkSubmission(subId: string, payload: any) {
+    try {
+      const res = await fetch(`/api/school/homework/submissions/${encodeURIComponent(subId)}/review`, {
+        method: 'PUT',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async getStudyMaterials() {
+    try {
+      const res = await fetch('/api/school/study-materials', { headers: this.getSchoolHeaders(false), credentials: 'include' });
+      return await res.json().catch(() => ({ ok: false, materials: [] }));
+    } catch { return { ok: false, materials: [] }; }
+  }
+
+  async saveStudyMaterial(payload: any) {
+    try {
+      const res = await fetch('/api/school/study-materials', {
+        method: 'POST',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async trackStudyMaterialDownload(id: string) {
+    try {
+      const res = await fetch(`/api/school/study-materials/${encodeURIComponent(id)}/download`, {
+        method: 'PUT',
+        headers: this.getSchoolHeaders(),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async deleteStudyMaterial(id: string) {
+    try {
+      const res = await fetch(`/api/school/study-materials/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        headers: this.getSchoolHeaders(false),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async getSchoolMessages() {
+    try {
+      const res = await fetch('/api/school/messages', { headers: this.getSchoolHeaders(false), credentials: 'include' });
+      return await res.json().catch(() => ({ ok: false, messages: [] }));
+    } catch { return { ok: false, messages: [] }; }
+  }
+
+  async saveSchoolMessage(payload: any) {
+    try {
+      const res = await fetch('/api/school/messages', {
+        method: 'POST',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async replySchoolMessage(id: string, reply: string, replyBy?: string) {
+    try {
+      const res = await fetch(`/api/school/messages/${encodeURIComponent(id)}/reply`, {
+        method: 'PUT',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify({ reply, replyBy }),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
   async getSchoolLeaves() {
     try {
       const res = await fetch('/api/school/leaves', { headers: this.getSchoolHeaders(false), credentials: 'include' });
@@ -1064,12 +1197,24 @@ export class BackendService {
     } catch { return { ok: false, lessonPlans: [] }; }
   }
 
-  async approveSchoolLessonPlan(id: string, status: string) {
+  async saveSchoolLessonPlan(payload: any) {
+    try {
+      const res = await fetch('/api/school/lesson-plans', {
+        method: 'POST',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async approveSchoolLessonPlan(id: string, status: string, moderatorNotes?: string) {
     try {
       const res = await fetch(`/api/school/lesson-plans/${encodeURIComponent(id)}`, {
         method: 'PUT',
         headers: this.getSchoolHeaders(),
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ status, moderatorNotes }),
         credentials: 'include'
       });
       return await res.json();

@@ -279,8 +279,81 @@ CREATE TABLE IF NOT EXISTS local_school_homework (
   due_date TEXT,
   description TEXT NOT NULL,
   teacher_name TEXT,
+  teacher_id TEXT,
+  attachment_name TEXT,
+  attachment_type TEXT,
+  attachment_data TEXT,
+  resource_kind TEXT DEFAULT 'Homework',
+  max_marks REAL DEFAULT 10,
+  status TEXT DEFAULT 'Active',
   submissions_count INTEGER DEFAULT 0,
   total_count INTEGER DEFAULT 30,
+  is_synced INTEGER DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Student Two-Way Homework Submissions & Teacher Checking
+CREATE TABLE IF NOT EXISTS local_school_homework_submissions (
+  id TEXT PRIMARY KEY,
+  tenant_id TEXT DEFAULT 'tenant-root-platform',
+  homework_id TEXT NOT NULL,
+  student_id TEXT NOT NULL,
+  roll_no TEXT,
+  student_name TEXT NOT NULL,
+  grade TEXT,
+  answer_text TEXT,
+  attachment_name TEXT,
+  attachment_type TEXT,
+  attachment_data TEXT,
+  external_link TEXT,
+  status TEXT DEFAULT 'Submitted',
+  marks_obtained REAL,
+  max_marks REAL DEFAULT 10,
+  teacher_remarks TEXT,
+  reviewed_by TEXT,
+  reviewed_at TEXT,
+  submitted_at TEXT,
+  is_synced INTEGER DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Teacher Uploaded Study Notes, Worksheets & Class Resources
+CREATE TABLE IF NOT EXISTS local_school_study_materials (
+  id TEXT PRIMARY KEY,
+  tenant_id TEXT DEFAULT 'tenant-root-platform',
+  title TEXT NOT NULL,
+  subject TEXT NOT NULL,
+  grade TEXT NOT NULL,
+  material_type TEXT DEFAULT 'Class Notes',
+  description TEXT,
+  attachment_name TEXT,
+  attachment_type TEXT,
+  attachment_data TEXT,
+  external_url TEXT,
+  file_size TEXT,
+  uploaded_by TEXT,
+  teacher_id TEXT,
+  downloads_count INTEGER DEFAULT 0,
+  is_synced INTEGER DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Direct Teacher-Parent Two-Way Communication Thread
+CREATE TABLE IF NOT EXISTS local_school_messages (
+  id TEXT PRIMARY KEY,
+  tenant_id TEXT DEFAULT 'tenant-root-platform',
+  sender TEXT NOT NULL,
+  sender_role TEXT DEFAULT 'parent',
+  recipient TEXT NOT NULL,
+  child_id TEXT,
+  student_name TEXT,
+  subject TEXT NOT NULL,
+  message TEXT NOT NULL,
+  date TEXT,
+  reply TEXT,
+  reply_by TEXT,
+  reply_date TEXT,
+  status TEXT DEFAULT 'Open',
   is_synced INTEGER DEFAULT 0,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );

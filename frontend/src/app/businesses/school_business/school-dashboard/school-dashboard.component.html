@@ -13926,11 +13926,11 @@
         <div class="flex items-center gap-2.5 shrink-0 flex-wrap sm:flex-nowrap w-full sm:w-auto relative z-10">
           <div class="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-white/90 backdrop-blur-md border border-white/80 shadow-[0_4px_12px_rgba(0,0,0,0.03),inset_0_1px_1px_rgba(255,255,255,0.9)] text-[11px] sm:text-xs font-bold text-slate-700 whitespace-nowrap">
             <lucide-icon [name]="'clock'" class="w-3.5 h-3.5 text-emerald-600 shrink-0"></lucide-icon>
-            <span><strong class="text-slate-900 font-black">6 Periods</strong> Assigned</span>
+            <span><strong class="text-slate-900 font-black">{{ teacherAllTodayPeriodsCount }} Periods</strong> ({{ teacherHeldPeriodsCount }} Held)</span>
           </div>
           <div class="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-emerald-500/10 backdrop-blur-md border border-emerald-200/80 shadow-[0_4px_12px_rgba(16,185,129,0.06),inset_0_1px_1px_rgba(255,255,255,0.9)] text-[11px] sm:text-xs font-bold text-emerald-800 whitespace-nowrap">
             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
-            <span>Roll Call <strong class="font-black">Marked</strong></span>
+            <span>Roll Call <strong class="font-black">{{ teacherRosterPresentCounts.rate }} Present</strong></span>
           </div>
 
           <button (click)="openPasskeyProfileModal()"
@@ -13962,9 +13962,9 @@
         <!-- KPI 1: Assigned Classes -->
         <div (click)="setTeacherTab('schedule')" class="apple-card rounded-2xl p-4 sm:p-5 cursor-pointer transition-all duration-300 flex items-start justify-between gap-2.5 min-h-[110px] scs-tile-3d group border min-w-0 overflow-hidden">
           <div class="space-y-0.5 min-w-0 flex-1">
-            <span class="text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-slate-400 block leading-tight truncate">Today's Schedule</span>
-            <div class="text-lg sm:text-xl 2xl:text-2xl font-black text-slate-900 transition-colors leading-tight break-words">6 Periods</div>
-            <span class="inline-flex px-1.5 sm:px-2 py-0.5 rounded-md text-[9px] sm:text-[10px] font-black bg-indigo-50 text-indigo-700 max-w-full truncate">Class 10-A, 10-B, 9-B</span>
+            <span class="text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-slate-400 block leading-tight truncate">Today's Schedule ({{ teacherScheduleDayFilter }})</span>
+            <div class="text-lg sm:text-xl 2xl:text-2xl font-black text-slate-900 transition-colors leading-tight break-words">{{ teacherAllTodayPeriodsCount }} Periods</div>
+            <span class="inline-flex px-1.5 sm:px-2 py-0.5 rounded-md text-[9px] sm:text-[10px] font-black bg-indigo-50 text-indigo-700 max-w-full truncate">{{ teacherAssignedGradesSummary }}</span>
           </div>
           <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-indigo-600 to-indigo-700 text-white flex items-center justify-center shrink-0 shadow-md shadow-indigo-600/20 border border-white/30 group-hover:scale-105 transition-transform">
             <lucide-icon [name]="'clock'" class="w-5 h-5 sm:w-6 sm:h-6"></lucide-icon>
@@ -13976,8 +13976,8 @@
           <div (click)="setTeacherTab('attendance')" class="apple-card rounded-2xl p-4 sm:p-5 cursor-pointer transition-all duration-300 flex items-start justify-between gap-2.5 min-h-[110px] scs-tile-3d group border min-w-0 overflow-hidden">
             <div class="space-y-0.5 min-w-0 flex-1">
               <span class="text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-slate-400 block leading-tight truncate">Attendance Roll Call</span>
-              <div class="text-lg sm:text-xl 2xl:text-2xl font-black text-emerald-600 leading-tight break-words">Marked 100%</div>
-              <span class="inline-flex px-1.5 sm:px-2 py-0.5 rounded-md text-[9px] sm:text-[10px] font-black bg-emerald-50 text-emerald-700 max-w-full truncate">38 Present / 2 Absent</span>
+              <div class="text-lg sm:text-xl 2xl:text-2xl font-black text-emerald-600 leading-tight break-words">{{ teacherRosterPresentCounts.rate }} Present</div>
+              <span class="inline-flex px-1.5 sm:px-2 py-0.5 rounded-md text-[9px] sm:text-[10px] font-black bg-emerald-50 text-emerald-700 max-w-full truncate">{{ teacherRosterPresentCounts.present }} Present / {{ teacherRosterPresentCounts.absent }} Absent</span>
             </div>
             <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-700 text-white flex items-center justify-center shrink-0 shadow-md shadow-emerald-600/20 border border-white/30 group-hover:scale-105 transition-transform">
               <lucide-icon [name]="'check-circle-2'" class="w-5 h-5 sm:w-6 sm:h-6"></lucide-icon>
@@ -13986,23 +13986,23 @@
         }
 
         <!-- KPI 3: Syllabus Covered -->
-        <div (click)="setTeacherTab('homework')" class="apple-card rounded-2xl p-4 sm:p-5 cursor-pointer transition-all duration-300 flex items-start justify-between gap-2.5 min-h-[110px] scs-tile-3d group border min-w-0 overflow-hidden">
+        <div (click)="setTeacherTab('lessons')" class="apple-card rounded-2xl p-4 sm:p-5 cursor-pointer transition-all duration-300 flex items-start justify-between gap-2.5 min-h-[110px] scs-tile-3d group border min-w-0 overflow-hidden">
           <div class="space-y-0.5 min-w-0 flex-1">
             <span class="text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-slate-400 block leading-tight truncate">Syllabus Covered</span>
-            <div class="text-lg sm:text-xl 2xl:text-2xl font-black text-slate-900 transition-colors leading-tight break-words">82% Covered</div>
-            <span class="inline-flex px-1.5 sm:px-2 py-0.5 rounded-md text-[9px] sm:text-[10px] font-black bg-blue-50 text-blue-700 max-w-full truncate">Ch. 8 Vector Calculus</span>
+            <div class="text-lg sm:text-xl 2xl:text-2xl font-black text-slate-900 transition-colors leading-tight break-words">{{ teacherAverageSyllabusPercentage }}% Covered</div>
+            <span class="inline-flex px-1.5 sm:px-2 py-0.5 rounded-md text-[9px] sm:text-[10px] font-black bg-blue-50 text-blue-700 max-w-full truncate">{{ teacherLessonPlans.length }} Lesson Plans • {{ teacherStudyMaterials.length }} Notes</span>
           </div>
           <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-blue-600 to-cyan-700 text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-600/20 border border-white/30 group-hover:scale-105 transition-transform">
             <lucide-icon [name]="'book-open'" class="w-5 h-5 sm:w-6 sm:h-6"></lucide-icon>
           </div>
         </div>
 
-        <!-- KPI 4: Pending Exam Grading -->
-        <div (click)="setTeacherTab('marks')" class="apple-card rounded-2xl p-4 sm:p-5 cursor-pointer transition-all duration-300 flex items-start justify-between gap-2.5 min-h-[110px] scs-tile-3d group border min-w-0 overflow-hidden">
+        <!-- KPI 4: Pending Homework Review -->
+        <div (click)="setTeacherTab('homework')" class="apple-card rounded-2xl p-4 sm:p-5 cursor-pointer transition-all duration-300 flex items-start justify-between gap-2.5 min-h-[110px] scs-tile-3d group border min-w-0 overflow-hidden">
           <div class="space-y-0.5 min-w-0 flex-1">
-            <span class="text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-slate-400 block leading-tight truncate">Pending Grading</span>
-            <div class="text-lg sm:text-xl 2xl:text-2xl font-black text-amber-600 leading-tight break-words">Mid-Term</div>
-            <span class="inline-flex px-1.5 sm:px-2 py-0.5 rounded-md text-[9px] sm:text-[10px] font-black bg-amber-50 text-amber-800 max-w-full truncate">12 Copies Left</span>
+            <span class="text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-slate-400 block leading-tight truncate">Pending Submissions</span>
+            <div class="text-lg sm:text-xl 2xl:text-2xl font-black text-amber-600 leading-tight break-words">{{ teacherPendingSubmissionsToReviewCount }} To Check</div>
+            <span class="inline-flex px-1.5 sm:px-2 py-0.5 rounded-md text-[9px] sm:text-[10px] font-black bg-amber-50 text-amber-800 max-w-full truncate">{{ teacherHomeworks.length }} Tasks • {{ teacherPendingLeavesAndDutiesCount }} Duties</span>
           </div>
           <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-amber-600 to-orange-700 text-white flex items-center justify-center shrink-0 shadow-md shadow-amber-600/20 border border-white/30 group-hover:scale-105 transition-transform">
             <lucide-icon [name]="'award'" class="w-5 h-5 sm:w-6 sm:h-6"></lucide-icon>
@@ -14061,7 +14061,7 @@
                   @if (teacherTab === 'schedule') {
                     <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse shrink-0"></span>
                   } @else {
-                    <span class="px-1.5 py-0.5 rounded-md bg-emerald-50 text-emerald-700 text-[10px] font-extrabold border border-emerald-200/60 shrink-0">6 Today</span>
+                    <span class="px-1.5 py-0.5 rounded-md bg-emerald-50 text-emerald-700 text-[10px] font-extrabold border border-emerald-200/60 shrink-0">{{ teacherAllTodayPeriodsCount }} Today</span>
                   }
                 </button>
                 @if (canTeacherUseAttendanceVerification) {
@@ -14075,7 +14075,7 @@
                     @if (teacherTab === 'attendance') {
                       <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse shrink-0"></span>
                     } @else {
-                      <span class="px-1.5 py-0.5 rounded-md bg-emerald-50 text-emerald-700 text-[10px] font-extrabold border border-emerald-200/60 shrink-0">Marked</span>
+                      <span class="px-1.5 py-0.5 rounded-md bg-emerald-50 text-emerald-700 text-[10px] font-extrabold border border-emerald-200/60 shrink-0">{{ teacherRosterPresentCounts.rate }}</span>
                     }
                   </button>
                 }
@@ -14084,12 +14084,12 @@
                     <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105" [class]="teacherTab === 'marks' ? 'bg-white/20 text-white' : 'bg-gradient-to-tr from-amber-500 via-amber-600 to-yellow-600 text-white shadow-2xs'">
                       <lucide-icon [name]="'award'" class="w-4 h-4"></lucide-icon>
                     </div>
-                    <span class="text-xs truncate">Marks Entry & Grading</span>
+                    <span class="text-xs truncate">Marks Entry &amp; Grading</span>
                   </div>
                   @if (teacherTab === 'marks') {
                     <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse shrink-0"></span>
                   } @else {
-                    <span class="px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-700 text-[10px] font-extrabold border border-amber-200/60 shrink-0">Term 1</span>
+                    <span class="px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-700 text-[10px] font-extrabold border border-amber-200/60 shrink-0">{{ teacherGradebook.length }}</span>
                   }
                 </button>
                 <button (click)="setTeacherTab('homework')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-all duration-200 cursor-pointer group" [class]="teacherTab === 'homework' ? 'bg-gradient-to-r from-indigo-600 via-indigo-600 to-blue-600 text-white shadow-md shadow-indigo-600/30 border border-indigo-500/20 font-extrabold' : 'scs-nav-3d-idle text-slate-700 hover:text-slate-900 font-bold'">
@@ -14097,12 +14097,12 @@
                     <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105" [class]="teacherTab === 'homework' ? 'bg-white/20 text-white' : 'bg-gradient-to-tr from-blue-500 via-blue-600 to-cyan-600 text-white shadow-2xs'">
                       <lucide-icon [name]="'file-text'" class="w-4 h-4"></lucide-icon>
                     </div>
-                    <span class="text-xs truncate">Homework & Notes Upload</span>
+                    <span class="text-xs truncate">Homework &amp; Notes Upload</span>
                   </div>
                   @if (teacherTab === 'homework') {
                     <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse shrink-0"></span>
                   } @else {
-                    <span class="px-1.5 py-0.5 rounded-md bg-teal-50 text-teal-700 text-[10px] font-extrabold border border-teal-200/60 shrink-0">Active</span>
+                    <span class="px-1.5 py-0.5 rounded-md bg-teal-50 text-teal-700 text-[10px] font-extrabold border border-teal-200/60 shrink-0">{{ teacherPendingSubmissionsToReviewCount }} Sub</span>
                   }
                 </button>
                 <button (click)="setTeacherTab('students')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-all duration-200 cursor-pointer group" [class]="teacherTab === 'students' ? 'bg-gradient-to-r from-indigo-600 via-indigo-600 to-blue-600 text-white shadow-md shadow-indigo-600/30 border border-indigo-500/20 font-extrabold' : 'scs-nav-3d-idle text-slate-700 hover:text-slate-900 font-bold'">
@@ -14110,12 +14110,12 @@
                     <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105" [class]="teacherTab === 'students' ? 'bg-white/20 text-white' : 'bg-gradient-to-tr from-sky-500 via-sky-600 to-blue-600 text-white shadow-2xs'">
                       <lucide-icon [name]="'users'" class="w-4 h-4"></lucide-icon>
                     </div>
-                    <span class="text-xs truncate">Class 10-A Student Roster</span>
+                    <span class="text-xs truncate">{{ currentTeacherProfile.assignedGrade }} Roster</span>
                   </div>
                   @if (teacherTab === 'students') {
                     <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse shrink-0"></span>
                   } @else {
-                    <span class="px-1.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 text-[10px] font-extrabold border border-indigo-200/60 shrink-0">42 Enrolled</span>
+                    <span class="px-1.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 text-[10px] font-extrabold border border-indigo-200/60 shrink-0">{{ activeStudents.length }} Enrolled</span>
                   }
                 </button>
                 <button (click)="setTeacherTab('lessons')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-all duration-200 cursor-pointer group" [class]="teacherTab === 'lessons' ? 'bg-gradient-to-r from-indigo-600 via-indigo-600 to-blue-600 text-white shadow-md shadow-indigo-600/30 border border-indigo-500/20 font-extrabold' : 'scs-nav-3d-idle text-slate-700 hover:text-slate-900 font-bold'">
@@ -14123,12 +14123,25 @@
                     <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105" [class]="teacherTab === 'lessons' ? 'bg-white/20 text-white' : 'bg-gradient-to-tr from-purple-600 via-indigo-600 to-blue-600 text-white shadow-2xs'">
                       <lucide-icon [name]="'book-open'" class="w-4 h-4"></lucide-icon>
                     </div>
-                    <span class="text-xs truncate">Daily Lesson Planner</span>
+                    <span class="text-xs truncate">Lessons &amp; Syllabus</span>
                   </div>
                   @if (teacherTab === 'lessons') {
                     <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse shrink-0"></span>
                   } @else {
                     <span class="px-1.5 py-0.5 rounded-md bg-purple-50 text-purple-700 text-[10px] font-extrabold border border-purple-200/60 shrink-0">{{ teacherLessonPlans.length }} Plans</span>
+                  }
+                </button>
+                <button (click)="setTeacherTab('duties')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-all duration-200 cursor-pointer group" [class]="teacherTab === 'duties' ? 'bg-gradient-to-r from-indigo-600 via-indigo-600 to-blue-600 text-white shadow-md shadow-indigo-600/30 border border-indigo-500/20 font-extrabold' : 'scs-nav-3d-idle text-slate-700 hover:text-slate-900 font-bold'">
+                  <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105" [class]="teacherTab === 'duties' ? 'bg-white/20 text-white' : 'bg-gradient-to-tr from-rose-500 via-amber-500 to-orange-500 text-white shadow-2xs'">
+                      <lucide-icon [name]="'calendar-check'" class="w-4 h-4"></lucide-icon>
+                    </div>
+                    <span class="text-xs truncate">Leaves, Tasks &amp; Sub Duty</span>
+                  </div>
+                  @if (teacherTab === 'duties') {
+                    <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse shrink-0"></span>
+                  } @else {
+                    <span class="px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-700 text-[10px] font-extrabold border border-amber-200/60 shrink-0">{{ teacherPendingLeavesAndDutiesCount }} Open</span>
                   }
                 </button>
                 <button (click)="setTeacherTab('library')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-all duration-200 cursor-pointer group" [class]="teacherTab === 'library' ? 'bg-gradient-to-r from-indigo-600 via-indigo-600 to-blue-600 text-white shadow-md shadow-indigo-600/30 border border-indigo-500/20 font-extrabold' : 'scs-nav-3d-idle text-slate-700 hover:text-slate-900 font-bold'">
@@ -14217,10 +14230,10 @@
                 <lucide-icon [name]="'zap'" class="w-4 h-4 text-emerald-500 fill-emerald-500"></lucide-icon>
                 <h3 class="font-bold text-slate-900 text-sm tracking-tight">Teacher Quick Action Hub</h3>
               </div>
-              <span class="text-xs text-slate-400 font-medium">Class 10-A In-Charge Workflows</span>
+              <span class="text-xs text-slate-400 font-medium">{{ currentTeacherProfile.assignedGrade }} Workflows</span>
             </div>
 
-            <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 sm:gap-4">
+            <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 xl:grid-cols-8 gap-3 sm:gap-4">
               
               <!-- Action 1: Timetable -->
               <button (click)="setTeacherTab('schedule')" 
@@ -14275,16 +14288,25 @@
                 <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-tr from-blue-600 via-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/30 flex items-center justify-center group-hover:scale-110 group-hover:-translate-y-0.5 group-hover:shadow-lg group-hover:shadow-blue-500/40 transition-all duration-300 border border-white/30">
                   <lucide-icon [name]="'file-text'" class="w-6 h-6 sm:w-7 sm:h-7 stroke-[2.2] drop-shadow-xs"></lucide-icon>
                 </div>
-                <span class="text-xs sm:text-sm font-black text-slate-800 leading-tight tracking-tight text-center">Homework Upload</span>
+                <span class="text-xs sm:text-sm font-black text-slate-800 leading-tight tracking-tight text-center">Homework &amp; Notes</span>
               </button>
 
-              <!-- Action 7: Class 10-A Roster -->
+              <!-- Action 7: Student Roster -->
               <button (click)="setTeacherTab('students')" 
                 class="rounded-2xl p-4 sm:p-5 bg-white border border-slate-200/90 text-center transition-all duration-300 ease-out cursor-pointer hover:-translate-y-1.5 hover:scale-[1.02] active:translate-y-0 active:scale-[0.97] flex flex-col items-center justify-center space-y-2.5 min-h-[120px] group scs-tile-3d">
                 <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-indigo-700 text-white shadow-md shadow-indigo-500/30 flex items-center justify-center group-hover:scale-110 group-hover:-translate-y-0.5 group-hover:shadow-lg group-hover:shadow-indigo-500/40 transition-all duration-300 border border-white/30">
                   <lucide-icon [name]="'users'" class="w-6 h-6 sm:w-7 sm:h-7 stroke-[2.2] drop-shadow-xs"></lucide-icon>
                 </div>
-                <span class="text-xs sm:text-sm font-black text-slate-800 leading-tight tracking-tight text-center">Class 10-A Roster</span>
+                <span class="text-xs sm:text-sm font-black text-slate-800 leading-tight tracking-tight text-center">{{ currentTeacherProfile.assignedGrade }} Roster</span>
+              </button>
+
+              <!-- Action 8: Leaves & Duties -->
+              <button (click)="setTeacherTab('duties')" 
+                class="rounded-2xl p-4 sm:p-5 bg-white border border-slate-200/90 text-center transition-all duration-300 ease-out cursor-pointer hover:-translate-y-1.5 hover:scale-[1.02] active:translate-y-0 active:scale-[0.97] flex flex-col items-center justify-center space-y-2.5 min-h-[120px] group scs-tile-3d">
+                <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-tr from-rose-500 via-amber-500 to-orange-500 text-white shadow-md shadow-amber-500/30 flex items-center justify-center group-hover:scale-110 group-hover:-translate-y-0.5 group-hover:shadow-lg group-hover:shadow-amber-500/40 transition-all duration-300 border border-white/30">
+                  <lucide-icon [name]="'calendar-check'" class="w-6 h-6 sm:w-7 sm:h-7 stroke-[2.2] drop-shadow-xs"></lucide-icon>
+                </div>
+                <span class="text-xs sm:text-sm font-black text-slate-800 leading-tight tracking-tight text-center">Leaves &amp; Sub Duties</span>
               </button>
 
             </div>
@@ -14359,6 +14381,14 @@
               <lucide-icon [name]="'book-open'" class="w-3.5 h-3.5"></lucide-icon>
             </div>
             <span>Lesson Planner</span>
+          </button>
+          <button (click)="setTeacherTab('duties')" class="px-3.5 py-2 rounded-xl text-xs transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap"
+            [class]="teacherTab === 'duties' ? 'bg-gradient-to-r from-rose-600 via-amber-600 to-orange-600 text-white shadow-md font-black border border-amber-500/30' : 'bg-white/80 hover:bg-slate-100 text-slate-700 font-bold border border-slate-200/80'">
+            <div class="w-6 h-6 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105"
+                 [class]="teacherTab === 'duties' ? 'bg-white/20 text-white' : 'bg-gradient-to-tr from-rose-500 via-amber-500 to-orange-500 text-white shadow-2xs'">
+              <lucide-icon [name]="'calendar-check'" class="w-3.5 h-3.5"></lucide-icon>
+            </div>
+            <span>Leaves &amp; Duties ({{ teacherPendingLeavesAndDutiesCount }})</span>
           </button>
           <button (click)="setTeacherTab('communication')" class="px-3.5 py-2 rounded-xl text-xs transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap"
             [class]="teacherTab === 'communication' ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 text-white shadow-md font-black border border-emerald-500/30' : 'bg-white/80 hover:bg-slate-100 text-slate-700 font-bold border border-slate-200/80'">
@@ -14898,44 +14928,67 @@
       <!-- TEACHER TAB 1: SCHEDULE -->
       @if (teacherTab === 'schedule') {
         <div id="teacher-workspace-schedule" class="apple-card scs-surface-3d rounded-2xl p-5 space-y-4 scroll-mt-24">
-          <div class="flex items-center justify-between">
-            <h3 class="font-black text-slate-900 text-base">Today's Class Schedule (Wednesday)</h3>
-            <span class="text-xs font-extrabold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full">Campus North Wing</span>
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h3 class="font-black text-slate-900 text-base">Faculty Timetable ({{ teacherScheduleDayFilter }})</h3>
+              <p class="text-xs text-slate-500 font-medium">Switch days, mark delivered lectures completed, or post homework directly from a period.</p>
+            </div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <button type="button" (click)="openTeacherPeriodModal()"
+                class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs cursor-pointer shadow-xs flex items-center gap-1.5">
+                <lucide-icon [name]="'plus'" class="w-3.5 h-3.5"></lucide-icon>
+                <span>Add Period</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-1.5 overflow-x-auto custom-scrollbar pb-1">
+            @for (dayName of ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']; track dayName) {
+              <button type="button" (click)="teacherScheduleDayFilter = dayName"
+                class="px-3 py-1.5 rounded-xl text-xs font-extrabold whitespace-nowrap cursor-pointer transition-all border"
+                [class]="teacherScheduleDayFilter === dayName ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'">
+                {{ dayName }}
+              </button>
+            }
           </div>
 
           <div class="space-y-3">
-            <div class="p-4 rounded-xl border border-slate-200 flex items-center justify-between gap-4 bg-white">
-              <div class="flex items-center gap-3">
-                <span class="w-10 h-10 rounded-xl bg-emerald-600 text-white font-mono font-bold flex items-center justify-center text-xs">P1</span>
-                <div>
-                  <h4 class="font-black text-slate-900 text-sm">Advanced Mathematics (Quadratic Theory)</h4>
-                  <p class="text-xs text-slate-500 font-medium">Class 10-A • Hall 204 • 08:00 AM - 08:45 AM</p>
+            @for (period of teacherTodayPeriods; track period.id) {
+              <div class="p-4 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white"
+                [class]="period.status === 'Current' ? 'border-2 border-indigo-300 shadow-xs' : 'border-slate-200'">
+                <div class="flex items-center gap-3 min-w-0">
+                  <span class="w-10 h-10 rounded-xl font-mono font-bold flex items-center justify-center text-xs shrink-0"
+                    [class]="period.status === 'Completed' ? 'bg-emerald-600 text-white' : (period.status === 'Current' ? 'bg-indigo-600 text-white animate-pulse' : 'bg-slate-100 border border-slate-200 text-slate-700')">
+                    {{ period.periodCode }}
+                  </span>
+                  <div class="min-w-0">
+                    <h4 class="font-black text-slate-900 text-sm truncate">{{ period.subject }} <span class="text-xs font-bold text-indigo-600">({{ period.topic }})</span></h4>
+                    <p class="text-xs text-slate-500 font-medium">{{ period.grade }} • {{ period.room }} • {{ period.timeSlot }}</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2 flex-wrap shrink-0">
+                  <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase"
+                    [class]="period.status === 'Completed' ? 'bg-emerald-100 text-emerald-800' : (period.status === 'Current' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600')">
+                    {{ period.status }}
+                  </span>
+                  <button type="button" (click)="markTeacherPeriodCompleted(period)"
+                    class="px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold text-[11px] cursor-pointer flex items-center gap-1">
+                    <lucide-icon [name]="'check'" class="w-3 h-3"></lucide-icon>
+                    <span>{{ period.status === 'Completed' ? 'Reopen' : 'Mark Held' }}</span>
+                  </button>
+                  <button type="button" (click)="assignHomeworkFromPeriod(period)"
+                    class="px-2.5 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold text-[11px] cursor-pointer flex items-center gap-1">
+                    <lucide-icon [name]="'file-text'" class="w-3 h-3"></lucide-icon>
+                    <span>Assign HW</span>
+                  </button>
                 </div>
               </div>
-              <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase bg-emerald-100 text-emerald-800">Completed</span>
-            </div>
-
-            <div class="p-4 rounded-xl border-2 border-slate-200/90 flex items-center justify-between gap-4 bg-white shadow-xs">
-              <div class="flex items-center gap-3">
-                <span class="w-10 h-10 rounded-xl bg-indigo-600 text-white font-mono font-bold flex items-center justify-center text-xs animate-pulse">P3</span>
-                <div>
-                  <h4 class="font-black text-indigo-950 text-sm">Calculus & Vector Analysis</h4>
-                  <p class="text-xs text-indigo-700 font-bold">Class 10-B • Lecture Hall 3 • 09:30 AM - 10:15 AM</p>
-                </div>
+            }
+            @if (teacherTodayPeriods.length === 0) {
+              <div class="p-6 text-center rounded-2xl bg-white border border-slate-200 text-xs text-slate-500 font-bold">
+                No periods scheduled on {{ teacherScheduleDayFilter }}. Click "Add Period" to schedule a class.
               </div>
-              <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase bg-indigo-600 text-white animate-pulse">Current Class</span>
-            </div>
-
-            <div class="p-4 rounded-xl border border-slate-200 flex items-center justify-between gap-4">
-              <div class="flex items-center gap-3">
-                <span class="w-10 h-10 rounded-xl bg-white border border-slate-200 text-slate-700 font-mono font-bold flex items-center justify-center text-xs">P5</span>
-                <div>
-                  <h4 class="font-black text-slate-900 text-sm">Applied Mathematics Lab Session</h4>
-                  <p class="text-xs text-slate-500 font-medium">Class 9-B • Math Lab 1 • 11:30 AM - 12:15 PM</p>
-                </div>
-              </div>
-              <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase bg-white border border-slate-200 text-slate-600">Upcoming</span>
-            </div>
+            }
           </div>
         </div>
       }
@@ -14971,32 +15024,58 @@
       @if (teacherTab === 'marks') {
         <div id="teacher-workspace-marks" class="apple-card rounded-[20px] p-5 sm:p-6 space-y-5 scs-surface-3d scroll-mt-24">
           <!-- Header with Meta & Quick Stats -->
-          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+          <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 pb-4 border-b border-slate-100">
             <div>
-              <div class="flex items-center gap-2">
+              <div class="flex items-center gap-2 flex-wrap">
                 <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200">Official Gradebook</span>
-                <span class="text-xs text-slate-400 font-mono font-bold">Subject: MTH-101</span>
+                <span class="text-xs text-slate-500 font-mono font-bold">{{ gradebookExamFilter }} • {{ gradebookSubjectFilter }}</span>
               </div>
-              <h3 class="font-black text-slate-900 text-lg mt-1">Student Gradebook & Term Assessment Records</h3>
-              <p class="text-xs text-slate-500">Live mark entry with automatic grade calculation, class rank computation, and student transcript sync.</p>
+              <h3 class="font-black text-slate-900 text-lg mt-1">Student Gradebook &amp; Term Assessment Records</h3>
+              <p class="text-xs text-slate-500">Live mark entry, editable remarks, rank computation, CSV export &amp; official result persistence.</p>
             </div>
 
             <!-- Search and Controls -->
-            <div class="flex items-center gap-3 w-full sm:w-auto">
-              <div class="relative flex-1 sm:w-72">
+            <div class="flex items-center gap-2 flex-wrap w-full lg:w-auto">
+              <select [(ngModel)]="gradebookExamFilter" class="px-2.5 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700">
+                <option value="Mid-Term 2026">Mid-Term 2026</option>
+                <option value="Monthly Test Oct">Monthly Test Oct</option>
+                <option value="Final Term 2026">Final Term 2026</option>
+              </select>
+              <select [(ngModel)]="gradebookSubjectFilter" class="px-2.5 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700">
+                <option value="Advanced Mathematics">Advanced Mathematics</option>
+                <option value="Physics & Optics">Physics &amp; Optics</option>
+                <option value="Chemistry">Chemistry</option>
+                <option value="Computer Science">Computer Science</option>
+                <option value="English Rhetoric">English Rhetoric</option>
+              </select>
+              <div class="relative flex-1 sm:w-56">
                 <lucide-icon [name]="'search'" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></lucide-icon>
                 <input
                   type="text"
                   [(ngModel)]="gradebookSearch"
-                  placeholder="Search by student name or roll #..."
+                  placeholder="Search name or roll #..."
                   class="w-full pl-9 pr-8 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all">
-                <button
-                  *ngIf="gradebookSearch"
-                  (click)="gradebookSearch = ''"
-                  class="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded text-slate-400 hover:text-slate-600">
-                  <lucide-icon [name]="'x'" class="w-3.5 h-3.5"></lucide-icon>
-                </button>
+                @if (gradebookSearch) {
+                  <button
+                    type="button"
+                    (click)="gradebookSearch = ''"
+                    class="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded text-slate-400 hover:text-slate-600 cursor-pointer">
+                    <lucide-icon [name]="'x'" class="w-3.5 h-3.5"></lucide-icon>
+                  </button>
+                }
               </div>
+              <button type="button" (click)="syncGradebookFromActiveRoster()" class="px-3 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs cursor-pointer flex items-center gap-1.5">
+                <lucide-icon [name]="'users'" class="w-3.5 h-3.5 text-indigo-600"></lucide-icon>
+                <span>Sync Roster</span>
+              </button>
+              <button type="button" (click)="exportTeacherGradebookCsv()" class="px-3 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs cursor-pointer flex items-center gap-1.5">
+                <lucide-icon [name]="'download'" class="w-3.5 h-3.5 text-slate-600"></lucide-icon>
+                <span>Export CSV</span>
+              </button>
+              <button type="button" (click)="saveGradebookToBackend()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs cursor-pointer shadow-xs flex items-center gap-1.5">
+                <lucide-icon [name]="'check'" class="w-3.5 h-3.5"></lucide-icon>
+                <span>Save Official Results</span>
+              </button>
             </div>
           </div>
 
@@ -15078,7 +15157,14 @@
                     <td class="px-4 py-3.5 font-bold tabular-nums text-center text-slate-600">
                       #{{ student.rank }}
                     </td>
-                    <td class="px-4 py-3.5 text-slate-600 text-[11px] max-w-xs truncate">{{ student.remarks }}</td>
+                    <td class="px-4 py-3.5 min-w-[180px]">
+                      <input
+                        type="text"
+                        [ngModel]="student.remarks"
+                        (ngModelChange)="updateTeacherGradeRemarks(student, $event)"
+                        placeholder="Add teacher remark..."
+                        class="w-full px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-[11px] font-medium text-slate-700 focus:outline-emerald-600">
+                    </td>
                   </tr>
                 }
 
@@ -15125,7 +15211,7 @@
         </div>
       }
 
-      <!-- TEACHER TAB 4: HOMEWORK -->
+      <!-- TEACHER TAB 4: HOMEWORK & STUDY MATERIALS -->
       @if (teacherTab === 'homework') {
         <div id="teacher-workspace-homework" class="apple-card scs-surface-3d rounded-2xl p-5 space-y-4 scroll-mt-24">
 
@@ -15135,93 +15221,216 @@
                 <lucide-icon [name]="'arrow-left'" class="w-3.5 h-3.5"></lucide-icon>
                 <span>← Return to Faculty Timetable / Overview</span>
               </button>
-              <h3 class="font-black text-slate-900 text-base">Class Homework & Digital School Diary Board</h3>
-              <p class="text-xs text-slate-500">Post assignments, broadcast digital diary to parent mobile apps & track student submission deadlines.</p>
+              <h3 class="font-black text-slate-900 text-base">Homework Assignments, Submission Checking &amp; Class Notes</h3>
+              <p class="text-xs text-slate-500">Upload worksheets/notes, inspect student submitted files &amp; answers, grade work, and sync diary to Students &amp; Parents.</p>
             </div>
             <div class="flex items-center gap-2 flex-wrap">
               <div class="inline-flex items-center p-1 bg-white rounded-xl border border-slate-200/80">
+                <button type="button" (click)="homeworkSubTab = 'assignments'"
+                  class="px-3 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1.5 cursor-pointer transition-all"
+                  [class]="homeworkSubTab === 'assignments' ? 'bg-emerald-600 text-white shadow-2xs font-black' : 'text-slate-600 hover:text-slate-900'">
+                  <lucide-icon [name]="'file-text'" class="w-3.5 h-3.5"></lucide-icon>
+                  <span>Assignments ({{ teacherHomeworks.length }})</span>
+                </button>
+                <button type="button" (click)="homeworkSubTab = 'materials'"
+                  class="px-3 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1.5 cursor-pointer transition-all"
+                  [class]="homeworkSubTab === 'materials' ? 'bg-indigo-600 text-white shadow-2xs font-black' : 'text-slate-600 hover:text-slate-900'">
+                  <lucide-icon [name]="'book-open'" class="w-3.5 h-3.5"></lucide-icon>
+                  <span>Class Notes &amp; Files ({{ teacherStudyMaterials.length }})</span>
+                </button>
+              </div>
+              <button type="button" (click)="openStudyMaterialModal()" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs cursor-pointer shadow-xs flex items-center gap-1.5">
+                <lucide-icon [name]="'plus'" class="w-3.5 h-3.5"></lucide-icon>
+                <span>Upload Notes / Past Paper</span>
+              </button>
+              <button type="button" (click)="openTeacherHomeworkModal()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs cursor-pointer shadow-xs flex items-center gap-1.5">
+                <lucide-icon [name]="'plus'" class="w-3.5 h-3.5"></lucide-icon>
+                <span>Post Homework</span>
+              </button>
+            </div>
+          </div>
+
+          @if (homeworkSubTab === 'assignments') {
+            <div class="flex items-center justify-between flex-wrap gap-2.5 p-3 rounded-2xl bg-slate-50/80 border border-slate-200/80">
+              <div class="flex items-center gap-2 flex-wrap">
+                <select [(ngModel)]="homeworkClassFilter" class="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700">
+                  <option value="All">All Classes</option>
+                  <option value="Class 10">Class 10</option>
+                  <option value="Class 9">Class 9</option>
+                  <option value="Class 8">Class 8</option>
+                  <option value="Class 7">Class 7</option>
+                </select>
+                <select [(ngModel)]="homeworkKindFilter" class="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700">
+                  <option value="All">All Types</option>
+                  <option value="Homework">Homework</option>
+                  <option value="Worksheet">Worksheet</option>
+                  <option value="Class Notes">Class Notes</option>
+                </select>
+              </div>
+              <div class="inline-flex items-center p-1 bg-white rounded-xl border border-slate-200/80">
                 <button type="button" (click)="setHomeworkViewMode('cards')"
                   class="px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-all"
-                  [class]="homeworkViewMode === 'cards' ? 'bg-white text-emerald-700 shadow-2xs font-black' : 'text-slate-600 hover:text-slate-900'">
+                  [class]="homeworkViewMode === 'cards' ? 'bg-emerald-50 text-emerald-700 font-black' : 'text-slate-600 hover:text-slate-900'">
                   <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">view_agenda</mat-icon>
                   <span>Cards</span>
                 </button>
                 <button type="button" (click)="setHomeworkViewMode('table')"
                   class="px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-all"
-                  [class]="homeworkViewMode === 'table' ? 'bg-white text-emerald-700 shadow-2xs font-black' : 'text-slate-600 hover:text-slate-900'">
+                  [class]="homeworkViewMode === 'table' ? 'bg-emerald-50 text-emerald-700 font-black' : 'text-slate-600 hover:text-slate-900'">
                   <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">table_chart</mat-icon>
                   <span>Table (Row &amp; Col)</span>
                 </button>
               </div>
-              <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold">
-                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                Parent Diary Sync Active
-              </span>
-              <button (click)="openTeacherHomeworkModal()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs cursor-pointer shadow-xs flex items-center gap-1.5">
-                <lucide-icon [name]="'plus'" class="w-3.5 h-3.5"></lucide-icon>
-                <span>+ Post New Assignment</span>
-              </button>
             </div>
-          </div>
 
-          @if (homeworkViewMode === 'cards') {
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              @for (hw of teacherHomeworks; track hw.id) {
-                <div class="apple-card scs-surface-3d rounded-2xl p-4 space-y-3">
-                  <div class="flex items-center justify-between">
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-indigo-50 text-indigo-700 border border-indigo-200">{{ hw.grade }}</span>
-                    <span class="text-xs text-rose-600 font-bold">Due: {{ hw.dueDate }}</span>
+            @if (homeworkViewMode === 'cards') {
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                @for (hw of getFilteredTeacherHomeworks(); track hw.id) {
+                  <div class="apple-card scs-surface-3d rounded-2xl p-4 space-y-3 flex flex-col justify-between">
+                    <div class="space-y-2.5">
+                      <div class="flex items-center justify-between gap-2 flex-wrap">
+                        <div class="flex items-center gap-1.5">
+                          <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-indigo-50 text-indigo-700 border border-indigo-200">{{ hw.grade }}</span>
+                          <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-blue-50 text-blue-700 border border-blue-200">{{ hw.resourceKind || 'Homework' }}</span>
+                        </div>
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase"
+                          [class]="hw.status === 'Closed' ? 'bg-slate-200 text-slate-700' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'">
+                          {{ hw.status || 'Active' }}
+                        </span>
+                      </div>
+                      <div>
+                        <h4 class="font-black text-slate-900 text-sm leading-snug">{{ hw.title }}</h4>
+                        <p class="text-[11px] font-bold text-indigo-600 mt-0.5">{{ hw.subject }} • Max {{ hw.maxMarks || 10 }} Marks • <span class="text-rose-600">Due: {{ hw.dueDate }}</span></p>
+                      </div>
+                      <p class="text-xs text-slate-600 font-medium leading-relaxed">{{ hw.description }}</p>
+
+                      @if (hw.attachmentData && isSafeAttachmentUrl(hw.attachmentData)) {
+                        <button type="button" (click)="openAttachmentPreview(hw.attachmentName || hw.title, hw.attachmentType || '', hw.attachmentData)"
+                          class="w-full px-3 py-1.5 rounded-xl bg-indigo-50/80 hover:bg-indigo-100 border border-indigo-200 text-indigo-800 text-[11px] font-bold flex items-center justify-between cursor-pointer">
+                          <span class="truncate">Attachment: {{ hw.attachmentName || 'View File' }}</span>
+                          <lucide-icon [name]="'eye'" class="w-3.5 h-3.5 shrink-0"></lucide-icon>
+                        </button>
+                      }
+                    </div>
+
+                    <div class="pt-3 border-t border-slate-100 space-y-2.5">
+                      <div class="flex items-center justify-between text-xs">
+                        <span class="text-slate-500 font-medium">Student Uploads:</span>
+                        <span class="font-black text-emerald-700">{{ getLiveHomeworkSubmissionCount(hw) }} / {{ hw.totalCount }}</span>
+                      </div>
+                      <div class="flex items-center gap-1.5 flex-wrap">
+                        <button type="button" (click)="openHomeworkSubmissionsModal(hw)"
+                          class="flex-1 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[11px] cursor-pointer flex items-center justify-center gap-1">
+                          <lucide-icon [name]="'check-circle-2'" class="w-3.5 h-3.5"></lucide-icon>
+                          <span>Check Submissions ({{ getSubmissionsForHomework(hw.id).length }})</span>
+                        </button>
+                        <button type="button" (click)="openTeacherHomeworkModal(hw)" title="Edit Assignment"
+                          class="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer">
+                          <lucide-icon [name]="'pencil'" class="w-3.5 h-3.5"></lucide-icon>
+                        </button>
+                        <button type="button" (click)="toggleHomeworkStatus(hw)" title="Toggle Open/Closed"
+                          class="px-2 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold text-[10px] cursor-pointer">
+                          {{ hw.status === 'Closed' ? 'Reopen' : 'Close' }}
+                        </button>
+                        <button type="button" (click)="deleteTeacherHomework(hw)" title="Delete Assignment"
+                          class="p-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 cursor-pointer">
+                          <lucide-icon [name]="'trash-2'" class="w-3.5 h-3.5"></lucide-icon>
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                  <h4 class="font-black text-slate-900 text-sm">{{ hw.title }}</h4>
-                  <p class="text-xs text-slate-500 font-medium">{{ hw.description }}</p>
-                  <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
-                    <span class="text-slate-500 font-medium">Submissions:</span>
-                    <span class="font-bold text-emerald-600">{{ hw.submissionsCount }} / {{ hw.totalCount }}</span>
+                }
+              </div>
+            }
+
+            @if (homeworkViewMode === 'table') {
+              <div class="rounded-[20px] scs-surface-3d overflow-hidden">
+                <div class="px-4 py-2.5 bg-white text-slate-900 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 text-xs font-bold border-b border-slate-200/70">
+                  <div class="flex items-center gap-2 min-w-0 flex-wrap">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0"></span>
+                    <span class="truncate">Class Homework &amp; Submission Checking Register</span>
+                    <span class="px-2 py-0.5 rounded-md bg-emerald-100/80 text-[10px] font-mono text-emerald-800 border border-emerald-200/70 whitespace-nowrap">{{ getFilteredTeacherHomeworks().length }} Tasks</span>
+                  </div>
+                  <div class="text-[11px] text-slate-500">
+                    Swipe horizontally for all fields · Click Check to grade student uploads
+                  </div>
+                </div>
+                <div data-scs-table-scroll="1" class="w-full overflow-x-auto custom-scrollbar">
+                  <table appSchoolTable="owner_homework_log" tableTitle="Teacher Homework Assignments" class="w-max min-w-full text-left border-collapse text-xs tabular-nums">
+                    <thead class="bg-white text-slate-600 uppercase font-black tracking-wider text-[10px] border-b border-slate-200 select-none">
+                      <tr>
+                        <th class="px-4 py-3.5 whitespace-nowrap">Title &amp; Type</th>
+                        <th class="px-3.5 py-3.5 whitespace-nowrap">Subject</th>
+                        <th class="px-3.5 py-3.5 whitespace-nowrap">Grade</th>
+                        <th class="px-3.5 py-3.5 whitespace-nowrap">Due Date</th>
+                        <th class="px-3.5 py-3.5 whitespace-nowrap">Max Marks</th>
+                        <th class="px-3.5 py-3.5 whitespace-nowrap">Uploads</th>
+                        <th class="px-3.5 py-3.5 whitespace-nowrap text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 font-medium bg-white text-slate-800">
+                      @for (hw of getFilteredTeacherHomeworks(); track hw.id) {
+                        <tr [attr.data-row-key]="hw.id" class="hover:bg-indigo-50/40 transition-colors">
+                          <td class="px-4 py-3.5 whitespace-nowrap">
+                            <div class="font-black text-slate-900">{{ hw.title }}</div>
+                            <div class="text-[11px] text-slate-500 max-w-[280px] truncate">{{ hw.resourceKind || 'Homework' }} • {{ hw.description }}</div>
+                          </td>
+                          <td class="px-3.5 py-3.5 font-bold text-indigo-700 whitespace-nowrap">{{ hw.subject }}</td>
+                          <td class="px-3.5 py-3.5 whitespace-nowrap">
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-indigo-50 text-indigo-700 border border-indigo-200">{{ hw.grade }}</span>
+                          </td>
+                          <td class="px-3.5 py-3.5 font-mono font-bold text-rose-600 whitespace-nowrap">{{ hw.dueDate }}</td>
+                          <td class="px-3.5 py-3.5 font-mono font-bold text-slate-700 whitespace-nowrap">{{ hw.maxMarks || 10 }}</td>
+                          <td class="px-3.5 py-3.5 font-bold text-emerald-700 whitespace-nowrap">{{ getLiveHomeworkSubmissionCount(hw) }} / {{ hw.totalCount }}</td>
+                          <td class="px-3.5 py-3.5 whitespace-nowrap text-right">
+                            <div class="inline-flex items-center gap-1.5">
+                              <button type="button" (click)="openHomeworkSubmissionsModal(hw)" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] cursor-pointer">
+                                Check ({{ getSubmissionsForHomework(hw.id).length }})
+                              </button>
+                              <button type="button" (click)="openTeacherHomeworkModal(hw)" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] cursor-pointer">Edit</button>
+                              <button type="button" (click)="deleteTeacherHomework(hw)" class="px-2 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-[11px] cursor-pointer">Delete</button>
+                            </div>
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            }
+          }
+
+          @if (homeworkSubTab === 'materials') {
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              @for (mat of teacherStudyMaterials; track mat.id) {
+                <div class="apple-card scs-surface-3d rounded-2xl p-4 space-y-3 flex flex-col justify-between">
+                  <div class="space-y-2">
+                    <div class="flex items-center justify-between gap-2">
+                      <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-indigo-50 text-indigo-700 border border-indigo-200">{{ mat.materialType }}</span>
+                      <span class="text-[11px] font-mono font-bold text-slate-500">{{ mat.grade }}</span>
+                    </div>
+                    <h4 class="font-black text-slate-900 text-sm leading-snug">{{ mat.title }}</h4>
+                    <p class="text-[11px] font-bold text-emerald-700">{{ mat.subject }} • {{ mat.fileSize || 'Attached' }} • {{ mat.downloadsCount || 0 }} Downloads</p>
+                    <p class="text-xs text-slate-600 leading-relaxed">{{ mat.description }}</p>
+                  </div>
+                  <div class="pt-3 border-t border-slate-100 flex items-center gap-2">
+                    <button type="button" (click)="downloadStudyMaterial(mat)"
+                      class="flex-1 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-[11px] cursor-pointer flex items-center justify-center gap-1.5">
+                      <lucide-icon [name]="'download'" class="w-3.5 h-3.5"></lucide-icon>
+                      <span>Preview / Download</span>
+                    </button>
+                    <button type="button" (click)="deleteStudyMaterial(mat)" title="Remove Material"
+                      class="p-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 cursor-pointer">
+                      <lucide-icon [name]="'trash-2'" class="w-3.5 h-3.5"></lucide-icon>
+                    </button>
                   </div>
                 </div>
               }
-            </div>
-          }
-
-          @if (homeworkViewMode === 'table') {
-            <div class="rounded-[20px] scs-surface-3d overflow-hidden">
-              <div class="px-4 py-2.5 bg-white text-slate-900 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 text-xs font-bold border-b border-slate-200/70">
-                <div class="flex items-center gap-2 min-w-0 flex-wrap">
-                  <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0"></span>
-                  <span class="truncate">Class Homework &amp; Digital Diary Register</span>
-                  <span class="px-2 py-0.5 rounded-md bg-emerald-100/80 text-[10px] font-mono text-emerald-800 border border-emerald-200/70 whitespace-nowrap">{{ teacherHomeworks.length }} Tasks</span>
+              @if (teacherStudyMaterials.length === 0) {
+                <div class="col-span-full p-6 text-center rounded-2xl bg-white border border-slate-200 text-xs font-bold text-slate-500">
+                  No class notes or study files uploaded yet. Click "Upload Notes / Past Paper" to share resources with students &amp; parents.
                 </div>
-                <div class="text-[11px] text-slate-500">
-                  Swipe horizontally for all fields · Click row for quick Details
-                </div>
-              </div>
-              <div data-scs-table-scroll="1" class="w-full overflow-x-auto custom-scrollbar">
-                <table appSchoolTable="owner_homework_log" tableTitle="Teacher Homework Assignments" class="w-max min-w-full text-left border-collapse text-xs tabular-nums">
-                  <thead class="bg-white text-slate-600 uppercase font-black tracking-wider text-[10px] border-b border-slate-200 select-none">
-                    <tr>
-                      <th class="px-4 py-3.5 whitespace-nowrap">Title</th>
-                      <th class="px-3.5 py-3.5 whitespace-nowrap">Subject</th>
-                      <th class="px-3.5 py-3.5 whitespace-nowrap">Grade</th>
-                      <th class="px-3.5 py-3.5 whitespace-nowrap">Due Date</th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-slate-100 font-medium bg-white text-slate-800">
-                    @for (hw of teacherHomeworks; track hw.id) {
-                      <tr [attr.data-row-key]="hw.id" class="hover:bg-indigo-50/40 transition-colors">
-                        <td class="px-4 py-3.5 whitespace-nowrap">
-                          <div class="font-black text-slate-900">{{ hw.title }}</div>
-                          <div class="text-[11px] text-slate-500 max-w-[280px] truncate">{{ hw.description }}</div>
-                        </td>
-                        <td class="px-3.5 py-3.5 font-bold text-indigo-700 whitespace-nowrap">{{ hw.subject }}</td>
-                        <td class="px-3.5 py-3.5 whitespace-nowrap">
-                          <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-indigo-50 text-indigo-700 border border-indigo-200">{{ hw.grade }}</span>
-                        </td>
-                        <td class="px-3.5 py-3.5 font-mono font-bold text-rose-600 whitespace-nowrap">{{ hw.dueDate }}</td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
-              </div>
+              }
             </div>
           }
         </div>
@@ -15230,23 +15439,75 @@
       <!-- TEACHER TAB 5: STUDENTS ROSTER -->
       @if (teacherTab === 'students') {
         <div id="teacher-workspace-students" class="apple-card scs-surface-3d rounded-2xl p-5 space-y-4 scroll-mt-24">
-          <div class="flex items-center justify-between">
-            <h3 class="font-black text-slate-900 text-base">Class 10-A Student Academic Roster</h3>
-            <span class="text-xs font-bold text-slate-400">Class In-charge Directory</span>
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h3 class="font-black text-slate-900 text-base">Student Academic Roster &amp; Classroom Interventions</h3>
+              <p class="text-xs text-slate-500">Approve student leave slips, flag weak students for Remedial/PTM care, or log behavior incidents directly to Principal.</p>
+            </div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <div class="relative">
+                <lucide-icon [name]="'search'" class="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></lucide-icon>
+                <input type="text" [(ngModel)]="teacherRosterSearch" placeholder="Search student / roll #..."
+                  class="pl-8 pr-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-800 focus:outline-emerald-600">
+              </div>
+              <select [(ngModel)]="teacherRosterGradeFilter" class="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700">
+                <option value="All">All Grades</option>
+                <option value="Class 10">Class 10</option>
+                <option value="Class 9">Class 9</option>
+                <option value="Class 8">Class 8</option>
+                <option value="Class 7">Class 7</option>
+              </select>
+              <button type="button" (click)="openTeacherLeaveModal()" class="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-extrabold text-xs cursor-pointer flex items-center gap-1.5">
+                <lucide-icon [name]="'calendar-check'" class="w-3.5 h-3.5"></lucide-icon>
+                <span>Apply My Leave</span>
+              </button>
+            </div>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            @for (st of activeStudents; track st.id) {
-              <div class="p-4 rounded-xl border border-slate-200 flex items-center justify-between gap-4">
-                <div class="flex items-center gap-3">
-                  <img [src]="safeAvatar(st.image, st.name)" [alt]="st.name" referrerpolicy="no-referrer" class="w-10 h-10 rounded-full object-cover">
-                  <div>
-                    <h4 class="font-black text-slate-900 text-xs">{{ st.name }} (Roll #{{ st.rollNo }})</h4>
-                    <p class="text-[11px] text-slate-500">Guardian: {{ st.guardian }} • {{ st.guardianPhone }}</p>
+            @for (st of getFilteredTeacherRosterStudents(); track st.id) {
+              @let pendingLv = getPendingLeaveForStudent(st);
+              <div class="p-4 rounded-2xl border border-slate-200 bg-white space-y-3">
+                <div class="flex items-center justify-between gap-3">
+                  <div class="flex items-center gap-3 min-w-0">
+                    <img [src]="safeAvatar(st.image, st.name)" [alt]="st.name" referrerpolicy="no-referrer" class="w-10 h-10 rounded-full object-cover shrink-0 border border-slate-200">
+                    <div class="min-w-0">
+                      <h4 class="font-black text-slate-900 text-xs truncate">{{ st.name }} (Roll #{{ st.rollNo }})</h4>
+                      <p class="text-[11px] text-slate-500 truncate">{{ st.grade }} • Guardian: {{ st.guardian }} • {{ st.guardianPhone }}</p>
+                    </div>
+                  </div>
+                  <div class="text-right shrink-0">
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-black"
+                      [class]="st.status === 'Absent' ? 'bg-rose-50 text-rose-700' : 'bg-emerald-50 text-emerald-700'">
+                      {{ st.status || 'Present' }} ({{ st.attendance }})
+                    </span>
                   </div>
                 </div>
-                <div class="text-right">
-                  <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-50 text-emerald-700">Attendance: {{ st.attendance }}</span>
+
+                @if (pendingLv) {
+                  <div class="p-2.5 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-between gap-2 flex-wrap text-[11px]">
+                    <div class="min-w-0">
+                      <strong class="text-amber-900 block">Pending Leave ({{ pendingLv.fromDate }} – {{ pendingLv.toDate }})</strong>
+                      <span class="text-amber-800 truncate block">{{ pendingLv.reason }}</span>
+                    </div>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                      <button type="button" (click)="approveStudentLeaveFromTeacher(pendingLv, 'Approved')" class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-bold cursor-pointer">Approve</button>
+                      <button type="button" (click)="approveStudentLeaveFromTeacher(pendingLv, 'Rejected')" class="px-2.5 py-1 rounded-lg bg-rose-600 text-white font-bold cursor-pointer">Reject</button>
+                    </div>
+                  </div>
+                }
+
+                <div class="pt-2 border-t border-slate-100 flex items-center justify-end gap-2 flex-wrap">
+                  <button type="button" (click)="openTeacherInterventionModal(st, 'remedial')"
+                    class="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-[11px] cursor-pointer flex items-center gap-1">
+                    <lucide-icon [name]="'alert-circle'" class="w-3 h-3"></lucide-icon>
+                    <span>Flag Remedial / PTM</span>
+                  </button>
+                  <button type="button" (click)="openTeacherInterventionModal(st, 'behavior')"
+                    class="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-[11px] cursor-pointer flex items-center gap-1">
+                    <lucide-icon [name]="'shield'" class="w-3 h-3"></lucide-icon>
+                    <span>Log Behavior</span>
+                  </button>
                 </div>
               </div>
             }
@@ -15324,6 +15585,149 @@
               </div>
             </div>
           </div>
+
+          <!-- SUBJECT SYLLABUS PROGRESS UPDATER (SYNCED WITH PRINCIPAL PORTAL) -->
+          <div class="apple-card scs-surface-3d rounded-2xl p-5 space-y-4">
+            <div class="flex items-center justify-between flex-wrap gap-2">
+              <div>
+                <h3 class="font-black text-slate-900 text-base">Subject Syllabus Completion Tracker</h3>
+                <p class="text-xs text-slate-500 font-medium">Update chapter milestones — synced live with Principal &amp; Student Progress portals.</p>
+              </div>
+              <span class="px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 text-xs font-black">
+                Avg Completion: {{ teacherAverageSyllabusPercentage }}%
+              </span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              @for (syl of syllabusTracker; track syl.id) {
+                <div class="p-4 rounded-2xl bg-white border border-slate-200/90 space-y-2.5">
+                  <div class="flex items-center justify-between">
+                    <span class="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 font-black text-[10px] border border-indigo-100">{{ syl.grade }}</span>
+                    <span class="font-mono font-black text-xs text-emerald-700">{{ syl.completedPercentage }}%</span>
+                  </div>
+                  <h4 class="font-black text-slate-900 text-sm">{{ syl.subject }}</h4>
+                  <div class="w-full h-2.5 rounded-full bg-slate-100 overflow-hidden">
+                    <div class="h-full rounded-full bg-gradient-to-r from-indigo-500 to-emerald-500 transition-all" [style.width.%]="syl.completedPercentage"></div>
+                  </div>
+                  <div class="flex items-center justify-between text-[11px] pt-1">
+                    <span class="font-bold text-slate-600">Chapters: {{ syl.completedChapters || 10 }} / {{ syl.totalChapters || 12 }}</span>
+                    <div class="flex items-center gap-1.5">
+                      <button type="button" (click)="updateSyllabusProgress(syl.id, -1)" class="w-6 h-6 rounded-lg bg-slate-100 hover:bg-slate-200 font-black text-slate-800 cursor-pointer">-</button>
+                      <button type="button" (click)="updateSyllabusProgress(syl.id, 1)" class="w-6 h-6 rounded-lg bg-indigo-600 hover:bg-indigo-500 font-black text-white cursor-pointer">+</button>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- TEACHER TAB 6B: LEAVES, FACULTY TASKS & SUBSTITUTE DUTIES -->
+      @if (teacherTab === 'duties') {
+        <div id="teacher-workspace-duties" class="space-y-5 scroll-mt-24">
+          <!-- 1. Teacher Own Leave Requests -->
+          <div class="apple-card scs-surface-3d rounded-2xl p-5 space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h3 class="font-black text-slate-900 text-base">My Faculty Leave Applications</h3>
+                <p class="text-xs text-slate-500 font-medium">Apply for casual, medical, or seminar leave with substitute coverage details (synced with Principal HR).</p>
+              </div>
+              <button type="button" (click)="openTeacherLeaveModal()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs cursor-pointer shadow-xs flex items-center gap-1.5 shrink-0">
+                <lucide-icon [name]="'plus'" class="w-3.5 h-3.5"></lucide-icon>
+                <span>Apply Teacher Leave</span>
+              </button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              @for (tl of teacherLeaveRequests; track tl.id) {
+                <div class="p-4 rounded-2xl bg-white border border-slate-200 space-y-2">
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="font-black text-slate-900 text-xs">{{ tl.leaveType }} ({{ tl.totalDays }} Day(s))</span>
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase"
+                      [class]="tl.status === 'Approved' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'">
+                      {{ tl.status }}
+                    </span>
+                  </div>
+                  <p class="text-[11px] font-bold text-indigo-700">{{ tl.fromDate }} to {{ tl.toDate }} • Sub: {{ tl.substituteTeacherAssigned }}</p>
+                  <p class="text-xs text-slate-600">{{ tl.reason }}</p>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- 2. Substitute Cover Duties -->
+          <div class="apple-card scs-surface-3d rounded-2xl p-5 space-y-4">
+            <h3 class="font-black text-slate-900 text-base">Assigned Substitute Cover Periods</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              @for (sub of substituteArrangements; track sub.id) {
+                <div class="p-4 rounded-2xl bg-white border border-slate-200 flex items-center justify-between gap-3">
+                  <div class="min-w-0">
+                    <span class="text-[10px] font-mono font-bold text-indigo-600">{{ sub.date }} • {{ sub.period }}</span>
+                    <h4 class="font-black text-slate-900 text-xs truncate">{{ sub.subject }} ({{ sub.grade }}) • {{ sub.roomNo }}</h4>
+                    <p class="text-[11px] text-slate-500 truncate">Cover for {{ sub.absentTeacher }} → {{ sub.substituteTeacher }}</p>
+                  </div>
+                  @if (sub.status !== 'Completed') {
+                    <button type="button" (click)="markSubstituteCovered(sub)" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] cursor-pointer shrink-0">
+                      Mark Covered
+                    </button>
+                  } @else {
+                    <span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black shrink-0">Covered ✓</span>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- 3. Principal-Assigned Faculty Tasks -->
+          <div class="apple-card scs-surface-3d rounded-2xl p-5 space-y-4">
+            <h3 class="font-black text-slate-900 text-base">Principal-Assigned Faculty Tasks</h3>
+            <div class="space-y-2.5">
+              @for (tsk of facultyTaskList; track tsk.id) {
+                <div class="p-4 rounded-2xl bg-white border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div class="min-w-0">
+                    <div class="flex items-center gap-2">
+                      <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-amber-50 text-amber-800 border border-amber-200">{{ tsk.priority }}</span>
+                      <span class="text-[11px] font-mono text-slate-500">Due: {{ tsk.dueDate }}</span>
+                    </div>
+                    <h4 class="font-black text-slate-900 text-xs mt-1">{{ tsk.taskTitle }} ({{ tsk.assignedTeacher }})</h4>
+                    <p class="text-[11px] text-slate-600">{{ tsk.description }}</p>
+                  </div>
+                  @if (!tsk.status.includes('Completed')) {
+                    <button type="button" (click)="completeFacultyTask(tsk.id)" class="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs cursor-pointer shrink-0">
+                      Mark Completed
+                    </button>
+                  } @else {
+                    <span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black shrink-0">{{ tsk.status }}</span>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- 4. Pending Student Leave Applications -->
+          <div class="apple-card scs-surface-3d rounded-2xl p-5 space-y-4">
+            <h3 class="font-black text-slate-900 text-base">Student Leave Applications</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              @for (lv of parentLeaveRequests; track lv.id) {
+                <div class="p-4 rounded-2xl bg-white border border-slate-200 space-y-2">
+                  <div class="flex items-center justify-between gap-2">
+                    <h4 class="font-black text-slate-900 text-xs">{{ lv.childName }}</h4>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase"
+                      [class]="lv.status === 'Approved' ? 'bg-emerald-100 text-emerald-800' : (lv.status === 'Rejected' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800')">
+                      {{ lv.status }}
+                    </span>
+                  </div>
+                  <p class="text-[11px] font-bold text-slate-500">{{ lv.fromDate }} – {{ lv.toDate }}</p>
+                  <p class="text-xs text-slate-700">{{ lv.reason }}</p>
+                  @if (lv.status === 'Pending') {
+                    <div class="flex items-center gap-2 pt-1">
+                      <button type="button" (click)="approveStudentLeaveFromTeacher(lv, 'Approved')" class="px-3 py-1 rounded-lg bg-emerald-600 text-white font-bold text-[11px] cursor-pointer">Approve</button>
+                      <button type="button" (click)="approveStudentLeaveFromTeacher(lv, 'Rejected')" class="px-3 py-1 rounded-lg bg-rose-600 text-white font-bold text-[11px] cursor-pointer">Reject</button>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
         </div>
       }
 
@@ -15346,7 +15750,7 @@
 
           <div class="space-y-3">
             @for (msg of parentMessages; track msg.id) {
-              <div class="p-4 rounded-2xl bg-white border border-slate-200/90 space-y-2">
+              <div class="p-4 rounded-2xl bg-white border border-slate-200/90 space-y-2.5">
                 <div class="flex items-center justify-between gap-2 flex-wrap">
                   <div>
                     <span class="text-[10px] font-mono font-bold text-indigo-600">{{ msg.id }} • {{ msg.date }}</span>
@@ -15357,8 +15761,18 @@
                 <p class="text-xs text-slate-700 leading-relaxed">{{ msg.message }}</p>
                 @if (msg.reply) {
                   <div class="p-3 rounded-xl bg-indigo-50/60 border border-indigo-100 text-xs text-indigo-950">
-                    <strong class="block text-[10px] uppercase tracking-wider text-indigo-700 mb-0.5">Faculty Response ({{ msg.recipient }}):</strong>
+                    <strong class="block text-[10px] uppercase tracking-wider text-indigo-700 mb-0.5">Faculty Response ({{ msg.replyBy || msg.recipient }}):</strong>
                     {{ msg.reply }}
+                  </div>
+                } @else {
+                  <div class="flex items-center gap-2 pt-1">
+                    <input type="text" [(ngModel)]="parentMessageReplyDrafts[msg.id]" placeholder="Write official faculty reply to parent..."
+                      class="flex-1 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-800 focus:bg-white focus:outline-emerald-600">
+                    <button type="button" (click)="replyToParentMessage(msg)"
+                      class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs cursor-pointer flex items-center gap-1.5 shrink-0">
+                      <lucide-icon [name]="'send'" class="w-3.5 h-3.5"></lucide-icon>
+                      <span>Send Reply</span>
+                    </button>
                   </div>
                 }
               </div>
@@ -15399,6 +15813,38 @@
                   <div class="flex items-center justify-between pt-1">
                     <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">{{ bk.availableCopies }} Available</span>
                     <button (click)="openCheckoutModal(bk)" [disabled]="bk.availableCopies <= 0" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] cursor-pointer disabled:opacity-50">Borrow</button>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="apple-card scs-surface-3d rounded-2xl p-5 space-y-3">
+            <div class="flex items-center justify-between flex-wrap gap-2">
+              <h3 class="text-sm font-black text-slate-900">Teacher-Uploaded Class Notes, Worksheets &amp; Past Papers</h3>
+              <button type="button" (click)="openStudyMaterialModal()" class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs cursor-pointer flex items-center gap-1.5">
+                <lucide-icon [name]="'plus'" class="w-3.5 h-3.5"></lucide-icon>
+                <span>Upload Class Notes / Past Paper</span>
+              </button>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              @for (mat of teacherStudyMaterials; track mat.id) {
+                <div class="p-3.5 rounded-2xl bg-white border border-slate-200 flex flex-col justify-between space-y-2">
+                  <div>
+                    <div class="flex items-center justify-between text-[10px] font-black uppercase text-emerald-700">
+                      <span>{{ mat.materialType }}</span>
+                      <span class="px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700">{{ mat.grade }}</span>
+                    </div>
+                    <h4 class="font-extrabold text-slate-900 text-xs mt-1">{{ mat.title }}</h4>
+                    <p class="text-[10px] text-slate-500">{{ mat.subject }} · {{ mat.fileSize || 'File' }}</p>
+                  </div>
+                  <div class="flex items-center gap-1.5">
+                    <button type="button" (click)="downloadStudyMaterial(mat)" class="flex-1 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs cursor-pointer">
+                      Preview / Download ({{ mat.downloadsCount || 0 }})
+                    </button>
+                    <button type="button" (click)="deleteStudyMaterial(mat)" class="p-1.5 rounded-xl bg-rose-50 text-rose-700 cursor-pointer">
+                      <lucide-icon [name]="'trash-2'" class="w-3.5 h-3.5"></lucide-icon>
+                    </button>
                   </div>
                 </div>
               }
@@ -16286,13 +16732,52 @@
           @if (homeworkViewMode === 'cards') {
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               @for (hw of teacherHomeworks; track hw.id) {
-                <div class="p-4 rounded-xl border border-slate-200 space-y-2">
-                  <div class="flex items-center justify-between">
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-indigo-50 text-indigo-700">{{ hw.subject }}</span>
-                    <span class="text-xs text-rose-600 font-bold">Due: {{ hw.dueDate }}</span>
+                @let stuSub = getStudentSubmissionForHomework(hw.id);
+                <div class="p-4 rounded-2xl border border-slate-200 bg-white space-y-2.5 flex flex-col justify-between">
+                  <div class="space-y-2">
+                    <div class="flex items-center justify-between gap-2 flex-wrap">
+                      <div class="flex items-center gap-1.5">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-indigo-50 text-indigo-700">{{ hw.subject }}</span>
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-blue-50 text-blue-700">{{ hw.resourceKind || 'Homework' }}</span>
+                      </div>
+                      <span class="text-xs text-rose-600 font-bold">Due: {{ hw.dueDate }}</span>
+                    </div>
+                    <h4 class="font-black text-slate-900 text-sm">{{ hw.title }} <span class="text-[11px] font-bold text-slate-500">({{ hw.maxMarks || 10 }} Marks)</span></h4>
+                    <p class="text-xs text-slate-600 font-medium leading-relaxed">{{ hw.description }}</p>
+
+                    @if (hw.attachmentData && isSafeAttachmentUrl(hw.attachmentData)) {
+                      <button type="button" (click)="openAttachmentPreview(hw.attachmentName || hw.title, hw.attachmentType || '', hw.attachmentData)"
+                        class="w-full px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-800 text-[11px] font-bold flex items-center justify-between cursor-pointer">
+                        <span class="truncate">Teacher File: {{ hw.attachmentName || 'Download / View' }}</span>
+                        <lucide-icon [name]="'eye'" class="w-3.5 h-3.5 shrink-0"></lucide-icon>
+                      </button>
+                    }
+
+                    @if (stuSub) {
+                      <div class="p-2.5 rounded-xl border text-[11px] space-y-1"
+                        [class]="stuSub.status === 'Checked' ? 'bg-emerald-50/80 border-emerald-200 text-emerald-900' : (stuSub.status === 'Needs Revision' ? 'bg-amber-50 border-amber-200 text-amber-900' : 'bg-blue-50/80 border-blue-200 text-blue-900')">
+                        <div class="flex items-center justify-between font-black">
+                          <span>Status: {{ stuSub.status }}</span>
+                          @if (stuSub.marksObtained !== null && stuSub.marksObtained !== undefined) {
+                            <span>Score: {{ stuSub.marksObtained }} / {{ stuSub.maxMarks }}</span>
+                          }
+                        </div>
+                        @if (stuSub.teacherRemarks) {
+                          <p class="font-medium">Teacher Remarks: {{ stuSub.teacherRemarks }}</p>
+                        }
+                      </div>
+                    }
                   </div>
-                  <h4 class="font-black text-slate-900 text-sm">{{ hw.title }}</h4>
-                  <p class="text-xs text-slate-500 font-medium">{{ hw.description }}</p>
+
+                  <div class="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+                    <span class="text-[11px] font-bold text-slate-500">{{ stuSub ? 'Uploaded ' + stuSub.submittedAt.slice(0, 10) : 'Not Submitted Yet' }}</span>
+                    <button type="button" (click)="openStudentHomeworkSubmitModal(hw)"
+                      class="px-3.5 py-1.5 rounded-xl text-white font-extrabold text-xs cursor-pointer flex items-center gap-1.5"
+                      [class]="stuSub ? 'bg-indigo-600 hover:bg-indigo-500' : 'bg-emerald-600 hover:bg-emerald-500'">
+                      <lucide-icon [name]="'send'" class="w-3.5 h-3.5"></lucide-icon>
+                      <span>{{ stuSub ? 'Update Submission' : 'Submit / Upload Work' }}</span>
+                    </button>
+                  </div>
                 </div>
               }
             </div>
@@ -16305,17 +16790,29 @@
                   <tr>
                     <th class="px-4 py-3 whitespace-nowrap">Title</th>
                     <th class="px-3.5 py-3 whitespace-nowrap">Subject</th>
-                    <th class="px-3.5 py-3 whitespace-nowrap">Grade</th>
                     <th class="px-3.5 py-3 whitespace-nowrap">Due Date</th>
+                    <th class="px-3.5 py-3 whitespace-nowrap">My Status</th>
+                    <th class="px-3.5 py-3 whitespace-nowrap text-right">Action</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 font-medium bg-white text-slate-800">
                   @for (hw of teacherHomeworks; track hw.id) {
+                    @let stuSub = getStudentSubmissionForHomework(hw.id);
                     <tr [attr.data-row-key]="hw.id" class="hover:bg-indigo-50/40 transition-colors">
                       <td class="px-4 py-3 font-black text-slate-900 whitespace-nowrap">{{ hw.title }}</td>
                       <td class="px-3.5 py-3 font-bold text-indigo-700 whitespace-nowrap">{{ hw.subject }}</td>
-                      <td class="px-3.5 py-3 whitespace-nowrap">{{ hw.grade }}</td>
                       <td class="px-3.5 py-3 font-mono font-bold text-rose-600 whitespace-nowrap">{{ hw.dueDate }}</td>
+                      <td class="px-3.5 py-3 whitespace-nowrap">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase"
+                          [class]="stuSub?.status === 'Checked' ? 'bg-emerald-100 text-emerald-800' : (stuSub ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800')">
+                          {{ stuSub ? (stuSub.status + (stuSub.marksObtained !== null && stuSub.marksObtained !== undefined ? ' • ' + stuSub.marksObtained + '/' + stuSub.maxMarks : '')) : 'Pending' }}
+                        </span>
+                      </td>
+                      <td class="px-3.5 py-3 whitespace-nowrap text-right">
+                        <button type="button" (click)="openStudentHomeworkSubmitModal(hw)" class="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] cursor-pointer">
+                          {{ stuSub ? 'Update' : 'Submit' }}
+                        </button>
+                      </td>
                     </tr>
                   }
                 </tbody>
@@ -16418,9 +16915,35 @@
             </div>
           </div>
 
+          <!-- Teacher-Uploaded Class Notes, Worksheets & Past Papers -->
+          <div class="apple-card rounded-2xl p-5 scs-surface-3d space-y-3">
+            <div class="flex items-center justify-between flex-wrap gap-2">
+              <h3 class="text-sm font-black text-slate-900">Teacher-Uploaded Class Notes, Worksheets &amp; Past Papers</h3>
+              <span class="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-black uppercase">{{ teacherStudyMaterials.length }} Files Synced</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              @for (mat of teacherStudyMaterials; track mat.id) {
+                <div class="p-3.5 rounded-2xl bg-white border border-slate-200 flex flex-col justify-between space-y-2 transition-all">
+                  <div>
+                    <div class="flex items-center justify-between text-[10px] font-black uppercase text-emerald-700">
+                      <span>{{ mat.materialType }}</span>
+                      <span class="px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700">{{ mat.grade }}</span>
+                    </div>
+                    <h4 class="font-extrabold text-slate-900 text-xs mt-1 leading-snug">{{ mat.title }}</h4>
+                    <p class="text-[10px] text-slate-500 font-medium mt-0.5">{{ mat.subject }} · {{ mat.uploadedBy || 'Faculty' }} · {{ mat.fileSize || 'File' }}</p>
+                  </div>
+                  <button type="button" (click)="downloadStudyMaterial(mat)" class="w-full py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-xs">
+                    <lucide-icon [name]="'download'" class="w-3.5 h-3.5"></lucide-icon>
+                    <span>Open / Download ({{ mat.downloadsCount || 0 }})</span>
+                  </button>
+                </div>
+              }
+            </div>
+          </div>
+
           <!-- Digital E-Resources & Solved Past Papers -->
           <div class="apple-card rounded-2xl p-5 scs-surface-3d space-y-3">
-            <h3 class="text-sm font-black text-slate-900">Digital E-Resources & Solved Past Papers</h3>
+            <h3 class="text-sm font-black text-slate-900">Digital E-Resources &amp; Solved Past Papers</h3>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               @for (res of libraryDigitalResources; track res.id) {
                 <div class="p-3.5 rounded-2xl bg-white border border-slate-200 flex flex-col justify-between space-y-2 transition-all">
@@ -17342,23 +17865,59 @@
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             @for (hw of teacherHomeworks; track hw.id) {
+              @let childSub = getStudentSubmissionForHomework(hw.id, selectedParentChild?.id);
               <div class="p-3.5 rounded-xl scs-tile-3d space-y-2">
-                <div class="flex items-center justify-between text-xs">
-                  <span class="px-2 py-0.5 rounded-md font-black bg-indigo-50 text-indigo-700 text-[10px] uppercase border border-indigo-100">{{ hw.subject }}</span>
+                <div class="flex items-center justify-between text-xs gap-2">
+                  <span class="px-2 py-0.5 rounded-md font-black bg-indigo-50 text-indigo-700 text-[10px] uppercase border border-indigo-100">{{ hw.subject }} • {{ hw.resourceKind || 'Homework' }}</span>
                   <span class="font-bold text-rose-600 text-[11px]">Due: {{ hw.dueDate }}</span>
                 </div>
                 <h5 class="font-black text-slate-900 text-xs">{{ hw.title }}</h5>
                 <p class="text-slate-600 text-[11px] leading-relaxed">{{ hw.description }}</p>
-                <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
-                  <span class="text-slate-400">Class 10-A Daily Diary</span>
+                @if (hw.attachmentData && isSafeAttachmentUrl(hw.attachmentData)) {
+                  <button type="button" (click)="openAttachmentPreview(hw.attachmentName || hw.title, hw.attachmentType || '', hw.attachmentData)"
+                    class="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-[10px] font-bold inline-flex items-center gap-1 cursor-pointer">
+                    <lucide-icon [name]="'eye'" class="w-3 h-3"></lucide-icon>
+                    <span>View Attachment ({{ hw.attachmentName || 'File' }})</span>
+                  </button>
+                }
+                <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] flex-wrap gap-2">
+                  <span class="text-slate-500 font-bold">
+                    Child Submission:
+                    <strong [class]="childSub?.status === 'Checked' ? 'text-emerald-700' : (childSub ? 'text-indigo-700' : 'text-amber-700')">
+                      {{ childSub ? childSub.status : 'Pending' }}
+                    </strong>
+                    @if (childSub && childSub.marksObtained !== null && childSub.marksObtained !== undefined) {
+                      <span> ({{ childSub.marksObtained }}/{{ childSub.maxMarks }})</span>
+                    }
+                  </span>
                   <span class="font-black text-emerald-700 flex items-center gap-1">
                     <lucide-icon [name]="'check'" class="w-3 h-3"></lucide-icon>
                     Teacher Verified
                   </span>
                 </div>
+                @if (childSub?.teacherRemarks) {
+                  <p class="text-[10px] text-indigo-800 bg-indigo-50/70 px-2.5 py-1 rounded-lg font-medium">Remarks: {{ childSub?.teacherRemarks }}</p>
+                }
               </div>
             }
           </div>
+
+          @if (teacherStudyMaterials.length > 0) {
+            <div class="pt-3 border-t border-slate-200/80 space-y-2">
+              <h5 class="text-xs font-black text-slate-800 uppercase tracking-wider">Teacher Shared Class Notes &amp; Study Material</h5>
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                @for (mat of teacherStudyMaterials; track mat.id) {
+                  <div class="p-3 rounded-xl bg-white border border-slate-200 flex items-center justify-between gap-2">
+                    <div class="min-w-0">
+                      <span class="text-[10px] font-black text-indigo-700 uppercase block">{{ mat.materialType }} • {{ mat.subject }}</span>
+                      <p class="text-xs font-bold text-slate-900 truncate">{{ mat.title }}</p>
+                    </div>
+                    <button type="button" (click)="downloadStudyMaterial(mat)" class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-[10px] font-bold cursor-pointer shrink-0">Open</button>
+                  </div>
+                }
+              </div>
+            </div>
+          }
         </div>
 
         <div class="apple-card scs-surface-3d rounded-2xl p-6 space-y-6 printable-voucher">
@@ -19138,13 +19697,15 @@
     </div>
   }
 
-  <!-- 2. TEACHER POST HOMEWORK MODAL -->
+  <!-- 2. TEACHER POST / EDIT HOMEWORK MODAL -->
   @if (isTeacherHomeworkModalOpen) {
     <div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-      <div class="apple-card rounded-3xl max-w-md w-full p-6 space-y-4">
+      <div class="apple-card rounded-3xl max-w-lg w-full p-6 space-y-4 max-h-[92vh] overflow-y-auto custom-scrollbar">
         <div class="flex items-center justify-between">
-          <h3 class="font-black text-slate-900 text-base">Post Homework Assignment</h3>
-          <button (click)="closeTeacherHomeworkModal()" class="p-1 rounded-lg text-slate-400 hover:text-slate-600">
+          <h3 class="font-black text-slate-900 text-base">
+            {{ teacherHomeworkForm.id ? 'Edit Homework / Assignment' : 'Post Homework Assignment' }}
+          </h3>
+          <button (click)="closeTeacherHomeworkModal()" class="p-1 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer">
             <lucide-icon [name]="'x'" class="w-5 h-5"></lucide-icon>
           </button>
         </div>
@@ -19179,8 +19740,32 @@
                 <input type="text" [(ngModel)]="teacherHomeworkForm.subject" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
               </div>
               <div>
-                <label class="block font-bold text-slate-700 mb-1">Due Date</label>
-                <input type="text" [(ngModel)]="teacherHomeworkForm.dueDate" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+                <label class="block font-bold text-slate-700 mb-1">Class / Grade</label>
+                <select [(ngModel)]="teacherHomeworkForm.grade" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+                  <option value="Class 10-A">Class 10-A</option>
+                  <option value="Class 10-B">Class 10-B</option>
+                  <option value="Class 9-B">Class 9-B</option>
+                  <option value="Class 8-A">Class 8-A</option>
+                  <option value="Class 7-C">Class 7-C</option>
+                </select>
+              </div>
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Resource Type</label>
+                <select [(ngModel)]="teacherHomeworkForm.resourceKind" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+                  <option value="Homework">Homework</option>
+                  <option value="Worksheet">Worksheet</option>
+                  <option value="Class Notes">Class Notes</option>
+                </select>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Due Date</label>
+                  <input type="text" [(ngModel)]="teacherHomeworkForm.dueDate" class="w-full px-2.5 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+                </div>
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Max Marks</label>
+                  <input type="number" min="1" max="1000" [(ngModel)]="teacherHomeworkForm.maxMarks" class="w-full px-2.5 py-2 rounded-xl bg-white border border-slate-200 font-mono font-bold">
+                </div>
               </div>
             </div>
           }
@@ -19194,10 +19779,21 @@
           }
           @if (!isFormFieldHidden('owner_homework_log', 'hw_desc')) {
             <div>
-              <label class="block font-bold text-slate-700 mb-1">Instructions & Problem Set</label>
+              <label class="block font-bold text-slate-700 mb-1">Instructions &amp; Problem Set</label>
               <textarea [(ngModel)]="teacherHomeworkForm.description" rows="3" placeholder="Solve exercise 4.1 to 4.4 in homework notebook..." class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-medium focus:bg-white focus:outline-emerald-600"></textarea>
             </div>
           }
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Attach Worksheet / PDF / Image (Max 3.5 MB)</label>
+            <input type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,.gif,.txt,.doc,.docx" (change)="onTeacherHomeworkFileSelected($event)"
+              class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium cursor-pointer">
+            @if (teacherHomeworkForm.attachmentName) {
+              <div class="mt-1.5 flex items-center justify-between px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 font-bold">
+                <span class="truncate">Attached: {{ teacherHomeworkForm.attachmentName }}</span>
+                <button type="button" (click)="teacherHomeworkForm.attachmentName = ''; teacherHomeworkForm.attachmentType = ''; teacherHomeworkForm.attachmentData = ''" class="text-rose-600 font-black ml-2 cursor-pointer">Remove</button>
+              </div>
+            }
+          </div>
           @if (hasCustomFieldsAtSlot('owner_homework_log', 'hw_desc')) {
             <app-school-custom-form-fields
               [tableId]="'owner_homework_log'"
@@ -19217,7 +19813,7 @@
         <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
           <button (click)="closeTeacherHomeworkModal()" class="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold text-xs cursor-pointer">Cancel</button>
           <button (click)="saveTeacherHomework()" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs cursor-pointer shadow">
-            Post Assignment
+            {{ teacherHomeworkForm.id ? 'Save Assignment Changes' : 'Post Assignment' }}
           </button>
         </div>
       </div>
@@ -19309,6 +19905,504 @@
           <button (click)="submitParentLeaveRequest()" class="px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-extrabold text-xs cursor-pointer shadow">
             Submit Leave Request
           </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- 3B. PARENT / TEACHER DIRECT MESSAGE MODAL -->
+  @if (isParentMessageModalOpen) {
+    <div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="apple-card rounded-3xl max-w-md w-full p-6 space-y-4">
+        <div class="flex items-center justify-between">
+          <h3 class="font-black text-slate-900 text-base">Direct Parent-Teacher Message</h3>
+          <button type="button" (click)="closeParentMessageModal()" class="p-1 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer">
+            <lucide-icon [name]="'x'" class="w-5 h-5"></lucide-icon>
+          </button>
+        </div>
+        <div class="space-y-3 text-xs">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Student Context</label>
+            <select [(ngModel)]="parentMessageForm.childId" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+              @for (st of activeStudents; track st.id) {
+                <option [value]="st.id">{{ st.name }} ({{ st.grade }} - {{ st.guardian }})</option>
+              }
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Recipient</label>
+            <input type="text" [(ngModel)]="parentMessageForm.recipient" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Subject</label>
+            <input type="text" [(ngModel)]="parentMessageForm.subject" placeholder="e.g. Monthly Progress & Classwork" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Message</label>
+            <textarea [(ngModel)]="parentMessageForm.message" rows="3" placeholder="Write your message..." class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-medium"></textarea>
+          </div>
+        </div>
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+          <button type="button" (click)="closeParentMessageModal()" class="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold text-xs cursor-pointer">Cancel</button>
+          <button type="button" (click)="sendParentMessage()" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs cursor-pointer flex items-center gap-1.5">
+            <lucide-icon [name]="'send'" class="w-3.5 h-3.5"></lucide-icon>
+            <span>Send Message</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- 3C. TEACHER HOMEWORK SUBMISSIONS CHECKING & GRADING MODAL -->
+  @if (isHomeworkSubmissionsModalOpen && selectedHomeworkForReview) {
+    <div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+      <div class="apple-card rounded-3xl max-w-4xl w-full max-h-[92vh] overflow-hidden flex flex-col bg-white shadow-2xl border border-slate-200">
+        <div class="px-5 sm:px-6 py-4 border-b border-slate-100 flex items-center justify-between shrink-0">
+          <div>
+            <span class="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase border border-emerald-200">{{ selectedHomeworkForReview.subject }} • {{ selectedHomeworkForReview.grade }}</span>
+            <h3 class="font-black text-slate-900 text-base mt-1">Submissions Review: {{ selectedHomeworkForReview.title }}</h3>
+            <p class="text-[11px] text-slate-500 font-medium">Submitted: {{ getSubmissionsForHomework(selectedHomeworkForReview.id).length }} • Pending Students: {{ getPendingStudentsForHomework(selectedHomeworkForReview).length }} • Max Marks: {{ selectedHomeworkForReview.maxMarks || 10 }}</p>
+          </div>
+          <button type="button" (click)="closeHomeworkSubmissionsModal()" class="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 cursor-pointer">
+            <lucide-icon [name]="'x'" class="w-5 h-5"></lucide-icon>
+          </button>
+        </div>
+
+        <div class="px-5 sm:px-6 py-2.5 bg-slate-50 border-b border-slate-200 flex items-center gap-2 flex-wrap text-xs">
+          <button type="button" (click)="submissionReviewFilter = 'all'" class="px-3 py-1 rounded-lg font-bold cursor-pointer" [class]="submissionReviewFilter === 'all' ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600 border border-slate-200'">All Uploads ({{ getSubmissionsForHomework(selectedHomeworkForReview.id).length }})</button>
+          <button type="button" (click)="submissionReviewFilter = 'submitted'" class="px-3 py-1 rounded-lg font-bold cursor-pointer" [class]="submissionReviewFilter === 'submitted' ? 'bg-amber-600 text-white' : 'bg-white text-slate-600 border border-slate-200'">Needs Check</button>
+          <button type="button" (click)="submissionReviewFilter = 'checked'" class="px-3 py-1 rounded-lg font-bold cursor-pointer" [class]="submissionReviewFilter === 'checked' ? 'bg-emerald-600 text-white' : 'bg-white text-slate-600 border border-slate-200'">Checked / Revision</button>
+          <button type="button" (click)="submissionReviewFilter = 'pending'" class="px-3 py-1 rounded-lg font-bold cursor-pointer" [class]="submissionReviewFilter === 'pending' ? 'bg-rose-600 text-white' : 'bg-white text-slate-600 border border-slate-200'">Pending Students ({{ getPendingStudentsForHomework(selectedHomeworkForReview).length }})</button>
+        </div>
+
+        <div class="p-5 sm:p-6 overflow-y-auto custom-scrollbar space-y-4 flex-1 text-xs">
+          @if (submissionReviewFilter === 'pending') {
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              @for (pst of getPendingStudentsForHomework(selectedHomeworkForReview); track pst.id) {
+                <div class="p-3.5 rounded-2xl border border-amber-200 bg-amber-50/50 flex items-center justify-between gap-2">
+                  <div>
+                    <h4 class="font-black text-slate-900">{{ pst.name }} (Roll #{{ pst.rollNo }})</h4>
+                    <p class="text-[11px] text-slate-600">{{ pst.grade }} • Guardian: {{ pst.guardian }} ({{ pst.guardianPhone }})</p>
+                  </div>
+                  <span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-black uppercase">Not Submitted</span>
+                </div>
+              }
+            </div>
+          } @else {
+            @for (sub of getFilteredModalSubmissions(); track sub.id) {
+              <div class="p-4 rounded-2xl border border-slate-200 bg-white space-y-3">
+                <div class="flex items-center justify-between gap-2 flex-wrap">
+                  <div>
+                    <h4 class="font-black text-slate-900 text-sm">{{ sub.studentName }} <span class="text-xs font-mono text-slate-500">(#{{ sub.rollNo }} • {{ sub.grade }})</span></h4>
+                    <p class="text-[11px] text-slate-500">Uploaded: {{ sub.submittedAt }}</p>
+                  </div>
+                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase"
+                    [class]="sub.status === 'Checked' ? 'bg-emerald-100 text-emerald-800' : (sub.status === 'Needs Revision' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800')">
+                    {{ sub.status }}
+                  </span>
+                </div>
+
+                @if (sub.answerText) {
+                  <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 font-medium leading-relaxed">
+                    {{ sub.answerText }}
+                  </div>
+                }
+
+                <div class="flex items-center gap-2 flex-wrap">
+                  @if (sub.attachmentData && isSafeAttachmentUrl(sub.attachmentData)) {
+                    <button type="button" (click)="openAttachmentPreview(sub.attachmentName || sub.studentName + ' Homework', sub.attachmentType || '', sub.attachmentData)"
+                      class="px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-800 font-bold flex items-center gap-1.5 cursor-pointer">
+                      <lucide-icon [name]="'eye'" class="w-3.5 h-3.5"></lucide-icon>
+                      <span>View Student File ({{ sub.attachmentName || 'Attachment' }})</span>
+                    </button>
+                  }
+                  @if (sub.externalLink && isSafeAttachmentUrl(sub.externalLink)) {
+                    <button type="button" (click)="openAttachmentPreview(sub.studentName + ' Link', 'external', sub.externalLink)"
+                      class="px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-800 font-bold flex items-center gap-1.5 cursor-pointer">
+                      <lucide-icon [name]="'eye'" class="w-3.5 h-3.5"></lucide-icon>
+                      <span>Open Submitted Link</span>
+                    </button>
+                  }
+                </div>
+
+                @if (submissionReviewDrafts[sub.id]) {
+                  <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 pt-2 border-t border-slate-100 items-end">
+                    <div class="sm:col-span-3">
+                      <label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Marks (Max {{ selectedHomeworkForReview.maxMarks || 10 }})</label>
+                      <input type="number" min="0" [max]="selectedHomeworkForReview.maxMarks || 10" [(ngModel)]="submissionReviewDrafts[sub.id].marksObtained"
+                        class="w-full px-2.5 py-1.5 rounded-xl border border-slate-200 font-mono font-black text-slate-900">
+                    </div>
+                    <div class="sm:col-span-5">
+                      <label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Teacher Remarks</label>
+                      <input type="text" [(ngModel)]="submissionReviewDrafts[sub.id].teacherRemarks" placeholder="Write feedback for student & parent..."
+                        class="w-full px-2.5 py-1.5 rounded-xl border border-slate-200 font-medium text-slate-800">
+                    </div>
+                    <div class="sm:col-span-4 flex items-center gap-1.5">
+                      <button type="button" (click)="submitHomeworkReview(sub, 'Checked')"
+                        class="flex-1 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold cursor-pointer">
+                        Mark Checked
+                      </button>
+                      <button type="button" (click)="submitHomeworkReview(sub, 'Needs Revision')"
+                        class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-white font-extrabold cursor-pointer">
+                        Revision
+                      </button>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+            @if (getFilteredModalSubmissions().length === 0) {
+              <div class="p-6 text-center rounded-2xl bg-slate-50 border border-slate-200 font-bold text-slate-500">
+                No student uploads in this filter yet.
+              </div>
+            }
+          }
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- 3D. STUDENT HOMEWORK SUBMISSION & UPLOAD MODAL -->
+  @if (isStudentHomeworkSubmitModalOpen && selectedHomeworkForSubmit) {
+    <div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="apple-card rounded-3xl max-w-lg w-full p-6 space-y-4 max-h-[92vh] overflow-y-auto custom-scrollbar">
+        <div class="flex items-center justify-between">
+          <div>
+            <span class="text-[10px] font-black uppercase text-indigo-600">{{ selectedHomeworkForSubmit.subject }} • Max {{ selectedHomeworkForSubmit.maxMarks || 10 }} Marks</span>
+            <h3 class="font-black text-slate-900 text-base">Submit Homework: {{ selectedHomeworkForSubmit.title }}</h3>
+          </div>
+          <button type="button" (click)="closeStudentHomeworkSubmitModal()" class="p-1 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer">
+            <lucide-icon [name]="'x'" class="w-5 h-5"></lucide-icon>
+          </button>
+        </div>
+
+        <div class="space-y-3 text-xs">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Written Answer / Notes</label>
+            <textarea [(ngModel)]="studentHomeworkForm.answerText" rows="3" placeholder="Type your solution summary or notes for teacher..."
+              class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-medium focus:outline-emerald-600"></textarea>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Upload Solved Notebook Photo / PDF / Document (Max 3.5 MB)</label>
+            <input type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,.gif,.txt,.doc,.docx" (change)="onStudentHomeworkFileSelected($event)"
+              class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer">
+            @if (studentHomeworkForm.attachmentName) {
+              <div class="mt-1.5 flex items-center justify-between px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 font-bold">
+                <span class="truncate">Selected: {{ studentHomeworkForm.attachmentName }}</span>
+                <button type="button" (click)="studentHomeworkForm.attachmentName = ''; studentHomeworkForm.attachmentType = ''; studentHomeworkForm.attachmentData = ''" class="text-rose-600 font-black ml-2 cursor-pointer">Remove</button>
+              </div>
+            }
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Optional Google Drive / Reference Link (https://)</label>
+            <input type="url" [(ngModel)]="studentHomeworkForm.externalLink" placeholder="https://..."
+              class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+          <button type="button" (click)="closeStudentHomeworkSubmitModal()" class="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold text-xs cursor-pointer">Cancel</button>
+          <button type="button" (click)="submitStudentHomework()" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs cursor-pointer flex items-center gap-1.5">
+            <lucide-icon [name]="'send'" class="w-3.5 h-3.5"></lucide-icon>
+            <span>Submit to Teacher</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- 3E. TEACHER STUDY MATERIAL / CLASS NOTES UPLOAD MODAL -->
+  @if (isStudyMaterialModalOpen) {
+    <div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="apple-card rounded-3xl max-w-lg w-full p-6 space-y-4 max-h-[92vh] overflow-y-auto custom-scrollbar">
+        <div class="flex items-center justify-between">
+          <h3 class="font-black text-slate-900 text-base">Upload Class Notes, Worksheet or Past Paper</h3>
+          <button type="button" (click)="closeStudyMaterialModal()" class="p-1 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer">
+            <lucide-icon [name]="'x'" class="w-5 h-5"></lucide-icon>
+          </button>
+        </div>
+        <div class="space-y-3 text-xs">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Title</label>
+            <input type="text" [(ngModel)]="studyMaterialForm.title" placeholder="e.g. Ch 4 Quadratic Solved Notes" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+          </div>
+          <div class="grid grid-cols-3 gap-2.5">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Subject</label>
+              <input type="text" [(ngModel)]="studyMaterialForm.subject" class="w-full px-2.5 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Class / Grade</label>
+              <select [(ngModel)]="studyMaterialForm.grade" class="w-full px-2.5 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+                <option value="Class 10-A">Class 10-A</option>
+                <option value="Class 10-B">Class 10-B</option>
+                <option value="Class 9-B">Class 9-B</option>
+                <option value="Class 8-A">Class 8-A</option>
+                <option value="All Classes">All Classes</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Material Type</label>
+              <select [(ngModel)]="studyMaterialForm.materialType" class="w-full px-2.5 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+                <option value="Class Notes">Class Notes</option>
+                <option value="Worksheet">Worksheet</option>
+                <option value="Past Paper">Past Paper</option>
+                <option value="Lab Manual">Lab Manual</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Description / Key Points</label>
+            <textarea [(ngModel)]="studyMaterialForm.description" rows="2" placeholder="Chapter summary, formulas & practice guidelines..." class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-medium"></textarea>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Upload File (PDF / Image / TXT / DOC up to 3.5 MB)</label>
+            <input type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,.gif,.txt,.doc,.docx" (change)="onStudyMaterialFileSelected($event)"
+              class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer">
+            @if (studyMaterialForm.attachmentName) {
+              <div class="mt-1.5 flex items-center justify-between px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 font-bold">
+                <span class="truncate">Ready: {{ studyMaterialForm.attachmentName }}</span>
+                <button type="button" (click)="studyMaterialForm.attachmentName = ''; studyMaterialForm.attachmentType = ''; studyMaterialForm.attachmentData = ''" class="text-rose-600 font-black ml-2 cursor-pointer">Remove</button>
+              </div>
+            }
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Or Reference Link (https://)</label>
+            <input type="url" [(ngModel)]="studyMaterialForm.externalUrl" placeholder="https://..." class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+          </div>
+        </div>
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+          <button type="button" (click)="closeStudyMaterialModal()" class="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold text-xs cursor-pointer">Cancel</button>
+          <button type="button" (click)="saveStudyMaterial()" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs cursor-pointer">Publish Material</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- 3F. TEACHER ADD PERIOD MODAL -->
+  @if (isTeacherPeriodModalOpen) {
+    <div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="apple-card rounded-3xl max-w-md w-full p-6 space-y-4">
+        <div class="flex items-center justify-between">
+          <h3 class="font-black text-slate-900 text-base">Add Class Period to Timetable</h3>
+          <button type="button" (click)="closeTeacherPeriodModal()" class="p-1 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer">
+            <lucide-icon [name]="'x'" class="w-5 h-5"></lucide-icon>
+          </button>
+        </div>
+        <div class="space-y-3 text-xs">
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Day</label>
+              <select [(ngModel)]="teacherPeriodForm.day" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+                <option value="Monday">Monday</option>
+                <option value="Tuesday">Tuesday</option>
+                <option value="Wednesday">Wednesday</option>
+                <option value="Thursday">Thursday</option>
+                <option value="Friday">Friday</option>
+                <option value="Saturday">Saturday</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Period Code</label>
+              <input type="text" [(ngModel)]="teacherPeriodForm.periodCode" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-mono font-bold">
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Subject</label>
+              <input type="text" [(ngModel)]="teacherPeriodForm.subject" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Grade / Section</label>
+              <input type="text" [(ngModel)]="teacherPeriodForm.grade" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Time Slot</label>
+              <input type="text" [(ngModel)]="teacherPeriodForm.timeSlot" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Room / Hall</label>
+              <input type="text" [(ngModel)]="teacherPeriodForm.room" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+            </div>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Lecture Topic</label>
+            <input type="text" [(ngModel)]="teacherPeriodForm.topic" placeholder="e.g. Trigonometric Identities" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+          </div>
+        </div>
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+          <button type="button" (click)="closeTeacherPeriodModal()" class="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold text-xs cursor-pointer">Cancel</button>
+          <button type="button" (click)="addTeacherPeriod()" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs cursor-pointer">Add Period</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- 3G. TEACHER OWN LEAVE APPLICATION MODAL -->
+  @if (isTeacherLeaveModalOpen) {
+    <div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="apple-card rounded-3xl max-w-md w-full p-6 space-y-4">
+        <div class="flex items-center justify-between">
+          <h3 class="font-black text-slate-900 text-base">Apply for Faculty Leave</h3>
+          <button type="button" (click)="closeTeacherLeaveModal()" class="p-1 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer">
+            <lucide-icon [name]="'x'" class="w-5 h-5"></lucide-icon>
+          </button>
+        </div>
+        <div class="space-y-3 text-xs">
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Leave Type</label>
+              <select [(ngModel)]="teacherLeaveForm.leaveType" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+                <option value="Casual Leave">Casual Leave</option>
+                <option value="Medical Leave">Medical Leave</option>
+                <option value="Academic Seminar">Academic Seminar</option>
+                <option value="Urgent Family Matter">Urgent Family Matter</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Total Days</label>
+              <input type="number" min="1" max="30" [(ngModel)]="teacherLeaveForm.totalDays" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-mono font-bold">
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">From Date</label>
+              <input type="date" [(ngModel)]="teacherLeaveForm.fromDate" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">To Date</label>
+              <input type="date" [(ngModel)]="teacherLeaveForm.toDate" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+            </div>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Suggested Substitute Teacher</label>
+            <input type="text" [(ngModel)]="teacherLeaveForm.substituteTeacherAssigned" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Reason</label>
+            <textarea [(ngModel)]="teacherLeaveForm.reason" rows="3" placeholder="Explain leave request details for Principal approval..." class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-medium"></textarea>
+          </div>
+        </div>
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+          <button type="button" (click)="closeTeacherLeaveModal()" class="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold text-xs cursor-pointer">Cancel</button>
+          <button type="button" (click)="submitTeacherOwnLeave()" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs cursor-pointer">Submit Leave Request</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- 3H. TEACHER REMEDIAL / BEHAVIOR INTERVENTION MODAL -->
+  @if (isTeacherInterventionModalOpen) {
+    <div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="apple-card rounded-3xl max-w-md w-full p-6 space-y-4">
+        <div class="flex items-center justify-between">
+          <h3 class="font-black text-slate-900 text-base">
+            {{ teacherInterventionForm.mode === 'remedial' ? 'Flag Weak Student (Remedial / PTM)' : 'Log Classroom Behavior Incident' }}
+          </h3>
+          <button type="button" (click)="closeTeacherInterventionModal()" class="p-1 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer">
+            <lucide-icon [name]="'x'" class="w-5 h-5"></lucide-icon>
+          </button>
+        </div>
+        <div class="space-y-3 text-xs">
+          <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 font-bold text-slate-800">
+            Student: {{ teacherInterventionForm.studentName }} (#{{ teacherInterventionForm.rollNo }} • {{ teacherInterventionForm.grade }})
+          </div>
+          @if (teacherInterventionForm.mode === 'remedial') {
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Subject</label>
+                <input type="text" [(ngModel)]="teacherInterventionForm.subject" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+              </div>
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Current Marks %</label>
+                <input type="number" min="0" max="100" [(ngModel)]="teacherInterventionForm.currentMarksPercentage" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-mono font-bold">
+              </div>
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Weakness / Topic Focus</label>
+              <input type="text" [(ngModel)]="teacherInterventionForm.weaknessArea" placeholder="e.g. Quadratic Factorization & Word Problems" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Action Plan</label>
+              <input type="text" [(ngModel)]="teacherInterventionForm.actionPlan" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+            </div>
+          } @else {
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Category</label>
+                <select [(ngModel)]="teacherInterventionForm.behaviorCategory" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+                  <option value="Academic Violation">Academic Violation</option>
+                  <option value="Late Arrival">Late Arrival</option>
+                  <option value="Uniform Violation">Uniform Violation</option>
+                  <option value="Misbehavior">Misbehavior</option>
+                </select>
+              </div>
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Severity</label>
+                <select [(ngModel)]="teacherInterventionForm.severity" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+                  <option value="Low">Low</option>
+                  <option value="Medium">Medium</option>
+                  <option value="High">High</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Incident Details</label>
+              <textarea [(ngModel)]="teacherInterventionForm.description" rows="3" placeholder="Describe observed behavior incident..." class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-medium"></textarea>
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Action Taken</label>
+              <input type="text" [(ngModel)]="teacherInterventionForm.actionTaken" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+            </div>
+          }
+        </div>
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+          <button type="button" (click)="closeTeacherInterventionModal()" class="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold text-xs cursor-pointer">Cancel</button>
+          <button type="button" (click)="submitTeacherIntervention()" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs cursor-pointer">Sync with Principal</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- 3I. IN-APP ATTACHMENT PREVIEW & SAFE DOWNLOAD MODAL -->
+  @if (isAttachmentPreviewModalOpen && attachmentPreviewData) {
+    <div class="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="apple-card rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col bg-white shadow-2xl border border-slate-200">
+        <div class="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between shrink-0">
+          <div class="min-w-0">
+            <h3 class="font-black text-slate-900 text-sm truncate">{{ attachmentPreviewData.name }}</h3>
+            <p class="text-[11px] text-slate-500 font-mono">{{ attachmentPreviewData.type }}</p>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            @if (attachmentPreviewData.safeUrl) {
+              <a [href]="attachmentPreviewData.safeUrl" [download]="attachmentPreviewData.name"
+                [attr.target]="attachmentPreviewData.isExternal ? '_blank' : null"
+                rel="noopener noreferrer"
+                class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs inline-flex items-center gap-1.5">
+                <lucide-icon [name]="'download'" class="w-3.5 h-3.5"></lucide-icon>
+                <span>{{ attachmentPreviewData.isExternal ? 'Open Link' : 'Download' }}</span>
+              </a>
+            }
+            <button type="button" (click)="closeAttachmentPreview()" class="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 cursor-pointer">
+              <lucide-icon [name]="'x'" class="w-5 h-5"></lucide-icon>
+            </button>
+          </div>
+        </div>
+        <div class="p-4 overflow-y-auto custom-scrollbar flex-1 flex items-center justify-center bg-slate-50 min-h-[260px]">
+          @if (attachmentPreviewData.type.startsWith('image/') && attachmentPreviewData.safeUrl) {
+            <img [src]="attachmentPreviewData.safeUrl" [alt]="attachmentPreviewData.name" referrerpolicy="no-referrer" class="max-h-[70vh] rounded-xl border border-slate-200 object-contain">
+          } @else if (attachmentPreviewData.type === 'application/pdf' && attachmentPreviewData.safeResourceUrl) {
+            <iframe [src]="attachmentPreviewData.safeResourceUrl" class="w-full h-[70vh] rounded-xl border border-slate-200 bg-white"></iframe>
+          } @else if (attachmentPreviewData.textContent) {
+            <pre class="w-full p-4 rounded-xl bg-white border border-slate-200 text-xs text-slate-800 whitespace-pre-wrap font-mono">{{ attachmentPreviewData.textContent }}</pre>
+          } @else {
+            <div class="text-center space-y-2 p-6">
+              <p class="text-xs font-bold text-slate-700">Preview ready via Download / Open button above.</p>
+              <p class="text-[11px] text-slate-500">Click "{{ attachmentPreviewData.isExternal ? 'Open Link' : 'Download' }}" to view {{ attachmentPreviewData.name }}.</p>
+            </div>
+          }
         </div>
       </div>
     </div>
