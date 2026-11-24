@@ -7,6 +7,13 @@ import { BackendService } from '../../services/backend.service';
 import { PwaInstallComponent } from '../../pwa-install.component';
 import { LegalComponent } from '../../softcodesolution_platform/landing-page/legal/legal.component';
 import { CurrencyLanguageSelectorComponent } from '../../components/currency-language-selector/currency-language-selector.component';
+import {
+  base64UrlToArrayBuffer,
+  bufferToBase64Url,
+  buildRpEntity,
+  getBiometricPasskeyAssertion,
+  isPasskeyWebAuthnSupported
+} from '../passkey-webauthn.util';
 
 function sanitizeInput(value: string): string {
   if (!value) return '';
@@ -59,12 +66,15 @@ export class LoginComponent implements OnInit {
   loginForm!: FormGroup;
   isLoading = false;
   isPasskeyLoading = false;
-  passkeyBlockedInIframe = false;
-  readonly isInIframe = typeof window !== 'undefined' && window.self !== window.top;
-  readonly standaloneUrl = typeof window !== 'undefined' ? window.location.href : '/login';
   showSuccessPopup = false;
   showLoginError = false;
   loginErrorMessage = 'Invalid credentials. Please verify your details.';
+  private prefetchedLoginOptions: {
+    email: string;
+    data: any;
+    fetchedAt: number;
+  } | null = null;
+  private loginPrefetchTimer: any = null;
   remainingAttempts: number | null = null;
   isAccountLocked = false;
   
@@ -138,6 +148,8 @@ export class LoginComponent implements OnInit {
         this.selectPortal('owner');
       }
     });
+
+    void this.prefetchLoginOptions();
   }
 
   selectPortal(type: 'owner' | 'teacher' | 'student' | 'parent' | 'staff' | 'accountant'): void {
@@ -191,6 +203,7 @@ export class LoginComponent implements OnInit {
       this.emailAutoCorrected = true;
       this.emailAutoCorrectNote = 'Unsafe characters removed';
     }
+    this.scheduleLoginPrefetch();
   }
 
   onEmailBlur(): void {
@@ -204,6 +217,7 @@ export class LoginComponent implements OnInit {
       this.emailAutoCorrected = true;
       this.emailAutoCorrectNote = raw !== trimmed ? 'Spaces auto-trimmed' : 'Email normalized';
     }
+    void this.prefetchLoginOptions();
   }
 
   onPasswordInput(): void {
@@ -530,38 +544,49 @@ export class LoginComponent implements OnInit {
     }
   }
 
-  private isIpHostname(hostname: string): boolean {
-    return /^\d{1,3}(\.\d{1,3}){3}$/.test(hostname) || hostname.includes(':');
+  private scheduleLoginPrefetch(): void {
+    if (this.loginPrefetchTimer) {
+      clearTimeout(this.loginPrefetchTimer);
+    }
+    this.loginPrefetchTimer = setTimeout(() => {
+      void this.prefetchLoginOptions();
+    }, 280);
   }
 
-  private base64UrlToArrayBuffer(b64u: string): ArrayBuffer {
-    const clean = String(b64u || '').trim().replace(/-/g, '+').replace(/_/g, '/');
-    const padLen = (4 - (clean.length % 4)) % 4;
-    const base64 = clean + '='.repeat(padLen);
-    const binary = atob(base64);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) {
-      bytes[i] = binary.charCodeAt(i);
+  private async fetchLoginOptionsPayload(email: string): Promise<any> {
+    const optResp = await fetch('/api/auth/passkey/login-options', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+    const optData = await optResp.json().catch(() => null);
+    if (!optResp.ok || !optData?.ok || !optData?.challenge) {
+      throw new Error('Unable to initialize Passkey sign-in.');
     }
-    return bytes.buffer;
+    return optData;
   }
 
-  private bufferToBase64Url(buf: ArrayBuffer): string {
-    const bytes = new Uint8Array(buf);
-    let binary = '';
-    for (let i = 0; i < bytes.byteLength; i++) {
-      binary += String.fromCharCode(bytes[i]);
+  private async prefetchLoginOptions(): Promise<void> {
+    if (!isPasskeyWebAuthnSupported()) return;
+    const emailInput = sanitizeInput(this.loginForm?.value?.email || '').toLowerCase();
+    try {
+      const data = await this.fetchLoginOptionsPayload(emailInput);
+      this.prefetchedLoginOptions = {
+        email: emailInput,
+        data,
+        fetchedAt: Date.now()
+      };
+    } catch {
+      // Silent prefetch retry on user tap
     }
-    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
   }
 
   async onPasskeyLogin(): Promise<void> {
     this.showLoginError = false;
-    this.passkeyBlockedInIframe = false;
     this.isAccountLocked = false;
     this.remainingAttempts = null;
 
-    if (typeof window === 'undefined' || !window.PublicKeyCredential || !navigator.credentials?.get) {
+    if (!isPasskeyWebAuthnSupported() || !navigator.credentials?.get) {
       this.showLoginError = true;
       this.loginErrorMessage = 'Passkey is not supported in this browser. Please sign in with your password.';
       this.notification.warning?.(this.loginErrorMessage, 'Notice');
@@ -569,57 +594,68 @@ export class LoginComponent implements OnInit {
       return;
     }
 
+    const emailInput = sanitizeInput(this.loginForm.value.email || '').toLowerCase();
+    let optData: any = null;
+    if (
+      this.prefetchedLoginOptions &&
+      this.prefetchedLoginOptions.email === emailInput &&
+      Date.now() - this.prefetchedLoginOptions.fetchedAt < 4 * 60 * 1000
+    ) {
+      optData = this.prefetchedLoginOptions.data;
+      this.prefetchedLoginOptions = null;
+    }
+
     this.isPasskeyLoading = true;
     this.cdr.detectChanges();
 
     try {
-      const emailInput = sanitizeInput(this.loginForm.value.email || '').toLowerCase();
-      const optResp = await fetch('/api/auth/passkey/login-options', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: emailInput })
-      });
-      const optData = await optResp.json().catch(() => null);
-      if (!optResp.ok || !optData?.ok || !optData?.challenge) {
-        throw new Error('Unable to initialize Passkey sign-in.');
+      if (!optData) {
+        optData = await this.fetchLoginOptionsPayload(emailInput);
       }
 
-      const allowCredentials: PublicKeyCredentialDescriptor[] = Array.isArray(optData.allowCredentials)
-        ? optData.allowCredentials.map((c: any) => ({
-            type: 'public-key' as const,
-            id: this.base64UrlToArrayBuffer(String(c.id))
-          }))
-        : [];
+      const allowCredentials: PublicKeyCredentialDescriptor[] = [];
+      if (Array.isArray(optData.allowCredentials)) {
+        for (const c of optData.allowCredentials) {
+          try {
+            if (c?.id) {
+              allowCredentials.push({
+                type: 'public-key',
+                id: base64UrlToArrayBuffer(String(c.id))
+              });
+            }
+          } catch {}
+        }
+      }
 
+      const rp = buildRpEntity();
       const publicKeyRequest: PublicKeyCredentialRequestOptions = {
-        challenge: this.base64UrlToArrayBuffer(optData.challenge),
-        userVerification: 'preferred',
+        challenge: base64UrlToArrayBuffer(optData.challenge),
+        userVerification: 'required',
         timeout: 60000
       };
-      const hostname = window.location.hostname;
-      if (hostname && !this.isIpHostname(hostname)) {
-        publicKeyRequest.rpId = hostname;
+      if (rp.id) {
+        publicKeyRequest.rpId = rp.id;
       }
       if (allowCredentials.length > 0) {
         publicKeyRequest.allowCredentials = allowCredentials;
       }
 
-      const assertion = (await navigator.credentials.get({ publicKey: publicKeyRequest })) as PublicKeyCredential | null;
+      const assertion = await getBiometricPasskeyAssertion(publicKeyRequest);
       if (!assertion) {
         throw new Error('Passkey sign-in cancelled.');
       }
 
       const resp = assertion.response as AuthenticatorAssertionResponse;
-      const credentialId = this.bufferToBase64Url(assertion.rawId) || assertion.id;
+      const credentialId = bufferToBase64Url(assertion.rawId) || assertion.id;
       const verifyResp = await fetch('/api/auth/passkey/login-verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           challengeToken: optData.challengeToken,
           credentialId,
-          clientDataJSON: this.bufferToBase64Url(resp.clientDataJSON),
-          authenticatorData: this.bufferToBase64Url(resp.authenticatorData),
-          signature: this.bufferToBase64Url(resp.signature)
+          clientDataJSON: bufferToBase64Url(resp.clientDataJSON),
+          authenticatorData: bufferToBase64Url(resp.authenticatorData),
+          signature: bufferToBase64Url(resp.signature)
         })
       });
 
@@ -673,13 +709,8 @@ export class LoginComponent implements OnInit {
     } catch (err: any) {
       this.showLoginError = true;
       const errName = String(err?.name || '');
-      if (errName === 'NotAllowedError' || errName === 'SecurityError') {
-        if (this.isInIframe) {
-          this.passkeyBlockedInIframe = true;
-          this.loginErrorMessage = 'Biometric Passkey sign-in is blocked inside this preview frame. Open in a full browser tab or sign in with your password.';
-        } else {
-          this.loginErrorMessage = 'No matching Passkey found on this device or prompt was cancelled. Enter your email or sign in with password.';
-        }
+      if (errName === 'NotAllowedError' || errName === 'SecurityError' || errName === 'AbortError') {
+        this.loginErrorMessage = 'No matching Passkey found on this device or verification was cancelled. Enter your email or sign in with password.';
       } else {
         this.loginErrorMessage = err?.message || 'Passkey sign-in failed. Please use your password.';
       }
@@ -688,6 +719,7 @@ export class LoginComponent implements OnInit {
     } finally {
       this.isPasskeyLoading = false;
       this.cdr.detectChanges();
+      void this.prefetchLoginOptions();
     }
   }
 

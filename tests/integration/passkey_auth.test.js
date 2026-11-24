@@ -183,6 +183,8 @@ test('WebAuthn Passkey enroll extracts SPKI from CBOR attestationObject, support
   assert.equal(regOpts.ok, true);
   assert.ok(regOpts.challenge);
   assert.ok(regOpts.challengeToken);
+  assert.equal(regOpts.authenticatorSelection?.authenticatorAttachment, 'platform');
+  assert.equal(regOpts.authenticatorSelection?.userVerification, 'required');
   assert.ok(Array.isArray(regOpts.pubKeyCredParams) && regOpts.pubKeyCredParams.length >= 2);
 
   // 3. Reject enroll when neither attestationObject nor publicKeySpki is valid
@@ -257,7 +259,7 @@ test('WebAuthn Passkey enroll extracts SPKI from CBOR attestationObject, support
   assert.equal(enrollJson.ok, true);
   assert.equal(enrollJson.passkey.hasPublicKey, true);
 
-  // 5. Verify /passkey/list returns key with hasPublicKey=true and register-options adds it to excludeCredentials
+  // 5. Verify /passkey/list returns key with hasPublicKey=true across SuperAdmin aliases and register-options adds it to excludeCredentials
   const listRes = await fetch(`${baseUrl}/api/auth/passkey/list?email=pervaizahmedabbasi786@gmail.com&tenantId=tenant-root-platform`, {
     headers: { Authorization: `Bearer ${adminToken}` }
   });
@@ -265,6 +267,14 @@ test('WebAuthn Passkey enroll extracts SPKI from CBOR attestationObject, support
   const listJson = await listRes.json();
   assert.equal(listJson.passkeys.length, 1);
   assert.equal(listJson.passkeys[0].hasPublicKey, true);
+
+  const aliasListRes = await fetch(`${baseUrl}/api/auth/passkey/list?email=admin&tenantId=tenant-root-platform`, {
+    headers: { Authorization: `Bearer ${adminToken}` }
+  });
+  assert.equal(aliasListRes.status, 200);
+  const aliasListJson = await aliasListRes.json();
+  assert.equal(aliasListJson.passkeys.length, 1);
+  assert.equal(aliasListJson.passkeys[0].credentialId, keyMat.credentialId);
 
   const regOpts3Res = await fetch(`${baseUrl}/api/auth/passkey/register-options`, {
     method: 'POST',
@@ -280,7 +290,7 @@ test('WebAuthn Passkey enroll extracts SPKI from CBOR attestationObject, support
   const regOpts3 = await regOpts3Res.json();
   assert.ok(regOpts3.excludeCredentials.some((c) => c.id === keyMat.credentialId));
 
-  // 6. Verify /passkey/login-options resolves 'admin' alias to SuperAdmin's enrolled credential
+  // 6. Verify /passkey/login-options resolves 'admin' alias to SuperAdmin's enrolled credential with required UV
   const loginOptsRes = await fetch(`${baseUrl}/api/auth/passkey/login-options`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -288,6 +298,7 @@ test('WebAuthn Passkey enroll extracts SPKI from CBOR attestationObject, support
   });
   assert.equal(loginOptsRes.status, 200);
   const loginOpts = await loginOptsRes.json();
+  assert.equal(loginOpts.userVerification, 'required');
   assert.ok(loginOpts.allowCredentials.some((c) => c.id === keyMat.credentialId));
 
   // 7. Tampered signature must fail with 401 PASSKEY_SIGNATURE_INVALID

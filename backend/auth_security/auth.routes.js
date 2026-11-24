@@ -1419,6 +1419,16 @@ export function createAuthRouter(sqliteDb, db) {
     };
   }
 
+  function resolvePasskeyLookupEmails(emailLower, includeAllSuperadmin = false) {
+    const clean = sanitizeStr(emailLower || '').toLowerCase();
+    if (includeAllSuperadmin || SUPERADMIN_ALIASES.has(clean)) {
+      const merged = new Set(SUPERADMIN_ALIASES);
+      if (clean) merged.add(clean);
+      return Array.from(merged);
+    }
+    return clean ? [clean] : [];
+  }
+
   router.post('/passkey/register-options', (req, res) => {
     const body = req.body || {};
     const session = verifySessionRequest(req);
@@ -1428,21 +1438,35 @@ export function createAuthRouter(sqliteDb, db) {
     const userId = crypto.createHash('sha256').update(cleanEmail).digest().subarray(0, 16).toString('base64url');
 
     const excludeCredentials = [];
+    const seenExclude = new Set();
     if (session && sqliteDb) {
       const scope = resolvePasskeyTargetScope(session, cleanEmail, body.tenantId);
       if (scope.allowed) {
         try {
-          const emailBlindIdx = vault.blindIndex(scope.email, 'email');
-          const existing = sqliteDb.prepare(`
-            SELECT credential_id, public_key_spki FROM auth_passkeys
-            WHERE email_blind_idx = ? AND tenant_id = ?
-          `).all(emailBlindIdx, scope.tenantId);
-          for (const row of existing) {
-            if (row.credential_id && row.public_key_spki) {
-              excludeCredentials.push({
-                type: 'public-key',
-                id: normalizeBase64Url(row.credential_id)
-              });
+          const isSuperAdminScope = session.role === 'super_admin' || SUPERADMIN_ALIASES.has(scope.email);
+          const candidateEmails = resolvePasskeyLookupEmails(scope.email, isSuperAdminScope);
+          const blindIndexes = candidateEmails.map((em) => vault.blindIndex(em, 'email')).filter(Boolean);
+          if (blindIndexes.length > 0) {
+            const placeholders = blindIndexes.map(() => '?').join(', ');
+            const existing = isSuperAdminScope
+              ? sqliteDb.prepare(`
+                  SELECT credential_id, public_key_spki FROM auth_passkeys
+                  WHERE (email_blind_idx IN (${placeholders}) OR role = 'super_admin')
+                    AND (tenant_id = ? OR tenant_id = 'tenant-root-platform')
+                `).all(...blindIndexes, scope.tenantId)
+              : sqliteDb.prepare(`
+                  SELECT credential_id, public_key_spki FROM auth_passkeys
+                  WHERE email_blind_idx IN (${placeholders}) AND tenant_id = ?
+                `).all(...blindIndexes, scope.tenantId);
+            for (const row of existing) {
+              const normId = normalizeBase64Url(row.credential_id || '');
+              if (normId && row.public_key_spki && !seenExclude.has(normId)) {
+                seenExclude.add(normId);
+                excludeCredentials.push({
+                  type: 'public-key',
+                  id: normId
+                });
+              }
             }
           }
         } catch {}
@@ -1458,6 +1482,12 @@ export function createAuthRouter(sqliteDb, db) {
         id: userId,
         name: cleanEmail,
         displayName: cleanName
+      },
+      authenticatorSelection: {
+        authenticatorAttachment: 'platform',
+        residentKey: 'required',
+        requireResidentKey: true,
+        userVerification: 'required'
       },
       pubKeyCredParams: [
         { type: 'public-key', alg: -7 },
@@ -1479,63 +1509,91 @@ export function createAuthRouter(sqliteDb, db) {
         return res.status(403).json({ ok: false, code: 'FORBIDDEN', message: scope.message });
       }
 
-      const emailBlindIdx = vault.blindIndex(scope.email, 'email');
+      const isSuperAdminScope = session.role === 'super_admin' || SUPERADMIN_ALIASES.has(scope.email);
+      const candidateEmails = resolvePasskeyLookupEmails(scope.email, isSuperAdminScope);
+      const blindIndexes = candidateEmails.map((em) => vault.blindIndex(em, 'email')).filter(Boolean);
+      const primaryBlindIdx = blindIndexes[0] || vault.blindIndex(scope.email, 'email');
+
       let rows = [];
-      if (sqliteDb) {
-        rows = sqliteDb.prepare(`
-          SELECT id, credential_id, tenant_id, user_id, public_key_spki, device_label, role, portal_type, is_synced, created_at, last_used_at
-          FROM auth_passkeys
-          WHERE email_blind_idx = ? AND tenant_id = ?
-          ORDER BY created_at DESC
-        `).all(emailBlindIdx, scope.tenantId);
+      const seenRowIds = new Set();
+      if (sqliteDb && blindIndexes.length > 0) {
+        const placeholders = blindIndexes.map(() => '?').join(', ');
+        const sqlRows = isSuperAdminScope
+          ? sqliteDb.prepare(`
+              SELECT id, credential_id, tenant_id, user_id, public_key_spki, device_label, role, portal_type, is_synced, created_at, last_used_at
+              FROM auth_passkeys
+              WHERE (email_blind_idx IN (${placeholders}) OR role = 'super_admin')
+                AND (tenant_id = ? OR tenant_id = 'tenant-root-platform')
+              ORDER BY created_at DESC
+            `).all(...blindIndexes, scope.tenantId)
+          : sqliteDb.prepare(`
+              SELECT id, credential_id, tenant_id, user_id, public_key_spki, device_label, role, portal_type, is_synced, created_at, last_used_at
+              FROM auth_passkeys
+              WHERE email_blind_idx IN (${placeholders}) AND tenant_id = ?
+              ORDER BY created_at DESC
+            `).all(...blindIndexes, scope.tenantId);
+
+        for (const r of sqlRows) {
+          const dedupeKey = r.credential_id || r.id;
+          if (!seenRowIds.has(dedupeKey)) {
+            seenRowIds.add(dedupeKey);
+            rows.push(r);
+          }
+        }
       }
 
-      if (rows.length === 0 && db) {
-        try {
-          const snap = await getDocs(query(collection(db, 'passkeys'), where('email_blind_idx', '==', emailBlindIdx)));
-          const cloudRows = [];
-          snap.forEach((docSnap) => {
-            const d = docSnap.data();
-            if (!d || (d.tenant_id && d.tenant_id !== scope.tenantId)) return;
-            cloudRows.push({
-              id: d.id || docSnap.id,
-              credential_id: normalizeBase64Url(d.credential_id || ''),
-              tenant_id: d.tenant_id || scope.tenantId,
-              user_id: d.user_id || session.uid,
-              public_key_spki: d.public_key_spki || '',
-              device_label: d.device_label || 'Cloud Synced Passkey',
-              role: d.role || 'client_admin',
-              portal_type: d.portal_type || 'platform',
-              is_synced: 1,
-              created_at: d.created_at || new Date().toISOString(),
-              last_used_at: d.last_used_at || null
+      if (rows.length === 0 && db && blindIndexes.length > 0) {
+        const cloudRows = [];
+        for (const bIdx of blindIndexes) {
+          try {
+            const snap = await getDocs(query(collection(db, 'passkeys'), where('email_blind_idx', '==', bIdx)));
+            snap.forEach((docSnap) => {
+              const d = docSnap.data();
+              if (!d || (d.tenant_id && d.tenant_id !== scope.tenantId && !(isSuperAdminScope && d.tenant_id === 'tenant-root-platform'))) return;
+              const normCred = normalizeBase64Url(d.credential_id || '');
+              const dedupeKey = normCred || d.id || docSnap.id;
+              if (seenRowIds.has(dedupeKey)) return;
+              seenRowIds.add(dedupeKey);
+              cloudRows.push({
+                id: d.id || docSnap.id,
+                credential_id: normCred,
+                tenant_id: d.tenant_id || scope.tenantId,
+                user_id: d.user_id || session.uid,
+                public_key_spki: d.public_key_spki || '',
+                device_label: d.device_label || 'Cloud Synced Passkey',
+                role: d.role || 'client_admin',
+                portal_type: d.portal_type || 'platform',
+                is_synced: 1,
+                created_at: d.created_at || new Date().toISOString(),
+                last_used_at: d.last_used_at || null
+              });
+              if (sqliteDb && d.credential_id) {
+                try {
+                  sqliteDb.prepare(`
+                    INSERT OR IGNORE INTO auth_passkeys (id, credential_id, tenant_id, user_id, email, email_blind_idx, public_key_spki, device_label, role, portal_type, is_synced, created_at, last_used_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
+                  `).run(
+                    d.id || docSnap.id,
+                    normCred,
+                    d.tenant_id || scope.tenantId,
+                    d.user_id || session.uid,
+                    d.email || vault.encryptField(scope.tenantId, scope.email),
+                    d.email_blind_idx || primaryBlindIdx,
+                    d.public_key_spki || '',
+                    d.device_label || 'Cloud Synced Passkey',
+                    d.role || 'client_admin',
+                    d.portal_type || 'platform',
+                    d.created_at || new Date().toISOString(),
+                    d.last_used_at || null
+                  );
+                } catch {}
+              }
             });
-            if (sqliteDb && d.credential_id) {
-              try {
-                sqliteDb.prepare(`
-                  INSERT OR IGNORE INTO auth_passkeys (id, credential_id, tenant_id, user_id, email, email_blind_idx, public_key_spki, device_label, role, portal_type, is_synced, created_at, last_used_at)
-                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
-                `).run(
-                  d.id || docSnap.id,
-                  normalizeBase64Url(d.credential_id),
-                  d.tenant_id || scope.tenantId,
-                  d.user_id || session.uid,
-                  d.email || vault.encryptField(scope.tenantId, scope.email),
-                  emailBlindIdx,
-                  d.public_key_spki || '',
-                  d.device_label || 'Cloud Synced Passkey',
-                  d.role || 'client_admin',
-                  d.portal_type || 'platform',
-                  d.created_at || new Date().toISOString(),
-                  d.last_used_at || null
-                );
-              } catch {}
-            }
-          });
-          rows = cloudRows;
-        } catch (err) {
-          handleFirestoreError(err, 'list', 'passkeys');
+          } catch (err) {
+            handleFirestoreError(err, 'list', 'passkeys');
+          }
         }
+        rows = cloudRows;
       }
 
       res.json({
@@ -1741,7 +1799,8 @@ export function createAuthRouter(sqliteDb, db) {
     const seen = new Set();
 
     if (cleanEmail) {
-      const candidateEmails = SUPERADMIN_ALIASES.has(cleanEmail)
+      const isSuperAdminAlias = SUPERADMIN_ALIASES.has(cleanEmail);
+      const candidateEmails = isSuperAdminAlias
         ? Array.from(SUPERADMIN_ALIASES)
         : [cleanEmail];
       const blindIndexes = candidateEmails.map((em) => vault.blindIndex(em, 'email')).filter(Boolean);
@@ -1749,9 +1808,13 @@ export function createAuthRouter(sqliteDb, db) {
       if (sqliteDb && blindIndexes.length > 0) {
         try {
           const placeholders = blindIndexes.map(() => '?').join(', ');
-          const rows = sqliteDb.prepare(
-            `SELECT credential_id FROM auth_passkeys WHERE email_blind_idx IN (${placeholders}) AND public_key_spki IS NOT NULL AND public_key_spki != ''`
-          ).all(...blindIndexes);
+          const rows = isSuperAdminAlias
+            ? sqliteDb.prepare(
+                `SELECT credential_id FROM auth_passkeys WHERE (email_blind_idx IN (${placeholders}) OR role = 'super_admin') AND public_key_spki IS NOT NULL AND public_key_spki != ''`
+              ).all(...blindIndexes)
+            : sqliteDb.prepare(
+                `SELECT credential_id FROM auth_passkeys WHERE (email_blind_idx IN (${placeholders}) OR LOWER(user_id) = ?) AND public_key_spki IS NOT NULL AND public_key_spki != ''`
+              ).all(...blindIndexes, cleanEmail);
           for (const r of rows) {
             const normId = normalizeBase64Url(r.credential_id || '');
             if (normId && !seen.has(normId)) {
@@ -1784,6 +1847,7 @@ export function createAuthRouter(sqliteDb, db) {
       ok: true,
       challenge,
       challengeToken,
+      userVerification: 'required',
       allowCredentials
     });
   });

@@ -6,6 +6,14 @@ import { LegalComponent } from '../../softcodesolution_platform/landing-page/leg
 import { NotificationService } from '../../services/notification.service';
 import { PwaInstallComponent } from '../../pwa-install.component';
 import { CurrencyLanguageSelectorComponent } from '../../components/currency-language-selector/currency-language-selector.component';
+import {
+  base64UrlToArrayBuffer,
+  bufferToBase64Url,
+  buildRpEntity,
+  createBiometricPasskey,
+  detectPasskeyDeviceLabel,
+  isPasskeyWebAuthnSupported
+} from '../passkey-webauthn.util';
 
 // ============ SECURITY UTILS (Minimal & Safe) ============
 
@@ -132,9 +140,13 @@ export class RegisterComponent implements OnInit {
   passkeyEnrolling = false;
   passkeyEnrolled = false;
   passkeyError = '';
-  passkeyBlockedInIframe = false;
-  readonly isInIframe = typeof window !== 'undefined' && window.self !== window.top;
-  readonly standaloneUrl = typeof window !== 'undefined' ? window.location.href : '/register';
+  private passkeyRegisteredEmail = '';
+  private prefetchedRegisterOptions: {
+    email: string;
+    data: any;
+    fetchedAt: number;
+  } | null = null;
+  private registerPrefetchTimer: any = null;
   private passkeyCredentialData: {
     credentialId: string;
     challengeToken: string;
@@ -396,6 +408,11 @@ export class RegisterComponent implements OnInit {
       ctrl.setValue(cleaned, { emitEvent: false });
       this.autoCorrectedFields['email'] = 'Auto-Corrected';
     }
+    const cleanLower = sanitizeInput(cleaned).toLowerCase();
+    if (this.passkeyEnrolled && this.passkeyRegisteredEmail && cleanLower !== this.passkeyRegisteredEmail) {
+      this.resetPasskeyEnrollmentState();
+    }
+    this.scheduleRegisterPrefetch(cleanLower);
   }
 
   onEmailBlur(): void {
@@ -407,6 +424,10 @@ export class RegisterComponent implements OnInit {
       ctrl.setValue(normalized);
       this.autoCorrectedFields['email'] = 'Normalized';
     }
+    if (this.passkeyEnrolled && this.passkeyRegisteredEmail && normalized !== this.passkeyRegisteredEmail) {
+      this.resetPasskeyEnrollmentState();
+    }
+    void this.prefetchRegisterOptions(normalized);
   }
 
   onPhoneInput(): void {
@@ -567,57 +588,56 @@ export class RegisterComponent implements OnInit {
     return Math.abs(this.puzzleSliderPos - this.puzzleTargetPos) <= 5;
   }
 
-  private isIpHostname(hostname: string): boolean {
-    return /^\d{1,3}(\.\d{1,3}){3}$/.test(hostname) || hostname.includes(':');
+  private resetPasskeyEnrollmentState(): void {
+    this.passkeyEnrolled = false;
+    this.passkeyCredentialData = null;
+    this.passkeyRegisteredEmail = '';
+    this.registerForm?.get('enablePasskey')?.setValue(false, { emitEvent: false });
   }
 
-  private base64UrlToArrayBuffer(b64u: string): ArrayBuffer {
-    const clean = String(b64u || '').trim().replace(/-/g, '+').replace(/_/g, '/');
-    const padLen = (4 - (clean.length % 4)) % 4;
-    const base64 = clean + '='.repeat(padLen);
-    const binary = atob(base64);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) {
-      bytes[i] = binary.charCodeAt(i);
+  private scheduleRegisterPrefetch(emailVal: string): void {
+    if (this.registerPrefetchTimer) {
+      clearTimeout(this.registerPrefetchTimer);
     }
-    return bytes.buffer;
+    if (!emailVal || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(emailVal)) return;
+    this.registerPrefetchTimer = setTimeout(() => {
+      void this.prefetchRegisterOptions(emailVal);
+    }, 280);
   }
 
-  private bufferToBase64Url(buf: ArrayBuffer): string {
-    const bytes = new Uint8Array(buf);
-    let binary = '';
-    for (let i = 0; i < bytes.byteLength; i++) {
-      binary += String.fromCharCode(bytes[i]);
+  private async fetchRegisterOptionsPayload(emailVal: string, fullNameVal: string): Promise<any> {
+    const optResp = await fetch('/api/auth/passkey/register-options', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: emailVal, fullName: fullNameVal })
+    });
+    const optData = await optResp.json().catch(() => null);
+    if (!optResp.ok || !optData?.ok || !optData?.challenge) {
+      throw new Error('Could not start Passkey enrollment.');
     }
-    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    return optData;
   }
 
-  private async createPlatformCredential(basePublicKey: PublicKeyCredentialCreationOptions): Promise<PublicKeyCredential | null> {
+  private async prefetchRegisterOptions(emailVal: string): Promise<void> {
+    if (!isPasskeyWebAuthnSupported()) return;
+    if (!emailVal || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(emailVal)) return;
+    if (
+      this.prefetchedRegisterOptions &&
+      this.prefetchedRegisterOptions.email === emailVal &&
+      Date.now() - this.prefetchedRegisterOptions.fetchedAt < 10 * 60 * 1000
+    ) {
+      return;
+    }
     try {
-      return (await navigator.credentials.create({
-        publicKey: {
-          ...basePublicKey,
-          authenticatorSelection: {
-            residentKey: 'required',
-            requireResidentKey: true,
-            userVerification: 'preferred'
-          }
-        }
-      })) as PublicKeyCredential | null;
-    } catch (err: any) {
-      const name = String(err?.name || '');
-      if (name === 'ConstraintError' || name === 'NotSupportedError') {
-        return (await navigator.credentials.create({
-          publicKey: {
-            ...basePublicKey,
-            authenticatorSelection: {
-              residentKey: 'preferred',
-              userVerification: 'preferred'
-            }
-          }
-        })) as PublicKeyCredential | null;
-      }
-      throw err;
+      const fullNameVal = sanitizeInput(this.registerForm?.value?.fullName || '');
+      const data = await this.fetchRegisterOptionsPayload(emailVal, fullNameVal);
+      this.prefetchedRegisterOptions = {
+        email: emailVal,
+        data,
+        fetchedAt: Date.now()
+      };
+    } catch {
+      // Silent prefetch retry on toggle
     }
   }
 
@@ -625,16 +645,16 @@ export class RegisterComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     const checked = !!input?.checked;
     this.passkeyError = '';
-    this.passkeyBlockedInIframe = false;
 
     if (!checked) {
       this.passkeyEnrolled = false;
       this.passkeyCredentialData = null;
+      this.passkeyRegisteredEmail = '';
       this.cdr.detectChanges();
       return;
     }
 
-    if (typeof window === 'undefined' || !window.PublicKeyCredential || !navigator.credentials?.create) {
+    if (!isPasskeyWebAuthnSupported() || !navigator.credentials?.create) {
       this.registerForm.get('enablePasskey')?.setValue(false, { emitEvent: false });
       this.passkeyError = 'Passkey is not supported in this browser.';
       this.cdr.detectChanges();
@@ -650,34 +670,30 @@ export class RegisterComponent implements OnInit {
       return;
     }
 
+    let optData: any = null;
+    if (
+      this.prefetchedRegisterOptions &&
+      this.prefetchedRegisterOptions.email === emailVal &&
+      Date.now() - this.prefetchedRegisterOptions.fetchedAt < 10 * 60 * 1000
+    ) {
+      optData = this.prefetchedRegisterOptions.data;
+      this.prefetchedRegisterOptions = null;
+    }
+
     this.passkeyEnrolling = true;
     this.cdr.detectChanges();
 
     try {
       const fullNameVal = sanitizeInput(this.registerForm.value.fullName || '');
-      const optResp = await fetch('/api/auth/passkey/register-options', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: emailVal, fullName: fullNameVal })
-      });
-      const optData = await optResp.json().catch(() => null);
-      if (!optResp.ok || !optData?.ok || !optData?.challenge) {
-        throw new Error('Could not start Passkey enrollment.');
-      }
-
-      const hostname = window.location.hostname;
-      const rpConfig: PublicKeyCredentialRpEntity = {
-        name: optData.rp?.name || 'SoftCodeSolution'
-      };
-      if (hostname && !this.isIpHostname(hostname)) {
-        rpConfig.id = hostname;
+      if (!optData) {
+        optData = await this.fetchRegisterOptionsPayload(emailVal, fullNameVal);
       }
 
       const publicKeyOptions: PublicKeyCredentialCreationOptions = {
-        challenge: this.base64UrlToArrayBuffer(optData.challenge),
-        rp: rpConfig,
+        challenge: base64UrlToArrayBuffer(optData.challenge),
+        rp: buildRpEntity(optData.rp?.name || 'SoftCodeSolution'),
         user: {
-          id: this.base64UrlToArrayBuffer(optData.user.id),
+          id: base64UrlToArrayBuffer(optData.user.id),
           name: optData.user.name,
           displayName: optData.user.displayName
         },
@@ -692,41 +708,39 @@ export class RegisterComponent implements OnInit {
         attestation: 'none'
       };
 
-      const cred = await this.createPlatformCredential(publicKeyOptions);
+      const cred = await createBiometricPasskey(publicKeyOptions);
       if (!cred) {
         throw new Error('Passkey creation cancelled.');
       }
 
       const response = cred.response as AuthenticatorAttestationResponse & { getPublicKey?: () => ArrayBuffer | null };
       const spkiBuf = typeof response.getPublicKey === 'function' ? response.getPublicKey() : null;
-      const attestationObject = response.attestationObject ? this.bufferToBase64Url(response.attestationObject) : '';
-      const credentialId = this.bufferToBase64Url(cred.rawId) || cred.id;
+      const attestationObject = response.attestationObject ? bufferToBase64Url(response.attestationObject) : '';
+      const credentialId = bufferToBase64Url(cred.rawId) || cred.id;
 
       this.passkeyCredentialData = {
         credentialId,
         challengeToken: optData.challengeToken,
-        clientDataJSON: this.bufferToBase64Url(response.clientDataJSON),
+        clientDataJSON: bufferToBase64Url(response.clientDataJSON),
         attestationObject,
-        publicKeySpki: spkiBuf ? this.bufferToBase64Url(spkiBuf) : '',
-        deviceLabel: /mobile|android|iphone|ipad/i.test(navigator.userAgent) ? 'Mobile Passkey' : 'Desktop Passkey'
+        publicKeySpki: spkiBuf ? bufferToBase64Url(spkiBuf) : '',
+        deviceLabel: detectPasskeyDeviceLabel()
       };
+      this.passkeyRegisteredEmail = emailVal;
       this.passkeyEnrolled = true;
       this.notification.success('Passkey ready! Complete registration to link it to your account.', 'Passkey Ready');
     } catch (err: any) {
       this.registerForm.get('enablePasskey')?.setValue(false, { emitEvent: false });
       this.passkeyEnrolled = false;
       this.passkeyCredentialData = null;
+      this.passkeyRegisteredEmail = '';
       const errName = String(err?.name || '');
-      if (errName === 'NotAllowedError' || errName === 'SecurityError') {
-        if (this.isInIframe) {
-          this.passkeyBlockedInIframe = true;
-          this.passkeyError = 'Passkey setup is blocked inside this preview frame. Open in a full browser tab to enroll.';
-        } else {
-          this.passkeyError = 'Passkey setup was cancelled or timed out. Make sure device lock / biometric is enabled.';
-        }
+      if (errName === 'NotAllowedError' || errName === 'SecurityError' || errName === 'AbortError') {
+        this.passkeyError = 'Biometric Passkey setup was cancelled or timed out. Make sure device lock / fingerprint is enabled.';
       } else {
         this.passkeyError = err?.message || 'Unable to set up Passkey on this device.';
       }
+      void this.prefetchRegisterOptions(emailVal);
     } finally {
       this.passkeyEnrolling = false;
       this.cdr.detectChanges();
@@ -866,6 +880,12 @@ export class RegisterComponent implements OnInit {
         return;
       }
 
+      if (String(result?.code || '').startsWith('PASSKEY_')) {
+        this.resetPasskeyEnrollmentState();
+        const emailVal = sanitizeInput(this.registerForm.value.email || '').toLowerCase();
+        void this.prefetchRegisterOptions(emailVal);
+      }
+
       void this.loadRegisterPuzzle();
       this.handleError(result?.code || result?.message || 'REGISTRATION_ERROR');
     } catch (error) {
@@ -905,6 +925,7 @@ export class RegisterComponent implements OnInit {
     this.autoCorrectedFields = {};
     this.passkeyEnrolled = false;
     this.passkeyCredentialData = null;
+    this.passkeyRegisteredEmail = '';
     this.passkeyError = '';
     this.humanVerified = false;
     this.botChallengeToken = '';
@@ -940,6 +961,9 @@ export class RegisterComponent implements OnInit {
       'BOT_REPLAY_DETECTED': 'Security challenge expired or replayed. Please solve the new puzzle.',
       'BOT_TOKEN_EXPIRED': 'Security verification expired. Please solve the new puzzle.',
       'BOT_TOO_FAST': 'Submission too fast. Please solve the puzzle and retry.',
+      'PASSKEY_CHALLENGE_INVALID': 'Passkey verification expired. Please toggle Create Passkey again.',
+      'PASSKEY_KEY_INVALID': 'Passkey could not be verified. Please toggle Create Passkey again.',
+      'PASSKEY_CREDENTIAL_IN_USE': 'This Passkey credential is already linked to another account.',
       'RATE_LIMIT': 'Too many attempts detected. Please wait 60 seconds.',
       'NETWORK_ERROR': 'Connection issue. Check internet and retry.'
     };

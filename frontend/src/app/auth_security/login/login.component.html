@@ -359,14 +359,6 @@
           </svg>
           <div class="text-xs font-medium flex-1 min-w-0" [class.text-red-700]="!isAccountLocked" [class.text-rose-100]="isAccountLocked">
             <p>{{ loginErrorMessage }}</p>
-            @if (passkeyBlockedInIframe && !isAccountLocked) {
-              <a [href]="standaloneUrl"
-                 target="_blank"
-                 rel="noopener noreferrer"
-                 class="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-[11px] font-bold transition-colors">
-                <span>Open in Full Browser Tab</span>
-              </a>
-            }
             @if (remainingAttempts !== null && !isAccountLocked) {
               <p class="mt-1 font-bold text-[11px] text-amber-700">Security Shield: {{ remainingAttempts }} attempt(s) remaining before Intruder Vault lock.</p>
             }

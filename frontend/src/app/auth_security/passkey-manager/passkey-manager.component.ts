@@ -12,6 +12,14 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { Router } from '@angular/router';
 import { NotificationService } from '../../services/notification.service';
+import {
+  base64UrlToArrayBuffer,
+  bufferToBase64Url,
+  buildRpEntity,
+  createBiometricPasskey,
+  detectPasskeyDeviceLabel,
+  isPasskeyWebAuthnSupported
+} from '../passkey-webauthn.util';
 
 export interface PasskeyItem {
   id: string;
@@ -60,27 +68,6 @@ export interface PasskeyItem {
       </div>
 
       <div class="p-4 sm:p-5 space-y-4">
-        @if (isInIframe) {
-          <div class="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div class="flex items-start gap-2.5 min-w-0 flex-1">
-              <mat-icon class="!text-[18px] !w-[18px] !h-[18px] text-amber-600 shrink-0 mt-0.5">info</mat-icon>
-              <div class="min-w-0 space-y-0.5">
-                <p class="font-bold">Preview frame detected</p>
-                <p class="text-[11px] text-amber-800 leading-relaxed">
-                  Embedded preview frames often restrict device biometric Passkey prompts. Open in a full browser tab to register fingerprint or FaceID.
-                </p>
-              </div>
-            </div>
-            <a [href]="standaloneUrl"
-               target="_blank"
-               rel="noopener noreferrer"
-               class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-[11px] font-extrabold shrink-0 transition-colors">
-              <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">open_in_new</mat-icon>
-              <span>Open Full Tab</span>
-            </a>
-          </div>
-        }
-
         @if (sessionUpgradeRequired()) {
           <div class="p-3.5 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-950 text-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div class="flex items-start gap-2.5">
@@ -108,15 +95,6 @@ export interface PasskeyItem {
               </mat-icon>
               <span>{{ statusMessage() }}</span>
             </div>
-            @if (statusType() === 'error' && isInIframe) {
-              <a [href]="standaloneUrl"
-                 target="_blank"
-                 rel="noopener noreferrer"
-                 class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-bold shrink-0 self-start sm:self-auto">
-                <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">open_in_new</mat-icon>
-                <span>Open Browser Tab</span>
-              </a>
-            }
           </div>
         }
 
@@ -164,7 +142,7 @@ export interface PasskeyItem {
                 <div class="p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50/70 transition-colors">
                   <div class="flex items-start gap-3 min-w-0">
                     <div class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-700 border border-indigo-100 flex items-center justify-center shrink-0">
-                      <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">passkey</mat-icon>
+                      <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">fingerprint</mat-icon>
                     </div>
                     <div class="min-w-0 space-y-0.5">
                       <div class="flex items-center gap-2 flex-wrap">
@@ -223,10 +201,14 @@ export class PasskeyManagerComponent {
   statusType = signal<'success' | 'error'>('success');
   sessionUpgradeRequired = signal<boolean>(false);
 
-  deviceLabelControl = new FormControl<string>(this.detectDefaultDeviceLabel(), { nonNullable: true });
+  deviceLabelControl = new FormControl<string>(detectPasskeyDeviceLabel(), { nonNullable: true });
 
-  readonly isInIframe = typeof window !== 'undefined' && window.self !== window.top;
-  readonly standaloneUrl = typeof window !== 'undefined' ? window.location.href : '/';
+  private prefetchedRegisterOptions: {
+    cacheKey: string;
+    data: any;
+    fetchedAt: number;
+  } | null = null;
+  private prefetchInFlight = false;
 
   readonly resolvedEmail = computed(() => {
     const passed = (this.email() || '').trim().toLowerCase();
@@ -254,20 +236,6 @@ export class PasskeyManagerComponent {
         void this.loadPasskeys();
       }
     });
-  }
-
-  private detectDefaultDeviceLabel(): string {
-    if (typeof navigator === 'undefined') return 'My Device Passkey';
-    const ua = navigator.userAgent || '';
-    if (/Android/i.test(ua)) return 'Android Passkey';
-    if (/iPhone|iPad/i.test(ua)) return 'iPhone / iPad Passkey';
-    if (/Mac/i.test(ua)) return 'MacBook Passkey';
-    if (/Windows/i.test(ua)) return 'Windows Hello Passkey';
-    return 'Browser Passkey';
-  }
-
-  private isIpHostname(hostname: string): boolean {
-    return /^\d{1,3}(\.\d{1,3}){3}$/.test(hostname) || hostname.includes(':');
   }
 
   private getAuthHeaders(): Record<string, string> {
@@ -321,6 +289,7 @@ export class PasskeyManagerComponent {
       }
       if (resp.ok && data?.ok) {
         this.passkeys.set(Array.isArray(data.passkeys) ? data.passkeys : []);
+        void this.prefetchRegisterOptions();
       }
     } catch {
       // Keep current list on transient network blip
@@ -329,32 +298,40 @@ export class PasskeyManagerComponent {
     }
   }
 
-  private async createPlatformCredential(basePublicKey: PublicKeyCredentialCreationOptions): Promise<PublicKeyCredential | null> {
+  private async fetchRegisterOptionsPayload(email: string): Promise<any> {
+    const optResp = await fetch('/api/auth/passkey/register-options', {
+      method: 'POST',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify({
+        email,
+        tenantId: this.tenantId(),
+        fullName: this.fullName() || email
+      })
+    });
+    const optData = await optResp.json().catch(() => null);
+    if (!optResp.ok || !optData?.ok || !optData?.challenge) {
+      throw new Error(optData?.message || 'Unable to start Passkey setup.');
+    }
+    return optData;
+  }
+
+  private async prefetchRegisterOptions(): Promise<void> {
+    if (this.prefetchInFlight || !this.checkSignedSession()) return;
+    const email = this.resolvedEmail();
+    if (!email) return;
+    const cacheKey = `${email}|${this.tenantId()}`;
+    this.prefetchInFlight = true;
     try {
-      return (await navigator.credentials.create({
-        publicKey: {
-          ...basePublicKey,
-          authenticatorSelection: {
-            residentKey: 'required',
-            requireResidentKey: true,
-            userVerification: 'preferred'
-          }
-        }
-      })) as PublicKeyCredential | null;
-    } catch (err: any) {
-      const name = String(err?.name || '');
-      if (name === 'ConstraintError' || name === 'NotSupportedError') {
-        return (await navigator.credentials.create({
-          publicKey: {
-            ...basePublicKey,
-            authenticatorSelection: {
-              residentKey: 'preferred',
-              userVerification: 'preferred'
-            }
-          }
-        })) as PublicKeyCredential | null;
-      }
-      throw err;
+      const data = await this.fetchRegisterOptionsPayload(email);
+      this.prefetchedRegisterOptions = {
+        cacheKey,
+        data,
+        fetchedAt: Date.now()
+      };
+    } catch {
+      // Ignore silent prefetch errors; tap handler will retry on demand
+    } finally {
+      this.prefetchInFlight = false;
     }
   }
 
@@ -362,7 +339,7 @@ export class PasskeyManagerComponent {
     this.statusMessage.set('');
     if (!this.checkSignedSession()) return;
 
-    if (typeof window === 'undefined' || !window.PublicKeyCredential || !navigator.credentials?.create) {
+    if (!isPasskeyWebAuthnSupported() || !navigator.credentials?.create) {
       this.statusType.set('error');
       this.statusMessage.set('WebAuthn Passkeys are not supported in this browser.');
       this.notification.warning(this.statusMessage(), 'Notice');
@@ -377,42 +354,42 @@ export class PasskeyManagerComponent {
       return;
     }
 
+    const cacheKey = `${email}|${this.tenantId()}`;
+    let optData: any = null;
+    if (
+      this.prefetchedRegisterOptions &&
+      this.prefetchedRegisterOptions.cacheKey === cacheKey &&
+      Date.now() - this.prefetchedRegisterOptions.fetchedAt < 10 * 60 * 1000
+    ) {
+      optData = this.prefetchedRegisterOptions.data;
+      this.prefetchedRegisterOptions = null;
+    }
+
     this.enrolling.set(true);
     try {
-      const optResp = await fetch('/api/auth/passkey/register-options', {
-        method: 'POST',
-        headers: this.getAuthHeaders(),
-        body: JSON.stringify({
-          email,
-          tenantId: this.tenantId(),
-          fullName: this.fullName() || email
-        })
-      });
-      const optData = await optResp.json().catch(() => null);
-      if (!optResp.ok || !optData?.ok || !optData?.challenge) {
-        throw new Error(optData?.message || 'Unable to start Passkey setup.');
+      if (!optData) {
+        optData = await this.fetchRegisterOptionsPayload(email);
       }
 
-      const hostname = window.location.hostname;
-      const rpConfig: PublicKeyCredentialRpEntity = {
-        name: optData.rp?.name || 'SoftCodeSolution'
-      };
-      if (hostname && !this.isIpHostname(hostname)) {
-        rpConfig.id = hostname;
+      const excludeCredentials: PublicKeyCredentialDescriptor[] = [];
+      if (Array.isArray(optData.excludeCredentials)) {
+        for (const c of optData.excludeCredentials) {
+          try {
+            if (c?.id) {
+              excludeCredentials.push({
+                type: 'public-key',
+                id: base64UrlToArrayBuffer(String(c.id))
+              });
+            }
+          } catch {}
+        }
       }
 
-      const excludeCredentials: PublicKeyCredentialDescriptor[] = Array.isArray(optData.excludeCredentials)
-        ? optData.excludeCredentials.map((c: any) => ({
-            type: 'public-key' as const,
-            id: this.base64UrlToArrayBuffer(String(c.id))
-          }))
-        : [];
-
-      const credential = await this.createPlatformCredential({
-        challenge: this.base64UrlToArrayBuffer(optData.challenge),
-        rp: rpConfig,
+      const credential = await createBiometricPasskey({
+        challenge: base64UrlToArrayBuffer(optData.challenge),
+        rp: buildRpEntity(optData.rp?.name || 'SoftCodeSolution'),
         user: {
-          id: this.base64UrlToArrayBuffer(optData.user?.id || 'c2NzLXVzZXI'),
+          id: base64UrlToArrayBuffer(optData.user?.id || 'c2NzLXVzZXI'),
           name: optData.user?.name || email,
           displayName: optData.user?.displayName || this.fullName() || email
         },
@@ -436,10 +413,10 @@ export class PasskeyManagerComponent {
       let publicKeySpki = '';
       if (typeof resp.getPublicKey === 'function') {
         const spkiBuf = resp.getPublicKey();
-        if (spkiBuf) publicKeySpki = this.bufferToBase64Url(spkiBuf);
+        if (spkiBuf) publicKeySpki = bufferToBase64Url(spkiBuf);
       }
-      const attestationObject = resp.attestationObject ? this.bufferToBase64Url(resp.attestationObject) : '';
-      const credentialId = this.bufferToBase64Url(credential.rawId) || credential.id;
+      const attestationObject = resp.attestationObject ? bufferToBase64Url(resp.attestationObject) : '';
+      const credentialId = bufferToBase64Url(credential.rawId) || credential.id;
 
       const enrollResp = await fetch('/api/auth/passkey/enroll', {
         method: 'POST',
@@ -450,10 +427,10 @@ export class PasskeyManagerComponent {
           userId: this.userId(),
           role: this.role(),
           portalType: this.portalType(),
-          deviceLabel: (this.deviceLabelControl.value || '').trim() || this.detectDefaultDeviceLabel(),
+          deviceLabel: (this.deviceLabelControl.value || '').trim() || detectPasskeyDeviceLabel(),
           challengeToken: optData.challengeToken,
           credentialId,
-          clientDataJSON: this.bufferToBase64Url(resp.clientDataJSON),
+          clientDataJSON: bufferToBase64Url(resp.clientDataJSON),
           attestationObject,
           publicKeySpki
         })
@@ -472,11 +449,9 @@ export class PasskeyManagerComponent {
       const errName = String(err?.name || '');
       if (errName === 'InvalidStateError') {
         this.statusMessage.set('This device already has a Passkey saved for this account.');
-      } else if (errName === 'NotAllowedError' || errName === 'SecurityError') {
+      } else if (errName === 'NotAllowedError' || errName === 'SecurityError' || errName === 'AbortError') {
         this.statusMessage.set(
-          this.isInIframe
-            ? 'Device Passkeys cannot be created inside an embedded preview frame. Tap "Open Browser Tab" to add your biometric Passkey.'
-            : 'Passkey verification was cancelled or timed out. Make sure device screen lock / fingerprint is enabled and try again.'
+          'Biometric Passkey prompt was cancelled or blocked by this context. Ensure device screen lock / fingerprint is enabled and try again.'
         );
       } else {
         this.statusMessage.set(err?.message || 'Could not enroll Passkey.');
@@ -484,6 +459,7 @@ export class PasskeyManagerComponent {
       this.notification.warning(this.statusMessage(), 'Notice');
     } finally {
       this.enrolling.set(false);
+      void this.prefetchRegisterOptions();
     }
   }
 
@@ -506,6 +482,8 @@ export class PasskeyManagerComponent {
       this.statusType.set('success');
       this.statusMessage.set(data.message || 'Passkey removed.');
       this.notification.info(this.statusMessage(), 'Notice');
+      this.prefetchedRegisterOptions = null;
+      void this.prefetchRegisterOptions();
     } catch (err: any) {
       this.statusType.set('error');
       this.statusMessage.set(err?.message || 'Unable to remove Passkey.');
@@ -529,26 +507,5 @@ export class PasskeyManagerComponent {
     const d = new Date(iso);
     if (Number.isNaN(d.getTime())) return iso;
     return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-  }
-
-  private base64UrlToArrayBuffer(b64u: string): ArrayBuffer {
-    const clean = String(b64u || '').trim().replace(/-/g, '+').replace(/_/g, '/');
-    const padLen = (4 - (clean.length % 4)) % 4;
-    const base64 = clean + '='.repeat(padLen);
-    const binary = atob(base64);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) {
-      bytes[i] = binary.charCodeAt(i);
-    }
-    return bytes.buffer;
-  }
-
-  private bufferToBase64Url(buf: ArrayBuffer): string {
-    const bytes = new Uint8Array(buf);
-    let binary = '';
-    for (let i = 0; i < bytes.byteLength; i++) {
-      binary += String.fromCharCode(bytes[i]);
-    }
-    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
   }
 }
