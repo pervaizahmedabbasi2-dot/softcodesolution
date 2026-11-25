@@ -52,7 +52,7 @@ test('Health, readiness, WAL journal mode, and observability metrics endpoints r
   assert.equal(health.status, 'HEALTHY');
   assert.ok(healthRes.headers.get('x-request-id'));
   assert.equal(healthRes.headers.get('x-content-type-options'), 'nosniff');
-  assert.equal(healthRes.headers.get('x-frame-options'), 'SAMEORIGIN');
+  assert.equal(healthRes.headers.get('x-xss-protection'), '1; mode=block');
 
   const readyRes = await fetch(`${baseUrl}/readyz`);
   assert.equal(readyRes.status, 200);

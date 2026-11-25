@@ -710,6 +710,9 @@ export function createI18nRouter(sqliteDb) {
                 setCached(rawLang, orig, fallbackCandidate);
               }
             }
+            if (!result[orig]) {
+              result[orig] = orig;
+            }
           });
         });
       }
