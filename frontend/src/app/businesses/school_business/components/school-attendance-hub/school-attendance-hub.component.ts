@@ -84,6 +84,9 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   currentActorName = input<string>('School Owner');
   currentStudentId = input<string>('');
   currentTeacherGrade = input<string>('All');
+  activeBranchScope = input<string>('ALL');
+  activeWingScope = input<string>('ALL');
+  activeBranchLabel = input<string>('All Branches (Group HQ)');
 
   // Outputs
   policySaved = output<OwnerAttendancePolicy>();
@@ -722,15 +725,23 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
 
   readonly cleanFaceProfiles = computed<FaceProfileRecord[]>(() => {
     const lookup = this.rawMemberLookup();
-    return (this.faceProfiles() || []).map((fp) => {
-      const raw = lookup.get(`${fp.memberCategory}:${fp.memberId}`);
-      return {
-        ...fp,
-        memberName: this.isMaskedValue(fp.memberName) ? (raw?.name || fp.memberCode || 'Campus Member') : fp.memberName,
-        memberCode: this.isMaskedValue(fp.memberCode) ? (raw?.code || fp.memberId) : fp.memberCode,
-        gradeOrDept: this.isMaskedValue(fp.gradeOrDept) ? (raw?.subLabel || 'Campus') : fp.gradeOrDept
-      };
-    });
+    const brScope = this.activeBranchScope();
+    return (this.faceProfiles() || [])
+      .filter((fp) => {
+        const key = `${fp.memberCategory}:${fp.memberId}`;
+        if (!lookup.has(key)) return false;
+        if (brScope && brScope !== 'ALL' && fp.branchId && fp.branchId !== brScope) return false;
+        return true;
+      })
+      .map((fp) => {
+        const raw = lookup.get(`${fp.memberCategory}:${fp.memberId}`);
+        return {
+          ...fp,
+          memberName: this.isMaskedValue(fp.memberName) ? (raw?.name || fp.memberCode || 'Campus Member') : fp.memberName,
+          memberCode: this.isMaskedValue(fp.memberCode) ? (raw?.code || fp.memberId) : fp.memberCode,
+          gradeOrDept: this.isMaskedValue(fp.gradeOrDept) ? (raw?.subLabel || 'Campus') : fp.gradeOrDept
+        };
+      });
   });
 
   readonly profileByMemberKey = computed(() => {
@@ -743,15 +754,23 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
 
   readonly cleanFingerprintProfiles = computed<FingerprintProfileRecord[]>(() => {
     const lookup = this.rawMemberLookup();
-    return (this.fingerprintProfiles() || []).map((fp) => {
-      const raw = lookup.get(`${fp.memberCategory}:${fp.memberId}`);
-      return {
-        ...fp,
-        memberName: this.isMaskedValue(fp.memberName) ? (raw?.name || fp.memberCode || 'Campus Member') : fp.memberName,
-        memberCode: this.isMaskedValue(fp.memberCode) ? (raw?.code || fp.memberId) : fp.memberCode,
-        gradeOrDept: this.isMaskedValue(fp.gradeOrDept) ? (raw?.subLabel || 'Campus') : fp.gradeOrDept
-      };
-    });
+    const brScope = this.activeBranchScope();
+    return (this.fingerprintProfiles() || [])
+      .filter((fp) => {
+        const key = `${fp.memberCategory}:${fp.memberId}`;
+        if (!lookup.has(key)) return false;
+        if (brScope && brScope !== 'ALL' && fp.branchId && fp.branchId !== brScope) return false;
+        return true;
+      })
+      .map((fp) => {
+        const raw = lookup.get(`${fp.memberCategory}:${fp.memberId}`);
+        return {
+          ...fp,
+          memberName: this.isMaskedValue(fp.memberName) ? (raw?.name || fp.memberCode || 'Campus Member') : fp.memberName,
+          memberCode: this.isMaskedValue(fp.memberCode) ? (raw?.code || fp.memberId) : fp.memberCode,
+          gradeOrDept: this.isMaskedValue(fp.gradeOrDept) ? (raw?.subLabel || 'Campus') : fp.gradeOrDept
+        };
+      });
   });
 
   readonly fingerprintByMemberKey = computed(() => {
@@ -1597,7 +1616,10 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       qualityScore: capture.qualityScore,
       liteEnabled: true,
       enrolledBy: this.currentActorName() || 'Biometric Kiosk',
-      enrolledAt: new Date().toISOString()
+      enrolledAt: new Date().toISOString(),
+      branchId: this.activeBranchScope() !== 'ALL' ? this.activeBranchScope() : undefined,
+      branchName: this.activeBranchScope() !== 'ALL' ? this.activeBranchLabel() : undefined,
+      wingId: this.activeWingScope() !== 'ALL' ? this.activeWingScope() : undefined
     };
 
     this.fingerprintEnrolled.emit(profile);
@@ -1688,7 +1710,10 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       qualityScore: extraction.qualityScore,
       liteEnabled: true,
       enrolledBy: this.currentActorName() || 'Selfie Kiosk',
-      enrolledAt: new Date().toISOString()
+      enrolledAt: new Date().toISOString(),
+      branchId: this.activeBranchScope() !== 'ALL' ? this.activeBranchScope() : undefined,
+      branchName: this.activeBranchScope() !== 'ALL' ? this.activeBranchLabel() : undefined,
+      wingId: this.activeWingScope() !== 'ALL' ? this.activeWingScope() : undefined
     };
 
     this.faceEnrolled.emit(profile);
@@ -2431,6 +2456,10 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       return;
     }
     const memberKey = `${prof.memberCategory}:${prof.memberId}`;
+    if (!this.rawMemberLookup().has(memberKey)) {
+      this.emitToast(`Cross-branch terminal guard: ${prof.memberName} does not belong to ${this.activeBranchLabel()}.`, 'warning');
+      return;
+    }
 
     // 2-frame neural stability lock (or instant 1-frame if confidence is very clear)
     if (isAutoScan) {
@@ -2533,6 +2562,10 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
 
       const prof = match.profile;
       if (!this.isOwner() && !this.allowedCategories().includes(prof.memberCategory)) {
+        return;
+      }
+      if (!this.rawMemberLookup().has(`${prof.memberCategory}:${prof.memberId}`)) {
+        this.emitToast(`Cross-branch terminal guard: ${prof.memberName} does not belong to ${this.activeBranchLabel()}.`, 'warning');
         return;
       }
       const thresholdUsed = this.effectiveFingerprintThreshold();
@@ -3064,7 +3097,10 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       qualityScore: extraction.qualityScore,
       liteEnabled: this.enrollLiteEnabled(),
       enrolledBy: this.currentActorName(),
-      enrolledAt: new Date().toISOString()
+      enrolledAt: new Date().toISOString(),
+      branchId: this.activeBranchScope() !== 'ALL' ? this.activeBranchScope() : undefined,
+      branchName: this.activeBranchScope() !== 'ALL' ? this.activeBranchLabel() : undefined,
+      wingId: this.activeWingScope() !== 'ALL' ? this.activeWingScope() : undefined
     };
 
     this.faceEnrolled.emit(profile);
@@ -3150,7 +3186,10 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       qualityScore: capture.qualityScore,
       liteEnabled: this.enrollLiteEnabled(),
       enrolledBy: this.currentActorName(),
-      enrolledAt: new Date().toISOString()
+      enrolledAt: new Date().toISOString(),
+      branchId: this.activeBranchScope() !== 'ALL' ? this.activeBranchScope() : undefined,
+      branchName: this.activeBranchScope() !== 'ALL' ? this.activeBranchLabel() : undefined,
+      wingId: this.activeWingScope() !== 'ALL' ? this.activeWingScope() : undefined
     };
 
     this.fingerprintEnrolled.emit(profile);

@@ -64,6 +64,8 @@ export interface StaffMemberRecord {
   branchName?: string;
   wingId?: string;
   wingName?: string;
+  wingScopeLocked?: boolean;
+  portalUserId?: string;
 }
 
 export interface PrincipalMemberRecord {
@@ -94,6 +96,8 @@ export interface PrincipalMemberRecord {
   branchName?: string;
   wingId?: string;
   wingName?: string;
+  wingScopeLocked?: boolean;
+  portalUserId?: string;
 }
 
 export interface FaceProfileRecord {
@@ -110,6 +114,10 @@ export interface FaceProfileRecord {
   liteEnabled: boolean;
   enrolledBy: string;
   enrolledAt: string;
+  branchId?: string;
+  branchName?: string;
+  wingId?: string;
+  wingName?: string;
 }
 
 export interface FingerprintProfileRecord {
@@ -130,6 +138,10 @@ export interface FingerprintProfileRecord {
   liteEnabled: boolean;
   enrolledBy: string;
   enrolledAt: string;
+  branchId?: string;
+  branchName?: string;
+  wingId?: string;
+  wingName?: string;
 }
 
 export interface RoleAttendancePermission {
@@ -204,6 +216,10 @@ export interface FaceVerificationLogRecord {
   verifiedBy: string;
   markedByRole: string;
   snapshotData?: string;
+  branchId?: string;
+  branchName?: string;
+  wingId?: string;
+  wingName?: string;
 }
 
 export type LateSeverityKind = 'early' | 'on_time' | 'grace' | 'late' | 'none';

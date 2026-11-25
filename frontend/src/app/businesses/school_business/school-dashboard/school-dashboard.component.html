@@ -2551,7 +2551,7 @@
                                   Collect Fee
                                 </button>
                               }
-                              <button type="button" (click)="switchPortal('parent')" class="px-2.5 py-1 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-[10px] cursor-pointer">
+                              <button type="button" (click)="switchPortal('parent', p.linkedStudents[0]?.id)" class="px-2.5 py-1 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-[10px] cursor-pointer">
                                 Parent Portal
                               </button>
                             </div>
@@ -2645,7 +2645,7 @@
                 </div>
                 <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
                   <span class="text-[11px] text-slate-500 font-bold capitalize">Role: {{ p.role }}</span>
-                  <button (click)="switchPortal(p.role)" 
+                  <button (click)="switchPortal(p.role, p.personaId)" 
                     class="px-3 py-1.5 rounded-xl font-extrabold text-xs transition-colors cursor-pointer flex items-center gap-1 shadow-xs"
                     [class]="p.role === 'principal' ? 'bg-amber-600 hover:bg-amber-500 text-white' : (p.role === 'accountant' ? 'bg-teal-600 hover:bg-teal-500 text-white' : (p.role === 'teacher' ? 'bg-emerald-600 hover:bg-emerald-500 text-white' : (p.role === 'student' ? 'bg-sky-600 hover:bg-sky-500 text-white' : 'bg-purple-600 hover:bg-purple-500 text-white')))">
                     <span>Login / Launch View</span>
@@ -2802,7 +2802,15 @@
                       <td class="px-4 py-3 font-semibold text-slate-700">{{ u.designation || '—' }}</td>
                       <td class="px-4 py-3 text-slate-600">{{ u.department || '—' }}</td>
                       <td class="px-4 py-3 text-[11px] font-bold text-slate-600">{{ u.clearanceLevel || 'Standard Access' }}</td>
-                      <td class="px-4 py-3 text-slate-600">{{ u.branch || 'Main Campus' }}</td>
+                      <td class="px-4 py-3 text-slate-600">
+                        <span class="font-semibold text-slate-800">{{ u.branchName || u.branch || resolveBranchName(u.branchId) }}</span>
+                        <span class="block text-[10px] text-indigo-600 font-semibold">
+                          {{ u.wingName || resolveWingName(u.wingId) }}
+                          @if (u.wingScopeLocked) {
+                            <span class="ml-1 px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 font-bold">Wing Locked</span>
+                          }
+                        </span>
+                      </td>
                       <td class="px-4 py-3 text-[11px] text-slate-500 font-mono">{{ u.email }}</td>
                       <td class="px-4 py-3 text-[11px] text-slate-600 font-mono">{{ u.phone || '—' }}</td>
                       <td class="px-4 py-3 font-bold text-slate-700">{{ u.linkedEntity }}</td>
@@ -3141,13 +3149,13 @@
                                 <span>Dossier</span>
                               </button>
                               @if (p.sourceKind === 'principal') {
-                                <button type="button" (click)="switchPortal('principal')" class="px-2 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold text-[10px] cursor-pointer">Portal</button>
+                                <button type="button" (click)="switchPortal('principal', p.rawRef?.id || p.uid)" class="px-2 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold text-[10px] cursor-pointer">Portal</button>
                                 <button type="button" (click)="openEditExecutiveStaffModal(p.rawRef, 'principal')" class="p-1 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 cursor-pointer">
                                   <lucide-icon [name]="'pencil'" class="w-3.5 h-3.5"></lucide-icon>
                                 </button>
                               }
                               @if (p.sourceKind === 'accountant') {
-                                <button type="button" (click)="switchPortal('accountant')" class="px-2 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-800 font-bold text-[10px] cursor-pointer">Desk</button>
+                                <button type="button" (click)="switchPortal('accountant', p.rawRef?.portalUserId || p.rawRef?.id || p.uid)" class="px-2 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-800 font-bold text-[10px] cursor-pointer">Desk</button>
                                 <button type="button" (click)="openEditExecutiveStaffModal(p.rawRef, 'accountant')" class="p-1 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 cursor-pointer">
                                   <lucide-icon [name]="'pencil'" class="w-3.5 h-3.5"></lucide-icon>
                                 </button>
@@ -3280,7 +3288,7 @@
                                 <lucide-icon [name]="'file-text'" class="w-3 h-3"></lucide-icon>
                                 <span>Dossier</span>
                               </button>
-                              <button type="button" (click)="switchPortal('principal')" class="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold text-[10px] cursor-pointer">
+                              <button type="button" (click)="switchPortal('principal', pr.id)" class="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold text-[10px] cursor-pointer">
                                 Principal Portal
                               </button>
                               <button type="button" (click)="openEditExecutiveStaffModal(pr, 'principal')" class="p-1 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 cursor-pointer">
@@ -3374,6 +3382,7 @@
                           <td class="px-4 py-3 font-mono font-bold text-slate-600">{{ acc.empCode }}</td>
                           <td class="px-4 py-3">
                             <p class="font-black text-slate-900">{{ acc.name }}</p>
+                            <p class="text-[10px] text-indigo-600 font-semibold">{{ acc.branchName || resolveBranchName(acc.branchId) }} · {{ acc.wingName || resolveWingName(acc.wingId) }}</p>
                             <p class="text-[10px] text-slate-500">{{ acc.lastLogin }}</p>
                           </td>
                           <td class="px-4 py-3">
@@ -3405,7 +3414,7 @@
                                 <lucide-icon [name]="'file-text'" class="w-3 h-3"></lucide-icon>
                                 <span>Dossier</span>
                               </button>
-                              <button type="button" (click)="switchPortal('accountant')" class="px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-800 font-bold text-[10px] cursor-pointer">
+                              <button type="button" (click)="switchPortal('accountant', acc.portalUserId || acc.id)" class="px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-800 font-bold text-[10px] cursor-pointer">
                                 Accountant Desk
                               </button>
                               <button type="button" (click)="openEditExecutiveStaffModal(acc, 'accountant')" class="p-1 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 cursor-pointer">
@@ -4855,16 +4864,19 @@
         <app-school-attendance-hub
           [portalContext]="'owner'"
           [schoolName]="schoolName"
-          [students]="activeStudents"
-          [teachers]="teachers"
-          [staff]="schoolStaff"
-          [principals]="schoolPrincipals"
-          [faceProfiles]="schoolFaceProfiles"
-          [fingerprintProfiles]="schoolFingerprintProfiles"
+          [students]="scopedActiveStudents"
+          [teachers]="scopedTeachers"
+          [staff]="scopedStaff"
+          [principals]="scopedPrincipals"
+          [faceProfiles]="scopedFaceProfiles"
+          [fingerprintProfiles]="scopedFingerprintProfiles"
           [policy]="ownerAttendancePolicy"
-          [verificationLogs]="faceVerificationLogs"
+          [verificationLogs]="scopedFaceVerificationLogs"
           [pendingSyncCount]="offlineAttendanceQueue.length"
           [currentActorName]="'School Owner'"
+          [activeBranchScope]="effectiveBranchScope"
+          [activeWingScope]="effectiveWingScope"
+          [activeBranchLabel]="activeScopeSummaryLabel"
           (policySaved)="onAttendancePolicySaved($event)"
           (faceEnrolled)="onFaceProfileEnrolled($event)"
           (faceRemoved)="onFaceProfileRemoved($event)"
@@ -5338,12 +5350,19 @@
                       </button>
                     </div>
                     <div class="space-y-3">
-                      @for (rec of feeReconciliations.slice(0, 3); track rec.id) {
+                      @for (rec of scopedFeeReconciliations.slice(0, 3); track rec.id) {
                         <div class="rounded-xl p-3.5 bg-white space-y-2.5">
                           <div class="flex items-center justify-between gap-2 flex-wrap">
-                            <div class="flex items-center gap-2">
+                            <div class="flex items-center gap-2 flex-wrap">
                               <span class="font-mono font-black text-xs text-slate-950">{{ rec.id }}</span>
                               <span class="font-mono text-[11px] text-slate-500">{{ rec.date }}</span>
+                              @if (rec.branchName) {
+                                <span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[10px] font-bold">{{ rec.branchName }}</span>
+                              }
+                              <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase"
+                                [class]="rec.principalApprovalStatus === 'Principal Flagged' ? 'bg-rose-100 text-rose-800' : (rec.principalApprovalStatus === 'Pending Principal Review' ? 'bg-slate-100 text-slate-700' : 'bg-indigo-100 text-indigo-800')">
+                                {{ rec.principalApprovalStatus || 'Principal Approved' }}
+                              </span>
                               <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase"
                                 [class]="rec.ownerApprovalStatus === 'Pending Owner Review' ? 'bg-amber-100 text-amber-800' : (rec.ownerApprovalStatus === 'Flagged by Owner' ? 'bg-rose-100 text-rose-800' : 'bg-emerald-100 text-emerald-800')">
                                 {{ rec.ownerApprovalStatus || 'Verified' }}
@@ -5394,7 +5413,7 @@
                             </tr>
                           </thead>
                           <tbody class="divide-y divide-slate-100 bg-white">
-                            @for (pv of accountantPettyVouchers.slice(0, 5); track pv.id) {
+                            @for (pv of scopedAccountantPettyVouchers.slice(0, 5); track pv.id) {
                               <tr [attr.data-row-key]="pv.id" class="hover:bg-slate-50/70">
                                 <td class="px-3 py-2.5 font-mono font-bold text-slate-900 whitespace-nowrap">{{ pv.voucherNo }}</td>
                                 <td class="px-3 py-2.5 min-w-[200px]">
@@ -5404,7 +5423,7 @@
                                 <td class="px-3 py-2.5 text-right font-mono font-black text-rose-700 tabular-nums whitespace-nowrap">PKR {{ formatCurrency(pv.amount) }}</td>
                               </tr>
                             }
-                            @if (accountantPettyVouchers.length === 0) {
+                            @if (scopedAccountantPettyVouchers.length === 0) {
                               <tr>
                                 <td colspan="3" class="px-3 py-4 text-center text-slate-400 font-medium">No petty vouchers recorded yet.</td>
                               </tr>
@@ -6197,7 +6216,7 @@
                       <lucide-icon [name]="'printer'" class="w-4 h-4 text-emerald-600"></lucide-icon>
                       <span>Print Rooznama Slip</span>
                     </button>
-                    <button (click)="switchPortal('accountant')" class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs cursor-pointer flex items-center gap-1.5 shadow-md shadow-emerald-600/20 transition-all active:scale-95">
+                    <button (click)="switchPortal('accountant', activeAccountantProfile.portalUserId || activeAccountantProfile.id)" class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs cursor-pointer flex items-center gap-1.5 shadow-md shadow-emerald-600/20 transition-all active:scale-95">
                       <lucide-icon [name]="'wallet'" class="w-4 h-4"></lucide-icon>
                       <span>Open Accountant Counter</span>
                     </button>
@@ -6234,15 +6253,104 @@
                   </div>
                 </div>
 
+                <!-- MULTI-BRANCH ROOZNAMA VARIANCE & CONSOLIDATION MATRIX -->
+                <div class="min-w-0 rounded-2xl scs-surface-3d p-4 sm:p-5 space-y-3">
+                  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <h5 class="font-black text-slate-900 text-sm flex items-center gap-2">
+                        <lucide-icon [name]="'building-2'" class="w-4 h-4 text-indigo-600"></lucide-icon>
+                        Multi-Branch Rooznama Consolidation &amp; Variance Audit
+                      </h5>
+                      <p class="text-[11px] text-slate-500">Click any campus row to filter submissions below · 3-Tier Chain: Accountant → Principal → School Owner.</p>
+                    </div>
+                    @if (selectedBranchScope !== 'ALL') {
+                      <button (click)="selectedBranchScope = 'ALL'; selectedWingScope = 'ALL'"
+                        class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-[11px] cursor-pointer shrink-0">
+                        Show All Campuses ({{ branchDailyClosingAuditSummary.totals.closingsCount }})
+                      </button>
+                    }
+                  </div>
+                  <div class="overflow-x-auto border border-slate-200 rounded-xl bg-white">
+                    <table class="w-full text-left text-xs border-collapse">
+                      <thead class="bg-slate-50 text-slate-600 uppercase font-black text-[10px] border-b border-slate-200">
+                        <tr>
+                          <th class="px-3 py-2.5">Campus Branch</th>
+                          <th class="px-3 py-2.5 text-right">Cash</th>
+                          <th class="px-3 py-2.5 text-right">Meezan</th>
+                          <th class="px-3 py-2.5 text-right">HBL</th>
+                          <th class="px-3 py-2.5 text-right">Digital</th>
+                          <th class="px-3 py-2.5 text-right">Petty</th>
+                          <th class="px-3 py-2.5 text-right">Collected</th>
+                          <th class="px-3 py-2.5 text-right">Variance</th>
+                          <th class="px-3 py-2.5">Review Queue</th>
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y divide-slate-100 font-medium">
+                        @for (row of branchDailyClosingAuditSummary.rows; track row.branch.id) {
+                          <tr (click)="selectedBranchScope = row.branch.id; selectedWingScope = 'ALL'"
+                              class="cursor-pointer transition-colors"
+                              [class]="selectedBranchScope === row.branch.id ? 'bg-indigo-50/70' : 'hover:bg-slate-50'">
+                            <td class="px-3 py-2.5">
+                              <div class="font-black text-slate-900">{{ row.branch.name }}</div>
+                              <div class="text-[10px] font-mono text-slate-500">{{ row.branch.code || row.branch.id }} · {{ row.closingsCount }} Closing(s)</div>
+                            </td>
+                            <td class="px-3 py-2.5 text-right font-mono">PKR {{ formatCurrency(row.cashTotal) }}</td>
+                            <td class="px-3 py-2.5 text-right font-mono text-emerald-700">PKR {{ formatCurrency(row.meezanTotal) }}</td>
+                            <td class="px-3 py-2.5 text-right font-mono text-blue-700">PKR {{ formatCurrency(row.hblTotal) }}</td>
+                            <td class="px-3 py-2.5 text-right font-mono text-purple-700">PKR {{ formatCurrency(row.digitalTotal) }}</td>
+                            <td class="px-3 py-2.5 text-right font-mono text-rose-700">PKR {{ formatCurrency(row.pettyTotal) }}</td>
+                            <td class="px-3 py-2.5 text-right font-mono font-black text-emerald-800">PKR {{ formatCurrency(row.collectedTotal) }}</td>
+                            <td class="px-3 py-2.5 text-right font-mono font-black"
+                                [class]="row.varianceTotal === 0 ? 'text-emerald-700' : (row.varianceTotal > 0 ? 'text-indigo-700' : 'text-rose-700')">
+                              PKR {{ formatCurrency(row.varianceTotal) }}
+                            </td>
+                            <td class="px-3 py-2.5">
+                              <div class="flex items-center gap-1 flex-wrap">
+                                @if (row.pendingPrincipalCount > 0) {
+                                  <span class="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 text-[9px] font-black uppercase">{{ row.pendingPrincipalCount }} Principal</span>
+                                }
+                                @if (row.pendingOwnerCount > 0) {
+                                  <span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[9px] font-black uppercase">{{ row.pendingOwnerCount }} Owner</span>
+                                }
+                                @if (row.flaggedCount > 0) {
+                                  <span class="px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 text-[9px] font-black uppercase">{{ row.flaggedCount }} Flagged</span>
+                                }
+                                @if (row.pendingPrincipalCount === 0 && row.pendingOwnerCount === 0 && row.flaggedCount === 0) {
+                                  <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[9px] font-black uppercase">Clear ✓</span>
+                                }
+                              </div>
+                            </td>
+                          </tr>
+                        }
+                      </tbody>
+                      <tfoot class="bg-slate-900 text-white font-black text-[11px]">
+                        <tr>
+                          <td class="px-3 py-2.5">Group Consolidated ({{ branchDailyClosingAuditSummary.totals.closingsCount }})</td>
+                          <td class="px-3 py-2.5 text-right font-mono">PKR {{ formatCurrency(branchDailyClosingAuditSummary.totals.cashTotal) }}</td>
+                          <td class="px-3 py-2.5 text-right font-mono">PKR {{ formatCurrency(branchDailyClosingAuditSummary.totals.meezanTotal) }}</td>
+                          <td class="px-3 py-2.5 text-right font-mono">PKR {{ formatCurrency(branchDailyClosingAuditSummary.totals.hblTotal) }}</td>
+                          <td class="px-3 py-2.5 text-right font-mono">PKR {{ formatCurrency(branchDailyClosingAuditSummary.totals.digitalTotal) }}</td>
+                          <td class="px-3 py-2.5 text-right font-mono text-rose-300">PKR {{ formatCurrency(branchDailyClosingAuditSummary.totals.pettyTotal) }}</td>
+                          <td class="px-3 py-2.5 text-right font-mono text-emerald-300">PKR {{ formatCurrency(branchDailyClosingAuditSummary.totals.collectedTotal) }}</td>
+                          <td class="px-3 py-2.5 text-right font-mono">PKR {{ formatCurrency(branchDailyClosingAuditSummary.totals.varianceTotal) }}</td>
+                          <td class="px-3 py-2.5 text-[10px]">
+                            {{ branchDailyClosingAuditSummary.totals.pendingPrincipalCount }} Prin · {{ branchDailyClosingAuditSummary.totals.pendingOwnerCount }} Own
+                          </td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                </div>
+
                 <!-- ACCOUNTANT SUBMITTED DAILY CLOSINGS QUEUE (OWNER APPROVAL WORKFLOW) -->
                 <div class="min-w-0 rounded-2xl scs-surface-3d p-4 sm:p-5 space-y-4">
                   <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
                     <div>
                       <h5 class="font-black text-slate-900 text-sm flex items-center gap-2">
                         <lucide-icon [name]="'shield-check'" class="w-4 h-4 text-indigo-600"></lucide-icon>
-                        Accountant Daily Closing Submissions — Owner Review & Sign-Off
+                        Accountant Daily Closing Submissions — Principal &amp; Owner Audit ({{ activeScopeSummaryLabel }})
                       </h5>
-                      <p class="text-[11px] text-slate-500">Verify physical cash counter, bank deposit slips, petty cash vouchers, and Principal/Accountant totals.</p>
+                      <p class="text-[11px] text-slate-500">Verify physical cash counter, bank deposit slips, petty cash vouchers, and Principal endorsement per campus.</p>
                     </div>
                     <button (click)="openAddReconciliationModal()" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs cursor-pointer flex items-center gap-1.5 shrink-0">
                       <lucide-icon [name]="'plus'" class="w-3.5 h-3.5"></lucide-icon>
@@ -6251,19 +6359,31 @@
                   </div>
 
                   <div class="space-y-4">
-                    @for (rec of feeReconciliations; track rec.id) {
+                    @for (rec of scopedFeeReconciliations; track rec.id) {
                       <div class="rounded-2xl p-5 sm:p-6 scs-surface-3d space-y-4 transition-all">
                         <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
                           <div class="space-y-1">
                             <div class="flex items-center gap-2 flex-wrap">
                               <span class="font-mono font-black text-xs text-slate-950">{{ rec.id }}</span>
                               <span class="px-2 py-0.5 rounded-md bg-indigo-50 font-mono font-bold text-[11px] text-indigo-800">{{ rec.date }}</span>
+                              @if (rec.branchName) {
+                                <span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-800 text-[10px] font-black">{{ rec.branchName }}</span>
+                              }
+                              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase"
+                                    [class]="rec.principalApprovalStatus === 'Principal Flagged' ? 'bg-rose-100 text-rose-800' : (rec.principalApprovalStatus === 'Pending Principal Review' ? 'bg-slate-100 text-slate-700' : 'bg-indigo-100 text-indigo-800')">
+                                {{ rec.principalApprovalStatus || 'Principal Approved' }}
+                              </span>
                               <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase"
                                     [class]="rec.ownerApprovalStatus === 'Pending Owner Review' ? 'bg-amber-100 text-amber-800' : (rec.ownerApprovalStatus === 'Flagged by Owner' ? 'bg-rose-100 text-rose-800' : 'bg-emerald-100 text-emerald-800')">
                                 {{ rec.ownerApprovalStatus || 'Verified & Approved by Owner' }}
                               </span>
                               <span class="text-xs font-bold text-slate-600">Submitted By: <strong class="text-slate-950">{{ rec.cashierName }}</strong></span>
                             </div>
+                            @if (rec.principalReviewedBy || rec.principalRemarks) {
+                              <p class="text-[11px] text-indigo-700 font-semibold">
+                                Principal Audit ({{ rec.principalReviewedBy || 'Campus Principal' }}): {{ rec.principalRemarks || rec.principalApprovalStatus }}
+                              </p>
+                            }
                             @if (rec.notes) {
                               <p class="text-[11px] text-slate-600 font-medium">{{ rec.notes }}</p>
                             }
@@ -7376,7 +7496,7 @@
                   <lucide-icon [name]="'download'" class="w-4 h-4 text-purple-600"></lucide-icon>
                 </div>
                 <div class="text-xl font-black text-purple-900 tabular-nums">
-                  {{ libraryDigitalResources.length }} Resources
+                  {{ scopedLibraryDigitalResources.length }} Resources
                 </div>
                 <div class="text-[10px] font-extrabold text-purple-700">
                   Past Papers & Study Guides
@@ -7392,7 +7512,7 @@
                 <lucide-icon [name]="'refresh-cw'" class="w-3.5 h-3.5"></lucide-icon>
                 <span>Book Circulation & Borrowers Ledger</span>
                 <span class="px-1.5 py-0.2 rounded-md text-[10px]" [class]="librarySubTab === 'circulation' ? 'bg-white/20 text-white' : 'bg-white border border-slate-200 text-slate-700'">
-                  {{ libraryCirculations.length }}
+                  {{ scopedLibraryCirculations.length }}
                 </span>
               </button>
 
@@ -7402,7 +7522,7 @@
                 <lucide-icon [name]="'book-open'" class="w-3.5 h-3.5"></lucide-icon>
                 <span>Physical Books Catalog & Shelves</span>
                 <span class="px-1.5 py-0.2 rounded-md text-[10px]" [class]="librarySubTab === 'catalog' ? 'bg-white/20 text-white' : 'bg-white border border-slate-200 text-slate-700'">
-                  {{ libraryBooks.length }}
+                  {{ scopedLibraryBooks.length }}
                 </span>
               </button>
 
@@ -7412,7 +7532,7 @@
                 <lucide-icon [name]="'download'" class="w-3.5 h-3.5"></lucide-icon>
                 <span>Digital E-Resources & Solved Past Papers</span>
                 <span class="px-1.5 py-0.2 rounded-md text-[10px]" [class]="librarySubTab === 'digital_resources' ? 'bg-white/20 text-white' : 'bg-purple-200 text-purple-800'">
-                  {{ libraryDigitalResources.length }}
+                  {{ scopedLibraryDigitalResources.length }}
                 </span>
               </button>
             </div>
@@ -7460,7 +7580,7 @@
                     <span class="text-[11px] font-bold text-slate-500">Status:</span>
                     <select [(ngModel)]="circulationStatusFilter"
                       class="px-2.5 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700 focus:outline-hidden shadow-2xs">
-                      <option value="All">All Transactions ({{ libraryCirculations.length }})</option>
+                      <option value="All">All Transactions ({{ scopedLibraryCirculations.length }})</option>
                       <option value="Issued">Active Loans ({{ libraryCirculationStats.activeCheckoutsCount }})</option>
                       <option value="Overdue">Overdue Checkouts ({{ libraryCirculationStats.overdueCheckoutsCount }})</option>
                       <option value="Returned">Returned History ({{ libraryCirculationStats.returnedCheckoutsCount }})</option>
@@ -7809,12 +7929,12 @@
                   <p class="text-xs text-slate-500">Free 24/7 digital academic resources accessible to all registered students and faculty members.</p>
                 </div>
                 <span class="px-2.5 py-1 rounded-xl bg-purple-50 text-purple-700 text-xs font-bold border border-purple-200">
-                  {{ libraryDigitalResources.length }} Verified Resources
+                  {{ scopedLibraryDigitalResources.length }} Verified Resources
                 </span>
               </div>
 
               <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                @for (res of libraryDigitalResources; track res.id) {
+                @for (res of scopedLibraryDigitalResources; track res.id) {
                   <div class="p-4 rounded-2xl border scs-tile-3d transition-all space-y-3">
                     <div class="flex items-center justify-between text-xs">
                       <span class="px-2 py-0.5 rounded-md font-black bg-purple-50 text-purple-800 text-[10px] uppercase border border-purple-100">
@@ -8839,7 +8959,7 @@
                           <button (click)="openOwnerRecordCrudModal('finance', 'edit', f)" title="Edit Transaction" class="p-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 cursor-pointer transition-colors">
                             <lucide-icon [name]="'pencil'" class="w-3.5 h-3.5 text-indigo-600"></lucide-icon>
                           </button>
-                          <button (click)="openFeeChallanVoucher(activeStudents[0] || null)" title="Print Fee Voucher" class="p-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 cursor-pointer transition-colors">
+                          <button (click)="openFeeChallanVoucher(scopedActiveStudents[0] || null)" title="Print Fee Voucher" class="p-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 cursor-pointer transition-colors">
                             <lucide-icon [name]="'printer'" class="w-3.5 h-3.5"></lucide-icon>
                           </button>
                           <button (click)="deletePaymentRecord(f)" title="Delete Payment Record" class="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 cursor-pointer transition-colors">
@@ -8915,7 +9035,7 @@
                 <lucide-icon [name]="'file-text'" class="w-3.5 h-3.5"></lucide-icon>
                 <span>Academic Session Report</span>
               </button>
-              <button (click)="openFeeChallanVoucher(activeStudents[0])" class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-xs cursor-pointer flex items-center gap-1.5 shadow-md shadow-emerald-600/20">
+              <button (click)="openFeeChallanVoucher(scopedActiveStudents[0] || activeStudents[0])" class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-xs cursor-pointer flex items-center gap-1.5 shadow-md shadow-emerald-600/20">
                 <lucide-icon [name]="'printer'" class="w-3.5 h-3.5"></lucide-icon>
                 <span>Print Official Voucher</span>
               </button>
@@ -10356,7 +10476,7 @@
                     class="px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-2"
                     [class]="auditSubTab === 'reconciliation' ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/30' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'">
               <mat-icon class="text-sm">compare_arrows</mat-icon>
-              Fee & Bank Reconciliation ({{ feeReconciliations.length }})
+              Fee & Bank Reconciliation ({{ scopedFeeReconciliations.length }})
             </button>
             <button (click)="setAuditSubTab('waivers')"
                     class="px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-2"
@@ -11524,8 +11644,11 @@
                     <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" [class]="principalTab === 'fee_oversight' ? 'bg-white/20 text-white' : 'bg-gradient-to-tr from-emerald-600 via-teal-600 to-emerald-700 text-white shadow-2xs'">
                       <lucide-icon [name]="'wallet'" class="w-4 h-4"></lucide-icon>
                     </div>
-                    <span class="text-xs truncate">Fee & Concession Policy</span>
+                    <span class="text-xs truncate">Fee &amp; Rooznama Oversight</span>
                   </div>
+                  @if (pendingPrincipalClosingsCount > 0) {
+                    <span class="px-1.5 py-0.5 rounded-full text-[9px] font-black bg-amber-500 text-white shrink-0">{{ pendingPrincipalClosingsCount }}</span>
+                  }
                 </button>
                 <button (click)="setPrincipalTab('parent_complaints')" class="w-full flex items-center justify-between px-3 py-2 rounded-2xl text-left transition-all duration-200 cursor-pointer group" [class]="principalTab === 'parent_complaints' ? 'bg-gradient-to-r from-indigo-600 via-indigo-600 to-blue-600 text-white shadow-md shadow-indigo-600/30 border border-indigo-500/20 font-extrabold' : 'scs-nav-3d-idle text-slate-700 hover:text-slate-900 font-bold'">
                   <div class="flex items-center gap-2.5 min-w-0">
@@ -11863,19 +11986,19 @@
                 @if (isAttendanceCategoryAllowedForRole('principal', 'student')) {
                   <div class="scs-tile-3d rounded-xl p-2.5">
                     <span class="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">Students Total</span>
-                    <span class="text-sm font-black text-emerald-700 tabular-nums">{{ activeStudents.length }} Enrolled</span>
+                    <span class="text-sm font-black text-emerald-700 tabular-nums">{{ scopedActiveStudents.length }} Enrolled</span>
                   </div>
                 }
                 @if (isAttendanceCategoryAllowedForRole('principal', 'teacher')) {
                   <div class="scs-tile-3d rounded-xl p-2.5">
                     <span class="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">Teachers Total</span>
-                    <span class="text-sm font-black text-teal-700 tabular-nums">{{ teachers.length }} Faculty</span>
+                    <span class="text-sm font-black text-teal-700 tabular-nums">{{ scopedTeachers.length }} Faculty</span>
                   </div>
                 }
                 @if (isAttendanceCategoryAllowedForRole('principal', 'staff')) {
                   <div class="scs-tile-3d rounded-xl p-2.5">
                     <span class="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">Campus Staff</span>
-                    <span class="text-sm font-black text-amber-600 tabular-nums">{{ schoolStaff.length }} Members</span>
+                    <span class="text-sm font-black text-amber-600 tabular-nums">{{ scopedStaff.length }} Members</span>
                   </div>
                 }
                 <div class="scs-tile-3d rounded-xl p-2.5">
@@ -12591,7 +12714,7 @@
                   <span class="font-black text-slate-900 text-base leading-tight block transition-colors">Students Table</span>
                   <span class="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-500 mt-1.5 bg-white px-2.5 py-0.5 rounded-md border border-slate-200/60">
                     <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
-                    <span>{{ activeStudents.length }} Active Enrolled</span>
+                    <span>{{ scopedActiveStudents.length }} Active Enrolled</span>
                   </span>
                 </div>
                 <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-blue-500 text-white shadow-md shadow-indigo-500/30 flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 z-10">
@@ -12608,7 +12731,7 @@
                   <span class="font-black text-slate-900 text-base leading-tight block transition-colors">Teachers Table</span>
                   <span class="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-500 mt-1.5 bg-white px-2.5 py-0.5 rounded-md border border-slate-200/60">
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                    <span>{{ teachers.length }} Staff Members</span>
+                    <span>{{ scopedTeachers.length }} Staff Members</span>
                   </span>
                 </div>
                 <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-600 via-teal-500 to-emerald-400 text-white shadow-md shadow-emerald-500/30 flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 z-10">
@@ -13095,8 +13218,11 @@
         <div class="apple-card scs-surface-3d rounded-2xl p-5 space-y-6">
           <div class="flex items-center justify-between border-b border-slate-100 pb-3 flex-wrap gap-2">
             <div>
-              <h2 class="text-base font-black text-slate-900">Faculty Period Substitution & Period Arrangement Register</h2>
-              <p class="text-xs text-slate-500">Assign available faculty to cover classes of absent teachers for seamless academic continuity.</p>
+              <div class="flex items-center gap-2 flex-wrap">
+                <h2 class="text-base font-black text-slate-900">Faculty Period Substitution &amp; Period Arrangement Register</h2>
+                <span class="px-2.5 py-0.5 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-800 text-[10px] font-black">{{ activeScopeSummaryLabel }}</span>
+              </div>
+              <p class="text-xs text-slate-500">Assign available faculty from the active campus/wing to cover classes of absent teachers.</p>
             </div>
             <button (click)="openSubstitutionPDFModal()" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs cursor-pointer flex items-center gap-1.5 shadow-sm transition-all active:scale-95">
               <lucide-icon [name]="'printer'" class="w-3.5 h-3.5"></lucide-icon>
@@ -13104,11 +13230,17 @@
             </button>
           </div>
 
+          <datalist id="scopedTeachersDatalist">
+            @for (t of scopedTeachers; track t.id) {
+              <option [value]="t.name">{{ t.subject }} · {{ t.branchName || activeScopeSummaryLabel }}</option>
+            }
+          </datalist>
+
           <!-- Form to assign substitution -->
           <div class="p-4 bg-white rounded-2xl border border-slate-200/90 space-y-4">
             <h3 class="font-black text-slate-900 text-sm flex items-center gap-2">
               <lucide-icon [name]="'user-plus'" class="w-4 h-4 text-indigo-600"></lucide-icon>
-              <span>Assign New Substitution Duty</span>
+              <span>Assign New Substitution Duty ({{ activeScopeSummaryLabel }})</span>
             </h3>
 
             <div class="space-y-3 text-xs">
@@ -13127,12 +13259,12 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   <div>
                     <label class="block font-bold text-slate-700 mb-1">Absent Faculty Member *</label>
-                    <input type="text" [(ngModel)]="newSubstituteForm.absentTeacher" placeholder="e.g. Prof. Rehan Alvi" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold text-slate-900">
+                    <input type="text" list="scopedTeachersDatalist" [(ngModel)]="newSubstituteForm.absentTeacher" placeholder="Select or type campus faculty..." class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold text-slate-900">
                   </div>
 
                   <div>
                     <label class="block font-bold text-slate-700 mb-1">Assigned Substitute Faculty *</label>
-                    <input type="text" [(ngModel)]="newSubstituteForm.substituteTeacher" placeholder="e.g. Engr. Bilal Hashmi" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold text-slate-900">
+                    <input type="text" list="scopedTeachersDatalist" [(ngModel)]="newSubstituteForm.substituteTeacher" placeholder="Select or type campus faculty..." class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold text-slate-900">
                   </div>
                 </div>
               }
@@ -13219,9 +13351,14 @@
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100 font-medium">
-                @for (s of substituteArrangements; track s.id) {
+                @for (s of scopedSubstituteArrangements; track s.id) {
                   <tr [attr.data-row-key]="s.id" class="hover:bg-slate-50/70 transition-colors">
-                    <td class="px-4 py-3 font-mono font-bold text-slate-500">{{ s.id }}</td>
+                    <td class="px-4 py-3 font-mono font-bold text-slate-500">
+                      <div>{{ s.id }}</div>
+                      @if (s.branchName) {
+                        <span class="text-[9px] font-sans font-bold text-indigo-700">{{ s.branchName }}</span>
+                      }
+                    </td>
                     <td class="px-4 py-3 text-slate-600 font-mono">{{ s.date }}</td>
                     <td class="px-4 py-3 font-bold text-rose-700">{{ s.absentTeacher }}</td>
                     <td class="px-4 py-3 font-black text-emerald-700">{{ s.substituteTeacher }}</td>
@@ -13268,7 +13405,7 @@
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            @for (st of syllabusTracker; track st.id) {
+            @for (st of scopedSyllabusTracker; track st.id) {
               <div class="p-4 rounded-2xl scs-tile-3d space-y-3">
                 <div class="flex items-center justify-between">
                   <span class="px-2.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 font-black text-xs border border-indigo-100">
@@ -13308,9 +13445,12 @@
       <!-- PRINCIPAL TAB 5: DAILY WALKTHROUGH LOG -->
       @if (principalTab === 'inspections') {
         <div class="apple-card scs-surface-3d rounded-2xl p-5 space-y-6">
-          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3 flex-wrap gap-2">
             <div>
-              <h2 class="text-base font-black text-slate-900">Campus Walkthrough & Daily Inspection Audit Register</h2>
+              <div class="flex items-center gap-2 flex-wrap">
+                <h2 class="text-base font-black text-slate-900">Campus Walkthrough &amp; Daily Inspection Audit Register</h2>
+                <span class="px-2.5 py-0.5 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-800 text-[10px] font-black">{{ activeScopeSummaryLabel }}</span>
+              </div>
               <p class="text-xs text-slate-500">Record observations on student discipline, teacher punctuality, uniform adherence, and wing cleanliness.</p>
             </div>
           </div>
@@ -13319,7 +13459,7 @@
           <div class="p-4 bg-white rounded-2xl border border-slate-200 space-y-4">
             <h3 class="font-black text-slate-900 text-sm flex items-center gap-2">
               <lucide-icon [name]="'clipboard-check'" class="w-4 h-4 text-indigo-600"></lucide-icon>
-              <span>Record Morning Inspection Walkthrough</span>
+              <span>Record Morning Inspection Walkthrough ({{ activeScopeSummaryLabel }})</span>
             </h3>
 
             <div class="space-y-3 text-xs">
@@ -13335,7 +13475,16 @@
               }
 
               @if (!isFormFieldHidden('principal_inspections', 'ins_location')) {
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                  <div>
+                    <label class="block font-bold text-slate-700 mb-1">Academic Wing</label>
+                    <select [(ngModel)]="newInspectionForm.wing" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold text-slate-900 cursor-pointer">
+                      @for (w of availableWingsForSelectedBranch; track w.id) {
+                        <option [value]="w.name">{{ w.name }} ({{ w.wingType }})</option>
+                      }
+                      <option value="Full Campus Block">Full Campus Block</option>
+                    </select>
+                  </div>
                   <div>
                     <label class="block font-bold text-slate-700 mb-1">Wing / Location *</label>
                     <input type="text" [(ngModel)]="newInspectionForm.location" placeholder="e.g. Senior Science Block & Assembly Hall" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold text-slate-900">
@@ -13449,11 +13598,21 @@
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100 font-medium">
-                @for (log of dailyInspectionLogs; track log.id) {
+                @for (log of scopedDailyInspectionLogs; track log.id) {
                   <tr [attr.data-row-key]="log.id" class="hover:bg-slate-50/70 transition-colors">
-                    <td class="px-4 py-3 font-mono font-bold text-slate-500">{{ log.id }}</td>
+                    <td class="px-4 py-3 font-mono font-bold text-slate-500">
+                      <div>{{ log.id }}</div>
+                      @if (log.branchName) {
+                        <span class="text-[9px] font-sans font-bold text-indigo-700">{{ log.branchName }}</span>
+                      }
+                    </td>
                     <td class="px-4 py-3 text-slate-600 font-mono">{{ log.time }}</td>
-                    <td class="px-4 py-3 font-black text-slate-900">{{ log.location }}</td>
+                    <td class="px-4 py-3 font-black text-slate-900">
+                      <div>{{ log.location }}</div>
+                      @if (log.wingName) {
+                        <span class="text-[10px] font-bold text-slate-500">{{ log.wingName }}</span>
+                      }
+                    </td>
                     <td class="px-4 py-3">
                       <p class="font-bold text-emerald-700">{{ log.uniformCheck }}</p>
                       <span class="text-[10px] text-slate-500">Cleanliness: {{ log.cleanlinessScore }}</span>
@@ -13883,7 +14042,7 @@
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            @for (ex of examModerationList; track ex.id) {
+            @for (ex of scopedExamModerationList; track ex.id) {
               <div class="p-4 rounded-2xl scs-tile-3d space-y-3 flex flex-col justify-between">
                 <div>
                   <div class="flex items-center justify-between">
@@ -14131,7 +14290,7 @@
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100 font-medium">
-                @for (tsk of facultyTaskList; track tsk.id) {
+                @for (tsk of scopedFacultyTaskList; track tsk.id) {
                   <tr [attr.data-row-key]="tsk.id" class="hover:bg-slate-50/70 transition-colors">
                     <td class="px-4 py-3 font-mono font-bold text-slate-500">{{ tsk.id }}</td>
                     <td class="px-4 py-3 font-black text-slate-900">{{ tsk.assignedTeacher }}</td>
@@ -14186,7 +14345,7 @@
           <div class="space-y-3">
             <h3 class="font-black text-slate-900 text-sm">Faculty Leave Requests Requiring Principal Sign-off</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              @for (tl of teacherLeaveRequests; track tl.id) {
+              @for (tl of scopedTeacherLeaveRequests; track tl.id) {
                 <div class="p-4 rounded-2xl scs-tile-3d space-y-3">
                   <div class="flex items-center justify-between">
                     <div>
@@ -14231,11 +14390,9 @@
               <div>
                 <label class="block font-bold text-slate-700 mb-1">Target Faculty Member *</label>
                 <select [(ngModel)]="newTeacherNoticeForm.teacherName" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold text-slate-900 cursor-pointer">
-                  <option value="Prof. Rehan Alvi">Prof. Rehan Alvi</option>
-                  <option value="Ms. Hira Naeem">Ms. Hira Naeem</option>
-                  <option value="Prof. Tariq Mehmood">Prof. Tariq Mehmood</option>
-                  <option value="Engr. Bilal Hashmi">Engr. Bilal Hashmi</option>
-                  <option value="Dr. Sarah Jenkins">Dr. Sarah Jenkins</option>
+                  @for (t of scopedTeachers; track t.id) {
+                    <option [value]="t.name">{{ t.name }} ({{ t.subject }})</option>
+                  }
                 </select>
               </div>
 
@@ -14722,11 +14879,95 @@
             </div>
           </div>
 
+          <!-- Branch Daily Closing (Rooznama) Review & Verification (Accountant -> Principal -> Owner) -->
+          <div class="space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <h3 class="font-black text-slate-900 text-sm flex items-center gap-2">
+                  <lucide-icon [name]="'shield-check'" class="w-4 h-4 text-indigo-600"></lucide-icon>
+                  Branch Daily Closing (Rooznama) Review &amp; Verification ({{ activeScopeSummaryLabel }})
+                </h3>
+                <p class="text-[11px] text-slate-500">Endorse Accountant counter closings and forward verified cash/bank slips to School Owner, or flag discrepancies.</p>
+              </div>
+              <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-indigo-50 text-indigo-800 border border-indigo-200 shrink-0">
+                {{ pendingPrincipalClosingsCount }} Pending Principal Review
+              </span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              @for (rec of scopedFeeReconciliations; track rec.id) {
+                <div class="p-4 sm:p-5 rounded-2xl scs-surface-3d space-y-3">
+                  <div class="flex items-center justify-between gap-2 flex-wrap">
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <span class="font-mono font-black text-xs text-slate-900">{{ rec.id }}</span>
+                      <span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-bold text-[10px]">{{ rec.branchName || activeScopeSummaryLabel }}</span>
+                      <span class="font-mono text-[10px] text-slate-500">{{ rec.date }}</span>
+                    </div>
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase"
+                      [class]="rec.principalApprovalStatus === 'Principal Flagged' ? 'bg-rose-100 text-rose-800' : (rec.principalApprovalStatus === 'Pending Principal Review' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800')">
+                      {{ rec.principalApprovalStatus || 'Principal Approved' }}
+                    </span>
+                  </div>
+
+                  <div class="grid grid-cols-4 gap-2 text-[11px] p-3 rounded-xl bg-white border border-slate-200/80">
+                    <div>
+                      <span class="text-[9px] font-bold text-slate-500 block">Cash</span>
+                      <span class="font-mono font-black text-slate-900">PKR {{ formatCurrency(rec.counterCashReceived) }}</span>
+                    </div>
+                    <div>
+                      <span class="text-[9px] font-bold text-slate-500 block">Bank</span>
+                      <span class="font-mono font-black text-emerald-700">PKR {{ formatCurrency((rec.bankDepositedMeezan || 0) + (rec.bankDepositedHBL || 0)) }}</span>
+                    </div>
+                    <div>
+                      <span class="text-[9px] font-bold text-slate-500 block">Digital</span>
+                      <span class="font-mono font-black text-purple-700">PKR {{ formatCurrency(rec.onlineDigitalKuickPay || 0) }}</span>
+                    </div>
+                    <div>
+                      <span class="text-[9px] font-bold text-slate-500 block">Petty</span>
+                      <span class="font-mono font-black text-rose-700">PKR {{ formatCurrency(rec.pettyExpenses || 0) }}</span>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center justify-between text-xs">
+                    <span class="text-slate-600 font-medium">Cashier: <strong class="text-slate-900">{{ rec.cashierName }}</strong> · Slip: {{ rec.bankDepositSlipNo || 'N/A' }}</span>
+                    <span class="font-mono font-black text-emerald-800">Net: PKR {{ formatCurrency(rec.actualCollected) }}</span>
+                  </div>
+
+                  <div class="text-[11px] flex items-center justify-between gap-2">
+                    <span class="text-slate-500 font-semibold">Owner Status:</span>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase"
+                      [class]="rec.ownerApprovalStatus === 'Pending Owner Review' ? 'bg-amber-100 text-amber-800' : (rec.ownerApprovalStatus === 'Flagged by Owner' ? 'bg-rose-100 text-rose-800' : 'bg-emerald-100 text-emerald-800')">
+                      {{ rec.ownerApprovalStatus || 'Verified & Approved by Owner' }}
+                    </span>
+                  </div>
+
+                  <div class="space-y-2 pt-1">
+                    <input type="text"
+                      [(ngModel)]="principalReviewRemarks[rec.id]"
+                      [placeholder]="rec.principalRemarks || 'Principal review notes (cash counter & slip match)...'"
+                      class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-medium text-slate-800">
+                    <div class="flex items-center gap-2">
+                      <button type="button" (click)="principalReviewDailyClosing(rec, 'Principal Approved')"
+                        class="flex-1 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs cursor-pointer flex items-center justify-center gap-1.5 shadow-xs">
+                        <lucide-icon [name]="'check-circle-2'" class="w-3.5 h-3.5"></lucide-icon>
+                        <span>Endorse &amp; Forward to Owner</span>
+                      </button>
+                      <button type="button" (click)="principalReviewDailyClosing(rec, 'Principal Flagged')"
+                        class="px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs cursor-pointer flex items-center justify-center gap-1 shadow-xs">
+                        <lucide-icon [name]="'alert-circle'" class="w-3.5 h-3.5"></lucide-icon>
+                        <span>Flag Discrepancy</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+
           <!-- Concession Applications List -->
           <div class="space-y-4">
-            <h3 class="font-black text-slate-900 text-sm">Fee Concession & Scholarship Requests for Principal Sanction</h3>
+            <h3 class="font-black text-slate-900 text-sm">Fee Concession &amp; Scholarship Requests for Principal Sanction ({{ activeScopeSummaryLabel }})</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-              @for (req of feeConcessionRequests; track req.id) {
+              @for (req of scopedFeeConcessionRequests; track req.id) {
                 <div class="p-5 sm:p-6 rounded-2xl scs-surface-3d space-y-4">
                   <div class="flex items-center justify-between">
                     <div>
@@ -14974,16 +15215,19 @@
         <app-school-attendance-hub
           [portalContext]="'principal'"
           [schoolName]="schoolName"
-          [students]="activeStudents"
-          [teachers]="teachers"
-          [staff]="schoolStaff"
-          [principals]="schoolPrincipals"
-          [faceProfiles]="schoolFaceProfiles"
-          [fingerprintProfiles]="schoolFingerprintProfiles"
+          [students]="scopedActiveStudents"
+          [teachers]="scopedTeachers"
+          [staff]="scopedStaff"
+          [principals]="scopedPrincipals"
+          [faceProfiles]="scopedFaceProfiles"
+          [fingerprintProfiles]="scopedFingerprintProfiles"
           [policy]="ownerAttendancePolicy"
-          [verificationLogs]="faceVerificationLogs"
+          [verificationLogs]="scopedFaceVerificationLogs"
           [pendingSyncCount]="offlineAttendanceQueue.length"
           [currentActorName]="'Principal Directorate'"
+          [activeBranchScope]="effectiveBranchScope"
+          [activeWingScope]="effectiveWingScope"
+          [activeBranchLabel]="activeScopeSummaryLabel"
           (policySaved)="onAttendancePolicySaved($event)"
           (faceEnrolled)="onFaceProfileEnrolled($event)"
           (faceRemoved)="onFaceProfileRemoved($event)"
@@ -15172,6 +15416,9 @@
             <p class="text-[11px] sm:text-xs text-slate-600 font-medium leading-tight">
               <span class="text-emerald-700 font-bold">{{ currentTeacherProfile.subject }}</span> • Section In-Charge: <strong>{{ currentTeacherProfile.assignedGrade }}</strong>
             </p>
+            <p class="text-[11px] font-semibold text-slate-500 leading-tight">
+              Campus &amp; Wing: <strong class="text-slate-800">{{ activePersonaBranchLabel }}</strong>
+            </p>
           </div>
         </div>
 
@@ -15243,7 +15490,7 @@
           <div class="space-y-0.5 min-w-0 flex-1">
             <span class="text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-slate-400 block leading-tight truncate">Syllabus Covered</span>
             <div class="text-lg sm:text-xl 2xl:text-2xl font-black text-slate-900 transition-colors leading-tight break-words">{{ teacherAverageSyllabusPercentage }}% Covered</div>
-            <span class="inline-flex px-1.5 sm:px-2 py-0.5 rounded-md text-[9px] sm:text-[10px] font-black bg-blue-50 text-blue-700 max-w-full truncate">{{ teacherLessonPlans.length }} Lesson Plans • {{ teacherStudyMaterials.length }} Notes</span>
+            <span class="inline-flex px-1.5 sm:px-2 py-0.5 rounded-md text-[9px] sm:text-[10px] font-black bg-blue-50 text-blue-700 max-w-full truncate">{{ scopedTeacherLessonPlans.length }} Lesson Plans • {{ scopedTeacherStudyMaterials.length }} Notes</span>
           </div>
           <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-blue-600 to-cyan-700 text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-600/20 border border-white/30 group-hover:scale-105 transition-transform">
             <lucide-icon [name]="'book-open'" class="w-5 h-5 sm:w-6 sm:h-6"></lucide-icon>
@@ -15255,7 +15502,7 @@
           <div class="space-y-0.5 min-w-0 flex-1">
             <span class="text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-slate-400 block leading-tight truncate">Pending Submissions</span>
             <div class="text-lg sm:text-xl 2xl:text-2xl font-black text-amber-600 leading-tight break-words">{{ teacherPendingSubmissionsToReviewCount }} To Check</div>
-            <span class="inline-flex px-1.5 sm:px-2 py-0.5 rounded-md text-[9px] sm:text-[10px] font-black bg-amber-50 text-amber-800 max-w-full truncate">{{ teacherHomeworks.length }} Tasks • {{ teacherPendingLeavesAndDutiesCount }} Duties</span>
+            <span class="inline-flex px-1.5 sm:px-2 py-0.5 rounded-md text-[9px] sm:text-[10px] font-black bg-amber-50 text-amber-800 max-w-full truncate">{{ scopedTeacherHomeworks.length }} Tasks • {{ teacherPendingLeavesAndDutiesCount }} Duties</span>
           </div>
           <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-amber-600 to-orange-700 text-white flex items-center justify-center shrink-0 shadow-md shadow-amber-600/20 border border-white/30 group-hover:scale-105 transition-transform">
             <lucide-icon [name]="'award'" class="w-5 h-5 sm:w-6 sm:h-6"></lucide-icon>
@@ -15342,7 +15589,7 @@
                   @if (teacherTab === 'marks') {
                     <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse shrink-0"></span>
                   } @else {
-                    <span class="px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-700 text-[10px] font-extrabold border border-amber-200/60 shrink-0">{{ teacherGradebook.length }}</span>
+                    <span class="px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-700 text-[10px] font-extrabold border border-amber-200/60 shrink-0">{{ scopedTeacherGradebook.length }}</span>
                   }
                 </button>
                 <button (click)="setTeacherTab('homework')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-all duration-200 cursor-pointer group" [class]="teacherTab === 'homework' ? 'bg-gradient-to-r from-indigo-600 via-indigo-600 to-blue-600 text-white shadow-md shadow-indigo-600/30 border border-indigo-500/20 font-extrabold' : 'scs-nav-3d-idle text-slate-700 hover:text-slate-900 font-bold'">
@@ -15368,7 +15615,7 @@
                   @if (teacherTab === 'students') {
                     <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse shrink-0"></span>
                   } @else {
-                    <span class="px-1.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 text-[10px] font-extrabold border border-indigo-200/60 shrink-0">{{ activeStudents.length }} Enrolled</span>
+                    <span class="px-1.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 text-[10px] font-extrabold border border-indigo-200/60 shrink-0">{{ scopedActiveStudents.length }} Enrolled</span>
                   }
                 </button>
                 <button (click)="setTeacherTab('lessons')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-all duration-200 cursor-pointer group" [class]="teacherTab === 'lessons' ? 'bg-gradient-to-r from-indigo-600 via-indigo-600 to-blue-600 text-white shadow-md shadow-indigo-600/30 border border-indigo-500/20 font-extrabold' : 'scs-nav-3d-idle text-slate-700 hover:text-slate-900 font-bold'">
@@ -15381,7 +15628,7 @@
                   @if (teacherTab === 'lessons') {
                     <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse shrink-0"></span>
                   } @else {
-                    <span class="px-1.5 py-0.5 rounded-md bg-purple-50 text-purple-700 text-[10px] font-extrabold border border-purple-200/60 shrink-0">{{ teacherLessonPlans.length }} Plans</span>
+                    <span class="px-1.5 py-0.5 rounded-md bg-purple-50 text-purple-700 text-[10px] font-extrabold border border-purple-200/60 shrink-0">{{ scopedTeacherLessonPlans.length }} Plans</span>
                   }
                 </button>
                 <button (click)="setTeacherTab('duties')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-all duration-200 cursor-pointer group" [class]="teacherTab === 'duties' ? 'bg-gradient-to-r from-indigo-600 via-indigo-600 to-blue-600 text-white shadow-md shadow-indigo-600/30 border border-indigo-500/20 font-extrabold' : 'scs-nav-3d-idle text-slate-700 hover:text-slate-900 font-bold'">
@@ -16257,17 +16504,20 @@
           <app-school-attendance-hub
             [portalContext]="'teacher'"
             [schoolName]="schoolName"
-            [students]="activeStudents"
-            [teachers]="teachers"
-            [staff]="schoolStaff"
-            [principals]="schoolPrincipals"
-            [faceProfiles]="schoolFaceProfiles"
-            [fingerprintProfiles]="schoolFingerprintProfiles"
+            [students]="scopedActiveStudents"
+            [teachers]="scopedTeachers"
+            [staff]="scopedStaff"
+            [principals]="scopedPrincipals"
+            [faceProfiles]="scopedFaceProfiles"
+            [fingerprintProfiles]="scopedFingerprintProfiles"
             [policy]="ownerAttendancePolicy"
-            [verificationLogs]="faceVerificationLogs"
+            [verificationLogs]="scopedFaceVerificationLogs"
             [pendingSyncCount]="offlineAttendanceQueue.length"
             [currentActorName]="currentTeacherProfile.name || 'Faculty Operator'"
             [currentTeacherGrade]="currentTeacherProfile.assignedGrade || 'All'"
+            [activeBranchScope]="effectiveBranchScope"
+            [activeWingScope]="effectiveWingScope"
+            [activeBranchLabel]="activeScopeSummaryLabel"
             (faceEnrolled)="onFaceProfileEnrolled($event)"
             (faceRemoved)="onFaceProfileRemoved($event)"
             (fingerprintEnrolled)="onFingerprintProfileEnrolled($event)"
@@ -16491,13 +16741,13 @@
                   class="px-3 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1.5 cursor-pointer transition-all"
                   [class]="homeworkSubTab === 'assignments' ? 'bg-emerald-600 text-white shadow-2xs font-black' : 'text-slate-600 hover:text-slate-900'">
                   <lucide-icon [name]="'file-text'" class="w-3.5 h-3.5"></lucide-icon>
-                  <span>Assignments ({{ teacherHomeworks.length }})</span>
+                  <span>Assignments ({{ scopedTeacherHomeworks.length }})</span>
                 </button>
                 <button type="button" (click)="homeworkSubTab = 'materials'"
                   class="px-3 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1.5 cursor-pointer transition-all"
                   [class]="homeworkSubTab === 'materials' ? 'bg-indigo-600 text-white shadow-2xs font-black' : 'text-slate-600 hover:text-slate-900'">
                   <lucide-icon [name]="'book-open'" class="w-3.5 h-3.5"></lucide-icon>
-                  <span>Class Notes &amp; Files ({{ teacherStudyMaterials.length }})</span>
+                  <span>Class Notes &amp; Files ({{ scopedTeacherStudyMaterials.length }})</span>
                 </button>
               </div>
               <button type="button" (click)="openStudyMaterialModal()" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs cursor-pointer shadow-xs flex items-center gap-1.5">
@@ -16770,7 +17020,7 @@
 
           @if (homeworkSubTab === 'materials') {
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              @for (mat of teacherStudyMaterials; track mat.id) {
+              @for (mat of scopedTeacherStudyMaterials; track mat.id) {
                 <div class="apple-card scs-surface-3d rounded-2xl p-4 space-y-3 flex flex-col justify-between">
                   <div class="space-y-2">
                     <div class="flex items-center justify-between gap-2">
@@ -16794,7 +17044,7 @@
                   </div>
                 </div>
               }
-              @if (teacherStudyMaterials.length === 0) {
+              @if (scopedTeacherStudyMaterials.length === 0) {
                 <div class="col-span-full p-6 text-center rounded-2xl bg-white border border-slate-200 text-xs font-bold text-slate-500">
                   No class notes or study files uploaded yet. Click "Upload Notes / Past Paper" to share resources with students &amp; parents.
                 </div>
@@ -16966,7 +17216,7 @@
               </span>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              @for (syl of syllabusTracker; track syl.id) {
+              @for (syl of scopedSyllabusTracker; track syl.id) {
                 <div class="p-4 rounded-2xl bg-white border border-slate-200/90 space-y-2.5">
                   <div class="flex items-center justify-between">
                     <span class="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 font-black text-[10px] border border-indigo-100">{{ syl.grade }}</span>
@@ -17006,7 +17256,7 @@
               </button>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-              @for (tl of teacherLeaveRequests; track tl.id) {
+              @for (tl of scopedTeacherLeaveRequests; track tl.id) {
                 <div class="p-4 rounded-2xl bg-white border border-slate-200 space-y-2">
                   <div class="flex items-center justify-between gap-2">
                     <span class="font-black text-slate-900 text-xs">{{ tl.leaveType }} ({{ tl.totalDays }} Day(s))</span>
@@ -17026,7 +17276,7 @@
           <div class="apple-card scs-surface-3d rounded-2xl p-5 space-y-4">
             <h3 class="font-black text-slate-900 text-base">Assigned Substitute Cover Periods</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-              @for (sub of substituteArrangements; track sub.id) {
+              @for (sub of scopedSubstituteArrangements; track sub.id) {
                 <div class="p-4 rounded-2xl bg-white border border-slate-200 flex items-center justify-between gap-3">
                   <div class="min-w-0">
                     <span class="text-[10px] font-mono font-bold text-indigo-600">{{ sub.date }} • {{ sub.period }}</span>
@@ -17049,7 +17299,7 @@
           <div class="apple-card scs-surface-3d rounded-2xl p-5 space-y-4">
             <h3 class="font-black text-slate-900 text-base">Principal-Assigned Faculty Tasks</h3>
             <div class="space-y-2.5">
-              @for (tsk of facultyTaskList; track tsk.id) {
+              @for (tsk of scopedFacultyTaskList; track tsk.id) {
                 <div class="p-4 rounded-2xl bg-white border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div class="min-w-0">
                     <div class="flex items-center gap-2">
@@ -17168,7 +17418,7 @@
               </button>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              @for (bk of libraryBooks; track bk.id) {
+              @for (bk of scopedLibraryBooks; track bk.id) {
                 <div class="p-3.5 rounded-2xl bg-white border border-slate-200 flex flex-col justify-between space-y-2">
                   <div>
                     <div class="flex items-center justify-between text-[10px] font-black uppercase text-slate-500">
@@ -17196,7 +17446,7 @@
               </button>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              @for (mat of teacherStudyMaterials; track mat.id) {
+              @for (mat of scopedTeacherStudyMaterials; track mat.id) {
                 <div class="p-3.5 rounded-2xl bg-white border border-slate-200 flex flex-col justify-between space-y-2">
                   <div>
                     <div class="flex items-center justify-between text-[10px] font-black uppercase text-emerald-700">
@@ -17222,7 +17472,7 @@
           <div class="apple-card scs-surface-3d rounded-2xl p-5 space-y-3">
             <h3 class="text-sm font-black text-slate-900">Digital Teaching Guides &amp; Past Papers</h3>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              @for (res of libraryDigitalResources; track res.id) {
+              @for (res of scopedLibraryDigitalResources; track res.id) {
                 <div class="p-3.5 rounded-2xl bg-white border border-slate-200 flex flex-col justify-between space-y-2">
                   <div>
                     <div class="flex items-center justify-between text-[10px] font-black uppercase text-indigo-700">
@@ -17320,6 +17570,7 @@
             </div>
             <h2 class="text-lg sm:text-xl font-black text-slate-900 mt-1 truncate">{{ currentStudentProfile.name }}</h2>
             <p class="text-xs text-slate-600 font-medium truncate">Class: <strong class="text-slate-800">{{ currentStudentProfile.grade }} ({{ currentStudentProfile.section || 'A' }})</strong> • ID: <strong class="text-slate-800">{{ currentStudentProfile.id }}</strong></p>
+            <p class="text-[11px] font-semibold text-slate-500 truncate mt-0.5">Campus &amp; Wing: <strong class="text-slate-800">{{ activePersonaBranchLabel }}</strong></p>
           </div>
         </div>
 
@@ -17910,17 +18161,20 @@
             <app-school-attendance-hub
               [portalContext]="'student'"
               [schoolName]="schoolName"
-              [students]="activeStudents"
-              [teachers]="teachers"
-              [staff]="schoolStaff"
-              [principals]="schoolPrincipals"
-              [faceProfiles]="schoolFaceProfiles"
-              [fingerprintProfiles]="schoolFingerprintProfiles"
+              [students]="scopedActiveStudents"
+              [teachers]="scopedTeachers"
+              [staff]="scopedStaff"
+              [principals]="scopedPrincipals"
+              [faceProfiles]="scopedFaceProfiles"
+              [fingerprintProfiles]="scopedFingerprintProfiles"
               [policy]="ownerAttendancePolicy"
-              [verificationLogs]="faceVerificationLogs"
+              [verificationLogs]="scopedFaceVerificationLogs"
               [pendingSyncCount]="offlineAttendanceQueue.length"
               [currentActorName]="currentStudentProfile.name || 'Student'"
               [currentStudentId]="currentStudentProfile.id || ''"
+              [activeBranchScope]="effectiveBranchScope"
+              [activeWingScope]="effectiveWingScope"
+              [activeBranchLabel]="activeScopeSummaryLabel"
               (faceEnrolled)="onFaceProfileEnrolled($event)"
               (faceRemoved)="onFaceProfileRemoved($event)"
               (fingerprintEnrolled)="onFingerprintProfileEnrolled($event)"
@@ -18038,7 +18292,7 @@
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            @for (tt of timetables; track tt.id) {
+            @for (tt of scopedTimetables; track tt.id) {
               <div class="p-3.5 rounded-xl border border-slate-200 flex items-center justify-between gap-3">
                 <div>
                   <span class="text-[10px] font-mono font-bold text-indigo-600">{{ tt.period }} • {{ tt.time }}</span>
@@ -18072,7 +18326,7 @@
                 <button type="button" (click)="studentHomeworkScopeFilter = 'all'"
                   class="px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer transition-all"
                   [class]="studentHomeworkScopeFilter === 'all' ? 'bg-indigo-600 text-white font-black' : 'text-slate-600 hover:text-slate-900'">
-                  All Classes ({{ teacherHomeworks.length }})
+                  All Classes ({{ scopedTeacherHomeworks.length }})
                 </button>
               </div>
               <select [(ngModel)]="studentHomeworkSubjectFilter" class="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700">
@@ -18424,7 +18678,7 @@
           <div class="apple-card rounded-2xl p-5 scs-surface-3d space-y-3">
             <h3 class="text-sm font-black text-slate-900">Digital E-Resources &amp; Solved Past Papers</h3>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              @for (res of libraryDigitalResources; track res.id) {
+              @for (res of scopedLibraryDigitalResources; track res.id) {
                 <div class="p-3.5 rounded-2xl bg-white border border-slate-200 flex flex-col justify-between space-y-2 transition-all">
                   <div>
                     <div class="flex items-center justify-between text-[10px] font-black uppercase text-indigo-700">
@@ -18447,7 +18701,7 @@
           <div class="apple-card rounded-2xl p-5 scs-surface-3d space-y-3">
             <h3 class="text-sm font-black text-slate-900">Library Book Catalog & Reservation Desk</h3>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              @for (bk of libraryBooks; track bk.id) {
+              @for (bk of scopedLibraryBooks; track bk.id) {
                 <div class="p-3.5 rounded-2xl bg-white border border-slate-200 flex flex-col justify-between space-y-2">
                   <div>
                     <div class="flex items-center justify-between text-[10px] font-black uppercase text-slate-500">
@@ -18901,6 +19155,7 @@
             </div>
             <h2 class="text-lg sm:text-xl font-black text-slate-900 mt-1 truncate">{{ currentGuardianProfile.name }}</h2>
             <p class="text-xs text-slate-600 font-medium truncate">Guardian Phone: <strong class="text-slate-800">{{ currentGuardianProfile.phone }}</strong> • {{ currentGuardianProfile.childrenCount }} {{ currentGuardianProfile.childrenCount === 1 ? 'Child' : 'Children' }} Enrolled</p>
+            <p class="text-[11px] font-semibold text-slate-500 truncate mt-0.5">Campus &amp; Wing: <strong class="text-slate-800">{{ activePersonaBranchLabel }}</strong></p>
           </div>
         </div>
 
@@ -20205,14 +20460,14 @@
         <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent"></div>
         <div class="flex items-center gap-4 min-w-0 relative z-10">
           <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-[22px] bg-gradient-to-br from-teal-600 via-emerald-600 to-cyan-700 text-white flex items-center justify-center font-black text-lg sm:text-xl shadow-[0_12px_28px_-6px_rgba(13,148,136,0.45)] ring-4 ring-white/90 border border-white/50 shrink-0">
-            MR
+            {{ activeAccountantProfile.initials }}
           </div>
           <div class="min-w-0">
             <div class="flex items-center gap-2 flex-wrap">
               <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-teal-500/10 text-teal-800 border border-teal-300/60">Accountant / Fee Clerk Desk</span>
               <span class="text-xs text-emerald-700 font-extrabold bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-300/60">Fee Counter &amp; Closing Only</span>
             </div>
-            <h2 class="text-lg sm:text-xl font-black text-slate-900 mt-1 truncate">Muhammad Rizwan — Campus Fee Counter</h2>
+            <h2 class="text-lg sm:text-xl font-black text-slate-900 mt-1 truncate">{{ activeAccountantProfile.name }} — {{ activeAccountantProfile.title }}</h2>
             <p class="text-xs text-slate-600 font-medium truncate">
               Branch Scope: <strong class="text-slate-900">{{ activePersonaBranchLabel }}</strong> · Generate challans, receive receipts &amp; submit Daily Closing to School Owner.
             </p>
@@ -20357,7 +20612,7 @@
                 </div>
                 <div class="rounded-2xl p-4 scs-tile-3d space-y-1 min-w-0 overflow-hidden">
                   <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block truncate">Generated Challans</span>
-                  <span class="text-lg sm:text-xl 2xl:text-2xl font-black text-indigo-700 font-mono block leading-tight break-words">{{ accountantGeneratedChallans.length }}</span>
+                  <span class="text-lg sm:text-xl 2xl:text-2xl font-black text-indigo-700 font-mono block leading-tight break-words">{{ scopedAccountantGeneratedChallans.length }}</span>
                   <p class="text-[10px] text-slate-500 font-medium truncate">3-Copy Bank Vouchers</p>
                 </div>
                 <div class="rounded-2xl p-4 scs-tile-3d border border-slate-200/90 space-y-1 min-w-0 overflow-hidden">
@@ -20397,7 +20652,7 @@
                 <div class="flex items-center justify-between flex-wrap gap-3">
                   <div>
                     <h3 class="font-black text-slate-900 text-sm">Live Counter Receipts Ledger (Accountant &amp; Principal Synced)</h3>
-                    <p class="text-xs text-slate-500">Petty Cash Outflow Today: <strong class="font-mono text-rose-700">PKR {{ formatCurrency(totalAccountantPettyVouchers) }}</strong> ({{ accountantPettyVouchers.length }} vouchers)</p>
+                    <p class="text-xs text-slate-500">Petty Cash Outflow Today: <strong class="font-mono text-rose-700">PKR {{ formatCurrency(totalAccountantPettyVouchers) }}</strong> ({{ scopedAccountantPettyVouchers.length }} vouchers)</p>
                   </div>
                   <div class="flex items-center gap-2">
                     <button (click)="printAccountantShiftHandover()" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs cursor-pointer flex items-center gap-1.5">
@@ -20419,7 +20674,7 @@
                       </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 font-medium">
-                      @for (r of principalFeeCollections.slice(0, 12); track r.id) {
+                      @for (r of scopedPrincipalFeeCollections.slice(0, 12); track r.id) {
                         <tr [attr.data-row-key]="r.id" class="hover:bg-slate-50/70">
                           <td class="px-3 py-2.5 font-mono font-black text-teal-700">{{ r.receiptNo }}</td>
                           <td class="px-3 py-2.5 font-bold text-slate-900">{{ r.studentName }} ({{ r.grade }})</td>
@@ -20451,10 +20706,17 @@
               <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
                 <!-- Single Challan Generator -->
                 <div class="apple-card scs-surface-3d rounded-2xl p-5 space-y-4">
-                  <h3 class="font-black text-slate-900 text-sm flex items-center gap-2">
-                    <lucide-icon [name]="'receipt'" class="w-4 h-4 text-teal-600"></lucide-icon>
-                    Generate Individual Student Fee Challan
-                  </h3>
+                  <div class="flex items-center justify-between gap-2 flex-wrap">
+                    <h3 class="font-black text-slate-900 text-sm flex items-center gap-2">
+                      <lucide-icon [name]="'receipt'" class="w-4 h-4 text-teal-600"></lucide-icon>
+                      Generate Individual Student Fee Challan
+                    </h3>
+                    <button type="button" (click)="openFeeStructureModal()"
+                      class="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-black text-[11px] cursor-pointer flex items-center gap-1.5 shrink-0">
+                      <lucide-icon [name]="'file-text'" class="w-3.5 h-3.5"></lucide-icon>
+                      <span>Branch Fee Plans</span>
+                    </button>
+                  </div>
                   <div class="space-y-3 text-xs">
                     @if (hasCustomFieldsAtSlot('fee_challans_invoices', '__first__')) {
                       <app-school-custom-form-fields
@@ -20470,7 +20732,7 @@
                         <select [(ngModel)]="accountantChallanForm.studentId" (ngModelChange)="onAccountantChallanStudentSelect($event)"
                           class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold text-slate-900">
                           <option value="">-- Choose Enrolled Student --</option>
-                          @for (st of activeStudents; track st.id) {
+                          @for (st of scopedActiveStudents; track st.id) {
                             <option [value]="st.id">Roll #{{ st.rollNo }} — {{ st.name }} ({{ st.grade }})</option>
                           }
                         </select>
@@ -20691,7 +20953,7 @@
                       <select [(ngModel)]="accountantCollectForm.studentId" (ngModelChange)="onAccountantCollectStudentSelect($event)"
                         class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold text-slate-900">
                         <option value="">-- Select Student from Register --</option>
-                        @for (st of activeStudents; track st.id) {
+                        @for (st of scopedActiveStudents; track st.id) {
                           <option [value]="st.id">Roll #{{ st.rollNo }} — {{ st.name }} ({{ st.grade }})</option>
                         }
                       </select>
@@ -20806,7 +21068,7 @@
                       </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 font-medium">
-                      @for (r of principalFeeCollections; track r.id) {
+                      @for (r of scopedPrincipalFeeCollections; track r.id) {
                         <tr [attr.data-row-key]="r.id" class="hover:bg-slate-50/70">
                           <td class="px-3 py-2.5 font-mono font-black text-teal-700">{{ r.receiptNo }}</td>
                           <td class="px-3 py-2.5 font-bold text-slate-900">{{ r.studentName }}</td>
@@ -21091,7 +21353,7 @@
                         </tr>
                       </thead>
                       <tbody class="divide-y divide-slate-100 font-medium">
-                        @for (pv of accountantPettyVouchers; track pv.id) {
+                        @for (pv of scopedAccountantPettyVouchers; track pv.id) {
                           <tr [attr.data-row-key]="pv.id" class="hover:bg-slate-50/70">
                             <td class="px-3 py-2 font-mono font-bold text-slate-900">{{ pv.voucherNo }}</td>
                             <td class="px-3 py-2 text-slate-600">{{ pv.category }}</td>
@@ -21117,30 +21379,40 @@
                 <!-- Submitted Closings Tracker -->
                 <div class="apple-card scs-surface-3d rounded-2xl p-5 space-y-4">
                   <div>
-                    <h3 class="font-black text-slate-900 text-sm">Submitted Closings &amp; School Owner Approval Status</h3>
-                    <p class="text-xs text-slate-500">Only School Owner can verify, approve, or flag submitted Daily Closings (dual-control security).</p>
+                    <h3 class="font-black text-slate-900 text-sm">Submitted Closings — Principal &amp; Owner Approval Chain ({{ activeScopeSummaryLabel }})</h3>
+                    <p class="text-xs text-slate-500">3-Tier verification: Accountant submits → Branch Principal endorses → School Owner approves &amp; locks.</p>
                   </div>
                   <div class="overflow-x-auto border border-slate-200 rounded-xl">
                     <table appSchoolTable="accountant_closings" tableTitle="Accountant Day-End Closings" class="w-full text-left text-xs">
                       <thead class="bg-white text-slate-600 uppercase font-black text-[10px] border-b border-slate-200">
                         <tr>
-                          <th class="px-3 py-2.5">Closing ID &amp; Date</th>
+                          <th class="px-3 py-2.5">Closing ID &amp; Campus</th>
                           <th class="px-3 py-2.5 text-right">Cash</th>
                           <th class="px-3 py-2.5 text-right">Bank / Digital</th>
                           <th class="px-3 py-2.5 text-right">Total</th>
+                          <th class="px-3 py-2.5">Principal Review</th>
                           <th class="px-3 py-2.5">Owner Decision</th>
                         </tr>
                       </thead>
                       <tbody class="divide-y divide-slate-100 font-medium">
-                        @for (rec of feeReconciliations; track rec.id) {
+                        @for (rec of scopedFeeReconciliations; track rec.id) {
                           <tr [attr.data-row-key]="rec.id" class="hover:bg-slate-50/70">
                             <td class="px-3 py-2.5">
                               <div class="font-mono font-black text-slate-900">{{ rec.id }}</div>
-                              <div class="font-mono text-[10px] text-slate-500">{{ rec.date }} · Slip: {{ rec.bankDepositSlipNo || 'N/A' }}</div>
+                              <div class="font-mono text-[10px] text-slate-500">{{ rec.date }} · {{ rec.branchName || activeScopeSummaryLabel }} · Slip: {{ rec.bankDepositSlipNo || 'N/A' }}</div>
                             </td>
                             <td class="px-3 py-2.5 text-right font-mono">PKR {{ formatCurrency(rec.counterCashReceived) }}</td>
                             <td class="px-3 py-2.5 text-right font-mono text-indigo-700">PKR {{ formatCurrency((rec.bankDepositedMeezan || 0) + (rec.bankDepositedHBL || 0) + (rec.onlineDigitalKuickPay || 0)) }}</td>
                             <td class="px-3 py-2.5 text-right font-mono font-black text-emerald-700">PKR {{ formatCurrency(rec.actualCollected) }}</td>
+                            <td class="px-3 py-2.5">
+                              <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase inline-block"
+                                [class]="rec.principalApprovalStatus === 'Principal Flagged' ? 'bg-rose-100 text-rose-800' : (rec.principalApprovalStatus === 'Pending Principal Review' ? 'bg-amber-100 text-amber-800' : 'bg-indigo-100 text-indigo-800')">
+                                {{ rec.principalApprovalStatus || 'Principal Approved' }}
+                              </span>
+                              @if (rec.principalRemarks) {
+                                <div class="text-[10px] text-slate-500 mt-0.5">{{ rec.principalRemarks }}</div>
+                              }
+                            </td>
                             <td class="px-3 py-2.5">
                               <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase inline-block"
                                 [class]="rec.ownerApprovalStatus === 'Pending Owner Review' ? 'bg-amber-100 text-amber-800' : (rec.ownerApprovalStatus === 'Flagged by Owner' ? 'bg-rose-100 text-rose-800' : 'bg-emerald-100 text-emerald-800')">
@@ -21222,7 +21494,7 @@
             @if (!isFormFieldHidden('owner_portal_users', 'pu_role')) {
               <div>
                 <label class="block font-bold text-slate-700 mb-1">Portal Role</label>
-                <select [(ngModel)]="portalUserForm.role" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold focus:bg-white focus:outline-indigo-600">
+                <select [(ngModel)]="portalUserForm.role" (ngModelChange)="onPortalRoleChange()" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold focus:bg-white focus:outline-indigo-600">
                   <option value="accountant">Accountant / Fee Clerk Portal</option>
                   <option value="principal">Principal Directorate Portal</option>
                   <option value="teacher">Teacher Portal</option>
@@ -21268,6 +21540,30 @@
               [allowSchemaEdit]="isOwnerPortal"
               (valuesChange)="updateFormCustomValues('portalUser', $event)" />
           }
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Campus Branch</label>
+              <select [(ngModel)]="portalUserForm.branchId" (ngModelChange)="onPortalUserBranchChange()"
+                class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold focus:bg-white focus:outline-indigo-600">
+                @for (br of schoolBranchRecords; track br.id) {
+                  <option [value]="br.id">{{ br.name }} ({{ br.city }})</option>
+                }
+              </select>
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Academic Wing</label>
+              <select [(ngModel)]="portalUserForm.wingId"
+                class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold focus:bg-white focus:outline-indigo-600">
+                @for (wg of getWingsForBranch(portalUserForm.branchId); track wg.id) {
+                  <option [value]="wg.id">{{ wg.name }} ({{ wg.wingType }})</option>
+                }
+              </select>
+            </div>
+          </div>
+          <label class="flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-50/70 border border-amber-200/80 text-[11px] font-bold text-amber-900 cursor-pointer select-none">
+            <input type="checkbox" [(ngModel)]="portalUserForm.wingScopeLocked" class="w-4 h-4 rounded accent-amber-600 cursor-pointer">
+            <span>Lock portal account to selected Academic Wing only (recommended for Wing Principals &amp; Wing Fee Clerks)</span>
+          </label>
           <app-school-custom-form-fields
             [tableId]="'owner_portal_users'"
             [values]="formCustomValues['portalUser']"
@@ -21652,7 +21948,7 @@
           <div>
             <label class="block font-bold text-slate-700 mb-1">Student Context</label>
             <select [(ngModel)]="parentMessageForm.childId" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
-              @for (st of activeStudents; track st.id) {
+              @for (st of scopedActiveStudents; track st.id) {
                 <option [value]="st.id">{{ st.name }} ({{ st.grade }} - {{ st.guardian }})</option>
               }
             </select>
@@ -22292,10 +22588,30 @@
                 [allowSchemaEdit]="isOwnerPortal"
                 (valuesChange)="updateFormCustomValues('student', $event)" />
             }
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Campus Branch</label>
+              <select [(ngModel)]="studentForm.branchId" (ngModelChange)="onStudentBranchChange()"
+                [disabled]="!isOwnerPortal"
+                class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold disabled:bg-slate-50 disabled:text-slate-600 cursor-pointer">
+                @for (br of schoolBranchRecords; track br.id) {
+                  <option [value]="br.id">{{ br.name }} ({{ br.city }})</option>
+                }
+              </select>
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Academic Wing</label>
+              <select [(ngModel)]="studentForm.wingId"
+                [disabled]="!isOwnerPortal && effectiveWingScope !== 'ALL'"
+                class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold disabled:bg-slate-50 disabled:text-slate-600 cursor-pointer">
+                @for (wg of getWingsForBranch(studentForm.branchId); track wg.id) {
+                  <option [value]="wg.id">{{ wg.name }} ({{ wg.wingType || wg.type }})</option>
+                }
+              </select>
+            </div>
             @if (!isFormFieldHidden('students_master', 'stu_grade')) {
               <div>
                 <label class="block font-bold text-slate-700 mb-1">Class &amp; Grade</label>
-                <input type="text" [(ngModel)]="studentForm.grade" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+                <input type="text" [(ngModel)]="studentForm.grade" (ngModelChange)="onStudentGradeChange()" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
               </div>
             }
             @if (hasCustomFieldsAtSlot('students_master', 'stu_grade')) {
@@ -24835,6 +25151,11 @@
               <h3 class="font-black text-slate-900 text-xs">{{ selectedCardStudent.name }}</h3>
               <p class="text-[10px] text-slate-500 font-bold">Class: {{ selectedCardStudent.grade }} | Sec: {{ selectedCardStudent.section }}</p>
               <p class="text-[10px] text-indigo-600 font-mono font-black">Roll No: {{ selectedCardStudent.rollNo }}</p>
+              @if (selectedCardStudent.branchName) {
+                <p class="text-[10px] text-emerald-700 font-bold mt-0.5">
+                  Campus: {{ selectedCardStudent.branchName }}@if (selectedCardStudent.wingName) { · {{ selectedCardStudent.wingName }} }
+                </p>
+              }
             </div>
           </div>
 
@@ -25578,6 +25899,26 @@
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+              <div class="sm:col-span-2">
+                <label class="block font-bold text-slate-800 mb-1.5">Campus Branch <span class="text-rose-500 font-black">*</span></label>
+                <select [(ngModel)]="admissionForm.branchId" (ngModelChange)="onAdmissionBranchChange()"
+                  [disabled]="!isOwnerPortal"
+                  class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 font-bold text-slate-900 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/10 disabled:bg-slate-50 disabled:text-slate-600 cursor-pointer">
+                  @for (br of schoolBranchRecords; track br.id) {
+                    <option [value]="br.id">{{ br.name }} ({{ br.city }})</option>
+                  }
+                </select>
+              </div>
+              <div class="sm:col-span-2">
+                <label class="block font-bold text-slate-800 mb-1.5">Academic Wing <span class="text-rose-500 font-black">*</span></label>
+                <select [(ngModel)]="admissionForm.wingId"
+                  [disabled]="!isOwnerPortal && effectiveWingScope !== 'ALL'"
+                  class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 font-bold text-slate-900 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/10 disabled:bg-slate-50 disabled:text-slate-600 cursor-pointer">
+                  @for (wg of getWingsForBranch(admissionForm.branchId); track wg.id) {
+                    <option [value]="wg.id">{{ wg.name }} ({{ wg.wingType || wg.type }} · {{ wg.gradeRange }})</option>
+                  }
+                </select>
+              </div>
               @if (!isFormFieldHidden('owner_admissions', 'adm_class')) {
                 <div class="sm:col-span-2">
                   <label class="block font-bold text-slate-800 mb-1.5">Admission Class / Grade <span class="text-rose-500 font-black">*</span></label>
@@ -26879,6 +27220,27 @@
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-4 gap-3.5">
+              <div class="sm:col-span-2">
+                <label class="block font-bold text-slate-700 mb-1">Campus Branch <span class="text-rose-500 font-black">*</span></label>
+                <select [(ngModel)]="teacherForm.branchId" (ngModelChange)="onTeacherBranchChange()"
+                  [disabled]="!isOwnerPortal"
+                  class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 font-bold text-slate-900 focus:bg-white focus:outline-teal-600 disabled:bg-slate-50 disabled:text-slate-600 cursor-pointer shadow-2xs">
+                  @for (br of schoolBranchRecords; track br.id) {
+                    <option [value]="br.id">{{ br.name }} ({{ br.city }})</option>
+                  }
+                </select>
+              </div>
+              <div class="sm:col-span-2">
+                <label class="block font-bold text-slate-700 mb-1">Academic Wing <span class="text-rose-500 font-black">*</span></label>
+                <select [(ngModel)]="teacherForm.wingId"
+                  [disabled]="!isOwnerPortal && effectiveWingScope !== 'ALL'"
+                  class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 font-bold text-slate-900 focus:bg-white focus:outline-teal-600 disabled:bg-slate-50 disabled:text-slate-600 cursor-pointer shadow-2xs">
+                  @for (wg of getWingsForBranch(teacherForm.branchId); track wg.id) {
+                    <option [value]="wg.id">{{ wg.name }} ({{ wg.wingType || wg.type }} · {{ wg.gradeRange }})</option>
+                  }
+                </select>
+              </div>
+
               <!-- Faculty Designation / Role -->
               @if (!isFormFieldHidden('teachers_master', 't_role')) {
                 <div class="sm:col-span-2">
@@ -26930,7 +27292,7 @@
               @if (!isFormFieldHidden('teachers_master', 't_grade')) {
                 <div class="sm:col-span-2">
                   <label class="block font-bold text-slate-700 mb-1">Assigned Grade / Class Level <span class="text-rose-500 font-black">*</span></label>
-                  <select [(ngModel)]="teacherForm.assignedGrade" class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 font-bold text-slate-900 focus:bg-white focus:outline-teal-600 cursor-pointer shadow-2xs">
+                  <select [(ngModel)]="teacherForm.assignedGrade" (ngModelChange)="onTeacherGradeChange()" class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 font-bold text-slate-900 focus:bg-white focus:outline-teal-600 cursor-pointer shadow-2xs">
                     <option value="Nursery / Playgroup">Nursery / Playgroup</option>
                     <option value="KG 1 / Kindergarten">KG 1 / Kindergarten</option>
                     <option value="KG 2 / Prep">KG 2 / Prep</option>
@@ -26953,7 +27315,7 @@
                   </select>
 
                   @if (teacherForm.assignedGrade === 'Custom Class / Grade Write-In...') {
-                    <input type="text" [(ngModel)]="teacherForm.customGradeInput" placeholder="Type Custom Class Name (e.g. Nursery-B / Class 10-Rose / Grade 11)..." class="w-full mt-2 px-3.5 py-2 rounded-xl bg-teal-50/80 border border-teal-300 font-bold text-slate-900 focus:bg-white focus:outline-teal-600 shadow-2xs">
+                    <input type="text" [(ngModel)]="teacherForm.customGradeInput" (ngModelChange)="onTeacherGradeChange()" placeholder="Type Custom Class Name (e.g. Nursery-B / Class 10-Rose / Grade 11)..." class="w-full mt-2 px-3.5 py-2 rounded-xl bg-teal-50/80 border border-teal-300 font-bold text-slate-900 focus:bg-white focus:outline-teal-600 shadow-2xs">
                   }
                 </div>
               }
@@ -28089,15 +28451,18 @@
   <!-- ========================================================================= -->
   @if (isFeeStructureModalOpen) {
     <div class="fixed inset-0 z-50 flex items-center justify-center p-3 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div class="bg-white rounded-3xl max-w-2xl w-full p-5 sm:p-6 shadow-2xl border border-slate-100 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="bg-white rounded-3xl max-w-4xl w-full p-5 sm:p-6 shadow-2xl border border-slate-100 space-y-5 max-h-[90vh] overflow-y-auto custom-scrollbar">
         <div class="flex items-center justify-between pb-3 border-b border-slate-100">
           <div class="flex items-center gap-2.5">
             <div class="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
               <lucide-icon [name]="'file-text'" class="w-5 h-5"></lucide-icon>
             </div>
             <div>
-              <span class="text-[10px] font-black uppercase text-amber-600 tracking-wider">Tuition & Ancillary Fees</span>
-              <h3 class="font-black text-slate-900 text-base">Class-wise Official Fee Structure</h3>
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-[10px] font-black uppercase text-amber-600 tracking-wider">Per-Branch &amp; Per-Wing Fee Plan Templates</span>
+                <span class="px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-[10px] font-black border border-indigo-200">{{ activeScopeSummaryLabel }}</span>
+              </div>
+              <h3 class="font-black text-slate-900 text-base">Campus &amp; Academic Wing Fee Structure Catalog</h3>
             </div>
           </div>
           <button (click)="closeFeeStructureModal()" class="p-1 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer">
@@ -28105,34 +28470,124 @@
           </button>
         </div>
 
-        <div class="overflow-x-auto text-xs">
+        <div class="overflow-x-auto text-xs border border-slate-200 rounded-2xl">
           <table class="w-full text-left">
             <thead>
-              <tr class="text-[10px] font-black uppercase text-slate-400 border-b border-slate-200 bg-white">
-                <th class="py-2.5 px-3">CLASS / GRADE</th>
+              <tr class="text-[10px] font-black uppercase text-slate-500 border-b border-slate-200 bg-slate-50">
+                <th class="py-2.5 px-3">CAMPUS &amp; WING</th>
+                <th class="py-2.5 px-3">CLASS / GRADE TIER</th>
                 <th class="py-2.5 px-3">ADMISSION</th>
                 <th class="py-2.5 px-3">TUITION (MO)</th>
                 <th class="py-2.5 px-3">LAB</th>
                 <th class="py-2.5 px-3">EXAM</th>
                 <th class="py-2.5 px-3 text-right">TOTAL MO.</th>
+                <th class="py-2.5 px-3 text-right">ACTIONS</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 font-bold">
-              @for (f of feeStructureCatalog; track f.grade) {
+              @for (f of scopedFeeStructureCatalog; track f.id) {
                 <tr class="hover:bg-slate-50">
+                  <td class="py-3 px-3">
+                    <div class="text-slate-900 font-black">{{ f.branchName }}</div>
+                    <div class="text-[10px] text-indigo-700 font-bold">{{ f.wingName || 'Campus-Wide' }}</div>
+                  </td>
                   <td class="py-3 px-3 text-slate-900 font-black">{{ f.grade }}</td>
-                  <td class="py-3 px-3 text-slate-600">PKR {{ formatCurrency(f.admissionFee) }}</td>
-                  <td class="py-3 px-3 text-emerald-700 font-black">PKR {{ formatCurrency(f.tuitionFee) }}</td>
-                  <td class="py-3 px-3 text-slate-500">PKR {{ formatCurrency(f.labFee) }}</td>
-                  <td class="py-3 px-3 text-slate-500">PKR {{ formatCurrency(f.examFee) }}</td>
-                  <td class="py-3 px-3 text-right font-black text-indigo-700">PKR {{ formatCurrency((f.tuitionFee + f.labFee + f.sportsFee)) }}</td>
+                  <td class="py-3 px-3 text-slate-600 font-mono">PKR {{ formatCurrency(f.admissionFee) }}</td>
+                  <td class="py-3 px-3 text-emerald-700 font-mono font-black">PKR {{ formatCurrency(f.tuitionFee) }}</td>
+                  <td class="py-3 px-3 text-slate-500 font-mono">PKR {{ formatCurrency(f.labFee) }}</td>
+                  <td class="py-3 px-3 text-slate-500 font-mono">PKR {{ formatCurrency(f.examFee) }}</td>
+                  <td class="py-3 px-3 text-right font-mono font-black text-indigo-700">PKR {{ formatCurrency((f.tuitionFee + f.labFee + f.sportsFee)) }}</td>
+                  <td class="py-3 px-3 text-right whitespace-nowrap">
+                    <div class="flex items-center justify-end gap-1">
+                      <button type="button" (click)="editFeePlanTemplate(f)" title="Edit Fee Plan"
+                        class="px-2 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-[10px] cursor-pointer">
+                        Edit
+                      </button>
+                      @if (isOwnerPortal) {
+                        <button type="button" (click)="deleteFeePlanTemplate(f)" title="Delete Fee Plan"
+                          class="px-2 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-[10px] cursor-pointer">
+                          Delete
+                        </button>
+                      }
+                    </div>
+                  </td>
                 </tr>
               }
             </tbody>
           </table>
         </div>
 
-        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-200">
+        <!-- Add / Edit Branch & Wing Fee Plan Template Form -->
+        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3 text-xs">
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <h4 class="font-black text-slate-900 text-sm">
+              {{ feePlanForm.id ? 'Update Fee Plan Template' : 'Add Custom Campus / Wing Fee Plan Template' }}
+            </h4>
+            @if (feePlanForm.id) {
+              <button type="button" (click)="resetFeePlanForm()" class="text-[11px] font-bold text-slate-600 hover:text-slate-900 cursor-pointer">
+                + New Template
+              </button>
+            }
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Campus Branch</label>
+              <select [(ngModel)]="feePlanForm.branchId" (ngModelChange)="onFeePlanBranchChange()"
+                [disabled]="!isOwnerPortal && effectiveBranchScope !== 'ALL'"
+                class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold text-slate-900 disabled:bg-slate-100">
+                @for (b of schoolBranchRecords; track b.id) {
+                  <option [value]="b.id">{{ b.name }} ({{ b.city }})</option>
+                }
+              </select>
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Academic Wing</label>
+              <select [(ngModel)]="feePlanForm.wingId"
+                class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold text-slate-900">
+                @for (w of getFeePlanFormWings(); track w.id) {
+                  <option [value]="w.id">{{ w.name }} ({{ w.wingType }})</option>
+                }
+              </select>
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Class / Grade Tier *</label>
+              <input type="text" [(ngModel)]="feePlanForm.grade" placeholder="e.g. Cambridge & Senior (Class 9 - 10)"
+                class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold text-slate-900">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Admission (PKR)</label>
+              <input type="number" [(ngModel)]="feePlanForm.admissionFee" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-mono font-bold">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Tuition / Mo</label>
+              <input type="number" [(ngModel)]="feePlanForm.tuitionFee" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-mono font-bold text-emerald-700">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Lab Fee</label>
+              <input type="number" [(ngModel)]="feePlanForm.labFee" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-mono font-bold">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Exam Fee</label>
+              <input type="number" [(ngModel)]="feePlanForm.examFee" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-mono font-bold">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Sports / Misc</label>
+              <input type="number" [(ngModel)]="feePlanForm.sportsFee" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-mono font-bold">
+            </div>
+          </div>
+
+          <div class="flex items-center justify-end gap-2 pt-1">
+            <button type="button" (click)="saveFeePlanTemplate()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs cursor-pointer shadow-xs">
+              {{ feePlanForm.id ? 'Update Fee Plan Template' : 'Save Campus Fee Plan' }}
+            </button>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-200">
           <button (click)="closeFeeStructureModal()" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs cursor-pointer shadow">
             Close Structure
           </button>
@@ -28305,7 +28760,7 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div class="p-3 bg-white rounded-xl border border-slate-200 min-w-0 overflow-hidden">
               <span class="text-[10px] text-slate-400 uppercase font-bold block truncate">Total Students</span>
-              <p class="text-lg sm:text-xl font-black text-slate-900 mt-0.5 leading-tight break-words">{{ activeStudents.length }} Active</p>
+              <p class="text-lg sm:text-xl font-black text-slate-900 mt-0.5 leading-tight break-words">{{ scopedActiveStudents.length }} Active</p>
             </div>
             <div class="p-3 bg-white rounded-xl border border-slate-200/90 min-w-0 overflow-hidden">
               <span class="text-[10px] text-emerald-700 uppercase font-bold block truncate">Board Passing Rate</span>
@@ -29417,7 +29872,7 @@
               <select [(ngModel)]="principalFeeCollectForm.studentRollNo" (ngModelChange)="onPrincipalFeeStudentSelect($event)"
                 class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold text-slate-900 focus:outline-emerald-600 shadow-2xs">
                 <option value="">-- Choose Student from Roll Register --</option>
-                @for (st of activeStudents; track st.id) {
+                @for (st of scopedActiveStudents; track st.id) {
                   <option [value]="st.rollNo">Roll #{{ st.rollNo }} - {{ st.name }} ({{ st.grade }}) - {{ st.guardian }}</option>
                 }
               </select>
@@ -30835,7 +31290,7 @@
                 </button>
               </div>
               <select [(ngModel)]="checkoutForm.bookId" class="w-full px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-800 focus:outline-hidden focus:border-indigo-500">
-                @for (b of libraryBooks; track b.id) {
+                @for (b of scopedLibraryBooks; track b.id) {
                   <option [value]="b.id" [disabled]="b.availableCopies <= 0">
                     {{ b.title }} ({{ b.availableCopies }} of {{ b.totalCopies }} Available) · {{ b.rackNo }}
                   </option>
@@ -30888,7 +31343,7 @@
               <div>
                 <label class="block font-bold text-slate-700 mb-1">Select Registered Student *</label>
                 <select [(ngModel)]="checkoutForm.studentId" (ngModelChange)="onCheckoutStudentChange($event)" class="w-full px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-800 focus:outline-hidden focus:border-indigo-500">
-                  @for (st of activeStudents; track st.id) {
+                  @for (st of scopedActiveStudents; track st.id) {
                     <option [value]="st.rollNo || st.id">
                       {{ st.name }} (Roll #{{ st.rollNo || st.id }}) · {{ st.grade }}
                     </option>
@@ -31080,7 +31535,7 @@
             <span class="text-[10px] text-indigo-600 font-extrabold">Instant Optical Lock</span>
           </div>
           <div class="grid grid-cols-2 gap-2 text-xs">
-            @for (bk of libraryBooks.slice(0, 4); track bk.id) {
+            @for (bk of scopedLibraryBooks.slice(0, 4); track bk.id) {
               <button (click)="simulateBarcodeScan(bk)" type="button" class="p-2.5 rounded-xl bg-white hover:bg-slate-50 hover:border-slate-300 border border-slate-200 text-left transition-all cursor-pointer group">
                 <div class="font-black text-slate-900 truncate text-[11px]">{{ bk.title }}</div>
                 <div class="text-[10px] font-mono text-slate-500 font-bold flex items-center justify-between mt-0.5">
@@ -31253,7 +31708,7 @@
                 Circulation Audit Report
               </span>
               <div class="text-[11px] font-mono text-slate-600 font-bold mt-1">Date Generated: Nov 07, 2026</div>
-              <div class="text-[10px] font-mono text-slate-400">Total Audit Records: {{ libraryCirculations.length }} Items</div>
+              <div class="text-[10px] font-mono text-slate-400">Total Audit Records: {{ scopedLibraryCirculations.length }} Items</div>
             </div>
           </div>
 
@@ -31295,7 +31750,7 @@
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200 font-medium text-slate-800">
-                  @for (c of libraryCirculations; track c.id; let idx = $index) {
+                  @for (c of scopedLibraryCirculations; track c.id; let idx = $index) {
                     <tr class="hover:bg-slate-50">
                       <td class="p-2.5 font-mono font-black text-slate-900 border-r border-slate-100">{{ c.issueNo }}</td>
                       <td class="p-2.5 border-r border-slate-100">
@@ -31678,10 +32133,10 @@
             </div>
             <div class="text-right space-y-1">
               <span class="px-3 py-1 rounded-lg bg-indigo-50 text-indigo-800 font-black text-xs uppercase border border-indigo-200 inline-block">
-                Daily Roster Chart
+                Daily Roster Chart · {{ activeScopeSummaryLabel }}
               </span>
               <div class="text-[11px] font-mono text-slate-700 font-bold mt-1">Date: Nov 07, 2026</div>
-              <div class="text-[10px] font-mono text-slate-400">Total Cover Slots: {{ substituteArrangements.length }} Assigned</div>
+              <div class="text-[10px] font-mono text-slate-400">Total Cover Slots: {{ scopedSubstituteArrangements.length }} Assigned</div>
             </div>
           </div>
 
@@ -31689,11 +32144,11 @@
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
             <div class="p-3 rounded-2xl bg-white border border-slate-200 min-w-0 overflow-hidden">
               <div class="text-[10px] font-black uppercase text-slate-500 truncate">Absent Faculty Today</div>
-              <div class="text-base font-black text-rose-700 mt-0.5 leading-tight break-words">{{ substituteArrangements.length }} Teachers</div>
+              <div class="text-base font-black text-rose-700 mt-0.5 leading-tight break-words">{{ scopedSubstituteArrangements.length }} Teachers</div>
             </div>
             <div class="p-3 rounded-2xl bg-white border border-slate-200/90 min-w-0 overflow-hidden">
               <div class="text-[10px] font-black uppercase text-indigo-800 truncate">Assigned Replacements</div>
-              <div class="text-base font-black text-indigo-950 mt-0.5 leading-tight break-words">{{ substituteArrangements.length }} Periods Covered</div>
+              <div class="text-base font-black text-indigo-950 mt-0.5 leading-tight break-words">{{ scopedSubstituteArrangements.length }} Periods Covered</div>
             </div>
             <div class="p-3 rounded-2xl bg-white border border-slate-200/90 min-w-0 overflow-hidden">
               <div class="text-[10px] font-black uppercase text-emerald-800 truncate">Academic Continuity Status</div>
@@ -31717,7 +32172,7 @@
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200 font-medium bg-white">
-                  @for (s of substituteArrangements; track s.id) {
+                  @for (s of scopedSubstituteArrangements; track s.id) {
                     <tr>
                       <td class="p-2.5 font-mono font-bold text-slate-500">{{ s.id }}</td>
                       <td class="p-2.5 font-bold text-rose-700">{{ s.absentTeacher }}</td>
@@ -32455,6 +32910,35 @@
               <label class="block font-bold text-slate-600 mb-1">Portal Security PIN</label>
               <input type="text" [(ngModel)]="executiveStaffForm.pin"
                 class="w-full px-3 py-2 rounded-xl border border-slate-200 font-mono font-bold text-indigo-700 focus:outline-indigo-600">
+            </div>
+          }
+          <div>
+            <label class="block font-bold text-slate-600 mb-1">Campus Branch *</label>
+            <select [(ngModel)]="executiveStaffForm.branchId" (ngModelChange)="onExecutiveStaffBranchChange()"
+              [disabled]="!isOwnerPortal"
+              class="w-full px-3 py-2 rounded-xl border border-slate-200 font-bold text-slate-900 focus:outline-indigo-600 disabled:bg-slate-50 disabled:text-slate-600 cursor-pointer">
+              @for (br of schoolBranchRecords; track br.id) {
+                <option [value]="br.id">{{ br.name }} ({{ br.city }})</option>
+              }
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-600 mb-1">Academic Wing *</label>
+            <select [(ngModel)]="executiveStaffForm.wingId"
+              [disabled]="!isOwnerPortal && effectiveWingScope !== 'ALL'"
+              class="w-full px-3 py-2 rounded-xl border border-slate-200 font-bold text-slate-900 focus:outline-indigo-600 disabled:bg-slate-50 disabled:text-slate-600 cursor-pointer">
+              @for (wg of getWingsForBranch(executiveStaffForm.branchId); track wg.id) {
+                <option [value]="wg.id">{{ wg.name }} ({{ wg.wingType || wg.type }})</option>
+              }
+            </select>
+          </div>
+          @if (executiveStaffModalRole !== 'support_staff') {
+            <div class="sm:col-span-2 flex items-center gap-2.5 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+              <input id="execWingScopeLocked" type="checkbox" [(ngModel)]="executiveStaffForm.wingScopeLocked"
+                class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
+              <label for="execWingScopeLocked" class="text-[11px] font-bold text-slate-700 cursor-pointer">
+                Lock Portal strictly to Selected Wing (leave unchecked for Campus-Wide access across all wings of this branch)
+              </label>
             </div>
           }
         </div>

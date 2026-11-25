@@ -96,7 +96,7 @@ export interface SchoolAuditTrailRecord {
   timestamp: string;
   operatorName: string;
   operatorRole: 'Principal' | 'School Owner' | 'Owner Executive' | 'Accounts Controller' | 'Accountant / Fee Clerk' | 'Examination Dean' | 'System Auditor';
-  actionType: 'Fee Waiver / Concession' | 'Mark Moderation Lock' | 'Salary Arrears Clearance' | 'Student Leaving Certificate (SLC)' | 'Fee Voucher Deletion' | 'Attendance Modification' | 'Biometric IP Override' | 'Asset Write-Off' | 'Exam Moderation & Tamper-Lock' | 'Daily Closing Submission' | 'Owner Daily Closing Oversight' | 'Fee Collection Receipt' | 'Branch / Wing Transfer';
+  actionType: 'Fee Waiver / Concession' | 'Mark Moderation Lock' | 'Salary Arrears Clearance' | 'Student Leaving Certificate (SLC)' | 'Fee Voucher Deletion' | 'Attendance Modification' | 'Biometric IP Override' | 'Asset Write-Off' | 'Exam Moderation & Tamper-Lock' | 'Daily Closing Submission' | 'Principal Daily Closing Oversight' | 'Owner Daily Closing Oversight' | 'Fee Collection Receipt' | 'Branch / Wing Transfer';
   category: 'Financial' | 'Academic' | 'Administrative' | 'Security & Biometric';
   entityId: string;
   entityDescription: string;
@@ -132,6 +132,10 @@ export interface FeeReconciliationRecord {
   pettyExpenses?: number;
   closingVaultCash?: number;
   bankDepositSlipNo?: string;
+  principalApprovalStatus?: 'Pending Principal Review' | 'Principal Approved' | 'Principal Flagged' | string;
+  principalRemarks?: string;
+  principalReviewedBy?: string;
+  principalReviewedAt?: string;
   ownerApprovalStatus?: 'Pending Owner Review' | 'Verified & Approved by Owner' | 'Flagged by Owner' | string;
   ownerRemarks?: string;
   approvedBy?: string;
@@ -214,6 +218,10 @@ export interface SubstituteArrangementRecord {
   reason?: string;
   roomNo?: string;
   assignedBy?: string;
+  branchId?: string;
+  branchName?: string;
+  wingId?: string;
+  wingName?: string;
 }
 
 export interface SyllabusTrackerRecord {
@@ -230,6 +238,10 @@ export interface SyllabusTrackerRecord {
   lastReviewed?: string;
   examPortionCovered?: string;
   targetExam?: string;
+  branchId?: string;
+  branchName?: string;
+  wingId?: string;
+  wingName?: string;
 }
 
 export interface DailyInspectionLogRecord {
@@ -248,6 +260,25 @@ export interface DailyInspectionLogRecord {
   actionRequired?: string;
   loggedBy?: string;
   inspectorName?: string;
+  branchId?: string;
+  branchName?: string;
+  wingId?: string;
+  wingName?: string;
+}
+
+export interface FeePlanTemplateRecord {
+  id: string;
+  branchId: string;
+  branchName: string;
+  wingId?: string;
+  wingName?: string;
+  grade: string;
+  admissionFee: number;
+  tuitionFee: number;
+  labFee: number;
+  examFee: number;
+  sportsFee: number;
+  isActive?: boolean;
 }
 
 export interface HostelRoomRecord {
@@ -517,6 +548,10 @@ export interface TransportRouteRecord {
   capacity: number;
   enrolledStudents: number;
   status: 'Active' | 'Maintenance';
+  branchId?: string;
+  branchName?: string;
+  wingId?: string;
+  wingName?: string;
 }
 
 export interface LibraryCirculationRecord {
@@ -536,6 +571,10 @@ export interface LibraryCirculationRecord {
   overdueDays: number;
   fineAmount: number;
   conditionNotes?: string;
+  branchId?: string;
+  branchName?: string;
+  wingId?: string;
+  wingName?: string;
 }
 
 export interface LibraryDigitalResource {
@@ -547,6 +586,10 @@ export interface LibraryDigitalResource {
   fileType: 'PDF' | 'EPUB';
   fileSize: string;
   downloadsCount: number;
+  branchId?: string;
+  branchName?: string;
+  wingId?: string;
+  wingName?: string;
 }
 
 export interface LibraryBookRecord {
@@ -562,6 +605,10 @@ export interface LibraryBookRecord {
   totalCopies: number;
   availableCopies: number;
   rackNo: string;
+  branchId?: string;
+  branchName?: string;
+  wingId?: string;
+  wingName?: string;
 }
 
 export interface ExamRecord {
@@ -571,6 +618,10 @@ export interface ExamRecord {
   startDate: string;
   status: 'Scheduled' | 'Active' | 'Drafting' | 'Completed';
   averageGPA: string;
+  branchId?: string;
+  branchName?: string;
+  wingId?: string;
+  wingName?: string;
 }
 
 export interface TimetableRecord {
@@ -581,6 +632,10 @@ export interface TimetableRecord {
   teacher: string;
   room: string;
   grade: string;
+  branchId?: string;
+  branchName?: string;
+  wingId?: string;
+  wingName?: string;
 }
 
 export interface AnnouncementRecord {
@@ -612,6 +667,7 @@ export interface PortalUserRecord {
   branchName?: string;
   wingId?: string;
   wingName?: string;
+  wingScopeLocked?: boolean;
 }
 
 export interface RoleModulePermission {
@@ -649,6 +705,10 @@ export interface TeacherHomeworkRecord {
   resourceKind?: 'Homework' | 'Worksheet' | 'Class Notes' | 'Project / Lab' | 'Oral / Reading' | 'Test Prep' | string;
   maxMarks?: number;
   status?: 'Active' | 'Closed' | string;
+  branchId?: string;
+  branchName?: string;
+  wingId?: string;
+  wingName?: string;
 }
 
 export interface HomeworkSubmissionRecord {
@@ -670,6 +730,10 @@ export interface HomeworkSubmissionRecord {
   reviewedBy?: string;
   reviewedAt?: string;
   submittedAt: string;
+  branchId?: string;
+  branchName?: string;
+  wingId?: string;
+  wingName?: string;
 }
 
 export interface TeacherStudyMaterialRecord {
@@ -688,6 +752,10 @@ export interface TeacherStudyMaterialRecord {
   teacherId?: string;
   downloadsCount: number;
   createdAt: string;
+  branchId?: string;
+  branchName?: string;
+  wingId?: string;
+  wingName?: string;
 }
 
 export interface TeacherPeriodScheduleRecord {
@@ -700,6 +768,10 @@ export interface TeacherPeriodScheduleRecord {
   room: string;
   topic: string;
   status: 'Completed' | 'Current' | 'Upcoming' | string;
+  branchId?: string;
+  branchName?: string;
+  wingId?: string;
+  wingName?: string;
 }
 
 export interface StudentSubjectResult {
@@ -753,6 +825,10 @@ export interface TeacherLessonPlan {
   teacherName?: string;
   principalRemarks?: string;
   approvedAt?: string;
+  branchId?: string;
+  branchName?: string;
+  wingId?: string;
+  wingName?: string;
 }
 
 export interface TeacherGradeRecord {
@@ -766,6 +842,10 @@ export interface TeacherGradeRecord {
   grade: string;
   remarks: string;
   rank: number;
+  branchId?: string;
+  branchName?: string;
+  wingId?: string;
+  wingName?: string;
 }
 
 export interface VisitorGatePassRecord {
@@ -1762,9 +1842,15 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
     const staff = this.selectedStaffForDossier;
     if (!staff || !staff.portalRole) return;
     const role = staff.portalRole;
-    const teacherId = staff.sourceKind === 'teacher' ? staff.rawRef?.id : undefined;
+    const personaId = staff.sourceKind === 'teacher'
+      ? staff.rawRef?.id
+      : (staff.sourceKind === 'principal'
+        ? (staff.rawRef?.id || staff.rawRef?.portalUserId || staff.uid)
+        : (staff.sourceKind === 'accountant'
+          ? (staff.rawRef?.portalUserId || staff.rawRef?.id || staff.uid)
+          : undefined));
     this.closeStaffDossierModal();
-    this.switchPortal(role, teacherId);
+    this.switchPortal(role, personaId);
   }
 
   get activeTenantId(): string {
@@ -1852,33 +1938,62 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
   }
 
   get currentTeacherProfile(): any {
-    const found = (this.teachers || []).find(t => t.id === this.activeTeacherId)
-      || (this.portalUsers || []).find(u => u.id === this.activeTeacherId && u.role === 'teacher');
-    if (found) {
-      const matchedTeacher = (this.teachers || []).find(t => t.id === found.id || t.name === found.name) || this.activeTeacherPersona;
-      return {
-        id: found.id,
-        name: found.name,
-        subject: (found as any).subject || matchedTeacher?.subject || 'Core Faculty',
-        assignedGrade: (found as any).assignedGrade || (found as any).linkedEntity || 'Class 10-A',
-        qualification: (found as any).qualification || matchedTeacher?.qualification || 'M.Phil / M.Sc.',
-        email: found.email || matchedTeacher?.email || 'faculty@campus.edu',
-        phone: found.phone || matchedTeacher?.phone || '',
-        image: (found as any).image || matchedTeacher?.image || '',
-        initials: String(found.name || 'FC').split(/\s+/).map((p: string) => p[0]).slice(0, 2).join('').toUpperCase()
-      };
-    }
-    const t = this.activeTeacherPersona;
+    const target = String(this.activeTeacherId || '').trim().toLowerCase();
+    const matchedTeacher = (this.teachers || []).find(t =>
+      (t.id && t.id.toLowerCase() === target) ||
+      (t.empCode && t.empCode.toLowerCase() === target) ||
+      (t.email && t.email.toLowerCase() === target) ||
+      (t.name && t.name.toLowerCase() === target)
+    );
+    const matchedPortal = (this.portalUsers || []).find(u =>
+      u.role === 'teacher' && (
+        (u.id && u.id.toLowerCase() === target) ||
+        (u.staffIdOrRoll && u.staffIdOrRoll.toLowerCase() === target) ||
+        (u.email && u.email.toLowerCase() === target) ||
+        (u.name && u.name.toLowerCase() === target) ||
+        (matchedTeacher && (
+          (matchedTeacher.email && u.email?.toLowerCase() === matchedTeacher.email.toLowerCase()) ||
+          (matchedTeacher.name && u.name?.toLowerCase() === matchedTeacher.name.toLowerCase())
+        ))
+      )
+    );
+    const fallbackTeacher = (!matchedTeacher && matchedPortal)
+      ? (this.teachers || []).find(t =>
+          (matchedPortal.staffIdOrRoll && t.empCode?.toLowerCase() === matchedPortal.staffIdOrRoll.toLowerCase()) ||
+          (matchedPortal.email && t.email?.toLowerCase() === matchedPortal.email.toLowerCase()) ||
+          (matchedPortal.name && t.name?.toLowerCase() === matchedPortal.name.toLowerCase())
+        )
+      : undefined;
+    const resolvedTeacher = matchedTeacher || fallbackTeacher || this.activeTeacherPersona;
+    const resolvedName = resolvedTeacher?.name || matchedPortal?.name || 'Senior Faculty';
+    const branchId = resolvedTeacher?.branchId || matchedPortal?.branchId || this.schoolBranchRecords[0]?.id;
+    const branchName = resolvedTeacher?.branchName || matchedPortal?.branchName || this.resolveBranchName(branchId);
+    const wingId = resolvedTeacher?.wingId || matchedPortal?.wingId;
+    const wingName = resolvedTeacher?.wingName || matchedPortal?.wingName || this.resolveWingName(wingId);
+
     return {
-      ...t,
-      assignedGrade: t.assignedGrade || 'Class 10-A',
-      initials: String(t.name || 'FC').split(/\s+/).map((p: string) => p[0]).slice(0, 2).join('').toUpperCase()
+      id: resolvedTeacher?.id || matchedPortal?.id || 'TCH-001',
+      empCode: resolvedTeacher?.empCode || matchedPortal?.staffIdOrRoll || resolvedTeacher?.id || 'TCH-001',
+      portalUserId: matchedPortal?.id,
+      name: resolvedName,
+      subject: resolvedTeacher?.subject || 'Core Faculty',
+      assignedGrade: resolvedTeacher?.assignedGrade || matchedPortal?.linkedEntity || 'Class 10-A',
+      qualification: resolvedTeacher?.qualification || 'M.Phil / M.Sc.',
+      email: resolvedTeacher?.email || matchedPortal?.email || 'faculty@campus.edu',
+      phone: resolvedTeacher?.phone || matchedPortal?.phone || '',
+      image: resolvedTeacher?.image || '',
+      branchId,
+      branchName,
+      wingId,
+      wingName,
+      wingScopeLocked: Boolean(matchedPortal?.wingScopeLocked),
+      initials: String(resolvedName || 'FC').split(/\s+/).map((p: string) => p[0]).slice(0, 2).join('').toUpperCase()
     };
   }
 
   get teacherTodayPeriods(): TeacherPeriodScheduleRecord[] {
     const day = this.teacherScheduleDayFilter || 'Wednesday';
-    return (this.teacherSelfSchedule || []).filter((p) => p.day === day);
+    return (this.scopedTeacherSelfSchedule || []).filter((p) => p.day === day);
   }
 
   get teacherAllTodayPeriodsCount(): number {
@@ -1915,33 +2030,80 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
   }
 
   get teacherPendingLeavesAndDutiesCount(): number {
-    const stuLeaves = (this.parentLeaveRequests || []).filter((l) => l.status === 'Pending').length;
-    const subDuties = (this.substituteArrangements || []).filter((s) => s.status === 'Assigned').length;
-    const tasks = (this.facultyTaskList || []).filter((t) => t.status !== 'Completed & Verified').length;
+    const stuLeaves = (this.parentLeaveRequests || []).filter((l) => l.status === 'Pending' && this.matchesActiveBranchWing(l)).length;
+    const subDuties = (this.scopedSubstituteArrangements || []).filter((s) => s.status === 'Assigned').length;
+    const tasks = (this.scopedFacultyTaskList || []).filter((t) => t.status !== 'Completed & Verified').length;
     return stuLeaves + subDuties + tasks;
   }
 
   get currentStudentProfile(): any {
-    const found = (this.activeStudents || []).find(s => s.id === this.activeStudentId || s.rollNo === this.activeStudentId)
-      || this.activeStudentPersona;
+    const target = String(this.activeStudentId || '').trim().toLowerCase();
+    const matchedPortal = (this.portalUsers || []).find(u =>
+      u.role === 'student' && (
+        (u.id && u.id.toLowerCase() === target) ||
+        (u.staffIdOrRoll && u.staffIdOrRoll.toLowerCase() === target) ||
+        (u.email && u.email.toLowerCase() === target) ||
+        (u.name && u.name.toLowerCase() === target)
+      )
+    );
+    const found = (this.activeStudents || []).find(s =>
+      (s.id && s.id.toLowerCase() === target) ||
+      (s.rollNo && s.rollNo.toLowerCase() === target) ||
+      (s.name && s.name.toLowerCase() === target) ||
+      (matchedPortal && (
+        (matchedPortal.staffIdOrRoll && s.rollNo?.toLowerCase() === matchedPortal.staffIdOrRoll.toLowerCase()) ||
+        (matchedPortal.name && s.name?.toLowerCase() === matchedPortal.name.toLowerCase())
+      ))
+    ) || this.activeStudentPersona;
+    const branchId = found?.branchId || matchedPortal?.branchId || this.schoolBranchRecords[0]?.id;
+    const wingId = found?.wingId || matchedPortal?.wingId;
     return {
       ...found,
+      portalUserId: matchedPortal?.id,
+      email: (found as any)?.email || matchedPortal?.email || `${String(found?.rollNo || found?.id || 'student').toLowerCase()}@student.campus.edu`,
+      branchId,
+      branchName: found?.branchName || matchedPortal?.branchName || this.resolveBranchName(branchId),
+      wingId,
+      wingName: found?.wingName || matchedPortal?.wingName || this.resolveWingName(wingId),
+      wingScopeLocked: Boolean(matchedPortal?.wingScopeLocked),
       initials: String(found?.name || 'ST').split(/\s+/).map((p: string) => p[0]).slice(0, 2).join('').toUpperCase()
     };
   }
 
   get currentGuardianProfile(): any {
     const child = this.selectedParentChild;
-    const matchedStudent = (this.activeStudents || []).find(s => s.id === child?.id) || this.activeStudents?.[0];
-    const guardianUser = (this.portalUsers || []).find(u => u.role === 'parent' && (u.linkedEntity?.includes(child?.name || '') || u.name === matchedStudent?.guardian));
+    const target = String(this.activeParentChildId || '').trim().toLowerCase();
+    const matchedStudent = (this.activeStudents || []).find(s =>
+      (s.id && s.id.toLowerCase() === String(child?.id || '').toLowerCase()) ||
+      (s.id && s.id.toLowerCase() === target) ||
+      (s.rollNo && s.rollNo.toLowerCase() === target)
+    ) || this.activeStudents?.[0];
+    const guardianUser = (this.portalUsers || []).find(u =>
+      u.role === 'parent' && (
+        (u.id && u.id.toLowerCase() === target) ||
+        (u.email && u.email.toLowerCase() === target) ||
+        (matchedStudent && (
+          (u.linkedEntity && (u.linkedEntity.includes(matchedStudent.id) || u.linkedEntity.includes(matchedStudent.name))) ||
+          (matchedStudent.guardian && u.name?.toLowerCase().includes(matchedStudent.guardian.toLowerCase())) ||
+          (matchedStudent.guardianEmail && u.email?.toLowerCase() === matchedStudent.guardianEmail.toLowerCase())
+        ))
+      )
+    );
     const name = matchedStudent?.guardian || guardianUser?.name || 'Registered Parent / Guardian';
     const phone = matchedStudent?.guardianPhone || guardianUser?.phone || '+92 300 0000000';
+    const branchId = matchedStudent?.branchId || guardianUser?.branchId || this.schoolBranchRecords[0]?.id;
+    const wingId = matchedStudent?.wingId || guardianUser?.wingId;
     return {
       id: guardianUser?.id || 'PAR-001',
       name,
       phone,
       email: matchedStudent?.guardianEmail || guardianUser?.email || 'guardian@campus.edu',
       cnic: matchedStudent?.guardianCnic || 'Verified on File',
+      branchId,
+      branchName: matchedStudent?.branchName || guardianUser?.branchName || this.resolveBranchName(branchId),
+      wingId,
+      wingName: matchedStudent?.wingName || guardianUser?.wingName || this.resolveWingName(wingId),
+      wingScopeLocked: Boolean(guardianUser?.wingScopeLocked),
       childrenCount: (this.parentChildren || []).length || 1,
       initials: String(name).split(/\s+/).map((p: string) => p[0]).slice(0, 2).join('').toUpperCase()
     };
@@ -1995,6 +2157,9 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
     pin: string;
     clearanceLevel: string;
     status: string;
+    branchId: string;
+    wingId: string;
+    wingScopeLocked: boolean;
   } = {
     empCode: '',
     name: '',
@@ -2010,7 +2175,10 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
     monthlySalary: 165000,
     pin: '4455',
     clearanceLevel: 'Level 5 - Executive Directorate',
-    status: 'ACTIVE'
+    status: 'ACTIVE',
+    branchId: 'BR-LHR-01',
+    wingId: 'WNG-LHR-SNR',
+    wingScopeLocked: false
   };
 
   // Daily Cash Closing (Rooznama) State & Helpers
@@ -2041,36 +2209,47 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
     return this.scopedFeeReconciliations.filter(r => r.ownerApprovalStatus === 'Pending Owner Review').length;
   }
 
+  get pendingPrincipalClosingsCount(): number {
+    return (this.scopedFeeReconciliations || []).filter(r =>
+      r.principalApprovalStatus === 'Pending Principal Review' ||
+      (!r.principalApprovalStatus && r.ownerApprovalStatus === 'Pending Owner Review')
+    ).length;
+  }
+
   get todayFeeCashCollections(): number {
-    const liveCash = (this.principalFeeCollections || [])
+    const liveCash = (this.scopedPrincipalFeeCollections || [])
       .filter(f => (f.paymentResource || '').toLowerCase().includes('cash'))
       .reduce((sum, f) => sum + Number(f.amount || 0), 0);
-    return Math.max(185000, liveCash);
+    return (this.effectiveBranchScope === 'ALL' && this.effectiveWingScope === 'ALL') ? Math.max(185000, liveCash) : liveCash;
   }
   get todayAdmissionCashCollections(): number {
-    return 50000;
+    if (this.effectiveBranchScope === 'ALL' && this.effectiveWingScope === 'ALL') return 50000;
+    return (this.scopedAdmissions || [])
+      .filter(a => a.status === 'Approved')
+      .reduce((sum, a) => sum + Number(a.admissionFee || 0), 0);
   }
   get todayOnlineBankCollections(): number {
-    const liveBank = (this.principalFeeCollections || [])
+    const liveBank = (this.scopedPrincipalFeeCollections || [])
       .filter(f => {
         const pr = (f.paymentResource || '').toLowerCase();
         return pr.includes('meezan') || pr.includes('hbl') || pr.includes('bank') || pr.includes('raast');
       })
       .reduce((sum, f) => sum + Number(f.amount || 0), 0);
-    return Math.max(95000, liveBank);
+    return (this.effectiveBranchScope === 'ALL' && this.effectiveWingScope === 'ALL') ? Math.max(95000, liveBank) : liveBank;
   }
   get todayEasyPaisaCollections(): number {
-    const liveWallet = (this.principalFeeCollections || [])
+    const liveWallet = (this.scopedPrincipalFeeCollections || [])
       .filter(f => {
         const pr = (f.paymentResource || '').toLowerCase();
         return pr.includes('jazzcash') || pr.includes('easypaisa') || pr.includes('kuickpay');
       })
       .reduce((sum, f) => sum + Number(f.amount || 0), 0);
-    return Math.max(42000, liveWallet);
+    return (this.effectiveBranchScope === 'ALL' && this.effectiveWingScope === 'ALL') ? Math.max(42000, liveWallet) : liveWallet;
   }
   get todayPettyExpensesOutflow(): number {
-    const voucherSum = (this.accountantPettyVouchers || []).reduce((sum, v) => sum + Number(v.amount || 0), 0);
-    return voucherSum > 0 ? voucherSum : Number(this.accountantDailyClosingForm?.pettyExpenses || 18500);
+    const voucherSum = (this.scopedAccountantPettyVouchers || []).reduce((sum, v) => sum + Number(v.amount || 0), 0);
+    if (voucherSum > 0) return voucherSum;
+    return (this.effectiveBranchScope === 'ALL' && this.effectiveWingScope === 'ALL') ? Number(this.accountantDailyClosingForm?.pettyExpenses || 18500) : 0;
   }
   get totalPhysicalCashInflow(): number {
     return this.dailyOpeningVaultCash + this.todayFeeCashCollections + this.todayAdmissionCashCollections;
@@ -2570,8 +2749,8 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
         const u = JSON.parse(userData);
         const r = (u.role || '').toLowerCase();
 
-        // Real students, parents, guardians, and accountant clerks are strictly restricted: CANNOT access Owner ERP or see Exit to Owner
-        if (['student', 'parent', 'student_guardian', 'guardian', 'accountant', 'fee_clerk', 'bursar'].includes(r)) {
+        // Real principals, students, parents, guardians, and accountant clerks are strictly restricted: CANNOT access Owner ERP or see Exit to Owner
+        if (['principal', 'student', 'parent', 'student_guardian', 'guardian', 'accountant', 'fee_clerk', 'bursar'].includes(r)) {
           return false;
         }
         // Pure teachers without admin privileges cannot access Owner ERP
@@ -2579,20 +2758,22 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
           return false;
         }
         // School owner, administrator, client admin, or super admin has full owner access
-        if (['owner', 'admin', 'super_admin', 'superadmin', 'client_admin', 'school_admin', 'principal'].includes(r)) {
+        if (['owner', 'admin', 'super_admin', 'superadmin', 'client_admin', 'school_admin'].includes(r)) {
           return true;
         }
       } else {
-        // Fallback when no explicit user_data: check if simulating real student, parent, or accountant
+        // Fallback when no explicit user_data: check if simulating real principal, teacher, student, parent, or accountant
         const activeSchoolRole = localStorage.getItem('activeSchoolRole');
         const activePortalUser = localStorage.getItem('activeSchoolPortalUser');
         if (activePortalUser) {
           try {
             const pu = JSON.parse(activePortalUser);
-            if (pu.role === 'student' || pu.role === 'parent' || pu.role === 'accountant') return false;
+            if (['principal', 'teacher', 'student', 'parent', 'accountant'].includes(String(pu?.role || '').toLowerCase())) {
+              return false;
+            }
           } catch {}
         }
-        if (activeSchoolRole === 'student' || activeSchoolRole === 'parent' || activeSchoolRole === 'accountant') {
+        if (activeSchoolRole && ['principal', 'teacher', 'student', 'parent', 'accountant'].includes(activeSchoolRole)) {
           const mockAuth = localStorage.getItem('scs_auth_mock');
           if (mockAuth && !this.isSuperAdminPreview) {
             return false;
@@ -2782,13 +2963,175 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
       .reduce((acc, s) => acc + Number(s.dueBakaya || s.feeAmount || 0), 0);
   }
 
-  // Persona selections for simulated portal views
+  // Persona selections for logged-in & simulated portal views
+  activePrincipalId: string = 'PRI-101';
+  activeAccountantId: string = 'USR-501';
   activeTeacherId: string = 'TCH-001';
   get activeTeacherName(): string {
     return this.currentTeacherProfile?.name || 'Senior Faculty';
   }
   activeStudentId: string = 'ST-1001';
   activeParentChildId: string = 'ST-1001';
+
+  get activePrincipalProfile(): {
+    id: string;
+    empCode: string;
+    portalUserId?: string;
+    name: string;
+    title: string;
+    qualification: string;
+    experience: string;
+    email: string;
+    phone: string;
+    mobile: string;
+    image: string;
+    office: string;
+    status: string;
+    branchId?: string;
+    branchName: string;
+    wingId?: string;
+    wingName: string;
+    wingScopeLocked: boolean;
+    initials: string;
+  } {
+    const target = String(this.activePrincipalId || '').trim().toLowerCase();
+    const matchedPortal = (this.portalUsers || []).find(u =>
+      u.role === 'principal' && (
+        (u.id && u.id.toLowerCase() === target) ||
+        (u.staffIdOrRoll && u.staffIdOrRoll.toLowerCase() === target) ||
+        (u.email && u.email.toLowerCase() === target) ||
+        (u.name && u.name.toLowerCase() === target)
+      )
+    );
+    const matchedPri = (this.schoolPrincipals || []).find(p =>
+      (p.id && p.id.toLowerCase() === target) ||
+      (p.empCode && p.empCode.toLowerCase() === target) ||
+      (p.portalUserId && p.portalUserId.toLowerCase() === target) ||
+      (p.email && p.email.toLowerCase() === target) ||
+      (p.name && p.name.toLowerCase() === target) ||
+      (matchedPortal && (
+        (matchedPortal.staffIdOrRoll && p.empCode?.toLowerCase() === matchedPortal.staffIdOrRoll.toLowerCase()) ||
+        (matchedPortal.email && p.email?.toLowerCase() === matchedPortal.email.toLowerCase()) ||
+        (matchedPortal.name && p.name?.toLowerCase() === matchedPortal.name.toLowerCase())
+      ))
+    ) || (this.schoolPrincipals || [])[0];
+
+    const linkedPortal = matchedPortal || (matchedPri
+      ? (this.portalUsers || []).find(u =>
+          u.role === 'principal' && (
+            (matchedPri.email && u.email?.toLowerCase() === matchedPri.email.toLowerCase()) ||
+            (matchedPri.name && u.name?.toLowerCase() === matchedPri.name.toLowerCase()) ||
+            (matchedPri.empCode && u.staffIdOrRoll?.toLowerCase() === matchedPri.empCode.toLowerCase())
+          )
+        )
+      : undefined);
+
+    const name = matchedPri?.name || linkedPortal?.name || 'Prof. Dr. Tahir Malik';
+    const branchId = matchedPri?.branchId || linkedPortal?.branchId || this.schoolBranchRecords[0]?.id;
+    const branchName = matchedPri?.branchName || linkedPortal?.branchName || this.resolveBranchName(branchId);
+    const wingId = matchedPri?.wingId || linkedPortal?.wingId;
+    const wingName = matchedPri?.wingName || linkedPortal?.wingName || this.resolveWingName(wingId);
+    const wingScopeLocked = Boolean(matchedPri?.wingScopeLocked || linkedPortal?.wingScopeLocked);
+
+    return {
+      id: matchedPri?.id || linkedPortal?.id || 'PRI-101',
+      empCode: matchedPri?.empCode || linkedPortal?.staffIdOrRoll || 'PRI-101',
+      portalUserId: linkedPortal?.id || matchedPri?.portalUserId,
+      name,
+      title: matchedPri?.roleTitle || linkedPortal?.designation || 'Principal & Academic Director',
+      qualification: 'Ph.D. Educational Leadership & Academic Management',
+      experience: 'Senior Campus Leadership',
+      email: matchedPri?.email || linkedPortal?.email || 'principal@campus.edu',
+      phone: matchedPri?.phone || linkedPortal?.phone || '+92 51 9283741',
+      mobile: matchedPri?.phone || linkedPortal?.phone || '+92 300 5544991',
+      image: matchedPri?.image || '',
+      office: matchedPri?.department || 'Executive Directorate, Admin Block 1',
+      status: `On Duty · ${branchName}`,
+      branchId,
+      branchName,
+      wingId,
+      wingName,
+      wingScopeLocked,
+      initials: String(name || 'PR').split(/\s+/).map((p: string) => p[0]).slice(0, 2).join('').toUpperCase()
+    };
+  }
+
+  get activeAccountantProfile(): {
+    id: string;
+    empCode: string;
+    portalUserId?: string;
+    staffId?: string;
+    name: string;
+    title: string;
+    department: string;
+    email: string;
+    phone: string;
+    branchId?: string;
+    branchName: string;
+    wingId?: string;
+    wingName: string;
+    wingScopeLocked: boolean;
+    initials: string;
+  } {
+    const target = String(this.activeAccountantId || '').trim().toLowerCase();
+    const portalAccs = (this.portalUsers || []).filter(u => u.role === 'accountant');
+    const financeStaff = (this.schoolStaff || []).filter(sf => {
+      const dept = String(sf.department || '').toLowerCase();
+      const role = String(sf.roleTitle || '').toLowerCase();
+      return dept.includes('finance') || dept.includes('account') || role.includes('account') || role.includes('fee') || role.includes('cashier') || role.includes('bursar');
+    });
+
+    const matchedPortal = portalAccs.find(u =>
+      (u.id && u.id.toLowerCase() === target) ||
+      (u.staffIdOrRoll && u.staffIdOrRoll.toLowerCase() === target) ||
+      (u.email && u.email.toLowerCase() === target) ||
+      (u.name && u.name.toLowerCase() === target)
+    );
+    const matchedStaff = financeStaff.find(sf =>
+      (sf.id && sf.id.toLowerCase() === target) ||
+      (sf.empCode && sf.empCode.toLowerCase() === target) ||
+      (sf.portalUserId && sf.portalUserId.toLowerCase() === target) ||
+      (sf.email && sf.email.toLowerCase() === target) ||
+      (sf.name && sf.name.toLowerCase() === target) ||
+      (matchedPortal && (
+        (matchedPortal.staffIdOrRoll && sf.empCode?.toLowerCase() === matchedPortal.staffIdOrRoll.toLowerCase()) ||
+        (matchedPortal.email && sf.email?.toLowerCase() === matchedPortal.email.toLowerCase()) ||
+        (matchedPortal.name && sf.name?.toLowerCase() === matchedPortal.name.toLowerCase())
+      ))
+    );
+    const fallbackPortal = matchedPortal || (matchedStaff
+      ? portalAccs.find(u =>
+          (matchedStaff.email && u.email?.toLowerCase() === matchedStaff.email.toLowerCase()) ||
+          (matchedStaff.name && u.name?.toLowerCase() === matchedStaff.name.toLowerCase())
+        )
+      : undefined) || portalAccs[0];
+    const resolvedStaff = matchedStaff || (!fallbackPortal ? financeStaff[0] : undefined);
+
+    const name = resolvedStaff?.name || fallbackPortal?.name || 'Muhammad Rizwan';
+    const branchId = resolvedStaff?.branchId || fallbackPortal?.branchId || this.schoolBranchRecords[0]?.id;
+    const branchName = resolvedStaff?.branchName || fallbackPortal?.branchName || this.resolveBranchName(branchId);
+    const wingId = resolvedStaff?.wingId || fallbackPortal?.wingId;
+    const wingName = resolvedStaff?.wingName || fallbackPortal?.wingName || this.resolveWingName(wingId);
+    const wingScopeLocked = Boolean(resolvedStaff?.wingScopeLocked || fallbackPortal?.wingScopeLocked);
+
+    return {
+      id: fallbackPortal?.id || resolvedStaff?.id || 'USR-501',
+      empCode: resolvedStaff?.empCode || fallbackPortal?.staffIdOrRoll || 'ACC-001',
+      portalUserId: fallbackPortal?.id,
+      staffId: resolvedStaff?.id,
+      name,
+      title: resolvedStaff?.roleTitle || fallbackPortal?.designation || 'Accountant / Fee Clerk',
+      department: resolvedStaff?.department || fallbackPortal?.department || 'Accounts & Fee Desk',
+      email: resolvedStaff?.email || fallbackPortal?.email || 'accountant@campus.edu',
+      phone: resolvedStaff?.phone || fallbackPortal?.phone || '+92 300 4455661',
+      branchId,
+      branchName,
+      wingId,
+      wingName,
+      wingScopeLocked,
+      initials: String(name || 'AC').split(/\s+/).map((p: string) => p[0]).slice(0, 2).join('').toUpperCase()
+    };
+  }
 
   searchQuery: string = '';
   studentSearchQuery: string = '';
@@ -3115,6 +3458,10 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
     type: 'Core' | 'Elective' | 'Lab';
     passMarks: number;
     totalMarks: number;
+    branchId?: string;
+    branchName?: string;
+    wingId?: string;
+    wingName?: string;
   }> = [
     { id: 'SUB-101', code: 'MTH-101', title: 'Advanced Mathematics', grade: 'Class 10', teacher: 'Prof. Tariq Mehmood', creditHours: 6, type: 'Core', passMarks: 40, totalMarks: 100 },
     { id: 'SUB-102', code: 'PHY-101', title: 'Physics & Quantum Mechanics', grade: 'Class 10', teacher: 'Prof. Rehan Alvi', creditHours: 5, type: 'Core', passMarks: 40, totalMarks: 100 },
@@ -4587,7 +4934,9 @@ INSTRUCTIONS:
     feeAmount: 28500,
     feeStatus: 'Pending',
     status: 'Present',
-    attendance: '95%'
+    attendance: '95%',
+    branchId: 'BR-LHR-01',
+    wingId: 'WNG-LHR-SNR'
   };
 
   teacherForm: Partial<TeacherRecord> & {
@@ -4613,7 +4962,9 @@ INSTRUCTIONS:
     monthlySalary: 145000,
     salaryStatus: 'Processing',
     weeklyPeriods: 24,
-    employmentType: 'Permanent'
+    employmentType: 'Permanent',
+    branchId: 'BR-LHR-01',
+    wingId: 'WNG-LHR-SNR'
   };
 
   admissionForm = {
@@ -4640,7 +4991,9 @@ INSTRUCTIONS:
     discount: 0,
     initialPaymentStatus: 'Paid' as 'Paid' | 'Pending',
     score: '88% Entrance Assessment',
-    status: 'Approved' as 'Approved' | 'Interview Scheduled' | 'Under Review' | 'Rejected'
+    status: 'Approved' as 'Approved' | 'Interview Scheduled' | 'Under Review' | 'Rejected',
+    branchId: 'BR-LHR-01',
+    wingId: 'WNG-LHR-SNR'
   };
 
   financeForm: Partial<FinanceRecord> = {
@@ -4694,7 +5047,10 @@ INSTRUCTIONS:
     designation: 'Principal & Academic Director',
     department: 'Academic Directorate',
     clearanceLevel: 'Level 5 - Executive Academic Authority',
-    branch: 'Main Senior Campus'
+    branch: 'Main Senior Campus',
+    branchId: 'BR-LHR-01',
+    wingId: 'WNG-LHR-SNR',
+    wingScopeLocked: false
   };
 
   teacherHomeworkForm = {
@@ -5009,39 +5365,61 @@ INSTRUCTIONS:
       actualCollected: 2235000,
       varianceAmount: 0,
       reconciliationStatus: 'Balanced & Cleared',
-      cashierName: 'Muhammad Rizwan (Senior Bursar)',
-      verifiedByAuditor: 'KPMG External Auditor Partner',
+      cashierName: 'Muhammad Rizwan (Lahore Senior Bursar)',
+      verifiedByAuditor: 'Dr. Tahir Malik & KPMG Auditor',
+      principalApprovalStatus: 'Principal Approved',
+      principalReviewedBy: 'Dr. Tahir Malik',
+      principalRemarks: 'Lahore Main Campus cash vault & Meezan bank slip reconciled.',
+      ownerApprovalStatus: 'Verified & Approved by Owner',
+      branchId: 'BR-LHR-01',
+      branchName: 'Lahore Main Campus',
+      wingId: 'WNG-LHR-SEN',
+      wingName: 'Senior & Matric/O-Level Wing',
       notes: 'All counter receipts matched Meezan & HBL bank deposits 100%. No discrepancy.'
     },
     {
       id: 'REC-2026-W41',
-      date: '17 Oct 2026',
-      counterCashReceived: 410000,
-      bankDepositedMeezan: 790000,
-      bankDepositedHBL: 540000,
-      onlineDigitalKuickPay: 360000,
-      totalSystemBilled: 2100000,
-      actualCollected: 2100000,
+      date: '25 Oct 2026',
+      counterCashReceived: 215000,
+      bankDepositedMeezan: 490000,
+      bankDepositedHBL: 310000,
+      onlineDigitalKuickPay: 185000,
+      totalSystemBilled: 1200000,
+      actualCollected: 1200000,
       varianceAmount: 0,
       reconciliationStatus: 'Balanced & Cleared',
-      cashierName: 'Muhammad Rizwan (Senior Bursar)',
-      verifiedByAuditor: 'Ch. Aslam Javed (Accounts Controller)',
-      notes: 'Reconciliation verified with 1Link interbank clearing statement.'
+      cashierName: 'Tariq Mahmood (Islamabad Campus Bursar)',
+      verifiedByAuditor: 'Pending Branch Principal & Owner Review',
+      principalApprovalStatus: 'Pending Principal Review',
+      ownerApprovalStatus: 'Pending Owner Review',
+      branchId: 'BR-ISB-02',
+      branchName: 'Islamabad F-10 Campus',
+      wingId: 'WNG-ISB-SEN',
+      wingName: 'Senior Cambridge Wing',
+      notes: 'Islamabad F-10 daily closing awaiting Branch Principal endorsement and Owner lock.'
     },
     {
       id: 'REC-2026-W40',
-      date: '10 Oct 2026',
-      counterCashReceived: 385000,
-      bankDepositedMeezan: 720000,
-      bankDepositedHBL: 490000,
-      onlineDigitalKuickPay: 305000,
-      totalSystemBilled: 1900000,
-      actualCollected: 1900000,
-      varianceAmount: 0,
-      reconciliationStatus: 'Balanced & Cleared',
-      cashierName: 'Muhammad Rizwan (Senior Bursar)',
-      verifiedByAuditor: 'Ch. Aslam Javed (Accounts Controller)',
-      notes: 'Monthly terminal week fee reconciliation completed without error.'
+      date: '23 Oct 2026',
+      counterCashReceived: 185000,
+      bankDepositedMeezan: 420000,
+      bankDepositedHBL: 290000,
+      onlineDigitalKuickPay: 145000,
+      totalSystemBilled: 1045000,
+      actualCollected: 1040000,
+      varianceAmount: -5000,
+      reconciliationStatus: 'Audit Deficit Flagged',
+      cashierName: 'Kamran Siddiqui (Karachi Clifton Bursar)',
+      verifiedByAuditor: 'Miss Ayesha Siddiqa (Principal Reviewed)',
+      principalApprovalStatus: 'Principal Approved',
+      principalReviewedBy: 'Miss Ayesha Siddiqa',
+      principalRemarks: 'PKR 5,000 bank clearing lag noted on HBL deposit slip #4412.',
+      ownerApprovalStatus: 'Pending Owner Review',
+      branchId: 'BR-KHI-03',
+      branchName: 'Karachi Clifton Campus',
+      wingId: 'WNG-KHI-JUN',
+      wingName: 'Clifton Junior Wing',
+      notes: 'Karachi Clifton Campus closing reconciled with HBL pending interbank clearance.'
     }
   ];
 
@@ -5941,6 +6319,19 @@ INSTRUCTIONS:
     return fallbackWings[0] || this.getDefaultWings()[0];
   }
 
+  resolveDefaultFormBranchWing(gradeHint?: string): { branchId: string; wingId: string } {
+    const branchId = this.effectiveBranchScope !== 'ALL'
+      ? this.effectiveBranchScope
+      : (this.schoolBranchRecords[0]?.id || 'BR-LHR-01');
+    const branchWings = this.getWingsForBranch(branchId);
+    const activeWingValid = this.effectiveWingScope !== 'ALL'
+      && branchWings.some(w => w.id === this.effectiveWingScope);
+    const wingId = activeWingValid
+      ? this.effectiveWingScope
+      : (this.inferWingForBranch(branchId, gradeHint)?.id || branchWings[0]?.id || '');
+    return { branchId, wingId };
+  }
+
   private pickDeterministicBranch(index: number, hintText?: string): SchoolBranchRecord {
     const branches = this.schoolBranchRecords.length > 0 ? this.schoolBranchRecords : this.getDefaultBranches();
     const hint = String(hintText || '').toLowerCase();
@@ -6018,8 +6409,149 @@ INSTRUCTIONS:
         ensureRecordScope(col, idx, col.grade, col.collectedBy);
       }
     });
-    (this.feeReconciliations || []).forEach((rec, idx) => ensureRecordScope(rec, idx, 'Senior', rec.cashierName));
+    (this.feeReconciliations || []).forEach((rec, idx) => {
+      ensureRecordScope(rec, idx, 'Senior', `${rec.cashierName || ''} ${rec.notes || ''}`);
+      if (!rec.principalApprovalStatus) {
+        rec.principalApprovalStatus = rec.ownerApprovalStatus === 'Pending Owner Review' ? 'Pending Principal Review' : 'Principal Approved';
+      }
+    });
     (this.schoolAuditLogs || []).forEach((log, idx) => ensureRecordScope(log, idx, 'Senior', log.entityDescription));
+
+    // Step 3 normalization: Exams, Timetables, Gradebook, Homework, Study Materials, Lesson Plans, Library, Transport & Biometric Kiosk
+    const stuById = new Map((this.activeStudents || []).map(s => [String(s.id || '').trim(), s]));
+    const stuByRoll = new Map((this.activeStudents || []).map(s => [String(s.rollNo || '').trim(), s]));
+    const tchById = new Map((this.teachers || []).map(t => [String(t.id || '').trim(), t]));
+    const tchByName = new Map((this.teachers || []).map(t => [String(t.name || '').trim().toLowerCase(), t]));
+    const memberByKey = new Map<string, any>();
+    (this.activeStudents || []).forEach(s => memberByKey.set(`student:${s.id}`, s));
+    (this.teachers || []).forEach(t => memberByKey.set(`teacher:${t.id}`, t));
+    (this.schoolStaff || []).forEach(sf => memberByKey.set(`staff:${sf.id}`, sf));
+    (this.schoolPrincipals || []).forEach(pr => memberByKey.set(`principal:${pr.id}`, pr));
+
+    const matchTeacherByName = (rawName?: string) => {
+      const clean = String(rawName || '').trim().toLowerCase();
+      if (!clean) return undefined;
+      if (tchByName.has(clean)) return tchByName.get(clean);
+      const stripped = clean.replace(/^(prof\.|dr\.|ms\.|mr\.|mrs\.|engr\.|miss)\s*/g, '').split('(')[0].trim();
+      return (this.teachers || []).find(t => String(t.name || '').toLowerCase().includes(stripped));
+    };
+
+    const adoptMemberOrScope = (rec: any, idx: number, member: any, gradeHint?: string, textHint?: string) => {
+      if (!rec) return;
+      if (member && member.branchId && branchMap.has(member.branchId) && (!rec.branchId || !branchMap.has(rec.branchId))) {
+        rec.branchId = member.branchId;
+        rec.branchName = member.branchName || branchMap.get(member.branchId)?.name;
+        const mWing = member.wingId && wingMap.has(member.wingId) ? wingMap.get(member.wingId)! : this.inferWingForBranch(member.branchId, gradeHint);
+        rec.wingId = mWing?.id || member.wingId;
+        rec.wingName = mWing?.name || member.wingName;
+      } else {
+        ensureRecordScope(rec, idx, gradeHint, textHint);
+      }
+    };
+
+    (this.examsList || []).forEach((ex, idx) => ensureRecordScope(ex, idx, ex.class, ex.examName));
+    (this.timetables || []).forEach((tt, idx) => ensureRecordScope(tt, idx, tt.grade, `${tt.subject || ''} ${tt.room || ''}`));
+    (this.transportRoutes || []).forEach((tr, idx) => ensureRecordScope(tr, idx, 'Senior', `${tr.routeName || ''} ${tr.vehicleNo || ''}`));
+    (this.libraryBooks || []).forEach((bk, idx) => ensureRecordScope(bk, idx, bk.academicGradeLevel || bk.category, `${bk.title || ''} ${bk.rackNo || ''}`));
+    (this.libraryDigitalResources || []).forEach((dr, idx) => ensureRecordScope(dr, idx, dr.grade, `${dr.title || ''} ${dr.category || ''}`));
+
+    (this.libraryCirculations || []).forEach((circ, idx) => {
+      const stu = stuById.get(String(circ.borrowerId || '').trim())
+        || stuByRoll.get(String(circ.borrowerId || '').trim())
+        || (circ.borrowerName ? stuByName.get(String(circ.borrowerName).trim().toLowerCase()) : undefined);
+      const tch = !stu ? matchTeacherByName(circ.borrowerName) : undefined;
+      adoptMemberOrScope(circ, idx, stu || tch, circ.gradeOrDept, `${circ.bookTitle || ''} ${circ.borrowerName || ''}`);
+    });
+
+    (this.teacherLessonPlans || []).forEach((lp, idx) => {
+      const tch = matchTeacherByName(lp.teacherName);
+      adoptMemberOrScope(lp, idx, tch, lp.grade, `${lp.subject || ''} ${lp.topic || ''}`);
+    });
+    (this.teacherHomeworks || []).forEach((hw, idx) => {
+      const tch = (hw.teacherId ? tchById.get(String(hw.teacherId).trim()) : undefined) || matchTeacherByName(hw.teacherName);
+      adoptMemberOrScope(hw, idx, tch, hw.grade, `${hw.subject || ''} ${hw.title || ''}`);
+    });
+    (this.teacherStudyMaterials || []).forEach((mat, idx) => {
+      const tch = (mat.teacherId ? tchById.get(String(mat.teacherId).trim()) : undefined) || matchTeacherByName(mat.uploadedBy);
+      adoptMemberOrScope(mat, idx, tch, mat.grade, `${mat.subject || ''} ${mat.title || ''}`);
+    });
+    (this.teacherGradebook || []).forEach((gb, idx) => {
+      const stu = stuById.get(String(gb.studentId || '').trim())
+        || stuByRoll.get(String(gb.rollNo || '').trim())
+        || (gb.name ? stuByName.get(String(gb.name).trim().toLowerCase()) : undefined);
+      adoptMemberOrScope(gb, idx, stu, 'Class 10', `${gb.subject || ''} ${gb.name || ''}`);
+    });
+    (this.teacherSelfSchedule || []).forEach((p, idx) => ensureRecordScope(p, idx, p.grade, `${p.subject || ''} ${p.room || ''}`));
+    (this.examModerationList || []).forEach((em, idx) => {
+      const tch = matchTeacherByName(em.teacherName);
+      adoptMemberOrScope(em, idx, tch, em.grade, `${em.subject || ''} ${em.examType || ''}`);
+    });
+    (this.schoolSubjectsList || []).forEach((sub, idx) => ensureRecordScope(sub, idx, sub.grade, `${sub.title || ''} ${sub.code || ''}`));
+
+    (this.schoolFaceProfiles || []).forEach((fp, idx) => {
+      const member = memberByKey.get(`${fp.memberCategory}:${fp.memberId}`);
+      adoptMemberOrScope(fp, idx, member, fp.gradeOrDept, fp.memberName);
+    });
+    (this.schoolFingerprintProfiles || []).forEach((fp, idx) => {
+      const member = memberByKey.get(`${fp.memberCategory}:${fp.memberId}`);
+      adoptMemberOrScope(fp, idx, member, fp.gradeOrDept, fp.memberName);
+    });
+    (this.faceVerificationLogs || []).forEach((log, idx) => {
+      const member = memberByKey.get(`${log.memberCategory}:${log.memberId}`);
+      adoptMemberOrScope(log, idx, member, log.gradeOrDept, `${log.memberName || ''} ${log.gateName || ''}`);
+    });
+
+    // Step 4 normalization: Fee Plans, Petty Vouchers, Challans, Defaulters, Substitutes, Inspections, Leaves, Concessions, Tasks, Syllabus
+    if (!Array.isArray(this.feeStructureCatalog) || this.feeStructureCatalog.length === 0) {
+      this.feeStructureCatalog = this.getDefaultFeeStructureCatalog();
+    }
+    (this.feeStructureCatalog || []).forEach((plan, idx) => {
+      ensureRecordScope(plan, idx, plan.grade, `${plan.branchName || ''} ${plan.wingName || ''}`);
+      if (plan.isActive === undefined) plan.isActive = true;
+    });
+
+    (this.accountantPettyVouchers || []).forEach((pv, idx) => ensureRecordScope(pv, idx, 'Senior', `${pv.recordedBy || ''} ${pv.paidTo || ''} ${pv.description || ''}`));
+    (this.accountantGeneratedChallans || []).forEach((ch, idx) => {
+      const stu = stuById.get(String(ch.studentId || '').trim())
+        || stuByRoll.get(String(ch.rollNo || '').trim())
+        || (ch.studentName ? stuByName.get(String(ch.studentName).trim().toLowerCase()) : undefined);
+      adoptMemberOrScope(ch, idx, stu, ch.grade, ch.studentName);
+    });
+    (this.studentFeeDefaulters || []).forEach((d, idx) => {
+      const stu = stuById.get(String(d.studentId || '').trim())
+        || stuByRoll.get(String(d.rollNo || '').trim())
+        || (d.studentName ? stuByName.get(String(d.studentName).trim().toLowerCase()) : undefined);
+      adoptMemberOrScope(d, idx, stu, d.grade, d.studentName);
+    });
+    (this.substituteArrangements || []).forEach((sub, idx) => {
+      const tch = matchTeacherByName(sub.substituteTeacher) || matchTeacherByName(sub.absentTeacher);
+      adoptMemberOrScope(sub, idx, tch, sub.grade, `${sub.subject || ''} ${sub.assignedBy || ''}`);
+    });
+    (this.substituteSmartSuggestions || []).forEach((sg: any, idx: number) => {
+      const tch = matchTeacherByName(sg.suggestedSubstitute) || matchTeacherByName(sg.absentFaculty);
+      adoptMemberOrScope(sg, idx, tch, sg.grade, sg.subject);
+    });
+    (this.dailyInspectionLogs || []).forEach((log, idx) => {
+      const wingHint = log.wing || log.location || 'Senior';
+      ensureRecordScope(log, idx, wingHint, `${log.location || ''} ${log.loggedBy || log.inspectorName || ''}`);
+    });
+    (this.teacherLeaveRequests || []).forEach((tl, idx) => {
+      const tch = (tl.teacherId ? tchById.get(String(tl.teacherId).trim()) : undefined) || matchTeacherByName(tl.teacherName);
+      adoptMemberOrScope(tl, idx, tch, tch?.assignedGrade || 'Senior', tl.department);
+    });
+    (this.feeConcessionRequests || []).forEach((req, idx) => {
+      const stu = stuByRoll.get(String(req.rollNo || '').trim())
+        || (req.studentName ? stuByName.get(String(req.studentName).trim().toLowerCase()) : undefined);
+      adoptMemberOrScope(req, idx, stu, req.grade, req.studentName);
+    });
+    (this.facultyTaskList || []).forEach((tsk, idx) => {
+      const tch = matchTeacherByName(tsk.assignedTeacher);
+      adoptMemberOrScope(tsk, idx, tch, tch?.assignedGrade || 'Senior', tsk.department);
+    });
+    (this.syllabusTracker || []).forEach((syl, idx) => {
+      const tch = matchTeacherByName(syl.teacher || syl.teacherName);
+      adoptMemberOrScope(syl, idx, tch, syl.grade, syl.subject);
+    });
 
     if (this.selectedBranchScope !== 'ALL' && !branchMap.has(this.selectedBranchScope)) {
       this.selectedBranchScope = 'ALL';
@@ -6032,12 +6564,10 @@ INSTRUCTIONS:
   get effectiveBranchScope(): string {
     if (this.currentPortalRole === 'owner') return this.selectedBranchScope || 'ALL';
     if (this.currentPortalRole === 'principal') {
-      const activePri = (this.schoolPrincipals || []).find(p => p.name === this.principalPersona?.name) || this.schoolPrincipals[0];
-      return activePri?.branchId || 'ALL';
+      return this.activePrincipalProfile?.branchId || 'ALL';
     }
     if (this.currentPortalRole === 'accountant') {
-      const accPortal = (this.portalUsers || []).find(u => u.role === 'accountant');
-      return accPortal?.branchId || this.schoolBranchRecords[0]?.id || 'ALL';
+      return this.activeAccountantProfile?.branchId || this.schoolBranchRecords[0]?.id || 'ALL';
     }
     if (this.currentPortalRole === 'teacher') {
       return this.currentTeacherProfile?.branchId || 'ALL';
@@ -6047,13 +6577,33 @@ INSTRUCTIONS:
     }
     if (this.currentPortalRole === 'parent') {
       const ward = (this.activeStudents || []).find(s => s.id === this.activeParentChildId);
-      return ward?.branchId || 'ALL';
+      return ward?.branchId || this.currentGuardianProfile?.branchId || 'ALL';
     }
     return 'ALL';
   }
 
   get effectiveWingScope(): string {
     if (this.currentPortalRole === 'owner') return this.selectedWingScope || 'ALL';
+    if (this.currentPortalRole === 'principal') {
+      const pri = this.activePrincipalProfile;
+      return pri?.wingScopeLocked && pri?.wingId ? pri.wingId : 'ALL';
+    }
+    if (this.currentPortalRole === 'accountant') {
+      const acc = this.activeAccountantProfile;
+      return acc?.wingScopeLocked && acc?.wingId ? acc.wingId : 'ALL';
+    }
+    if (this.currentPortalRole === 'teacher') {
+      const tch = this.currentTeacherProfile;
+      return tch?.wingScopeLocked && tch?.wingId ? tch.wingId : 'ALL';
+    }
+    if (this.currentPortalRole === 'student') {
+      const stu = this.currentStudentProfile;
+      return stu?.wingScopeLocked && stu?.wingId ? stu.wingId : 'ALL';
+    }
+    if (this.currentPortalRole === 'parent') {
+      const grd = this.currentGuardianProfile;
+      return grd?.wingScopeLocked && grd?.wingId ? grd.wingId : 'ALL';
+    }
     return 'ALL';
   }
 
@@ -6071,13 +6621,27 @@ INSTRUCTIONS:
     const brId = this.effectiveBranchScope;
     const brName = this.resolveBranchName(brId);
     if (this.currentPortalRole === 'principal') {
-      const activePri = (this.schoolPrincipals || []).find(p => p.name === this.principalPersona?.name) || this.schoolPrincipals[0];
-      const wName = activePri?.wingName || 'All Academic Wings';
+      const pri = this.activePrincipalProfile;
+      const wName = pri?.wingScopeLocked && pri?.wingId ? `${pri.wingName} (Locked)` : (pri?.wingName || 'All Academic Wings');
       return `${brName} · ${wName}`;
     }
     if (this.currentPortalRole === 'accountant') {
-      const accPortal = (this.portalUsers || []).find(u => u.role === 'accountant');
-      return `${brName} · ${accPortal?.wingName || 'All Wing Fee Counters'}`;
+      const acc = this.activeAccountantProfile;
+      const wName = acc?.wingScopeLocked && acc?.wingId ? `${acc.wingName} (Locked)` : (acc?.wingName || 'All Wing Fee Counters');
+      return `${brName} · ${wName}`;
+    }
+    if (this.currentPortalRole === 'teacher') {
+      const tch = this.currentTeacherProfile;
+      const wName = tch?.wingScopeLocked && tch?.wingId ? `${tch.wingName} (Locked)` : (tch?.wingName || 'All Academic Wings');
+      return `${brName} · ${wName}`;
+    }
+    if (this.currentPortalRole === 'student') {
+      const stu = this.currentStudentProfile;
+      return `${brName} · ${stu?.wingName || 'Academic Wing'}`;
+    }
+    if (this.currentPortalRole === 'parent') {
+      const grd = this.currentGuardianProfile;
+      return `${brName} · ${grd?.wingName || 'Ward Wing'}`;
     }
     return this.activeScopeSummaryLabel;
   }
@@ -6146,6 +6710,250 @@ INSTRUCTIONS:
 
   get scopedStaff(): StaffMemberRecord[] {
     return (this.schoolStaff || []).filter(s => this.matchesActiveBranchWing(s));
+  }
+
+  get scopedExams(): ExamRecord[] {
+    return (this.examsList || []).filter(ex => this.matchesActiveBranchWing(ex, ex.class));
+  }
+
+  get scopedTimetables(): TimetableRecord[] {
+    return (this.timetables || []).filter(tt => this.matchesActiveBranchWing(tt, tt.grade));
+  }
+
+  get scopedTransportRoutes(): TransportRouteRecord[] {
+    return (this.transportRoutes || []).filter(tr => this.matchesActiveBranchWing(tr));
+  }
+
+  get scopedLibraryBooks(): LibraryBookRecord[] {
+    return (this.libraryBooks || []).filter(bk => this.matchesActiveBranchWing(bk, bk.academicGradeLevel || bk.category));
+  }
+
+  get scopedLibraryCirculations(): LibraryCirculationRecord[] {
+    return (this.libraryCirculations || []).filter(c => this.matchesActiveBranchWing(c, c.gradeOrDept));
+  }
+
+  get scopedLibraryDigitalResources(): LibraryDigitalResource[] {
+    return (this.libraryDigitalResources || []).filter(dr => this.matchesActiveBranchWing(dr, dr.grade));
+  }
+
+  get scopedTeacherLessonPlans(): TeacherLessonPlan[] {
+    return (this.teacherLessonPlans || []).filter(lp => this.matchesActiveBranchWing(lp, lp.grade));
+  }
+
+  get scopedTeacherHomeworks(): TeacherHomeworkRecord[] {
+    return (this.teacherHomeworks || []).filter(hw => this.matchesActiveBranchWing(hw, hw.grade));
+  }
+
+  get scopedTeacherStudyMaterials(): TeacherStudyMaterialRecord[] {
+    return (this.teacherStudyMaterials || []).filter(mat => this.matchesActiveBranchWing(mat, mat.grade));
+  }
+
+  get scopedTeacherGradebook(): TeacherGradeRecord[] {
+    return (this.teacherGradebook || []).filter(gb => this.matchesActiveBranchWing(gb));
+  }
+
+  get scopedTeacherSelfSchedule(): TeacherPeriodScheduleRecord[] {
+    return (this.teacherSelfSchedule || []).filter(p => this.matchesActiveBranchWing(p, p.grade));
+  }
+
+  get scopedExamModerationList(): any[] {
+    return (this.examModerationList || []).filter(em => this.matchesActiveBranchWing(em, em.grade));
+  }
+
+  get scopedSchoolSubjects(): Array<{
+    id: string;
+    code: string;
+    title: string;
+    grade: string;
+    teacher: string;
+    creditHours: number;
+    type: 'Core' | 'Elective' | 'Lab';
+    passMarks: number;
+    totalMarks: number;
+    branchId?: string;
+    branchName?: string;
+    wingId?: string;
+    wingName?: string;
+  }> {
+    return (this.schoolSubjectsList || []).filter(sub => this.matchesActiveBranchWing(sub, sub.grade));
+  }
+
+  private get scopedAttendanceMemberKeys(): Set<string> {
+    const keys = new Set<string>();
+    (this.scopedActiveStudents || []).forEach(s => keys.add(`student:${s.id}`));
+    (this.scopedTeachers || []).forEach(t => keys.add(`teacher:${t.id}`));
+    (this.scopedStaff || []).forEach(sf => keys.add(`staff:${sf.id}`));
+    (this.scopedPrincipals || []).forEach(pr => keys.add(`principal:${pr.id}`));
+    return keys;
+  }
+
+  get scopedFaceProfiles(): FaceProfileRecord[] {
+    if (this.effectiveBranchScope === 'ALL' && this.effectiveWingScope === 'ALL') {
+      return this.schoolFaceProfiles || [];
+    }
+    const keys = this.scopedAttendanceMemberKeys;
+    return (this.schoolFaceProfiles || []).filter(fp =>
+      keys.has(`${fp.memberCategory}:${fp.memberId}`) && this.matchesActiveBranchWing(fp, fp.gradeOrDept)
+    );
+  }
+
+  get scopedFingerprintProfiles(): FingerprintProfileRecord[] {
+    if (this.effectiveBranchScope === 'ALL' && this.effectiveWingScope === 'ALL') {
+      return this.schoolFingerprintProfiles || [];
+    }
+    const keys = this.scopedAttendanceMemberKeys;
+    return (this.schoolFingerprintProfiles || []).filter(fp =>
+      keys.has(`${fp.memberCategory}:${fp.memberId}`) && this.matchesActiveBranchWing(fp, fp.gradeOrDept)
+    );
+  }
+
+  get scopedFaceVerificationLogs(): FaceVerificationLogRecord[] {
+    if (this.effectiveBranchScope === 'ALL' && this.effectiveWingScope === 'ALL') {
+      return this.faceVerificationLogs || [];
+    }
+    const keys = this.scopedAttendanceMemberKeys;
+    return (this.faceVerificationLogs || []).filter(log =>
+      keys.has(`${log.memberCategory}:${log.memberId}`) || this.matchesActiveBranchWing(log, log.gradeOrDept)
+    );
+  }
+
+  get scopedFeeStructureCatalog(): FeePlanTemplateRecord[] {
+    return (this.feeStructureCatalog || []).filter(plan => this.matchesActiveBranchWing(plan, plan.grade));
+  }
+
+  get scopedAccountantPettyVouchers(): any[] {
+    return (this.accountantPettyVouchers || []).filter(pv => this.matchesActiveBranchWing(pv));
+  }
+
+  get scopedAccountantGeneratedChallans(): any[] {
+    return (this.accountantGeneratedChallans || []).filter(ch => this.matchesActiveBranchWing(ch, ch.grade));
+  }
+
+  get scopedStudentFeeDefaulters(): StudentFeeDefaulterRecord[] {
+    return (this.studentFeeDefaulters || []).filter(d => this.matchesActiveBranchWing(d, d.grade));
+  }
+
+  get scopedSubstituteArrangements(): SubstituteArrangementRecord[] {
+    return (this.substituteArrangements || []).filter(sub => this.matchesActiveBranchWing(sub, sub.grade));
+  }
+
+  get scopedSubstituteSmartSuggestions(): any[] {
+    return (this.substituteSmartSuggestions || []).filter(sg => this.matchesActiveBranchWing(sg, sg.grade));
+  }
+
+  get scopedDailyInspectionLogs(): DailyInspectionLogRecord[] {
+    return (this.dailyInspectionLogs || []).filter(log => this.matchesActiveBranchWing(log, log.wing || log.location));
+  }
+
+  get scopedTeacherLeaveRequests(): any[] {
+    return (this.teacherLeaveRequests || []).filter(tl => this.matchesActiveBranchWing(tl));
+  }
+
+  get scopedFeeConcessionRequests(): any[] {
+    return (this.feeConcessionRequests || []).filter(req => this.matchesActiveBranchWing(req, req.grade));
+  }
+
+  get scopedFacultyTaskList(): any[] {
+    return (this.facultyTaskList || []).filter(tsk => this.matchesActiveBranchWing(tsk));
+  }
+
+  get scopedSyllabusTracker(): SyllabusTrackerRecord[] {
+    return (this.syllabusTracker || []).filter(syl => this.matchesActiveBranchWing(syl, syl.grade));
+  }
+
+  get branchDailyClosingAuditSummary(): {
+    rows: Array<{
+      branch: SchoolBranchRecord;
+      closingsCount: number;
+      cashTotal: number;
+      meezanTotal: number;
+      hblTotal: number;
+      digitalTotal: number;
+      pettyTotal: number;
+      billedTotal: number;
+      collectedTotal: number;
+      varianceTotal: number;
+      pendingPrincipalCount: number;
+      pendingOwnerCount: number;
+      flaggedCount: number;
+    }>;
+    totals: {
+      closingsCount: number;
+      cashTotal: number;
+      meezanTotal: number;
+      hblTotal: number;
+      digitalTotal: number;
+      pettyTotal: number;
+      billedTotal: number;
+      collectedTotal: number;
+      varianceTotal: number;
+      pendingPrincipalCount: number;
+      pendingOwnerCount: number;
+      flaggedCount: number;
+    };
+  } {
+    const branches = this.schoolBranchRecords || [];
+    const reconciliations = this.feeReconciliations || [];
+    const rows = branches.map(branch => {
+      const list = reconciliations.filter(r => (r.branchId || branches[0]?.id) === branch.id);
+      const cashTotal = list.reduce((s, r) => s + Number(r.counterCashReceived || 0), 0);
+      const meezanTotal = list.reduce((s, r) => s + Number(r.bankDepositedMeezan || 0), 0);
+      const hblTotal = list.reduce((s, r) => s + Number(r.bankDepositedHBL || 0), 0);
+      const digitalTotal = list.reduce((s, r) => s + Number(r.onlineDigitalKuickPay || 0), 0);
+      const pettyTotal = list.reduce((s, r) => s + Number(r.pettyExpenses || 0), 0);
+      const billedTotal = list.reduce((s, r) => s + Number(r.totalSystemBilled || 0), 0);
+      const collectedTotal = list.reduce((s, r) => s + Number(r.actualCollected || 0), 0);
+      const varianceTotal = list.reduce((s, r) => s + Number(r.varianceAmount || 0), 0);
+      const pendingPrincipalCount = list.filter(r => r.principalApprovalStatus === 'Pending Principal Review').length;
+      const pendingOwnerCount = list.filter(r => r.ownerApprovalStatus === 'Pending Owner Review').length;
+      const flaggedCount = list.filter(r => r.ownerApprovalStatus === 'Flagged by Owner' || r.principalApprovalStatus === 'Principal Flagged').length;
+      return {
+        branch,
+        closingsCount: list.length,
+        cashTotal,
+        meezanTotal,
+        hblTotal,
+        digitalTotal,
+        pettyTotal,
+        billedTotal,
+        collectedTotal,
+        varianceTotal,
+        pendingPrincipalCount,
+        pendingOwnerCount,
+        flaggedCount
+      };
+    });
+    const totals = rows.reduce(
+      (acc, r) => ({
+        closingsCount: acc.closingsCount + r.closingsCount,
+        cashTotal: acc.cashTotal + r.cashTotal,
+        meezanTotal: acc.meezanTotal + r.meezanTotal,
+        hblTotal: acc.hblTotal + r.hblTotal,
+        digitalTotal: acc.digitalTotal + r.digitalTotal,
+        pettyTotal: acc.pettyTotal + r.pettyTotal,
+        billedTotal: acc.billedTotal + r.billedTotal,
+        collectedTotal: acc.collectedTotal + r.collectedTotal,
+        varianceTotal: acc.varianceTotal + r.varianceTotal,
+        pendingPrincipalCount: acc.pendingPrincipalCount + r.pendingPrincipalCount,
+        pendingOwnerCount: acc.pendingOwnerCount + r.pendingOwnerCount,
+        flaggedCount: acc.flaggedCount + r.flaggedCount
+      }),
+      {
+        closingsCount: 0,
+        cashTotal: 0,
+        meezanTotal: 0,
+        hblTotal: 0,
+        digitalTotal: 0,
+        pettyTotal: 0,
+        billedTotal: 0,
+        collectedTotal: 0,
+        varianceTotal: 0,
+        pendingPrincipalCount: 0,
+        pendingOwnerCount: 0,
+        flaggedCount: 0
+      }
+    );
+    return { rows, totals };
   }
 
   get branchComparisonRows(): Array<{
@@ -6820,7 +7628,7 @@ INSTRUCTIONS:
   ];
 
   autoAllotSubstitutePeriod(item: any): void {
-    const newSub: SubstituteArrangementRecord = {
+    const newSub: SubstituteArrangementRecord = this.stampActiveBranchWing({
       id: 'SUB-' + Math.floor(100 + Math.random() * 899),
       date: new Date().toISOString().slice(0, 10),
       period: item.period,
@@ -6830,12 +7638,15 @@ INSTRUCTIONS:
       substituteTeacher: item.suggestedSubstitute,
       roomNo: 'Room 204',
       status: 'Assigned',
-      assignedBy: 'Dr. Tahir Malik (Principal - Smart Auto-Matcher)'
-    };
+      assignedBy: `${this.activePrincipalProfile?.name || 'Dr. Tahir Malik'} (Principal - Smart Auto-Matcher)`,
+      branchId: item.branchId,
+      wingId: item.wingId
+    }, item.grade);
     this.substituteArrangements.unshift(newSub);
     const idx = this.substituteSmartSuggestions.indexOf(item);
     if (idx !== -1) this.substituteSmartSuggestions.splice(idx, 1);
-    this.showToast(`✅ Auto-matched! ${item.suggestedSubstitute} allocated to ${item.grade} (${item.period}).`, 'success');
+    this.saveStateToStorage();
+    this.showToast(`✅ Auto-matched! ${item.suggestedSubstitute} allocated to ${item.grade} (${item.period}) [${newSub.branchName}].`, 'success');
   }
 
   moderationGracePoints: number = 2;
@@ -7020,7 +7831,7 @@ INSTRUCTIONS:
   // LESSON PLAN CRUD & PAGINATION METHODS
   // ==========================================
   getFilteredLessonPlans(): TeacherLessonPlan[] {
-    let list = this.teacherLessonPlans;
+    let list = this.scopedTeacherLessonPlans;
     const q = (this.lessonPlanSearchQuery || '').toLowerCase().trim();
     if (q) {
       list = list.filter(p =>
@@ -7135,7 +7946,7 @@ INSTRUCTIONS:
       }
       this.showToast(`✏️ Lesson Plan [${this.editingLessonPlan.id}] updated successfully!`, 'success');
     } else {
-      const newPlan: TeacherLessonPlan = {
+      const newPlan: TeacherLessonPlan = this.stampActiveBranchWing({
         id: 'LP-' + Math.floor(100 + Math.random() * 900),
         topic: this.lessonPlanForm.topic,
         subject: this.lessonPlanForm.subject,
@@ -7147,7 +7958,7 @@ INSTRUCTIONS:
         homeworkAssigned: this.lessonPlanForm.homeworkAssigned,
         status: this.lessonPlanForm.status,
         teacherName: targetAuthor
-      };
+      }, this.lessonPlanForm.grade);
       targetPlanId = newPlan.id;
       this.teacherLessonPlans.unshift(newPlan);
       this.showToast(`📚 New Lesson Plan [${newPlan.id}] created and published!`, 'success');
@@ -7216,7 +8027,7 @@ INSTRUCTIONS:
   }
 
   getFilteredPrincipalStudents(): StudentRecord[] {
-    let list = this.activeStudents;
+    let list = this.scopedActiveStudents;
     const q = this.principalMasterSearch.toLowerCase().trim();
     if (q) {
       list = list.filter(s =>
@@ -7643,22 +8454,45 @@ INSTRUCTIONS:
     passOnly: true
   };
 
-  // Quick Actions: Fee Structure
+  // Quick Actions: Fee Structure (Multi-Branch & Multi-Wing Fee Plan Templates)
   isFeeStructureModalOpen: boolean = false;
-  feeStructureCatalog: Array<{
+  feePlanForm: {
+    id: string;
+    branchId: string;
+    wingId: string;
     grade: string;
     admissionFee: number;
     tuitionFee: number;
     labFee: number;
     examFee: number;
     sportsFee: number;
-  }> = [
-    { grade: 'Pre-Primary (LKG / UKG / Prep)', admissionFee: 15000, tuitionFee: 6500, labFee: 500, examFee: 1200, sportsFee: 800 },
-    { grade: 'Primary (Class 1 - 5)', admissionFee: 20000, tuitionFee: 12500, labFee: 1000, examFee: 1800, sportsFee: 1000 },
-    { grade: 'Middle (Class 6 - 8)', admissionFee: 25000, tuitionFee: 18000, labFee: 2500, examFee: 2500, sportsFee: 1200 },
-    { grade: 'High School (Class 9 - 10)', admissionFee: 30000, tuitionFee: 28500, labFee: 4000, examFee: 3500, sportsFee: 1500 },
-    { grade: 'Cambridge (O-Levels)', admissionFee: 45000, tuitionFee: 42000, labFee: 6000, examFee: 5000, sportsFee: 2500 }
-  ];
+  } = {
+    id: '',
+    branchId: 'BR-LHR-01',
+    wingId: 'WNG-LHR-SEN',
+    grade: '',
+    admissionFee: 25000,
+    tuitionFee: 18000,
+    labFee: 2000,
+    examFee: 2500,
+    sportsFee: 1000
+  };
+
+  getDefaultFeeStructureCatalog(): FeePlanTemplateRecord[] {
+    return [
+      { id: 'FP-LHR-MON', branchId: 'BR-LHR-01', branchName: 'Lahore Main Campus', wingId: 'WNG-LHR-MON', wingName: 'Montessori & Prep Wing', grade: 'Pre-Primary (Prep / KG / Nursery)', admissionFee: 15000, tuitionFee: 7500, labFee: 500, examFee: 1200, sportsFee: 800, isActive: true },
+      { id: 'FP-LHR-JUN', branchId: 'BR-LHR-01', branchName: 'Lahore Main Campus', wingId: 'WNG-LHR-JUN', wingName: 'Junior Primary Wing (1-5)', grade: 'Primary (Class 1 - 5)', admissionFee: 20000, tuitionFee: 13500, labFee: 1000, examFee: 1800, sportsFee: 1000, isActive: true },
+      { id: 'FP-LHR-MID', branchId: 'BR-LHR-01', branchName: 'Lahore Main Campus', wingId: 'WNG-LHR-MID', wingName: 'Middle Wing (6-8)', grade: 'Middle (Class 6 - 8)', admissionFee: 25000, tuitionFee: 19500, labFee: 2500, examFee: 2500, sportsFee: 1200, isActive: true },
+      { id: 'FP-LHR-SEN', branchId: 'BR-LHR-01', branchName: 'Lahore Main Campus', wingId: 'WNG-LHR-SEN', wingName: 'Senior & Matric/O-Level Wing', grade: 'High School (Class 9 - 10)', admissionFee: 30000, tuitionFee: 28500, labFee: 4000, examFee: 3500, sportsFee: 1500, isActive: true },
+      { id: 'FP-ISB-MON', branchId: 'BR-ISB-02', branchName: 'Islamabad F-10 Campus', wingId: 'WNG-ISB-MON', wingName: 'Early Years Wing', grade: 'Pre-Primary (Prep / KG / Nursery)', admissionFee: 18000, tuitionFee: 9500, labFee: 600, examFee: 1500, sportsFee: 1000, isActive: true },
+      { id: 'FP-ISB-JUN', branchId: 'BR-ISB-02', branchName: 'Islamabad F-10 Campus', wingId: 'WNG-ISB-JUN', wingName: 'Primary Academic Wing', grade: 'Primary (Class 1 - 5)', admissionFee: 24000, tuitionFee: 16500, labFee: 1500, examFee: 2000, sportsFee: 1200, isActive: true },
+      { id: 'FP-ISB-SEN', branchId: 'BR-ISB-02', branchName: 'Islamabad F-10 Campus', wingId: 'WNG-ISB-SEN', wingName: 'Senior Cambridge Wing', grade: 'Cambridge & Senior (Class 9 - 10 / O-Levels)', admissionFee: 48000, tuitionFee: 44000, labFee: 6000, examFee: 5000, sportsFee: 2500, isActive: true },
+      { id: 'FP-KHI-JUN', branchId: 'BR-KHI-03', branchName: 'Karachi Clifton Campus', wingId: 'WNG-KHI-JUN', wingName: 'Clifton Junior Wing', grade: 'Primary & Middle (Class 1 - 8)', admissionFee: 22000, tuitionFee: 17500, labFee: 2000, examFee: 2200, sportsFee: 1200, isActive: true },
+      { id: 'FP-KHI-SEN', branchId: 'BR-KHI-03', branchName: 'Karachi Clifton Campus', wingId: 'WNG-KHI-SEN', wingName: 'Clifton Senior Wing', grade: 'High School & O-Levels (Class 9 - 10)', admissionFee: 38000, tuitionFee: 35000, labFee: 4500, examFee: 4000, sportsFee: 2000, isActive: true }
+    ];
+  }
+
+  feeStructureCatalog: FeePlanTemplateRecord[] = this.getDefaultFeeStructureCatalog();
 
   // Quick Actions: Fee Deletion Log
   isFeeDeletionLogModalOpen: boolean = false;
@@ -7882,13 +8716,144 @@ INSTRUCTIONS:
     this.showToast(`Viewing receipt ${rcp.receiptNo} for ${rcp.studentName} (PKR ${rcp.amount})`, 'info');
   }
 
+  getFeePlanFormWings(): SchoolWingRecord[] {
+    return this.getWingsForBranch(this.feePlanForm.branchId || this.resolveDefaultFormBranchWing().branchId);
+  }
+
+  onFeePlanBranchChange(): void {
+    const wings = this.getFeePlanFormWings();
+    this.feePlanForm.wingId = wings[0]?.id || '';
+    this.cdr.detectChanges();
+  }
+
+  resetFeePlanForm(): void {
+    const defScope = this.resolveDefaultFormBranchWing('Class 9');
+    this.feePlanForm = {
+      id: '',
+      branchId: defScope.branchId,
+      wingId: defScope.wingId,
+      grade: '',
+      admissionFee: 25000,
+      tuitionFee: 18000,
+      labFee: 2000,
+      examFee: 2500,
+      sportsFee: 1000
+    };
+  }
+
   openFeeStructureModal() {
+    this.resetFeePlanForm();
     this.isFeeStructureModalOpen = true;
     this.cdr.detectChanges();
   }
+
   closeFeeStructureModal() {
     this.isFeeStructureModalOpen = false;
     this.cdr.detectChanges();
+  }
+
+  editFeePlanTemplate(plan: FeePlanTemplateRecord): void {
+    this.feePlanForm = {
+      id: plan.id,
+      branchId: plan.branchId,
+      wingId: plan.wingId || this.getWingsForBranch(plan.branchId)[0]?.id || '',
+      grade: plan.grade,
+      admissionFee: Number(plan.admissionFee || 0),
+      tuitionFee: Number(plan.tuitionFee || 0),
+      labFee: Number(plan.labFee || 0),
+      examFee: Number(plan.examFee || 0),
+      sportsFee: Number(plan.sportsFee || 0)
+    };
+    this.cdr.detectChanges();
+  }
+
+  saveFeePlanTemplate(): void {
+    if (!this.isOwnerPortal && this.effectiveBranchScope !== 'ALL') {
+      this.feePlanForm.branchId = this.effectiveBranchScope;
+    }
+    const grade = String(this.feePlanForm.grade || '').trim();
+    if (!grade) {
+      this.showToast('Please enter Class / Grade tier name for the fee plan.', 'warning');
+      return;
+    }
+    const branchId = this.feePlanForm.branchId || this.schoolBranchRecords[0]?.id || 'BR-LHR-01';
+    const wingObj = (this.schoolWingRecords || []).find(w => w.id === this.feePlanForm.wingId && w.branchId === branchId)
+      || this.inferWingForBranch(branchId, grade);
+    const entry: FeePlanTemplateRecord = {
+      id: this.feePlanForm.id || `FP-${Date.now()}`,
+      branchId,
+      branchName: this.resolveBranchName(branchId),
+      wingId: wingObj?.id || '',
+      wingName: wingObj?.name || this.resolveWingName(wingObj?.id),
+      grade,
+      admissionFee: Number(this.feePlanForm.admissionFee || 0),
+      tuitionFee: Number(this.feePlanForm.tuitionFee || 0),
+      labFee: Number(this.feePlanForm.labFee || 0),
+      examFee: Number(this.feePlanForm.examFee || 0),
+      sportsFee: Number(this.feePlanForm.sportsFee || 0),
+      isActive: true
+    };
+    const existingIdx = (this.feeStructureCatalog || []).findIndex(p => p.id === entry.id);
+    if (existingIdx !== -1) {
+      this.feeStructureCatalog[existingIdx] = entry;
+      this.feeStructureCatalog = [...this.feeStructureCatalog];
+    } else {
+      this.feeStructureCatalog.unshift(entry);
+    }
+    this.saveStateToStorage();
+    this.resetFeePlanForm();
+    this.showToast(`Saved Fee Plan (${entry.grade}) for ${entry.branchName} · ${entry.wingName}!`, 'success');
+    this.cdr.detectChanges();
+  }
+
+  deleteFeePlanTemplate(plan: FeePlanTemplateRecord): void {
+    if (!this.isOwnerPortal) {
+      this.showToast('Only School Business Owner can delete branch fee plan templates.', 'warning');
+      return;
+    }
+    this.feeStructureCatalog = (this.feeStructureCatalog || []).filter(p => p.id !== plan.id);
+    this.saveStateToStorage();
+    this.showToast(`Removed fee plan template ${plan.grade} (${plan.branchName}).`, 'info');
+    this.cdr.detectChanges();
+  }
+
+  resolveFeePlanForGrade(grade: string, branchId?: string, wingId?: string): FeePlanTemplateRecord | undefined {
+    const catalog = this.feeStructureCatalog || [];
+    if (!catalog.length) return undefined;
+    const targetBranch = branchId || (this.effectiveBranchScope !== 'ALL' ? this.effectiveBranchScope : this.schoolBranchRecords[0]?.id);
+    const g = String(grade || '').toLowerCase();
+    const scoreTier = (planGrade: string): number => {
+      const pg = String(planGrade || '').toLowerCase();
+      if (!pg) return 0;
+      if (g === pg) return 100;
+      const isPrep = g.includes('prep') || g.includes('nursery') || g.includes('playgroup') || g.includes('kg') || g.includes('montessori');
+      const isPrimary = g.includes('1') || g.includes('2') || g.includes('3') || g.includes('4') || g.includes('5');
+      const isMiddle = g.includes('6') || g.includes('7') || g.includes('8');
+      const isCambridge = g.includes('o-level') || g.includes('cambridge');
+      const isSenior = g.includes('9') || g.includes('10');
+      if (isCambridge && (pg.includes('o-level') || pg.includes('cambridge'))) return 90;
+      if (isPrep && (pg.includes('prep') || pg.includes('pre-primary') || pg.includes('kg') || pg.includes('montessori'))) return 85;
+      if (isPrimary && pg.includes('primary') && !pg.includes('pre-primary')) return 85;
+      if (isMiddle && pg.includes('middle')) return 85;
+      if (isSenior && (pg.includes('high') || pg.includes('senior') || pg.includes('9') || pg.includes('10'))) return 85;
+      return 0;
+    };
+    const branchPlans = catalog.filter(p => p.branchId === targetBranch);
+    const pool = branchPlans.length > 0 ? branchPlans : catalog;
+    if (wingId) {
+      const exactWingAndGrade = pool.find(p => p.wingId === wingId && scoreTier(p.grade) >= 85);
+      if (exactWingAndGrade) return exactWingAndGrade;
+    }
+    const gradeMatch = pool
+      .map(p => ({ p, s: scoreTier(p.grade) }))
+      .filter(x => x.s > 0)
+      .sort((a, b) => b.s - a.s)[0];
+    if (gradeMatch) return gradeMatch.p;
+    if (wingId) {
+      const wingMatch = pool.find(p => p.wingId === wingId);
+      if (wingMatch) return wingMatch;
+    }
+    return pool[0];
   }
 
   openFeeDeletionLogModal() {
@@ -8074,12 +9039,14 @@ INSTRUCTIONS:
   defaulters: any[] = [];
 
   get portals() {
+    const pri = this.activePrincipalProfile;
+    const acc = this.activeAccountantProfile;
     return [
-      { name: 'Principal & Academic Director Command Nexus', users: 'Prof. Dr. Tahir Malik (Principal)', uptime: '100.0%', status: 'Active', security: 'Executive Academic Clearance', role: 'principal' as SchoolPortalRole },
-      { name: 'Accountant & Fee Clerk Counter Desk', users: 'Muhammad Rizwan (Fee Clerk)', uptime: '100.0%', status: 'Active', security: 'Dual-Control Closing to Owner', role: 'accountant' as SchoolPortalRole },
-      { name: 'Teacher & Faculty Portal Nexus', users: `${this.liveFacultyCount} Faculty Members`, uptime: '99.95%', status: 'Active', security: 'MFA Enforced / RBAC Active', role: 'teacher' as SchoolPortalRole },
-      { name: 'Student Nexus Mobile & Web App', users: `${this.liveEnrolledCount} Enrolled Students`, uptime: '100.0%', status: 'Active', security: 'Biometric RFID Sync', role: 'student' as SchoolPortalRole },
-      { name: 'Parent Portal Nexus Alpha', users: `${this.liveGuardianCount} Connected Guardians`, uptime: '99.99%', status: 'Stable', security: 'Encrypted 256-bit SSL', role: 'parent' as SchoolPortalRole }
+      { name: 'Principal & Academic Director Command Nexus', users: `${pri.name} (${pri.branchName})`, uptime: '100.0%', status: 'Active', security: 'Executive Academic Clearance', role: 'principal' as SchoolPortalRole, personaId: pri.id },
+      { name: 'Accountant & Fee Clerk Counter Desk', users: `${acc.name} (${acc.branchName})`, uptime: '100.0%', status: 'Active', security: 'Dual-Control Closing to Owner', role: 'accountant' as SchoolPortalRole, personaId: acc.portalUserId || acc.id },
+      { name: 'Teacher & Faculty Portal Nexus', users: `${this.liveFacultyCount} Faculty Members`, uptime: '99.95%', status: 'Active', security: 'MFA Enforced / RBAC Active', role: 'teacher' as SchoolPortalRole, personaId: this.activeTeacherId },
+      { name: 'Student Nexus Mobile & Web App', users: `${this.liveEnrolledCount} Enrolled Students`, uptime: '100.0%', status: 'Active', security: 'Biometric RFID Sync', role: 'student' as SchoolPortalRole, personaId: this.activeStudentId },
+      { name: 'Parent Portal Nexus Alpha', users: `${this.liveGuardianCount} Connected Guardians`, uptime: '99.99%', status: 'Stable', security: 'Encrypted 256-bit SSL', role: 'parent' as SchoolPortalRole, personaId: this.activeParentChildId }
     ];
   }
 
@@ -8089,18 +9056,9 @@ INSTRUCTIONS:
     { title: 'National Inter-School Cricket Championship', date: 'Dec 12', time: '08:00 AM', type: 'Sports', location: 'Academy Sports Complex' }
   ];
 
-  principalPersona = {
-    name: 'Prof. Dr. Tahir Mahmood Malik',
-    title: 'Principal & Academic Director',
-    qualification: 'Ph.D. Educational Leadership & Pure Mathematics (Oxford)',
-    experience: '22 Years Senior Academic Management',
-    email: 'principal@campus.edu',
-    phone: '+92 51 9283741',
-    mobile: '+92 300 5544991',
-    image: '',
-    office: 'Executive Directorate, Admin Block 1',
-    status: 'On Duty · Daily Campus Inspection Active'
-  };
+  get principalPersona() {
+    return this.activePrincipalProfile;
+  }
 
   substituteArrangements: SubstituteArrangementRecord[] = [
     { id: 'SUB-101', date: 'Oct 25, 2026', period: 'Period 2 (08:45 - 09:30 AM)', timeSlot: '08:45 AM', grade: 'Class 10-A', subject: 'Physics & Practical Labs', absentTeacher: 'Dr. Rehan Alvi (On Sick Leave)', substituteTeacher: 'Prof. Tariq Mehmood', status: 'Assigned', reason: 'Viral Fever Rest Advised' },
@@ -8259,15 +9217,7 @@ INSTRUCTIONS:
       } catch {}
     }
 
-    const savedPortalUserRaw = localStorage.getItem('activeSchoolPortalUser');
-    if (savedPortalUserRaw) {
-      try {
-        const u = JSON.parse(savedPortalUserRaw);
-        if (u.role === 'teacher') this.activeTeacherId = u.id;
-        if (u.role === 'student') this.activeStudentId = u.id;
-        if (u.role === 'parent') this.activeParentChildId = u.linkedEntity || u.id;
-      } catch {}
-    }
+    this.hydrateActivePortalIdentity();
 
     if (typeof window !== 'undefined') {
       window.addEventListener('online', this.boundOnlineSyncHandler);
@@ -9287,6 +10237,27 @@ INSTRUCTIONS:
           if (Array.isArray(parsedWg) && parsedWg.length > 0) this.schoolWingRecords = parsedWg;
         } catch {}
       }
+      const savedFeePlans = this.getScopedItem('scs_school_fee_plans_v1');
+      if (savedFeePlans) {
+        try {
+          const parsedFp = JSON.parse(savedFeePlans);
+          if (Array.isArray(parsedFp) && parsedFp.length > 0) this.feeStructureCatalog = parsedFp;
+        } catch {}
+      }
+      const savedSubstitutions = this.getScopedItem('scs_school_substitutions_v1');
+      if (savedSubstitutions) {
+        try {
+          const parsedSub = JSON.parse(savedSubstitutions);
+          if (Array.isArray(parsedSub) && parsedSub.length > 0) this.substituteArrangements = parsedSub;
+        } catch {}
+      }
+      const savedInspections = this.getScopedItem('scs_school_inspections_v1');
+      if (savedInspections) {
+        try {
+          const parsedIns = JSON.parse(savedInspections);
+          if (Array.isArray(parsedIns) && parsedIns.length > 0) this.dailyInspectionLogs = parsedIns;
+        } catch {}
+      }
       const savedBranchScope = this.getScopedItem('scs_school_branch_scope_v1');
       if (savedBranchScope) this.selectedBranchScope = savedBranchScope;
       const savedWingScope = this.getScopedItem('scs_school_wing_scope_v1');
@@ -9396,6 +10367,8 @@ INSTRUCTIONS:
         if (Array.isArray(w.weakStudentInterventions) && w.weakStudentInterventions.length > 0) this.weakStudentInterventions = w.weakStudentInterventions;
         if (Array.isArray(w.schoolBranchRecords) && w.schoolBranchRecords.length > 0) this.schoolBranchRecords = w.schoolBranchRecords;
         if (Array.isArray(w.schoolWingRecords) && w.schoolWingRecords.length > 0) this.schoolWingRecords = w.schoolWingRecords;
+        if (Array.isArray(w.feeStructureCatalog) && w.feeStructureCatalog.length > 0) this.feeStructureCatalog = w.feeStructureCatalog;
+        if (Array.isArray(w.dailyInspectionLogs) && w.dailyInspectionLogs.length > 0) this.dailyInspectionLogs = w.dailyInspectionLogs;
         if (w.selectedBranchScope) this.selectedBranchScope = w.selectedBranchScope;
         if (w.selectedWingScope) this.selectedWingScope = w.selectedWingScope;
       }
@@ -9757,9 +10730,157 @@ INSTRUCTIONS:
       }
 
       this.normalizeBranchWingAssignments();
+      this.hydrateActivePortalIdentity();
       this.recomputeAttendanceSummary();
       this.recalculateDefaulters();
       this.cdr.detectChanges();
+    } catch {}
+  }
+
+  hydrateActivePortalIdentity(): void {
+    if (typeof localStorage === 'undefined') return;
+    try {
+      const savedPortalUserRaw = localStorage.getItem('activeSchoolPortalUser');
+      const userDataRaw = localStorage.getItem('user_data');
+      const targetPri = localStorage.getItem('activeSchoolTargetPrincipal') || '';
+      const targetAcc = localStorage.getItem('activeSchoolTargetAccountant') || '';
+      const targetTch = localStorage.getItem('activeSchoolTargetTeacher') || '';
+      const targetStu = localStorage.getItem('activeSchoolTargetStudent') || '';
+      const targetPar = localStorage.getItem('activeSchoolTargetParent') || '';
+
+      let portalUser: any = null;
+      if (savedPortalUserRaw) {
+        try { portalUser = JSON.parse(savedPortalUserRaw); } catch {}
+      }
+      let authUser: any = null;
+      if (userDataRaw) {
+        try { authUser = JSON.parse(userDataRaw); } catch {}
+      }
+
+      const activeRole = portalUser?.role || authUser?.role || this.currentPortalRole;
+      const hintEmail = String(portalUser?.email || authUser?.email || '').trim().toLowerCase();
+      const hintName = String(portalUser?.name || authUser?.full_name || authUser?.name || '').trim().toLowerCase();
+      const hintId = String(portalUser?.id || portalUser?.staffIdOrRoll || authUser?.id || '').trim().toLowerCase();
+
+      const resolvePrincipalTarget = (key: string) => {
+        const k = key.trim().toLowerCase();
+        if (!k && !hintEmail && !hintName) return;
+        const pri = (this.schoolPrincipals || []).find(p =>
+          (k && (p.id?.toLowerCase() === k || p.empCode?.toLowerCase() === k || p.portalUserId?.toLowerCase() === k || p.email?.toLowerCase() === k || p.name?.toLowerCase() === k)) ||
+          (hintEmail && p.email?.toLowerCase() === hintEmail) ||
+          (hintName && p.name?.toLowerCase() === hintName)
+        );
+        if (pri) {
+          this.activePrincipalId = pri.id;
+          return;
+        }
+        const pu = (this.portalUsers || []).find(u =>
+          u.role === 'principal' && (
+            (k && (u.id?.toLowerCase() === k || u.staffIdOrRoll?.toLowerCase() === k || u.email?.toLowerCase() === k || u.name?.toLowerCase() === k)) ||
+            (hintEmail && u.email?.toLowerCase() === hintEmail) ||
+            (hintName && u.name?.toLowerCase() === hintName)
+          )
+        );
+        if (pu) this.activePrincipalId = pu.staffIdOrRoll || pu.id;
+      };
+
+      const resolveAccountantTarget = (key: string) => {
+        const k = key.trim().toLowerCase();
+        if (!k && !hintEmail && !hintName) return;
+        const pu = (this.portalUsers || []).find(u =>
+          u.role === 'accountant' && (
+            (k && (u.id?.toLowerCase() === k || u.staffIdOrRoll?.toLowerCase() === k || u.email?.toLowerCase() === k || u.name?.toLowerCase() === k)) ||
+            (hintEmail && u.email?.toLowerCase() === hintEmail) ||
+            (hintName && u.name?.toLowerCase() === hintName)
+          )
+        );
+        if (pu) {
+          this.activeAccountantId = pu.id;
+          return;
+        }
+        const sf = (this.schoolStaff || []).find(x =>
+          (k && (x.id?.toLowerCase() === k || x.empCode?.toLowerCase() === k || x.email?.toLowerCase() === k || x.name?.toLowerCase() === k)) ||
+          (hintEmail && x.email?.toLowerCase() === hintEmail) ||
+          (hintName && x.name?.toLowerCase() === hintName)
+        );
+        if (sf) this.activeAccountantId = sf.portalUserId || sf.id;
+      };
+
+      const resolveTeacherTarget = (key: string) => {
+        const k = key.trim().toLowerCase();
+        if (!k && !hintEmail && !hintName) return;
+        const tch = (this.teachers || []).find(t =>
+          (k && (t.id?.toLowerCase() === k || t.empCode?.toLowerCase() === k || t.email?.toLowerCase() === k || t.name?.toLowerCase() === k)) ||
+          (hintEmail && t.email?.toLowerCase() === hintEmail) ||
+          (hintName && t.name?.toLowerCase() === hintName)
+        );
+        if (tch) {
+          this.activeTeacherId = tch.id;
+          return;
+        }
+        const pu = (this.portalUsers || []).find(u =>
+          u.role === 'teacher' && (
+            (k && (u.id?.toLowerCase() === k || u.staffIdOrRoll?.toLowerCase() === k || u.email?.toLowerCase() === k || u.name?.toLowerCase() === k)) ||
+            (hintEmail && u.email?.toLowerCase() === hintEmail) ||
+            (hintName && u.name?.toLowerCase() === hintName)
+          )
+        );
+        if (pu) this.activeTeacherId = pu.id;
+      };
+
+      const resolveStudentTarget = (key: string) => {
+        const k = key.trim().toLowerCase();
+        if (!k && !hintEmail && !hintName) return;
+        const stu = (this.activeStudents || []).find(s =>
+          (k && (s.id?.toLowerCase() === k || s.rollNo?.toLowerCase() === k || s.name?.toLowerCase() === k)) ||
+          (hintName && s.name?.toLowerCase() === hintName)
+        );
+        if (stu) {
+          this.activeStudentId = stu.id;
+          return;
+        }
+        const pu = (this.portalUsers || []).find(u =>
+          u.role === 'student' && (
+            (k && (u.id?.toLowerCase() === k || u.staffIdOrRoll?.toLowerCase() === k || u.email?.toLowerCase() === k)) ||
+            (hintEmail && u.email?.toLowerCase() === hintEmail)
+          )
+        );
+        if (pu) this.activeStudentId = pu.staffIdOrRoll || pu.id;
+      };
+
+      const resolveParentTarget = (key: string) => {
+        const k = key.trim().toLowerCase();
+        if (!k && !hintEmail && !hintName) return;
+        const child = (this.activeStudents || []).find(s =>
+          (k && (s.id?.toLowerCase() === k || s.rollNo?.toLowerCase() === k || k.includes(s.id.toLowerCase()) || k.includes(s.name.toLowerCase()))) ||
+          (hintEmail && s.guardianEmail?.toLowerCase() === hintEmail) ||
+          (hintName && s.guardian?.toLowerCase() === hintName)
+        );
+        if (child) {
+          this.activeParentChildId = child.id;
+        } else if (key.trim()) {
+          this.activeParentChildId = key.trim();
+        }
+      };
+
+      if (targetPri) resolvePrincipalTarget(targetPri);
+      else if (activeRole === 'principal') resolvePrincipalTarget(hintId);
+
+      if (targetAcc) resolveAccountantTarget(targetAcc);
+      else if (activeRole === 'accountant') resolveAccountantTarget(hintId);
+
+      if (targetTch) resolveTeacherTarget(targetTch);
+      else if (activeRole === 'teacher') resolveTeacherTarget(hintId);
+
+      if (targetStu) resolveStudentTarget(targetStu);
+      else if (activeRole === 'student') resolveStudentTarget(hintId);
+
+      if (targetPar) resolveParentTarget(targetPar);
+      else if (activeRole === 'parent') resolveParentTarget(String(portalUser?.linkedEntity || hintId));
+
+      if (this.currentPortalRole === 'accountant' && this.activeAccountantProfile?.name) {
+        this.dailyClosingCashier = `${this.activeAccountantProfile.name} (${this.activeAccountantProfile.branchName})`;
+      }
     } catch {}
   }
 
@@ -9772,7 +10893,9 @@ INSTRUCTIONS:
       this.setScopedItem('scs_school_exams_v2', JSON.stringify(this.examsList));
       this.setScopedItem('scs_school_timetables_v2', JSON.stringify(this.timetables));
       this.setScopedItem('scs_school_announcements_v2', JSON.stringify(this.announcements));
-      this.setScopedItem('scs_school_portal_users_v1', JSON.stringify(this.portalUsers));
+      const portalUsersJson = JSON.stringify(this.portalUsers);
+      this.setScopedItem('scs_school_portal_users_v1', portalUsersJson);
+      localStorage.setItem('scs_school_portal_users_v1', portalUsersJson);
       this.setScopedItem('scs_school_role_perms_v1', JSON.stringify(this.rolePermissions));
       this.setScopedItem('scs_school_homeworks_v1', JSON.stringify(this.teacherHomeworks));
       this.setScopedItem('scs_school_custom_classes_v1', JSON.stringify(this.customSchoolClasses));
@@ -9832,6 +10955,9 @@ INSTRUCTIONS:
       this.setScopedItem('scs_school_table_schemas_v1', JSON.stringify(this.tableSchemaService.exportSchemas()));
       this.setScopedItem('scs_school_branches_v1', JSON.stringify(this.schoolBranchRecords));
       this.setScopedItem('scs_school_wings_v1', JSON.stringify(this.schoolWingRecords));
+      this.setScopedItem('scs_school_fee_plans_v1', JSON.stringify(this.feeStructureCatalog));
+      this.setScopedItem('scs_school_substitutions_v1', JSON.stringify(this.substituteArrangements));
+      this.setScopedItem('scs_school_inspections_v1', JSON.stringify(this.dailyInspectionLogs));
       this.setScopedItem('scs_school_branch_scope_v1', this.selectedBranchScope);
       this.setScopedItem('scs_school_wing_scope_v1', this.selectedWingScope);
       void this.backend.saveSchoolWorkspace({
@@ -9869,6 +10995,8 @@ INSTRUCTIONS:
         weakStudentInterventions: this.weakStudentInterventions,
         schoolBranchRecords: this.schoolBranchRecords,
         schoolWingRecords: this.schoolWingRecords,
+        feeStructureCatalog: this.feeStructureCatalog,
+        dailyInspectionLogs: this.dailyInspectionLogs,
         selectedBranchScope: this.selectedBranchScope,
         selectedWingScope: this.selectedWingScope
       });
@@ -11304,17 +12432,19 @@ INSTRUCTIONS:
 
   getInitialPortalUsers(): PortalUserRecord[] {
     return [
-      { id: 'USR-601', name: 'Prof. Dr. Tahir Malik', email: 'principal@campus.edu', pin: '9900', role: 'principal', linkedEntity: 'Academic Directorate & Examination Council', status: 'Active', lastLogin: 'Today at 07:30 AM', staffIdOrRoll: 'DIR-001', designation: 'Principal & Academic Director', department: 'Academic Directorate', clearanceLevel: 'Level 5 - Executive Authority', phone: '+92 300 9876543' },
-      { id: 'USR-501', name: 'Muhammad Rizwan', email: 'accountant@campus.edu', pin: '4455', role: 'accountant', linkedEntity: 'Fee Counter, Challans & Daily Closing Desk', status: 'Active', lastLogin: 'Today at 07:45 AM', staffIdOrRoll: 'ACC-001', designation: 'Accountant / Fee Clerk', department: 'Accounts & Fee Desk', clearanceLevel: 'Level 2 - Fee Counter & Closing Submission Only', phone: '+92 300 4455661' },
-      { id: 'USR-801', name: 'Prof. Tariq Mehmood', email: 'tariq.math@campus.edu', pin: '8821', role: 'teacher', linkedEntity: 'Grade 10-A Mathematics', status: 'Active', lastLogin: 'Today at 08:12 AM' },
-      { id: 'USR-802', name: 'Ms. Sarah Jenkins', email: 'sarah.eng@campus.edu', pin: '4410', role: 'teacher', linkedEntity: 'Grade 11-C English Literature', status: 'Active', lastLogin: 'Yesterday at 04:30 PM' },
-      { id: 'USR-803', name: 'Dr. Rehan Alvi', email: 'rehan.phy@campus.edu', pin: '1920', role: 'teacher', linkedEntity: 'Grade 10-B Physics & Labs', status: 'Active', lastLogin: 'Today at 09:05 AM' },
-      { id: 'USR-901', name: 'Zayan Ahmed Khan', email: 'zayan.1001@student.campus.edu', pin: '1001', role: 'student', linkedEntity: 'Roll #1001 (Grade 10-A)', status: 'Active', lastLogin: 'Today at 07:50 AM' },
-      { id: 'USR-902', name: 'Amna Salman', email: 'amna.1102@student.campus.edu', pin: '1102', role: 'student', linkedEntity: 'Roll #1102 (Grade 11-C)', status: 'Active', lastLogin: 'Today at 08:00 AM' },
-      { id: 'USR-903', name: 'Omar Farooq Malik', email: 'omar.0903@student.campus.edu', pin: '0903', role: 'student', linkedEntity: 'Roll #0903 (Grade 9-B)', status: 'Active', lastLogin: 'Oct 14 at 02:40 PM' },
-      { id: 'USR-701', name: 'Tariq Ahmed Khan', email: 'tariq.khan@guardian.campus.edu', pin: '5521', role: 'parent', linkedEntity: 'Guardian of Zayan (10-A) & Amna (11-C)', status: 'Active', lastLogin: 'Today at 07:52 AM' },
-      { id: 'USR-702', name: 'Dr. Salman Farooq', email: 'salman.farooq@guardian.campus.edu', pin: '3319', role: 'parent', linkedEntity: 'Guardian of Amna Salman (11-C)', status: 'Active', lastLogin: 'Oct 13 at 08:15 PM' },
-      { id: 'USR-703', name: 'Mrs. Fatima Malik', email: 'fatima.malik@guardian.campus.edu', pin: '7742', role: 'parent', linkedEntity: 'Guardian of Omar Farooq (9-B)', status: 'Active', lastLogin: 'Oct 14 at 10:20 AM' }
+      { id: 'USR-601', name: 'Prof. Dr. Tahir Malik', email: 'principal@campus.edu', pin: '9900', role: 'principal', linkedEntity: 'Academic Directorate & Examination Council', status: 'Active', lastLogin: 'Today at 07:30 AM', staffIdOrRoll: 'PRI-101', designation: 'Principal & Academic Director', department: 'Academic Directorate', clearanceLevel: 'Level 5 - Executive Authority', phone: '+92 300 9876543', branchId: 'BR-LHR-01', branchName: 'Lahore Main Campus', wingId: 'WNG-LHR-SNR', wingName: 'Senior & O-Level Wing' },
+      { id: 'USR-602', name: 'Prof. Ayesha Siddiqua', email: 'viceprincipal@campus.edu.pk', pin: '9902', role: 'principal', linkedEntity: 'Islamabad F-10 Campus Directorate', status: 'Active', lastLogin: 'Today at 07:40 AM', staffIdOrRoll: 'PRI-102', designation: 'Campus Vice Principal (F-10)', department: 'Academic Directorate', clearanceLevel: 'Level 5 - Campus Executive', phone: '+92 321 7742290', branchId: 'BR-ISB-02', branchName: 'Islamabad F-10 Campus', wingId: 'WNG-ISB-SNR', wingName: 'F-10 Senior Science Wing' },
+      { id: 'USR-501', name: 'Muhammad Rizwan', email: 'accountant@campus.edu', pin: '4455', role: 'accountant', linkedEntity: 'Lahore Fee Counter, Challans & Daily Closing Desk', status: 'Active', lastLogin: 'Today at 07:45 AM', staffIdOrRoll: 'ACC-001', designation: 'Accountant / Fee Clerk', department: 'Accounts & Fee Desk', clearanceLevel: 'Level 2 - Fee Counter & Closing Submission Only', phone: '+92 300 4455661', branchId: 'BR-LHR-01', branchName: 'Lahore Main Campus', wingId: 'WNG-LHR-SNR', wingName: 'Senior & O-Level Wing' },
+      { id: 'USR-502', name: 'Kamran Qureshi', email: 'accounts@campus.edu.pk', pin: '4460', role: 'accountant', linkedEntity: 'Islamabad F-10 Fee Counter & Ledger Desk', status: 'Active', lastLogin: 'Today at 08:02 AM', staffIdOrRoll: 'STF-104', designation: 'Senior Accounts Clerk', department: 'Finance & Fee Desk', clearanceLevel: 'Level 2 - Fee Counter & Ledger Desk', phone: '+92 301 7744221', branchId: 'BR-ISB-02', branchName: 'Islamabad F-10 Campus', wingId: 'WNG-ISB-SNR', wingName: 'F-10 Senior Science Wing' },
+      { id: 'USR-801', name: 'Prof. Tariq Mehmood', email: 'tariq.math@campus.edu', pin: '8821', role: 'teacher', linkedEntity: 'Grade 10-A Mathematics', status: 'Active', lastLogin: 'Today at 08:12 AM', staffIdOrRoll: 'TCH-001', branchId: 'BR-LHR-01', branchName: 'Lahore Main Campus', wingId: 'WNG-LHR-SNR', wingName: 'Senior & O-Level Wing' },
+      { id: 'USR-802', name: 'Dr. Sarah Jenkins', email: 'sarah.eng@campus.edu', pin: '4410', role: 'teacher', linkedEntity: 'Grade 11-C English Literature', status: 'Active', lastLogin: 'Yesterday at 04:30 PM', staffIdOrRoll: 'TCH-002', branchId: 'BR-ISB-02', branchName: 'Islamabad F-10 Campus', wingId: 'WNG-ISB-GRL', wingName: 'F-10 Girls Wing' },
+      { id: 'USR-803', name: 'Prof. Rehan Alvi', email: 'rehan.phy@campus.edu', pin: '1920', role: 'teacher', linkedEntity: 'Grade 10-B Physics & Labs', status: 'Active', lastLogin: 'Today at 09:05 AM', staffIdOrRoll: 'TCH-003', branchId: 'BR-KHI-03', branchName: 'Karachi Clifton Campus', wingId: 'WNG-KHI-SNR', wingName: 'Clifton Senior & Cambridge Wing' },
+      { id: 'USR-901', name: 'Zayan Ahmed Khan', email: 'zayan.1001@student.campus.edu', pin: '1001', role: 'student', linkedEntity: 'Roll #1001 (Grade 10-A)', status: 'Active', lastLogin: 'Today at 07:50 AM', staffIdOrRoll: 'ST-1001', branchId: 'BR-LHR-01', branchName: 'Lahore Main Campus', wingId: 'WNG-LHR-SNR', wingName: 'Senior & O-Level Wing' },
+      { id: 'USR-902', name: 'Amna Salman', email: 'amna.1102@student.campus.edu', pin: '1102', role: 'student', linkedEntity: 'Roll #1102 (Grade 9-C)', status: 'Active', lastLogin: 'Today at 08:00 AM', staffIdOrRoll: 'ST-1002', branchId: 'BR-ISB-02', branchName: 'Islamabad F-10 Campus', wingId: 'WNG-ISB-GRL', wingName: 'F-10 Girls Wing' },
+      { id: 'USR-903', name: 'Omar Farooq Malik', email: 'omar.0903@student.campus.edu', pin: '0903', role: 'student', linkedEntity: 'Roll #0903 (Grade 8-B)', status: 'Active', lastLogin: 'Oct 14 at 02:40 PM', staffIdOrRoll: 'ST-1003', branchId: 'BR-KHI-03', branchName: 'Karachi Clifton Campus', wingId: 'WNG-KHI-MID', wingName: 'Clifton Middle Wing' },
+      { id: 'USR-701', name: 'Tariq Ahmed Khan', email: 'tariq.khan@guardian.campus.edu', pin: '5521', role: 'parent', linkedEntity: 'ST-1001', status: 'Active', lastLogin: 'Today at 07:52 AM', staffIdOrRoll: 'GRD-701', branchId: 'BR-LHR-01', branchName: 'Lahore Main Campus', wingId: 'WNG-LHR-SNR', wingName: 'Senior & O-Level Wing' },
+      { id: 'USR-702', name: 'Dr. Salman Farooq', email: 'salman.farooq@guardian.campus.edu', pin: '3319', role: 'parent', linkedEntity: 'ST-1002', status: 'Active', lastLogin: 'Oct 13 at 08:15 PM', staffIdOrRoll: 'GRD-702', branchId: 'BR-ISB-02', branchName: 'Islamabad F-10 Campus', wingId: 'WNG-ISB-GRL', wingName: 'F-10 Girls Wing' },
+      { id: 'USR-703', name: 'Mrs. Fatima Malik', email: 'fatima.malik@guardian.campus.edu', pin: '7742', role: 'parent', linkedEntity: 'ST-1003', status: 'Active', lastLogin: 'Oct 14 at 10:20 AM', staffIdOrRoll: 'GRD-703', branchId: 'BR-KHI-03', branchName: 'Karachi Clifton Campus', wingId: 'WNG-KHI-MID', wingName: 'Clifton Middle Wing' }
     ];
   }
 
@@ -11734,13 +12864,21 @@ INSTRUCTIONS:
       this.showToast('Access restricted: Only School Owner or Administrator can access Owner ERP.', 'warning');
       return;
     }
-    // Block real student, parent, or accountant accounts from jumping into other portals
+    // Block real principal, teacher, student, parent, or accountant accounts from jumping into other portals
     if (!this.isOwnerSession) {
       const realRole = this.getRealUserRole();
-      if (['student', 'parent', 'student_guardian', 'accountant', 'fee_clerk', 'bursar'].includes(realRole) && role !== realRole) {
+      if (['principal', 'teacher', 'student', 'parent', 'student_guardian', 'accountant', 'fee_clerk', 'bursar'].includes(realRole) && role !== realRole) {
         this.showToast(`Access restricted: You cannot switch to ${role} portal.`, 'warning');
         return;
       }
+    }
+
+    if (personaId) {
+      if (role === 'principal') this.activePrincipalId = personaId;
+      else if (role === 'accountant') this.activeAccountantId = personaId;
+      else if (role === 'teacher') this.activeTeacherId = personaId;
+      else if (role === 'student') this.activeStudentId = personaId;
+      else if (role === 'parent') this.activeParentChildId = personaId;
     }
 
     this.currentPortalRole = role as SchoolPortalRole;
@@ -11749,17 +12887,23 @@ INSTRUCTIONS:
       void this.tableSchemaService.loadFromBackend();
     }
     this.syncPortalAttendanceTabAccess();
-    if (personaId) {
-      if (role === 'teacher') this.activeTeacherId = personaId;
-      else if (role === 'student') this.activeStudentId = personaId;
-      else if (role === 'parent') this.activeParentChildId = personaId;
-    }
+
     if (role === 'accountant') {
+      if (this.activeAccountantProfile?.name) {
+        this.dailyClosingCashier = `${this.activeAccountantProfile.name} (${this.activeAccountantProfile.branchName})`;
+      }
       this.populateAccountantClosingFromReceipts();
     }
     try {
       localStorage.setItem('activeSchoolRole', role);
       localStorage.setItem('activeSchoolPortal', role === 'owner' ? 'overview' : role + '-portal');
+      if (personaId) {
+        if (role === 'principal') localStorage.setItem('activeSchoolTargetPrincipal', personaId);
+        else if (role === 'accountant') localStorage.setItem('activeSchoolTargetAccountant', personaId);
+        else if (role === 'teacher') localStorage.setItem('activeSchoolTargetTeacher', personaId);
+        else if (role === 'student') localStorage.setItem('activeSchoolTargetStudent', personaId);
+        else if (role === 'parent') localStorage.setItem('activeSchoolTargetParent', personaId);
+      }
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('school-role-changed', { detail: { role } }));
       }
@@ -11772,7 +12916,7 @@ INSTRUCTIONS:
       student: 'Student Academic Portal',
       parent: 'Parent & Guardian Portal'
     };
-    this.showToast(`Switched view to ${roleLabels[role as SchoolPortalRole] || role}`, 'info');
+    this.showToast(`Switched view to ${roleLabels[role as SchoolPortalRole] || role} (${this.activePersonaBranchLabel})`, 'info');
     this.cdr.detectChanges();
     this.resetScrollToTop();
   }
@@ -11805,7 +12949,7 @@ INSTRUCTIONS:
   }
 
   getFilteredGradebook(): TeacherGradeRecord[] {
-    let list = [...this.teacherGradebook];
+    let list = [...this.scopedTeacherGradebook];
     if (this.gradebookSearch && this.gradebookSearch.trim()) {
       const q = this.gradebookSearch.toLowerCase().trim();
       list = list.filter(g =>
@@ -11908,6 +13052,9 @@ INSTRUCTIONS:
   // --- PORTAL USER CRUD (OWNER HUB) ---
   openAddPortalUserModal() {
     this.activePortalUserForEdit = null;
+    const defaultBranchId = this.effectiveBranchScope !== 'ALL' ? this.effectiveBranchScope : (this.schoolBranchRecords[0]?.id || 'BR-LHR-01');
+    const defaultWings = this.getWingsForBranch(defaultBranchId);
+    const defaultWingId = this.effectiveWingScope !== 'ALL' ? this.effectiveWingScope : (defaultWings[0]?.id || '');
     this.portalUserForm = {
       name: '',
       email: '',
@@ -11920,10 +13067,20 @@ INSTRUCTIONS:
       designation: 'Principal & Academic Director',
       department: 'Academic Directorate',
       clearanceLevel: 'Level 5 - Executive Academic Authority',
-      branch: 'Main Senior Campus'
+      branch: this.resolveBranchName(defaultBranchId),
+      branchId: defaultBranchId,
+      wingId: defaultWingId,
+      wingScopeLocked: false
     };
     this.formCustomValues['portalUser'] = {};
     this.isPortalUserModalOpen = true;
+    this.cdr.detectChanges();
+  }
+
+  onPortalUserBranchChange(): void {
+    const wings = this.getWingsForBranch(this.portalUserForm.branchId);
+    this.portalUserForm.wingId = wings[0]?.id || '';
+    this.portalUserForm.branch = this.resolveBranchName(this.portalUserForm.branchId);
     this.cdr.detectChanges();
   }
 
@@ -11974,7 +13131,12 @@ INSTRUCTIONS:
 
   openEditPortalUserModal(user: PortalUserRecord) {
     this.activePortalUserForEdit = user;
-    this.portalUserForm = { ...user };
+    this.portalUserForm = {
+      ...user,
+      branchId: user.branchId || this.schoolBranchRecords[0]?.id || 'BR-LHR-01',
+      wingId: user.wingId || this.getWingsForBranch(user.branchId || this.schoolBranchRecords[0]?.id)[0]?.id || '',
+      wingScopeLocked: Boolean(user.wingScopeLocked)
+    };
     this.formCustomValues['portalUser'] = {
       ...(this.tableSchemaService.getSchema('owner_portal_users').customCells[user.id] || {})
     };
@@ -11993,8 +13155,23 @@ INSTRUCTIONS:
       this.showToast('Please enter Full Name and Email Address.', 'warning');
       return;
     }
+    const targetBranchId = this.portalUserForm.branchId || (this.effectiveBranchScope !== 'ALL' ? this.effectiveBranchScope : (this.schoolBranchRecords[0]?.id || 'BR-LHR-01'));
+    const targetBranchName = this.resolveBranchName(targetBranchId);
+    const branchWings = this.getWingsForBranch(targetBranchId);
+    const matchedWing = branchWings.find(w => w.id === this.portalUserForm.wingId) || branchWings[0];
+    const targetWingId = matchedWing?.id || '';
+    const targetWingName = matchedWing?.name || this.resolveWingName(targetWingId);
+
     if (this.activePortalUserForEdit) {
-      Object.assign(this.activePortalUserForEdit, this.portalUserForm);
+      Object.assign(this.activePortalUserForEdit, {
+        ...this.portalUserForm,
+        branch: targetBranchName,
+        branchId: targetBranchId,
+        branchName: targetBranchName,
+        wingId: targetWingId,
+        wingName: targetWingName,
+        wingScopeLocked: Boolean(this.portalUserForm.wingScopeLocked)
+      });
       this.tableSchemaService.submitFormCustomInputs(
         'owner_portal_users',
         [this.activePortalUserForEdit.id, this.activePortalUserForEdit.staffIdOrRoll].filter(Boolean) as string[],
@@ -12005,11 +13182,11 @@ INSTRUCTIONS:
           submittedByRole: this.currentPortalRole
         }
       );
-      this.showToast(`Updated credentials for ${this.portalUserForm.name}`, 'success');
+      this.showToast(`Updated credentials for ${this.portalUserForm.name} (${targetBranchName})`, 'success');
     } else {
       const role = this.portalUserForm.role || 'principal';
       const prefix = role === 'principal' ? 'DIR' : (role === 'accountant' ? 'ACC' : (role === 'teacher' ? 'TCH' : (role === 'student' ? 'ST' : 'GRD')));
-      const newUser: PortalUserRecord = {
+      const newUser: PortalUserRecord = this.stampActiveBranchWing({
         id: `USR-${Math.floor(800 + Math.random() * 199)}`,
         name: this.portalUserForm.name || '',
         email: this.portalUserForm.email || '',
@@ -12023,8 +13200,13 @@ INSTRUCTIONS:
         designation: this.portalUserForm.designation || (role === 'principal' ? 'Principal & Academic Director' : (role === 'accountant' ? 'Accountant / Fee Clerk' : 'Academic Member')),
         department: this.portalUserForm.department || (role === 'accountant' ? 'Accounts & Fee Desk' : 'Academic Directorate'),
         clearanceLevel: this.portalUserForm.clearanceLevel || (role === 'accountant' ? 'Level 2 - Fee Counter Only' : 'Level 3 - Standard Access'),
-        branch: this.portalUserForm.branch || 'Main Executive Campus'
-      };
+        branch: targetBranchName,
+        branchId: targetBranchId,
+        branchName: targetBranchName,
+        wingId: targetWingId,
+        wingName: targetWingName,
+        wingScopeLocked: Boolean(this.portalUserForm.wingScopeLocked)
+      });
       this.portalUsers.unshift(newUser);
       this.tableSchemaService.submitFormCustomInputs(
         'owner_portal_users',
@@ -12036,7 +13218,7 @@ INSTRUCTIONS:
           submittedByRole: this.currentPortalRole
         }
       );
-      this.showToast(`Created new ${role.toUpperCase()} portal access account for ${newUser.name}!`, 'success');
+      this.showToast(`Created new ${role.toUpperCase()} portal access account for ${newUser.name} (${targetBranchName})!`, 'success');
     }
     this.formCustomValues['portalUser'] = {};
     this.saveStateToStorage();
@@ -12486,7 +13668,7 @@ INSTRUCTIONS:
   // --- TEACHER HOMEWORK CRUD + SUBMISSIONS REVIEW ---
   getFilteredTeacherHomeworks(): TeacherHomeworkRecord[] {
     const q = (this.homeworkSearchQuery || '').trim().toLowerCase();
-    return (this.teacherHomeworks || []).filter((hw) => {
+    return (this.scopedTeacherHomeworks || []).filter((hw) => {
       if (this.homeworkClassFilter !== 'All' && !this.doesHomeworkMatchClass(hw.grade, this.homeworkClassFilter, hw.section)) {
         return false;
       }
@@ -12504,7 +13686,7 @@ INSTRUCTIONS:
   getFilteredStudentHomeworks(): TeacherHomeworkRecord[] {
     const stuGrade = this.currentStudentProfile?.grade || 'Class 10-A';
     const stuSection = this.currentStudentProfile?.section || '';
-    return (this.teacherHomeworks || []).filter((hw) => {
+    return (this.scopedTeacherHomeworks || []).filter((hw) => {
       if (this.studentHomeworkScopeFilter === 'my_class') {
         const target = stuSection && !stuGrade.includes('-') ? `${stuGrade}-${stuSection}` : stuGrade;
         if (!this.doesHomeworkMatchClass(hw.grade, target, hw.section)) {
@@ -12526,7 +13708,7 @@ INSTRUCTIONS:
 
   getStudentHomeworkSubjects(): string[] {
     const subjects = new Set<string>();
-    for (const hw of this.teacherHomeworks || []) {
+    for (const hw of this.scopedTeacherHomeworks || []) {
       if (hw.subject) subjects.add(hw.subject);
     }
     return ['All', ...Array.from(subjects)];
@@ -12534,21 +13716,21 @@ INSTRUCTIONS:
 
   getFilteredParentChildHomeworks(): TeacherHomeworkRecord[] {
     const childGrade = this.selectedParentChild?.grade || 'Class 10-A';
-    return (this.teacherHomeworks || []).filter((hw) =>
+    return (this.scopedTeacherHomeworks || []).filter((hw) =>
       this.doesHomeworkMatchClass(hw.grade, childGrade, hw.section)
     );
   }
 
   getFilteredStudentStudyMaterials(): TeacherStudyMaterialRecord[] {
     const stuGrade = this.currentStudentProfile?.grade || 'Class 10-A';
-    return (this.teacherStudyMaterials || []).filter((mat) =>
+    return (this.scopedTeacherStudyMaterials || []).filter((mat) =>
       this.doesHomeworkMatchClass(mat.grade, stuGrade)
     );
   }
 
   getFilteredParentStudyMaterials(): TeacherStudyMaterialRecord[] {
     const childGrade = this.selectedParentChild?.grade || 'Class 10-A';
-    return (this.teacherStudyMaterials || []).filter((mat) =>
+    return (this.scopedTeacherStudyMaterials || []).filter((mat) =>
       this.doesHomeworkMatchClass(mat.grade, childGrade)
     );
   }
@@ -12679,7 +13861,7 @@ INSTRUCTIONS:
       }
     }
 
-    const newHw: TeacherHomeworkRecord = {
+    const newHw: TeacherHomeworkRecord = this.stampActiveBranchWing({
       id: `HW-${Math.floor(200 + Math.random() * 700)}-${Date.now().toString().slice(-3)}`,
       title: this.teacherHomeworkForm.title.trim(),
       subject: this.teacherHomeworkForm.subject.trim() || 'General',
@@ -12704,7 +13886,7 @@ INSTRUCTIONS:
       attachmentName: this.teacherHomeworkForm.attachmentName,
       attachmentType: this.teacherHomeworkForm.attachmentType,
       attachmentData: this.teacherHomeworkForm.attachmentData
-    };
+    }, finalGrade);
     this.teacherHomeworks.unshift(newHw);
     void this.backend.saveSchoolHomework(newHw);
     this.tableSchemaService.submitFormCustomInputs(
@@ -12946,7 +14128,7 @@ INSTRUCTIONS:
     const sizeKb = this.studyMaterialForm.attachmentData
       ? Math.max(1, Math.round((this.studyMaterialForm.attachmentData.length * 0.75) / 1024))
       : 0;
-    const item: TeacherStudyMaterialRecord = {
+    const item: TeacherStudyMaterialRecord = this.stampActiveBranchWing({
       id: `MAT-${Date.now()}`,
       title: this.studyMaterialForm.title.trim(),
       subject: this.studyMaterialForm.subject.trim(),
@@ -12962,7 +14144,7 @@ INSTRUCTIONS:
       teacherId: this.currentTeacherProfile?.id || '',
       downloadsCount: 0,
       createdAt: new Date().toISOString().split('T')[0]
-    };
+    }, finalGrade);
     this.teacherStudyMaterials.unshift(item);
     void this.backend.saveStudyMaterial(item);
     this.saveStateToStorage();
@@ -13021,7 +14203,7 @@ INSTRUCTIONS:
       this.showToast('Subject and Class/Grade are required.', 'warning');
       return;
     }
-    const newPeriod: TeacherPeriodScheduleRecord = {
+    const newPeriod: TeacherPeriodScheduleRecord = this.stampActiveBranchWing({
       id: `SCH-${Date.now()}`,
       day: this.teacherPeriodForm.day,
       periodCode: this.teacherPeriodForm.periodCode || 'P1',
@@ -13031,7 +14213,7 @@ INSTRUCTIONS:
       room: this.teacherPeriodForm.room.trim() || 'Room 204',
       topic: this.teacherPeriodForm.topic.trim() || 'Core Lecture',
       status: 'Upcoming'
-    };
+    }, this.teacherPeriodForm.grade.trim());
     this.teacherSelfSchedule.push(newPeriod);
     this.teacherScheduleDayFilter = newPeriod.day;
     this.saveStateToStorage();
@@ -13049,7 +14231,7 @@ INSTRUCTIONS:
 
   // --- TEACHER ROSTER, INTERVENTIONS & LEAVE/DUTY WORKFLOWS ---
   getFilteredTeacherRosterStudents(): StudentRecord[] {
-    let list = [...(this.activeStudents || [])];
+    let list = [...(this.scopedActiveStudents || [])];
     if (this.teacherRosterGradeFilter && this.teacherRosterGradeFilter !== 'All') {
       const cleanG = this.teacherRosterGradeFilter.toLowerCase().replace('class ', '').replace('grade ', '').split('-')[0].trim();
       list = list.filter((s) => String(s.grade || '').toLowerCase().includes(cleanG));
@@ -13159,7 +14341,7 @@ INSTRUCTIONS:
       toDate: new Date().toISOString().split('T')[0],
       totalDays: 1,
       reason: '',
-      substituteTeacherAssigned: (this.teachers.find((t) => t.name !== this.currentTeacherProfile?.name)?.name) || 'Dr. Rehan Alvi'
+      substituteTeacherAssigned: (this.scopedTeachers.find((t) => t.name !== this.currentTeacherProfile?.name)?.name) || this.scopedTeachers[0]?.name || 'Dr. Rehan Alvi'
     };
     this.isTeacherLeaveModalOpen = true;
     this.cdr.detectChanges();
@@ -13175,7 +14357,7 @@ INSTRUCTIONS:
       this.showToast('Please enter reason for faculty leave.', 'warning');
       return;
     }
-    const newLeave = {
+    const newLeave = this.stampActiveBranchWing({
       id: `TLV-${Date.now()}`,
       teacherId: this.currentTeacherProfile.id,
       teacherName: this.currentTeacherProfile.name,
@@ -13187,7 +14369,7 @@ INSTRUCTIONS:
       reason: this.teacherLeaveForm.reason.trim(),
       substituteTeacherAssigned: this.teacherLeaveForm.substituteTeacherAssigned,
       status: 'Pending Approval'
-    };
+    }, this.currentTeacherProfile?.assignedGrade);
     this.teacherLeaveRequests.unshift(newLeave);
     void this.backend.saveSchoolLeave({
       id: newLeave.id,
@@ -13553,7 +14735,7 @@ INSTRUCTIONS:
   }
 
   get filteredTransport(): TransportRouteRecord[] {
-    return this.transportRoutes.filter(tr => {
+    return this.scopedTransportRoutes.filter(tr => {
       const q = (this.transportSearchQuery || '').toLowerCase();
       return !q ||
         tr.routeName.toLowerCase().includes(q) ||
@@ -13563,7 +14745,7 @@ INSTRUCTIONS:
   }
 
   get filteredLibrary(): LibraryBookRecord[] {
-    return this.libraryBooks.filter(bk => {
+    return this.scopedLibraryBooks.filter(bk => {
       const q = (this.librarySearchQuery || '').toLowerCase();
       return !q ||
         bk.title.toLowerCase().includes(q) ||
@@ -13577,7 +14759,7 @@ INSTRUCTIONS:
   get filteredAttendanceStudents(): StudentRecord[] {
     const q = (this.attendanceSearchQuery || '').trim().toLowerCase();
     const filterGrade = this.attendanceSelectedClass.trim().toLowerCase();
-    return this.activeStudents.filter(s => {
+    return this.scopedActiveStudents.filter(s => {
       const matchSearch = !q ||
         (s.name && s.name.toLowerCase().includes(q)) ||
         (s.rollNo && s.rollNo.toLowerCase().includes(q)) ||
@@ -13711,7 +14893,7 @@ INSTRUCTIONS:
   get filteredMarksStudents(): StudentRecord[] {
     const q = (this.marksEntrySearchQuery || '').trim().toLowerCase();
     const filterGrade = this.selectedMarksClass.trim().toLowerCase();
-    return this.activeStudents.filter(s => {
+    return this.scopedActiveStudents.filter(s => {
       const matchSearch = !q ||
         (s.name && s.name.toLowerCase().includes(q)) ||
         (s.rollNo && s.rollNo.toLowerCase().includes(q));
@@ -13726,7 +14908,7 @@ INSTRUCTIONS:
 
   get filteredSubjects(): any[] {
     const q = (this.subjectsSearchQuery || '').trim().toLowerCase();
-    return this.schoolSubjectsList.filter(sub => {
+    return this.scopedSchoolSubjects.filter(sub => {
       return !q ||
         sub.title.toLowerCase().includes(q) ||
         sub.code.toLowerCase().includes(q) ||
@@ -13818,7 +15000,7 @@ INSTRUCTIONS:
     const filterGrade = this.selectedMarksClass.trim().toLowerCase();
     const q = (this.classResultSearchQuery || '').trim().toLowerCase();
 
-    const classStudents = this.activeStudents.filter(s => {
+    const classStudents = this.scopedActiveStudents.filter(s => {
       const gradeNorm = (s.grade || '').trim().toLowerCase();
       const matchGrade = gradeNorm.startsWith(filterGrade + '-') ||
                          gradeNorm.startsWith(filterGrade + ' ') ||
@@ -13874,7 +15056,7 @@ INSTRUCTIONS:
       this.showToast('Please enter Subject Code and Title', 'warning');
       return;
     }
-    const newSub = {
+    const newSub = this.stampActiveBranchWing({
       id: `SUB-${Date.now()}`,
       code: this.subjectForm.code,
       title: this.subjectForm.title,
@@ -13884,7 +15066,7 @@ INSTRUCTIONS:
       type: this.subjectForm.type,
       passMarks: this.subjectForm.passMarks,
       totalMarks: this.subjectForm.totalMarks
-    };
+    }, this.subjectForm.grade);
     this.schoolSubjectsList.unshift(newSub);
     this.tableSchemaService.submitFormCustomInputs(
       'owner_subjects',
@@ -14107,7 +15289,7 @@ INSTRUCTIONS:
   }
 
   get filteredExams(): ExamRecord[] {
-    return this.examsList.filter(ex => {
+    return this.scopedExams.filter(ex => {
       const q = (this.examsSearchQuery || '').toLowerCase();
       return !q ||
         ex.examName.toLowerCase().includes(q) ||
@@ -14116,7 +15298,7 @@ INSTRUCTIONS:
   }
 
   get filteredTimetables(): TimetableRecord[] {
-    return this.timetables.filter(tt => {
+    return this.scopedTimetables.filter(tt => {
       const q = (this.timetableSearchQuery || '').toLowerCase();
       return !q ||
         tt.subject.toLowerCase().includes(q) ||
@@ -14825,6 +16007,7 @@ INSTRUCTIONS:
   openAddExecutiveStaffModal(role: 'principal' | 'accountant' | 'support_staff'): void {
     this.executiveStaffModalRole = role;
     this.editingExecutiveStaffTarget = null;
+    const defScope = this.resolveDefaultFormBranchWing(role === 'support_staff' ? 'General' : 'Senior');
     if (role === 'principal') {
       this.executiveStaffForm = {
         empCode: `PRI-${Math.floor(200 + Math.random() * 799)}`,
@@ -14841,7 +16024,10 @@ INSTRUCTIONS:
         monthlySalary: 195000,
         pin: Math.floor(1000 + Math.random() * 9000).toString(),
         clearanceLevel: 'Level 5 - Executive Directorate',
-        status: 'ACTIVE'
+        status: 'ACTIVE',
+        branchId: defScope.branchId,
+        wingId: defScope.wingId,
+        wingScopeLocked: false
       };
     } else if (role === 'accountant') {
       this.executiveStaffForm = {
@@ -14859,7 +16045,10 @@ INSTRUCTIONS:
         monthlySalary: 95000,
         pin: Math.floor(1000 + Math.random() * 9000).toString(),
         clearanceLevel: 'Level 2 - Fee Counter & Daily Closing',
-        status: 'ACTIVE'
+        status: 'ACTIVE',
+        branchId: defScope.branchId,
+        wingId: defScope.wingId,
+        wingScopeLocked: false
       };
     } else {
       this.executiveStaffForm = {
@@ -14877,7 +16066,10 @@ INSTRUCTIONS:
         monthlySalary: 52000,
         pin: '0000',
         clearanceLevel: 'Campus Staff Clearance',
-        status: 'ACTIVE'
+        status: 'ACTIVE',
+        branchId: defScope.branchId,
+        wingId: defScope.wingId,
+        wingScopeLocked: false
       };
     }
     this.isExecutiveStaffModalOpen = true;
@@ -14890,6 +16082,12 @@ INSTRUCTIONS:
       role === 'principal' ? 'principal' : (item.staffId || role === 'support_staff' ? 'staff' : 'portal');
     const targetId = role === 'principal' ? item.id : (item.staffId || item.portalUserId || item.id);
     this.editingExecutiveStaffTarget = { kind: targetKind, id: targetId };
+    const defScope = this.resolveDefaultFormBranchWing(item.department || 'Senior');
+    const resolvedBranchId = item.branchId || defScope.branchId;
+    const branchWings = this.getWingsForBranch(resolvedBranchId);
+    const resolvedWingId = (item.wingId && branchWings.some(w => w.id === item.wingId))
+      ? item.wingId
+      : (this.inferWingForBranch(resolvedBranchId, item.department || 'Senior')?.id || branchWings[0]?.id || '');
     this.executiveStaffForm = {
       empCode: item.empCode || item.id || '',
       name: item.name || '',
@@ -14905,9 +16103,18 @@ INSTRUCTIONS:
       monthlySalary: Number(item.monthlySalary || 85000),
       pin: item.pin || '4455',
       clearanceLevel: item.clearanceLevel || 'Standard Clearance',
-      status: item.status || 'ACTIVE'
+      status: item.status || 'ACTIVE',
+      branchId: resolvedBranchId,
+      wingId: resolvedWingId,
+      wingScopeLocked: Boolean(item.wingScopeLocked)
     };
     this.isExecutiveStaffModalOpen = true;
+    this.cdr.detectChanges();
+  }
+
+  onExecutiveStaffBranchChange(): void {
+    const wings = this.getWingsForBranch(this.executiveStaffForm.branchId);
+    this.executiveStaffForm.wingId = wings[0]?.id || '';
     this.cdr.detectChanges();
   }
 
@@ -14925,11 +16132,24 @@ INSTRUCTIONS:
     const f = this.executiveStaffForm;
     const role = this.executiveStaffModalRole;
     const editing = this.editingExecutiveStaffTarget;
+    const defScope = this.resolveDefaultFormBranchWing(f.department || 'Senior');
+    const branchId = f.branchId || defScope.branchId;
+    const branchName = this.resolveBranchName(branchId);
+    const branchWings = this.getWingsForBranch(branchId);
+    const wingId = (f.wingId && branchWings.some(w => w.id === f.wingId))
+      ? f.wingId
+      : (this.inferWingForBranch(branchId, f.department || 'Senior')?.id || branchWings[0]?.id || '');
+    const wingName = this.resolveWingName(wingId);
+    const wingScopeLocked = role === 'support_staff' ? false : Boolean(f.wingScopeLocked);
 
     if (role === 'principal') {
       if (editing?.kind === 'principal') {
         const idx = this.schoolPrincipals.findIndex(p => p.id === editing.id);
+        let portalUserId = '';
+        let prevName = '';
         if (idx >= 0) {
+          portalUserId = this.schoolPrincipals[idx].portalUserId || '';
+          prevName = this.schoolPrincipals[idx].name || '';
           const updated: any = {
             ...this.schoolPrincipals[idx],
             empCode: f.empCode || this.schoolPrincipals[idx].empCode,
@@ -14944,19 +16164,40 @@ INSTRUCTIONS:
             shift: f.shift,
             attendanceStatus: f.attendanceStatus,
             status: f.status,
-            monthlySalary: Number(f.monthlySalary) || 195000
+            monthlySalary: Number(f.monthlySalary) || 195000,
+            branchId,
+            branchName,
+            wingId,
+            wingName,
+            wingScopeLocked
           };
           this.schoolPrincipals = this.schoolPrincipals.map(p => (p.id === editing.id ? updated : p));
           void this.backend.updateSchoolPrincipal(editing.id, updated);
         }
-        const linkedPortal = this.portalUsers.find(u => u.role === 'principal' && u.name.trim().toLowerCase() === f.name.trim().toLowerCase());
+        const linkedPortal = this.portalUsers.find(u =>
+          (portalUserId && u.id === portalUserId) ||
+          (u.role === 'principal' && (
+            u.name.trim().toLowerCase() === f.name.trim().toLowerCase() ||
+            (prevName && u.name.trim().toLowerCase() === prevName.trim().toLowerCase())
+          ))
+        );
         if (linkedPortal) {
+          linkedPortal.name = f.name.trim();
           linkedPortal.email = f.email.trim() || linkedPortal.email;
           linkedPortal.pin = f.pin || linkedPortal.pin;
           linkedPortal.phone = f.phone.trim();
+          linkedPortal.designation = f.roleTitle.trim();
+          linkedPortal.department = f.department.trim();
+          linkedPortal.branchId = branchId;
+          linkedPortal.branch = branchName;
+          linkedPortal.branchName = branchName;
+          linkedPortal.wingId = wingId;
+          linkedPortal.wingName = wingName;
+          linkedPortal.wingScopeLocked = wingScopeLocked;
         }
-        this.showToast(`Updated Principal profile: ${f.name}`, 'success');
+        this.showToast(`Updated Principal profile: ${f.name} (${branchName})`, 'success');
       } else {
+        const portalId = `USR-${Math.floor(610 + Math.random() * 380)}`;
         const res = await this.backend.saveSchoolPrincipal({
           name: f.name.trim(),
           fatherName: f.fatherName.trim(),
@@ -14967,10 +16208,16 @@ INSTRUCTIONS:
           phone: f.phone.trim(),
           email: f.email.trim(),
           shift: f.shift,
+          branchId,
+          branchName,
+          wingId,
+          wingName,
+          wingScopeLocked,
+          portalUserId: portalId,
           liteEnabled: true
         });
         const created: any = this.stampActiveBranchWing(res?.ok && res.principal
-          ? { ...res.principal, attendanceStatus: f.attendanceStatus, monthlySalary: Number(f.monthlySalary) || 195000 }
+          ? { ...res.principal, branchId, branchName, wingId, wingName, wingScopeLocked, portalUserId: res.principal.portalUserId || portalId, attendanceStatus: f.attendanceStatus, monthlySalary: Number(f.monthlySalary) || 195000 }
           : {
               id: `PRI-${Date.now().toString(36).slice(-5).toUpperCase()}`,
               empCode: f.empCode || `PRI-${Math.floor(200 + Math.random() * 799)}`,
@@ -14988,11 +16235,17 @@ INSTRUCTIONS:
               attendanceStatus: f.attendanceStatus,
               monthlySalary: Number(f.monthlySalary) || 195000,
               faceEnrolled: false,
-              liteEnabled: true
+              liteEnabled: true,
+              branchId,
+              branchName,
+              wingId,
+              wingName,
+              wingScopeLocked,
+              portalUserId: portalId
             });
         this.schoolPrincipals = [created, ...this.schoolPrincipals];
         this.portalUsers.unshift(this.stampActiveBranchWing({
-          id: `USR-${Math.floor(610 + Math.random() * 380)}`,
+          id: created.portalUserId || portalId,
           name: created.name,
           email: created.email || `${created.empCode.toLowerCase()}@campus.edu`,
           pin: f.pin || '9901',
@@ -15004,13 +16257,24 @@ INSTRUCTIONS:
           designation: created.roleTitle,
           department: created.department,
           clearanceLevel: f.clearanceLevel || 'Level 5 - Executive Directorate',
-          phone: created.phone
+          phone: created.phone,
+          branch: branchName,
+          branchId,
+          branchName,
+          wingId,
+          wingName,
+          wingScopeLocked
         }));
-        this.showToast(`Added Principal ${created.name} with portal access PIN ${f.pin}`, 'success');
+        this.showToast(`Added Principal ${created.name} (${branchName}) with portal access PIN ${f.pin}`, 'success');
       }
     } else if (role === 'accountant') {
       if (editing) {
+        let linkedPortalId = '';
+        let prevName = '';
         if (editing.kind === 'staff') {
+          const existingStaff = this.schoolStaff.find(sf => sf.id === editing.id);
+          linkedPortalId = existingStaff?.portalUserId || '';
+          prevName = existingStaff?.name || '';
           this.schoolStaff = this.schoolStaff.map(sf => sf.id === editing.id ? {
             ...sf,
             empCode: f.empCode || sf.empCode,
@@ -15025,11 +16289,23 @@ INSTRUCTIONS:
             shift: f.shift,
             attendanceStatus: f.attendanceStatus,
             status: f.status,
-            monthlySalary: Number(f.monthlySalary) || 85000
+            monthlySalary: Number(f.monthlySalary) || 85000,
+            branchId,
+            branchName,
+            wingId,
+            wingName,
+            wingScopeLocked
           } as any : sf);
           void this.backend.updateSchoolStaff(editing.id, this.schoolStaff.find(sf => sf.id === editing.id));
         }
-        const pu = this.portalUsers.find(u => u.id === editing.id || (u.role === 'accountant' && u.name.trim().toLowerCase() === f.name.trim().toLowerCase()));
+        const pu = this.portalUsers.find(u =>
+          u.id === editing.id ||
+          (linkedPortalId && u.id === linkedPortalId) ||
+          (u.role === 'accountant' && (
+            u.name.trim().toLowerCase() === f.name.trim().toLowerCase() ||
+            (prevName && u.name.trim().toLowerCase() === prevName.trim().toLowerCase())
+          ))
+        );
         if (pu) {
           pu.name = f.name.trim();
           pu.email = f.email.trim() || pu.email;
@@ -15038,9 +16314,16 @@ INSTRUCTIONS:
           pu.designation = f.roleTitle.trim();
           pu.department = f.department.trim();
           pu.status = f.attendanceStatus === 'Absent' ? 'Suspended' : 'Active';
+          pu.branchId = branchId;
+          pu.branch = branchName;
+          pu.branchName = branchName;
+          pu.wingId = wingId;
+          pu.wingName = wingName;
+          pu.wingScopeLocked = wingScopeLocked;
         }
-        this.showToast(`Updated Accountant / Fee Clerk profile: ${f.name}`, 'success');
+        this.showToast(`Updated Accountant / Fee Clerk profile: ${f.name} (${branchName})`, 'success');
       } else {
+        const portalId = `USR-${Math.floor(510 + Math.random() * 80)}`;
         const res = await this.backend.saveSchoolStaff({
           name: f.name.trim(),
           fatherName: f.fatherName.trim(),
@@ -15051,10 +16334,16 @@ INSTRUCTIONS:
           phone: f.phone.trim(),
           email: f.email.trim(),
           shift: f.shift,
+          branchId,
+          branchName,
+          wingId,
+          wingName,
+          wingScopeLocked,
+          portalUserId: portalId,
           liteEnabled: true
         });
         const created: any = this.stampActiveBranchWing(res?.ok && res.staff
-          ? { ...res.staff, attendanceStatus: f.attendanceStatus, monthlySalary: Number(f.monthlySalary) || 95000 }
+          ? { ...res.staff, branchId, branchName, wingId, wingName, wingScopeLocked, portalUserId: res.staff.portalUserId || portalId, attendanceStatus: f.attendanceStatus, monthlySalary: Number(f.monthlySalary) || 95000 }
           : {
               id: `STF-${Date.now().toString(36).slice(-5).toUpperCase()}`,
               empCode: f.empCode || `ACC-${Math.floor(200 + Math.random() * 799)}`,
@@ -15072,11 +16361,17 @@ INSTRUCTIONS:
               attendanceStatus: f.attendanceStatus,
               monthlySalary: Number(f.monthlySalary) || 95000,
               faceEnrolled: false,
-              liteEnabled: true
+              liteEnabled: true,
+              branchId,
+              branchName,
+              wingId,
+              wingName,
+              wingScopeLocked,
+              portalUserId: portalId
             });
         this.schoolStaff = [created, ...this.schoolStaff];
         this.portalUsers.unshift(this.stampActiveBranchWing({
-          id: `USR-${Math.floor(510 + Math.random() * 80)}`,
+          id: created.portalUserId || portalId,
           name: created.name,
           email: created.email || `${created.empCode.toLowerCase()}@campus.edu`,
           pin: f.pin || '4466',
@@ -15088,9 +16383,15 @@ INSTRUCTIONS:
           designation: created.roleTitle,
           department: created.department,
           clearanceLevel: f.clearanceLevel || 'Level 2 - Fee Counter & Closing Submission',
-          phone: created.phone
+          phone: created.phone,
+          branch: branchName,
+          branchId,
+          branchName,
+          wingId,
+          wingName,
+          wingScopeLocked
         }));
-        this.showToast(`Added Accountant / Fee Clerk ${created.name} (PIN: ${f.pin})`, 'success');
+        this.showToast(`Added Accountant / Fee Clerk ${created.name} (${branchName}, PIN: ${f.pin})`, 'success');
       }
     } else {
       if (editing?.kind === 'staff') {
@@ -15108,10 +16409,14 @@ INSTRUCTIONS:
           shift: f.shift,
           attendanceStatus: f.attendanceStatus,
           status: f.status,
-          monthlySalary: Number(f.monthlySalary) || 52000
+          monthlySalary: Number(f.monthlySalary) || 52000,
+          branchId,
+          branchName,
+          wingId,
+          wingName
         } as any : sf);
         void this.backend.updateSchoolStaff(editing.id, this.schoolStaff.find(sf => sf.id === editing.id));
-        this.showToast(`Updated campus staff record: ${f.name}`, 'success');
+        this.showToast(`Updated campus staff record: ${f.name} (${branchName})`, 'success');
       } else {
         const res = await this.backend.saveSchoolStaff({
           name: f.name.trim(),
@@ -15123,10 +16428,14 @@ INSTRUCTIONS:
           phone: f.phone.trim(),
           email: f.email.trim(),
           shift: f.shift,
+          branchId,
+          branchName,
+          wingId,
+          wingName,
           liteEnabled: true
         });
         const created: any = this.stampActiveBranchWing(res?.ok && res.staff
-          ? { ...res.staff, attendanceStatus: f.attendanceStatus, monthlySalary: Number(f.monthlySalary) || 52000 }
+          ? { ...res.staff, branchId, branchName, wingId, wingName, attendanceStatus: f.attendanceStatus, monthlySalary: Number(f.monthlySalary) || 52000 }
           : {
               id: `STF-${Date.now().toString(36).slice(-5).toUpperCase()}`,
               empCode: f.empCode || `STF-${Math.floor(200 + Math.random() * 799)}`,
@@ -15144,10 +16453,14 @@ INSTRUCTIONS:
               attendanceStatus: f.attendanceStatus,
               monthlySalary: Number(f.monthlySalary) || 52000,
               faceEnrolled: false,
-              liteEnabled: true
+              liteEnabled: true,
+              branchId,
+              branchName,
+              wingId,
+              wingName
             });
         this.schoolStaff = [created, ...this.schoolStaff];
-        this.showToast(`Added campus staff member ${created.name}`, 'success');
+        this.showToast(`Added campus staff member ${created.name} (${branchName})`, 'success');
       }
     }
 
@@ -15288,8 +16601,18 @@ INSTRUCTIONS:
 
   openEditStudentModal(student: StudentRecord) {
     this.activeStudentForEdit = student;
+    const defScope = this.resolveDefaultFormBranchWing(student.grade);
+    const branchId = student.branchId || defScope.branchId;
+    const branchWings = this.getWingsForBranch(branchId);
+    const wingId = (student.wingId && branchWings.some(w => w.id === student.wingId))
+      ? student.wingId
+      : (this.inferWingForBranch(branchId, student.grade)?.id || branchWings[0]?.id || '');
     this.studentForm = {
       ...student,
+      branchId,
+      branchName: this.resolveBranchName(branchId),
+      wingId,
+      wingName: this.resolveWingName(wingId),
       admissionFee: this.getStudentAdmissionFee(student) ?? 25000,
       discount: this.getStudentDiscount(student)
     };
@@ -15297,6 +16620,25 @@ INSTRUCTIONS:
     this.formCustomValues['student'] = { ...mergedCells };
     this.isStudentModalOpen = true;
     this.cdr.detectChanges();
+  }
+
+  onStudentBranchChange(): void {
+    const branchId = this.studentForm.branchId || this.resolveDefaultFormBranchWing(this.studentForm.grade).branchId;
+    this.studentForm.branchId = branchId;
+    this.studentForm.branchName = this.resolveBranchName(branchId);
+    const suggested = this.inferWingForBranch(branchId, this.studentForm.grade);
+    this.studentForm.wingId = suggested?.id || this.getWingsForBranch(branchId)[0]?.id || '';
+    this.studentForm.wingName = this.resolveWingName(this.studentForm.wingId);
+    this.cdr.detectChanges();
+  }
+
+  onStudentGradeChange(): void {
+    const branchId = this.studentForm.branchId || this.resolveDefaultFormBranchWing(this.studentForm.grade).branchId;
+    const suggested = this.inferWingForBranch(branchId, this.studentForm.grade);
+    if (suggested?.id) {
+      this.studentForm.wingId = suggested.id;
+      this.studentForm.wingName = suggested.name;
+    }
   }
 
   closeStudentModal() {
@@ -15312,14 +16654,43 @@ INSTRUCTIONS:
       this.showToast('Please enter Student Name and Guardian information.', 'warning');
       return;
     }
+    const defScope = this.resolveDefaultFormBranchWing(this.studentForm.grade);
+    const branchId = this.studentForm.branchId || defScope.branchId;
+    const branchName = this.resolveBranchName(branchId);
+    const branchWings = this.getWingsForBranch(branchId);
+    const wingId = (this.studentForm.wingId && branchWings.some(w => w.id === this.studentForm.wingId))
+      ? this.studentForm.wingId
+      : (this.inferWingForBranch(branchId, this.studentForm.grade)?.id || branchWings[0]?.id || '');
+    const wingName = this.resolveWingName(wingId);
+
     let targetId = '';
     let targetRoll = '';
     if (this.activeStudentForEdit) {
-      Object.assign(this.activeStudentForEdit, this.studentForm);
+      const prevName = (this.activeStudentForEdit.name || '').trim().toLowerCase();
+      Object.assign(this.activeStudentForEdit, this.studentForm, {
+        branchId,
+        branchName,
+        wingId,
+        wingName
+      });
       targetId = this.activeStudentForEdit.id;
       targetRoll = this.activeStudentForEdit.rollNo || '';
+      const linkedStuPortal = this.portalUsers.find(u =>
+        u.role === 'student' && (
+          (targetRoll && u.staffIdOrRoll === targetRoll) ||
+          (prevName && u.name.trim().toLowerCase() === prevName)
+        )
+      );
+      if (linkedStuPortal) {
+        linkedStuPortal.name = this.activeStudentForEdit.name;
+        linkedStuPortal.branchId = branchId;
+        linkedStuPortal.branch = branchName;
+        linkedStuPortal.branchName = branchName;
+        linkedStuPortal.wingId = wingId;
+        linkedStuPortal.wingName = wingName;
+      }
       void this.backend.updateSchoolStudent(this.activeStudentForEdit.id, this.activeStudentForEdit);
-      this.showToast(`Updated student profile for ${this.studentForm.name}`, 'success');
+      this.showToast(`Updated student profile for ${this.studentForm.name} (${branchName})`, 'success');
     } else {
       const newStudent: StudentRecord = this.stampActiveBranchWing({
         id: `ST-${Math.floor(1000 + Math.random() * 9000)}`,
@@ -15334,7 +16705,11 @@ INSTRUCTIONS:
         feeStatus: (this.studentForm.feeStatus as any) || 'Pending',
         feeAmount: this.studentForm.feeAmount || 28500,
         rollNo: Math.floor(1000 + Math.random() * 9000).toString(),
-        admissionDate: new Date().toISOString().slice(0, 10)
+        admissionDate: new Date().toISOString().slice(0, 10),
+        branchId,
+        branchName,
+        wingId,
+        wingName
       }, this.studentForm.grade);
       targetId = newStudent.id;
       targetRoll = newStudent.rollNo;
@@ -15363,7 +16738,7 @@ INSTRUCTIONS:
       this.notificationsList.unshift({
         id: 'NOTIF-STU-' + Date.now(),
         title: `👤 Student Enrolled: ${newStudent.name} (Roll #${newStudent.rollNo})`,
-        message: `${newStudent.name} registered into ${newStudent.grade}. Guardian: ${newStudent.guardian} (${newStudent.guardianPhone}). Positioned at Row #1 in table.`,
+        message: `${newStudent.name} registered into ${newStudent.grade} (${branchName} · ${wingName}). Guardian: ${newStudent.guardian} (${newStudent.guardianPhone}). Positioned at Row #1 in table.`,
         type: 'general',
         targetRole: 'all',
         createdAt: 'Just now',
@@ -15371,7 +16746,7 @@ INSTRUCTIONS:
         linkTab: 'students'
       });
 
-      this.showToast(`Enrolled new student: ${newStudent.name} (Roll #${newStudent.rollNo}) at Row 1!`, 'success');
+      this.showToast(`Enrolled new student: ${newStudent.name} (${branchName}) at Row #1!`, 'success');
     }
     this.tableSchemaService.submitFormCustomInputs(
       'students_master',
@@ -15466,6 +16841,7 @@ INSTRUCTIONS:
   // --- TEACHER CRUD ---
   openAddTeacherModal() {
     this.activeTeacherForEdit = null;
+    const defScope = this.resolveDefaultFormBranchWing('Class 10 (Science)');
     this.teacherForm = {
       name: '',
       role: 'Senior Faculty Teacher',
@@ -15492,7 +16868,11 @@ INSTRUCTIONS:
       accountNo: 'PK36MEZN01020108920192',
       status: 'Active',
       salaryStatus: 'Processing',
-      rating: 4.9
+      rating: 4.9,
+      branchId: defScope.branchId,
+      branchName: this.resolveBranchName(defScope.branchId),
+      wingId: defScope.wingId,
+      wingName: this.resolveWingName(defScope.wingId)
     };
     this.formCustomValues['teacher'] = {};
     this.isTeacherModalOpen = true;
@@ -15501,14 +16881,49 @@ INSTRUCTIONS:
 
   openEditTeacherModal(teacher: TeacherRecord) {
     this.activeTeacherForEdit = teacher;
+    const defScope = this.resolveDefaultFormBranchWing(teacher.assignedGrade);
+    const branchId = teacher.branchId || defScope.branchId;
+    const branchWings = this.getWingsForBranch(branchId);
+    const wingId = (teacher.wingId && branchWings.some(w => w.id === teacher.wingId))
+      ? teacher.wingId
+      : (this.inferWingForBranch(branchId, teacher.assignedGrade)?.id || branchWings[0]?.id || '');
     this.teacherForm = {
       ...teacher,
-      role: teacher.role || teacher.designation || 'Senior Faculty Teacher'
+      role: teacher.role || teacher.designation || 'Senior Faculty Teacher',
+      branchId,
+      branchName: this.resolveBranchName(branchId),
+      wingId,
+      wingName: this.resolveWingName(wingId)
     };
     const existingCells = this.tableSchemaService.getSchema('teachers_master').customCells[teacher.id] || {};
     this.formCustomValues['teacher'] = { ...existingCells };
     this.isTeacherModalOpen = true;
     this.cdr.detectChanges();
+  }
+
+  onTeacherBranchChange(): void {
+    const branchId = this.teacherForm.branchId || this.resolveDefaultFormBranchWing(this.teacherForm.assignedGrade).branchId;
+    this.teacherForm.branchId = branchId;
+    this.teacherForm.branchName = this.resolveBranchName(branchId);
+    const gradeHint = this.teacherForm.assignedGrade === 'Custom Class / Grade Write-In...'
+      ? this.teacherForm.customGradeInput
+      : this.teacherForm.assignedGrade;
+    const suggested = this.inferWingForBranch(branchId, gradeHint);
+    this.teacherForm.wingId = suggested?.id || this.getWingsForBranch(branchId)[0]?.id || '';
+    this.teacherForm.wingName = this.resolveWingName(this.teacherForm.wingId);
+    this.cdr.detectChanges();
+  }
+
+  onTeacherGradeChange(): void {
+    const branchId = this.teacherForm.branchId || this.resolveDefaultFormBranchWing(this.teacherForm.assignedGrade).branchId;
+    const gradeHint = this.teacherForm.assignedGrade === 'Custom Class / Grade Write-In...'
+      ? this.teacherForm.customGradeInput
+      : this.teacherForm.assignedGrade;
+    const suggested = this.inferWingForBranch(branchId, gradeHint);
+    if (suggested?.id) {
+      this.teacherForm.wingId = suggested.id;
+      this.teacherForm.wingName = suggested.name;
+    }
   }
 
   closeTeacherModal() {
@@ -15529,25 +16944,53 @@ INSTRUCTIONS:
       ? this.teacherForm.customRole.trim()
       : (this.teacherForm.role || 'Senior Faculty Teacher');
 
-    const finalGrade = (this.teacherForm.assignedGrade === 'Custom Class Name Write-In...' && this.teacherForm.customGradeInput?.trim())
+    const finalGrade = ((this.teacherForm.assignedGrade === 'Custom Class Name Write-In...' || this.teacherForm.assignedGrade === 'Custom Class / Grade Write-In...') && this.teacherForm.customGradeInput?.trim())
       ? this.teacherForm.customGradeInput.trim()
       : (this.teacherForm.assignedGrade || 'Class 10-A');
 
-    const finalIncharge = (this.teacherForm.inchargeClass === 'Custom Class Name Write-In...' && this.teacherForm.customInchargeInput?.trim())
+    const finalIncharge = ((this.teacherForm.inchargeClass === 'Custom Class Name Write-In...' || this.teacherForm.inchargeClass === 'Custom In-Charge Write-In...') && this.teacherForm.customInchargeInput?.trim())
       ? this.teacherForm.customInchargeInput.trim()
       : (this.teacherForm.inchargeClass || 'None');
 
+    const defScope = this.resolveDefaultFormBranchWing(finalGrade);
+    const branchId = this.teacherForm.branchId || defScope.branchId;
+    const branchName = this.resolveBranchName(branchId);
+    const branchWings = this.getWingsForBranch(branchId);
+    const wingId = (this.teacherForm.wingId && branchWings.some(w => w.id === this.teacherForm.wingId))
+      ? this.teacherForm.wingId
+      : (this.inferWingForBranch(branchId, finalGrade)?.id || branchWings[0]?.id || '');
+    const wingName = this.resolveWingName(wingId);
+
     let targetTeacherId = '';
     if (this.activeTeacherForEdit) {
+      const prevName = (this.activeTeacherForEdit.name || '').trim().toLowerCase();
       Object.assign(this.activeTeacherForEdit, this.teacherForm, {
         role: finalRole,
         designation: finalRole,
         assignedGrade: finalGrade,
-        inchargeClass: finalIncharge
+        inchargeClass: finalIncharge,
+        branchId,
+        branchName,
+        wingId,
+        wingName
       });
       targetTeacherId = this.activeTeacherForEdit.id;
+      const linkedTeacherPortal = this.portalUsers.find(u =>
+        u.role === 'teacher' && (
+          (u.email && this.activeTeacherForEdit?.email && u.email.trim().toLowerCase() === this.activeTeacherForEdit.email.trim().toLowerCase()) ||
+          (prevName && u.name.trim().toLowerCase() === prevName)
+        )
+      );
+      if (linkedTeacherPortal) {
+        linkedTeacherPortal.name = this.activeTeacherForEdit.name;
+        linkedTeacherPortal.branchId = branchId;
+        linkedTeacherPortal.branch = branchName;
+        linkedTeacherPortal.branchName = branchName;
+        linkedTeacherPortal.wingId = wingId;
+        linkedTeacherPortal.wingName = wingName;
+      }
       void this.backend.updateSchoolTeacher(this.activeTeacherForEdit.id, this.activeTeacherForEdit);
-      this.showToast(`Updated faculty profile for ${this.teacherForm.name}`, 'success');
+      this.showToast(`Updated faculty profile for ${this.teacherForm.name} (${branchName})`, 'success');
     } else {
       const newTeacher: TeacherRecord = this.stampActiveBranchWing({
         id: `TCH-${Math.floor(100 + Math.random() * 900)}`,
@@ -15577,7 +17020,11 @@ INSTRUCTIONS:
         salaryStatus: (this.teacherForm.salaryStatus as any) || 'Processing',
         monthlySalary: Number(this.teacherForm.monthlySalary) || 145000,
         appointmentDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-        tenureDuration: 'Newly Appointed'
+        tenureDuration: 'Newly Appointed',
+        branchId,
+        branchName,
+        wingId,
+        wingName
       }, finalGrade);
       targetTeacherId = newTeacher.id;
       this.teachers.unshift(newTeacher);
@@ -15600,7 +17047,7 @@ INSTRUCTIONS:
       this.notificationsList.unshift({
         id: 'NOTIF-TCH-' + Date.now(),
         title: `🎓 Faculty Appointed: ${newTeacher.name} (${finalRole} — ${newTeacher.subject})`,
-        message: `${newTeacher.name} appointed as ${finalRole} (${newTeacher.subject}). Assigned Class: ${finalGrade}. Salary: PKR ${this.formatCurrency(newTeacher.monthlySalary)}. Positioned at Row #1 in table.`,
+        message: `${newTeacher.name} appointed as ${finalRole} (${newTeacher.subject}) at ${branchName} · ${wingName}. Assigned Class: ${finalGrade}. Salary: PKR ${this.formatCurrency(newTeacher.monthlySalary)}. Positioned at Row #1 in table.`,
         type: 'general',
         targetRole: 'all',
         createdAt: 'Just now',
@@ -15608,7 +17055,7 @@ INSTRUCTIONS:
         linkTab: 'teachers'
       });
 
-      this.showToast(`Faculty Member Appointed: ${newTeacher.name} (${finalRole}) added at Row #1!`, 'success');
+      this.showToast(`Faculty Member Appointed: ${newTeacher.name} (${branchName}) added at Row #1!`, 'success');
     }
     this.tableSchemaService.submitFormCustomInputs(
       'teachers_master',
@@ -15640,6 +17087,7 @@ INSTRUCTIONS:
   // --- ADMISSIONS CRUD ---
   openAddAdmissionModal() {
     const nextRoll = (this.activeStudents.length + 1001).toString();
+    const defScope = this.resolveDefaultFormBranchWing('Class 9');
     this.admissionForm = {
       applicant: '',
       fatherName: '',
@@ -15664,31 +17112,58 @@ INSTRUCTIONS:
       discount: 0,
       initialPaymentStatus: 'Paid',
       score: '88% Entrance Assessment',
-      status: 'Approved'
+      status: 'Approved',
+      branchId: defScope.branchId,
+      wingId: defScope.wingId
     };
     this.formCustomValues['admission'] = {};
     this.isAdmissionModalOpen = true;
     this.cdr.detectChanges();
   }
 
-  onAdmissionGradeChange(): void {
-    const val = (this.admissionForm.appliedFor || '').toLowerCase();
-    if (val.includes('prep') || val.includes('nursery') || val.includes('playgroup')) {
-      this.admissionForm.admissionFee = 15000;
-      this.admissionForm.tuitionFee = 6500;
-    } else if (val.includes('1') || val.includes('2') || val.includes('3') || val.includes('4') || val.includes('5')) {
-      this.admissionForm.admissionFee = 20000;
-      this.admissionForm.tuitionFee = 12500;
-    } else if (val.includes('6') || val.includes('7') || val.includes('8')) {
-      this.admissionForm.admissionFee = 25000;
-      this.admissionForm.tuitionFee = 18000;
-    } else if (val.includes('o-level') || val.includes('cambridge')) {
-      this.admissionForm.admissionFee = 45000;
-      this.admissionForm.tuitionFee = 42000;
-    } else {
-      this.admissionForm.admissionFee = 30000;
-      this.admissionForm.tuitionFee = 28500;
+  onAdmissionBranchChange(): void {
+    const branchId = this.admissionForm.branchId || this.resolveDefaultFormBranchWing(this.admissionForm.appliedFor).branchId;
+    this.admissionForm.branchId = branchId;
+    const suggested = this.inferWingForBranch(branchId, this.admissionForm.appliedFor);
+    this.admissionForm.wingId = suggested?.id || this.getWingsForBranch(branchId)[0]?.id || '';
+    const plan = this.resolveFeePlanForGrade(this.admissionForm.appliedFor, branchId, this.admissionForm.wingId);
+    if (plan) {
+      this.admissionForm.admissionFee = plan.admissionFee;
+      this.admissionForm.tuitionFee = plan.tuitionFee;
     }
+    this.cdr.detectChanges();
+  }
+
+  onAdmissionGradeChange(): void {
+    const branchId = this.admissionForm.branchId || this.resolveDefaultFormBranchWing(this.admissionForm.appliedFor).branchId;
+    const suggested = this.inferWingForBranch(branchId, this.admissionForm.appliedFor);
+    if (suggested?.id) {
+      this.admissionForm.wingId = suggested.id;
+    }
+    const plan = this.resolveFeePlanForGrade(this.admissionForm.appliedFor, branchId, this.admissionForm.wingId);
+    if (plan) {
+      this.admissionForm.admissionFee = plan.admissionFee;
+      this.admissionForm.tuitionFee = plan.tuitionFee;
+    } else {
+      const val = (this.admissionForm.appliedFor || '').toLowerCase();
+      if (val.includes('prep') || val.includes('nursery') || val.includes('playgroup')) {
+        this.admissionForm.admissionFee = 15000;
+        this.admissionForm.tuitionFee = 6500;
+      } else if (val.includes('1') || val.includes('2') || val.includes('3') || val.includes('4') || val.includes('5')) {
+        this.admissionForm.admissionFee = 20000;
+        this.admissionForm.tuitionFee = 12500;
+      } else if (val.includes('6') || val.includes('7') || val.includes('8')) {
+        this.admissionForm.admissionFee = 25000;
+        this.admissionForm.tuitionFee = 18000;
+      } else if (val.includes('o-level') || val.includes('cambridge')) {
+        this.admissionForm.admissionFee = 45000;
+        this.admissionForm.tuitionFee = 42000;
+      } else {
+        this.admissionForm.admissionFee = 30000;
+        this.admissionForm.tuitionFee = 28500;
+      }
+    }
+    this.cdr.detectChanges();
   }
 
   closeAdmissionModal() {
@@ -15797,6 +17272,14 @@ INSTRUCTIONS:
     const finalMonthlyFee = Math.round(Math.max(0, Number(this.admissionForm.tuitionFee || 18000) * (1 - (Number(this.admissionForm.discount || 0) / 100))));
     const admId = `ADM-2026-${Math.floor(1000 + Math.random() * 9000)}`;
 
+    const admBranchId = this.admissionForm.branchId || this.resolveDefaultFormBranchWing(this.admissionForm.appliedFor).branchId;
+    const admBranchName = this.resolveBranchName(admBranchId);
+    const admWings = this.getWingsForBranch(admBranchId);
+    const admWingId = (this.admissionForm.wingId && admWings.some(w => w.id === this.admissionForm.wingId))
+      ? this.admissionForm.wingId
+      : (this.inferWingForBranch(admBranchId, this.admissionForm.appliedFor)?.id || admWings[0]?.id || '');
+    const admWingName = this.resolveWingName(admWingId);
+
     const newStudent: StudentRecord = this.stampActiveBranchWing({
       id: `ST-${roll}`,
       name: (this.admissionForm.applicant || '').trim() || `Student #${roll}`,
@@ -15826,7 +17309,11 @@ INSTRUCTIONS:
       score: this.admissionForm.score ? this.admissionForm.score.trim() : undefined,
       medicalConditions: this.admissionForm.medicalNotes ? this.admissionForm.medicalNotes.trim() : undefined,
       address: this.admissionForm.address ? this.admissionForm.address.trim() : 'Islamabad, Pakistan',
-      emergencyContact: this.admissionForm.emergencyContact ? this.admissionForm.emergencyContact.trim() : this.admissionForm.phone.trim()
+      emergencyContact: this.admissionForm.emergencyContact ? this.admissionForm.emergencyContact.trim() : this.admissionForm.phone.trim(),
+      branchId: admBranchId,
+      branchName: admBranchName,
+      wingId: admWingId,
+      wingName: admWingName
     }, this.admissionForm.appliedFor);
 
     // 1. Add to active students list
@@ -15861,7 +17348,11 @@ INSTRUCTIONS:
       initialPaymentStatus: this.admissionForm.initialPaymentStatus || 'Paid',
       medicalNotes: this.admissionForm.medicalNotes,
       source: 'School Office Direct',
-      decisionRemarks: 'Approved & Enrolled by School Admissions Directorate'
+      decisionRemarks: 'Approved & Enrolled by School Admissions Directorate',
+      branchId: admBranchId,
+      branchName: admBranchName,
+      wingId: admWingId,
+      wingName: admWingName
     }, newStudent.grade);
     this.admissionsList.unshift(newAdm);
 
@@ -15878,7 +17369,11 @@ INSTRUCTIONS:
         amount: Number(this.admissionForm.admissionFee || 25000),
         date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
         status: 'Verified',
-        challanNo: receiptNo
+        challanNo: receiptNo,
+        branchId: admBranchId,
+        branchName: admBranchName,
+        wingId: admWingId,
+        wingName: admWingName
       }, newStudent.grade));
     }
 
@@ -16257,14 +17752,14 @@ INSTRUCTIONS:
       this.showToast('Please enter Examination Title.', 'warning');
       return;
     }
-    const newEx: ExamRecord = {
+    const newEx: ExamRecord = this.stampActiveBranchWing({
       id: `EXM-${Math.floor(100 + Math.random() * 900)}`,
       examName: this.examForm.examName || '',
       class: this.examForm.class || 'All Sections',
       startDate: this.examForm.startDate || 'Nov 2026',
       status: (this.examForm.status as any) || 'Scheduled',
       averageGPA: this.examForm.averageGPA || '3.75 / 4.0'
-    };
+    }, this.examForm.class);
     this.examsList.unshift(newEx);
     this.tableSchemaService.submitFormCustomInputs(
       'owner_exams',
@@ -16318,7 +17813,7 @@ INSTRUCTIONS:
       this.showToast('Please enter Subject and Teacher.', 'warning');
       return;
     }
-    const newTt: TimetableRecord = {
+    const newTt: TimetableRecord = this.stampActiveBranchWing({
       id: `TT-${Math.floor(10 + Math.random() * 90)}`,
       period: this.timetableForm.period || 'Period 1',
       time: this.timetableForm.time || '08:00 AM',
@@ -16326,7 +17821,7 @@ INSTRUCTIONS:
       teacher: this.timetableForm.teacher || '',
       room: this.timetableForm.room || 'Room 101',
       grade: this.timetableForm.grade || 'Grade 10-A'
-    };
+    }, this.timetableForm.grade);
     this.timetables.push(newTt);
     this.tableSchemaService.submitFormCustomInputs(
       'owner_timetable',
@@ -16439,7 +17934,7 @@ INSTRUCTIONS:
       this.showToast('Please enter Route Name and Driver Name.', 'warning');
       return;
     }
-    const newRoute: TransportRouteRecord = {
+    const newRoute: TransportRouteRecord = this.stampActiveBranchWing({
       id: `TR-${Math.floor(10 + Math.random() * 90)}`,
       routeName: this.transportForm.routeName,
       vehicleNo: this.transportForm.vehicleNo || 'BUS-2026',
@@ -16449,7 +17944,7 @@ INSTRUCTIONS:
       capacity: Number(this.transportForm.capacity) || 40,
       enrolledStudents: Number(this.transportForm.enrolledStudents) || 30,
       status: (this.transportForm.status as any) || 'Active'
-    };
+    });
     this.transportRoutes.unshift(newRoute);
     this.tableSchemaService.submitFormCustomInputs(
       'owner_transport',
@@ -16541,7 +18036,7 @@ INSTRUCTIONS:
       .map(t => t.trim())
       .filter(t => t.length > 0);
 
-    const newBook: LibraryBookRecord = {
+    const newBook: LibraryBookRecord = this.stampActiveBranchWing({
       id: `BK-${Math.floor(100 + Math.random() * 900)}`,
       isbn: this.libraryForm.isbn || `ISBN-${Math.floor(1000 + Math.random() * 9000)}`,
       title: this.libraryForm.title,
@@ -16554,7 +18049,7 @@ INSTRUCTIONS:
       totalCopies: Number(this.libraryForm.totalCopies) || 10,
       availableCopies: Number(this.libraryForm.availableCopies) || 10,
       rackNo: this.libraryForm.rackNo || 'RACK-01'
-    };
+    }, this.libraryForm.academicGradeLevel);
     this.libraryBooks.unshift(newBook);
     this.tableSchemaService.submitFormCustomInputs(
       'owner_library_catalog',
@@ -16584,7 +18079,7 @@ INSTRUCTIONS:
   }
 
   get filteredCatalogBooks(): LibraryBookRecord[] {
-    let list = this.libraryBooks;
+    let list = this.scopedLibraryBooks;
     const q = (this.librarySearchQuery || '').toLowerCase().trim();
     if (q) {
       list = list.filter(bk =>
@@ -16674,11 +18169,13 @@ INSTRUCTIONS:
   }
 
   get libraryCirculationStats() {
-    const totalBooksCount = this.libraryBooks.reduce((acc, b) => acc + (b.totalCopies || 0), 0);
-    const availableBooksCount = this.libraryBooks.reduce((acc, b) => acc + (b.availableCopies || 0), 0);
-    const activeCheckouts = this.libraryCirculations.filter(c => c.status === 'Issued');
-    const overdueCheckouts = this.libraryCirculations.filter(c => c.status === 'Overdue');
-    const returnedCheckouts = this.libraryCirculations.filter(c => c.status === 'Returned');
+    const books = this.scopedLibraryBooks;
+    const circs = this.scopedLibraryCirculations;
+    const totalBooksCount = books.reduce((acc, b) => acc + (b.totalCopies || 0), 0);
+    const availableBooksCount = books.reduce((acc, b) => acc + (b.availableCopies || 0), 0);
+    const activeCheckouts = circs.filter(c => c.status === 'Issued');
+    const overdueCheckouts = circs.filter(c => c.status === 'Overdue');
+    const returnedCheckouts = circs.filter(c => c.status === 'Returned');
     const totalFinesAccrued = overdueCheckouts.reduce((acc, c) => acc + (c.fineAmount || 0), 0);
     const inCirculationCount = totalBooksCount - availableBooksCount;
     const circulationRate = totalBooksCount > 0 
@@ -16686,7 +18183,7 @@ INSTRUCTIONS:
       : '0';
 
     return {
-      totalTitles: this.libraryBooks.length,
+      totalTitles: books.length,
       totalBooksCount,
       availableBooksCount,
       activeCheckoutsCount: activeCheckouts.length,
@@ -16699,7 +18196,7 @@ INSTRUCTIONS:
   }
 
   get filteredCirculations(): LibraryCirculationRecord[] {
-    let list = this.libraryCirculations;
+    let list = this.scopedLibraryCirculations;
     const q = (this.circulationSearchQuery || '').toLowerCase().trim();
     if (q) {
       list = list.filter(c => 
@@ -16715,7 +18212,7 @@ INSTRUCTIONS:
       list = list.filter(c => c.status === this.circulationStatusFilter);
     }
     if (this.circulationCategoryFilter !== 'All') {
-      const matchingBookIds = this.libraryBooks
+      const matchingBookIds = this.scopedLibraryBooks
         .filter(b => b.category === this.circulationCategoryFilter)
         .map(b => b.id);
       list = list.filter(c => matchingBookIds.includes(c.bookId));
@@ -16724,8 +18221,8 @@ INSTRUCTIONS:
   }
 
   openCheckoutModal(bk?: LibraryBookRecord): void {
-    const defaultBook = bk || this.libraryBooks[0];
-    const defaultStudent = this.activeStudents[0];
+    const defaultBook = bk || this.scopedLibraryBooks[0] || this.libraryBooks[0];
+    const defaultStudent = this.scopedActiveStudents[0] || this.activeStudents[0];
     this.checkoutForm = {
       bookId: defaultBook ? defaultBook.id : '',
       borrowerType: 'Student',
@@ -16746,7 +18243,8 @@ INSTRUCTIONS:
   }
 
   onCheckoutStudentChange(studentId: string): void {
-    const st = this.activeStudents.find(s => s.id === studentId || s.rollNo === studentId);
+    const st = this.scopedActiveStudents.find(s => s.id === studentId || s.rollNo === studentId)
+      || this.activeStudents.find(s => s.id === studentId || s.rollNo === studentId);
     if (st) {
       this.checkoutForm.studentId = st.rollNo || st.id;
       this.checkoutForm.studentName = st.name;
@@ -16774,7 +18272,11 @@ INSTRUCTIONS:
     const dueDateObj = new Date(now.getTime() + (Number(this.checkoutForm.issuePeriodDays) || 14) * 24 * 60 * 60 * 1000);
     const dueDateStr = dueDateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
-    const newCirculation: LibraryCirculationRecord = {
+    const targetGrade = this.checkoutForm.borrowerType === 'Student' ? (this.checkoutForm.grade || 'General') : 'Department of Science';
+    const borrowerStudent = this.checkoutForm.borrowerType === 'Student'
+      ? (this.activeStudents || []).find(s => s.rollNo === this.checkoutForm.studentId || s.id === this.checkoutForm.studentId || s.name === this.checkoutForm.studentName)
+      : undefined;
+    const newCirculation: LibraryCirculationRecord = this.stampActiveBranchWing({
       id: 'CIR-' + Date.now(),
       issueNo: 'CIR-2026-' + String(this.libraryCirculations.length + 101).padStart(3, '0'),
       bookId: bk.id,
@@ -16783,14 +18285,18 @@ INSTRUCTIONS:
       borrowerType: this.checkoutForm.borrowerType,
       borrowerName: this.checkoutForm.borrowerType === 'Student' ? (this.checkoutForm.studentName || 'Student') : 'Faculty Member',
       borrowerId: this.checkoutForm.borrowerType === 'Student' ? (this.checkoutForm.studentId || 'RN-1099') : 'FAC-01',
-      gradeOrDept: this.checkoutForm.borrowerType === 'Student' ? (this.checkoutForm.grade || 'General') : 'Department of Science',
+      gradeOrDept: targetGrade,
       issueDate: issueDateStr,
       dueDate: dueDateStr,
       status: 'Issued',
       overdueDays: 0,
       fineAmount: 0,
-      conditionNotes: this.checkoutForm.notes || 'Issued in verified good condition'
-    };
+      conditionNotes: this.checkoutForm.notes || 'Issued in verified good condition',
+      branchId: borrowerStudent?.branchId || bk.branchId,
+      branchName: borrowerStudent?.branchName || bk.branchName,
+      wingId: borrowerStudent?.wingId || bk.wingId,
+      wingName: borrowerStudent?.wingName || bk.wingName
+    }, targetGrade);
 
     bk.availableCopies = Math.max(0, bk.availableCopies - 1);
     this.libraryCirculations.unshift(newCirculation);
@@ -17171,7 +18677,15 @@ INSTRUCTIONS:
   }
 
   get studentLibraryCirculations(): LibraryCirculationRecord[] {
-    return this.libraryCirculations.filter(c => c.borrowerName.toLowerCase().includes('zayan') || c.borrowerId === '1001' || c.borrowerId === 'ST-1001');
+    const stu = this.currentStudentProfile;
+    const stuId = String(stu?.id || 'ST-1001').toLowerCase();
+    const stuRoll = String(stu?.rollNo || '1001').toLowerCase();
+    const stuName = String(stu?.name || 'zayan').toLowerCase();
+    return this.scopedLibraryCirculations.filter(c => {
+      const bId = String(c.borrowerId || '').toLowerCase();
+      const bName = String(c.borrowerName || '').toLowerCase();
+      return bId === stuId || bId === stuRoll || (stuName && bName.includes(stuName));
+    });
   }
 
   // --- FEE DEFAULTER PROMISSORY NOTE & RESTRUCTURING METHODS ---
@@ -17326,8 +18840,8 @@ INSTRUCTIONS:
 
   getInitialSchoolPrincipals(): PrincipalMemberRecord[] {
     return [
-      { id: 'PRI-101', empCode: 'PRI-101', name: 'Prof. Dr. Tahir Malik', fatherName: 'Malik Sher Muhammad', cnic: '61101-8451120-1', passportNo: 'PK-DIR-44102', nationality: 'Pakistani', gender: 'Male', dob: '1974-09-14', bloodGroup: 'O+', roleTitle: 'Campus Principal', department: 'Executive Directorate', phone: '+92 300 8451120', emergencyContact: '+92 300 8451100', email: 'principal@campus.edu.pk', address: 'Executive Residence, Sector F-7/2, Islamabad', shift: 'Full Day (07:30 AM - 03:30 PM)', status: 'ACTIVE', attendanceStatus: 'Present', faceEnrolled: false, liteEnabled: true },
-      { id: 'PRI-102', empCode: 'PRI-102', name: 'Prof. Ayesha Siddiqua', fatherName: 'Brig. (R) Manzoor Ahmed', cnic: '61101-7742290-2', passportNo: 'PK-DIR-55198', nationality: 'Pakistani', gender: 'Female', dob: '1979-03-27', bloodGroup: 'A+', roleTitle: 'Vice Principal (Academics)', department: 'Academic Directorate', phone: '+92 321 7742290', emergencyContact: '+92 321 7742200', email: 'viceprincipal@campus.edu.pk', address: 'House 19, Street 12, Sector F-8/3, Islamabad', shift: 'Full Day (07:45 AM - 03:45 PM)', status: 'ACTIVE', attendanceStatus: 'Present', faceEnrolled: false, liteEnabled: true }
+      { id: 'PRI-101', empCode: 'PRI-101', name: 'Prof. Dr. Tahir Malik', fatherName: 'Malik Sher Muhammad', cnic: '61101-8451120-1', passportNo: 'PK-DIR-44102', nationality: 'Pakistani', gender: 'Male', dob: '1974-09-14', bloodGroup: 'O+', roleTitle: 'Campus Principal', department: 'Executive Directorate', phone: '+92 300 8451120', emergencyContact: '+92 300 8451100', email: 'principal@campus.edu.pk', address: 'Gulberg III Main Boulevard, Lahore', shift: 'Full Day (07:30 AM - 03:30 PM)', status: 'ACTIVE', attendanceStatus: 'Present', faceEnrolled: false, liteEnabled: true, branchId: 'BR-LHR-01', branchName: 'Lahore Main Campus', wingId: 'WNG-LHR-SNR', wingName: 'Senior & O-Level Wing' },
+      { id: 'PRI-102', empCode: 'PRI-102', name: 'Prof. Ayesha Siddiqua', fatherName: 'Brig. (R) Manzoor Ahmed', cnic: '61101-7742290-2', passportNo: 'PK-DIR-55198', nationality: 'Pakistani', gender: 'Female', dob: '1979-03-27', bloodGroup: 'A+', roleTitle: 'Vice Principal (Academics)', department: 'Academic Directorate', phone: '+92 321 7742290', emergencyContact: '+92 321 7742200', email: 'viceprincipal@campus.edu.pk', address: 'House 19, Street 12, Sector F-10/3, Islamabad', shift: 'Full Day (07:45 AM - 03:45 PM)', status: 'ACTIVE', attendanceStatus: 'Present', faceEnrolled: false, liteEnabled: true, branchId: 'BR-ISB-02', branchName: 'Islamabad F-10 Campus', wingId: 'WNG-ISB-SNR', wingName: 'F-10 Senior Science Wing' }
     ];
   }
 
@@ -17501,20 +19015,46 @@ INSTRUCTIONS:
     this.cdr.detectChanges();
   }
 
+  private resolveBiometricMemberScope(cat: AttendanceMemberCategory, memberId: string, gradeHint?: string, existing?: any) {
+    const member = cat === 'student'
+      ? (this.activeStudents || []).find(s => s.id === memberId)
+      : cat === 'teacher'
+        ? (this.teachers || []).find(t => t.id === memberId)
+        : cat === 'principal'
+          ? (this.schoolPrincipals || []).find(p => p.id === memberId)
+          : (this.schoolStaff || []).find(sf => sf.id === memberId);
+    const memberGradeHint = gradeHint
+      || (member && 'grade' in member ? member.grade : undefined)
+      || (member && 'assignedGrade' in member ? member.assignedGrade : undefined);
+    return this.stampActiveBranchWing({
+      ...existing,
+      branchId: existing?.branchId || member?.branchId,
+      branchName: existing?.branchName || member?.branchName,
+      wingId: existing?.wingId || member?.wingId,
+      wingName: existing?.wingName || member?.wingName
+    }, memberGradeHint);
+  }
+
   async onFaceProfileEnrolled(profile: FaceProfileRecord): Promise<void> {
-    const filtered = this.schoolFaceProfiles.filter(
-      (fp) => !(fp.memberCategory === profile.memberCategory && fp.memberId === profile.memberId)
+    const scopedProfile: FaceProfileRecord = this.resolveBiometricMemberScope(
+      profile.memberCategory,
+      profile.memberId,
+      profile.gradeOrDept,
+      profile
     );
-    this.schoolFaceProfiles = [profile, ...filtered];
+    const filtered = this.schoolFaceProfiles.filter(
+      (fp) => !(fp.memberCategory === scopedProfile.memberCategory && fp.memberId === scopedProfile.memberId)
+    );
+    this.schoolFaceProfiles = [scopedProfile, ...filtered];
     this.syncBiometricFlagsFromFaceProfiles();
     this.saveStateToStorage();
     const isOnline = typeof navigator === 'undefined' || navigator.onLine !== false;
-    const res = isOnline ? await this.backend.saveSchoolFaceProfile(profile) : { ok: false };
+    const res = isOnline ? await this.backend.saveSchoolFaceProfile(scopedProfile) : { ok: false };
     if (!res?.ok) {
-      this.enqueueOfflineMutation('face_profile', profile);
-      this.showToast(`Offline mode: Face profile saved locally for ${profile.memberName} & queued for sync.`, 'info');
+      this.enqueueOfflineMutation('face_profile', scopedProfile);
+      this.showToast(`Offline mode: Face profile saved locally for ${scopedProfile.memberName} & queued for sync.`, 'info');
     } else {
-      this.showToast(`Face profile enrolled & saved for ${profile.memberName} (${profile.memberCategory}).`, 'success');
+      this.showToast(`Face profile enrolled & saved for ${scopedProfile.memberName} (${scopedProfile.memberCategory}).`, 'success');
     }
     this.cdr.detectChanges();
   }
@@ -17544,19 +19084,25 @@ INSTRUCTIONS:
   }
 
   async onFingerprintProfileEnrolled(profile: FingerprintProfileRecord): Promise<void> {
-    const filtered = this.schoolFingerprintProfiles.filter(
-      (fp) => !(fp.memberCategory === profile.memberCategory && fp.memberId === profile.memberId)
+    const scopedProfile: FingerprintProfileRecord = this.resolveBiometricMemberScope(
+      profile.memberCategory,
+      profile.memberId,
+      profile.gradeOrDept,
+      profile
     );
-    this.schoolFingerprintProfiles = [profile, ...filtered];
+    const filtered = this.schoolFingerprintProfiles.filter(
+      (fp) => !(fp.memberCategory === scopedProfile.memberCategory && fp.memberId === scopedProfile.memberId)
+    );
+    this.schoolFingerprintProfiles = [scopedProfile, ...filtered];
     this.syncBiometricFlagsFromFingerprintProfiles();
     this.saveStateToStorage();
     const isOnline = typeof navigator === 'undefined' || navigator.onLine !== false;
-    const res = isOnline ? await this.backend.saveSchoolFingerprintProfile(profile) : { ok: false };
+    const res = isOnline ? await this.backend.saveSchoolFingerprintProfile(scopedProfile) : { ok: false };
     if (!res?.ok) {
-      this.enqueueOfflineMutation('fingerprint_profile', profile);
-      this.showToast(`Offline mode: Fingerprint profile saved locally for ${profile.memberName} & queued for sync.`, 'info');
+      this.enqueueOfflineMutation('fingerprint_profile', scopedProfile);
+      this.showToast(`Offline mode: Fingerprint profile saved locally for ${scopedProfile.memberName} & queued for sync.`, 'info');
     } else {
-      this.showToast(`Fingerprint enrolled & saved for ${profile.memberName} (${profile.memberCategory}).`, 'success');
+      this.showToast(`Fingerprint enrolled & saved for ${scopedProfile.memberName} (${scopedProfile.memberCategory}).`, 'success');
     }
     this.cdr.detectChanges();
   }
@@ -17655,27 +19201,32 @@ INSTRUCTIONS:
 
     const nowTs = ev.checkInTime || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     const scheduledStart = ev.scheduledStartTime || this.ownerAttendancePolicy.scheduledStartTime || '08:00';
-    const logEntry: FaceVerificationLogRecord = {
-      id: `FLOG-${Date.now().toString(36).slice(-5)}`,
-      memberCategory: ev.memberCategory,
-      memberId: ev.memberId,
-      memberName: ev.memberName,
-      memberCode: ev.memberCode,
-      gradeOrDept: ev.gradeOrDept,
-      status: ev.status,
-      punchType: punch,
-      scheduledStartTime: scheduledStart,
-      lateMinutes: ev.lateMinutes,
-      lateByLabel: ev.lateByLabel,
-      gateName: terminalGateName,
-      verificationMode: ev.verificationMode,
-      confidenceScore: ev.confidenceScore,
-      verifiedBy: ev.verifiedBy,
-      markedByRole: this.currentPortalRole || 'owner',
-      date: new Date().toISOString().split('T')[0],
-      timestamp: nowTs,
-      snapshotData: ev.snapshotData
-    };
+    const logEntry: FaceVerificationLogRecord = this.resolveBiometricMemberScope(
+      ev.memberCategory,
+      ev.memberId,
+      ev.gradeOrDept,
+      {
+        id: `FLOG-${Date.now().toString(36).slice(-5)}`,
+        memberCategory: ev.memberCategory,
+        memberId: ev.memberId,
+        memberName: ev.memberName,
+        memberCode: ev.memberCode,
+        gradeOrDept: ev.gradeOrDept,
+        status: ev.status,
+        punchType: punch,
+        scheduledStartTime: scheduledStart,
+        lateMinutes: ev.lateMinutes,
+        lateByLabel: ev.lateByLabel,
+        gateName: terminalGateName,
+        verificationMode: ev.verificationMode,
+        confidenceScore: ev.confidenceScore,
+        verifiedBy: ev.verifiedBy,
+        markedByRole: this.currentPortalRole || 'owner',
+        date: new Date().toISOString().split('T')[0],
+        timestamp: nowTs,
+        snapshotData: ev.snapshotData
+      }
+    );
     this.faceVerificationLogs = [logEntry, ...this.faceVerificationLogs].slice(0, 80);
 
     this.recomputeAttendanceSummary();
@@ -17697,7 +19248,11 @@ INSTRUCTIONS:
       verificationMode: ev.verificationMode,
       confidenceScore: ev.confidenceScore,
       verifiedBy: ev.verifiedBy,
-      markedByRole: this.currentPortalRole || 'owner'
+      markedByRole: this.currentPortalRole || 'owner',
+      branchId: logEntry.branchId,
+      branchName: logEntry.branchName,
+      wingId: logEntry.wingId,
+      wingName: logEntry.wingName
     };
 
     const isOnline = typeof navigator === 'undefined' || navigator.onLine !== false;
@@ -17739,7 +19294,7 @@ INSTRUCTIONS:
     customValues?: Record<string, string>;
   }): Promise<void> {
     const res = await this.backend.saveSchoolStaff(payload);
-    const created: StaffMemberRecord = res?.ok && res.staff
+    const created: StaffMemberRecord = this.stampActiveBranchWing(res?.ok && res.staff
       ? res.staff
       : {
           id: `STF-${Date.now().toString(36).slice(-5).toUpperCase()}`,
@@ -17757,7 +19312,7 @@ INSTRUCTIONS:
           attendanceStatus: 'Absent',
           faceEnrolled: false,
           liteEnabled: payload.liteEnabled
-        };
+        }, payload.department);
     this.schoolStaff = [created, ...this.schoolStaff];
     if (payload.customValues && Object.keys(payload.customValues).length > 0) {
       this.tableSchemaService.submitFormCustomInputs(
@@ -17797,7 +19352,7 @@ INSTRUCTIONS:
     customValues?: Record<string, string>;
   }): Promise<void> {
     const res = await this.backend.saveSchoolPrincipal(payload);
-    const created: PrincipalMemberRecord = res?.ok && res.principal
+    const created: PrincipalMemberRecord = this.stampActiveBranchWing(res?.ok && res.principal
       ? res.principal
       : {
           id: `PRI-${Date.now().toString(36).slice(-5).toUpperCase()}`,
@@ -17816,7 +19371,7 @@ INSTRUCTIONS:
           attendanceStatus: 'Absent',
           faceEnrolled: false,
           liteEnabled: payload.liteEnabled
-        };
+        }, 'Senior');
     this.schoolPrincipals = [created, ...this.schoolPrincipals];
     if (payload.customValues && Object.keys(payload.customValues).length > 0) {
       this.tableSchemaService.submitFormCustomInputs(
@@ -18223,12 +19778,12 @@ INSTRUCTIONS:
   getBiometricEnrolledCount(role: 'Student' | 'Teacher' | 'All' | 'student' | 'teacher' | 'all'): number {
     const r = (role || '').toLowerCase();
     if (r === 'student') {
-      return (this.activeStudents || []).filter(s => s.biometricEnrolled || s.fingerprintEnrolled).length;
+      return (this.scopedActiveStudents || []).filter(s => s.biometricEnrolled || s.fingerprintEnrolled).length;
     } else if (r === 'teacher') {
-      return (this.teachers || []).filter(t => t.biometricEnrolled || t.fingerprintEnrolled).length;
+      return (this.scopedTeachers || []).filter(t => t.biometricEnrolled || t.fingerprintEnrolled).length;
     } else {
-      const sCount = (this.activeStudents || []).filter(s => s.biometricEnrolled || s.fingerprintEnrolled).length;
-      const tCount = (this.teachers || []).filter(t => t.biometricEnrolled || t.fingerprintEnrolled).length;
+      const sCount = (this.scopedActiveStudents || []).filter(s => s.biometricEnrolled || s.fingerprintEnrolled).length;
+      const tCount = (this.scopedTeachers || []).filter(t => t.biometricEnrolled || t.fingerprintEnrolled).length;
       return sCount + tCount;
     }
   }
@@ -18244,20 +19799,20 @@ INSTRUCTIONS:
       // 1. Check if specific candidate selected in dropdown
       if (this.kioskSelectedCandidateId) {
         if (this.targetScanRole === 'Teacher') {
-          candidate = this.teachers.find(t => t.id === this.kioskSelectedCandidateId);
+          candidate = this.scopedTeachers.find(t => t.id === this.kioskSelectedCandidateId);
         } else {
-          candidate = this.activeStudents.find(s => s.id === this.kioskSelectedCandidateId);
+          candidate = this.scopedActiveStudents.find(s => s.id === this.kioskSelectedCandidateId);
         }
       }
 
-      // 2. Otherwise auto-detect candidate
+      // 2. Otherwise auto-detect candidate within active campus branch
       if (!candidate) {
-        if (this.targetScanRole === 'Teacher' && this.teachers && this.teachers.length > 0) {
-          const enrolledTeachers = this.teachers.filter(t => t.biometricEnrolled || t.fingerprintEnrolled);
-          candidate = enrolledTeachers.length > 0 ? enrolledTeachers[Math.floor(Math.random() * enrolledTeachers.length)] : this.teachers[0];
-        } else if (this.activeStudents && this.activeStudents.length > 0) {
-          const enrolledStudents = this.activeStudents.filter(s => s.biometricEnrolled || s.fingerprintEnrolled);
-          candidate = enrolledStudents.length > 0 ? enrolledStudents[Math.floor(Math.random() * enrolledStudents.length)] : this.activeStudents[0];
+        if (this.targetScanRole === 'Teacher' && this.scopedTeachers && this.scopedTeachers.length > 0) {
+          const enrolledTeachers = this.scopedTeachers.filter(t => t.biometricEnrolled || t.fingerprintEnrolled);
+          candidate = enrolledTeachers.length > 0 ? enrolledTeachers[Math.floor(Math.random() * enrolledTeachers.length)] : this.scopedTeachers[0];
+        } else if (this.scopedActiveStudents && this.scopedActiveStudents.length > 0) {
+          const enrolledStudents = this.scopedActiveStudents.filter(s => s.biometricEnrolled || s.fingerprintEnrolled);
+          candidate = enrolledStudents.length > 0 ? enrolledStudents[Math.floor(Math.random() * enrolledStudents.length)] : this.scopedActiveStudents[0];
         } else {
           candidate = { name: 'Pervaiz Ahmed Abbasi', rollNo: '1030', grade: 'Class 1', biometricEnrolled: true, fingerprintEnrolled: true };
         }
@@ -19019,10 +20574,11 @@ INSTRUCTIONS:
 
     const portal = this.currentPortalRole;
     if (portal === 'principal') {
+      const pri = this.activePrincipalProfile;
       return {
-        email: this.principalPersona?.email || 'principal@campus.edu',
-        fullName: this.principalPersona?.name || 'Campus Principal',
-        userId: 'PRIN-001',
+        email: pri?.email || 'principal@campus.edu',
+        fullName: pri?.name || 'Campus Principal',
+        userId: pri?.id || 'PRI-101',
         tenantId: baseTenantId,
         role: 'principal',
         portalType: 'principal'
@@ -19063,10 +20619,11 @@ INSTRUCTIONS:
       };
     }
     if (portal === 'accountant') {
+      const acc = this.activeAccountantProfile;
       return {
-        email: 'accountant@campus.edu',
-        fullName: this.dailyClosingCashier || 'Muhammad Rizwan (Accountant)',
-        userId: 'ACC-001',
+        email: acc?.email || 'accountant@campus.edu',
+        fullName: acc?.name || this.dailyClosingCashier || 'Accountant',
+        userId: acc?.id || 'USR-501',
         tenantId: baseTenantId,
         role: 'accountant',
         portalType: 'accountant'
@@ -19921,7 +21478,7 @@ INSTRUCTIONS:
   }
 
   get filteredFeeReconciliations(): FeeReconciliationRecord[] {
-    return this.feeReconciliations || [];
+    return this.scopedFeeReconciliations || [];
   }
 
   openRunAuditScanModal(): void {
@@ -20174,7 +21731,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     const collected = cash + meezan + hbl + kuickpay;
     const variance = collected - billed;
 
-    const newRec: FeeReconciliationRecord = {
+    const newRec: FeeReconciliationRecord = this.stampActiveBranchWing({
       id: 'REC-2026-W' + Math.floor(43 + Math.random() * 9),
       date: this.reconciliationForm.date,
       counterCashReceived: cash,
@@ -20186,14 +21743,16 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       varianceAmount: variance,
       reconciliationStatus: variance === 0 ? 'Balanced & Cleared' : (variance > 0 ? 'Surplus Recorded' : 'Audit Deficit Flagged'),
       cashierName: this.reconciliationForm.cashierName,
-      verifiedByAuditor: this.reconciliationForm.verifiedByAuditor,
+      verifiedByAuditor: this.reconciliationForm.verifiedByAuditor || 'Pending Branch Principal & Owner Review',
+      principalApprovalStatus: 'Pending Principal Review',
+      ownerApprovalStatus: 'Pending Owner Review',
       notes: this.reconciliationForm.notes
-    };
+    });
 
     this.feeReconciliations.unshift(newRec);
 
     // Add to Audit Trail
-    this.schoolAuditLogs.unshift({
+    this.schoolAuditLogs.unshift(this.stampActiveBranchWing({
       id: 'AUD-' + Math.floor(1000 + Math.random() * 9000),
       timestamp: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       operatorName: newRec.cashierName,
@@ -20201,12 +21760,12 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       actionType: 'Fee Waiver / Concession',
       category: 'Financial',
       entityId: newRec.id,
-      entityDescription: `Fee Reconciliation Entry for ${newRec.date}`,
+      entityDescription: `Fee Reconciliation Entry for ${newRec.date} (${newRec.branchName})`,
       details: `Reconciliation balanced: PKR ${this.formatCurrency(collected)} collected vs PKR ${this.formatCurrency(billed)} billed. Status: ${newRec.reconciliationStatus}. Verified by ${newRec.verifiedByAuditor}.`,
       severity: variance === 0 ? 'Normal Audit' : 'Compliance Flag',
       verifiedBy: newRec.verifiedByAuditor,
       ipAddress: '192.168.10.22 (Bursar Counter)'
-    });
+    }));
 
     this.tableSchemaService.submitFormCustomInputs(
       'owner_audit_reconciliation',
@@ -20528,7 +22087,8 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       this.showToast('Please select both Absent Teacher and Substitute Faculty', 'warning');
       return;
     }
-    const newSub: SubstituteArrangementRecord = {
+    const principalName = this.activePrincipalProfile?.name || 'Dr. Tahir Malik';
+    const newSub: SubstituteArrangementRecord = this.stampActiveBranchWing({
       id: `SUB-${Math.floor(100 + Math.random() * 899)}`,
       date: new Date().toISOString().slice(0, 10),
       period: this.newSubstituteForm.period,
@@ -20538,8 +22098,8 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       substituteTeacher: this.newSubstituteForm.substituteTeacher,
       roomNo: this.newSubstituteForm.roomNo || 'Room 12',
       status: 'Assigned',
-      assignedBy: 'Dr. Tahir Malik (Principal)'
-    };
+      assignedBy: `${principalName} (Principal)`
+    }, this.newSubstituteForm.grade);
     this.substituteArrangements.unshift(newSub);
     this.tableSchemaService.submitFormCustomInputs(
       'principal_substitutions',
@@ -20547,20 +22107,20 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       this.formCustomValues['principalSubstitution'],
       {
         rowLabel: `${newSub.substituteTeacher} -> ${newSub.absentTeacher}`,
-        submittedByName: 'Dr. Tahir Malik (Principal)',
+        submittedByName: `${principalName} (Principal)`,
         submittedByRole: this.currentPortalRole
       }
     );
     this.formCustomValues['principalSubstitution'] = {};
     this.saveStateToStorage();
-    this.showToast(`Substitute period assigned! ${newSub.substituteTeacher} assigned to ${newSub.grade} (${newSub.period}).`, 'success');
+    this.showToast(`Substitute period assigned! ${newSub.substituteTeacher} assigned to ${newSub.grade} (${newSub.period}) [${newSub.branchName}].`, 'success');
     this.triggerAdmissionAlert({
       id: newSub.id,
       studentName: `Substitution: ${newSub.substituteTeacher}`,
       rollNo: newSub.period,
       grade: newSub.grade,
       guardian: `Covering for ${newSub.absentTeacher}`,
-      phone: 'Campus Administrative Duty',
+      phone: newSub.branchName || 'Campus Administrative Duty',
       feeStatus: 'Assigned',
       source: 'Student Roster'
     });
@@ -20571,17 +22131,19 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       this.showToast('Please specify the Inspection Location / Wing', 'warning');
       return;
     }
-    const log: DailyInspectionLogRecord = {
+    const principalName = this.activePrincipalProfile?.name || 'Dr. Tahir Malik';
+    const log: DailyInspectionLogRecord = this.stampActiveBranchWing({
       id: `INS-${Math.floor(100 + Math.random() * 899)}`,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      wing: this.newInspectionForm.wing || this.newInspectionForm.location,
       location: this.newInspectionForm.location,
-      inspectorName: 'Dr. Tahir Malik (Principal)',
+      inspectorName: `${principalName} (Principal)`,
       uniformCheck: this.newInspectionForm.uniformCheck,
       cleanlinessScore: this.newInspectionForm.cleanlinessScore,
       teacherPunctuality: this.newInspectionForm.teacherPunctuality,
       notes: this.newInspectionForm.notes || 'Inspection completed successfully during morning rounds.',
       actionRequired: this.newInspectionForm.actionRequired || 'None - Routine Inspection'
-    };
+    }, this.newInspectionForm.wing || this.newInspectionForm.location);
     this.dailyInspectionLogs.unshift(log);
     this.tableSchemaService.submitFormCustomInputs(
       'principal_inspections',
@@ -20589,13 +22151,13 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       this.formCustomValues['principalInspection'],
       {
         rowLabel: log.location,
-        submittedByName: 'Dr. Tahir Malik (Principal)',
+        submittedByName: `${principalName} (Principal)`,
         submittedByRole: this.currentPortalRole
       }
     );
     this.formCustomValues['principalInspection'] = {};
     this.saveStateToStorage();
-    this.showToast(`Daily Inspection Log #${log.id} recorded for ${log.location}!`, 'success');
+    this.showToast(`Daily Inspection Log #${log.id} recorded for ${log.location} (${log.branchName} · ${log.wingName})!`, 'success');
   }
 
   approveStudentLeave(leaveId: string) {
@@ -20865,10 +22427,10 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       item.resultStatus = 'Moderated & Locked';
       item.sha256Hash = 'sha256:' + Array.from({length: 32}, () => Math.floor(Math.random()*16).toString(16)).join('');
       
-      const newAuditLog: SchoolAuditTrailRecord = {
+      const newAuditLog: SchoolAuditTrailRecord = this.stampActiveBranchWing({
         id: `AUD-2026-${Math.floor(950 + Math.random() * 49)}`,
         timestamp: new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }),
-        operatorName: this.currentPortalRole === 'owner' ? 'School Owner Executive' : 'Dr. Tahir Malik (Principal)',
+        operatorName: this.currentPortalRole === 'owner' ? 'School Owner Executive' : (this.activePrincipalProfile?.name || 'Dr. Tahir Malik (Principal)'),
         operatorRole: this.currentPortalRole === 'owner' ? 'Owner Executive' : 'Principal',
         actionType: 'Exam Moderation & Tamper-Lock',
         category: 'Academic',
@@ -20877,8 +22439,12 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
         details: `Exam paper officially approved, syllabus coverage verified, and result tamper-lock activated. Cryptographic Seal Hash: ${item.sha256Hash}`,
         severity: 'Critical / High Security',
         verifiedBy: 'Controller of Examinations & School Owner',
-        ipAddress: '192.168.10.1 (Owner Executive Console)'
-      };
+        ipAddress: '192.168.10.1 (Owner Executive Console)',
+        branchId: item.branchId,
+        branchName: item.branchName,
+        wingId: item.wingId,
+        wingName: item.wingName
+      }, item.grade);
       this.schoolAuditLogs.unshift(newAuditLog);
       this.saveStateToStorage();
       this.showToast(`Exam Paper #${recordId} officially approved, sealed & tamper-locked!`, 'success');
@@ -20891,11 +22457,11 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
   };
 
   get lockedExamCount(): number {
-    return this.examModerationList.filter(e => e.resultStatus === 'Moderated & Locked').length;
+    return this.scopedExamModerationList.filter(e => e.resultStatus === 'Moderated & Locked').length;
   }
 
   get pendingExamCount(): number {
-    return this.examModerationList.filter(e => e.resultStatus !== 'Moderated & Locked').length;
+    return this.scopedExamModerationList.filter(e => e.resultStatus !== 'Moderated & Locked').length;
   }
 
   verifyExamTamperLock(item: any) {
@@ -21073,7 +22639,9 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       this.showToast('Please enter task title and detailed instructions.', 'warning');
       return;
     }
-    const newTask = {
+    const principalName = this.activePrincipalProfile?.name || 'Dr. Tahir Malik';
+    const matchedTeacher = (this.teachers || []).find(t => t.name === this.newTaskForm.assignedTeacher);
+    const newTask = this.stampActiveBranchWing({
       id: 'TSK-2026-' + Math.floor(10 + Math.random() * 90),
       assignedTeacher: this.newTaskForm.assignedTeacher,
       department: this.newTaskForm.department,
@@ -21082,8 +22650,10 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       priority: this.newTaskForm.priority,
       dueDate: this.newTaskForm.dueDate,
       status: 'In Progress',
-      assignedBy: 'Dr. Tahir Malik (Principal)'
-    };
+      assignedBy: `${principalName} (Principal)`,
+      branchId: matchedTeacher?.branchId,
+      wingId: matchedTeacher?.wingId
+    }, matchedTeacher?.assignedGrade || 'Senior');
     this.facultyTaskList.unshift(newTask);
     this.tableSchemaService.submitFormCustomInputs(
       'principal_faculty_tasks',
@@ -21091,13 +22661,13 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       this.formCustomValues['principalTask'],
       {
         rowLabel: newTask.taskTitle,
-        submittedByName: 'Dr. Tahir Malik (Principal)',
+        submittedByName: `${principalName} (Principal)`,
         submittedByRole: this.currentPortalRole
       }
     );
     this.formCustomValues['principalTask'] = {};
     this.saveStateToStorage();
-    this.showToast(`Official task "${newTask.taskTitle}" delegated to ${newTask.assignedTeacher}!`, 'success');
+    this.showToast(`Official task "${newTask.taskTitle}" delegated to ${newTask.assignedTeacher} (${this.resolveBranchName(newTask.branchId) || this.activeScopeSummaryLabel})!`, 'success');
   }
 
   completeFacultyTask(taskId: string) {
@@ -21547,6 +23117,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
   // ==========================================
   accountantChallanSearch: string = '';
   accountantDefaulterSearch: string = '';
+  principalReviewRemarks: Record<string, string> = {};
   ownerReviewRemarks: Record<string, string> = {};
   accountantGeneratedChallans: Array<{
     id: string;
@@ -21684,7 +23255,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
   }
 
   get totalAccountantPettyVouchers(): number {
-    return (this.accountantPettyVouchers || []).reduce((sum, v) => sum + Number(v.amount || 0), 0);
+    return (this.scopedAccountantPettyVouchers || []).reduce((sum, v) => sum + Number(v.amount || 0), 0);
   }
 
   syncClosingPettyExpensesFromVouchers(): void {
@@ -21701,7 +23272,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       this.showToast('Please enter voucher description and a positive PKR amount.', 'warning');
       return;
     }
-    const payload = {
+    const payload = this.stampActiveBranchWing({
       id: 'PV-' + Date.now(),
       voucherNo: 'PCV-' + new Date().getFullYear() + '-' + Math.floor(1000 + Math.random() * 8999),
       date: this.accountantPettyForm.date || new Date().toISOString().split('T')[0],
@@ -21709,10 +23280,10 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       description: desc,
       amount: amt,
       paidTo: (this.accountantPettyForm.paidTo || '').trim() || 'Campus Vendor',
-      recordedBy: 'Muhammad Rizwan (Fee Clerk)'
-    };
+      recordedBy: `${this.activeAccountantProfile?.name || 'Muhammad Rizwan'} (Fee Clerk)`
+    });
     const res = await this.backend.createSchoolPettyVoucher(payload);
-    const saved = res?.ok && res.voucher ? res.voucher : payload;
+    const saved = this.stampActiveBranchWing(res?.ok && res.voucher ? res.voucher : payload);
     this.accountantPettyVouchers.unshift(saved);
     this.syncClosingPettyExpensesFromVouchers();
     this.accountantPettyForm.description = '';
@@ -21782,14 +23353,14 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
   private _monChartVal: any = null;
 
   private getFinanceMonitoringSignature(): string {
-    const colCount = (this.principalFeeCollections || []).length;
-    const finCount = (this.finances || []).length;
-    const recCount = (this.feeReconciliations || []).length;
-    const pvCount = (this.accountantPettyVouchers || []).length;
-    const defCount = (this.studentFeeDefaulters || []).length;
-    const stCount = (this.activeStudents || []).length;
+    const colCount = (this.scopedPrincipalFeeCollections || []).length;
+    const finCount = (this.scopedFinances || []).length;
+    const recCount = (this.scopedFeeReconciliations || []).length;
+    const pvCount = (this.scopedAccountantPettyVouchers || []).length;
+    const defCount = (this.scopedStudentFeeDefaulters || []).length;
+    const stCount = (this.scopedActiveStudents || []).length;
     const snapCount = (this.backendMonitoringSnapshot?.dailyRevenueSeries || []).length;
-    return `${this.monitoringRangeDays}|${colCount}|${finCount}|${recCount}|${pvCount}|${defCount}|${stCount}|${this.totalFinanceIncome}|${this.totalFinanceExpense}|${this.totalAccountantPettyVouchers}|${this.totalUncollectedDues}|${this.dailyOpeningVaultCash}|${snapCount}`;
+    return `${this.effectiveBranchScope}|${this.effectiveWingScope}|${this.monitoringRangeDays}|${colCount}|${finCount}|${recCount}|${pvCount}|${defCount}|${stCount}|${this.totalFinanceIncome}|${this.totalFinanceExpense}|${this.totalAccountantPettyVouchers}|${this.totalUncollectedDues}|${this.dailyOpeningVaultCash}|${snapCount}`;
   }
 
   // Real-Time Owner Financial Monitoring Dashboard Computed Metrics
@@ -21808,7 +23379,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     let hblInflow = 0;
     let digitalInflow = 0;
 
-    for (const r of (this.principalFeeCollections || [])) {
+    for (const r of (this.scopedPrincipalFeeCollections || [])) {
       const amt = Number(r.amount || 0);
       const m = (r.paymentResource || '').toLowerCase();
       if (m.includes('meezan')) meezanInflow += amt;
@@ -21818,11 +23389,11 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     }
 
     const pettyOutflow = this.totalAccountantPettyVouchers;
-    const payrollAndOpsOutflow = (this.finances || [])
+    const payrollAndOpsOutflow = (this.scopedFinances || [])
       .filter(f => f.type === 'Expense')
       .reduce((acc, f) => acc + Number(f.amount || 0), 0);
     const totalOutflow = pettyOutflow + payrollAndOpsOutflow;
-    const openingVault = Number((this.feeReconciliations && this.feeReconciliations[0]?.openingVaultCash) || this.dailyOpeningVaultCash || 45000);
+    const openingVault = Number((this.scopedFeeReconciliations && this.scopedFeeReconciliations[0]?.openingVaultCash) || this.dailyOpeningVaultCash || 45000);
     const netCashFlow = grossRevenue - pettyOutflow;
     const vaultCashOnHand = Math.max(0, openingVault + cashInflow - pettyOutflow);
     const pendingBakaya = this.totalUncollectedDues;
@@ -22191,7 +23762,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
 
   get filteredAccountantChallans(): any[] {
     const q = (this.accountantChallanSearch || '').toLowerCase().trim();
-    const list = this.accountantGeneratedChallans || [];
+    const list = this.scopedAccountantGeneratedChallans || [];
     if (!q) return list;
     return list.filter(c =>
       (c.challanNo || '').toLowerCase().includes(q) ||
@@ -22203,7 +23774,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
 
   get filteredAccountantDefaulters(): any[] {
     const q = (this.accountantDefaulterSearch || '').toLowerCase().trim();
-    const list = this.studentFeeDefaulters || [];
+    const list = this.scopedStudentFeeDefaulters || [];
     const active = list.filter(d => Number(d.totalRemainingBakaya || 0) > 0);
     if (!q) return active;
     return active.filter(d =>
@@ -22214,18 +23785,24 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
   }
 
   onAccountantChallanStudentSelect(studentId: string): void {
-    const st = this.activeStudents.find(s => s.id === studentId || s.rollNo === studentId);
+    const st = this.scopedActiveStudents.find(s => s.id === studentId || s.rollNo === studentId)
+      || this.activeStudents.find(s => s.id === studentId || s.rollNo === studentId);
     if (!st) return;
+    const plan = this.resolveFeePlanForGrade(st.grade, st.branchId, st.wingId);
     this.accountantChallanForm.studentId = st.id;
     this.accountantChallanForm.studentName = st.name;
     this.accountantChallanForm.rollNo = st.rollNo;
     this.accountantChallanForm.grade = st.grade;
-    this.accountantChallanForm.tuition = Number(st.feeAmount || 25000);
+    this.accountantChallanForm.tuition = Number(st.feeAmount || plan?.tuitionFee || 25000);
+    if (plan) {
+      this.accountantChallanForm.labFee = Number(plan.labFee || 0);
+    }
     this.cdr.detectChanges();
   }
 
   onAccountantCollectStudentSelect(studentId: string): void {
-    const st = this.activeStudents.find(s => s.id === studentId || s.rollNo === studentId);
+    const st = this.scopedActiveStudents.find(s => s.id === studentId || s.rollNo === studentId)
+      || this.activeStudents.find(s => s.id === studentId || s.rollNo === studentId);
     if (!st) return;
     const expectedAmt = (st.dueBakaya && st.dueBakaya > 0) ? st.dueBakaya : (st.feeAmount || 25000);
     this.accountantCollectForm.studentId = st.id;
@@ -22237,7 +23814,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     this.accountantCollectForm.expectedDueAmount = expectedAmt;
     this.accountantCollectForm.amount = expectedAmt;
     this.accountantCollectForm.isPartialPayment = false;
-    const openChallan = (this.accountantGeneratedChallans || []).find(
+    const openChallan = (this.scopedAccountantGeneratedChallans || []).find(
       c => (c.studentId === st.id || c.rollNo === st.rollNo) && String(c.status).toUpperCase() !== 'PAID'
     );
     this.accountantCollectForm.challanNo = openChallan ? openChallan.challanNo : '';
@@ -22255,8 +23832,11 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     const discount = Number(this.accountantChallanForm.discount || 0);
     const total = Math.max(0, tuition + labFee - discount);
     const challanNo = 'CHLN-' + new Date().getFullYear() + '-' + Math.floor(1000 + Math.random() * 8999);
+    const matchedStudent = this.activeStudents.find(
+      s => s.id === this.accountantChallanForm.studentId || s.rollNo === this.accountantChallanForm.rollNo || s.name === this.accountantChallanForm.studentName
+    );
 
-    const localChallan = {
+    const localChallan = this.stampActiveBranchWing({
       id: 'FEE-' + Date.now(),
       challanNo,
       studentId: this.accountantChallanForm.studentId,
@@ -22270,18 +23850,20 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       total,
       status: 'PENDING',
       dueDate: this.accountantChallanForm.dueDate,
-      collectorRole: 'accountant'
-    };
+      collectorRole: 'accountant',
+      branchId: matchedStudent?.branchId,
+      wingId: matchedStudent?.wingId
+    }, this.accountantChallanForm.grade);
 
     const res = await this.backend.createSchoolFee(localChallan);
-    const saved = res?.ok && res.fee ? res.fee : localChallan;
+    const saved = this.stampActiveBranchWing(res?.ok && res.fee ? res.fee : localChallan, this.accountantChallanForm.grade);
     this.accountantGeneratedChallans.unshift(saved);
 
-    const matchedStudent = this.activeStudents.find(
+    const matchedStudentForPrint = this.activeStudents.find(
       s => s.id === saved.studentId || s.rollNo === saved.rollNo || s.name === saved.studentName
     );
-    if (matchedStudent && openPrint) {
-      this.openFeeChallanVoucher(matchedStudent);
+    if (matchedStudentForPrint && openPrint) {
+      this.openFeeChallanVoucher(matchedStudentForPrint);
     } else if (openPrint) {
       this.openFeeChallanVoucher({
         id: saved.studentId || saved.id,
@@ -22362,8 +23944,9 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     if (res?.ok && Array.isArray(createdList)) {
       const bulkVals = this.formCustomValues['accountantBulk'];
       for (const ch of createdList) {
-        if (!this.accountantGeneratedChallans.some(existing => existing.challanNo === ch.challanNo)) {
-          this.accountantGeneratedChallans.unshift(ch);
+        const scopedChallan = this.stampActiveBranchWing(ch, ch?.grade);
+        if (!this.accountantGeneratedChallans.some(existing => existing.challanNo === scopedChallan.challanNo)) {
+          this.accountantGeneratedChallans.unshift(scopedChallan);
         }
         if (bulkVals && Object.keys(bulkVals).length > 0) {
           this.tableSchemaService.submitFormCustomInputs(
@@ -22520,7 +24103,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
   }
 
   populateAccountantClosingFromReceipts(): void {
-    const accReceipts = (this.principalFeeCollections || []).filter(
+    const accReceipts = (this.scopedPrincipalFeeCollections || []).filter(
       f => f.collectorRole === 'accountant' || (f.collectedBy || '').toLowerCase().includes('accountant') || (f.collectedBy || '').toLowerCase().includes('fee clerk')
     );
     let cash = 0;
@@ -22547,7 +24130,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     this.accountantDailyClosingForm.onlineDigitalKuickPay = digital;
     this.accountantDailyClosingForm.pettyExpenses = this.totalAccountantPettyVouchers;
     this.accountantDailyClosingForm.totalSystemBilled = accTotal > 0 ? accTotal : (cash + meezan + hbl + digital);
-    this.accountantDailyClosingForm.notes = `Accountant Desk: PKR ${this.formatCurrency(accTotal)} | Principal Desk: PKR ${this.formatCurrency(prinTotal)} | Online: PKR ${this.formatCurrency(onlineTotal)} | Petty Vouchers: ${this.accountantPettyVouchers.length}. Submitted to School Owner.`;
+    this.accountantDailyClosingForm.notes = `[${this.activeScopeSummaryLabel}] Accountant Desk: PKR ${this.formatCurrency(accTotal)} | Principal Desk: PKR ${this.formatCurrency(prinTotal)} | Online: PKR ${this.formatCurrency(onlineTotal)} | Petty Vouchers: ${this.scopedAccountantPettyVouchers.length}. Submitted for Principal & Owner Review.`;
   }
 
   async submitAccountantDailyClosing(): Promise<void> {
@@ -22561,6 +24144,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     const openingVaultCash = Number(this.accountantDailyClosingForm.openingVaultCash || 0);
     const pettyExpenses = Number(this.accountantDailyClosingForm.pettyExpenses || 0);
     const closingVaultCash = openingVaultCash + cash - pettyExpenses;
+    const cashierName = this.accountantDailyClosingForm.cashierName || this.activeAccountantProfile?.name || 'Muhammad Rizwan (Accountant / Fee Clerk)';
 
     const payload: FeeReconciliationRecord = this.stampActiveBranchWing({
       id: 'DCL-' + Date.now(),
@@ -22573,8 +24157,8 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       actualCollected,
       varianceAmount,
       reconciliationStatus: varianceAmount === 0 ? 'Balanced & Cleared' : (varianceAmount > 0 ? 'Surplus Recorded' : 'Audit Deficit Flagged'),
-      cashierName: this.accountantDailyClosingForm.cashierName || 'Muhammad Rizwan (Accountant / Fee Clerk)',
-      verifiedByAuditor: 'Pending School Owner Review',
+      cashierName,
+      verifiedByAuditor: 'Pending Branch Principal & Owner Review',
       submittedByRole: 'accountant',
       principalCollected: this.principalCollectedTotal,
       accountantCollected: actualCollected,
@@ -22583,12 +24167,14 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       pettyExpenses,
       closingVaultCash,
       bankDepositSlipNo: this.accountantDailyClosingForm.bankDepositSlipNo || '',
+      principalApprovalStatus: 'Pending Principal Review',
+      principalRemarks: '',
       ownerApprovalStatus: 'Pending Owner Review',
       notes: this.accountantDailyClosingForm.notes
     });
 
     const res = await this.backend.saveSchoolReconciliation(payload);
-    const saved = res?.ok && res.reconciliation ? res.reconciliation : payload;
+    const saved = this.stampActiveBranchWing(res?.ok && res.reconciliation ? res.reconciliation : payload);
     this.feeReconciliations.unshift(saved);
 
     this.schoolAuditLogs.unshift(this.stampActiveBranchWing({
@@ -22599,17 +24185,17 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       actionType: 'Daily Closing Submission',
       category: 'Financial',
       entityId: saved.id,
-      entityDescription: `Accountant Daily Closing (${saved.date}) — PKR ${this.formatCurrency(actualCollected)}`,
-      details: `Cash: PKR ${this.formatCurrency(cash)}, Meezan: PKR ${this.formatCurrency(meezan)}, HBL: PKR ${this.formatCurrency(hbl)}, Digital: PKR ${this.formatCurrency(digital)}. Principal Desk: PKR ${this.formatCurrency(this.principalCollectedTotal)}. Submitted to School Owner.`,
+      entityDescription: `[${saved.branchName}] Accountant Daily Closing (${saved.date}) — PKR ${this.formatCurrency(actualCollected)}`,
+      details: `Cash: PKR ${this.formatCurrency(cash)}, Meezan: PKR ${this.formatCurrency(meezan)}, HBL: PKR ${this.formatCurrency(hbl)}, Digital: PKR ${this.formatCurrency(digital)}. Principal Desk: PKR ${this.formatCurrency(this.principalCollectedTotal)}. Routed to Branch Principal & Owner.`,
       severity: varianceAmount === 0 ? 'Normal Audit' : 'Compliance Flag',
-      verifiedBy: 'Pending School Owner Review',
+      verifiedBy: 'Pending Branch Principal & Owner Review',
       ipAddress: '192.168.10.25 (Fee Counter)'
     }));
 
     this.notificationsList.unshift({
       id: 'NOTIF-DCL-' + Date.now(),
-      title: `Daily Closing Report Submitted by Accountant (PKR ${this.formatCurrency(actualCollected)})`,
-      message: `${saved.cashierName} submitted Rooznama closing for ${saved.date}. Principal Desk also collected PKR ${this.formatCurrency(this.principalCollectedTotal)}. Review in Finance -> Financial Monitoring.`,
+      title: `[${saved.branchName}] Daily Closing Submitted (PKR ${this.formatCurrency(actualCollected)})`,
+      message: `${saved.cashierName} submitted Rooznama closing for ${saved.date}. Principal Desk collected PKR ${this.formatCurrency(this.principalCollectedTotal)}.`,
       type: 'fee',
       targetRole: 'all',
       createdAt: 'Just now',
@@ -22631,7 +24217,52 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
 
     this.saveStateToStorage();
     void this.refreshOwnerFinancialMonitoring();
-    this.showToast(`Daily Closing (${saved.id}) submitted to School Owner for review & approval!`, 'success');
+    this.showToast(`Daily Closing (${saved.id}) for ${saved.branchName} sent to Branch Principal & Owner!`, 'success');
+    this.cdr.detectChanges();
+  }
+
+  principalReviewDailyClosing(rec: FeeReconciliationRecord, decision: 'Principal Approved' | 'Principal Flagged'): void {
+    if (!rec) return;
+    const principalName = this.activePrincipalProfile?.name || 'Branch Principal';
+    const remarks = (this.principalReviewRemarks[rec.id] || '').trim() || (
+      decision === 'Principal Flagged'
+        ? `Flagged by ${principalName} (${rec.branchName || 'Campus'}) for counter cash & deposit slip verification.`
+        : `Endorsed & forwarded to School Owner by ${principalName} (${rec.branchName || 'Campus'}).`
+    );
+    rec.principalApprovalStatus = decision;
+    rec.principalRemarks = remarks;
+    rec.principalReviewedBy = principalName;
+    rec.principalReviewedAt = new Date().toISOString();
+    rec.verifiedByAuditor = decision === 'Principal Flagged'
+      ? `Flagged by ${principalName} (Principal)`
+      : `Endorsed by ${principalName} (Pending Owner Lock)`;
+
+    this.schoolAuditLogs.unshift(this.stampActiveBranchWing({
+      id: 'AUD-' + Math.floor(1000 + Math.random() * 9000),
+      timestamp: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      operatorName: principalName,
+      operatorRole: 'Principal',
+      actionType: 'Principal Daily Closing Oversight',
+      category: 'Financial',
+      entityId: rec.id,
+      entityDescription: `[${rec.branchName || 'Campus'}] ${decision} — ${rec.date}`,
+      details: `Branch Principal reviewed ${rec.cashierName} closing (PKR ${this.formatCurrency(rec.actualCollected)}). Remarks: ${remarks}`,
+      severity: decision === 'Principal Flagged' ? 'Compliance Flag' : 'Normal Audit',
+      verifiedBy: principalName,
+      ipAddress: '192.168.10.5 (Principal Office)',
+      branchId: rec.branchId,
+      branchName: rec.branchName,
+      wingId: rec.wingId,
+      wingName: rec.wingName
+    }));
+
+    this.saveStateToStorage();
+    this.showToast(
+      decision === 'Principal Approved'
+        ? `Rooznama ${rec.id} endorsed & forwarded to School Owner!`
+        : `Rooznama ${rec.id} flagged for Accountant recount.`,
+      decision === 'Principal Flagged' ? 'warning' : 'success'
+    );
     this.cdr.detectChanges();
   }
 
@@ -22660,7 +24291,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       Object.assign(rec, res.reconciliation);
     }
 
-    this.schoolAuditLogs.unshift({
+    this.schoolAuditLogs.unshift(this.stampActiveBranchWing({
       id: 'AUD-' + Math.floor(1000 + Math.random() * 9000),
       timestamp: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       operatorName: approvedBy,
@@ -22668,12 +24299,16 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       actionType: 'Owner Daily Closing Oversight',
       category: 'Financial',
       entityId: rec.id,
-      entityDescription: `${decision} — ${rec.date}`,
+      entityDescription: `[${rec.branchName || 'Campus'}] ${decision} — ${rec.date}`,
       details: `Owner reviewed Accountant Daily Closing (${rec.cashierName}) for PKR ${this.formatCurrency(rec.actualCollected)}. Remarks: ${remarks}`,
       severity: decision === 'Flagged by Owner' ? 'Compliance Flag' : 'Normal Audit',
       verifiedBy: approvedBy,
-      ipAddress: '192.168.10.2 (Owner Executive Suite)'
-    });
+      ipAddress: '192.168.10.2 (Owner Executive Suite)',
+      branchId: rec.branchId,
+      branchName: rec.branchName,
+      wingId: rec.wingId,
+      wingName: rec.wingName
+    }));
 
     this.saveStateToStorage();
     void this.refreshOwnerFinancialMonitoring();
@@ -22733,6 +24368,8 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
         auditWaiversList: this.auditWaiversList,
         schoolBranchRecords: this.schoolBranchRecords,
         schoolWingRecords: this.schoolWingRecords,
+        feeStructureCatalog: this.feeStructureCatalog,
+        dailyInspectionLogs: this.dailyInspectionLogs,
         selectedBranchScope: this.selectedBranchScope,
         selectedWingScope: this.selectedWingScope,
         ...(this.isOwnerPortal ? { tableSchemas: this.tableSchemaService.exportSchemas() } : {})
@@ -22759,6 +24396,12 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
         }
         if (Array.isArray(cloudData.schoolWingRecords) && cloudData.schoolWingRecords.length > 0) {
           this.schoolWingRecords = cloudData.schoolWingRecords;
+        }
+        if (Array.isArray(cloudData.feeStructureCatalog) && cloudData.feeStructureCatalog.length > 0) {
+          this.feeStructureCatalog = cloudData.feeStructureCatalog;
+        }
+        if (Array.isArray(cloudData.dailyInspectionLogs) && cloudData.dailyInspectionLogs.length > 0) {
+          this.dailyInspectionLogs = cloudData.dailyInspectionLogs;
         }
         if (cloudData.selectedBranchScope) this.selectedBranchScope = cloudData.selectedBranchScope;
         if (cloudData.selectedWingScope) this.selectedWingScope = cloudData.selectedWingScope;
@@ -22896,6 +24539,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
           }
         }
         this.normalizeBranchWingAssignments();
+        this.hydrateActivePortalIdentity();
         this.lastCloudSyncTimestamp = 'Synced Just now';
         this.cdr.detectChanges();
       }

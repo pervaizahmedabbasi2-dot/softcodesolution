@@ -93,7 +93,7 @@ export class LoginComponent implements OnInit {
   private botPowNonce = 0;
 
   // Multi-Portal Gateway Selection
-  portalType: 'owner' | 'teacher' | 'student' | 'parent' | 'staff' | 'accountant' = 'owner';
+  portalType: 'owner' | 'principal' | 'teacher' | 'student' | 'parent' | 'staff' | 'accountant' = 'owner';
 
   showForgotPopup = false;
   showForgotSuccess = false;
@@ -138,6 +138,8 @@ export class LoginComponent implements OnInit {
         this.selectPortal('student');
       } else if (p.includes('parent') || p.includes('family')) {
         this.selectPortal('parent');
+      } else if (p.includes('principal') || p.includes('headmaster') || p.includes('viceprincipal')) {
+        this.selectPortal('principal');
       } else if (p.includes('teacher') || p.includes('faculty')) {
         this.selectPortal('teacher');
       } else if (p.includes('accountant') || p.includes('feeclerk') || p.includes('bursar') || p.includes('cashier')) {
@@ -152,13 +154,13 @@ export class LoginComponent implements OnInit {
     void this.prefetchLoginOptions();
   }
 
-  selectPortal(type: 'owner' | 'teacher' | 'student' | 'parent' | 'staff' | 'accountant'): void {
+  selectPortal(type: 'owner' | 'principal' | 'teacher' | 'student' | 'parent' | 'staff' | 'accountant'): void {
     this.portalType = type;
     this.showLoginError = false;
     this.cdr.detectChanges();
   }
 
-  quickFillDemo(type: 'owner' | 'teacher' | 'student' | 'parent' | 'accountant'): void {
+  quickFillDemo(type: 'owner' | 'principal' | 'teacher' | 'student' | 'parent' | 'accountant'): void {
     this.portalType = type;
     if (type === 'student') {
       this.loginForm.patchValue({
@@ -169,6 +171,11 @@ export class LoginComponent implements OnInit {
       this.loginForm.patchValue({
         email: '+92 300 1234567',
         password: 'Parent#2026!'
+      });
+    } else if (type === 'principal') {
+      this.loginForm.patchValue({
+        email: 'principal@campus.edu',
+        password: 'Principal#2026!'
       });
     } else if (type === 'teacher') {
       this.loginForm.patchValue({
@@ -352,23 +359,33 @@ export class LoginComponent implements OnInit {
       formTimingMs: Date.now() - this.formLoadedAt
     };
 
-    // Smart Role Determination (Portal users registry lookup first)
-    let targetPortal: 'owner' | 'teacher' | 'student' | 'parent' | 'staff' | 'accountant' = this.portalType;
+    // Smart Role Determination (Portal users registry lookup first — tenant-scoped + global fallback)
+    let targetPortal: 'owner' | 'principal' | 'teacher' | 'student' | 'parent' | 'staff' | 'accountant' = this.portalType;
     let matchedPortalUser: any = null;
+    const savedTenantId = (localStorage.getItem('scs_tenant_id') || '').trim();
+    const portalUsersStorageKey = savedTenantId
+      ? `scs_school_portal_users_v1_${savedTenantId}`
+      : 'scs_school_portal_users_v1';
 
     try {
-      let storedUsersRaw = localStorage.getItem('scs_school_portal_users_v1');
+      let storedUsersRaw = localStorage.getItem(portalUsersStorageKey) || localStorage.getItem('scs_school_portal_users_v1');
       if (!storedUsersRaw) {
         const initialUsers = [
-          { id: 'TCH-001', name: 'Prof. Tariq Mehmood', role: 'teacher', email: 'tariq.math@school.edu', linkedEntity: 'Grade 10-A (Mathematics)', status: 'Active', pin: '1001', lastLogin: 'Never' },
-          { id: 'TCH-002', name: 'Ms. Sarah Jenkins', role: 'teacher', email: 'sarah.eng@school.edu', linkedEntity: 'Grade 10-B (English)', status: 'Active', pin: '1002', lastLogin: 'Never' },
-          { id: 'ST-1001', name: 'Zayan Ahmed Khan', role: 'student', email: 'zayan.1001@student.edu', linkedEntity: 'Grade 10-A (Roll #1001)', status: 'Active', pin: '8821', lastLogin: 'Never' },
-          { id: 'ST-1002', name: 'Amna Salman Khan', role: 'student', email: 'amna.1102@student.edu', linkedEntity: 'Grade 11-C (Roll #1102)', status: 'Active', pin: '8824', lastLogin: 'Never' },
-          { id: 'PAR-001', name: 'Tariq Ahmed Khan (Guardian)', role: 'parent', email: 'tariq.parent@guardian.com', linkedEntity: 'Zayan Ahmed Khan (ST-1001)', status: 'Active', pin: '4041', lastLogin: 'Never' },
-          { id: 'PAR-002', name: 'Dr. Salman Khan (Guardian)', role: 'parent', email: 'salman.parent@guardian.com', linkedEntity: 'Amna Salman Khan (ST-1002)', status: 'Active', pin: '4042', lastLogin: 'Never' },
-          { id: 'ACC-001', name: 'Muhammad Rizwan (Accountant)', role: 'accountant', email: 'accountant@campus.edu', linkedEntity: 'Fee Counter & Daily Closing Desk', status: 'Active', pin: '4455', lastLogin: 'Never' }
+          { id: 'USR-601', staffIdOrRoll: 'PRI-101', name: 'Prof. Dr. Tahir Malik', role: 'principal', email: 'principal@campus.edu', linkedEntity: 'Academic Directorate & Examination Council', branchId: 'BR-LHR-01', branchName: 'Lahore Main Campus', wingId: 'WNG-LHR-SNR', wingName: 'Senior & O-Level Wing', status: 'Active', pin: '9900', lastLogin: 'Never' },
+          { id: 'USR-602', staffIdOrRoll: 'PRI-102', name: 'Prof. Ayesha Siddiqua', role: 'principal', email: 'viceprincipal@campus.edu.pk', linkedEntity: 'Islamabad F-10 Campus Directorate', branchId: 'BR-ISB-02', branchName: 'Islamabad F-10 Campus', wingId: 'WNG-ISB-SNR', wingName: 'F-10 Senior Science Wing', status: 'Active', pin: '9902', lastLogin: 'Never' },
+          { id: 'USR-501', staffIdOrRoll: 'ACC-001', name: 'Muhammad Rizwan (Accountant)', role: 'accountant', email: 'accountant@campus.edu', linkedEntity: 'Fee Counter & Daily Closing Desk', branchId: 'BR-LHR-01', branchName: 'Lahore Main Campus', wingId: 'WNG-LHR-SNR', wingName: 'Senior & O-Level Wing', status: 'Active', pin: '4455', lastLogin: 'Never' },
+          { id: 'USR-502', staffIdOrRoll: 'STF-104', name: 'Kamran Qureshi', role: 'accountant', email: 'accounts@campus.edu.pk', linkedEntity: 'Islamabad Fee Counter & Ledger Desk', branchId: 'BR-ISB-02', branchName: 'Islamabad F-10 Campus', wingId: 'WNG-ISB-SNR', wingName: 'F-10 Senior Science Wing', status: 'Active', pin: '4460', lastLogin: 'Never' },
+          { id: 'TCH-001', staffIdOrRoll: 'EMP-2021-01', name: 'Prof. Tariq Mehmood', role: 'teacher', email: 'tariq.math@school.edu', linkedEntity: 'Grade 10-A (Mathematics)', branchId: 'BR-LHR-01', branchName: 'Lahore Main Campus', wingId: 'WNG-LHR-SNR', wingName: 'Senior & O-Level Wing', status: 'Active', pin: '1001', lastLogin: 'Never' },
+          { id: 'TCH-002', staffIdOrRoll: 'EMP-2020-02', name: 'Dr. Sarah Jenkins', role: 'teacher', email: 'sarah.eng@school.edu', linkedEntity: 'Grade 10-B (English)', branchId: 'BR-ISB-02', branchName: 'Islamabad F-10 Campus', wingId: 'WNG-ISB-GRL', wingName: 'F-10 Girls Wing', status: 'Active', pin: '1002', lastLogin: 'Never' },
+          { id: 'ST-1001', staffIdOrRoll: '1001', name: 'Zayan Ahmed Khan', role: 'student', email: 'zayan.1001@student.edu', linkedEntity: 'Grade 10-A (Roll #1001)', branchId: 'BR-LHR-01', branchName: 'Lahore Main Campus', wingId: 'WNG-LHR-SNR', wingName: 'Senior & O-Level Wing', status: 'Active', pin: '8821', lastLogin: 'Never' },
+          { id: 'ST-1002', staffIdOrRoll: '1102', name: 'Amna Salman', role: 'student', email: 'amna.1102@student.edu', linkedEntity: 'Grade 9-C (Roll #1102)', branchId: 'BR-ISB-02', branchName: 'Islamabad F-10 Campus', wingId: 'WNG-ISB-GRL', wingName: 'F-10 Girls Wing', status: 'Active', pin: '8824', lastLogin: 'Never' },
+          { id: 'PAR-001', staffIdOrRoll: 'GRD-701', name: 'Tariq Ahmed Khan (Guardian)', role: 'parent', email: 'tariq.parent@guardian.com', linkedEntity: 'ST-1001', branchId: 'BR-LHR-01', branchName: 'Lahore Main Campus', wingId: 'WNG-LHR-SNR', wingName: 'Senior & O-Level Wing', status: 'Active', pin: '4041', lastLogin: 'Never' },
+          { id: 'PAR-002', staffIdOrRoll: 'GRD-702', name: 'Dr. Salman Farooq (Guardian)', role: 'parent', email: 'salman.parent@guardian.com', linkedEntity: 'ST-1002', branchId: 'BR-ISB-02', branchName: 'Islamabad F-10 Campus', wingId: 'WNG-ISB-GRL', wingName: 'F-10 Girls Wing', status: 'Active', pin: '4042', lastLogin: 'Never' }
         ];
         localStorage.setItem('scs_school_portal_users_v1', JSON.stringify(initialUsers));
+        if (savedTenantId) {
+          localStorage.setItem(portalUsersStorageKey, JSON.stringify(initialUsers));
+        }
         storedUsersRaw = JSON.stringify(initialUsers);
       }
       if (storedUsersRaw) {
@@ -378,11 +395,13 @@ export class LoginComponent implements OnInit {
           matchedPortalUser = storedUsers.find((u: any) => {
             const uEmail = (u.email || '').toLowerCase().trim();
             const uId = (u.id || '').toLowerCase().trim();
+            const uCode = (u.staffIdOrRoll || '').toLowerCase().trim();
             const uName = (u.name || '').toLowerCase().trim();
             const uPin = (u.pin || '').trim();
             return (
               (uEmail && uEmail === inputLower) ||
               (uId && uId === inputLower) ||
+              (uCode && uCode === inputLower) ||
               (uName && uName === inputLower) ||
               (uPin && uPin === inputLower) ||
               (uId && inputLower.includes(uId)) ||
@@ -404,21 +423,30 @@ export class LoginComponent implements OnInit {
       }
       targetPortal = matchedPortalUser.role;
       try {
-        const storedUsersRaw = localStorage.getItem('scs_school_portal_users_v1');
-        if (storedUsersRaw) {
-          const storedUsers = JSON.parse(storedUsersRaw);
-          const idx = storedUsers.findIndex((u: any) => u.id === matchedPortalUser.id);
+        const updateRegistryKey = (storageKey: string) => {
+          const raw = localStorage.getItem(storageKey);
+          if (!raw) return;
+          const list = JSON.parse(raw);
+          if (!Array.isArray(list)) return;
+          const idx = list.findIndex((u: any) => u.id === matchedPortalUser.id);
           if (idx !== -1) {
-            storedUsers[idx].lastLogin = 'Today at ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            localStorage.setItem('scs_school_portal_users_v1', JSON.stringify(storedUsers));
+            list[idx].lastLogin = 'Today at ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            localStorage.setItem(storageKey, JSON.stringify(list));
           }
-        }
+        };
+        updateRegistryKey('scs_school_portal_users_v1');
+        if (savedTenantId) updateRegistryKey(portalUsersStorageKey);
       } catch {}
-      localStorage.setItem('activeSchoolPortalUser', JSON.stringify(matchedPortalUser));
+      localStorage.setItem('activeSchoolPortalUser', JSON.stringify({
+        ...matchedPortalUser,
+        tenantId: matchedPortalUser.tenantId || savedTenantId || undefined
+      }));
     } else {
-      if (sanitizedEmail.includes('owner') || sanitizedEmail.includes('principal') || sanitizedEmail.includes('headmaster') || sanitizedEmail.includes('admin@school')) {
+      if (sanitizedEmail.includes('principal') || sanitizedEmail.includes('viceprincipal') || sanitizedEmail.includes('headmaster')) {
+        targetPortal = 'principal';
+      } else if (sanitizedEmail.includes('owner') || sanitizedEmail.includes('admin@school')) {
         targetPortal = 'owner';
-      } else if (sanitizedEmail.includes('accountant') || sanitizedEmail.includes('feeclerk') || sanitizedEmail.includes('bursar') || sanitizedEmail.includes('cashier')) {
+      } else if (sanitizedEmail.includes('accountant') || sanitizedEmail.includes('accounts@') || sanitizedEmail.includes('feeclerk') || sanitizedEmail.includes('bursar') || sanitizedEmail.includes('cashier')) {
         targetPortal = 'accountant';
       } else if (sanitizedEmail.startsWith('sch-') || sanitizedEmail.endsWith('.sch') || sanitizedEmail.includes('std-') || sanitizedEmail.includes('student') || sanitizedEmail.includes('zayan') || sanitizedEmail.includes('amna') || /^\d{4,6}$/.test(sanitizedEmail)) {
         targetPortal = 'student';
@@ -429,29 +457,38 @@ export class LoginComponent implements OnInit {
       }
     }
 
-    // Configure role-based routing target
-    if (targetPortal === 'student') {
-      localStorage.setItem('activeSchoolPortal', 'student-portal');
-      localStorage.setItem('activeSchoolRole', 'student');
-      localStorage.setItem('activeSchoolTargetStudent', matchedPortalUser?.id || rawInput);
-    } else if (targetPortal === 'parent') {
-      localStorage.setItem('activeSchoolPortal', 'parent-portal');
-      localStorage.setItem('activeSchoolRole', 'parent');
-      localStorage.setItem('activeSchoolTargetParent', matchedPortalUser?.id || rawInput);
-    } else if (targetPortal === 'teacher') {
-      localStorage.setItem('activeSchoolPortal', 'teacher-portal');
-      localStorage.setItem('activeSchoolRole', 'teacher');
-      localStorage.setItem('activeSchoolTargetTeacher', matchedPortalUser?.id || rawInput);
-    } else if (targetPortal === 'accountant') {
-      localStorage.setItem('activeSchoolPortal', 'accountant-portal');
-      localStorage.setItem('activeSchoolRole', 'accountant');
-    } else if (targetPortal === 'staff') {
-      localStorage.setItem('activeSchoolPortal', 'attendance');
-      localStorage.setItem('activeSchoolRole', 'staff');
-    } else {
-      localStorage.setItem('activeSchoolPortal', 'overview');
-      localStorage.setItem('activeSchoolRole', 'owner');
-    }
+    const applySchoolPortalRouting = (portalRole: string, personaObj: any, fallbackInput: string) => {
+      if (portalRole === 'student') {
+        localStorage.setItem('activeSchoolPortal', 'student-portal');
+        localStorage.setItem('activeSchoolRole', 'student');
+        localStorage.setItem('activeSchoolTargetStudent', personaObj?.staffIdOrRoll || personaObj?.id || fallbackInput);
+      } else if (portalRole === 'parent') {
+        localStorage.setItem('activeSchoolPortal', 'parent-portal');
+        localStorage.setItem('activeSchoolRole', 'parent');
+        localStorage.setItem('activeSchoolTargetParent', personaObj?.linkedEntity || personaObj?.id || fallbackInput);
+      } else if (portalRole === 'teacher') {
+        localStorage.setItem('activeSchoolPortal', 'teacher-portal');
+        localStorage.setItem('activeSchoolRole', 'teacher');
+        localStorage.setItem('activeSchoolTargetTeacher', personaObj?.staffIdOrRoll || personaObj?.id || fallbackInput);
+      } else if (portalRole === 'principal') {
+        localStorage.setItem('activeSchoolPortal', 'principal-portal');
+        localStorage.setItem('activeSchoolRole', 'principal');
+        localStorage.setItem('activeSchoolTargetPrincipal', personaObj?.staffIdOrRoll || personaObj?.id || fallbackInput);
+      } else if (portalRole === 'accountant') {
+        localStorage.setItem('activeSchoolPortal', 'accountant-portal');
+        localStorage.setItem('activeSchoolRole', 'accountant');
+        localStorage.setItem('activeSchoolTargetAccountant', personaObj?.id || personaObj?.staffIdOrRoll || fallbackInput);
+      } else if (portalRole === 'staff') {
+        localStorage.setItem('activeSchoolPortal', 'attendance');
+        localStorage.setItem('activeSchoolRole', 'staff');
+      } else {
+        localStorage.setItem('activeSchoolPortal', 'overview');
+        localStorage.setItem('activeSchoolRole', 'owner');
+      }
+    };
+
+    // Configure initial role-based routing target
+    applySchoolPortalRouting(targetPortal, matchedPortalUser, rawInput);
 
     try {
       const clientMeta = {
@@ -502,6 +539,28 @@ export class LoginComponent implements OnInit {
           localStorage.setItem('scs_tenant_id', result.user.tenant_id);
         } else {
           localStorage.removeItem('scs_tenant_id');
+        }
+        const backendRole = String(result.user.role || '').toLowerCase();
+        const backendPortal = String(result.user.portal_type || '').toLowerCase();
+        const resolvedSchoolRole = ['principal', 'teacher', 'student', 'parent', 'accountant'].includes(backendRole)
+          ? backendRole
+          : (['principal', 'teacher', 'student', 'parent', 'accountant'].includes(backendPortal) ? backendPortal : targetPortal);
+        const mergedPortalUser = {
+          ...(matchedPortalUser || {}),
+          id: matchedPortalUser?.id || result.user.id || undefined,
+          name: matchedPortalUser?.name || result.user.full_name || result.user.name || undefined,
+          email: matchedPortalUser?.email || result.user.email || sanitizedEmail,
+          role: resolvedSchoolRole,
+          tenantId: result.user.tenant_id || matchedPortalUser?.tenantId || savedTenantId || undefined,
+          branchId: result.user.branchId || result.user.branch_id || matchedPortalUser?.branchId,
+          branchName: result.user.branchName || result.user.branch_name || matchedPortalUser?.branchName,
+          wingId: result.user.wingId || result.user.wing_id || matchedPortalUser?.wingId,
+          wingName: result.user.wingName || result.user.wing_name || matchedPortalUser?.wingName,
+          wingScopeLocked: result.user.wingScopeLocked ?? matchedPortalUser?.wingScopeLocked
+        };
+        if (mergedPortalUser.role && mergedPortalUser.role !== 'owner') {
+          localStorage.setItem('activeSchoolPortalUser', JSON.stringify(mergedPortalUser));
+          applySchoolPortalRouting(mergedPortalUser.role, mergedPortalUser, rawInput);
         }
       }
       
@@ -676,12 +735,30 @@ export class LoginComponent implements OnInit {
         }
         const pkPortal = String(result.portalType || result.user.portal_type || '').toLowerCase();
         const pkRole = String(result.user.role || '').toLowerCase();
-        if (['principal', 'teacher', 'student', 'parent', 'accountant'].includes(pkRole)) {
-          localStorage.setItem('activeSchoolRole', pkRole);
-          localStorage.setItem('activeSchoolPortal', pkRole + '-portal');
-        } else if (['principal', 'teacher', 'student', 'parent', 'accountant'].includes(pkPortal)) {
-          localStorage.setItem('activeSchoolRole', pkPortal);
-          localStorage.setItem('activeSchoolPortal', pkPortal + '-portal');
+        const resolvedPkRole = ['principal', 'teacher', 'student', 'parent', 'accountant'].includes(pkRole)
+          ? pkRole
+          : (['principal', 'teacher', 'student', 'parent', 'accountant'].includes(pkPortal) ? pkPortal : '');
+        if (resolvedPkRole) {
+          localStorage.setItem('activeSchoolRole', resolvedPkRole);
+          localStorage.setItem('activeSchoolPortal', resolvedPkRole + '-portal');
+          const pkId = result.user.id || result.user.email || emailInput;
+          if (resolvedPkRole === 'principal' && pkId) localStorage.setItem('activeSchoolTargetPrincipal', String(pkId));
+          if (resolvedPkRole === 'accountant' && pkId) localStorage.setItem('activeSchoolTargetAccountant', String(pkId));
+          if (resolvedPkRole === 'teacher' && pkId) localStorage.setItem('activeSchoolTargetTeacher', String(pkId));
+          if (resolvedPkRole === 'student' && pkId) localStorage.setItem('activeSchoolTargetStudent', String(pkId));
+          if (resolvedPkRole === 'parent' && pkId) localStorage.setItem('activeSchoolTargetParent', String(pkId));
+          localStorage.setItem('activeSchoolPortalUser', JSON.stringify({
+            id: result.user.id,
+            name: result.user.full_name || result.user.name,
+            email: result.user.email,
+            role: resolvedPkRole,
+            tenantId: result.user.tenant_id,
+            branchId: result.user.branchId || result.user.branch_id,
+            branchName: result.user.branchName || result.user.branch_name,
+            wingId: result.user.wingId || result.user.wing_id,
+            wingName: result.user.wingName || result.user.wing_name,
+            wingScopeLocked: result.user.wingScopeLocked
+          }));
         } else if (pkPortal === 'school_owner') {
           localStorage.setItem('activeSchoolRole', 'owner');
           localStorage.setItem('activeSchoolPortal', 'overview');
