@@ -23,8 +23,10 @@ import {
   AttendanceMemberCategory,
   AttendanceMemberView,
   AttendancePortalContext,
+  AttendanceVerificationChannel,
   FaceProfileRecord,
   FaceVerificationLogRecord,
+  FingerprintProfileRecord,
   LateSeverityKind,
   OwnerAttendancePolicy,
   PrincipalMemberRecord,
@@ -38,6 +40,10 @@ import {
   FaceExtractionResult,
   FaceVerificationService
 } from '../../../../services/face-verification.service';
+import {
+  FingerprintCaptureResult,
+  FingerprintVerificationService
+} from '../../../../services/fingerprint-verification.service';
 import { SchoolTableDirective } from '../../directives/school-table.directive';
 import { SchoolCustomFormFieldsComponent } from '../school-custom-form-fields/school-custom-form-fields.component';
 
@@ -55,6 +61,7 @@ export type ScannerCategoryFilter = 'all' | AttendanceMemberCategory;
 })
 export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   private readonly faceVerifier = inject(FaceVerificationService);
+  private readonly fingerprintVerifier = inject(FingerprintVerificationService);
 
   @ViewChild('verifyVideoEl') verifyVideoEl?: ElementRef<HTMLVideoElement>;
   @ViewChild('enrollVideoEl') enrollVideoEl?: ElementRef<HTMLVideoElement>;
@@ -70,6 +77,7 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   staff = input<StaffMemberRecord[]>([]);
   principals = input<PrincipalMemberRecord[]>([]);
   faceProfiles = input<FaceProfileRecord[]>([]);
+  fingerprintProfiles = input<FingerprintProfileRecord[]>([]);
   policy = input<OwnerAttendancePolicy>(createDefaultOwnerAttendancePolicy());
   verificationLogs = input<FaceVerificationLogRecord[]>([]);
   pendingSyncCount = input<number>(0);
@@ -81,6 +89,8 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   policySaved = output<OwnerAttendancePolicy>();
   faceEnrolled = output<FaceProfileRecord>();
   faceRemoved = output<string>();
+  fingerprintEnrolled = output<FingerprintProfileRecord>();
+  fingerprintRemoved = output<string>();
   attendanceRecorded = output<{
     memberCategory: AttendanceMemberCategory;
     memberId: string;
@@ -250,20 +260,37 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     }>
   >([]);
 
-  // Inline Quick Selfie Enrollment (right on the Scanner Platform)
+  // Inline Quick Selfie / Fingerprint Enrollment (right on the Scanner Platform)
   quickEnrollCategory = signal<AttendanceMemberCategory>('student');
   quickEnrollMemberId = signal<string>('');
   quickEnrollSearch = signal<string>('');
   quickEnrollPreviewUrl = signal<string>('');
   quickEnrollExtraction = signal<FaceExtractionResult | null>(null);
+  quickEnrollFingerLabel = signal<string>('Right Index');
+  quickEnrollFingerCapture = signal<FingerprintCaptureResult | null>(null);
+  quickEnrollFingerError = signal<string>('');
+  isCapturingQuickFinger = signal<boolean>(false);
 
-  // Full Face Enrollment tab state
+  // Full Face & Biometric Fingerprint Enrollment tab state
+  scannerChannel = signal<AttendanceVerificationChannel>('face');
+  enrollChannel = signal<AttendanceVerificationChannel>('face');
+  fingerScanStatus = signal<string>('');
+  fingerSensorError = signal<string>('');
+  isProcessingFingerScan = signal<boolean>(false);
+  fingerSensorAvailable = signal<boolean | null>(null);
+  fingerSensorDeviceLabel = signal<string>('Mobile / Device Fingerprint Sensor');
+  fingerScannerInsideIframe = signal<boolean>(false);
+
   enrollCategory = signal<AttendanceMemberCategory>('student');
   enrollTargetMemberId = signal<string>('');
   enrollCapturedDataUrl = signal<string>('');
   enrollExtraction = signal<FaceExtractionResult | null>(null);
   isCapturingEnroll = signal<boolean>(false);
   enrollLiteEnabled = signal<boolean>(true);
+  enrollFingerLabel = signal<string>('Right Index');
+  enrollFingerCapture = signal<FingerprintCaptureResult | null>(null);
+  enrollFingerError = signal<string>('');
+  isCapturingFingerEnroll = signal<boolean>(false);
 
   // Add Staff inline drawer state (signal-based form, no ngModel)
   showAddStaffForm = signal<boolean>(false);
@@ -325,6 +352,10 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       this.liteVerifyActive.set(incoming.verificationMode === 'lite' || incoming.liteModeEnabled);
       this.autoScanEnabled.set(true);
       this.gateMode.set('auto');
+      if (incoming.allowFingerprintAttendance === false) {
+        if (this.scannerChannel() === 'fingerprint') this.scannerChannel.set('face');
+        if (this.enrollChannel() === 'fingerprint') this.enrollChannel.set('face');
+      }
     });
 
     effect(() => {
@@ -429,17 +460,49 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
         if (params.get('kiosk') === '1') {
           this.kioskFullscreen.set(true);
         }
+        if (params.get('channel') === 'fingerprint' && this.canUseFingerprint()) {
+          this.scannerChannel.set('fingerprint');
+          this.enrollChannel.set('fingerprint');
+        }
+        if (params.get('subtab') === 'enrollment' && this.canEnrollCurrentPortal()) {
+          this.activeSubTab.set('enrollment');
+        }
       } catch {}
     }
     if (typeof document !== 'undefined') {
       document.addEventListener('visibilitychange', this.boundVisibilityHandler);
     }
-    if (!this.isPortalLocked() && this.canVerifyCameraCurrentPortal() && this.activeSubTab() === 'terminal' && this.keepCameraOn()) {
+    if (
+      !this.isPortalLocked() &&
+      this.canVerifyCameraCurrentPortal() &&
+      this.activeSubTab() === 'terminal' &&
+      this.scannerChannel() === 'face' &&
+      this.keepCameraOn()
+    ) {
       setTimeout(() => {
-        if (!this.cameraActive() && !this.isPortalLocked() && this.canVerifyCameraCurrentPortal() && this.activeSubTab() === 'terminal' && this.keepCameraOn()) {
+        if (
+          !this.cameraActive() &&
+          !this.isPortalLocked() &&
+          this.canVerifyCameraCurrentPortal() &&
+          this.activeSubTab() === 'terminal' &&
+          this.scannerChannel() === 'face' &&
+          this.keepCameraOn()
+        ) {
           void this.startCamera('verify', true);
         }
       }, 60);
+    }
+    void this.refreshFingerprintCapabilities();
+  }
+
+  private async refreshFingerprintCapabilities(): Promise<void> {
+    try {
+      const caps = await this.fingerprintVerifier.probeSensorCapabilities();
+      this.fingerSensorAvailable.set(caps.platformAvailable);
+      this.fingerSensorDeviceLabel.set(caps.deviceLabel);
+      this.fingerScannerInsideIframe.set(caps.insideCrossOriginIframe);
+    } catch {
+      this.fingerSensorAvailable.set(false);
     }
   }
 
@@ -587,6 +650,20 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     return p.confidenceThreshold;
   });
 
+  readonly canUseFingerprint = computed(() => this.policy().allowFingerprintAttendance !== false);
+
+  readonly effectiveFingerprintThreshold = computed(() => {
+    const p = this.policy();
+    const base = p.fingerprintConfidenceThreshold ?? 78;
+    if (this.liteVerifyActive() && p.liteModeEnabled) {
+      return Math.max(60, Math.min(82, base - 8));
+    }
+    if (p.verificationMode === 'strict') {
+      return Math.max(84, base);
+    }
+    return base;
+  });
+
   private isMaskedValue(val: unknown): boolean {
     const s = String(val || '').trim();
     return !s || s === '[ENCRYPTED_PROTECTED]' || s === '[LOCKED_VIP_VAULT]';
@@ -659,6 +736,27 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   readonly profileByMemberKey = computed(() => {
     const map = new Map<string, FaceProfileRecord>();
     for (const fp of this.cleanFaceProfiles()) {
+      map.set(`${fp.memberCategory}:${fp.memberId}`, fp);
+    }
+    return map;
+  });
+
+  readonly cleanFingerprintProfiles = computed<FingerprintProfileRecord[]>(() => {
+    const lookup = this.rawMemberLookup();
+    return (this.fingerprintProfiles() || []).map((fp) => {
+      const raw = lookup.get(`${fp.memberCategory}:${fp.memberId}`);
+      return {
+        ...fp,
+        memberName: this.isMaskedValue(fp.memberName) ? (raw?.name || fp.memberCode || 'Campus Member') : fp.memberName,
+        memberCode: this.isMaskedValue(fp.memberCode) ? (raw?.code || fp.memberId) : fp.memberCode,
+        gradeOrDept: this.isMaskedValue(fp.gradeOrDept) ? (raw?.subLabel || 'Campus') : fp.gradeOrDept
+      };
+    });
+  });
+
+  readonly fingerprintByMemberKey = computed(() => {
+    const map = new Map<string, FingerprintProfileRecord>();
+    for (const fp of this.cleanFingerprintProfiles()) {
       map.set(`${fp.memberCategory}:${fp.memberId}`, fp);
     }
     return map;
@@ -777,10 +875,12 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
 
   readonly studentMembers = computed<AttendanceMemberView[]>(() => {
     const map = this.profileByMemberKey();
+    const fpMap = this.fingerprintByMemberKey();
     const punchMap = this.punchSummaryByMember();
     const overrides = this.policy().operatorOverrides || {};
     return (this.students() || []).map((s) => {
       const fp = map.get(`student:${s.id}`) || null;
+      const fpp = fpMap.get(`student:${s.id}`) || null;
       const ov = overrides[`student:${s.id}`];
       const status = this.normalizeStatus(s.status || s.attendanceStatus);
       const punchFields = this.buildMemberPunchView(punchMap.get(`student:${s.id}`), status);
@@ -808,8 +908,10 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
         monthlyRate: String(s.attendance || s.attendanceRate || '96%'),
         image: fp?.facePhotoData || s.image || '',
         faceProfile: fp,
+        fingerprintProfile: fpp,
         liteEnabled: ov ? ov.liteEnabled : (fp ? fp.liteEnabled : true),
         isEnrolled: Boolean(fp || s.biometricEnrolled),
+        isFingerprintEnrolled: Boolean(fpp || s.fingerprintEnrolled),
         ...punchFields
       };
     });
@@ -817,10 +919,12 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
 
   readonly teacherMembers = computed<AttendanceMemberView[]>(() => {
     const map = this.profileByMemberKey();
+    const fpMap = this.fingerprintByMemberKey();
     const punchMap = this.punchSummaryByMember();
     const overrides = this.policy().operatorOverrides || {};
     return (this.teachers() || []).map((t) => {
       const fp = map.get(`teacher:${t.id}`) || null;
+      const fpp = fpMap.get(`teacher:${t.id}`) || null;
       const ov = overrides[`teacher:${t.id}`];
       const status = this.normalizeStatus(t.attendanceStatus || (t.status === 'On Leave' ? 'On Leave' : 'Present'));
       const punchFields = this.buildMemberPunchView(punchMap.get(`teacher:${t.id}`), status);
@@ -848,8 +952,10 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
         monthlyRate: String(t.attendanceRate || '98%'),
         image: fp?.facePhotoData || t.image || '',
         faceProfile: fp,
+        fingerprintProfile: fpp,
         liteEnabled: ov ? ov.liteEnabled : (fp ? fp.liteEnabled : true),
         isEnrolled: Boolean(fp || t.biometricEnrolled),
+        isFingerprintEnrolled: Boolean(fpp || t.fingerprintEnrolled),
         ...punchFields
       };
     });
@@ -857,10 +963,12 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
 
   readonly staffMembers = computed<AttendanceMemberView[]>(() => {
     const map = this.profileByMemberKey();
+    const fpMap = this.fingerprintByMemberKey();
     const punchMap = this.punchSummaryByMember();
     const overrides = this.policy().operatorOverrides || {};
     return (this.staff() || []).map((st) => {
       const fp = map.get(`staff:${st.id}`) || null;
+      const fpp = fpMap.get(`staff:${st.id}`) || null;
       const ov = overrides[`staff:${st.id}`];
       const status = this.normalizeStatus(st.attendanceStatus);
       const punchFields = this.buildMemberPunchView(punchMap.get(`staff:${st.id}`), status);
@@ -888,8 +996,10 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
         monthlyRate: st.shift || 'Morning Shift',
         image: fp?.facePhotoData || st.image || '',
         faceProfile: fp,
+        fingerprintProfile: fpp,
         liteEnabled: ov ? ov.liteEnabled : (fp ? fp.liteEnabled : Boolean(st.liteEnabled ?? true)),
         isEnrolled: Boolean(fp || st.faceEnrolled),
+        isFingerprintEnrolled: Boolean(fpp || st.fingerprintEnrolled),
         ...punchFields
       };
     });
@@ -897,10 +1007,12 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
 
   readonly principalMembers = computed<AttendanceMemberView[]>(() => {
     const map = this.profileByMemberKey();
+    const fpMap = this.fingerprintByMemberKey();
     const punchMap = this.punchSummaryByMember();
     const overrides = this.policy().operatorOverrides || {};
     return (this.principals() || []).map((pr) => {
       const fp = map.get(`principal:${pr.id}`) || null;
+      const fpp = fpMap.get(`principal:${pr.id}`) || null;
       const ov = overrides[`principal:${pr.id}`];
       const status = this.normalizeStatus(pr.attendanceStatus);
       const punchFields = this.buildMemberPunchView(punchMap.get(`principal:${pr.id}`), status);
@@ -928,8 +1040,10 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
         monthlyRate: pr.shift || 'Full Day Shift',
         image: fp?.facePhotoData || pr.image || '',
         faceProfile: fp,
+        fingerprintProfile: fpp,
         liteEnabled: ov ? ov.liteEnabled : (fp ? fp.liteEnabled : Boolean(pr.liteEnabled ?? true)),
         isEnrolled: Boolean(fp || pr.faceEnrolled),
+        isFingerprintEnrolled: Boolean(fpp || pr.fingerprintEnrolled),
         ...punchFields
       };
     });
@@ -966,6 +1080,16 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       : this.cleanFaceProfiles().filter((fp) => allowed.includes(fp.memberCategory));
     if (cat === 'all') return permittedProfiles;
     return permittedProfiles.filter((fp) => fp.memberCategory === cat);
+  });
+
+  readonly activeFingerprintProfiles = computed<FingerprintProfileRecord[]>(() => {
+    const cat = this.activeCategory();
+    const allowed = this.allowedCategories();
+    const permitted = this.isOwner()
+      ? this.cleanFingerprintProfiles()
+      : this.cleanFingerprintProfiles().filter((fp) => allowed.includes(fp.memberCategory));
+    if (cat === 'all') return permitted;
+    return permitted.filter((fp) => fp.memberCategory === cat);
   });
 
   readonly enrollCategoryMembers = computed<AttendanceMemberView[]>(() => {
@@ -1036,7 +1160,8 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       checkedIn: list.filter((m) => m.punchState === 'Checked IN' || m.punchState === 'Checked OUT').length,
       checkedOut: list.filter((m) => m.punchState === 'Checked OUT').length,
       pending: list.filter((m) => m.punchState === 'Pending' || m.punchState === 'Absent').length,
-      enrolled: list.filter((m) => m.isEnrolled).length
+      enrolled: list.filter((m) => m.isEnrolled).length,
+      fpEnrolled: list.filter((m) => Boolean(m.isFingerprintEnrolled)).length
     };
   });
 
@@ -1074,6 +1199,7 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     const summarize = (list: AttendanceMemberView[]) => ({
       total: list.length,
       enrolled: list.filter((m) => m.isEnrolled).length,
+      fpEnrolled: list.filter((m) => Boolean(m.isFingerprintEnrolled)).length,
       present: list.filter((m) => m.status === 'Present').length,
       late: list.filter((m) => m.status === 'Late').length,
       absent: list.filter((m) => m.status === 'Absent').length
@@ -1087,6 +1213,7 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   });
 
   readonly totalEnrolledCount = computed(() => this.cleanFaceProfiles().length);
+  readonly totalFingerprintEnrolledCount = computed(() => this.cleanFingerprintProfiles().length);
 
   readonly activeLogs = computed(() => {
     const cat = this.activeCategory();
@@ -1259,7 +1386,7 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     if (tab === 'teachers') this.activeCategory.set('teacher');
     if (tab === 'staff') this.activeCategory.set('staff');
     if (tab === 'principals') this.activeCategory.set('principal');
-    if (tab === 'terminal' && this.keepCameraOn() && this.canVerifyCameraCurrentPortal()) {
+    if (tab === 'terminal' && this.keepCameraOn() && this.scannerChannel() === 'face' && this.canVerifyCameraCurrentPortal()) {
       setTimeout(() => void this.startCamera('verify', true), 60);
     }
     if (tab === 'enrollment') {
@@ -1274,9 +1401,43 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       if (list.length > 0 && !this.enrollTargetMemberId()) {
         this.enrollTargetMemberId.set(list[0].id);
       }
-      if (this.keepCameraOn() && this.canEnrollCurrentPortal()) {
+      if (this.keepCameraOn() && this.enrollChannel() === 'face' && this.canEnrollCurrentPortal()) {
         setTimeout(() => void this.startCamera('enroll', true), 60);
       }
+    }
+  }
+
+  setScannerChannel(channel: AttendanceVerificationChannel): void {
+    if (channel === 'fingerprint' && !this.canUseFingerprint()) {
+      this.emitToast('Fingerprint biometric attendance is currently disabled by School Owner.', 'warning');
+      return;
+    }
+    this.scannerChannel.set(channel);
+    this.fingerSensorError.set('');
+    this.fingerScanStatus.set('');
+    this.lastVerificationResult.set(null);
+    this.scanOverlay.set(null);
+    if (channel === 'fingerprint') {
+      this.stopCamera(false);
+      void this.refreshFingerprintCapabilities();
+    } else if (this.activeSubTab() === 'terminal' && this.keepCameraOn() && this.canVerifyCameraCurrentPortal()) {
+      setTimeout(() => void this.startCamera('verify', true), 60);
+    }
+  }
+
+  setEnrollChannel(channel: AttendanceVerificationChannel): void {
+    if (channel === 'fingerprint' && !this.canUseFingerprint()) {
+      this.emitToast('Fingerprint biometric enrollment is currently disabled by School Owner.', 'warning');
+      return;
+    }
+    this.enrollChannel.set(channel);
+    this.enrollFingerCapture.set(null);
+    this.enrollFingerError.set('');
+    if (channel === 'fingerprint') {
+      this.stopCamera(false);
+      void this.refreshFingerprintCapabilities();
+    } else if (this.activeSubTab() === 'enrollment' && this.keepCameraOn() && this.canEnrollCurrentPortal()) {
+      setTimeout(() => void this.startCamera('enroll', true), 60);
     }
   }
 
@@ -1333,9 +1494,14 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       this.quickEnrollCategory.set(enrollAllowed[0]);
     }
     this.quickEnrollDrawerOpen.set(true);
+    this.quickEnrollFingerError.set('');
     const list = this.quickEnrollFilteredMembers();
     if (list.length > 0 && !this.quickEnrollMemberId()) {
       this.quickEnrollMemberId.set(list[0].id);
+    }
+    if (this.scannerChannel() === 'fingerprint') {
+      void this.refreshFingerprintCapabilities();
+      return;
     }
     if (this.cameraActive()) {
       if (prefillFromLive) {
@@ -1350,6 +1516,95 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     this.quickEnrollDrawerOpen.set(false);
     this.quickEnrollPreviewUrl.set('');
     this.quickEnrollExtraction.set(null);
+    this.quickEnrollFingerCapture.set(null);
+    this.quickEnrollFingerError.set('');
+  }
+
+  async captureQuickEnrollFingerprint(): Promise<void> {
+    if (!this.canEnrollCurrentPortal() || !this.canUseFingerprint()) {
+      this.emitToast('Fingerprint enrollment is disabled by School Owner permissions.', 'warning');
+      return;
+    }
+    const member = this.quickEnrollSelectedMember();
+    if (!member) {
+      this.emitToast('Select a member first before scanning their fingerprint.', 'warning');
+      return;
+    }
+    this.isCapturingQuickFinger.set(true);
+    this.quickEnrollFingerError.set('');
+    try {
+      const capture = await this.fingerprintVerifier.enrollDeviceFingerprint(
+        { id: member.id, category: member.category, name: member.name, code: member.code, sectionOrDept: member.subLabel },
+        this.quickEnrollFingerLabel()
+      );
+      if (!capture.ok) {
+        this.quickEnrollFingerError.set(capture.reason || 'Could not capture fingerprint from mobile/device sensor.');
+        return;
+      }
+      this.quickEnrollFingerCapture.set(capture);
+      this.quickEnrollFingerError.set('');
+      this.playMatchChime();
+      this.emitToast(`Fingerprint captured for ${member.name} (${this.quickEnrollFingerLabel()}). Tap Save Fingerprint.`, 'success');
+    } finally {
+      this.isCapturingQuickFinger.set(false);
+    }
+  }
+
+  saveQuickFingerprintEnrollment(): void {
+    if (!this.canEnrollCurrentPortal() || !this.canUseFingerprint()) {
+      this.emitToast('Fingerprint enrollment is disabled by School Owner permissions.', 'warning');
+      return;
+    }
+    const memberId = this.quickEnrollMemberId();
+    const capture = this.quickEnrollFingerCapture();
+    if (!memberId || !capture || !capture.ok) {
+      this.emitToast('Choose a member and scan their fingerprint first.', 'warning');
+      return;
+    }
+    const cat = this.quickEnrollCategory();
+    if (!this.isOwner() && !this.enrollAllowedCategories().includes(cat)) {
+      this.emitToast(`You do not have Owner permission to enroll ${this.categoryLabel(cat)} fingerprints.`, 'warning');
+      return;
+    }
+    const list =
+      cat === 'teacher'
+        ? this.teacherMembers()
+        : cat === 'staff'
+          ? this.staffMembers()
+          : cat === 'principal'
+            ? this.principalMembers()
+            : this.studentMembers();
+    const member = list.find((m) => m.id === memberId);
+    if (!member) {
+      this.emitToast('Selected member could not be found.', 'warning');
+      return;
+    }
+
+    const profile: FingerprintProfileRecord = {
+      id: `FPP-${cat}-${member.id}`,
+      memberId: member.id,
+      memberCategory: cat,
+      memberName: member.name,
+      memberCode: member.code,
+      gradeOrDept: member.subLabel,
+      fingerLabel: this.quickEnrollFingerLabel() || 'Right Index',
+      scannerType: capture.scannerType,
+      credentialId: capture.credentialId,
+      publicKeySpki: capture.publicKeySpki,
+      fingerprintDescriptor: capture.descriptor,
+      fingerprintPreviewData: capture.previewDataUrl,
+      fingerprintHash: capture.fingerprintHash,
+      qualityScore: capture.qualityScore,
+      liteEnabled: true,
+      enrolledBy: this.currentActorName() || 'Biometric Kiosk',
+      enrolledAt: new Date().toISOString()
+    };
+
+    this.fingerprintEnrolled.emit(profile);
+    this.playMatchChime();
+    this.quickEnrollFingerCapture.set(null);
+    this.quickEnrollDrawerOpen.set(false);
+    this.emitToast(`${member.name} fingerprint registered! Ready for instant biometric attendance.`, 'success');
   }
 
   async snapQuickSelfieFromLiveCamera(): Promise<void> {
@@ -1449,6 +1704,7 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       this.emitToast(`School Owner has restricted camera verification for ${this.singleCategoryLabel(member.category)} records.`, 'warning');
       return;
     }
+    this.scannerChannel.set('face');
     this.keepCameraOn.set(true);
     this.activeCategory.set(member.category);
     this.scanScope.set('targeted');
@@ -1459,11 +1715,33 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     setTimeout(() => void this.startCamera('verify'), 60);
   }
 
+  openFingerprintForMember(member: AttendanceMemberView): void {
+    if (!this.canUseFingerprint()) {
+      this.emitToast('Fingerprint biometric attendance is disabled in Owner Setup.', 'warning');
+      return;
+    }
+    if (!this.canVerifyCameraCurrentPortal() || (!this.isOwner() && !this.allowedCategories().includes(member.category))) {
+      this.emitToast(`School Owner has restricted biometric verification for ${this.singleCategoryLabel(member.category)} records.`, 'warning');
+      return;
+    }
+    this.stopCamera(false);
+    this.scannerChannel.set('fingerprint');
+    this.activeCategory.set(member.category);
+    this.scanScope.set('targeted');
+    this.selectedTargetMemberId.set(member.id);
+    this.lastVerificationResult.set(null);
+    this.fingerSensorError.set('');
+    this.fingerScanStatus.set(`Ready to verify ${member.name} by fingerprint.`);
+    this.activeSubTab.set('terminal');
+    void this.refreshFingerprintCapabilities();
+  }
+
   openEnrollmentForMember(member: AttendanceMemberView): void {
     if (!this.canEnrollCurrentPortal() || (!this.isOwner() && !this.enrollAllowedCategories().includes(member.category))) {
       this.emitToast(`School Owner has restricted face enrollment for ${this.singleCategoryLabel(member.category)} records.`, 'warning');
       return;
     }
+    this.enrollChannel.set('face');
     this.keepCameraOn.set(true);
     this.enrollCategory.set(member.category);
     this.enrollTargetMemberId.set(member.id);
@@ -1472,6 +1750,26 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     this.enrollLiteEnabled.set(member.liteEnabled);
     this.activeSubTab.set('enrollment');
     setTimeout(() => void this.startCamera('enroll'), 60);
+  }
+
+  openFingerEnrollmentForMember(member: AttendanceMemberView): void {
+    if (!this.canUseFingerprint()) {
+      this.emitToast('Fingerprint biometric enrollment is disabled in Owner Setup.', 'warning');
+      return;
+    }
+    if (!this.canEnrollCurrentPortal() || (!this.isOwner() && !this.enrollAllowedCategories().includes(member.category))) {
+      this.emitToast(`School Owner has restricted biometric enrollment for ${this.singleCategoryLabel(member.category)} records.`, 'warning');
+      return;
+    }
+    this.stopCamera(false);
+    this.enrollChannel.set('fingerprint');
+    this.enrollCategory.set(member.category);
+    this.enrollTargetMemberId.set(member.id);
+    this.enrollFingerCapture.set(null);
+    this.enrollFingerError.set('');
+    this.enrollLiteEnabled.set(member.liteEnabled);
+    this.activeSubTab.set('enrollment');
+    void this.refreshFingerprintCapabilities();
   }
 
   setEnrollCategory(cat: AttendanceMemberCategory): void {
@@ -1491,6 +1789,8 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     this.enrollTargetMemberId.set(list[0]?.id || '');
     this.enrollCapturedDataUrl.set('');
     this.enrollExtraction.set(null);
+    this.enrollFingerCapture.set(null);
+    this.enrollFingerError.set('');
   }
 
   // WebRTC Continuous Camera Engine
@@ -1696,7 +1996,7 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       }
     } catch {}
     if (this.cameraActive() && this.activeCameraSlot) {
-      void this.startCamera(this.activeCameraSlot);
+      void this.startCamera(this.activeCameraSlot, false);
     }
   }
 
@@ -1971,6 +2271,7 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   async onViewportDrop(event: DragEvent): Promise<void> {
     event.preventDefault();
     this.isDraggingFiles.set(false);
+    if (this.scannerChannel() === 'fingerprint') return;
     const files = event.dataTransfer?.files ? Array.from(event.dataTransfer.files).filter((f) => f.type.startsWith('image/')) : [];
     if (files.length === 0) return;
     await this.processVerifyBatchFiles(files);
@@ -2144,14 +2445,201 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       }
     }
 
+    const modeTag = this.liteVerifyActive() ? 'face_camera_lite' : `face_camera_${this.policy().verificationMode}`;
+    const verifiedByLabel = isAutoScan
+      ? (this.liteVerifyActive() ? 'Auto Kiosk (Lite)' : 'Auto Face Kiosk')
+      : (this.liteVerifyActive() ? 'Face Scan (Lite)' : 'Face Camera Scan');
+
+    this.processMatchedMemberPunch({
+      memberKey,
+      memberId: prof.memberId,
+      memberCategory: prof.memberCategory,
+      memberName: prof.memberName,
+      memberCode: prof.memberCode,
+      gradeOrDept: prof.gradeOrDept,
+      enrolledPhoto: prof.facePhotoData,
+      snapUrl: resolveSnapUrl(),
+      confidence: match.confidence,
+      thresholdUsed: match.thresholdUsed,
+      modeTag,
+      verifiedByLabel,
+      isAutoScan
+    });
+  }
+
+  // Biometric Fingerprint Verification (Real Mobile / Device Fingerprint Sensor 1:N / 1:1)
+  async verifyFingerprintScan(): Promise<void> {
+    if (this.isPortalLocked() || !this.canVerifyCameraCurrentPortal()) {
+      this.emitToast('Biometric attendance verification is restricted by School Owner permissions.', 'warning');
+      return;
+    }
+    if (!this.canUseFingerprint()) {
+      this.emitToast('Fingerprint biometric attendance is disabled in Owner Setup.', 'warning');
+      return;
+    }
+    if (this.isProcessingFingerScan()) return;
+
+    this.getAudioContext();
+    const profiles = this.activeFingerprintProfiles();
+    const targetId = this.scanScope() === 'targeted' ? this.selectedTargetMemberId() : undefined;
+
+    if (profiles.length === 0) {
+      this.fingerSensorError.set('No fingerprints enrolled yet. Enroll a finger or switch to Face Camera.');
+      if (this.canEnrollCurrentPortal()) {
+        this.openQuickEnrollPanel(false);
+      } else {
+        this.emitToast('No enrolled fingerprints found for your permitted categories.', 'warning');
+      }
+      return;
+    }
+
+    if (this.scanScope() === 'targeted' && !targetId) {
+      this.emitToast('Select a member in 1:1 Member mode before scanning fingerprint.', 'warning');
+      return;
+    }
+
+    this.isProcessingFingerScan.set(true);
+    this.fingerSensorError.set('');
+    this.fingerScanStatus.set('Touch your mobile or device fingerprint sensor...');
+    try {
+      const match = await this.fingerprintVerifier.verifyDeviceFingerprint(profiles, targetId);
+      if (!match.matched || !match.profile) {
+        const reason = match.reason || 'Fingerprint did not match any enrolled profile.';
+        this.fingerSensorError.set(reason);
+        this.fingerScanStatus.set('');
+        this.lastVerificationResult.set({
+          matched: false,
+          resultType: 'mismatch',
+          confidence: match.confidence,
+          threshold: this.effectiveFingerprintThreshold(),
+          message: reason,
+          memberName: 'Fingerprint Not Matched',
+          memberCode: '-',
+          category: 'student',
+          statusMarked: 'Not Matched'
+        });
+        this.triggerScanOverlay(
+          {
+            kind: 'mismatch',
+            title: 'Fingerprint Not Enrolled / Matched',
+            subtitle: reason,
+            badgeText: 'BIOMETRIC MISMATCH'
+          },
+          2200
+        );
+        this.playAlertTone('mismatch');
+        return;
+      }
+
+      const prof = match.profile;
+      if (!this.isOwner() && !this.allowedCategories().includes(prof.memberCategory)) {
+        return;
+      }
+      const thresholdUsed = this.effectiveFingerprintThreshold();
+      if (match.confidence < thresholdUsed) {
+        this.emitToast(`Fingerprint match ${match.confidence}% below threshold (${thresholdUsed}%).`, 'warning');
+        return;
+      }
+
+      this.fingerScanStatus.set(`Verified: ${prof.memberName} (${prof.fingerLabel})`);
+      this.processMatchedMemberPunch({
+        memberKey: `${prof.memberCategory}:${prof.memberId}`,
+        memberId: prof.memberId,
+        memberCategory: prof.memberCategory,
+        memberName: prof.memberName,
+        memberCode: prof.memberCode,
+        gradeOrDept: prof.gradeOrDept,
+        enrolledPhoto: prof.fingerprintPreviewData,
+        confidence: match.confidence,
+        thresholdUsed,
+        modeTag: 'fingerprint_device_webauthn',
+        verifiedByLabel: `Mobile Fingerprint (${prof.fingerLabel})`,
+        isAutoScan: false
+      });
+    } finally {
+      this.isProcessingFingerScan.set(false);
+    }
+  }
+
+  fallbackScanToFaceCamera(): void {
+    this.stopCamera(false);
+    this.fingerSensorError.set('');
+    this.fingerScanStatus.set('');
+    this.setScannerChannel('face');
+    if (this.canVerifyCameraCurrentPortal()) {
+      this.keepCameraOn.set(true);
+      setTimeout(() => void this.startCamera('verify', false), 60);
+    }
+    this.emitToast('Switched to Face Camera Biometric.', 'info');
+  }
+
+  fallbackEnrollToFaceCamera(fromQuickDrawer: boolean = false): void {
+    this.stopCamera(false);
+    if (fromQuickDrawer) {
+      this.quickEnrollFingerError.set('');
+      this.quickEnrollFingerCapture.set(null);
+      this.scannerChannel.set('face');
+      this.quickEnrollDrawerOpen.set(true);
+      if (this.canVerifyCameraCurrentPortal()) {
+        this.keepCameraOn.set(true);
+        setTimeout(() => void this.startCamera('verify', false), 60);
+      }
+      this.emitToast('Switched to Face Biometric Enrollment.', 'info');
+      return;
+    }
+
+    this.enrollFingerError.set('');
+    this.enrollFingerCapture.set(null);
+    this.enrollCapturedDataUrl.set('');
+    this.enrollExtraction.set(null);
+    this.enrollChannel.set('face');
+    if (this.canEnrollCurrentPortal()) {
+      this.keepCameraOn.set(true);
+      setTimeout(() => void this.startCamera('enroll', false), 60);
+    }
+    this.emitToast('Switched to Face Biometric Enrollment.', 'info');
+  }
+
+  // Shared Gate / Two-Punch / Anti-Duplicate / Timing / Persistence Pipeline for Face & Fingerprint
+  private processMatchedMemberPunch(params: {
+    memberKey: string;
+    memberId: string;
+    memberCategory: AttendanceMemberCategory;
+    memberName: string;
+    memberCode: string;
+    gradeOrDept: string;
+    enrolledPhoto?: string;
+    snapUrl?: string;
+    confidence: number;
+    thresholdUsed: number;
+    modeTag: string;
+    verifiedByLabel: string;
+    isAutoScan: boolean;
+  }): void {
+    const {
+      memberKey,
+      memberId,
+      memberCategory,
+      memberName,
+      memberCode,
+      gradeOrDept,
+      enrolledPhoto,
+      snapUrl,
+      confidence,
+      thresholdUsed,
+      modeTag,
+      verifiedByLabel,
+      isAutoScan
+    } = params;
+    const nowMs = Date.now();
     const todayIso = new Date().toISOString().split('T')[0];
     const nowDate = new Date();
     const session = this.localSessionPunches.get(memberKey);
 
     const todayLogs = this.verificationLogs().filter(
       (l) =>
-        l.memberCategory === prof.memberCategory &&
-        l.memberId === prof.memberId &&
+        l.memberCategory === memberCategory &&
+        l.memberId === memberId &&
         l.date === todayIso &&
         (l.status === 'Present' || l.status === 'Late')
     );
@@ -2222,7 +2710,6 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     }
 
     if (!nextPunch) {
-      // Right after marking IN/OUT, hold the Green Tick banner cleanly for 2.0s before showing Duplicate Caution
       if (isAutoScan && this.lastActiveFaceKey === memberKey && nowMs - this.lastSuccessAtMs < 2000) {
         return;
       }
@@ -2234,25 +2721,25 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       this.lastVerificationResult.set({
         matched: true,
         resultType: 'duplicate',
-        confidence: match.confidence,
-        threshold: match.thresholdUsed,
+        confidence,
+        threshold: thresholdUsed,
         message: alreadySubtitle,
-        memberName: prof.memberName,
-        memberCode: prof.memberCode,
-        category: prof.memberCategory,
+        memberName,
+        memberCode,
+        category: memberCategory,
         statusMarked: hasOut ? 'Duplicate · Already Checked OUT' : 'Duplicate · Already Checked IN',
-        enrolledPhoto: prof.facePhotoData,
-        livePhoto: isAutoScan ? undefined : resolveSnapUrl(),
+        enrolledPhoto,
+        livePhoto: isAutoScan ? undefined : snapUrl,
         savedOffline: !this.isBrowserOnline()
       });
       this.triggerScanOverlay(
         {
           kind: 'duplicate',
-          title: prof.memberName,
+          title: memberName,
           subtitle: alreadySubtitle,
           badgeText: hasOut ? 'DUPLICATE · ALREADY IN & OUT' : 'DUPLICATE · ALREADY CHECKED IN',
-          confidence: match.confidence,
-          memberCode: prof.memberCode,
+          confidence,
+          memberCode,
           storageLabel: this.isBrowserOnline() ? 'SQLite + Cloud Synced' : 'SQLite Offline Saved'
         },
         1600
@@ -2261,7 +2748,7 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       if (!isAutoScan || isNewVisit || nowMs - this.lastDuplicateAlertAt >= 4000) {
         this.lastDuplicateAlertAt = nowMs;
         this.playAlertTone('duplicate');
-        this.emitToast(`${prof.memberName} — ${alreadySubtitle}`, 'warning');
+        this.emitToast(`${memberName} — ${alreadySubtitle}`, 'warning');
       }
       return;
     }
@@ -2273,7 +2760,6 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     this.stableCandidateKey = '';
     this.stableCandidateHits = 0;
 
-    const snapUrl = resolveSnapUrl();
     const timeLabel = nowDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const status = nextPunch === 'IN' ? this.computeArrivalStatus() : 'Present';
     const scheduledStartTime = this.policy().scheduledStartTime || '08:00';
@@ -2296,25 +2782,24 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     }
     this.punchRevision.update((v) => v + 1);
 
-    const modeTag = this.liteVerifyActive() ? 'face_camera_lite' : `face_camera_${this.policy().verificationMode}`;
     const storageLabel = this.isBrowserOnline() ? 'SQLite + Auto-Sync' : 'Saved Offline · Auto-Sync Ready';
     const overlayBadge = nextPunch === 'OUT' ? 'CHECKED OUT · VERIFIED' : 'ATTENDANCE MARKED · OK';
     const timingSuffix = punctuality.lateByLabel ? ` · ${punctuality.lateByLabel}` : '';
     const overlaySub =
       nextPunch === 'OUT'
-        ? `${this.singleCategoryLabel(prof.memberCategory)} · ${prof.gradeOrDept} · OUT ${timeLabel}`
-        : `${this.singleCategoryLabel(prof.memberCategory)} · ${prof.gradeOrDept} · ${status} ${timeLabel}${timingSuffix}`;
+        ? `${this.singleCategoryLabel(memberCategory)} · ${gradeOrDept} · OUT ${timeLabel}`
+        : `${this.singleCategoryLabel(memberCategory)} · ${gradeOrDept} · ${status} ${timeLabel}${timingSuffix}`;
 
     this.recentVerifiedFeed.update((feed) =>
       [
         {
           id: `${memberKey}-${nowMs}`,
-          name: prof.memberName,
-          category: prof.memberCategory,
+          name: memberName,
+          category: memberCategory,
           punch: nextPunch as 'IN' | 'OUT',
           time: timeLabel,
           lateByLabel: punctuality.lateByLabel || undefined,
-          confidence: match.confidence,
+          confidence,
           syncedLabel: this.isBrowserOnline() ? 'SQLite · Synced' : 'Offline Queued'
         },
         ...feed
@@ -2324,15 +2809,15 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     this.lastVerificationResult.set({
       matched: true,
       resultType: 'success',
-      confidence: match.confidence,
-      threshold: match.thresholdUsed,
-      message: `${overlayBadge} (${match.confidence}% match) — ${prof.memberName} (${nextPunch} at ${timeLabel}${timingSuffix})`,
-      memberName: prof.memberName,
-      memberCode: prof.memberCode,
-      category: prof.memberCategory,
+      confidence,
+      threshold: thresholdUsed,
+      message: `${overlayBadge} (${confidence}% match) — ${memberName} (${nextPunch} at ${timeLabel}${timingSuffix})`,
+      memberName,
+      memberCode,
+      category: memberCategory,
       statusMarked: nextPunch === 'OUT' ? 'Checked Out' : status,
       lateByLabel: punctuality.lateByLabel || undefined,
-      enrolledPhoto: prof.facePhotoData,
+      enrolledPhoto,
       livePhoto: snapUrl,
       savedOffline: !this.isBrowserOnline()
     });
@@ -2340,12 +2825,12 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     this.triggerScanOverlay(
       {
         kind: 'success',
-        title: prof.memberName,
+        title: memberName,
         subtitle: overlaySub,
         badgeText: overlayBadge,
         punchType: nextPunch,
-        confidence: match.confidence,
-        memberCode: prof.memberCode,
+        confidence,
+        memberCode,
         lateByLabel: punctuality.lateByLabel || undefined,
         storageLabel
       },
@@ -2353,14 +2838,14 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     );
 
     this.playMatchChime();
-    this.emitToast(`✔ ${prof.memberName} — ${nextPunch} (${status}${timingSuffix}) · ${match.confidence}%`, 'success');
+    this.emitToast(`✔ ${memberName} — ${nextPunch} (${status}${timingSuffix}) · ${confidence}%`, 'success');
 
     this.attendanceRecorded.emit({
-      memberCategory: prof.memberCategory,
-      memberId: prof.memberId,
-      memberName: prof.memberName,
-      memberCode: prof.memberCode,
-      gradeOrDept: prof.gradeOrDept,
+      memberCategory,
+      memberId,
+      memberName,
+      memberCode,
+      gradeOrDept,
       status,
       punchType: nextPunch,
       scheduledStartTime,
@@ -2368,10 +2853,8 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       lateByLabel: punctuality.lateByLabel,
       checkInTime: nextPunch === 'IN' ? timeLabel : undefined,
       verificationMode: modeTag,
-      confidenceScore: match.confidence,
-      verifiedBy: isAutoScan
-        ? `${this.liteVerifyActive() ? 'Auto Kiosk (Lite)' : 'Auto Face Kiosk'} · ${nextPunch}`
-        : `${this.liteVerifyActive() ? 'Face Scan (Lite)' : 'Face Camera Scan'} · ${nextPunch}`,
+      confidenceScore: confidence,
+      verifiedBy: `${verifiedByLabel} · ${nextPunch}`,
       snapshotData: snapUrl
     });
   }
@@ -2597,6 +3080,93 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     this.faceRemoved.emit(profileId);
   }
 
+  // Biometric Fingerprint Enrollment Tab Methods (Real Mobile / Device Fingerprint Sensor)
+  async captureDeviceFingerprintForEnroll(): Promise<void> {
+    if (!this.canEnrollCurrentPortal() || !this.canUseFingerprint()) {
+      this.emitToast('Fingerprint enrollment is restricted by School Owner permissions.', 'warning');
+      return;
+    }
+    const member = this.enrollSelectedMember();
+    if (!member) {
+      this.emitToast('Select an existing member before scanning their fingerprint.', 'warning');
+      return;
+    }
+    this.isCapturingFingerEnroll.set(true);
+    this.enrollFingerError.set('');
+    try {
+      const cap = await this.fingerprintVerifier.enrollDeviceFingerprint(
+        { id: member.id, category: member.category, name: member.name, code: member.code, sectionOrDept: member.subLabel },
+        this.enrollFingerLabel()
+      );
+      if (!cap.ok) {
+        this.enrollFingerError.set(cap.reason || 'Mobile/device biometric fingerprint capture failed.');
+        return;
+      }
+      this.enrollFingerCapture.set(cap);
+      this.enrollFingerError.set('');
+      this.playMatchChime();
+      this.emitToast(`Fingerprint captured (${cap.qualityScore}% quality · ${this.enrollFingerLabel()}). Click Save Fingerprint Profile.`, 'success');
+    } finally {
+      this.isCapturingFingerEnroll.set(false);
+    }
+  }
+
+  saveEnrolledFingerprintProfile(): void {
+    if (!this.canEnrollCurrentPortal() || !this.canUseFingerprint()) {
+      this.emitToast('Fingerprint enrollment is restricted by School Owner permissions.', 'warning');
+      return;
+    }
+    const memberId = this.enrollTargetMemberId();
+    const capture = this.enrollFingerCapture();
+    if (!memberId || !capture || !capture.ok) {
+      this.emitToast('Select a member and capture their fingerprint before saving.', 'warning');
+      return;
+    }
+    const cat = this.enrollCategory();
+    if (!this.isOwner() && !this.enrollAllowedCategories().includes(cat)) {
+      this.emitToast(`School Owner has restricted biometric enrollment for ${this.categoryLabel(cat)}.`, 'warning');
+      return;
+    }
+    const member = this.enrollCategoryMembers().find((m) => m.id === memberId);
+    if (!member) {
+      this.emitToast('Selected member record could not be found.', 'warning');
+      return;
+    }
+
+    const profile: FingerprintProfileRecord = {
+      id: `FPP-${cat}-${member.id}`,
+      memberId: member.id,
+      memberCategory: cat,
+      memberName: member.name,
+      memberCode: member.code,
+      gradeOrDept: member.subLabel,
+      fingerLabel: this.enrollFingerLabel() || 'Right Index',
+      scannerType: capture.scannerType,
+      credentialId: capture.credentialId,
+      publicKeySpki: capture.publicKeySpki,
+      fingerprintDescriptor: capture.descriptor,
+      fingerprintPreviewData: capture.previewDataUrl,
+      fingerprintHash: capture.fingerprintHash,
+      qualityScore: capture.qualityScore,
+      liteEnabled: this.enrollLiteEnabled(),
+      enrolledBy: this.currentActorName(),
+      enrolledAt: new Date().toISOString()
+    };
+
+    this.fingerprintEnrolled.emit(profile);
+    this.playMatchChime();
+    this.enrollFingerCapture.set(null);
+    this.emitToast(`${member.name} fingerprint saved! Ready for biometric IN/OUT attendance.`, 'success');
+  }
+
+  removeEnrolledFingerprint(profileId: string): void {
+    if (!this.canEnrollCurrentPortal()) {
+      this.emitToast('Fingerprint removal is restricted by School Owner permissions.', 'warning');
+      return;
+    }
+    this.fingerprintRemoved.emit(profileId);
+  }
+
   handleRosterStatusAction(member: AttendanceMemberView, status: 'Present' | 'Late' | 'Absent' | 'On Leave'): void {
     if (!this.isOwner() && !this.allowedCategories().includes(member.category)) {
       this.emitToast(`School Owner has restricted attendance actions for ${this.singleCategoryLabel(member.category)} records.`, 'warning');
@@ -2706,16 +3276,20 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       | 'livenessCheckEnabled'
       | 'autoCaptureOnMatch'
       | 'requireCameraForAllAttendance'
+      | 'allowFingerprintAttendance'
       | 'twoPunchEnabled'
   ): void {
-    this.policyDraft.update((d) => ({ ...d, [field]: !d[field] }));
+    this.policyDraft.update((d) => {
+      const current = field === 'allowFingerprintAttendance' ? d[field] !== false : Boolean(d[field]);
+      return { ...d, [field]: !current };
+    });
   }
 
   setDraftFillLightColor(color: 'neutral' | 'warm' | 'bright'): void {
     this.policyDraft.update((d) => ({ ...d, fillLightColor: color }));
   }
 
-  setDraftNumber(field: 'confidenceThreshold' | 'liteConfidenceThreshold', raw: string): void {
+  setDraftNumber(field: 'confidenceThreshold' | 'liteConfidenceThreshold' | 'fingerprintConfidenceThreshold', raw: string): void {
     const num = Math.max(50, Math.min(98, Number(raw) || 75));
     this.policyDraft.update((d) => ({ ...d, [field]: num }));
   }
@@ -2914,8 +3488,13 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
         return m.checkOutTime || '—';
       case 'durationLabel':
         return `${m.durationLabel} (${m.punchState})`;
-      case 'verifyFace':
-        return m.isEnrolled ? (m.lastConfidence > 0 ? `Matched ${m.lastConfidence}%` : 'Face Enrolled') : 'Not Enrolled';
+      case 'verifyFace': {
+        const badges: string[] = [];
+        if (m.isEnrolled) badges.push('Face');
+        if (m.isFingerprintEnrolled) badges.push('Finger');
+        if (badges.length === 0) return 'Not Enrolled';
+        return m.lastConfidence > 0 ? `Matched ${m.lastConfidence}% (${badges.join('+')})` : `${badges.join(' + ')} Enrolled`;
+      }
       case 'verifiedMethod':
         return m.verifiedMethod || '—';
       case 'overallRate':

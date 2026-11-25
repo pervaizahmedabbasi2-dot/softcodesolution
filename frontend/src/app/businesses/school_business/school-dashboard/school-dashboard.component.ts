@@ -71,6 +71,7 @@ import { SchoolAttendanceHubComponent } from '../components/school-attendance-hu
 import {
   AttendanceMemberCategory,
   FaceProfileRecord,
+  FingerprintProfileRecord,
   FaceVerificationLogRecord,
   OwnerAttendancePolicy,
   PrincipalMemberRecord,
@@ -1761,6 +1762,13 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
     return {
       ...def,
       ...src,
+      allowFingerprintAttendance:
+        src.allowFingerprintAttendance !== undefined
+          ? Boolean(src.allowFingerprintAttendance)
+          : def.allowFingerprintAttendance,
+      fingerprintConfidenceThreshold:
+        Number(src.fingerprintConfidenceThreshold ?? def.fingerprintConfidenceThreshold) ||
+        def.fingerprintConfidenceThreshold,
       categories: mergedCategories,
       roleAccess: mergedRoleAccess,
       operatorOverrides: { ...(src.operatorOverrides || {}) }
@@ -4924,6 +4932,7 @@ INSTRUCTIONS:
   schoolStaff: StaffMemberRecord[] = [];
   schoolPrincipals: PrincipalMemberRecord[] = [];
   schoolFaceProfiles: FaceProfileRecord[] = [];
+  schoolFingerprintProfiles: FingerprintProfileRecord[] = [];
   ownerAttendancePolicy: OwnerAttendancePolicy = createDefaultOwnerAttendancePolicy();
   faceVerificationLogs: FaceVerificationLogRecord[] = [];
 
@@ -6954,7 +6963,7 @@ INSTRUCTIONS:
 
   offlineAttendanceQueue: Array<{
     id: string;
-    kind: 'attendance' | 'face_profile' | 'face_delete' | 'policy';
+    kind: 'attendance' | 'face_profile' | 'face_delete' | 'fingerprint_profile' | 'fingerprint_delete' | 'policy';
     payload: any;
     queuedAt: string;
   }> = [];
@@ -7073,7 +7082,7 @@ INSTRUCTIONS:
   }
 
   private enqueueOfflineMutation(
-    kind: 'attendance' | 'face_profile' | 'face_delete' | 'policy',
+    kind: 'attendance' | 'face_profile' | 'face_delete' | 'fingerprint_profile' | 'fingerprint_delete' | 'policy',
     payload: any
   ): void {
     const item = {
@@ -7106,6 +7115,12 @@ INSTRUCTIONS:
             ok = Boolean(r?.ok);
           } else if (item.kind === 'face_delete') {
             const r = await this.backend.deleteSchoolFaceProfile(item.payload);
+            ok = Boolean(r?.ok);
+          } else if (item.kind === 'fingerprint_profile') {
+            const r = await this.backend.saveSchoolFingerprintProfile(item.payload);
+            ok = Boolean(r?.ok);
+          } else if (item.kind === 'fingerprint_delete') {
+            const r = await this.backend.deleteSchoolFingerprintProfile(item.payload);
             ok = Boolean(r?.ok);
           } else if (item.kind === 'policy') {
             const r = await this.backend.saveSchoolAttendancePolicy(item.payload);
@@ -7909,6 +7924,14 @@ INSTRUCTIONS:
         } catch {}
       }
 
+      const savedFingerProfiles = this.getScopedItem('scs_school_fingerprint_profiles_v1');
+      if (savedFingerProfiles) {
+        try {
+          const parsedFg = JSON.parse(savedFingerProfiles);
+          if (Array.isArray(parsedFg)) this.schoolFingerprintProfiles = parsedFg;
+        } catch {}
+      }
+
       const savedOwnerAttPolicy = this.getScopedItem('scs_school_owner_attendance_policy_v1');
       if (savedOwnerAttPolicy) {
         try {
@@ -7996,6 +8019,7 @@ INSTRUCTIONS:
       }
 
       this.syncBiometricFlagsFromFaceProfiles();
+      this.syncBiometricFlagsFromFingerprintProfiles();
       this.recalculateDefaulters();
       this.checkAndUpdateOverdueBooks();
     } catch {
@@ -8032,7 +8056,7 @@ INSTRUCTIONS:
   async loadStateFromBackend(): Promise<void> {
     try {
       await this.flushOfflineSyncQueue();
-      const [wsRes, stuRes, tchRes, admRes, feeRes, hwRes, hwSubRes, matRes, msgRes, lvRes, conRes, cmpRes, lpRes, subRes, audRes, recRes, pvRes, monRes, stfRes, priRes, polRes, fpRes, attRes] = await Promise.all([
+      const [wsRes, stuRes, tchRes, admRes, feeRes, hwRes, hwSubRes, matRes, msgRes, lvRes, conRes, cmpRes, lpRes, subRes, audRes, recRes, pvRes, monRes, stfRes, priRes, polRes, fpRes, fgRes, attRes] = await Promise.all([
         this.backend.getSchoolWorkspace().catch(() => null),
         this.backend.getSchoolStudents().catch(() => null),
         this.backend.getSchoolTeachers().catch(() => null),
@@ -8055,6 +8079,7 @@ INSTRUCTIONS:
         this.backend.getSchoolPrincipals().catch(() => null),
         this.backend.getSchoolAttendancePolicy().catch(() => null),
         this.backend.getSchoolFaceProfiles().catch(() => null),
+        this.backend.getSchoolFingerprintProfiles().catch(() => null),
         this.backend.getSchoolAttendance().catch(() => null),
         this.tableSchemaService.loadFromBackend().catch(() => null)
       ]);
@@ -8386,6 +8411,18 @@ INSTRUCTIONS:
         this.syncBiometricFlagsFromFaceProfiles();
       }
 
+      if (fgRes?.ok && Array.isArray(fgRes.profiles)) {
+        const mapFg = new Map<string, FingerprintProfileRecord>();
+        for (const p of fgRes.profiles) {
+          if (p && p.id) mapFg.set(p.id, p);
+        }
+        for (const local of this.schoolFingerprintProfiles) {
+          if (local && local.id && !mapFg.has(local.id)) mapFg.set(local.id, local);
+        }
+        this.schoolFingerprintProfiles = Array.from(mapFg.values());
+        this.syncBiometricFlagsFromFingerprintProfiles();
+      }
+
       if (attRes?.ok && Array.isArray(attRes.attendance) && attRes.attendance.length > 0) {
         const todayIso = new Date().toISOString().split('T')[0];
         const logs: FaceVerificationLogRecord[] = [];
@@ -8501,6 +8538,7 @@ INSTRUCTIONS:
       this.setScopedItem('scs_school_staff_v1', JSON.stringify(this.schoolStaff));
       this.setScopedItem('scs_school_principals_v1', JSON.stringify(this.schoolPrincipals));
       this.setScopedItem('scs_school_face_profiles_v1', JSON.stringify(this.schoolFaceProfiles));
+      this.setScopedItem('scs_school_fingerprint_profiles_v1', JSON.stringify(this.schoolFingerprintProfiles));
       this.setScopedItem('scs_school_owner_attendance_policy_v1', JSON.stringify(this.ownerAttendancePolicy));
       this.setScopedItem('scs_school_face_verification_logs_v1', JSON.stringify(this.faceVerificationLogs));
       this.setScopedItem('scs_school_audit_waivers_v1', JSON.stringify(this.auditWaiversList));
@@ -15127,6 +15165,45 @@ INSTRUCTIONS:
     });
   }
 
+  private syncBiometricFlagsFromFingerprintProfiles(): void {
+    const enrolledSet = new Set(this.schoolFingerprintProfiles.map((fp) => `${fp.memberCategory}:${fp.memberId}`));
+
+    this.schoolFingerprintProfiles = (this.schoolFingerprintProfiles || []).map((fp) => {
+      const n = String(fp.memberName || '').trim();
+      if (!n || n === '[ENCRYPTED_PROTECTED]' || n === '[LOCKED_VIP_VAULT]') {
+        return {
+          ...fp,
+          memberName: this.resolveCleanMemberName(fp.memberCategory, fp.memberId, fp.memberCode || 'Campus Member')
+        };
+      }
+      return fp;
+    });
+
+    this.activeStudents = (this.activeStudents || []).map((st) => {
+      const key = `student:${st.id}`;
+      const hasProfile = enrolledSet.has(key);
+      return hasProfile ? { ...st, fingerprintEnrolled: true } : st;
+    });
+
+    this.teachers = (this.teachers || []).map((t) => {
+      const key = `teacher:${t.id}`;
+      const hasProfile = enrolledSet.has(key);
+      return hasProfile ? { ...t, fingerprintEnrolled: true } : t;
+    });
+
+    this.schoolStaff = (this.schoolStaff || []).map((sf) => {
+      const key = `staff:${sf.id}`;
+      const hasProfile = enrolledSet.has(key);
+      return hasProfile ? { ...sf, fingerprintEnrolled: true } : sf;
+    });
+
+    this.schoolPrincipals = (this.schoolPrincipals || []).map((pr) => {
+      const key = `principal:${pr.id}`;
+      const hasProfile = enrolledSet.has(key);
+      return hasProfile ? { ...pr, fingerprintEnrolled: true } : pr;
+    });
+  }
+
   private recomputeAttendanceSummary(): void {
     const total = (this.activeStudents || []).length;
     const present = (this.activeStudents || []).filter((s) => s.status === 'Present').length;
@@ -15213,6 +15290,48 @@ INSTRUCTIONS:
     this.cdr.detectChanges();
   }
 
+  async onFingerprintProfileEnrolled(profile: FingerprintProfileRecord): Promise<void> {
+    const filtered = this.schoolFingerprintProfiles.filter(
+      (fp) => !(fp.memberCategory === profile.memberCategory && fp.memberId === profile.memberId)
+    );
+    this.schoolFingerprintProfiles = [profile, ...filtered];
+    this.syncBiometricFlagsFromFingerprintProfiles();
+    this.saveStateToStorage();
+    const isOnline = typeof navigator === 'undefined' || navigator.onLine !== false;
+    const res = isOnline ? await this.backend.saveSchoolFingerprintProfile(profile) : { ok: false };
+    if (!res?.ok) {
+      this.enqueueOfflineMutation('fingerprint_profile', profile);
+      this.showToast(`Offline mode: Fingerprint profile saved locally for ${profile.memberName} & queued for sync.`, 'info');
+    } else {
+      this.showToast(`Fingerprint enrolled & saved for ${profile.memberName} (${profile.memberCategory}).`, 'success');
+    }
+    this.cdr.detectChanges();
+  }
+
+  async onFingerprintProfileRemoved(profileId: string): Promise<void> {
+    const removed = this.schoolFingerprintProfiles.find((fp) => fp.id === profileId);
+    this.schoolFingerprintProfiles = this.schoolFingerprintProfiles.filter((fp) => fp.id !== profileId);
+    if (removed) {
+      if (removed.memberCategory === 'student') {
+        this.activeStudents = this.activeStudents.map((s) => (s.id === removed.memberId ? { ...s, fingerprintEnrolled: false } : s));
+      } else if (removed.memberCategory === 'teacher') {
+        this.teachers = this.teachers.map((t) => (t.id === removed.memberId ? { ...t, fingerprintEnrolled: false } : t));
+      } else if (removed.memberCategory === 'principal') {
+        this.schoolPrincipals = this.schoolPrincipals.map((pr) => (pr.id === removed.memberId ? { ...pr, fingerprintEnrolled: false } : pr));
+      } else {
+        this.schoolStaff = this.schoolStaff.map((sf) => (sf.id === removed.memberId ? { ...sf, fingerprintEnrolled: false } : sf));
+      }
+    }
+    this.saveStateToStorage();
+    const isOnline = typeof navigator === 'undefined' || navigator.onLine !== false;
+    const res = isOnline ? await this.backend.deleteSchoolFingerprintProfile(profileId) : { ok: false };
+    if (!res?.ok) {
+      this.enqueueOfflineMutation('fingerprint_delete', profileId);
+    }
+    this.showToast('Fingerprint biometric profile removed.', 'info');
+    this.cdr.detectChanges();
+  }
+
   async onHubAttendanceRecorded(ev: {
     memberCategory: AttendanceMemberCategory;
     memberId: string;
@@ -15231,6 +15350,13 @@ INSTRUCTIONS:
     snapshotData?: string;
   }): Promise<void> {
     const punch: 'IN' | 'OUT' = ev.punchType === 'OUT' ? 'OUT' : 'IN';
+    const isFingerprintScan =
+      String(ev.verificationMode || '').startsWith('fingerprint') ||
+      String(ev.verificationMode || '').startsWith('biometric');
+    const terminalGateName = `${isFingerprintScan ? 'Biometric Fingerprint Terminal' : 'Camera Face Terminal'} · ${punch}`;
+    const studentGateLabel = isFingerprintScan
+      ? `Biometric Fingerprint (${Math.round(ev.confidenceScore)}%)`
+      : `Face Camera Terminal (${Math.round(ev.confidenceScore)}%)`;
     if (ev.memberCategory === 'student') {
       this.activeStudents = this.activeStudents.map((s) =>
         s.id === ev.memberId || s.rollNo === ev.memberCode
@@ -15254,7 +15380,7 @@ INSTRUCTIONS:
             day: dayLabel,
             checkIn: nowTime,
             checkOut: 'Active',
-            gate: `Face Camera Terminal (${Math.round(ev.confidenceScore)}%)`,
+            gate: studentGateLabel,
             status: ev.status
           },
           ...this.studentAttendanceLog
@@ -15288,7 +15414,7 @@ INSTRUCTIONS:
       scheduledStartTime: scheduledStart,
       lateMinutes: ev.lateMinutes,
       lateByLabel: ev.lateByLabel,
-      gateName: `Camera Face Terminal · ${punch}`,
+      gateName: terminalGateName,
       verificationMode: ev.verificationMode,
       confidenceScore: ev.confidenceScore,
       verifiedBy: ev.verifiedBy,
@@ -15313,7 +15439,7 @@ INSTRUCTIONS:
       scheduledStartTime: scheduledStart,
       lateMinutes: ev.lateMinutes,
       lateByLabel: ev.lateByLabel,
-      gateName: `Camera Face Terminal · ${punch}`,
+      gateName: terminalGateName,
       memberCategory: ev.memberCategory,
       verificationMode: ev.verificationMode,
       confidenceScore: ev.confidenceScore,
@@ -15396,6 +15522,7 @@ INSTRUCTIONS:
   async onHubStaffDeleted(staffId: string): Promise<void> {
     this.schoolStaff = this.schoolStaff.filter((s) => s.id !== staffId);
     this.schoolFaceProfiles = this.schoolFaceProfiles.filter((fp) => !(fp.memberCategory === 'staff' && fp.memberId === staffId));
+    this.schoolFingerprintProfiles = this.schoolFingerprintProfiles.filter((fp) => !(fp.memberCategory === 'staff' && fp.memberId === staffId));
     this.tableSchemaService.clearRowCustomData('attendance_roster_staff', [staffId]);
     this.saveStateToStorage();
     await this.backend.deleteSchoolStaff(staffId);
@@ -15454,6 +15581,7 @@ INSTRUCTIONS:
   async onHubPrincipalDeleted(principalId: string): Promise<void> {
     this.schoolPrincipals = this.schoolPrincipals.filter((p) => p.id !== principalId);
     this.schoolFaceProfiles = this.schoolFaceProfiles.filter((fp) => !(fp.memberCategory === 'principal' && fp.memberId === principalId));
+    this.schoolFingerprintProfiles = this.schoolFingerprintProfiles.filter((fp) => !(fp.memberCategory === 'principal' && fp.memberId === principalId));
     this.tableSchemaService.clearRowCustomData('attendance_roster_principals', [principalId]);
     this.saveStateToStorage();
     await this.backend.deleteSchoolPrincipal(principalId);
@@ -20346,6 +20474,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
         schoolStaff: this.schoolStaff,
         schoolPrincipals: this.schoolPrincipals,
         schoolFaceProfiles: this.schoolFaceProfiles,
+        schoolFingerprintProfiles: this.schoolFingerprintProfiles,
         ownerAttendancePolicy: this.ownerAttendancePolicy,
         faceVerificationLogs: this.faceVerificationLogs,
         auditWaiversList: this.auditWaiversList,
@@ -20479,6 +20608,11 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
           this.schoolFaceProfiles = [...localOnlyFp, ...cloudData.schoolFaceProfiles];
         }
         this.syncBiometricFlagsFromFaceProfiles();
+        if (Array.isArray(cloudData.schoolFingerprintProfiles) && cloudData.schoolFingerprintProfiles.length > 0) {
+          const localOnlyFg = this.schoolFingerprintProfiles.filter(fp => !cloudData.schoolFingerprintProfiles.some((c: any) => c.id === fp.id));
+          this.schoolFingerprintProfiles = [...localOnlyFg, ...cloudData.schoolFingerprintProfiles];
+        }
+        this.syncBiometricFlagsFromFingerprintProfiles();
         if (cloudData.ownerAttendancePolicy && typeof cloudData.ownerAttendancePolicy === 'object') {
           this.ownerAttendancePolicy = this.mergeOwnerAttendancePolicy(cloudData.ownerAttendancePolicy);
           this.ownerBiometricPolicy.principalBiometricAccessGranted = Boolean(this.ownerAttendancePolicy.roleAccess.principal.enabled);

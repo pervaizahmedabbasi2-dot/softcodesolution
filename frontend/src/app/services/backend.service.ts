@@ -957,6 +957,42 @@ export class BackendService {
     } catch { return { ok: false }; }
   }
 
+  async getSchoolFingerprintProfiles(category?: string) {
+    try {
+      const q = category ? `?category=${encodeURIComponent(category)}` : '';
+      const res = await fetch(`/api/school/attendance/fingerprint-profiles${q}`, {
+        headers: this.getSchoolHeaders(false),
+        credentials: 'include'
+      });
+      return await res.json().catch(() => ({ ok: false, profiles: [] }));
+    } catch { return { ok: false, profiles: [] }; }
+  }
+
+  async saveSchoolFingerprintProfile(payload: any) {
+    try {
+      const res = await fetch('/api/school/attendance/fingerprint-profiles', {
+        method: 'POST',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify(payload),
+        credentials: 'include',
+        signal: this.createTimeoutSignal(4500)
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async deleteSchoolFingerprintProfile(id: string) {
+    try {
+      const res = await fetch(`/api/school/attendance/fingerprint-profiles/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        headers: this.getSchoolHeaders(false),
+        credentials: 'include',
+        signal: this.createTimeoutSignal(3500)
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
   async getSchoolHomework() {
     try {
       const res = await fetch('/api/school/homework', { headers: this.getSchoolHeaders(false), credentials: 'include' });

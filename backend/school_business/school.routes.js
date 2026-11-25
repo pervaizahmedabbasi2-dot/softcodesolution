@@ -48,8 +48,10 @@ export function getDefaultAttendancePolicy() {
     livenessCheckEnabled: true,
     autoCaptureOnMatch: true,
     requireCameraForAllAttendance: true,
+    allowFingerprintAttendance: true,
     confidenceThreshold: 76,
     liteConfidenceThreshold: 66,
+    fingerprintConfidenceThreshold: 78,
     scheduledStartTime: '08:00',
     lateCutoffTime: '08:15',
     twoPunchEnabled: true,
@@ -260,6 +262,8 @@ function ensureColumnMigrations(sqliteDb) {
   safeAddCol('local_school_attendance', 'marked_by_role', "TEXT DEFAULT 'owner'");
   safeAddCol('local_school_attendance', 'remarks', 'TEXT');
   safeAddCol('local_school_face_profiles', 'is_synced', 'INTEGER DEFAULT 0');
+  safeAddCol('local_school_staff', 'fingerprint_enrolled', 'INTEGER DEFAULT 0');
+  safeAddCol('local_school_principals', 'fingerprint_enrolled', 'INTEGER DEFAULT 0');
 
   const teacherCols = [
     ['tenant_id', "TEXT DEFAULT 'tenant-root-platform'"],
@@ -363,6 +367,28 @@ function ensureColumnMigrations(sqliteDb) {
         lite_enabled INTEGER DEFAULT 1,
         enrolled_by TEXT DEFAULT 'owner',
         enrolled_at TEXT NOT NULL,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE TABLE IF NOT EXISTS local_school_fingerprint_profiles (
+        id TEXT PRIMARY KEY,
+        tenant_id TEXT DEFAULT 'tenant-root-platform',
+        member_id TEXT NOT NULL,
+        member_category TEXT NOT NULL,
+        member_name TEXT NOT NULL,
+        member_code TEXT,
+        grade_or_dept TEXT,
+        finger_label TEXT DEFAULT 'Right Index',
+        scanner_type TEXT DEFAULT 'device_webauthn',
+        credential_id TEXT,
+        public_key_spki TEXT,
+        fingerprint_descriptor_json TEXT NOT NULL DEFAULT '[]',
+        fingerprint_preview_data TEXT,
+        fingerprint_hash TEXT NOT NULL,
+        quality_score REAL DEFAULT 95,
+        lite_enabled INTEGER DEFAULT 1,
+        enrolled_by TEXT DEFAULT 'owner',
+        enrolled_at TEXT NOT NULL,
+        is_synced INTEGER DEFAULT 0,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       );
       CREATE TABLE IF NOT EXISTS local_school_attendance_policy (
@@ -1758,6 +1784,7 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     status: r.status || 'ACTIVE',
     attendanceStatus: r.attendance_status || 'Absent',
     faceEnrolled: r.face_enrolled === 1,
+    fingerprintEnrolled: r.fingerprint_enrolled === 1,
     liteEnabled: r.lite_enabled !== 0
   });
 
@@ -1805,20 +1832,21 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       status: String(b.status || 'ACTIVE').toUpperCase(),
       attendanceStatus: String(b.attendanceStatus || 'Absent'),
       faceEnrolled: Boolean(b.faceEnrolled),
+      fingerprintEnrolled: Boolean(b.fingerprintEnrolled),
       liteEnabled: b.liteEnabled !== false
     };
     if (sqliteDb) {
       sqliteDb.prepare(`
         INSERT OR REPLACE INTO local_school_staff
-        (id, tenant_id, emp_code, name, father_name, cnic, passport_no, nationality, gender, dob, blood_group, role_title, department, phone, emergency_contact, address, shift, status, attendance_status, face_enrolled, lite_enabled, is_synced, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
+        (id, tenant_id, emp_code, name, father_name, cnic, passport_no, nationality, gender, dob, blood_group, role_title, department, phone, emergency_contact, address, shift, status, attendance_status, face_enrolled, fingerprint_enrolled, lite_enabled, is_synced, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
       `).run(
         staffItem.id, tid, staffItem.empCode, enc(tid, staffItem.name), enc(tid, staffItem.fatherName),
         enc(tid, staffItem.cnic), enc(tid, staffItem.passportNo), staffItem.nationality, staffItem.gender,
         staffItem.dob, staffItem.bloodGroup, staffItem.roleTitle, staffItem.department,
         enc(tid, staffItem.phone), enc(tid, staffItem.emergencyContact), enc(tid, staffItem.address),
         staffItem.shift, staffItem.status, staffItem.attendanceStatus,
-        staffItem.faceEnrolled ? 1 : 0, staffItem.liteEnabled ? 1 : 0, new Date().toISOString()
+        staffItem.faceEnrolled ? 1 : 0, staffItem.fingerprintEnrolled ? 1 : 0, staffItem.liteEnabled ? 1 : 0, new Date().toISOString()
       );
     }
     if (db) {
@@ -1913,6 +1941,7 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     status: r.status || 'ACTIVE',
     attendanceStatus: r.attendance_status || 'Absent',
     faceEnrolled: r.face_enrolled === 1,
+    fingerprintEnrolled: r.fingerprint_enrolled === 1,
     liteEnabled: r.lite_enabled !== 0
   });
 
@@ -1961,20 +1990,21 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       status: String(b.status || 'ACTIVE').toUpperCase(),
       attendanceStatus: String(b.attendanceStatus || 'Absent'),
       faceEnrolled: Boolean(b.faceEnrolled),
+      fingerprintEnrolled: Boolean(b.fingerprintEnrolled),
       liteEnabled: b.liteEnabled !== false
     };
     if (sqliteDb) {
       sqliteDb.prepare(`
         INSERT OR REPLACE INTO local_school_principals
-        (id, tenant_id, emp_code, name, father_name, cnic, passport_no, nationality, gender, dob, blood_group, role_title, department, phone, emergency_contact, email, address, shift, status, attendance_status, face_enrolled, lite_enabled, is_synced, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
+        (id, tenant_id, emp_code, name, father_name, cnic, passport_no, nationality, gender, dob, blood_group, role_title, department, phone, emergency_contact, email, address, shift, status, attendance_status, face_enrolled, fingerprint_enrolled, lite_enabled, is_synced, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
       `).run(
         principalItem.id, tid, principalItem.empCode, enc(tid, principalItem.name), enc(tid, principalItem.fatherName),
         enc(tid, principalItem.cnic), enc(tid, principalItem.passportNo), principalItem.nationality, principalItem.gender,
         principalItem.dob, principalItem.bloodGroup, principalItem.roleTitle, principalItem.department,
         enc(tid, principalItem.phone), enc(tid, principalItem.emergencyContact), enc(tid, principalItem.email),
         enc(tid, principalItem.address), principalItem.shift, principalItem.status, principalItem.attendanceStatus,
-        principalItem.faceEnrolled ? 1 : 0, principalItem.liteEnabled ? 1 : 0, new Date().toISOString()
+        principalItem.faceEnrolled ? 1 : 0, principalItem.fingerprintEnrolled ? 1 : 0, principalItem.liteEnabled ? 1 : 0, new Date().toISOString()
       );
       recordAudit(tid, {
         operatorName: String(req.headers['x-user-name'] || 'School Owner'),
@@ -2380,6 +2410,203 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     res.json({ ok: true, id });
   });
 
+  // -------------------------------------------------------------------------
+  // BIOMETRIC FINGERPRINT PROFILES (Students, Teachers, Staff, Principal)
+  // -------------------------------------------------------------------------
+  router.get('/attendance/fingerprint-profiles', async (req, res) => {
+    const tid = resolveTenantId(req);
+    const category = String(req.query?.category || '').trim().toLowerCase();
+    let profiles = [];
+    if (sqliteDb) {
+      try {
+        const rows = category
+          ? sqliteDb.prepare('SELECT * FROM local_school_fingerprint_profiles WHERE tenant_id = ? AND member_category = ? ORDER BY updated_at DESC').all(tid, category)
+          : sqliteDb.prepare('SELECT * FROM local_school_fingerprint_profiles WHERE tenant_id = ? ORDER BY updated_at DESC').all(tid);
+        profiles = rows.map((r) => ({
+          id: r.id,
+          tenantId: r.tenant_id || tid,
+          memberId: r.member_id,
+          memberCategory: r.member_category,
+          memberName: dec(r.tenant_id || tid, r.member_name),
+          memberCode: r.member_code || '',
+          gradeOrDept: r.grade_or_dept || '',
+          fingerLabel: r.finger_label || 'Right Index',
+          scannerType: r.scanner_type || 'device_webauthn',
+          credentialId: r.credential_id || '',
+          publicKeySpki: r.public_key_spki || '',
+          fingerprintDescriptor: (() => { try { return JSON.parse(r.fingerprint_descriptor_json || '[]'); } catch { return []; } })(),
+          fingerprintPreviewData: r.fingerprint_preview_data || '',
+          fingerprintHash: r.fingerprint_hash,
+          qualityScore: Number(r.quality_score ?? 95),
+          liteEnabled: r.lite_enabled !== 0,
+          enrolledBy: r.enrolled_by || 'owner',
+          enrolledAt: r.enrolled_at,
+          isSynced: r.is_synced === 1
+        }));
+      } catch {}
+    }
+    if (profiles.length === 0 && getCollectionDocs) {
+      try {
+        const cloudProfiles = await getCollectionDocs('school_fingerprint_profiles', []);
+        profiles = (cloudProfiles || [])
+          .filter((p) => (!p.tenant_id || p.tenant_id === tid) && (!category || p.memberCategory === category))
+          .map((p) => ({
+            ...p,
+            memberName: dec(p.tenant_id || tid, p.memberName || ''),
+            isSynced: true
+          }));
+      } catch {}
+    }
+    if (profiles.some((p) => isMaskedField(p.memberName))) {
+      const resolver = await buildMemberNameResolver(tid);
+      profiles = profiles.map((p) => {
+        if (!isMaskedField(p.memberName)) return p;
+        const resolved = resolver.get(`${p.memberCategory}:${p.memberId}`);
+        return { ...p, memberName: resolved || p.memberCode || p.memberId || 'Campus Member' };
+      });
+    }
+    const role = resolveUserRole(req);
+    if (role && !OWNER_ROLES.has(role)) {
+      const policy = loadTenantAttendancePolicy(tid);
+      const allowedCategories = getAllowedAttendanceCategoriesForRole(policy, role);
+      profiles = profiles.filter((p) => allowedCategories.includes(String(p.memberCategory || 'student').toLowerCase()));
+    }
+    res.json({ ok: true, tenantId: tid, profiles });
+  });
+
+  router.post('/attendance/fingerprint-profiles', (req, res) => {
+    const tid = resolveTenantId(req);
+    const role = resolveUserRole(req);
+    const b = req.body || {};
+    const memberId = String(b.memberId || '').trim();
+    const memberCategory = String(b.memberCategory || 'student').trim().toLowerCase();
+    const memberName = String(b.memberName || '').trim();
+    const credentialId = String(b.credentialId || '').trim();
+    const descriptor = Array.isArray(b.fingerprintDescriptor) ? b.fingerprintDescriptor.map(Number) : [];
+    if (!['student', 'teacher', 'staff', 'principal'].includes(memberCategory)) {
+      return res.status(400).json({ ok: false, message: 'memberCategory must be student, teacher, staff, or principal.' });
+    }
+    const policy = loadTenantAttendancePolicy(tid);
+    const permCheck = canRolePerformAttendanceAction(policy, role, memberCategory, 'enroll');
+    if (!permCheck.allowed) {
+      return res.status(403).json({
+        ok: false,
+        error: 'ROLE_FORBIDDEN',
+        message: permCheck.message
+      });
+    }
+    if (!memberId || !memberName || (!credentialId && descriptor.length < 8)) {
+      return res.status(400).json({
+        ok: false,
+        message: 'memberId, memberName, and valid biometric credentialId or fingerprintDescriptor are required.'
+      });
+    }
+    const id = b.id || `BFP-${memberCategory}-${memberId}`;
+    const enrolledAt = String(b.enrolledAt || new Date().toISOString());
+    const scannerType = String(b.scannerType || (credentialId ? 'device_webauthn' : 'usb_optical_template'));
+    const profile = {
+      id,
+      tenantId: tid,
+      memberId,
+      memberCategory,
+      memberName,
+      memberCode: String(b.memberCode || memberId),
+      gradeOrDept: String(b.gradeOrDept || ''),
+      fingerLabel: String(b.fingerLabel || 'Right Index'),
+      scannerType,
+      credentialId,
+      publicKeySpki: String(b.publicKeySpki || ''),
+      fingerprintDescriptor: descriptor,
+      fingerprintPreviewData: String(b.fingerprintPreviewData || ''),
+      fingerprintHash: String(b.fingerprintHash || `BIO-FP-${memberId}`),
+      qualityScore: Number(b.qualityScore ?? 95),
+      liteEnabled: b.liteEnabled !== false,
+      enrolledBy: String(b.enrolledBy || resolveUserRole(req) || 'kiosk'),
+      enrolledAt,
+      isSynced: false
+    };
+
+    if (sqliteDb) {
+      sqliteDb.prepare(`
+        INSERT OR REPLACE INTO local_school_fingerprint_profiles
+        (id, tenant_id, member_id, member_category, member_name, member_code, grade_or_dept, finger_label, scanner_type, credential_id, public_key_spki, fingerprint_descriptor_json, fingerprint_preview_data, fingerprint_hash, quality_score, lite_enabled, enrolled_by, enrolled_at, is_synced, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
+      `).run(
+        profile.id, tid, profile.memberId, profile.memberCategory, enc(tid, profile.memberName),
+        profile.memberCode, profile.gradeOrDept, profile.fingerLabel, profile.scannerType,
+        profile.credentialId, profile.publicKeySpki, JSON.stringify(profile.fingerprintDescriptor),
+        profile.fingerprintPreviewData, profile.fingerprintHash, profile.qualityScore,
+        profile.liteEnabled ? 1 : 0, profile.enrolledBy, profile.enrolledAt, new Date().toISOString()
+      );
+      if (memberCategory === 'staff') {
+        try {
+          sqliteDb.prepare('UPDATE local_school_staff SET fingerprint_enrolled = 1 WHERE id = ? AND tenant_id = ?').run(memberId, tid);
+        } catch {}
+      } else if (memberCategory === 'principal') {
+        try {
+          sqliteDb.prepare('UPDATE local_school_principals SET fingerprint_enrolled = 1, is_synced = 0 WHERE id = ? AND tenant_id = ?').run(memberId, tid);
+        } catch {}
+      }
+    }
+    if (db) {
+      setDoc(doc(db, 'school_fingerprint_profiles', id), {
+        id: profile.id,
+        tenant_id: tid,
+        memberId: profile.memberId,
+        memberCategory: profile.memberCategory,
+        memberName: enc(tid, profile.memberName),
+        memberCode: profile.memberCode,
+        gradeOrDept: profile.gradeOrDept,
+        fingerLabel: profile.fingerLabel,
+        scannerType: profile.scannerType,
+        credentialId: profile.credentialId,
+        publicKeySpki: profile.publicKeySpki,
+        fingerprintDescriptor: profile.fingerprintDescriptor,
+        fingerprintPreviewData: profile.fingerprintPreviewData,
+        fingerprintHash: profile.fingerprintHash,
+        qualityScore: profile.qualityScore,
+        liteEnabled: profile.liteEnabled,
+        enrolledBy: profile.enrolledBy,
+        enrolledAt: profile.enrolledAt,
+        is_synced: 1,
+        synced_at: new Date().toISOString()
+      }, { merge: true }).then(() => {
+        try {
+          if (sqliteDb) {
+            sqliteDb.prepare('UPDATE local_school_fingerprint_profiles SET is_synced = 1 WHERE id = ? AND tenant_id = ?').run(id, tid);
+          }
+        } catch {}
+      }).catch(() => {});
+    }
+    res.status(201).json({ ok: true, profile });
+  });
+
+  router.delete('/attendance/fingerprint-profiles/:id', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
+    const tid = resolveTenantId(req);
+    const role = resolveUserRole(req);
+    const id = req.params.id;
+    if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
+    const row = sqliteDb.prepare('SELECT id, member_id, member_category FROM local_school_fingerprint_profiles WHERE id = ? AND tenant_id = ?').get(id, tid);
+    if (!row) return res.status(404).json({ ok: false, message: 'Fingerprint profile not found for this tenant' });
+    const policy = loadTenantAttendancePolicy(tid);
+    const permCheck = canRolePerformAttendanceAction(policy, role, String(row.member_category || 'student').toLowerCase(), 'enroll');
+    if (!permCheck.allowed) {
+      return res.status(403).json({
+        ok: false,
+        error: 'ROLE_FORBIDDEN',
+        message: permCheck.message
+      });
+    }
+    sqliteDb.prepare('DELETE FROM local_school_fingerprint_profiles WHERE id = ? AND tenant_id = ?').run(id, tid);
+    if (row.member_category === 'staff') {
+      try { sqliteDb.prepare('UPDATE local_school_staff SET fingerprint_enrolled = 0 WHERE id = ? AND tenant_id = ?').run(row.member_id, tid); } catch {}
+    } else if (row.member_category === 'principal') {
+      try { sqliteDb.prepare('UPDATE local_school_principals SET fingerprint_enrolled = 0, is_synced = 0 WHERE id = ? AND tenant_id = ?').run(row.member_id, tid); } catch {}
+    }
+    try { sqliteDb.prepare('DELETE FROM encrypted_domain_records WHERE tenant_id = ? AND domain_key = ? AND id LIKE ?').run(tid, 'school_business', `%:${id}`); } catch {}
+    res.json({ ok: true, id });
+  });
+
   const parseClockToMinutes = (raw) => {
     const m = String(raw || '').trim().match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*([AP]M)?$/i);
     if (!m) return null;
@@ -2502,14 +2729,26 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       return res.status(400).json({ ok: false, message: 'memberCategory must be student, teacher, staff, or principal.' });
     }
     const mode = String(body.verificationMode || body.verification_mode || 'face_camera');
-    const isCameraScan = mode.startsWith('face_camera') || mode.startsWith('face_kiosk');
+    const isFingerprintScan = mode.startsWith('fingerprint') || mode.startsWith('biometric_finger');
+    const isBiometricScan =
+      mode.startsWith('face_camera') ||
+      mode.startsWith('face_kiosk') ||
+      isFingerprintScan ||
+      mode.startsWith('biometric');
     const policy = loadTenantAttendancePolicy(tid);
-    const permCheck = canRolePerformAttendanceAction(policy, role, memberCategory, isCameraScan ? 'camera' : 'manual');
+    const permCheck = canRolePerformAttendanceAction(policy, role, memberCategory, isBiometricScan ? 'camera' : 'manual');
     if (!permCheck.allowed) {
       return res.status(403).json({
         ok: false,
         error: 'ROLE_FORBIDDEN',
         message: permCheck.message
+      });
+    }
+    if (isFingerprintScan && policy.allowFingerprintAttendance === false) {
+      return res.status(403).json({
+        ok: false,
+        error: 'FINGERPRINT_DISABLED',
+        message: 'Fingerprint biometric attendance is currently disabled by School Owner policy.'
       });
     }
 
@@ -2524,9 +2763,13 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     const status = String(body.status || 'PRESENT').toUpperCase();
     const date = String(body.date || new Date().toISOString().split('T')[0]);
     const punchType = String(body.punchType || 'IN').toUpperCase() === 'OUT' ? 'OUT' : 'IN';
-    const gateName = String(body.gateName || `Camera Face Terminal · ${punchType}`);
+    const gateName = String(
+      body.gateName || (isFingerprintScan ? `Biometric Fingerprint Terminal · ${punchType}` : `Camera Face Terminal · ${punchType}`)
+    );
     const confidenceScore = Number(body.confidenceScore ?? 0);
-    const verifiedBy = String(body.verifiedBy || 'Camera Face Verification');
+    const verifiedBy = String(
+      body.verifiedBy || (isFingerprintScan ? 'Biometric Fingerprint Verification' : 'Camera Face Verification')
+    );
     const markedByRole = String(body.markedByRole || role || 'kiosk');
     const remarks = String(body.remarks || '').trim();
 

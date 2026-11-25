@@ -1713,6 +1713,258 @@ test('Teacher-Student-Parent Two-Way Homework, Study Materials, Messaging, Valid
   assert.equal(delHwRes.status, 200);
 });
 
+test('School Business Biometric Fingerprint Attendance: Profiles CRUD, Encryption, Policy Governance & Same Punch Rules', async () => {
+  const tenantId = `tenant-finger-${Date.now()}`;
+  const otherTenantId = `tenant-finger-other-${Date.now()}`;
+  const ownerHeaders = { 'Content-Type': 'application/json', 'x-tenant-id': tenantId, 'x-user-role': 'owner', 'x-user-name': 'School Owner' };
+  const principalHeaders = { 'Content-Type': 'application/json', 'x-tenant-id': tenantId, 'x-user-role': 'principal', 'x-user-name': 'Principal Tariq' };
+  const studentHeaders = { 'Content-Type': 'application/json', 'x-tenant-id': tenantId, 'x-user-role': 'student', 'x-user-name': 'Self Student' };
+  const accountantHeaders = { 'Content-Type': 'application/json', 'x-tenant-id': tenantId, 'x-user-role': 'accountant', 'x-user-name': 'Fee Clerk' };
+  const otherOwnerHeaders = { 'Content-Type': 'application/json', 'x-tenant-id': otherTenantId, 'x-user-role': 'owner' };
+
+  // 1. Default policy includes fingerprint governance defaults
+  const defaultPolRes = await fetch(`${baseUrl}/api/school/attendance/policy`, { headers: ownerHeaders });
+  assert.equal(defaultPolRes.status, 200);
+  const { policy: defPol } = await defaultPolRes.json();
+  assert.equal(defPol.allowFingerprintAttendance, true);
+  assert.equal(defPol.fingerprintConfidenceThreshold, 78);
+
+  // Create Staff + Principal for biometric flag toggle verification
+  const createStaffRes = await fetch(`${baseUrl}/api/school/staff`, {
+    method: 'POST',
+    headers: ownerHeaders,
+    body: JSON.stringify({
+      name: 'Imran Raza',
+      roleTitle: 'Gate Supervisor',
+      department: 'Security',
+      phone: '+92-300-7778899',
+      shift: 'Morning'
+    })
+  });
+  assert.equal(createStaffRes.status, 201);
+  const createdStaff = (await createStaffRes.json()).staff;
+  assert.equal(createdStaff.fingerprintEnrolled, false);
+
+  const createPriRes = await fetch(`${baseUrl}/api/school/principals`, {
+    method: 'POST',
+    headers: ownerHeaders,
+    body: JSON.stringify({
+      name: 'Dr. Naveed Akram',
+      roleTitle: 'Principal',
+      department: 'Executive Directorate',
+      phone: '+92-321-4455667',
+      shift: 'Morning'
+    })
+  });
+  assert.equal(createPriRes.status, 201);
+  const createdPri = (await createPriRes.json()).principal;
+  assert.equal(createdPri.fingerprintEnrolled, false);
+
+  // 2. RBAC: Accountant/Student blocked from enrolling fingerprints (403)
+  const fpDescriptor = Array.from({ length: 32 }, (_, idx) => Number(((idx % 7) * 0.12 + 0.05).toFixed(4)));
+  const blockedEnroll = await fetch(`${baseUrl}/api/school/attendance/fingerprint-profiles`, {
+    method: 'POST',
+    headers: accountantHeaders,
+    body: JSON.stringify({
+      memberId: 'STD-FP-1',
+      memberCategory: 'student',
+      memberName: 'Zainab Ali',
+      fingerprintDescriptor: fpDescriptor
+    })
+  });
+  assert.equal(blockedEnroll.status, 403);
+
+  // 3. Owner enrolls fingerprint profiles (WebAuthn device credential + optical scanner descriptor)
+  const enrollStuRes = await fetch(`${baseUrl}/api/school/attendance/fingerprint-profiles`, {
+    method: 'POST',
+    headers: ownerHeaders,
+    body: JSON.stringify({
+      memberId: 'STD-FP-1',
+      memberCategory: 'student',
+      memberName: 'Zainab Ali',
+      memberCode: 'SCH-201',
+      gradeOrDept: 'Class 9-A',
+      fingerLabel: 'Right Index',
+      scannerType: 'device_webauthn',
+      credentialId: 'cred-webauthn-zainab-001',
+      publicKeySpki: 'spki-base64-sample',
+      fingerprintDescriptor: fpDescriptor,
+      qualityScore: 97
+    })
+  });
+  assert.equal(enrollStuRes.status, 201);
+  const stuProfile = (await enrollStuRes.json()).profile;
+  assert.equal(stuProfile.fingerLabel, 'Right Index');
+
+  const enrollStaffRes = await fetch(`${baseUrl}/api/school/attendance/fingerprint-profiles`, {
+    method: 'POST',
+    headers: ownerHeaders,
+    body: JSON.stringify({
+      memberId: createdStaff.id,
+      memberCategory: 'staff',
+      memberName: createdStaff.name,
+      memberCode: createdStaff.empCode,
+      gradeOrDept: 'Security',
+      fingerLabel: 'Right Thumb',
+      scannerType: 'optical_image',
+      fingerprintDescriptor: fpDescriptor,
+      qualityScore: 91
+    })
+  });
+  assert.equal(enrollStaffRes.status, 201);
+  const staffFpProfile = (await enrollStaffRes.json()).profile;
+
+  const enrollPriRes = await fetch(`${baseUrl}/api/school/attendance/fingerprint-profiles`, {
+    method: 'POST',
+    headers: ownerHeaders,
+    body: JSON.stringify({
+      memberId: createdPri.id,
+      memberCategory: 'principal',
+      memberName: createdPri.name,
+      memberCode: createdPri.empCode,
+      gradeOrDept: 'Executive Directorate',
+      fingerLabel: 'Left Index',
+      scannerType: 'device_webauthn',
+      credentialId: 'cred-webauthn-pri-001',
+      qualityScore: 98
+    })
+  });
+  assert.equal(enrollPriRes.status, 201);
+  const priFpProfile = (await enrollPriRes.json()).profile;
+
+  // Encryption at rest check in SQLite
+  const rawFpRow = runtime.sqliteDb
+    .prepare('SELECT member_name FROM local_school_fingerprint_profiles WHERE id = ? AND tenant_id = ?')
+    .get(stuProfile.id, tenantId);
+  assert.ok(rawFpRow?.member_name?.startsWith('enc:v1:'), 'Fingerprint profile member_name must be AES-GCM encrypted at rest');
+
+  // Enrolled flags propagated onto staff & principal records
+  const staffAfterRes = await fetch(`${baseUrl}/api/school/staff`, { headers: ownerHeaders });
+  assert.equal((await staffAfterRes.json()).staff.find((s) => s.id === createdStaff.id)?.fingerprintEnrolled, true);
+
+  const priAfterRes = await fetch(`${baseUrl}/api/school/principals`, { headers: ownerHeaders });
+  assert.equal((await priAfterRes.json()).principals.find((p) => p.id === createdPri.id)?.fingerprintEnrolled, true);
+
+  // Tenant isolation on GET & DELETE
+  const otherTenantList = await fetch(`${baseUrl}/api/school/attendance/fingerprint-profiles`, { headers: otherOwnerHeaders });
+  assert.equal((await otherTenantList.json()).profiles.length, 0);
+
+  const crossTenantDel = await fetch(`${baseUrl}/api/school/attendance/fingerprint-profiles/${staffFpProfile.id}`, {
+    method: 'DELETE',
+    headers: otherOwnerHeaders
+  });
+  assert.equal(crossTenantDel.status, 404);
+
+  // 4. Strict biometric policy: requireCameraForAllAttendance = true allows fingerprint scan (biometric path) & calculates late timing
+  const policyRes = await fetch(`${baseUrl}/api/school/attendance/policy`, {
+    method: 'PUT',
+    headers: ownerHeaders,
+    body: JSON.stringify({
+      requireCameraForAllAttendance: true,
+      allowFingerprintAttendance: true,
+      fingerprintConfidenceThreshold: 80,
+      scheduledStartTime: '08:00',
+      lateCutoffTime: '08:15',
+      roleAccess: {
+        principal: { enabled: true, canScanStudents: true, canScanTeachers: true, canScanStaff: true, canScanPrincipal: false, canEnrollFaces: true, liteModeAllowed: true, manualFallbackAllowed: false, canExportReports: true, selfCheckInEnabled: false },
+        student: { enabled: true, canScanStudents: false, canScanTeachers: false, canScanStaff: false, canScanPrincipal: false, canEnrollFaces: false, liteModeAllowed: true, manualFallbackAllowed: false, canExportReports: false, selfCheckInEnabled: true }
+      }
+    })
+  });
+  assert.equal(policyRes.status, 200);
+  const updatedPol = (await policyRes.json()).policy;
+  assert.equal(updatedPol.allowFingerprintAttendance, true);
+  assert.equal(updatedPol.fingerprintConfidenceThreshold, 80);
+
+  const fpCheckIn = await fetch(`${baseUrl}/api/school/attendance`, {
+    method: 'POST',
+    headers: studentHeaders,
+    body: JSON.stringify({
+      studentId: 'STD-FP-1',
+      studentName: 'Zainab Ali',
+      rollNo: 'SCH-201',
+      grade: 'Class 9-A',
+      memberCategory: 'student',
+      verificationMode: 'fingerprint_device_webauthn',
+      confidenceScore: 97,
+      verifiedBy: 'Device Fingerprint (Right Index) · IN',
+      checkInTime: '08:25',
+      scheduledStartTime: '08:00',
+      punchType: 'IN',
+      status: 'Late'
+    })
+  });
+  assert.equal(fpCheckIn.status, 200);
+  const fpCheckInJson = await fpCheckIn.json();
+  assert.equal(fpCheckInJson.record.lateMinutes, 25);
+  assert.equal(fpCheckInJson.record.lateByLabel, '+25m late');
+  assert.equal(fpCheckInJson.record.gateName, 'Biometric Fingerprint Terminal · IN');
+
+  // Principal still blocked from scanning another Principal per roleAccess.canScanPrincipal = false
+  const blockedPriFpScan = await fetch(`${baseUrl}/api/school/attendance`, {
+    method: 'POST',
+    headers: principalHeaders,
+    body: JSON.stringify({
+      studentId: createdPri.id,
+      studentName: createdPri.name,
+      memberCategory: 'principal',
+      verificationMode: 'fingerprint_device_webauthn',
+      confidenceScore: 98,
+      status: 'Present'
+    })
+  });
+  assert.equal(blockedPriFpScan.status, 403);
+  assert.equal((await blockedPriFpScan.json()).error, 'ROLE_FORBIDDEN');
+
+  // 5. Owner disables Fingerprint Attendance -> biometric fingerprint scans return 403 FINGERPRINT_DISABLED while Face still works
+  const disableFpPolRes = await fetch(`${baseUrl}/api/school/attendance/policy`, {
+    method: 'PUT',
+    headers: ownerHeaders,
+    body: JSON.stringify({ allowFingerprintAttendance: false })
+  });
+  assert.equal(disableFpPolRes.status, 200);
+
+  const disabledFpScan = await fetch(`${baseUrl}/api/school/attendance`, {
+    method: 'POST',
+    headers: ownerHeaders,
+    body: JSON.stringify({
+      studentId: createdStaff.id,
+      studentName: createdStaff.name,
+      memberCategory: 'staff',
+      verificationMode: 'fingerprint_optical_scanner',
+      confidenceScore: 91,
+      status: 'Present'
+    })
+  });
+  assert.equal(disabledFpScan.status, 403);
+  assert.equal((await disabledFpScan.json()).error, 'FINGERPRINT_DISABLED');
+
+  const faceStillWorks = await fetch(`${baseUrl}/api/school/attendance`, {
+    method: 'POST',
+    headers: ownerHeaders,
+    body: JSON.stringify({
+      studentId: createdStaff.id,
+      studentName: createdStaff.name,
+      memberCategory: 'staff',
+      verificationMode: 'face_camera',
+      confidenceScore: 92,
+      status: 'Present'
+    })
+  });
+  assert.equal(faceStillWorks.status, 200);
+
+  // 6. Delete enrolled principal fingerprint resets fingerprintEnrolled back to false
+  const delPriFp = await fetch(`${baseUrl}/api/school/attendance/fingerprint-profiles/${priFpProfile.id}`, {
+    method: 'DELETE',
+    headers: ownerHeaders
+  });
+  assert.equal(delPriFp.status, 200);
+
+  const priResetRes = await fetch(`${baseUrl}/api/school/principals`, { headers: ownerHeaders });
+  assert.equal((await priResetRes.json()).principals.find((p) => p.id === createdPri.id)?.fingerprintEnrolled, false);
+});
+
+
 
 
 

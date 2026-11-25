@@ -2,13 +2,15 @@ import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { DomTranslatorService } from './services/dom-translator.service';
 import { NotificationService } from './services/notification.service';
+import { PwaInstallComponent } from './shared/pwa-install/pwa-install.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, PwaInstallComponent],
   template: `
     <router-outlet></router-outlet>
+    <app-pwa-install></app-pwa-install>
 
     @if (notification.toasts().length > 0) {
       <div class="fixed top-5 right-5 z-[100001] max-w-md w-[calc(100vw-2.5rem)] sm:w-full flex flex-col gap-2.5 pointer-events-none">

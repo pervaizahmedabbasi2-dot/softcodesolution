@@ -30,7 +30,7 @@
               <span>{{ isBrowserOnline() ? 'Online · SQLite + Cloud Sync' : 'Offline · Local SQLite Active' }}</span>
             </span>
             <span aria-hidden="true" class="text-slate-300">·</span>
-            <span class="font-mono font-semibold text-slate-700 tabular-nums">{{ totalEnrolledCount() }} Faces Enrolled</span>
+            <span class="font-mono font-semibold text-slate-700 tabular-nums">{{ totalEnrolledCount() }} Faces · {{ totalFingerprintEnrolledCount() }} Fingerprints</span>
             @if (pendingSyncCount() > 0) {
               <span aria-hidden="true" class="text-slate-300">·</span>
               <button type="button" (click)="syncRequested.emit()"
@@ -42,10 +42,10 @@
           </div>
 
           <h2 class="text-lg sm:text-xl font-black text-slate-900 tracking-tight leading-snug">
-            {{ schoolName() }} — Face Recognition Attendance Hub
+            {{ schoolName() }} — Face &amp; Biometric Attendance Hub
           </h2>
           <p class="text-xs text-slate-500 leading-relaxed">
-            Walk-up continuous biometric scanner with offline-first SQLite recording, anti-duplicate guard, and automatic cloud sync.
+            Walk-up continuous face camera &amp; fingerprint biometric scanner with offline-first SQLite recording, anti-duplicate guard, and automatic cloud sync.
           </p>
         </div>
       </div>
@@ -54,8 +54,8 @@
         @if (canEnrollCurrentPortal()) {
           <button type="button" (click)="openQuickEnrollPanel(cameraActive())"
             class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold shadow-[0_6px_16px_-4px_rgba(16,185,129,0.38)] cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 active:scale-[0.98] transition-all">
-            <lucide-icon [name]="'user-plus'" class="w-3.5 h-3.5"></lucide-icon>
-            <span>Quick Selfie Enroll</span>
+            <lucide-icon [name]="scannerChannel() === 'fingerprint' ? 'fingerprint' : 'user-plus'" class="w-3.5 h-3.5"></lucide-icon>
+            <span>{{ scannerChannel() === 'fingerprint' ? 'Quick Finger Enroll' : 'Quick Selfie Enroll' }}</span>
           </button>
         }
 
@@ -214,8 +214,8 @@
           <button type="button" (click)="setSubTab('terminal')"
             class="px-3.5 py-2 rounded-xl text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 transition-all"
             [class]="activeSubTab() === 'terminal' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md shadow-emerald-600/20' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'">
-            <lucide-icon [name]="'scan-face'" class="w-3.5 h-3.5"></lucide-icon>
-            <span>Live Face Scanner</span>
+            <lucide-icon [name]="scannerChannel() === 'fingerprint' ? 'fingerprint' : 'scan-face'" class="w-3.5 h-3.5"></lucide-icon>
+            <span>Live Scanner</span>
           </button>
         }
 
@@ -262,7 +262,7 @@
             class="px-3.5 py-2 rounded-xl text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 transition-all tabular-nums"
             [class]="activeSubTab() === 'enrollment' ? 'bg-white text-slate-900 shadow-sm border border-slate-200/70' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'">
             <lucide-icon [name]="'user-plus'" class="w-3.5 h-3.5 text-indigo-600"></lucide-icon>
-            <span>Face Registry ({{ totalEnrolledCount() }})</span>
+            <span>Biometric Registry ({{ totalEnrolledCount() + totalFingerprintEnrolledCount() }})</span>
           </button>
         }
 
@@ -288,41 +288,72 @@
         @if (!kioskFullscreen()) {
           <div class="flex items-center justify-between flex-wrap gap-3">
             <div>
-              <h3 class="text-base font-black text-slate-900 tracking-tight">Selfie &amp; Walk-Up Face Scanner</h3>
-              <p class="text-xs text-slate-500 mt-0.5">Camera stays open continuously — stand in front for instant attendance mark.</p>
+              <h3 class="text-base font-black text-slate-900 tracking-tight">
+                {{ scannerChannel() === 'fingerprint' ? 'Biometric Fingerprint Scanner' : 'Selfie & Walk-Up Face Scanner' }}
+              </h3>
+              <p class="text-xs text-slate-500 mt-0.5">
+                {{ scannerChannel() === 'fingerprint'
+                  ? 'Scan via built-in fingerprint sensor or optical USB scanner using identical IN/OUT & duplicate rules.'
+                  : 'Camera stays open continuously — stand in front for instant attendance mark.' }}
+              </p>
             </div>
 
-            <!-- Category Filter (All Campus | Students | Teachers | Staff | Principal) -->
-            <div class="inline-flex p-1 rounded-xl bg-white border border-slate-200/80 gap-1 flex-wrap">
-              @if (isOwner() || allowedCategories().length > 1) {
-                <button type="button" (click)="setCategory('all')"
-                  class="px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all whitespace-nowrap shrink-0"
-                  [class]="activeCategory() === 'all' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'">
-                  All Campus
-                </button>
+            <div class="flex items-center gap-2 flex-wrap">
+              @if (canUseFingerprint()) {
+                <div class="inline-flex p-1 rounded-xl bg-slate-100 border border-slate-200/90 gap-1">
+                  <button type="button" (click)="setScannerChannel('face')"
+                    class="px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 transition-all whitespace-nowrap shrink-0"
+                    [class]="scannerChannel() === 'face' ? 'bg-white text-slate-900 shadow-xs border border-slate-200/80' : 'text-slate-600 hover:text-slate-900'">
+                    <lucide-icon [name]="'scan-face'" class="w-3.5 h-3.5 text-emerald-600"></lucide-icon>
+                    <span>Face Camera</span>
+                  </button>
+                  <button type="button" (click)="setScannerChannel('fingerprint')"
+                    class="px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 transition-all whitespace-nowrap shrink-0"
+                    [class]="scannerChannel() === 'fingerprint' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'">
+                    <lucide-icon [name]="'fingerprint'" class="w-3.5 h-3.5"></lucide-icon>
+                    <span>Fingerprint Biometric</span>
+                  </button>
+                </div>
               }
-              @for (cat of allowedCategories(); track cat) {
-                <button type="button" (click)="setCategory(cat)"
-                  class="px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all whitespace-nowrap shrink-0"
-                  [class]="activeCategory() === cat ? 'bg-white text-slate-900 shadow-xs border border-slate-200/60' : 'text-slate-600 hover:text-slate-900'">
-                  {{ categoryLabel(cat) }}
-                </button>
-              }
+
+              <!-- Category Filter (All Campus | Students | Teachers | Staff | Principal) -->
+              <div class="inline-flex p-1 rounded-xl bg-white border border-slate-200/80 gap-1 flex-wrap">
+                @if (isOwner() || allowedCategories().length > 1) {
+                  <button type="button" (click)="setCategory('all')"
+                    class="px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all whitespace-nowrap shrink-0"
+                    [class]="activeCategory() === 'all' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'">
+                    All Campus
+                  </button>
+                }
+                @for (cat of allowedCategories(); track cat) {
+                  <button type="button" (click)="setCategory(cat)"
+                    class="px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all whitespace-nowrap shrink-0"
+                    [class]="activeCategory() === cat ? 'bg-white text-slate-900 shadow-xs border border-slate-200/60' : 'text-slate-600 hover:text-slate-900'">
+                    {{ categoryLabel(cat) }}
+                  </button>
+                }
+              </div>
             </div>
           </div>
         }
 
-        <!-- Inline Quick Selfie Enroll Drawer -->
+        <!-- Inline Quick Selfie / Fingerprint Enroll Drawer -->
         @if (quickEnrollDrawerOpen() && canEnrollCurrentPortal() && !kioskFullscreen()) {
           <div class="p-4 rounded-2xl scs-tile-3d space-y-3">
             <div class="flex items-center justify-between gap-2">
               <div class="flex items-center gap-2">
                 <div class="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center shadow-2xs">
-                  <lucide-icon [name]="'user-plus'" class="w-3.5 h-3.5"></lucide-icon>
+                  <lucide-icon [name]="scannerChannel() === 'fingerprint' ? 'fingerprint' : 'user-plus'" class="w-3.5 h-3.5"></lucide-icon>
                 </div>
                 <div>
-                  <h4 class="text-xs font-black text-slate-900 tracking-tight">Quick Selfie Face Link · Existing Member Only</h4>
-                  <p class="text-[10px] font-medium text-slate-500">Attaches camera face to an already-saved school profile — does not create a new admission.</p>
+                  <h4 class="text-xs font-black text-slate-900 tracking-tight">
+                    {{ scannerChannel() === 'fingerprint' ? 'Quick Fingerprint Link · Existing Member Only' : 'Quick Selfie Face Link · Existing Member Only' }}
+                  </h4>
+                  <p class="text-[10px] font-medium text-slate-500">
+                    {{ scannerChannel() === 'fingerprint'
+                      ? 'Links a biometric fingerprint template to an already-saved school profile — no duplicate admission created.'
+                      : 'Attaches camera face to an already-saved school profile — does not create a new admission.' }}
+                  </p>
                 </div>
               </div>
               <button type="button" (click)="closeQuickEnrollPanel()"
@@ -349,7 +380,9 @@
               <select [value]="quickEnrollMemberId()" (change)="quickEnrollMemberId.set($any($event.target).value)"
                 class="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-900">
                 @for (m of quickEnrollFilteredMembers(); track m.id) {
-                  <option [value]="m.id">{{ m.name }} ({{ m.code }}) {{ m.isEnrolled ? '✔' : '' }}</option>
+                  <option [value]="m.id">
+                    {{ m.name }} ({{ m.code }}) {{ (scannerChannel() === 'fingerprint' ? m.isFingerprintEnrolled : m.isEnrolled) ? '✔' : '' }}
+                  </option>
                 }
               </select>
             </div>
@@ -375,47 +408,267 @@
               </div>
             }
 
-            <div class="flex flex-col sm:flex-row items-center gap-3">
-              <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-50 to-slate-100 border border-emerald-200/80 overflow-hidden shrink-0 flex items-center justify-center text-emerald-600 shadow-inner">
-                @if (quickEnrollPreviewUrl()) {
-                  <img [src]="quickEnrollPreviewUrl()" alt="Quick Selfie Preview" referrerpolicy="no-referrer"
-                    class="w-full h-full object-cover" />
-                } @else {
-                  <lucide-icon [name]="'camera'" class="w-6 h-6"></lucide-icon>
-                }
-              </div>
-
-              <div class="flex-1 min-w-0 space-y-2 w-full">
-                @if (quickEnrollExtraction(); as qex) {
-                  <div class="flex items-center gap-2 flex-wrap text-xs font-mono text-slate-700 tabular-nums">
-                    <span class="font-bold text-emerald-700">Quality {{ qex.qualityScore }}%</span>
-                    <span aria-hidden="true" class="text-slate-300">·</span>
-                    <span>{{ qex.hash }}</span>
+            @if (scannerChannel() === 'fingerprint') {
+              <div class="flex flex-col sm:flex-row items-center gap-3">
+                <div class="relative w-20 h-20 rounded-2xl bg-slate-950 border border-emerald-400/40 overflow-hidden shrink-0 flex items-center justify-center text-emerald-400 shadow-inner">
+                  @if (quickEnrollFingerCapture()?.previewDataUrl) {
+                    <img [src]="quickEnrollFingerCapture()?.previewDataUrl" alt="Fingerprint Capture Preview" referrerpolicy="no-referrer"
+                      class="w-full h-full object-cover" />
+                  } @else {
+                    <lucide-icon [name]="'fingerprint'" class="w-8 h-8"></lucide-icon>
+                  }
+                </div>
+                <div class="flex-1 min-w-0 space-y-2.5 w-full">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <select [value]="quickEnrollFingerLabel()" (change)="quickEnrollFingerLabel.set($any($event.target).value)"
+                      class="px-2.5 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-800">
+                      <option value="Right Index">Right Index Finger</option>
+                      <option value="Right Thumb">Right Thumb</option>
+                      <option value="Left Index">Left Index Finger</option>
+                      <option value="Left Thumb">Left Thumb</option>
+                    </select>
+                    @if (quickEnrollFingerCapture(); as qfc) {
+                      <span class="text-xs font-mono font-bold text-emerald-700">
+                        Ready · {{ qfc.fingerprintHash }}
+                      </span>
+                    }
                   </div>
-                } @else {
-                  <p class="text-[11px] text-slate-600">
-                    Stand in front of the live camera below and tap <strong>Snap Live Selfie</strong>, then save into SQLite.
-                  </p>
-                }
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <button type="button" (click)="captureQuickEnrollFingerprint()" [disabled]="isCapturingQuickFinger()"
+                      class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap shadow-xs disabled:opacity-50 active:scale-[0.98] transition-all">
+                      <lucide-icon [name]="isCapturingQuickFinger() ? 'loader-2' : 'fingerprint'" class="w-3.5 h-3.5" [class.animate-spin]="isCapturingQuickFinger()"></lucide-icon>
+                      <span>{{ isCapturingQuickFinger() ? 'Scanning Sensor...' : 'Scan Mobile Fingerprint' }}</span>
+                    </button>
+                    <button type="button" (click)="saveQuickFingerprintEnrollment()" [disabled]="!quickEnrollFingerCapture()?.ok || !quickEnrollMemberId()"
+                      class="px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap disabled:opacity-45 active:scale-[0.98] transition-all">
+                      <lucide-icon [name]="'check-circle-2'" class="w-3.5 h-3.5"></lucide-icon>
+                      <span>Save &amp; Activate Finger</span>
+                    </button>
+                  </div>
 
-                <div class="flex items-center gap-2 flex-wrap">
-                  <button type="button" (click)="cameraActive() ? snapQuickSelfieFromLiveCamera() : startCamera('verify')"
-                    class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap active:scale-[0.98] transition-all shadow-xs">
-                    <lucide-icon [name]="'camera'" class="w-3.5 h-3.5 text-white"></lucide-icon>
-                    <span>{{ cameraActive() ? 'Snap Live Selfie' : 'Open Camera to Snap' }}</span>
-                  </button>
-                  <button type="button" (click)="saveQuickSelfieEnrollment()" [disabled]="!quickEnrollExtraction() || !quickEnrollMemberId()"
-                    class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap disabled:opacity-45 active:scale-[0.98] transition-all">
-                    <lucide-icon [name]="'check-circle-2'" class="w-3.5 h-3.5"></lucide-icon>
-                    <span>Save &amp; Activate Face</span>
-                  </button>
+                  @if (quickEnrollFingerError(); as qferr) {
+                    <div class="p-2.5 rounded-xl bg-amber-50/90 border border-amber-200/90 text-[11px] text-amber-950 space-y-2">
+                      <div class="flex items-start gap-2">
+                        <lucide-icon [name]="'info'" class="w-4 h-4 text-amber-600 shrink-0 mt-0.5"></lucide-icon>
+                        <p class="font-medium leading-snug">{{ qferr }}</p>
+                      </div>
+                      <button type="button" (click)="fallbackEnrollToFaceCamera(true)"
+                        class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold cursor-pointer inline-flex items-center gap-1 transition-colors">
+                        <lucide-icon [name]="'scan-face'" class="w-3 h-3"></lucide-icon>
+                        <span>Use Face Camera</span>
+                      </button>
+                    </div>
+                  }
                 </div>
               </div>
-            </div>
+            } @else {
+              <div class="flex flex-col sm:flex-row items-center gap-3">
+                <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-50 to-slate-100 border border-emerald-200/80 overflow-hidden shrink-0 flex items-center justify-center text-emerald-600 shadow-inner">
+                  @if (quickEnrollPreviewUrl()) {
+                    <img [src]="quickEnrollPreviewUrl()" alt="Quick Selfie Preview" referrerpolicy="no-referrer"
+                      class="w-full h-full object-cover" />
+                  } @else {
+                    <lucide-icon [name]="'camera'" class="w-6 h-6"></lucide-icon>
+                  }
+                </div>
+
+                <div class="flex-1 min-w-0 space-y-2 w-full">
+                  @if (quickEnrollExtraction(); as qex) {
+                    <div class="flex items-center gap-2 flex-wrap text-xs font-mono text-slate-700 tabular-nums">
+                      <span class="font-bold text-emerald-700">Quality {{ qex.qualityScore }}%</span>
+                      <span aria-hidden="true" class="text-slate-300">·</span>
+                      <span>{{ qex.hash }}</span>
+                    </div>
+                  } @else {
+                    <p class="text-[11px] text-slate-600">
+                      Stand in front of the live camera below and tap <strong>Snap Live Selfie</strong>, then save into SQLite.
+                    </p>
+                  }
+
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <button type="button" (click)="cameraActive() ? snapQuickSelfieFromLiveCamera() : startCamera('verify')"
+                      class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap active:scale-[0.98] transition-all shadow-xs">
+                      <lucide-icon [name]="'camera'" class="w-3.5 h-3.5 text-white"></lucide-icon>
+                      <span>{{ cameraActive() ? 'Snap Live Selfie' : 'Open Camera to Snap' }}</span>
+                    </button>
+                    <button type="button" (click)="saveQuickSelfieEnrollment()" [disabled]="!quickEnrollExtraction() || !quickEnrollMemberId()"
+                      class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap disabled:opacity-45 active:scale-[0.98] transition-all">
+                      <lucide-icon [name]="'check-circle-2'" class="w-3.5 h-3.5"></lucide-icon>
+                      <span>Save &amp; Activate Face</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            }
           </div>
         }
         <input #quickSelfieFileEl type="file" accept="image/*" (change)="onQuickSelfieFileSelected($event)" class="hidden" />
 
+        @if (scannerChannel() === 'fingerprint') {
+          <!-- Biometric Fingerprint Terminal Viewport -->
+          <div
+            [class]="kioskFullscreen()
+              ? 'relative w-full h-full bg-slate-950 overflow-hidden'
+              : 'relative w-full h-80 sm:h-96 rounded-[22px] bg-gradient-to-b from-slate-900 via-slate-950 to-slate-950 overflow-hidden shadow-[0_18px_42px_-12px_rgba(15,23,42,0.45)] border border-emerald-500/20 transition-all'">
+
+            <div class="absolute inset-0 flex flex-col items-center justify-center p-5 text-center text-white space-y-4">
+              <button type="button" (click)="verifyFingerprintScan()" [disabled]="isProcessingFingerScan()"
+                class="w-24 h-24 rounded-[26px] bg-emerald-500/15 hover:bg-emerald-500/25 border-2 border-emerald-400/50 text-emerald-400 flex items-center justify-center shadow-[0_16px_38px_-8px_rgba(16,185,129,0.4)] cursor-pointer transition-all active:scale-95 disabled:opacity-60">
+                <lucide-icon [name]="isProcessingFingerScan() ? 'loader-2' : 'fingerprint'" class="w-12 h-12" [class.animate-spin]="isProcessingFingerScan()"></lucide-icon>
+              </button>
+
+              <div class="space-y-1.5 max-w-md">
+                <p class="text-sm sm:text-base font-black text-white tracking-tight">
+                  {{ isProcessingFingerScan() ? 'Scanning Mobile Fingerprint...' : 'Tap to Scan Mobile Fingerprint' }}
+                </p>
+                <p class="text-xs leading-relaxed" [class]="fingerSensorError() ? 'text-amber-300 font-semibold' : 'text-slate-300'">
+                  {{ fingerSensorError() || fingerScanStatus() || ('Uses ' + fingerSensorDeviceLabel() + ' for instant attendance.') }}
+                </p>
+              </div>
+
+              <div class="flex items-center justify-center gap-2 flex-wrap">
+                <button type="button" (click)="verifyFingerprintScan()" [disabled]="isProcessingFingerScan()"
+                  class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold shadow-lg shadow-emerald-600/30 cursor-pointer inline-flex items-center gap-2 active:scale-[0.98] transition-all disabled:opacity-50">
+                  <lucide-icon [name]="'fingerprint'" class="w-4 h-4"></lucide-icon>
+                  <span>Scan Fingerprint</span>
+                </button>
+                @if (fingerSensorError() || fingerScannerInsideIframe()) {
+                  <button type="button" (click)="fallbackScanToFaceCamera()"
+                    class="px-3.5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 transition-colors">
+                    <lucide-icon [name]="'scan-face'" class="w-4 h-4 text-emerald-300"></lucide-icon>
+                    <span>Use Face Camera</span>
+                  </button>
+                }
+              </div>
+            </div>
+
+            <!-- Shared Dynamic Island Overlay: Green Tick / Red Caution Duplicate / Unclear / Unregistered -->
+            @if (scanOverlay(); as ov) {
+              <div class="absolute inset-0 pointer-events-none border-4 transition-colors"
+                [class.rounded-[22px]]="!kioskFullscreen()"
+                [class]="ov.kind === 'success' ? 'border-emerald-500' : (ov.kind === 'unclear' ? 'border-amber-400' : 'border-rose-500')">
+              </div>
+
+              <div class="absolute bottom-3.5 left-3.5 right-3.5 flex justify-center z-10">
+                @if (ov.kind === 'success') {
+                  <div class="w-full max-w-md rounded-2xl bg-emerald-600/95 backdrop-blur-xl border border-white/30 px-4 py-3 shadow-2xl flex items-center gap-3.5">
+                    <div class="w-11 h-11 rounded-full bg-white text-emerald-600 flex items-center justify-center shrink-0 shadow-md">
+                      <lucide-icon [name]="'check'" class="w-7 h-7"></lucide-icon>
+                    </div>
+                    <div class="min-w-0 flex-1 text-left">
+                      <div class="flex items-center justify-between gap-2">
+                        <span class="text-[11px] font-bold text-emerald-100 inline-flex items-center gap-1">
+                          <lucide-icon [name]="'check-circle-2'" class="w-3.5 h-3.5 text-white"></lucide-icon>
+                          <span>{{ ov.badgeText }}</span>
+                        </span>
+                        @if (ov.confidence) {
+                          <span class="font-mono text-xs font-black text-white tabular-nums">{{ ov.confidence }}%</span>
+                        }
+                      </div>
+                      <p class="text-base font-black text-white truncate leading-tight tracking-tight">{{ ov.title }}</p>
+                      <p class="text-[11px] font-medium text-emerald-50 truncate">
+                        {{ ov.subtitle }} · {{ ov.storageLabel || 'SQLite Saved' }}
+                      </p>
+                    </div>
+                  </div>
+                } @else if (ov.kind === 'duplicate') {
+                  <div class="w-full max-w-md rounded-2xl bg-rose-600/95 backdrop-blur-xl border border-white/30 px-4 py-3 shadow-2xl flex items-center gap-3.5">
+                    <div class="w-11 h-11 rounded-full bg-white text-rose-600 flex items-center justify-center shrink-0 shadow-md">
+                      <lucide-icon [name]="'alert-triangle'" class="w-7 h-7"></lucide-icon>
+                    </div>
+                    <div class="min-w-0 flex-1 text-left">
+                      <div class="flex items-center justify-between gap-2">
+                        <span class="text-[11px] font-bold text-rose-100 inline-flex items-center gap-1">
+                          <lucide-icon [name]="'shield-alert'" class="w-3.5 h-3.5 text-white"></lucide-icon>
+                          <span>{{ ov.badgeText }}</span>
+                        </span>
+                        @if (ov.confidence) {
+                          <span class="font-mono text-xs font-black text-white tabular-nums">{{ ov.confidence }}%</span>
+                        }
+                      </div>
+                      <p class="text-base font-black text-white truncate leading-tight tracking-tight">{{ ov.title }}</p>
+                      <p class="text-[11px] font-semibold text-rose-50 truncate">{{ ov.subtitle }}</p>
+                    </div>
+                  </div>
+                } @else if (ov.kind === 'unclear') {
+                  <div class="w-full max-w-md rounded-2xl bg-amber-500/95 backdrop-blur-xl border border-white/30 px-4 py-3 shadow-2xl flex items-center gap-3.5">
+                    <div class="w-11 h-11 rounded-full bg-white text-amber-600 flex items-center justify-center shrink-0 shadow-md">
+                      <lucide-icon [name]="'fingerprint'" class="w-7 h-7"></lucide-icon>
+                    </div>
+                    <div class="min-w-0 flex-1 text-left">
+                      <span class="text-[11px] font-bold text-amber-50 inline-flex items-center gap-1">
+                        <lucide-icon [name]="'alert-triangle'" class="w-3.5 h-3.5 text-white"></lucide-icon>
+                        <span>{{ ov.badgeText }}</span>
+                      </span>
+                      <p class="text-base font-black text-white truncate leading-tight tracking-tight">{{ ov.title }}</p>
+                      <p class="text-[11px] font-semibold text-amber-50 truncate">{{ ov.subtitle }}</p>
+                    </div>
+                  </div>
+                } @else {
+                  <div class="w-full max-w-md rounded-2xl bg-rose-600/95 backdrop-blur-xl border border-white/30 px-4 py-3 shadow-2xl flex items-center gap-3.5">
+                    <div class="w-11 h-11 rounded-full bg-white text-rose-600 flex items-center justify-center shrink-0 shadow-md">
+                      <lucide-icon [name]="'x-circle'" class="w-7 h-7"></lucide-icon>
+                    </div>
+                    <div class="min-w-0 flex-1 text-left">
+                      <span class="text-[11px] font-bold text-rose-100 inline-flex items-center gap-1">
+                        <lucide-icon [name]="'alert-triangle'" class="w-3.5 h-3.5 text-white"></lucide-icon>
+                        <span>{{ ov.badgeText }}</span>
+                      </span>
+                      <p class="text-base font-black text-white truncate leading-tight tracking-tight">{{ ov.title }}</p>
+                      <p class="text-[11px] font-medium text-rose-50 truncate">{{ ov.subtitle }}</p>
+                    </div>
+                    @if (canEnrollCurrentPortal()) {
+                      <button type="button" (click)="openQuickEnrollPanel(false)"
+                        class="px-3 py-1.5 rounded-xl bg-white text-rose-700 hover:bg-rose-50 text-xs font-bold cursor-pointer shrink-0 shadow-sm whitespace-nowrap">
+                        Enroll Finger
+                      </button>
+                    }
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- Top HUD Status Bar inside Fingerprint Viewport -->
+            <div class="absolute flex items-center justify-between gap-2 text-[11px] pointer-events-none z-20"
+              [class]="kioskFullscreen() ? 'top-4 left-4 right-4' : 'top-3 left-3 right-3'">
+              <span class="px-3 py-1.5 rounded-xl bg-slate-950/75 backdrop-blur-xl text-white font-semibold border border-white/15 inline-flex items-center gap-2 shadow-sm min-w-0 truncate">
+                <span class="w-2 h-2 rounded-full shrink-0" [class]="fingerSensorAvailable() ? 'bg-emerald-400' : 'bg-sky-400'"></span>
+                <span class="truncate">{{ fingerSensorDeviceLabel() }} · {{ activeFingerprintProfiles().length }} Enrolled · {{ categoryLabel(activeCategory()) }}</span>
+              </span>
+              @if (kioskFullscreen()) {
+                <button type="button" (click)="toggleKioskFullscreen()"
+                  class="px-3 py-1.5 rounded-xl bg-slate-950/80 backdrop-blur-xl hover:bg-slate-900 text-white font-semibold border border-white/25 cursor-pointer inline-flex items-center gap-1.5 shadow-md transition-colors whitespace-nowrap pointer-events-auto">
+                  <lucide-icon [name]="'x'" class="w-3.5 h-3.5"></lucide-icon>
+                  <span>Exit Full Screen</span>
+                </button>
+              }
+            </div>
+          </div>
+
+          @if (!kioskFullscreen()) {
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <button type="button" (click)="verifyFingerprintScan()" [disabled]="isProcessingFingerScan()"
+                class="py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold shadow-md shadow-emerald-600/20 cursor-pointer inline-flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all disabled:opacity-50 whitespace-nowrap">
+                <lucide-icon [name]="isProcessingFingerScan() ? 'loader-2' : 'fingerprint'" class="w-4 h-4" [class.animate-spin]="isProcessingFingerScan()"></lucide-icon>
+                <span>{{ isProcessingFingerScan() ? 'Scanning Sensor...' : 'Scan Fingerprint' }}</span>
+              </button>
+
+              @if (canEnrollCurrentPortal()) {
+                <button type="button" (click)="openQuickEnrollPanel(false)"
+                  class="py-2.5 px-4 rounded-xl bg-white hover:bg-slate-50 border border-slate-200/90 text-slate-800 text-xs font-bold shadow-2xs cursor-pointer inline-flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all whitespace-nowrap">
+                  <lucide-icon [name]="'user-plus'" class="w-4 h-4 text-emerald-600"></lucide-icon>
+                  <span>Enroll Finger</span>
+                </button>
+              } @else {
+                <button type="button" (click)="fallbackScanToFaceCamera()"
+                  class="py-2.5 px-4 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-bold shadow-2xs cursor-pointer inline-flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all whitespace-nowrap">
+                  <lucide-icon [name]="'scan-face'" class="w-4 h-4 text-emerald-600"></lucide-icon>
+                  <span>Use Face Camera</span>
+                </button>
+              }
+            </div>
+          }
+        } @else {
         <!-- Live Camera & Precision Optical Viewport -->
         <div
           (dragover)="onViewportDragOver($event)"
@@ -651,8 +904,10 @@
               </button>
             }
           </div>
+        }
+        }
 
-          @if (recentVerifiedFeed().length > 0) {
+          @if (!kioskFullscreen() && recentVerifiedFeed().length > 0) {
             <div class="pt-3 border-t border-slate-100 flex items-center gap-2 flex-wrap text-xs">
               <span class="font-bold text-slate-500 shrink-0">Recent Scans:</span>
               <div class="flex items-center gap-3 flex-wrap">
@@ -668,7 +923,6 @@
               </div>
             </div>
           }
-        }
       </div>
 
       <!-- Right 5 cols: Verification Target, Match Card & Live Attendance Feed -->
@@ -706,14 +960,18 @@
                 <option value="">-- Choose Candidate --</option>
                 @for (m of activeCategoryMembers(); track m.id) {
                   <option [value]="m.id">
-                    {{ m.name }} ({{ m.code }}) — {{ m.isEnrolled ? 'Face Ready' : 'Needs Selfie' }}
+                    {{ m.name }} ({{ m.code }}) — {{ scannerChannel() === 'fingerprint' ? (m.isFingerprintEnrolled ? 'Finger Ready' : 'Needs Finger') : (m.isEnrolled ? 'Face Ready' : 'Needs Selfie') }}
                   </option>
                 }
               </select>
             </div>
           } @else {
             <p class="text-xs text-slate-500 leading-relaxed tabular-nums">
-              Matching locally against <strong class="text-slate-900">{{ activeFaceProfiles().length }}</strong> registered face(s) in <strong class="text-slate-900">{{ categoryLabel(activeCategory()) }}</strong> — instant SQLite entry &amp; cloud sync.
+              @if (scannerChannel() === 'fingerprint') {
+                Matching against <strong class="text-slate-900">{{ activeFingerprintProfiles().length }}</strong> registered fingerprint(s) in <strong class="text-slate-900">{{ categoryLabel(activeCategory()) }}</strong> — instant SQLite entry &amp; cloud sync.
+              } @else {
+                Matching locally against <strong class="text-slate-900">{{ activeFaceProfiles().length }}</strong> registered face(s) in <strong class="text-slate-900">{{ categoryLabel(activeCategory()) }}</strong> — instant SQLite entry &amp; cloud sync.
+              }
             </p>
           }
 
@@ -1534,10 +1792,10 @@
                   @if (isColVisible('verifyFace')) {
                     <td class="px-3.5 py-3 whitespace-nowrap">
                       <div class="space-y-0.5">
-                        @if (m.isEnrolled) {
+                        @if (m.isEnrolled || m.isFingerprintEnrolled) {
                           <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700">
                             <lucide-icon [name]="'check-circle-2'" class="w-3.5 h-3.5 text-emerald-600"></lucide-icon>
-                            <span>{{ m.lastConfidence > 0 ? ('Match ' + m.lastConfidence + '%') : 'Face Ready' }}</span>
+                            <span>{{ m.lastConfidence > 0 ? ('Match ' + m.lastConfidence + '%') : (m.isEnrolled && m.isFingerprintEnrolled ? 'Face + Finger Ready' : (m.isFingerprintEnrolled ? 'Finger Ready' : 'Face Ready')) }}</span>
                           </span>
                         } @else {
                           <span class="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700">
@@ -1545,7 +1803,7 @@
                             <span>Not Enrolled</span>
                           </span>
                         }
-                        <p class="text-[10px] font-medium text-slate-500 truncate max-w-[130px]">{{ m.verifiedMethod }}</p>
+                        <p class="text-[10px] font-medium text-slate-500 truncate max-w-[140px]">{{ m.verifiedMethod }}</p>
                       </div>
                     </td>
                   }
@@ -1594,6 +1852,13 @@
                           <lucide-icon [name]="'camera'" class="w-3 h-3"></lucide-icon>
                           <span>Verify Face</span>
                         </button>
+                        @if (canUseFingerprint()) {
+                          <button type="button" (click)="openFingerprintForMember(m)"
+                            class="px-2.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-bold cursor-pointer inline-flex items-center gap-1 shadow-2xs transition-all active:scale-[0.98] whitespace-nowrap">
+                            <lucide-icon [name]="'fingerprint'" class="w-3 h-3"></lucide-icon>
+                            <span>Verify Finger</span>
+                          </button>
+                        }
                       }
 
                       @if (canEnrollCurrentPortal()) {
@@ -1601,6 +1866,13 @@
                           class="px-2.5 py-1.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-[11px] font-bold cursor-pointer transition-colors whitespace-nowrap">
                           {{ m.isEnrolled ? 'Re-Enroll' : 'Enroll Face' }}
                         </button>
+                        @if (canUseFingerprint()) {
+                          <button type="button" (click)="openFingerEnrollmentForMember(m)"
+                            class="px-2.5 py-1.5 rounded-xl bg-white hover:bg-emerald-50 border border-slate-200 text-slate-700 text-[11px] font-bold cursor-pointer inline-flex items-center gap-1 transition-colors whitespace-nowrap">
+                            <lucide-icon [name]="'fingerprint'" class="w-3 h-3 text-emerald-600"></lucide-icon>
+                            <span>{{ m.isFingerprintEnrolled ? 'Re-Enroll Finger' : 'Enroll Finger' }}</span>
+                          </button>
+                        }
                       }
 
                       @if (canUseManualFallback()) {
@@ -1659,26 +1931,50 @@
     @if (!kioskFullscreen() && activeSubTab() === 'enrollment' && canEnrollCurrentPortal()) {
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
 
-        <!-- Left 7 cols: Live Camera Capture for Face Registration -->
+        <!-- Left 7 cols: Live Camera / Biometric Fingerprint Capture -->
         <div class="lg:col-span-7 apple-card scs-surface-3d rounded-[24px] p-5 sm:p-6 space-y-4">
           <div class="flex items-center justify-between flex-wrap gap-3 border-b border-slate-100 pb-4">
             <div class="flex items-center gap-3">
               <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-500 text-white flex items-center justify-center shadow-sm border border-white/30 shrink-0">
-                <lucide-icon [name]="'user-plus'" class="w-5 h-5"></lucide-icon>
+                <lucide-icon [name]="enrollChannel() === 'fingerprint' ? 'fingerprint' : 'user-plus'" class="w-5 h-5"></lucide-icon>
               </div>
               <div>
-                <h3 class="text-sm sm:text-base font-black text-slate-900 tracking-tight">Camera Face Enrollment (Existing Member Link)</h3>
-                <p class="text-[11px] font-medium text-slate-500">Links a camera face signature to an already-saved member — details load automatically, no duplicate admission created.</p>
+                <h3 class="text-sm sm:text-base font-black text-slate-900 tracking-tight">
+                  {{ enrollChannel() === 'fingerprint' ? 'Biometric Fingerprint Enrollment (Existing Member Link)' : 'Camera Face Enrollment (Existing Member Link)' }}
+                </h3>
+                <p class="text-[11px] font-medium text-slate-500">
+                  {{ enrollChannel() === 'fingerprint'
+                    ? 'Registers a finger credential on an already-saved member — no duplicate admission created.'
+                    : 'Links a camera face signature to an already-saved member — details load automatically, no duplicate admission created.' }}
+                </p>
               </div>
             </div>
-            <div class="inline-flex p-1 rounded-2xl bg-white border border-slate-200/70 gap-1 flex-wrap">
-              @for (cat of enrollAllowedCategories(); track cat) {
-                <button type="button" (click)="setEnrollCategory(cat)"
-                  class="px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-all"
-                  [class]="enrollCategory() === cat ? 'bg-white text-slate-900 shadow-xs border border-slate-200/70' : 'text-slate-600 hover:text-slate-900'">
-                  {{ categoryLabel(cat) }}
-                </button>
+            <div class="flex items-center gap-2 flex-wrap">
+              @if (canUseFingerprint()) {
+                <div class="inline-flex p-1 rounded-xl bg-slate-100 border border-slate-200/80 gap-1">
+                  <button type="button" (click)="setEnrollChannel('face')"
+                    class="px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 transition-all"
+                    [class]="enrollChannel() === 'face' ? 'bg-white text-slate-900 shadow-xs border border-slate-200/70' : 'text-slate-600 hover:text-slate-900'">
+                    <lucide-icon [name]="'scan-face'" class="w-3.5 h-3.5 text-emerald-600"></lucide-icon>
+                    <span>Face Camera</span>
+                  </button>
+                  <button type="button" (click)="setEnrollChannel('fingerprint')"
+                    class="px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 transition-all"
+                    [class]="enrollChannel() === 'fingerprint' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'">
+                    <lucide-icon [name]="'fingerprint'" class="w-3.5 h-3.5"></lucide-icon>
+                    <span>Fingerprint</span>
+                  </button>
+                </div>
               }
+              <div class="inline-flex p-1 rounded-2xl bg-white border border-slate-200/70 gap-1 flex-wrap">
+                @for (cat of enrollAllowedCategories(); track cat) {
+                  <button type="button" (click)="setEnrollCategory(cat)"
+                    class="px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-all"
+                    [class]="enrollCategory() === cat ? 'bg-white text-slate-900 shadow-xs border border-slate-200/70' : 'text-slate-600 hover:text-slate-900'">
+                    {{ categoryLabel(cat) }}
+                  </button>
+                }
+              </div>
             </div>
           </div>
 
@@ -1689,7 +1985,9 @@
                 class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-200/80 text-xs font-bold text-slate-900 focus:bg-white focus:border-emerald-500 focus:outline-none">
                 <option value="">-- Select Member --</option>
                 @for (m of enrollCategoryMembers(); track m.id) {
-                  <option [value]="m.id">{{ m.name }} ({{ m.code }} · {{ m.subLabel }}) {{ m.isEnrolled ? '— Enrolled' : '' }}</option>
+                  <option [value]="m.id">
+                    {{ m.name }} ({{ m.code }} · {{ m.subLabel }}) {{ (enrollChannel() === 'fingerprint' ? m.isFingerprintEnrolled : m.isEnrolled) ? '— Enrolled' : '' }}
+                  </option>
                 }
               </select>
             </div>
@@ -1720,121 +2018,205 @@
             }
           </div>
 
-          <div class="relative w-full h-72 sm:h-80 rounded-[22px] bg-slate-950 overflow-hidden ring-1 ring-slate-900/10 shadow-inner" [class]="fillLightFrameClass()">
-            <video #enrollVideoEl
-              class="w-full h-full object-cover"
-              [class.hidden]="!cameraActive() || !!enrollCapturedDataUrl()"
-              [style.transform]="cameraFacingMode() === 'user' ? 'scaleX(-1)' : 'none'"
-              autoplay playsinline muted></video>
+          @if (enrollChannel() === 'fingerprint') {
+            <div class="space-y-4">
+              <div>
+                <label class="block text-[11px] font-bold text-slate-600 mb-1.5">Finger Designation</label>
+                <select [value]="enrollFingerLabel()" (change)="enrollFingerLabel.set($any($event.target).value)"
+                  class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-200/80 text-xs font-bold text-slate-900 focus:border-emerald-500 focus:outline-none">
+                  <option value="Right Index">Right Index Finger</option>
+                  <option value="Right Thumb">Right Thumb</option>
+                  <option value="Left Index">Left Index Finger</option>
+                  <option value="Left Thumb">Left Thumb</option>
+                  <option value="Other Finger">Other Finger</option>
+                </select>
+              </div>
 
-            @if (enrollCapturedDataUrl()) {
-              <img [src]="enrollCapturedDataUrl()" alt="Captured Enrollment Photo" referrerpolicy="no-referrer"
-                class="w-full h-full object-cover" />
-            }
-
-            @if (!cameraActive() && !enrollCapturedDataUrl()) {
-              <div (click)="startCamera('enroll')"
-                class="absolute inset-0 flex flex-col items-center justify-center p-5 text-center text-white space-y-3 cursor-pointer bg-gradient-to-b from-slate-900/80 to-slate-950">
-                <div class="w-14 h-14 rounded-2xl bg-emerald-500/15 border border-emerald-400/30 flex items-center justify-center">
-                  <lucide-icon [name]="'camera'" class="w-7 h-7 text-emerald-400"></lucide-icon>
-                </div>
-                @if (cameraError()) {
-                  <div class="space-y-2.5 max-w-md">
-                    <p class="text-xs font-black text-white tracking-tight">Tap to Open Enrollment Camera</p>
-                    <p class="text-[11px] text-slate-300 leading-relaxed">{{ cameraError() }}</p>
-                    <button type="button" (click)="$event.stopPropagation(); startCamera('enroll')"
-                      class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 shadow-md">
-                      <lucide-icon [name]="'video'" class="w-3.5 h-3.5"></lucide-icon>
-                      <span>Open Live Camera</span>
-                    </button>
-                  </div>
+              <div class="relative w-full h-56 sm:h-64 rounded-[22px] bg-gradient-to-b from-slate-900 to-slate-950 overflow-hidden ring-1 ring-emerald-500/25 shadow-inner flex flex-col items-center justify-center p-5 text-center text-white space-y-3">
+                @if (enrollFingerCapture(); as efc) {
+                  <img [src]="efc.previewDataUrl" alt="Captured Fingerprint" referrerpolicy="no-referrer"
+                    class="w-24 h-24 rounded-2xl object-cover border-2 border-emerald-400 shadow-lg" />
+                  <p class="text-xs font-bold text-emerald-300">
+                    Fingerprint Captured ({{ efc.deviceLabel }} · {{ efc.fingerprintHash }})
+                  </p>
                 } @else {
-                  <p class="text-xs font-bold text-slate-200">Opening Live Camera for Face Capture...</p>
+                  <button type="button" (click)="captureDeviceFingerprintForEnroll()" [disabled]="isCapturingFingerEnroll() || !enrollTargetMemberId()"
+                    class="w-20 h-20 rounded-2xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/40 flex items-center justify-center text-emerald-400 cursor-pointer transition-all active:scale-95 disabled:opacity-50">
+                    <lucide-icon [name]="isCapturingFingerEnroll() ? 'loader-2' : 'fingerprint'" class="w-10 h-10" [class.animate-spin]="isCapturingFingerEnroll()"></lucide-icon>
+                  </button>
+                  <p class="text-xs font-bold text-slate-200 max-w-md">
+                    Tap below and touch your mobile fingerprint sensor for {{ enrollSelectedMember()?.name || 'member' }} ({{ enrollFingerLabel() }}).
+                  </p>
                 }
               </div>
-            }
 
-            @if (cameraActive() && !enrollCapturedDataUrl()) {
-              <div class="absolute inset-0 pointer-events-none flex items-center justify-center">
-                <div class="w-40 h-52 rounded-[50%] border-2 border-dashed border-emerald-400/80 shadow-[0_0_0_9999px_rgba(2,6,23,0.18)]"></div>
-              </div>
-            }
-          </div>
-
-          <input #phoneEnrollInputEl type="file" accept="image/*"
-            (change)="onEnrollPhotoFileSelected($event)" class="hidden" />
-
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-            @if (!cameraActive()) {
-              <button type="button" (click)="startCamera('enroll')"
-                class="h-10 px-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold cursor-pointer inline-flex items-center justify-center gap-1.5 shadow-sm transition-all active:scale-[0.98]">
-                <lucide-icon [name]="'video'" class="w-4 h-4"></lucide-icon>
-                <span>Open Live Camera</span>
+              <button type="button" (click)="captureDeviceFingerprintForEnroll()" [disabled]="isCapturingFingerEnroll() || !enrollTargetMemberId()"
+                class="w-full h-11 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold cursor-pointer inline-flex items-center justify-center gap-2 shadow-sm transition-all active:scale-[0.98] disabled:opacity-50 whitespace-nowrap">
+                <lucide-icon [name]="isCapturingFingerEnroll() ? 'loader-2' : 'fingerprint'" class="w-4 h-4" [class.animate-spin]="isCapturingFingerEnroll()"></lucide-icon>
+                <span>{{ isCapturingFingerEnroll() ? 'Waiting for Mobile Fingerprint Sensor...' : 'Scan Mobile / Device Fingerprint' }}</span>
               </button>
-            } @else {
-              <button type="button" (click)="captureEnrollmentFromCamera()" [disabled]="isCapturingEnroll()"
-                class="h-10 px-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold cursor-pointer inline-flex items-center justify-center gap-1.5 shadow-sm transition-all active:scale-[0.98]">
-                <lucide-icon [name]="'camera'" class="w-4 h-4"></lucide-icon>
-                <span>Snap Camera Frame</span>
-              </button>
-            }
 
-            <button type="button" (click)="switchCameraFacing()"
-              class="h-10 px-3.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200/80 text-slate-800 text-xs font-bold cursor-pointer inline-flex items-center justify-center gap-1.5 transition-colors">
-              <lucide-icon [name]="'refresh-cw'" class="w-4 h-4 text-emerald-600"></lucide-icon>
-              <span>{{ cameraFacingMode() === 'user' ? 'Front Camera' : 'Rear Camera' }}</span>
-            </button>
-
-            <button type="button" (click)="toggleFillLight()"
-              class="h-10 px-3.5 rounded-xl border text-xs font-bold cursor-pointer inline-flex items-center justify-center gap-1.5 transition-colors"
-              [class]="fillLightBoost() ? 'bg-amber-50 border-amber-300 text-amber-900' : 'bg-white hover:bg-slate-50 border-slate-200/80 text-slate-700'">
-              <lucide-icon [name]="'lightbulb'" class="w-4 h-4 text-amber-500"></lucide-icon>
-              <span>Light: {{ fillLightBoost() ? 'ON' : 'OFF' }}</span>
-            </button>
-          </div>
-
-          @if (enrollExtraction(); as ex) {
-            <div class="p-4 sm:p-5 rounded-2xl scs-tile-3d space-y-3.5">
-              <div class="flex items-center justify-between text-xs">
-                <span class="font-black text-slate-900 tracking-tight">Captured Face Signature Metrics</span>
-                <span class="font-mono font-bold text-slate-500">{{ ex.hash }}</span>
-              </div>
-              <div class="grid grid-cols-3 gap-2.5 text-center text-xs tabular-nums">
-                <div class="p-2.5 rounded-xl scs-tile-3d">
-                  <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Quality</span>
-                  <strong class="text-sm font-black text-slate-900">{{ ex.qualityScore }}%</strong>
-                </div>
-                <div class="p-2.5 rounded-xl scs-tile-3d">
-                  <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Brightness</span>
-                  <strong class="text-sm font-black text-slate-900">{{ ex.brightness }}%</strong>
-                </div>
-                <div class="p-2.5 rounded-xl scs-tile-3d">
-                  <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Sharpness</span>
-                  <strong class="text-sm font-black text-slate-900">{{ ex.sharpness }}%</strong>
-                </div>
-              </div>
-              <div class="flex items-center justify-between flex-wrap gap-3 pt-1">
-                <label class="inline-flex items-center gap-2.5 text-xs font-semibold text-slate-700 cursor-pointer select-none">
-                  <div class="relative w-10 h-5 rounded-full transition-colors duration-200"
-                    [class]="enrollLiteEnabled() ? 'bg-emerald-500' : 'bg-slate-300'">
-                    <input type="checkbox" class="sr-only" [checked]="enrollLiteEnabled()" (change)="enrollLiteEnabled.set(!enrollLiteEnabled())" />
-                    <div class="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow-xs transition-transform duration-200"
-                      [class.translate-x-5]="enrollLiteEnabled()"></div>
+              @if (enrollFingerError(); as ferr) {
+                <div class="p-3.5 rounded-2xl bg-amber-50/90 border border-amber-200/90 text-xs text-amber-950 space-y-2.5">
+                  <div class="flex items-start gap-2.5">
+                    <lucide-icon [name]="'info'" class="w-4 h-4 text-amber-600 shrink-0 mt-0.5"></lucide-icon>
+                    <p class="text-[11px] text-amber-900 font-medium leading-relaxed">{{ ferr }}</p>
                   </div>
-                  <span>Allow Lite Quick-Verify for this profile</span>
-                </label>
-                <div class="flex items-center gap-2">
-                  <button type="button" (click)="enrollCapturedDataUrl.set(''); enrollExtraction.set(null)"
-                    class="px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 cursor-pointer">
-                    Retake
-                  </button>
-                  <button type="button" (click)="saveEnrolledFaceProfile()"
-                    class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold shadow-sm cursor-pointer">
-                    Save Face Profile
+                  <button type="button" (click)="fallbackEnrollToFaceCamera(false)"
+                    class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold cursor-pointer inline-flex items-center gap-1.5 shadow-2xs transition-colors">
+                    <lucide-icon [name]="'scan-face'" class="w-3.5 h-3.5"></lucide-icon>
+                    <span>Use Face Camera Instead</span>
                   </button>
                 </div>
-              </div>
+              }
+
+              @if (enrollFingerCapture(); as efc) {
+                <div class="p-4 sm:p-5 rounded-2xl scs-tile-3d space-y-3.5">
+                  <div class="flex items-center justify-between text-xs">
+                    <span class="font-black text-slate-900 tracking-tight">Captured Biometric Template</span>
+                    <span class="font-mono font-bold text-slate-500">{{ efc.fingerprintHash }}</span>
+                  </div>
+                  <div class="flex items-center justify-between flex-wrap gap-3 pt-1">
+                    <label class="inline-flex items-center gap-2.5 text-xs font-semibold text-slate-700 cursor-pointer select-none">
+                      <div class="relative w-10 h-5 rounded-full transition-colors duration-200"
+                        [class]="enrollLiteEnabled() ? 'bg-emerald-500' : 'bg-slate-300'">
+                        <input type="checkbox" class="sr-only" [checked]="enrollLiteEnabled()" (change)="enrollLiteEnabled.set(!enrollLiteEnabled())" />
+                        <div class="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow-xs transition-transform duration-200"
+                          [class.translate-x-5]="enrollLiteEnabled()"></div>
+                      </div>
+                      <span>Allow Lite Quick-Verify for this fingerprint</span>
+                    </label>
+                    <div class="flex items-center gap-2">
+                      <button type="button" (click)="enrollFingerCapture.set(null)"
+                        class="px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 cursor-pointer">
+                        Rescan
+                      </button>
+                      <button type="button" (click)="saveEnrolledFingerprintProfile()"
+                        class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold shadow-sm cursor-pointer">
+                        Save Fingerprint Profile
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              }
             </div>
+          } @else {
+            <div class="relative w-full h-72 sm:h-80 rounded-[22px] bg-slate-950 overflow-hidden ring-1 ring-slate-900/10 shadow-inner" [class]="fillLightFrameClass()">
+              <video #enrollVideoEl
+                class="w-full h-full object-cover"
+                [class.hidden]="!cameraActive() || !!enrollCapturedDataUrl()"
+                [style.transform]="cameraFacingMode() === 'user' ? 'scaleX(-1)' : 'none'"
+                autoplay playsinline muted></video>
+
+              @if (enrollCapturedDataUrl()) {
+                <img [src]="enrollCapturedDataUrl()" alt="Captured Enrollment Photo" referrerpolicy="no-referrer"
+                  class="w-full h-full object-cover" />
+              }
+
+              @if (!cameraActive() && !enrollCapturedDataUrl()) {
+                <div (click)="startCamera('enroll')"
+                  class="absolute inset-0 flex flex-col items-center justify-center p-5 text-center text-white space-y-3 cursor-pointer bg-gradient-to-b from-slate-900/80 to-slate-950">
+                  <div class="w-14 h-14 rounded-2xl bg-emerald-500/15 border border-emerald-400/30 flex items-center justify-center">
+                    <lucide-icon [name]="'camera'" class="w-7 h-7 text-emerald-400"></lucide-icon>
+                  </div>
+                  @if (cameraError()) {
+                    <div class="space-y-2.5 max-w-md">
+                      <p class="text-xs font-black text-white tracking-tight">Tap to Open Enrollment Camera</p>
+                      <p class="text-[11px] text-slate-300 leading-relaxed">{{ cameraError() }}</p>
+                      <button type="button" (click)="$event.stopPropagation(); startCamera('enroll')"
+                        class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 shadow-md">
+                        <lucide-icon [name]="'video'" class="w-3.5 h-3.5"></lucide-icon>
+                        <span>Open Live Camera</span>
+                      </button>
+                    </div>
+                  } @else {
+                    <p class="text-xs font-bold text-slate-200">Opening Live Camera for Face Capture...</p>
+                  }
+                </div>
+              }
+
+              @if (cameraActive() && !enrollCapturedDataUrl()) {
+                <div class="absolute inset-0 pointer-events-none flex items-center justify-center">
+                  <div class="w-40 h-52 rounded-[50%] border-2 border-dashed border-emerald-400/80 shadow-[0_0_0_9999px_rgba(2,6,23,0.18)]"></div>
+                </div>
+              }
+            </div>
+
+            <input #phoneEnrollInputEl type="file" accept="image/*"
+              (change)="onEnrollPhotoFileSelected($event)" class="hidden" />
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              @if (!cameraActive()) {
+                <button type="button" (click)="startCamera('enroll')"
+                  class="h-10 px-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold cursor-pointer inline-flex items-center justify-center gap-1.5 shadow-sm transition-all active:scale-[0.98]">
+                  <lucide-icon [name]="'video'" class="w-4 h-4"></lucide-icon>
+                  <span>Open Live Camera</span>
+                </button>
+              } @else {
+                <button type="button" (click)="captureEnrollmentFromCamera()" [disabled]="isCapturingEnroll()"
+                  class="h-10 px-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold cursor-pointer inline-flex items-center justify-center gap-1.5 shadow-sm transition-all active:scale-[0.98]">
+                  <lucide-icon [name]="'camera'" class="w-4 h-4"></lucide-icon>
+                  <span>Snap Camera Frame</span>
+                </button>
+              }
+
+              <button type="button" (click)="switchCameraFacing()"
+                class="h-10 px-3.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200/80 text-slate-800 text-xs font-bold cursor-pointer inline-flex items-center justify-center gap-1.5 transition-colors">
+                <lucide-icon [name]="'refresh-cw'" class="w-4 h-4 text-emerald-600"></lucide-icon>
+                <span>{{ cameraFacingMode() === 'user' ? 'Front Camera' : 'Rear Camera' }}</span>
+              </button>
+
+              <button type="button" (click)="toggleFillLight()"
+                class="h-10 px-3.5 rounded-xl border text-xs font-bold cursor-pointer inline-flex items-center justify-center gap-1.5 transition-colors"
+                [class]="fillLightBoost() ? 'bg-amber-50 border-amber-300 text-amber-900' : 'bg-white hover:bg-slate-50 border-slate-200/80 text-slate-700'">
+                <lucide-icon [name]="'lightbulb'" class="w-4 h-4 text-amber-500"></lucide-icon>
+                <span>Light: {{ fillLightBoost() ? 'ON' : 'OFF' }}</span>
+              </button>
+            </div>
+
+            @if (enrollExtraction(); as ex) {
+              <div class="p-4 sm:p-5 rounded-2xl scs-tile-3d space-y-3.5">
+                <div class="flex items-center justify-between text-xs">
+                  <span class="font-black text-slate-900 tracking-tight">Captured Face Signature Metrics</span>
+                  <span class="font-mono font-bold text-slate-500">{{ ex.hash }}</span>
+                </div>
+                <div class="grid grid-cols-3 gap-2.5 text-center text-xs tabular-nums">
+                  <div class="p-2.5 rounded-xl scs-tile-3d">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Quality</span>
+                    <strong class="text-sm font-black text-slate-900">{{ ex.qualityScore }}%</strong>
+                  </div>
+                  <div class="p-2.5 rounded-xl scs-tile-3d">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Brightness</span>
+                    <strong class="text-sm font-black text-slate-900">{{ ex.brightness }}%</strong>
+                  </div>
+                  <div class="p-2.5 rounded-xl scs-tile-3d">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Sharpness</span>
+                    <strong class="text-sm font-black text-slate-900">{{ ex.sharpness }}%</strong>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between flex-wrap gap-3 pt-1">
+                  <label class="inline-flex items-center gap-2.5 text-xs font-semibold text-slate-700 cursor-pointer select-none">
+                    <div class="relative w-10 h-5 rounded-full transition-colors duration-200"
+                      [class]="enrollLiteEnabled() ? 'bg-emerald-500' : 'bg-slate-300'">
+                      <input type="checkbox" class="sr-only" [checked]="enrollLiteEnabled()" (change)="enrollLiteEnabled.set(!enrollLiteEnabled())" />
+                      <div class="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow-xs transition-transform duration-200"
+                        [class.translate-x-5]="enrollLiteEnabled()"></div>
+                    </div>
+                    <span>Allow Lite Quick-Verify for this profile</span>
+                  </label>
+                  <div class="flex items-center gap-2">
+                    <button type="button" (click)="enrollCapturedDataUrl.set(''); enrollExtraction.set(null)"
+                      class="px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 cursor-pointer">
+                      Retake
+                    </button>
+                    <button type="button" (click)="saveEnrolledFaceProfile()"
+                      class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold shadow-sm cursor-pointer">
+                      Save Face Profile
+                    </button>
+                  </div>
+                </div>
+              </div>
+            }
           }
         </div>
 
@@ -1843,9 +2225,11 @@
           <div class="flex items-center justify-between border-b border-slate-100 pb-3.5">
             <div class="flex items-center gap-2.5">
               <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-sky-500 to-blue-600 text-white flex items-center justify-center shadow-xs border border-white/30 shrink-0">
-                <lucide-icon [name]="'user-check'" class="w-4 h-4"></lucide-icon>
+                <lucide-icon [name]="enrollChannel() === 'fingerprint' ? 'fingerprint' : 'user-check'" class="w-4 h-4"></lucide-icon>
               </div>
-              <h4 class="text-sm font-black text-slate-900 tracking-tight">Enrolled {{ categoryLabel(enrollCategory()) }} Profiles</h4>
+              <h4 class="text-sm font-black text-slate-900 tracking-tight">
+                {{ enrollChannel() === 'fingerprint' ? ('Enrolled ' + categoryLabel(enrollCategory()) + ' Fingerprints') : ('Enrolled ' + categoryLabel(enrollCategory()) + ' Profiles') }}
+              </h4>
             </div>
             <span class="text-xs font-bold text-slate-500 tabular-nums">
               {{ enrollCategoryMembers().length }} total
@@ -1854,37 +2238,71 @@
 
           <div class="divide-y divide-slate-100 max-h-[440px] overflow-y-auto pr-1">
             @for (m of enrollCategoryMembers(); track m.id) {
-              <div class="py-3 flex items-center justify-between gap-2.5 text-xs">
-                <div class="flex items-center gap-3 min-w-0">
-                  @if (m.faceProfile?.facePhotoData) {
-                    <img [src]="m.faceProfile?.facePhotoData" [alt]="m.name" referrerpolicy="no-referrer"
-                      class="w-10 h-10 rounded-xl object-cover ring-2 ring-emerald-500/20 shrink-0" />
-                  } @else {
-                    <div class="w-10 h-10 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold text-[11px] flex items-center justify-center shrink-0">
-                      {{ memberInitials(m.name) }}
+              @if (enrollChannel() === 'fingerprint') {
+                <div class="py-3 flex items-center justify-between gap-2.5 text-xs">
+                  <div class="flex items-center gap-3 min-w-0">
+                    @if (m.fingerprintProfile?.fingerprintPreviewData) {
+                      <img [src]="m.fingerprintProfile?.fingerprintPreviewData" [alt]="m.name" referrerpolicy="no-referrer"
+                        class="w-10 h-10 rounded-xl object-cover ring-2 ring-emerald-500/20 shrink-0" />
+                    } @else {
+                      <div class="w-10 h-10 rounded-xl bg-white border border-slate-200 text-slate-600 flex items-center justify-center shrink-0">
+                        <lucide-icon [name]="'fingerprint'" class="w-5 h-5"></lucide-icon>
+                      </div>
+                    }
+                    <div class="min-w-0">
+                      <p class="font-bold text-slate-900 truncate">{{ m.name }}</p>
+                      <p class="text-[11px] text-slate-500 font-mono truncate">
+                        {{ m.code }} · {{ m.fingerprintProfile ? (m.fingerprintProfile.fingerLabel + ' · ' + m.fingerprintProfile.fingerprintHash) : 'Pending fingerprint' }}
+                      </p>
                     </div>
-                  }
-                  <div class="min-w-0">
-                    <p class="font-bold text-slate-900 truncate">{{ m.name }}</p>
-                    <p class="text-[11px] text-slate-500 font-mono truncate">
-                      {{ m.code }} · {{ m.faceProfile ? m.faceProfile.faceHash : 'Pending capture' }}
-                    </p>
+                  </div>
+                  <div class="flex items-center gap-1.5 shrink-0">
+                    @if (m.fingerprintProfile; as fpp) {
+                      <button type="button" (click)="removeEnrolledFingerprint(fpp.id)" title="Remove enrolled fingerprint"
+                        class="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer transition-colors">
+                        <lucide-icon [name]="'trash-2'" class="w-3.5 h-3.5"></lucide-icon>
+                      </button>
+                    } @else {
+                      <button type="button" (click)="enrollTargetMemberId.set(m.id); captureDeviceFingerprintForEnroll()"
+                        class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-[11px] font-bold cursor-pointer transition-colors shadow-xs">
+                        Scan Finger
+                      </button>
+                    }
                   </div>
                 </div>
-                <div class="flex items-center gap-1.5 shrink-0">
-                  @if (m.faceProfile; as fp) {
-                    <button type="button" (click)="removeEnrolledFace(fp.id)" title="Remove enrolled face"
-                      class="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer transition-colors">
-                      <lucide-icon [name]="'trash-2'" class="w-3.5 h-3.5"></lucide-icon>
-                    </button>
-                  } @else {
-                    <button type="button" (click)="enrollTargetMemberId.set(m.id); startCamera('enroll')"
-                      class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-[11px] font-bold cursor-pointer transition-colors shadow-xs">
-                      Enroll
-                    </button>
-                  }
+              } @else {
+                <div class="py-3 flex items-center justify-between gap-2.5 text-xs">
+                  <div class="flex items-center gap-3 min-w-0">
+                    @if (m.faceProfile?.facePhotoData) {
+                      <img [src]="m.faceProfile?.facePhotoData" [alt]="m.name" referrerpolicy="no-referrer"
+                        class="w-10 h-10 rounded-xl object-cover ring-2 ring-emerald-500/20 shrink-0" />
+                    } @else {
+                      <div class="w-10 h-10 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold text-[11px] flex items-center justify-center shrink-0">
+                        {{ memberInitials(m.name) }}
+                      </div>
+                    }
+                    <div class="min-w-0">
+                      <p class="font-bold text-slate-900 truncate">{{ m.name }}</p>
+                      <p class="text-[11px] text-slate-500 font-mono truncate">
+                        {{ m.code }} · {{ m.faceProfile ? m.faceProfile.faceHash : 'Pending capture' }}
+                      </p>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-1.5 shrink-0">
+                    @if (m.faceProfile; as fp) {
+                      <button type="button" (click)="removeEnrolledFace(fp.id)" title="Remove enrolled face"
+                        class="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer transition-colors">
+                        <lucide-icon [name]="'trash-2'" class="w-3.5 h-3.5"></lucide-icon>
+                      </button>
+                    } @else {
+                      <button type="button" (click)="enrollTargetMemberId.set(m.id); startCamera('enroll')"
+                        class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-[11px] font-bold cursor-pointer transition-colors shadow-xs">
+                        Enroll
+                      </button>
+                    }
+                  </div>
                 </div>
-              </div>
+              }
             }
           </div>
         </div>
@@ -2014,8 +2432,21 @@
 
               <label class="p-3.5 rounded-2xl scs-tile-3d flex items-center justify-between gap-3 cursor-pointer transition-all select-none">
                 <div>
+                  <span class="font-bold text-slate-900 block">Allow Fingerprint Biometric Attendance</span>
+                  <span class="text-[11px] text-slate-500">Enables Device Touch/Fingerprint &amp; Optical USB Fingerprint verification alongside Face Camera</span>
+                </div>
+                <div class="relative w-11 h-6 rounded-full transition-colors duration-200 shrink-0"
+                  [class]="policyDraft().allowFingerprintAttendance !== false ? 'bg-emerald-500' : 'bg-slate-300'">
+                  <input type="checkbox" class="sr-only" [checked]="policyDraft().allowFingerprintAttendance !== false" (change)="toggleDraftField('allowFingerprintAttendance')" />
+                  <div class="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform duration-200"
+                    [class.translate-x-5]="policyDraft().allowFingerprintAttendance !== false"></div>
+                </div>
+              </label>
+
+              <label class="p-3.5 rounded-2xl scs-tile-3d flex items-center justify-between gap-3 cursor-pointer transition-all select-none">
+                <div>
                   <span class="font-bold text-slate-900 block">Enforce Camera-Only Attendance</span>
-                  <span class="text-[11px] text-slate-500">Requires camera face verification across portals</span>
+                  <span class="text-[11px] text-slate-500">Requires biometric verification across portals</span>
                 </div>
                 <div class="relative w-11 h-6 rounded-full transition-colors duration-200 shrink-0"
                   [class]="policyDraft().requireCameraForAllAttendance ? 'bg-emerald-500' : 'bg-slate-300'">
@@ -2049,6 +2480,16 @@
                   <input type="range" min="60" max="95" [value]="policyDraft().confidenceThreshold"
                     (input)="setDraftNumber('confidenceThreshold', $any($event.target).value)"
                     class="w-full accent-emerald-600 cursor-pointer" />
+                </div>
+
+                <div>
+                  <div class="flex items-center justify-between font-bold text-slate-800 mb-1.5">
+                    <span>Fingerprint Match Threshold</span>
+                    <span class="font-mono font-black text-indigo-700 tabular-nums">{{ policyDraft().fingerprintConfidenceThreshold ?? 78 }}%</span>
+                  </div>
+                  <input type="range" min="60" max="98" [value]="policyDraft().fingerprintConfidenceThreshold ?? 78"
+                    (input)="setDraftNumber('fingerprintConfidenceThreshold', $any($event.target).value)"
+                    class="w-full accent-indigo-600 cursor-pointer" />
                 </div>
 
                 <div>

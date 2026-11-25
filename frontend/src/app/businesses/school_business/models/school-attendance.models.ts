@@ -2,6 +2,10 @@ export type AttendanceMemberCategory = 'student' | 'teacher' | 'staff' | 'princi
 
 export type AttendanceVerificationMode = 'strict' | 'standard' | 'lite';
 
+export type AttendanceVerificationChannel = 'face' | 'fingerprint';
+
+export type FingerprintScannerType = 'device_webauthn' | 'optical_image';
+
 export type AttendancePortalContext = 'owner' | 'principal' | 'teacher' | 'student' | 'staff';
 
 export interface StaffMemberRecord {
@@ -25,6 +29,7 @@ export interface StaffMemberRecord {
   status: 'ACTIVE' | 'ON_LEAVE' | 'INACTIVE' | string;
   attendanceStatus: 'Present' | 'Late' | 'Absent' | 'On Leave';
   faceEnrolled?: boolean;
+  fingerprintEnrolled?: boolean;
   liteEnabled?: boolean;
   image?: string;
 }
@@ -50,6 +55,7 @@ export interface PrincipalMemberRecord {
   status: 'ACTIVE' | 'ON_LEAVE' | 'INACTIVE' | string;
   attendanceStatus: 'Present' | 'Late' | 'Absent' | 'On Leave';
   faceEnrolled?: boolean;
+  fingerprintEnrolled?: boolean;
   liteEnabled?: boolean;
   image?: string;
 }
@@ -64,6 +70,26 @@ export interface FaceProfileRecord {
   faceDescriptor: number[];
   facePhotoData: string;
   faceHash: string;
+  qualityScore: number;
+  liteEnabled: boolean;
+  enrolledBy: string;
+  enrolledAt: string;
+}
+
+export interface FingerprintProfileRecord {
+  id: string;
+  memberId: string;
+  memberCategory: AttendanceMemberCategory;
+  memberName: string;
+  memberCode: string;
+  gradeOrDept: string;
+  fingerLabel: string;
+  scannerType: FingerprintScannerType;
+  credentialId: string;
+  publicKeySpki?: string;
+  fingerprintDescriptor: number[];
+  fingerprintPreviewData: string;
+  fingerprintHash: string;
   qualityScore: number;
   liteEnabled: boolean;
   enrolledBy: string;
@@ -98,7 +124,9 @@ export interface OwnerAttendancePolicy {
   livenessCheckEnabled: boolean;
   autoCaptureOnMatch: boolean;
   requireCameraForAllAttendance: boolean;
+  allowFingerprintAttendance?: boolean;
   confidenceThreshold: number;
+  fingerprintConfidenceThreshold?: number;
   liteConfidenceThreshold: number;
   scheduledStartTime: string;
   lateCutoffTime: string;
@@ -168,8 +196,10 @@ export interface AttendanceMemberView {
   monthlyRate: string;
   image: string;
   faceProfile?: FaceProfileRecord | null;
+  fingerprintProfile?: FingerprintProfileRecord | null;
   liteEnabled: boolean;
   isEnrolled: boolean;
+  isFingerprintEnrolled?: boolean;
   scheduledStartTime: string;
   checkInTime: string;
   lateMinutes: number | null;
@@ -335,7 +365,9 @@ export function createDefaultOwnerAttendancePolicy(): OwnerAttendancePolicy {
     livenessCheckEnabled: true,
     autoCaptureOnMatch: true,
     requireCameraForAllAttendance: true,
+    allowFingerprintAttendance: true,
     confidenceThreshold: 76,
+    fingerprintConfidenceThreshold: 78,
     liteConfidenceThreshold: 66,
     scheduledStartTime: '08:00',
     lateCutoffTime: '08:15',

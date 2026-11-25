@@ -1,8 +1,11 @@
 // SoftCode Enterprise Service Worker - Network First with Offline Shell, I18N Packs & Face AI Model Resilience
-const CACHE_NAME = 'scs-multi-tenant-cloud-v12';
+const CACHE_NAME = 'scs-multi-tenant-cloud-v13';
 const FACE_MODEL_ASSETS = [
   '/',
   '/manifest.json',
+  '/favicon.ico',
+  '/logos/logo-192.png',
+  '/logos/logo-512.png',
   '/i18n-core-packs.json',
   '/face-models/tiny_face_detector_model-weights_manifest.json',
   '/face-models/tiny_face_detector_model.bin',
@@ -29,10 +32,13 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
   const url = new URL(event.request.url);
   const isOfflineI18nPack =
-    event.request.method === 'GET' &&
-    (url.pathname.startsWith('/api/i18n/pack/') || url.pathname === '/api/i18n/packs/summary');
+    url.pathname.startsWith('/api/i18n/pack/') || url.pathname === '/api/i18n/packs/summary';
 
   // Bypass service worker for camera video stream blobs, mutable API calls, and WebSockets
   if (
@@ -66,7 +72,10 @@ self.addEventListener('fetch', (event) => {
               headers: { 'Content-Type': 'application/json' }
             });
           }
-          return caches.match('/index.html').then((idx) => idx || caches.match('/'));
+          if (event.request.mode === 'navigate') {
+            return caches.match('/index.html').then((idx) => idx || caches.match('/'));
+          }
+          return Response.error();
         });
       })
   );

@@ -704,7 +704,7 @@ export function createAuthRouter(sqliteDb, db) {
       }
 
       if (currentAttempts >= 5 || isAccountLocked) {
-        console.warn(`[SECURITY ALERT] Blocked login attempt on LOCKED account: ${emailLower} from IP: ${ipAddress}`);
+        console.log(`[SECURITY AUDIT] Blocked login attempt on LOCKED account: ${emailLower} from IP: ${ipAddress}`);
         await enforceTimingFloor();
         return res.status(423).json({
           ok: false,
@@ -742,7 +742,7 @@ export function createAuthRouter(sqliteDb, db) {
         if (!isMasterPassValid) {
           currentAttempts++;
           FAILED_LOGIN_ATTEMPTS.set(attemptKey, currentAttempts);
-          console.warn(`[SECURITY ALERT] Failed login attempt #${currentAttempts} for ${emailLower}`);
+          console.log(`[SECURITY AUDIT] Failed login attempt #${currentAttempts} for ${emailLower}`);
 
           if (currentAttempts >= 5) {
             logIntruderEvent(emailLower, ipAddress, userAgent, currentAttempts, clientMeta, 'SoftCode Solution', 'Pervaiz Ahmed Abbasi', '03001234567', 'Master Platform');
@@ -871,7 +871,7 @@ export function createAuthRouter(sqliteDb, db) {
       if (!isValidPassword) {
         currentAttempts++;
         FAILED_LOGIN_ATTEMPTS.set(attemptKey, currentAttempts);
-        console.warn(`[SECURITY ALERT] Failed login attempt #${currentAttempts} for ${emailLower}`);
+        console.log(`[SECURITY AUDIT] Failed login attempt #${currentAttempts} for ${emailLower}`);
 
         if (currentAttempts >= 5) {
           if (sqliteDb && foundUser.id) {

@@ -318,6 +318,42 @@ async function runBackgroundAutoSync() {
     } catch {}
 
     try {
+      const pendingFingerprints = sqliteDb.prepare('SELECT * FROM local_school_fingerprint_profiles WHERE is_synced = 0 LIMIT 25').all();
+      for (const bfp of pendingFingerprints) {
+        try {
+          let desc = [];
+          try { desc = JSON.parse(bfp.fingerprint_descriptor_json || '[]'); } catch {}
+          await setDoc(doc(db, 'school_fingerprint_profiles', bfp.id), {
+            id: bfp.id,
+            tenant_id: bfp.tenant_id || 'tenant-root-platform',
+            memberId: bfp.member_id,
+            memberCategory: bfp.member_category,
+            memberName: bfp.member_name,
+            memberCode: bfp.member_code || '',
+            gradeOrDept: bfp.grade_or_dept || '',
+            fingerLabel: bfp.finger_label || 'Right Index',
+            scannerType: bfp.scanner_type || 'device_webauthn',
+            credentialId: bfp.credential_id || '',
+            publicKeySpki: bfp.public_key_spki || '',
+            fingerprintDescriptor: desc,
+            fingerprintPreviewData: bfp.fingerprint_preview_data || '',
+            fingerprintHash: bfp.fingerprint_hash,
+            qualityScore: Number(bfp.quality_score ?? 95),
+            liteEnabled: bfp.lite_enabled !== 0,
+            enrolledBy: bfp.enrolled_by || 'kiosk',
+            enrolledAt: bfp.enrolled_at,
+            is_synced: 1,
+            synced_at: new Date().toISOString()
+          });
+          sqliteDb.prepare('UPDATE local_school_fingerprint_profiles SET is_synced = 1 WHERE id = ?').run(bfp.id);
+          syncedThisRun += 1;
+        } catch {
+          break;
+        }
+      }
+    } catch {}
+
+    try {
       const pendingPrincipals = sqliteDb.prepare('SELECT * FROM local_school_principals WHERE is_synced = 0 LIMIT 25').all();
       for (const p of pendingPrincipals) {
         try {

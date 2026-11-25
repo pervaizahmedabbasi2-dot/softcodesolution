@@ -81,25 +81,30 @@ function isFallbackEligibleError(err: unknown): boolean {
 }
 
 export async function createBiometricPasskey(
-  basePublicKey: PublicKeyCredentialCreationOptions
+  basePublicKey: PublicKeyCredentialCreationOptions,
+  options?: { preferResidentKey?: boolean }
 ): Promise<PublicKeyCredential | null> {
-  const strictWithHints = {
-    ...basePublicKey,
-    authenticatorSelection: {
-      authenticatorAttachment: 'platform' as const,
-      residentKey: 'required' as const,
-      requireResidentKey: true,
-      userVerification: 'required' as const
-    },
-    hints: ['client-device']
-  } as PublicKeyCredentialCreationOptions;
+  const preferResident = options?.preferResidentKey !== false;
 
-  try {
-    return (await navigator.credentials.create({
-      publicKey: strictWithHints
-    })) as PublicKeyCredential | null;
-  } catch (err1) {
-    if (!isFallbackEligibleError(err1)) throw err1;
+  if (preferResident) {
+    const strictWithHints = {
+      ...basePublicKey,
+      authenticatorSelection: {
+        authenticatorAttachment: 'platform' as const,
+        residentKey: 'required' as const,
+        requireResidentKey: true,
+        userVerification: 'required' as const
+      },
+      hints: ['client-device']
+    } as PublicKeyCredentialCreationOptions;
+
+    try {
+      return (await navigator.credentials.create({
+        publicKey: strictWithHints
+      })) as PublicKeyCredential | null;
+    } catch (err1) {
+      if (!isFallbackEligibleError(err1)) throw err1;
+    }
   }
 
   try {

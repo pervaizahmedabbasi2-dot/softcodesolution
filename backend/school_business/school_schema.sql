@@ -137,6 +137,7 @@ CREATE TABLE IF NOT EXISTS local_school_principals (
   status TEXT DEFAULT 'ACTIVE',
   attendance_status TEXT DEFAULT 'Absent',
   face_enrolled INTEGER DEFAULT 0,
+  fingerprint_enrolled INTEGER DEFAULT 0,
   lite_enabled INTEGER DEFAULT 1,
   is_synced INTEGER DEFAULT 0,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -158,6 +159,30 @@ CREATE TABLE IF NOT EXISTS local_school_face_profiles (
   lite_enabled INTEGER DEFAULT 1,
   enrolled_by TEXT DEFAULT 'owner',
   enrolled_at TEXT NOT NULL,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Biometric Fingerprint Profiles (Students, Teachers, Staff, Principal)
+CREATE TABLE IF NOT EXISTS local_school_fingerprint_profiles (
+  id TEXT PRIMARY KEY,
+  tenant_id TEXT DEFAULT 'tenant-root-platform',
+  member_id TEXT NOT NULL,
+  member_category TEXT NOT NULL,
+  member_name TEXT NOT NULL,
+  member_code TEXT,
+  grade_or_dept TEXT,
+  finger_label TEXT DEFAULT 'Right Index',
+  scanner_type TEXT DEFAULT 'device_webauthn',
+  credential_id TEXT,
+  public_key_spki TEXT,
+  fingerprint_descriptor_json TEXT NOT NULL DEFAULT '[]',
+  fingerprint_preview_data TEXT,
+  fingerprint_hash TEXT NOT NULL,
+  quality_score REAL DEFAULT 95,
+  lite_enabled INTEGER DEFAULT 1,
+  enrolled_by TEXT DEFAULT 'owner',
+  enrolled_at TEXT NOT NULL,
+  is_synced INTEGER DEFAULT 0,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 

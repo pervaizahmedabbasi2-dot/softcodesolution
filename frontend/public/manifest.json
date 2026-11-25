@@ -1,11 +1,14 @@
 {
+  "id": "/",
   "name": "SoftCode Solution",
   "short_name": "SoftCode",
-  "description": "SoftCode Solution is a comprehensive web application for managing software projects and solutions.",
+  "description": "SoftCode Solution is an installable multi-tenant business and school operations platform.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "any",
   "background_color": "#ffffff",
-  "theme_color": "#000000",
+  "theme_color": "#0f172a",
   "icons": [
     {
       "src": "/logos/logo-192.png",
