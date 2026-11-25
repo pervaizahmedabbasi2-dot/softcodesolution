@@ -8,6 +8,34 @@ export type FingerprintScannerType = 'device_webauthn' | 'optical_image';
 
 export type AttendancePortalContext = 'owner' | 'principal' | 'teacher' | 'student' | 'staff';
 
+export interface SchoolBranchRecord {
+  id: string;
+  code: string;
+  name: string;
+  city: string;
+  address: string;
+  phone: string;
+  principalName: string;
+  accountantName?: string;
+  status: 'ACTIVE' | 'MAINTENANCE' | 'INACTIVE';
+  establishedYear?: string;
+  createdAt?: string;
+}
+
+export type SchoolWingType = 'Montessori' | 'Junior' | 'Middle' | 'Senior' | 'Girls' | 'Boys' | 'Evening' | 'General';
+
+export interface SchoolWingRecord {
+  id: string;
+  branchId: string;
+  code?: string;
+  name: string;
+  type: SchoolWingType;
+  wingType?: SchoolWingType;
+  gradeRange: string;
+  headName: string;
+  status: 'ACTIVE' | 'INACTIVE';
+}
+
 export interface StaffMemberRecord {
   id: string;
   empCode: string;
@@ -32,6 +60,10 @@ export interface StaffMemberRecord {
   fingerprintEnrolled?: boolean;
   liteEnabled?: boolean;
   image?: string;
+  branchId?: string;
+  branchName?: string;
+  wingId?: string;
+  wingName?: string;
 }
 
 export interface PrincipalMemberRecord {
@@ -58,6 +90,10 @@ export interface PrincipalMemberRecord {
   fingerprintEnrolled?: boolean;
   liteEnabled?: boolean;
   image?: string;
+  branchId?: string;
+  branchName?: string;
+  wingId?: string;
+  wingName?: string;
 }
 
 export interface FaceProfileRecord {

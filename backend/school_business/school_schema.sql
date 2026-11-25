@@ -2,10 +2,40 @@
 -- SCHOOL & COLLEGE BUSINESS DOMAIN SCHEMA (MULTI-TENANT + ENCRYPTED PII)
 -- ===========================================================================
 
+-- Multi-Campus Branches & Academic Wings
+CREATE TABLE IF NOT EXISTS local_school_branches (
+  id TEXT PRIMARY KEY,
+  tenant_id TEXT DEFAULT 'tenant-root-platform',
+  code TEXT NOT NULL,
+  name TEXT NOT NULL,
+  city TEXT,
+  address TEXT,
+  phone TEXT,
+  principal_name TEXT,
+  accountant_name TEXT,
+  status TEXT DEFAULT 'ACTIVE',
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS local_school_wings (
+  id TEXT PRIMARY KEY,
+  tenant_id TEXT DEFAULT 'tenant-root-platform',
+  branch_id TEXT NOT NULL,
+  code TEXT NOT NULL,
+  name TEXT NOT NULL,
+  wing_type TEXT DEFAULT 'General',
+  grade_range TEXT,
+  head_name TEXT,
+  status TEXT DEFAULT 'ACTIVE',
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Students Directory
 CREATE TABLE IF NOT EXISTS local_school_students (
   id TEXT PRIMARY KEY,
   tenant_id TEXT DEFAULT 'tenant-root-platform',
+  branch_id TEXT DEFAULT 'BR-LHR-01',
+  wing_id TEXT DEFAULT 'WNG-LHR-SR',
   roll_no TEXT NOT NULL,
   full_name TEXT NOT NULL,
   grade TEXT NOT NULL,
@@ -40,6 +70,8 @@ CREATE TABLE IF NOT EXISTS local_school_students (
 CREATE TABLE IF NOT EXISTS local_school_fees (
   id TEXT PRIMARY KEY,
   tenant_id TEXT DEFAULT 'tenant-root-platform',
+  branch_id TEXT DEFAULT 'BR-LHR-01',
+  wing_id TEXT DEFAULT 'WNG-LHR-SR',
   challan_no TEXT NOT NULL,
   student_id TEXT,
   student_name TEXT NOT NULL,
@@ -65,6 +97,8 @@ CREATE TABLE IF NOT EXISTS local_school_fees (
 CREATE TABLE IF NOT EXISTS local_school_attendance (
   id TEXT PRIMARY KEY,
   tenant_id TEXT DEFAULT 'tenant-root-platform',
+  branch_id TEXT DEFAULT 'BR-LHR-01',
+  wing_id TEXT DEFAULT 'WNG-LHR-SR',
   student_id TEXT NOT NULL,
   roll_no TEXT NOT NULL,
   student_name TEXT NOT NULL,
@@ -91,6 +125,8 @@ CREATE TABLE IF NOT EXISTS local_school_attendance (
 CREATE TABLE IF NOT EXISTS local_school_staff (
   id TEXT PRIMARY KEY,
   tenant_id TEXT DEFAULT 'tenant-root-platform',
+  branch_id TEXT DEFAULT 'BR-LHR-01',
+  wing_id TEXT DEFAULT 'WNG-LHR-SR',
   emp_code TEXT NOT NULL,
   name TEXT NOT NULL,
   father_name TEXT,
@@ -118,6 +154,8 @@ CREATE TABLE IF NOT EXISTS local_school_staff (
 CREATE TABLE IF NOT EXISTS local_school_principals (
   id TEXT PRIMARY KEY,
   tenant_id TEXT DEFAULT 'tenant-root-platform',
+  branch_id TEXT DEFAULT 'BR-LHR-01',
+  wing_id TEXT DEFAULT 'WNG-LHR-SR',
   emp_code TEXT NOT NULL,
   name TEXT NOT NULL,
   father_name TEXT,
