@@ -82,7 +82,7 @@ import { SchoolTableDirective } from '../directives/school-table.directive';
 import { SchoolTableColumnModalComponent } from '../components/school-table-column-modal/school-table-column-modal.component';
 import { SchoolCustomFormFieldsComponent } from '../components/school-custom-form-fields/school-custom-form-fields.component';
 import { SchoolTableSchemaService, SchoolCustomColumn, TableColumnPositionOption } from '../services/school-table-schema.service';
-import { PdfStudentCardEntry, downloadStudentsCardsPdf, downloadStudentsTablePdf } from '../services/school-pdf-export.util';
+import { PdfStudentCardEntry, downloadStudentsCardsPdf, downloadStudentsTablePdf, downloadTableCardsPdf } from '../services/school-pdf-export.util';
 import { PasskeyManagerComponent } from '../../../auth_security/passkey-manager/passkey-manager.component';
 
 export type SchoolDashboardTab = 'overview' | 'stage_wise' | 'feed' | 'events' | 'students' | 'teachers' | 'admissions' | 'attendance' | 'finance' | 'invoices' | 'expenses' | 'payment_gateway' | 'transport' | 'library' | 'exams' | 'timetable' | 'hostel' | 'labs' | 'alumni' | 'portals' | 'reports' | 'visitors' | 'assets' | 'settings' | 'audit' | 'lesson_plans' | 'appraisals' | 'inspections' | 'exam_moderation' | 'parent_complaints' | 'substitutions' | 'syllabus' | 'safeguarding' | 'directives';
@@ -963,6 +963,55 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
   isStudentExportMenuOpen: boolean = false;
   isDossierPrintPreview: boolean = false;
 
+  isStaffDossierModalOpen: boolean = false;
+  isStaffDossierPrintPreview: boolean = false;
+  selectedStaffForDossier: {
+    uid: string;
+    empCode: string;
+    name: string;
+    fatherName?: string;
+    categoryRole: 'Principal' | 'Accountant' | 'Teacher' | 'Support Staff';
+    designation: string;
+    department: string;
+    phone: string;
+    email: string;
+    cnic: string;
+    gender: string;
+    dob?: string;
+    bloodGroup?: string;
+    nationality?: string;
+    passportNo?: string;
+    shift: string;
+    address?: string;
+    emergencyContact?: string;
+    qualification?: string;
+    previousInstitute?: string;
+    experienceYears?: number;
+    subject?: string;
+    assignedGrade?: string;
+    inchargeClass?: string;
+    employmentType?: string;
+    bankName?: string;
+    accountNo?: string;
+    clearanceLevel?: string;
+    pin?: string;
+    lastLogin?: string;
+    appointmentDate?: string;
+    monthlySalary: number;
+    salaryStatus?: string;
+    attendanceStatus: 'Present' | 'Late' | 'Absent' | 'On Leave';
+    status: string;
+    faceEnrolled?: boolean;
+    fingerprintEnrolled?: boolean;
+    image?: string;
+    portalRole?: SchoolPortalRole;
+    collectedTotal?: number;
+    pendingClosings?: number;
+    sourceKind: 'principal' | 'accountant' | 'teacher' | 'support_staff';
+    tableId: string;
+    rawRef: any;
+  } | null = null;
+
   setStudentViewMode(mode: 'cards' | 'table'): void {
     this.studentViewMode = mode;
     this.cdr.detectChanges();
@@ -1398,6 +1447,282 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
     this.showToast(`Downloaded complete PDF dossier for ${student.name}`, 'success');
   }
 
+  getStaffInitials(name: string): string {
+    const parts = String(name || 'ST').trim().split(' ').filter(Boolean);
+    if (parts.length === 0) return 'ST';
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+  }
+
+  openStaffDossierModal(
+    item: any,
+    kind: 'principal' | 'accountant' | 'teacher' | 'support_staff' | 'all_staff'
+  ): void {
+    const resolvedKind: 'principal' | 'accountant' | 'teacher' | 'support_staff' =
+      kind === 'all_staff' ? (item?.sourceKind || 'support_staff') : kind;
+    const raw = kind === 'all_staff' ? (item?.rawRef || item) : item;
+    if (!raw) return;
+
+    const categoryRole: 'Principal' | 'Accountant' | 'Teacher' | 'Support Staff' =
+      resolvedKind === 'principal'
+        ? 'Principal'
+        : (resolvedKind === 'accountant'
+          ? 'Accountant'
+          : (resolvedKind === 'teacher' ? 'Teacher' : 'Support Staff'));
+
+    const tableId =
+      resolvedKind === 'principal'
+        ? 'owner_principals_directory'
+        : (resolvedKind === 'accountant'
+          ? 'owner_accountants_directory'
+          : (resolvedKind === 'teacher' ? 'owner_teachers_faculty' : 'owner_support_staff_directory'));
+
+    const attStatus: 'Present' | 'Late' | 'Absent' | 'On Leave' =
+      raw.attendanceStatus ||
+      (raw.status === 'On Leave' ? 'On Leave' : (raw.status === 'Resigned' || raw.status === 'INACTIVE' ? 'Absent' : 'Present'));
+
+    const rawEmpCode = raw.empCode || item?.empCode || raw.id || 'STF-001';
+    const uidPrefix =
+      resolvedKind === 'principal' ? 'PRI' : (resolvedKind === 'accountant' ? 'ACC' : (resolvedKind === 'teacher' ? 'TCH' : 'STF'));
+
+    this.selectedStaffForDossier = {
+      uid: raw.id || `${uidPrefix}-${rawEmpCode}`,
+      empCode: rawEmpCode,
+      name: raw.name || item?.name || 'Staff Member',
+      fatherName: raw.fatherName || undefined,
+      categoryRole,
+      designation:
+        resolvedKind === 'teacher'
+          ? (raw.role || raw.designation || 'Faculty Lecturer')
+          : (raw.roleTitle || item?.designation || categoryRole),
+      department:
+        resolvedKind === 'teacher'
+          ? (raw.department || raw.subject || 'Academic Faculty')
+          : (raw.department || item?.department || 'Campus Operations'),
+      phone: raw.phone || item?.phone || 'N/A',
+      email: raw.email || item?.email || 'staff@campus.edu.pk',
+      cnic: raw.cnic || item?.cnic || 'On file',
+      gender: raw.gender || 'Male',
+      dob: raw.dob || undefined,
+      bloodGroup: raw.bloodGroup || undefined,
+      nationality: raw.nationality || 'Pakistani',
+      passportNo: raw.passportNo || undefined,
+      shift:
+        resolvedKind === 'teacher'
+          ? `${raw.weeklyPeriods || raw.classes || 24} Periods / Week`
+          : (raw.shift || item?.shift || 'Full Day (08:00 AM - 04:00 PM)'),
+      address: raw.address || undefined,
+      emergencyContact: raw.emergencyContact || undefined,
+      qualification: raw.qualification || undefined,
+      previousInstitute: raw.previousInstitute || undefined,
+      experienceYears: raw.experienceYears !== undefined ? Number(raw.experienceYears) : undefined,
+      subject: raw.subject || undefined,
+      assignedGrade: raw.assignedGrade || undefined,
+      inchargeClass: raw.inchargeClass || undefined,
+      employmentType: raw.employmentType || undefined,
+      bankName: raw.bankName || undefined,
+      accountNo: raw.accountNo || undefined,
+      clearanceLevel: raw.clearanceLevel || undefined,
+      pin: raw.pin || undefined,
+      lastLogin: raw.lastLogin || undefined,
+      appointmentDate: raw.appointmentDate || undefined,
+      monthlySalary: Number(raw.monthlySalary ?? item?.monthlySalary ?? (resolvedKind === 'principal' ? 210000 : resolvedKind === 'teacher' ? 125000 : resolvedKind === 'accountant' ? 85000 : 52000)),
+      salaryStatus: raw.salaryStatus || (attStatus === 'Present' || attStatus === 'Late' ? 'Active Payroll' : 'On Leave'),
+      attendanceStatus: attStatus,
+      status: raw.status || 'ACTIVE',
+      faceEnrolled: Boolean(raw.faceEnrolled ?? raw.biometricEnrolled),
+      fingerprintEnrolled: Boolean(raw.fingerprintEnrolled),
+      image: raw.image || undefined,
+      portalRole:
+        resolvedKind === 'principal'
+          ? 'principal'
+          : (resolvedKind === 'accountant' ? 'accountant' : (resolvedKind === 'teacher' ? 'teacher' : undefined)),
+      collectedTotal: raw.collectedTotal,
+      pendingClosings: raw.pendingClosings,
+      sourceKind: resolvedKind,
+      tableId,
+      rawRef: raw
+    };
+    this.isStaffDossierPrintPreview = false;
+    this.isStaffDossierModalOpen = true;
+    this.cdr.detectChanges();
+  }
+
+  closeStaffDossierModal(): void {
+    this.isStaffDossierModalOpen = false;
+    this.isStaffDossierPrintPreview = false;
+    this.selectedStaffForDossier = null;
+    this.cdr.detectChanges();
+  }
+
+  getStaffDossierData(staff: NonNullable<SchoolDashboardComponent['selectedStaffForDossier']>): {
+    identityFields: Array<{ label: string; value: string; tone?: string }>;
+    particularsFields: Array<{ label: string; value: string; tone?: string }>;
+    additionalFields: Array<{ label: string; value: string }>;
+    totalCount: number;
+  } {
+    const identityFields: Array<{ label: string; value: string; tone?: string }> = [
+      { label: 'Hierarchy Tier', value: staff.categoryRole },
+      { label: 'Gender', value: staff.gender || 'Male' },
+      { label: 'Father / Guardian', value: staff.fatherName || 'Verified on File' },
+      { label: 'CNIC No', value: staff.cnic || 'On file', tone: 'mono' },
+      { label: 'Date of Birth / Nat.', value: `${staff.dob || 'On file'} · ${staff.nationality || 'Pakistani'}`, tone: 'mono' },
+      { label: 'Blood Group', value: staff.bloodGroup || 'O+', tone: 'rose' }
+    ];
+
+    if (staff.sourceKind === 'teacher') {
+      identityFields.push({ label: 'Qualification', value: staff.qualification || 'M.Phil / Subject Specialist' });
+      identityFields.push({ label: 'Experience', value: `${staff.experienceYears ?? 5} Years`, tone: 'mono' });
+      identityFields.push({ label: 'Previous Institute', value: staff.previousInstitute || 'Direct Faculty Appointment' });
+    } else {
+      identityFields.push({ label: 'Security Clearance', value: staff.clearanceLevel || (staff.sourceKind === 'principal' ? 'Level 5 - Executive Directorate' : staff.sourceKind === 'accountant' ? 'Level 2 - Fee Counter & Ledger' : 'Standard Campus Clearance') });
+      if (staff.pin) {
+        identityFields.push({ label: 'Portal Access PIN', value: staff.pin, tone: 'indigo' });
+      }
+      identityFields.push({ label: 'Duty Shift', value: staff.shift });
+    }
+
+    const particularsFields: Array<{ label: string; value: string; tone?: string }> = [
+      { label: 'Primary Phone', value: staff.phone || 'N/A', tone: 'indigo' },
+      { label: 'Emergency Contact', value: staff.emergencyContact || staff.phone || 'On file', tone: 'mono' },
+      { label: 'Official Email', value: staff.email || 'staff@campus.edu.pk' },
+      { label: 'Designation & Dept', value: `${staff.designation} · ${staff.department}` }
+    ];
+
+    if (staff.sourceKind === 'teacher') {
+      particularsFields.push({
+        label: 'Assigned Grade & Class',
+        value: `${staff.assignedGrade || 'All Grades'} (In-Charge: ${staff.inchargeClass || 'None'})`
+      });
+      particularsFields.push({
+        label: 'Contract & Payroll Bank',
+        value: `${staff.employmentType || 'Permanent'} · ${staff.bankName || 'Meezan Bank'} (${staff.accountNo || 'On file'})`
+      });
+    } else {
+      particularsFields.push({
+        label: 'Biometric & Auth',
+        value: `${staff.faceEnrolled ? 'Face ID Enrolled' : 'Standard ID'} · ${staff.fingerprintEnrolled ? 'Fingerprint Verified' : 'PIN Active'}`
+      });
+      particularsFields.push({
+        label: 'Last Activity / Status',
+        value: `${staff.lastLogin || 'Active Session'} · ${staff.status || 'ACTIVE'}`
+      });
+    }
+
+    particularsFields.push({
+      label: 'Residential Address',
+      value: staff.address || 'Campus Faculty & Staff Residency / On file'
+    });
+
+    const additionalFields: Array<{ label: string; value: string }> = [];
+    if (staff.sourceKind === 'accountant') {
+      additionalFields.push({
+        label: 'Fee Counter Tracked',
+        value: `PKR ${this.formatCurrency(staff.collectedTotal || 0)}`
+      });
+      additionalFields.push({
+        label: 'Pending Owner Closings',
+        value: `${staff.pendingClosings ?? 0} Closings`
+      });
+    }
+    if (staff.passportNo) {
+      additionalFields.push({ label: 'Passport No', value: staff.passportNo });
+    }
+    if (staff.subject && staff.sourceKind === 'teacher') {
+      additionalFields.push({ label: 'Primary Subject', value: staff.subject });
+    }
+
+    this.tableSchemaService.schemaRevision();
+    const schema = this.tableSchemaService.getSchema(staff.tableId);
+    const customCols = schema.customColumns || [];
+    const customCells = {
+      ...(schema.customCells[staff.name] || {}),
+      ...(schema.customCells[staff.uid] || {}),
+      ...(schema.customCells[staff.empCode] || {})
+    };
+    for (const c of customCols) {
+      const raw = customCells[c.id];
+      const val = raw !== undefined && String(raw).trim() !== '' ? String(raw).trim() : (c.defaultValue || '—');
+      additionalFields.push({ label: c.label, value: val });
+    }
+
+    const totalCount = 4 + identityFields.length + particularsFields.length + additionalFields.length;
+    return { identityFields, particularsFields, additionalFields, totalCount };
+  }
+
+  printStaffDossier(staff: NonNullable<SchoolDashboardComponent['selectedStaffForDossier']>): void {
+    this.selectedStaffForDossier = staff;
+    this.isStaffDossierModalOpen = true;
+    this.isStaffDossierPrintPreview = true;
+    this.cdr.detectChanges();
+    setTimeout(() => {
+      if (typeof window !== 'undefined') window.print();
+      setTimeout(() => {
+        this.isStaffDossierPrintPreview = false;
+        this.cdr.detectChanges();
+      }, 400);
+    }, 200);
+  }
+
+  downloadSingleStaffDossierPdf(staff: NonNullable<SchoolDashboardComponent['selectedStaffForDossier']>): void {
+    const dossier = this.getStaffDossierData(staff);
+    const safeCode = String(staff.empCode || staff.uid).replace(/[^a-zA-Z0-9_-]+/g, '_');
+    const safeName = String(staff.name || 'staff').toLowerCase().replace(/[^a-z0-9]+/g, '_');
+    const fields: Array<{ label: string; value: string }> = [
+      ...dossier.identityFields.map((f) => ({ label: f.label, value: f.value })),
+      ...dossier.particularsFields.map((f) => ({ label: f.label, value: f.value })),
+      ...dossier.additionalFields.map((f) => ({ label: f.label, value: f.value })),
+      { label: 'Attendance Status', value: `${staff.attendanceStatus} (${staff.status})` },
+      { label: 'Monthly Salary', value: `PKR ${this.formatCurrency(staff.monthlySalary)}` }
+    ];
+    downloadTableCardsPdf({
+      title: `Official ${staff.categoryRole} Dossier - ${staff.name}`,
+      subtitle: `Emp #${staff.empCode} | ${staff.designation} (${staff.department}) | ${dossier.totalCount}-Field Record`,
+      cards: [
+        {
+          title: staff.name,
+          subtitle: `Emp #${staff.empCode} | ${staff.designation} · ${staff.department}`,
+          badgeText: `${staff.attendanceStatus} · PKR ${this.formatCurrency(staff.monthlySalary)}`,
+          fields
+        }
+      ],
+      filename: `staff_dossier_${safeCode}_${safeName}.pdf`,
+      footerLabel: `SoftCode School ERP | ${staff.categoryRole} Dossier`
+    });
+    this.showToast(`Downloaded complete PDF dossier for ${staff.name}`, 'success');
+  }
+
+  toggleStaffDossierAttendance(): void {
+    const staff = this.selectedStaffForDossier;
+    if (!staff) return;
+    this.toggleExecutiveAttendanceStatus(staff.rawRef, staff.sourceKind);
+    const current = staff.attendanceStatus || 'Present';
+    const nextStatus: 'Present' | 'Absent' | 'On Leave' =
+      current === 'Present' ? 'Absent' : (current === 'Absent' ? 'On Leave' : 'Present');
+    this.selectedStaffForDossier = { ...staff, attendanceStatus: nextStatus };
+    this.cdr.detectChanges();
+  }
+
+  editStaffFromDossier(): void {
+    const staff = this.selectedStaffForDossier;
+    if (!staff) return;
+    this.closeStaffDossierModal();
+    if (staff.sourceKind === 'teacher') {
+      this.openEditTeacherModal(staff.rawRef);
+    } else {
+      this.openEditExecutiveStaffModal(staff.rawRef, staff.sourceKind);
+    }
+  }
+
+  openPortalFromStaffDossier(): void {
+    const staff = this.selectedStaffForDossier;
+    if (!staff || !staff.portalRole) return;
+    const role = staff.portalRole;
+    const teacherId = staff.sourceKind === 'teacher' ? staff.rawRef?.id : undefined;
+    this.closeStaffDossierModal();
+    this.switchPortal(role, teacherId);
+  }
+
   get activeTenantId(): string {
     if (typeof localStorage === 'undefined') return 'tenant-root-platform';
     try {
@@ -1594,10 +1919,53 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
   studentTab: 'overview' | 'feed' | 'events' | 'routine' | 'academics' | 'attendance' | 'fee' | 'homework' | 'library' = 'overview';
   parentTab: 'overview' | 'feed' | 'events' | 'attendance' | 'academics' | 'fee' | 'leave' | 'library' | 'communication' = 'overview';
   accountantTab: 'overview' | 'challans' | 'collect' | 'defaulters' | 'daily_closing' = 'overview';
-  studentSubTab: 'directory' | 'medical' | 'disciplinary' = 'directory';
-  teacherSubTab: 'directory' | 'payroll' | 'leaves' | 'lesson_plans' = 'directory';
+  studentSubTab: 'directory' | 'parents' | 'medical' | 'disciplinary' = 'directory';
+  teacherSubTab: 'all_staff' | 'principals' | 'accountants' | 'directory' | 'support_staff' | 'payroll' | 'leaves' | 'lesson_plans' = 'directory';
   financeSubTab: 'monitoring' | 'ledger' | 'cashiering' | 'class_wise' | 'defaulters' | 'teacher_arrears' | 'profit_loss' | 'accounts' | 'alerts_log' | 'daily_closing' = 'monitoring';
   selectedProfitLossYear: string = '2025-2026';
+
+  // Owner Unified Directory Filters & Executive Staff CRUD State
+  ownerParentSearchQuery: string = '';
+  ownerParentStatusFilter: 'All' | 'All Clear' | 'Dues Pending' | 'Defaulter' = 'All';
+  ownerPersonnelSearchQuery: string = '';
+  ownerStaffRoleFilter: 'All' | 'Principal' | 'Accountant' | 'Teacher' | 'Support Staff' = 'All';
+  ownerStaffStatusFilter: 'All' | 'Present' | 'Remaining' = 'All';
+  isExecutiveStaffModalOpen: boolean = false;
+  executiveStaffModalRole: 'principal' | 'accountant' | 'support_staff' = 'principal';
+  editingExecutiveStaffTarget: { kind: 'principal' | 'staff' | 'portal'; id: string } | null = null;
+  executiveStaffForm: {
+    empCode: string;
+    name: string;
+    fatherName: string;
+    roleTitle: string;
+    department: string;
+    phone: string;
+    email: string;
+    cnic: string;
+    gender: string;
+    shift: string;
+    attendanceStatus: 'Present' | 'Late' | 'Absent' | 'On Leave';
+    monthlySalary: number;
+    pin: string;
+    clearanceLevel: string;
+    status: string;
+  } = {
+    empCode: '',
+    name: '',
+    fatherName: '',
+    roleTitle: 'Campus Principal',
+    department: 'Executive Directorate',
+    phone: '+92 300 0000000',
+    email: '',
+    cnic: '35202-0000000-1',
+    gender: 'Male',
+    shift: 'Full Day (07:30 AM - 03:30 PM)',
+    attendanceStatus: 'Present',
+    monthlySalary: 165000,
+    pin: '4455',
+    clearanceLevel: 'Level 5 - Executive Directorate',
+    status: 'ACTIVE'
+  };
 
   // Daily Cash Closing (Rooznama) State & Helpers
   dailyClosingDate: string = new Date().toISOString().split('T')[0];
@@ -4447,27 +4815,27 @@ INSTRUCTIONS:
 
   sidebarItems = [
     { id: 'overview', label: 'Dashboard Overview', shortLabel: 'Overview', icon: LayoutDashboard, badge: 'LIVE' },
-    { id: 'students', label: 'Active Students', shortLabel: 'Students', icon: Users, count: 'Live' },
-    { id: 'teachers', label: 'Faculty & Teachers', shortLabel: 'Faculty', icon: GraduationCap, count: 'Live' },
+    { id: 'students', label: 'Students & Parents', shortLabel: 'Students', icon: Users, count: 'Live' },
+    { id: 'teachers', label: 'Principals, Accountants & Staff', shortLabel: 'Staff Hub', icon: GraduationCap, count: 'Live' },
     { id: 'admissions', label: 'Admissions & Inquiries', shortLabel: 'Admissions', icon: BookOpen, badge: 'New' },
     { id: 'stage_wise', label: 'Stage-Wise Operations', shortLabel: 'Stage-Wise', icon: Layers, badge: 'Nur-10' },
     { id: 'attendance', label: 'Attendance & Biometrics', shortLabel: 'Attendance', icon: Clock, count: 'Live' },
     { id: 'finance', label: 'Fees & Finance Ledger', shortLabel: 'Finance', icon: CreditCard, badge: 'PKR' },
     { id: 'invoices', label: 'Invoices & Billing Hub', shortLabel: 'Invoices', icon: Receipt, badge: 'PRO' },
     { id: 'expenses', label: 'School Expenses Ledger', shortLabel: 'Expenses', icon: Receipt, badge: 'Bills' },
-    { id: 'payment_gateway', label: 'Payment Gateway & Online Fees', shortLabel: 'Online Pay', icon: WalletCards, badge: 'Online Pay' },
+    { id: 'payment_gateway', label: 'Online Fees & Gateway', shortLabel: 'Online Pay', icon: WalletCards, badge: 'Pay' },
+    { id: 'reports', label: 'Reports & Certificates', shortLabel: 'Reports', icon: FileText, badge: 'PDF/CSV' },
+    { id: 'exams', label: 'Examinations & Grades', shortLabel: 'Exams', icon: Trophy, count: 'GPA 3.8' },
+    { id: 'timetable', label: 'Timetable & Routine', shortLabel: 'Timetable', icon: Calendar, count: '8 Periods' },
+    { id: 'library', label: 'Library & Book Register', shortLabel: 'Library', icon: Library, count: '4,500' },
     { id: 'transport', label: 'School Bus & Transport', shortLabel: 'Transport', icon: Bus, badge: 'GPS' },
     { id: 'hostel', label: 'Hostel & Boarding', shortLabel: 'Hostel', icon: Building2, badge: 'Rooms' },
     { id: 'labs', label: 'Computer & Science Labs', shortLabel: 'Labs', icon: Cpu, badge: '40 PCs' },
-    { id: 'library', label: 'Library & Book Register', shortLabel: 'Library', icon: Library, count: '4,500' },
-    { id: 'exams', label: 'Examinations & Grades', shortLabel: 'Exams', icon: Trophy, count: 'GPA 3.8' },
-    { id: 'timetable', label: 'Timetable & Routine', shortLabel: 'Timetable', icon: Calendar, count: '8 Periods' },
     { id: 'alumni', label: 'Alumni & Graduate Archive', shortLabel: 'Alumni', icon: Award, count: '450+' },
     { id: 'visitors', label: 'Visitor Gate Passes', shortLabel: 'Visitors', icon: ShieldCheck, badge: 'Gate' },
     { id: 'assets', label: 'Assets & Inventory', shortLabel: 'Assets', icon: Layers, badge: 'Stock' },
     { id: 'portals', label: 'Role Portals & RBAC', shortLabel: 'Portals', icon: ShieldCheck, count: '5 Portals' },
-    { id: 'reports', label: 'Certificates & Transcripts', shortLabel: 'Certs/PDF', icon: FileText, badge: 'SLC/PDF' },
-    { id: 'audit', label: 'Institutional Audit & Compliance', shortLabel: 'Audit Hub', icon: ShieldCheck, badge: '98.4%' },
+    { id: 'audit', label: 'Campus Audit & Compliance', shortLabel: 'Audit Hub', icon: ShieldCheck, badge: '98.4%' },
     { id: 'settings', label: 'School Settings', shortLabel: 'Settings', icon: Settings }
   ];
 
@@ -7355,7 +7723,12 @@ INSTRUCTIONS:
     if (a === 'feed') this.setTab('feed');
     else if (a === 'events' || a.includes('event')) this.setTab('events');
     else if (a === 'overview') this.setTab('overview');
-    else if (a === 'students') this.setTab('students');
+    else if (a === 'students') this.openRegistryDirectory('students');
+    else if (a === 'parents' || a === 'guardians') this.openRegistryDirectory('parents');
+    else if (a === 'principals' || a === 'directorate') this.openRegistryDirectory('principals');
+    else if (a === 'accountants' || a === 'fee_clerks') this.openRegistryDirectory('accountants');
+    else if (a === 'all_staff' || a === 'campus_personnel') this.openRegistryDirectory('all_staff');
+    else if (a === 'support_staff') this.openRegistryDirectory('support_staff');
     else if (a === 'admissions') this.setTab('admissions');
     else if (a === 'new_admission' || a === 'new-admission') {
       this.setTab('admissions');
@@ -7424,8 +7797,7 @@ INSTRUCTIONS:
     }
     else if (a === 'reports' || a === 'certificates') this.setTab('reports');
     else if (a === 'teachers' || a === 'staff_management' || a === 'staff-management') {
-      this.teacherSubTab = 'directory';
-      this.setTab('teachers');
+      this.openRegistryDirectory('teachers');
     }
     else if (a === 'salary_management' || a === 'salary-management') {
       this.teacherSubTab = 'payroll';
@@ -13026,6 +13398,930 @@ INSTRUCTIONS:
     return (this.finances || [])
       .filter(f => f && f.type === 'Expense')
       .reduce((acc, curr) => acc + (Number(curr?.amount) || 0), 0);
+  }
+
+  // Dynamic School Expenses Breakdown (Single Source of Truth synced with schoolExpenses array)
+  get schoolExpensesTotal(): number {
+    return (this.schoolExpenses || []).reduce((acc, e) => acc + (Number(e?.amount) || 0), 0);
+  }
+
+  get schoolUtilityExpensesTotal(): number {
+    return (this.schoolExpenses || [])
+      .filter(e => String(e?.category || '').toLowerCase() === 'utilities')
+      .reduce((acc, e) => acc + (Number(e?.amount) || 0), 0);
+  }
+
+  get schoolMaintenanceExpensesTotal(): number {
+    return (this.schoolExpenses || [])
+      .filter(e => {
+        const c = String(e?.category || '').toLowerCase();
+        return c === 'maintenance' || c === 'transport' || c === 'facilities';
+      })
+      .reduce((acc, e) => acc + (Number(e?.amount) || 0), 0);
+  }
+
+  get schoolAcademicLabExpensesTotal(): number {
+    return (this.schoolExpenses || [])
+      .filter(e => {
+        const c = String(e?.category || '').toLowerCase();
+        return c === 'lab' || c === 'stationary' || c === 'academic';
+      })
+      .reduce((acc, e) => acc + (Number(e?.amount) || 0), 0);
+  }
+
+  // --- UNIFIED OWNER PERSONNEL, PRINCIPAL, ACCOUNTANT & GUARDIAN DIRECTORY ENGINE ---
+  get principalDirectoryRecords(): Array<PrincipalMemberRecord & {
+    portalUserId?: string;
+    pin?: string;
+    clearanceLevel?: string;
+    lastLogin?: string;
+    monthlySalary: number;
+  }> {
+    const portalPrincipals = (this.portalUsers || []).filter(u => u.role === 'principal');
+    const payrollMap = new Map<string, number>();
+    for (const p of (this.staffPayrolls || [])) {
+      if (p?.staffName) payrollMap.set(p.staffName.trim().toLowerCase(), Number(p.baseSalary || p.netPayable || 0));
+    }
+    return (this.schoolPrincipals || []).map((pr, idx) => {
+      const nameNorm = String(pr.name || '').trim().toLowerCase();
+      const emailNorm = String(pr.email || '').trim().toLowerCase();
+      const linkedPortal = portalPrincipals.find(u =>
+        String(u.name || '').trim().toLowerCase() === nameNorm ||
+        (emailNorm && String(u.email || '').trim().toLowerCase() === emailNorm)
+      ) || (idx === 0 ? portalPrincipals[0] : undefined);
+      const defaultSalary = idx === 0 ? 285000 : 210000;
+      const recordedSalary = Number((pr as any).monthlySalary || payrollMap.get(nameNorm) || defaultSalary);
+      return {
+        ...pr,
+        portalUserId: linkedPortal?.id,
+        pin: linkedPortal?.pin || (idx === 0 ? '9900' : '9902'),
+        clearanceLevel: linkedPortal?.clearanceLevel || 'Level 5 - Executive Directorate',
+        lastLogin: linkedPortal?.lastLogin || 'Today at 07:35 AM',
+        email: pr.email || linkedPortal?.email || 'principal@campus.edu.pk',
+        monthlySalary: recordedSalary
+      };
+    });
+  }
+
+  get accountantDirectoryRecords(): Array<{
+    id: string;
+    empCode: string;
+    name: string;
+    fatherName: string;
+    roleTitle: string;
+    department: string;
+    phone: string;
+    email: string;
+    cnic: string;
+    gender: string;
+    shift: string;
+    status: string;
+    attendanceStatus: 'Present' | 'Late' | 'Absent' | 'On Leave';
+    pin: string;
+    clearanceLevel: string;
+    lastLogin: string;
+    monthlySalary: number;
+    collectedTotal: number;
+    pendingClosings: number;
+    portalUserId?: string;
+    staffId?: string;
+    sourceKind: 'portal' | 'staff' | 'linked';
+  }> {
+    const portalAccountants = (this.portalUsers || []).filter(u => u.role === 'accountant');
+    const financeStaff = (this.schoolStaff || []).filter(sf => {
+      const dept = String(sf.department || '').toLowerCase();
+      const role = String(sf.roleTitle || '').toLowerCase();
+      return dept.includes('finance') || dept.includes('account') || role.includes('account') || role.includes('fee') || role.includes('cashier') || role.includes('bursar');
+    });
+
+    const list: any[] = [];
+    const seenNames = new Set<string>();
+
+    for (const sf of financeStaff) {
+      const key = String(sf.name || '').trim().toLowerCase();
+      const matchedPortal = portalAccountants.find(u =>
+        String(u.name || '').trim().toLowerCase() === key ||
+        (sf.email && String(u.email || '').trim().toLowerCase() === String(sf.email).trim().toLowerCase())
+      );
+      seenNames.add(key);
+      list.push({
+        id: sf.id,
+        empCode: sf.empCode || sf.id,
+        name: sf.name,
+        fatherName: sf.fatherName || '—',
+        roleTitle: sf.roleTitle || matchedPortal?.designation || 'Accounts & Fee Clerk',
+        department: sf.department || 'Finance & Fee Desk',
+        phone: sf.phone || matchedPortal?.phone || '+92 300 0000000',
+        email: sf.email || matchedPortal?.email || 'accounts@campus.edu.pk',
+        cnic: sf.cnic || '—',
+        gender: sf.gender || 'Male',
+        shift: sf.shift || 'Full Day (08:00 AM - 04:00 PM)',
+        status: sf.status || 'ACTIVE',
+        attendanceStatus: sf.attendanceStatus || 'Present',
+        pin: matchedPortal?.pin || '4460',
+        clearanceLevel: matchedPortal?.clearanceLevel || 'Level 2 - Fee Counter & Ledger Desk',
+        lastLogin: matchedPortal?.lastLogin || 'Today at 08:02 AM',
+        monthlySalary: Number((sf as any).monthlySalary || 85000),
+        collectedTotal: Math.round(this.accountantCollectedTotal * (matchedPortal ? 0.65 : 0.35)),
+        pendingClosings: this.pendingOwnerClosingsCount,
+        portalUserId: matchedPortal?.id,
+        staffId: sf.id,
+        sourceKind: matchedPortal ? 'linked' : 'staff'
+      });
+    }
+
+    for (const pu of portalAccountants) {
+      const key = String(pu.name || '').trim().toLowerCase();
+      if (seenNames.has(key)) continue;
+      seenNames.add(key);
+      list.push({
+        id: pu.id,
+        empCode: pu.staffIdOrRoll || pu.id,
+        name: pu.name,
+        fatherName: 'Verified on File',
+        roleTitle: pu.designation || 'Accountant / Fee Clerk',
+        department: pu.department || 'Accounts & Fee Desk',
+        phone: pu.phone || '+92 300 4455661',
+        email: pu.email || 'accountant@campus.edu',
+        cnic: '35202-4455661-1',
+        gender: 'Male',
+        shift: 'Full Day (07:45 AM - 03:45 PM)',
+        status: pu.status === 'Suspended' ? 'INACTIVE' : 'ACTIVE',
+        attendanceStatus: pu.status === 'Suspended' ? 'Absent' : 'Present',
+        pin: pu.pin || '4455',
+        clearanceLevel: pu.clearanceLevel || 'Level 2 - Fee Counter & Daily Closing',
+        lastLogin: pu.lastLogin || 'Today at 07:45 AM',
+        monthlySalary: Number((pu as any).monthlySalary || 110000),
+        collectedTotal: this.accountantCollectedTotal,
+        pendingClosings: this.pendingOwnerClosingsCount,
+        portalUserId: pu.id,
+        staffId: undefined,
+        sourceKind: 'portal'
+      });
+    }
+
+    return list;
+  }
+
+  get supportStaffDirectoryRecords(): Array<StaffMemberRecord & { monthlySalary: number }> {
+    return (this.schoolStaff || []).map((sf, idx) => ({
+      ...sf,
+      monthlySalary: Number((sf as any).monthlySalary || (sf.department?.toLowerCase().includes('finance') ? 85000 : (idx % 2 === 0 ? 52000 : 45000)))
+    }));
+  }
+
+  get allCampusPersonnelRecords(): Array<{
+    uid: string;
+    empCode: string;
+    name: string;
+    categoryRole: 'Principal' | 'Accountant' | 'Teacher' | 'Support Staff';
+    designation: string;
+    department: string;
+    phone: string;
+    email: string;
+    cnic: string;
+    shift: string;
+    monthlySalary: number;
+    attendanceStatus: 'Present' | 'Late' | 'Absent' | 'On Leave';
+    isActivePresent: boolean;
+    portalRole?: SchoolPortalRole;
+    pin?: string;
+    sourceKind: 'principal' | 'accountant' | 'teacher' | 'support_staff';
+    rawRef: any;
+  }> {
+    const rows: any[] = [];
+    const seen = new Set<string>();
+
+    for (const pr of this.principalDirectoryRecords) {
+      seen.add(String(pr.name || '').trim().toLowerCase());
+      const st = pr.attendanceStatus || 'Present';
+      rows.push({
+        uid: `PRI-${pr.id}`,
+        empCode: pr.empCode || pr.id,
+        name: pr.name,
+        categoryRole: 'Principal',
+        designation: pr.roleTitle || 'Campus Principal',
+        department: pr.department || 'Executive Directorate',
+        phone: pr.phone || '—',
+        email: pr.email || '—',
+        cnic: pr.cnic || '—',
+        shift: pr.shift || 'Full Day',
+        monthlySalary: pr.monthlySalary,
+        attendanceStatus: st,
+        isActivePresent: st === 'Present' || st === 'Late',
+        portalRole: 'principal' as SchoolPortalRole,
+        pin: pr.pin,
+        sourceKind: 'principal',
+        rawRef: pr
+      });
+    }
+
+    for (const acc of this.accountantDirectoryRecords) {
+      seen.add(String(acc.name || '').trim().toLowerCase());
+      const st = acc.attendanceStatus || 'Present';
+      rows.push({
+        uid: `ACC-${acc.id}`,
+        empCode: acc.empCode || acc.id,
+        name: acc.name,
+        categoryRole: 'Accountant',
+        designation: acc.roleTitle || 'Accountant / Fee Clerk',
+        department: acc.department || 'Accounts & Fee Desk',
+        phone: acc.phone || '—',
+        email: acc.email || '—',
+        cnic: acc.cnic || '—',
+        shift: acc.shift || 'Full Day',
+        monthlySalary: acc.monthlySalary,
+        attendanceStatus: st,
+        isActivePresent: st === 'Present' || st === 'Late',
+        portalRole: 'accountant' as SchoolPortalRole,
+        pin: acc.pin,
+        sourceKind: 'accountant',
+        rawRef: acc
+      });
+    }
+
+    for (const t of (this.teachers || [])) {
+      const nameNorm = String(t.name || '').trim().toLowerCase();
+      if (seen.has(nameNorm)) continue;
+      seen.add(nameNorm);
+      const st: 'Present' | 'Late' | 'Absent' | 'On Leave' = t.attendanceStatus || (t.status === 'On Leave' ? 'On Leave' : (t.status === 'Resigned' ? 'Absent' : 'Present'));
+      rows.push({
+        uid: `TCH-${t.id}`,
+        empCode: t.empCode || t.id,
+        name: t.name,
+        categoryRole: 'Teacher',
+        designation: t.role || t.designation || 'Faculty Lecturer',
+        department: t.subject || 'Academic Faculty',
+        phone: t.phone || '—',
+        email: t.email || '—',
+        cnic: t.cnic || '—',
+        shift: `${t.weeklyPeriods || t.classes || 24} Periods/wk`,
+        monthlySalary: Number(t.monthlySalary || 125000),
+        attendanceStatus: st,
+        isActivePresent: st === 'Present' || st === 'Late',
+        portalRole: 'teacher' as SchoolPortalRole,
+        pin: undefined,
+        sourceKind: 'teacher',
+        rawRef: t
+      });
+    }
+
+    for (const sf of this.supportStaffDirectoryRecords) {
+      const nameNorm = String(sf.name || '').trim().toLowerCase();
+      if (seen.has(nameNorm)) continue;
+      seen.add(nameNorm);
+      const st = sf.attendanceStatus || 'Present';
+      rows.push({
+        uid: `STF-${sf.id}`,
+        empCode: sf.empCode || sf.id,
+        name: sf.name,
+        categoryRole: 'Support Staff',
+        designation: sf.roleTitle || 'Campus Staff',
+        department: sf.department || 'Operations',
+        phone: sf.phone || '—',
+        email: sf.email || '—',
+        cnic: sf.cnic || '—',
+        shift: sf.shift || 'Morning Shift',
+        monthlySalary: sf.monthlySalary,
+        attendanceStatus: st,
+        isActivePresent: st === 'Present' || st === 'Late',
+        portalRole: undefined,
+        pin: undefined,
+        sourceKind: 'support_staff',
+        rawRef: sf
+      });
+    }
+
+    return rows;
+  }
+
+  get campusDirectorySummary() {
+    const stuTotal = (this.activeStudents || []).length;
+    const stuPresent = (this.activeStudents || []).filter(s => s.status === 'Present' || s.status === 'Late').length;
+    const stuRemaining = Math.max(0, stuTotal - stuPresent);
+
+    const parentsList = this.getParentsDirectory();
+    const parentsClear = parentsList.filter(p => p.familyFeeStatus === 'All Clear').length;
+    const parentsRemaining = Math.max(0, parentsList.length - parentsClear);
+    const parentsTotalDue = parentsList.reduce((sum, p) => sum + Number(p.totalDueBakaya || 0), 0);
+
+    const priList = this.principalDirectoryRecords;
+    const priPresent = priList.filter(p => (p.attendanceStatus || 'Present') === 'Present' || p.attendanceStatus === 'Late').length;
+    const priRemaining = Math.max(0, priList.length - priPresent);
+
+    const accList = this.accountantDirectoryRecords;
+    const accPresent = accList.filter(a => (a.attendanceStatus || 'Present') === 'Present' || a.attendanceStatus === 'Late').length;
+    const accRemaining = Math.max(0, accList.length - accPresent);
+
+    const tchList = this.teachers || [];
+    const tchPresent = tchList.filter(t => {
+      const st = t.attendanceStatus || (t.status === 'On Leave' ? 'On Leave' : (t.status === 'Resigned' ? 'Absent' : 'Present'));
+      return st === 'Present' || st === 'Late';
+    }).length;
+    const tchRemaining = Math.max(0, tchList.length - tchPresent);
+
+    const stfList = this.supportStaffDirectoryRecords;
+    const stfPresent = stfList.filter(s => (s.attendanceStatus || 'Present') === 'Present' || s.attendanceStatus === 'Late').length;
+    const stfRemaining = Math.max(0, stfList.length - stfPresent);
+
+    const allStaff = this.allCampusPersonnelRecords;
+    const allStaffPresent = allStaff.filter(x => x.isActivePresent).length;
+    const allStaffRemaining = Math.max(0, allStaff.length - allStaffPresent);
+    const monthlyPayrollTotal = allStaff.reduce((sum, x) => sum + Number(x.monthlySalary || 0), 0);
+
+    return {
+      students: { total: stuTotal, present: stuPresent, remaining: stuRemaining },
+      parents: { total: parentsList.length, clear: parentsClear, remainingDues: parentsRemaining, totalDueAmount: parentsTotalDue },
+      principals: { total: priList.length, present: priPresent, remaining: priRemaining },
+      accountants: { total: accList.length, present: accPresent, remaining: accRemaining, collectedTotal: this.accountantCollectedTotal, pendingClosings: this.pendingOwnerClosingsCount },
+      teachers: { total: tchList.length, present: tchPresent, remaining: tchRemaining },
+      supportStaff: { total: stfList.length, present: stfPresent, remaining: stfRemaining },
+      allStaff: { total: allStaff.length, present: allStaffPresent, remaining: allStaffRemaining, monthlyPayrollTotal }
+    };
+  }
+
+  get filteredOwnerParents(): ParentDirectoryRecord[] {
+    const q = (this.ownerParentSearchQuery || '').trim().toLowerCase();
+    return this.getParentsDirectory().filter(p => {
+      const matchSearch = !q ||
+        p.guardianName.toLowerCase().includes(q) ||
+        p.guardianCnic.toLowerCase().includes(q) ||
+        p.guardianPhone.toLowerCase().includes(q) ||
+        (p.guardianEmail || '').toLowerCase().includes(q) ||
+        (p.address || '').toLowerCase().includes(q) ||
+        p.linkedStudents.some(c => c.name.toLowerCase().includes(q) || c.rollNo.toLowerCase().includes(q) || c.grade.toLowerCase().includes(q));
+      const matchStatus = this.ownerParentStatusFilter === 'All' || p.familyFeeStatus === this.ownerParentStatusFilter;
+      return matchSearch && matchStatus;
+    });
+  }
+
+  get filteredOwnerPrincipals() {
+    const q = (this.ownerPersonnelSearchQuery || '').trim().toLowerCase();
+    return this.principalDirectoryRecords.filter(p => {
+      const matchQ = !q ||
+        p.name.toLowerCase().includes(q) ||
+        p.empCode.toLowerCase().includes(q) ||
+        p.roleTitle.toLowerCase().includes(q) ||
+        p.phone.toLowerCase().includes(q) ||
+        (p.cnic || '').toLowerCase().includes(q);
+      const isPresent = (p.attendanceStatus || 'Present') === 'Present' || p.attendanceStatus === 'Late';
+      const matchStatus = this.ownerStaffStatusFilter === 'All' || (this.ownerStaffStatusFilter === 'Present' ? isPresent : !isPresent);
+      return matchQ && matchStatus;
+    });
+  }
+
+  get filteredOwnerAccountants() {
+    const q = (this.ownerPersonnelSearchQuery || '').trim().toLowerCase();
+    return this.accountantDirectoryRecords.filter(a => {
+      const matchQ = !q ||
+        a.name.toLowerCase().includes(q) ||
+        a.empCode.toLowerCase().includes(q) ||
+        a.roleTitle.toLowerCase().includes(q) ||
+        a.phone.toLowerCase().includes(q) ||
+        a.email.toLowerCase().includes(q);
+      const isPresent = (a.attendanceStatus || 'Present') === 'Present' || a.attendanceStatus === 'Late';
+      const matchStatus = this.ownerStaffStatusFilter === 'All' || (this.ownerStaffStatusFilter === 'Present' ? isPresent : !isPresent);
+      return matchQ && matchStatus;
+    });
+  }
+
+  get filteredOwnerSupportStaff() {
+    const q = (this.ownerPersonnelSearchQuery || '').trim().toLowerCase();
+    return this.supportStaffDirectoryRecords.filter(s => {
+      const matchQ = !q ||
+        s.name.toLowerCase().includes(q) ||
+        s.empCode.toLowerCase().includes(q) ||
+        s.roleTitle.toLowerCase().includes(q) ||
+        s.department.toLowerCase().includes(q) ||
+        s.phone.toLowerCase().includes(q);
+      const isPresent = (s.attendanceStatus || 'Present') === 'Present' || s.attendanceStatus === 'Late';
+      const matchStatus = this.ownerStaffStatusFilter === 'All' || (this.ownerStaffStatusFilter === 'Present' ? isPresent : !isPresent);
+      return matchQ && matchStatus;
+    });
+  }
+
+  get filteredAllCampusPersonnel() {
+    const q = (this.ownerPersonnelSearchQuery || '').trim().toLowerCase();
+    return this.allCampusPersonnelRecords.filter(p => {
+      const matchQ = !q ||
+        p.name.toLowerCase().includes(q) ||
+        p.empCode.toLowerCase().includes(q) ||
+        p.designation.toLowerCase().includes(q) ||
+        p.department.toLowerCase().includes(q) ||
+        p.phone.toLowerCase().includes(q) ||
+        p.cnic.toLowerCase().includes(q);
+      const matchRole = this.ownerStaffRoleFilter === 'All' || p.categoryRole === this.ownerStaffRoleFilter;
+      const matchStatus = this.ownerStaffStatusFilter === 'All' || (this.ownerStaffStatusFilter === 'Present' ? p.isActivePresent : !p.isActivePresent);
+      return matchQ && matchRole && matchStatus;
+    });
+  }
+
+  openRegistryDirectory(target: 'students' | 'parents' | 'teachers' | 'principals' | 'accountants' | 'support_staff' | 'all_staff'): void {
+    if (target === 'students') {
+      this.studentSubTab = 'directory';
+      this.studentViewMode = 'table';
+      this.currentPage['students'] = 1;
+      this.setTab('students');
+    } else if (target === 'parents') {
+      this.studentSubTab = 'parents';
+      this.currentPage['students'] = 1;
+      this.setTab('students');
+    } else if (target === 'teachers') {
+      this.teacherSubTab = 'directory';
+      this.facultyViewMode = 'table';
+      this.currentPage['teachers'] = 1;
+      this.setTab('teachers');
+    } else {
+      this.teacherSubTab = target;
+      this.ownerPersonnelSearchQuery = '';
+      this.ownerStaffRoleFilter = 'All';
+      this.ownerStaffStatusFilter = 'All';
+      this.currentPage['teachers'] = 1;
+      this.setTab('teachers');
+    }
+    this.cdr.detectChanges();
+  }
+
+  openStudentFromParent(studentId: string): void {
+    const st = (this.activeStudents || []).find(s => s.id === studentId || s.rollNo === studentId);
+    if (!st) return;
+    this.studentSubTab = 'directory';
+    this.studentViewMode = 'table';
+    this.selectedGradeFilter = 'All';
+    this.selectedFeeFilter = 'All';
+    this.studentSearchQuery = st.rollNo || st.name;
+    this.expandedStudentId = st.id;
+    this.currentPage['students'] = 1;
+    this.cdr.detectChanges();
+  }
+
+  collectFeeForParentFamily(parent: ParentDirectoryRecord): void {
+    const dueChild = parent.linkedStudents.find(c => c.feeStatus !== 'Paid') || parent.linkedStudents[0];
+    const studentObj = (this.activeStudents || []).find(s => s.id === dueChild?.id);
+    if (studentObj) {
+      this.openQuickFeeModal(studentObj);
+    } else {
+      this.openQuickFeeModal();
+    }
+  }
+
+  openAddExecutiveStaffModal(role: 'principal' | 'accountant' | 'support_staff'): void {
+    this.executiveStaffModalRole = role;
+    this.editingExecutiveStaffTarget = null;
+    if (role === 'principal') {
+      this.executiveStaffForm = {
+        empCode: `PRI-${Math.floor(200 + Math.random() * 799)}`,
+        name: '',
+        fatherName: '',
+        roleTitle: 'Vice Principal / Campus Head',
+        department: 'Executive Directorate',
+        phone: '+92 300 0000000',
+        email: '',
+        cnic: '61101-0000000-1',
+        gender: 'Male',
+        shift: 'Full Day (07:30 AM - 03:30 PM)',
+        attendanceStatus: 'Present',
+        monthlySalary: 195000,
+        pin: Math.floor(1000 + Math.random() * 9000).toString(),
+        clearanceLevel: 'Level 5 - Executive Directorate',
+        status: 'ACTIVE'
+      };
+    } else if (role === 'accountant') {
+      this.executiveStaffForm = {
+        empCode: `ACC-${Math.floor(200 + Math.random() * 799)}`,
+        name: '',
+        fatherName: '',
+        roleTitle: 'Accountant / Fee Clerk',
+        department: 'Finance & Fee Desk',
+        phone: '+92 300 0000000',
+        email: '',
+        cnic: '35202-0000000-1',
+        gender: 'Male',
+        shift: 'Full Day (08:00 AM - 04:00 PM)',
+        attendanceStatus: 'Present',
+        monthlySalary: 95000,
+        pin: Math.floor(1000 + Math.random() * 9000).toString(),
+        clearanceLevel: 'Level 2 - Fee Counter & Daily Closing',
+        status: 'ACTIVE'
+      };
+    } else {
+      this.executiveStaffForm = {
+        empCode: `STF-${Math.floor(200 + Math.random() * 799)}`,
+        name: '',
+        fatherName: '',
+        roleTitle: 'Campus Operations Officer',
+        department: 'Administration',
+        phone: '+92 300 0000000',
+        email: '',
+        cnic: '35202-0000000-1',
+        gender: 'Male',
+        shift: 'Morning (07:00 AM - 03:00 PM)',
+        attendanceStatus: 'Present',
+        monthlySalary: 52000,
+        pin: '0000',
+        clearanceLevel: 'Campus Staff Clearance',
+        status: 'ACTIVE'
+      };
+    }
+    this.isExecutiveStaffModalOpen = true;
+    this.cdr.detectChanges();
+  }
+
+  openEditExecutiveStaffModal(item: any, role: 'principal' | 'accountant' | 'support_staff'): void {
+    this.executiveStaffModalRole = role;
+    const targetKind: 'principal' | 'staff' | 'portal' =
+      role === 'principal' ? 'principal' : (item.staffId || role === 'support_staff' ? 'staff' : 'portal');
+    const targetId = role === 'principal' ? item.id : (item.staffId || item.portalUserId || item.id);
+    this.editingExecutiveStaffTarget = { kind: targetKind, id: targetId };
+    this.executiveStaffForm = {
+      empCode: item.empCode || item.id || '',
+      name: item.name || '',
+      fatherName: item.fatherName || '',
+      roleTitle: item.roleTitle || '',
+      department: item.department || '',
+      phone: item.phone || '',
+      email: item.email || '',
+      cnic: item.cnic || '',
+      gender: item.gender || 'Male',
+      shift: item.shift || 'Full Day (08:00 AM - 04:00 PM)',
+      attendanceStatus: item.attendanceStatus || 'Present',
+      monthlySalary: Number(item.monthlySalary || 85000),
+      pin: item.pin || '4455',
+      clearanceLevel: item.clearanceLevel || 'Standard Clearance',
+      status: item.status || 'ACTIVE'
+    };
+    this.isExecutiveStaffModalOpen = true;
+    this.cdr.detectChanges();
+  }
+
+  closeExecutiveStaffModal(): void {
+    this.isExecutiveStaffModalOpen = false;
+    this.editingExecutiveStaffTarget = null;
+    this.cdr.detectChanges();
+  }
+
+  async saveExecutiveStaffModal(): Promise<void> {
+    if (!this.executiveStaffForm.name.trim() || !this.executiveStaffForm.phone.trim()) {
+      this.showToast('Please enter Full Name and Contact Phone.', 'warning');
+      return;
+    }
+    const f = this.executiveStaffForm;
+    const role = this.executiveStaffModalRole;
+    const editing = this.editingExecutiveStaffTarget;
+
+    if (role === 'principal') {
+      if (editing?.kind === 'principal') {
+        const idx = this.schoolPrincipals.findIndex(p => p.id === editing.id);
+        if (idx >= 0) {
+          const updated: any = {
+            ...this.schoolPrincipals[idx],
+            empCode: f.empCode || this.schoolPrincipals[idx].empCode,
+            name: f.name.trim(),
+            fatherName: f.fatherName.trim(),
+            roleTitle: f.roleTitle.trim(),
+            department: f.department.trim(),
+            phone: f.phone.trim(),
+            email: f.email.trim(),
+            cnic: f.cnic.trim(),
+            gender: f.gender,
+            shift: f.shift,
+            attendanceStatus: f.attendanceStatus,
+            status: f.status,
+            monthlySalary: Number(f.monthlySalary) || 195000
+          };
+          this.schoolPrincipals = this.schoolPrincipals.map(p => (p.id === editing.id ? updated : p));
+          void this.backend.updateSchoolPrincipal(editing.id, updated);
+        }
+        const linkedPortal = this.portalUsers.find(u => u.role === 'principal' && u.name.trim().toLowerCase() === f.name.trim().toLowerCase());
+        if (linkedPortal) {
+          linkedPortal.email = f.email.trim() || linkedPortal.email;
+          linkedPortal.pin = f.pin || linkedPortal.pin;
+          linkedPortal.phone = f.phone.trim();
+        }
+        this.showToast(`Updated Principal profile: ${f.name}`, 'success');
+      } else {
+        const res = await this.backend.saveSchoolPrincipal({
+          name: f.name.trim(),
+          fatherName: f.fatherName.trim(),
+          cnic: f.cnic.trim(),
+          gender: f.gender,
+          roleTitle: f.roleTitle.trim(),
+          department: f.department.trim(),
+          phone: f.phone.trim(),
+          email: f.email.trim(),
+          shift: f.shift,
+          liteEnabled: true
+        });
+        const created: any = res?.ok && res.principal
+          ? { ...res.principal, attendanceStatus: f.attendanceStatus, monthlySalary: Number(f.monthlySalary) || 195000 }
+          : {
+              id: `PRI-${Date.now().toString(36).slice(-5).toUpperCase()}`,
+              empCode: f.empCode || `PRI-${Math.floor(200 + Math.random() * 799)}`,
+              name: f.name.trim(),
+              fatherName: f.fatherName.trim(),
+              cnic: f.cnic.trim(),
+              gender: f.gender,
+              nationality: 'Pakistani',
+              roleTitle: f.roleTitle.trim(),
+              department: f.department.trim(),
+              phone: f.phone.trim(),
+              email: f.email.trim(),
+              shift: f.shift,
+              status: f.status || 'ACTIVE',
+              attendanceStatus: f.attendanceStatus,
+              monthlySalary: Number(f.monthlySalary) || 195000,
+              faceEnrolled: false,
+              liteEnabled: true
+            };
+        this.schoolPrincipals = [created, ...this.schoolPrincipals];
+        this.portalUsers.unshift({
+          id: `USR-${Math.floor(610 + Math.random() * 380)}`,
+          name: created.name,
+          email: created.email || `${created.empCode.toLowerCase()}@campus.edu`,
+          pin: f.pin || '9901',
+          role: 'principal',
+          linkedEntity: created.department,
+          status: 'Active',
+          lastLogin: 'Provisioned Today',
+          staffIdOrRoll: created.empCode,
+          designation: created.roleTitle,
+          department: created.department,
+          clearanceLevel: f.clearanceLevel || 'Level 5 - Executive Directorate',
+          phone: created.phone
+        });
+        this.showToast(`Added Principal ${created.name} with portal access PIN ${f.pin}`, 'success');
+      }
+    } else if (role === 'accountant') {
+      if (editing) {
+        if (editing.kind === 'staff') {
+          this.schoolStaff = this.schoolStaff.map(sf => sf.id === editing.id ? {
+            ...sf,
+            empCode: f.empCode || sf.empCode,
+            name: f.name.trim(),
+            fatherName: f.fatherName.trim(),
+            roleTitle: f.roleTitle.trim(),
+            department: f.department.trim() || 'Finance & Fee Desk',
+            phone: f.phone.trim(),
+            email: f.email.trim(),
+            cnic: f.cnic.trim(),
+            gender: f.gender,
+            shift: f.shift,
+            attendanceStatus: f.attendanceStatus,
+            status: f.status,
+            monthlySalary: Number(f.monthlySalary) || 85000
+          } as any : sf);
+          void this.backend.updateSchoolStaff(editing.id, this.schoolStaff.find(sf => sf.id === editing.id));
+        }
+        const pu = this.portalUsers.find(u => u.id === editing.id || (u.role === 'accountant' && u.name.trim().toLowerCase() === f.name.trim().toLowerCase()));
+        if (pu) {
+          pu.name = f.name.trim();
+          pu.email = f.email.trim() || pu.email;
+          pu.pin = f.pin || pu.pin;
+          pu.phone = f.phone.trim();
+          pu.designation = f.roleTitle.trim();
+          pu.department = f.department.trim();
+          pu.status = f.attendanceStatus === 'Absent' ? 'Suspended' : 'Active';
+        }
+        this.showToast(`Updated Accountant / Fee Clerk profile: ${f.name}`, 'success');
+      } else {
+        const res = await this.backend.saveSchoolStaff({
+          name: f.name.trim(),
+          fatherName: f.fatherName.trim(),
+          cnic: f.cnic.trim(),
+          gender: f.gender,
+          roleTitle: f.roleTitle.trim() || 'Accountant / Fee Clerk',
+          department: f.department.trim() || 'Finance & Fee Desk',
+          phone: f.phone.trim(),
+          email: f.email.trim(),
+          shift: f.shift,
+          liteEnabled: true
+        });
+        const created: any = res?.ok && res.staff
+          ? { ...res.staff, attendanceStatus: f.attendanceStatus, monthlySalary: Number(f.monthlySalary) || 95000 }
+          : {
+              id: `STF-${Date.now().toString(36).slice(-5).toUpperCase()}`,
+              empCode: f.empCode || `ACC-${Math.floor(200 + Math.random() * 799)}`,
+              name: f.name.trim(),
+              fatherName: f.fatherName.trim(),
+              cnic: f.cnic.trim(),
+              gender: f.gender,
+              nationality: 'Pakistani',
+              roleTitle: f.roleTitle.trim() || 'Accountant / Fee Clerk',
+              department: f.department.trim() || 'Finance & Fee Desk',
+              phone: f.phone.trim(),
+              email: f.email.trim() || 'accountant@campus.edu.pk',
+              shift: f.shift,
+              status: f.status || 'ACTIVE',
+              attendanceStatus: f.attendanceStatus,
+              monthlySalary: Number(f.monthlySalary) || 95000,
+              faceEnrolled: false,
+              liteEnabled: true
+            };
+        this.schoolStaff = [created, ...this.schoolStaff];
+        this.portalUsers.unshift({
+          id: `USR-${Math.floor(510 + Math.random() * 80)}`,
+          name: created.name,
+          email: created.email || `${created.empCode.toLowerCase()}@campus.edu`,
+          pin: f.pin || '4466',
+          role: 'accountant',
+          linkedEntity: 'Fee Counter, Challans & Daily Closing Desk',
+          status: 'Active',
+          lastLogin: 'Provisioned Today',
+          staffIdOrRoll: created.empCode,
+          designation: created.roleTitle,
+          department: created.department,
+          clearanceLevel: f.clearanceLevel || 'Level 2 - Fee Counter & Closing Submission',
+          phone: created.phone
+        });
+        this.showToast(`Added Accountant / Fee Clerk ${created.name} (PIN: ${f.pin})`, 'success');
+      }
+    } else {
+      if (editing?.kind === 'staff') {
+        this.schoolStaff = this.schoolStaff.map(sf => sf.id === editing.id ? {
+          ...sf,
+          empCode: f.empCode || sf.empCode,
+          name: f.name.trim(),
+          fatherName: f.fatherName.trim(),
+          roleTitle: f.roleTitle.trim(),
+          department: f.department.trim(),
+          phone: f.phone.trim(),
+          email: f.email.trim(),
+          cnic: f.cnic.trim(),
+          gender: f.gender,
+          shift: f.shift,
+          attendanceStatus: f.attendanceStatus,
+          status: f.status,
+          monthlySalary: Number(f.monthlySalary) || 52000
+        } as any : sf);
+        void this.backend.updateSchoolStaff(editing.id, this.schoolStaff.find(sf => sf.id === editing.id));
+        this.showToast(`Updated campus staff record: ${f.name}`, 'success');
+      } else {
+        const res = await this.backend.saveSchoolStaff({
+          name: f.name.trim(),
+          fatherName: f.fatherName.trim(),
+          cnic: f.cnic.trim(),
+          gender: f.gender,
+          roleTitle: f.roleTitle.trim(),
+          department: f.department.trim(),
+          phone: f.phone.trim(),
+          email: f.email.trim(),
+          shift: f.shift,
+          liteEnabled: true
+        });
+        const created: any = res?.ok && res.staff
+          ? { ...res.staff, attendanceStatus: f.attendanceStatus, monthlySalary: Number(f.monthlySalary) || 52000 }
+          : {
+              id: `STF-${Date.now().toString(36).slice(-5).toUpperCase()}`,
+              empCode: f.empCode || `STF-${Math.floor(200 + Math.random() * 799)}`,
+              name: f.name.trim(),
+              fatherName: f.fatherName.trim(),
+              cnic: f.cnic.trim(),
+              gender: f.gender,
+              nationality: 'Pakistani',
+              roleTitle: f.roleTitle.trim(),
+              department: f.department.trim(),
+              phone: f.phone.trim(),
+              email: f.email.trim(),
+              shift: f.shift,
+              status: f.status || 'ACTIVE',
+              attendanceStatus: f.attendanceStatus,
+              monthlySalary: Number(f.monthlySalary) || 52000,
+              faceEnrolled: false,
+              liteEnabled: true
+            };
+        this.schoolStaff = [created, ...this.schoolStaff];
+        this.showToast(`Added campus staff member ${created.name}`, 'success');
+      }
+    }
+
+    this.saveStateToStorage();
+    this.closeExecutiveStaffModal();
+  }
+
+  toggleExecutiveAttendanceStatus(item: any, kind: 'principal' | 'accountant' | 'support_staff' | 'teacher'): void {
+    const current = item.attendanceStatus || 'Present';
+    const nextStatus: 'Present' | 'Absent' | 'On Leave' = current === 'Present' ? 'Absent' : (current === 'Absent' ? 'On Leave' : 'Present');
+    if (kind === 'principal') {
+      this.schoolPrincipals = this.schoolPrincipals.map(p => p.id === item.id ? { ...p, attendanceStatus: nextStatus } : p);
+      void this.backend.updateSchoolPrincipal(item.id, { attendanceStatus: nextStatus });
+    } else if (kind === 'teacher') {
+      this.teachers = this.teachers.map(t => t.id === item.id ? { ...t, attendanceStatus: nextStatus } : t);
+      void this.backend.updateSchoolTeacher(item.id, { attendanceStatus: nextStatus });
+    } else {
+      const staffId = item.staffId || item.id;
+      if (staffId && this.schoolStaff.some(s => s.id === staffId)) {
+        this.schoolStaff = this.schoolStaff.map(s => s.id === staffId ? { ...s, attendanceStatus: nextStatus } : s);
+        void this.backend.updateSchoolStaff(staffId, { attendanceStatus: nextStatus });
+      }
+      if (item.portalUserId) {
+        this.portalUsers = this.portalUsers.map(u => u.id === item.portalUserId ? { ...u, status: nextStatus === 'Absent' ? 'Suspended' : 'Active' } : u);
+      }
+    }
+    this.saveStateToStorage();
+    this.showToast(`${item.name} attendance status updated to ${nextStatus}`, 'info');
+    this.cdr.detectChanges();
+  }
+
+  async deleteExecutiveStaffRecord(item: any, kind: 'principal' | 'accountant' | 'support_staff'): Promise<void> {
+    if (!this.isOwnerPortal) {
+      this.showToast('Access Restricted: Only School Business Owner can remove staff master records.', 'warning');
+      return;
+    }
+    if (kind === 'principal') {
+      this.schoolPrincipals = this.schoolPrincipals.filter(p => p.id !== item.id);
+      if (item.portalUserId) {
+        this.portalUsers = this.portalUsers.filter(u => u.id !== item.portalUserId);
+      }
+      await this.backend.deleteSchoolPrincipal(item.id);
+      this.showToast(`Removed Principal record: ${item.name}`, 'info');
+    } else if (kind === 'accountant') {
+      if (item.staffId) {
+        this.schoolStaff = this.schoolStaff.filter(s => s.id !== item.staffId);
+        await this.backend.deleteSchoolStaff(item.staffId);
+      }
+      if (item.portalUserId) {
+        this.portalUsers = this.portalUsers.filter(u => u.id !== item.portalUserId);
+      }
+      this.showToast(`Removed Accountant / Fee Clerk record: ${item.name}`, 'info');
+    } else {
+      this.schoolStaff = this.schoolStaff.filter(s => s.id !== item.id);
+      await this.backend.deleteSchoolStaff(item.id);
+      this.showToast(`Removed staff member: ${item.name}`, 'info');
+    }
+    this.saveStateToStorage();
+    this.cdr.detectChanges();
+  }
+
+  exportAllPersonnelCSV(): void {
+    const list = this.filteredAllCampusPersonnel;
+    if (!list.length) {
+      this.showToast('No personnel records to export.', 'warning');
+      return;
+    }
+    const headers = ['Emp Code', 'Full Name', 'Role Category', 'Designation', 'Department', 'Phone', 'Email', 'CNIC', 'Shift', 'Monthly Salary (PKR)', 'Today Status'];
+    const rows = list.map(p => [
+      `"${p.empCode}"`,
+      `"${p.name.replace(/"/g, '""')}"`,
+      `"${p.categoryRole}"`,
+      `"${p.designation.replace(/"/g, '""')}"`,
+      `"${p.department.replace(/"/g, '""')}"`,
+      `"${p.phone}"`,
+      `"${p.email}"`,
+      `"${p.cnic}"`,
+      `"${p.shift}"`,
+      p.monthlySalary,
+      `"${p.attendanceStatus}"`
+    ]);
+    const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+    this.downloadCSVFile(csv, `Complete_Campus_Personnel_Master_${new Date().toISOString().slice(0, 10)}.csv`);
+    this.showToast(`Exported ${list.length} complete personnel records (Principals to Support Staff)`, 'success');
+  }
+
+  exportOwnerParentsCSV(): void {
+    const list = this.filteredOwnerParents;
+    if (!list.length) {
+      this.showToast('No guardian records to export.', 'warning');
+      return;
+    }
+    const headers = ['Guardian ID', 'Guardian Name', 'Relation', 'CNIC', 'Phone', 'Email', 'Occupation', 'Address', 'Linked Wards', 'Total Due Bakaya (PKR)', 'Fee Status'];
+    const rows = list.map(p => [
+      `"${p.id}"`,
+      `"${p.guardianName.replace(/"/g, '""')}"`,
+      `"${p.guardianRelation}"`,
+      `"${p.guardianCnic}"`,
+      `"${p.guardianPhone}"`,
+      `"${p.guardianEmail || ''}"`,
+      `"${(p.guardianOccupation || '').replace(/"/g, '""')}"`,
+      `"${(p.address || '').replace(/"/g, '""')}"`,
+      `"${p.linkedStudents.map(c => `${c.name} (${c.grade})`).join('; ').replace(/"/g, '""')}"`,
+      p.totalDueBakaya,
+      `"${p.familyFeeStatus}"`
+    ]);
+    const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+    this.downloadCSVFile(csv, `Parents_Guardians_Directory_${new Date().toISOString().slice(0, 10)}.csv`);
+    this.showToast(`Exported ${list.length} parent/guardian family records`, 'success');
+  }
+
+  exportFinanceDefaultersCSV(): void {
+    const list = this.defaulters || [];
+    if (!list.length) {
+      this.showToast('No pending fee defaulters found — all clear!', 'info');
+      return;
+    }
+    const headers = ['Student ID', 'Roll No', 'Student Name', 'Class', 'Guardian', 'Phone', 'Due Amount (PKR)', 'Status'];
+    const rows = list.map(d => [
+      `"${d.id}"`,
+      `"${d.rollNo || ''}"`,
+      `"${(d.name || d.studentName || '').replace(/"/g, '""')}"`,
+      `"${d.grade || ''}"`,
+      `"${(d.guardian || '').replace(/"/g, '""')}"`,
+      `"${d.guardianPhone || d.phone || ''}"`,
+      Number(d.feeAmount || d.amount || 0),
+      `"${d.feeStatus || 'Due'}"`
+    ]);
+    const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+    this.downloadCSVFile(csv, `Fee_Defaulters_Register_${new Date().toISOString().slice(0, 10)}.csv`);
+    this.showToast(`Exported ${list.length} fee defaulter records`, 'success');
   }
 
   // --- STUDENT CRUD ---
@@ -21323,11 +22619,22 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       case 'owner_students_roster':
       case 'owner_overview_students':
       case 'owner_stage_wise':
+      case 'owner_parents_directory':
         this.openAddStudentModal();
         break;
       case 'owner_overview_teachers':
       case 'owner_teachers_faculty':
         this.openAddTeacherModal();
+        break;
+      case 'owner_principals_directory':
+        this.openAddExecutiveStaffModal('principal');
+        break;
+      case 'owner_accountants_directory':
+        this.openAddExecutiveStaffModal('accountant');
+        break;
+      case 'owner_support_staff_directory':
+      case 'owner_all_personnel':
+        this.openAddExecutiveStaffModal('support_staff');
         break;
       case 'owner_portal_users':
         this.openAddPortalUserModal();
