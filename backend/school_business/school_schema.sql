@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS local_school_branches (
   phone TEXT,
   principal_name TEXT,
   accountant_name TEXT,
+  established_year TEXT,
   status TEXT DEFAULT 'ACTIVE',
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -185,6 +186,8 @@ CREATE TABLE IF NOT EXISTS local_school_principals (
 CREATE TABLE IF NOT EXISTS local_school_face_profiles (
   id TEXT PRIMARY KEY,
   tenant_id TEXT DEFAULT 'tenant-root-platform',
+  branch_id TEXT DEFAULT 'BR-LHR-01',
+  wing_id TEXT DEFAULT 'WNG-LHR-SR',
   member_id TEXT NOT NULL,
   member_category TEXT NOT NULL,
   member_name TEXT NOT NULL,
@@ -204,6 +207,8 @@ CREATE TABLE IF NOT EXISTS local_school_face_profiles (
 CREATE TABLE IF NOT EXISTS local_school_fingerprint_profiles (
   id TEXT PRIMARY KEY,
   tenant_id TEXT DEFAULT 'tenant-root-platform',
+  branch_id TEXT DEFAULT 'BR-LHR-01',
+  wing_id TEXT DEFAULT 'WNG-LHR-SR',
   member_id TEXT NOT NULL,
   member_category TEXT NOT NULL,
   member_name TEXT NOT NULL,
@@ -235,6 +240,8 @@ CREATE TABLE IF NOT EXISTS local_school_attendance_policy (
 CREATE TABLE IF NOT EXISTS local_school_teachers (
   id TEXT PRIMARY KEY,
   tenant_id TEXT DEFAULT 'tenant-root-platform',
+  branch_id TEXT DEFAULT 'BR-LHR-01',
+  wing_id TEXT DEFAULT 'WNG-LHR-SR',
   emp_code TEXT NOT NULL,
   name TEXT NOT NULL,
   father_name TEXT,
@@ -267,6 +274,8 @@ CREATE TABLE IF NOT EXISTS local_school_teachers (
 CREATE TABLE IF NOT EXISTS local_school_exams (
   id TEXT PRIMARY KEY,
   tenant_id TEXT DEFAULT 'tenant-root-platform',
+  branch_id TEXT DEFAULT 'BR-LHR-01',
+  wing_id TEXT DEFAULT 'WNG-LHR-SR',
   exam_code TEXT NOT NULL,
   title TEXT NOT NULL,
   grade TEXT NOT NULL,
@@ -281,6 +290,8 @@ CREATE TABLE IF NOT EXISTS local_school_exams (
 CREATE TABLE IF NOT EXISTS local_school_results (
   id TEXT PRIMARY KEY,
   tenant_id TEXT DEFAULT 'tenant-root-platform',
+  branch_id TEXT DEFAULT 'BR-LHR-01',
+  wing_id TEXT DEFAULT 'WNG-LHR-SR',
   exam_id TEXT NOT NULL,
   student_id TEXT NOT NULL,
   roll_no TEXT NOT NULL,
@@ -300,6 +311,8 @@ CREATE TABLE IF NOT EXISTS local_school_results (
 CREATE TABLE IF NOT EXISTS local_school_admissions (
   id TEXT PRIMARY KEY,
   tenant_id TEXT DEFAULT 'tenant-root-platform',
+  branch_id TEXT DEFAULT 'BR-LHR-01',
+  wing_id TEXT DEFAULT 'WNG-LHR-SR',
   applicant TEXT NOT NULL,
   applied_for TEXT NOT NULL,
   section TEXT DEFAULT 'A',
@@ -335,6 +348,8 @@ CREATE TABLE IF NOT EXISTS local_school_admissions (
 CREATE TABLE IF NOT EXISTS local_school_homework (
   id TEXT PRIMARY KEY,
   tenant_id TEXT DEFAULT 'tenant-root-platform',
+  branch_id TEXT DEFAULT 'BR-LHR-01',
+  wing_id TEXT DEFAULT 'WNG-LHR-SR',
   title TEXT NOT NULL,
   subject TEXT NOT NULL,
   grade TEXT NOT NULL,
@@ -366,6 +381,8 @@ CREATE TABLE IF NOT EXISTS local_school_homework (
 CREATE TABLE IF NOT EXISTS local_school_homework_submissions (
   id TEXT PRIMARY KEY,
   tenant_id TEXT DEFAULT 'tenant-root-platform',
+  branch_id TEXT DEFAULT 'BR-LHR-01',
+  wing_id TEXT DEFAULT 'WNG-LHR-SR',
   homework_id TEXT NOT NULL,
   student_id TEXT NOT NULL,
   roll_no TEXT,
@@ -391,6 +408,8 @@ CREATE TABLE IF NOT EXISTS local_school_homework_submissions (
 CREATE TABLE IF NOT EXISTS local_school_study_materials (
   id TEXT PRIMARY KEY,
   tenant_id TEXT DEFAULT 'tenant-root-platform',
+  branch_id TEXT DEFAULT 'BR-LHR-01',
+  wing_id TEXT DEFAULT 'WNG-LHR-SR',
   title TEXT NOT NULL,
   subject TEXT NOT NULL,
   grade TEXT NOT NULL,
@@ -412,6 +431,8 @@ CREATE TABLE IF NOT EXISTS local_school_study_materials (
 CREATE TABLE IF NOT EXISTS local_school_messages (
   id TEXT PRIMARY KEY,
   tenant_id TEXT DEFAULT 'tenant-root-platform',
+  branch_id TEXT DEFAULT 'BR-LHR-01',
+  wing_id TEXT DEFAULT 'WNG-LHR-SR',
   sender TEXT NOT NULL,
   sender_role TEXT DEFAULT 'parent',
   recipient TEXT NOT NULL,
@@ -432,6 +453,8 @@ CREATE TABLE IF NOT EXISTS local_school_messages (
 CREATE TABLE IF NOT EXISTS local_school_leaves (
   id TEXT PRIMARY KEY,
   tenant_id TEXT DEFAULT 'tenant-root-platform',
+  branch_id TEXT DEFAULT 'BR-LHR-01',
+  wing_id TEXT DEFAULT 'WNG-LHR-SR',
   child_id TEXT NOT NULL,
   child_name TEXT NOT NULL,
   from_date TEXT NOT NULL,
@@ -448,6 +471,8 @@ CREATE TABLE IF NOT EXISTS local_school_leaves (
 CREATE TABLE IF NOT EXISTS local_school_concessions (
   id TEXT PRIMARY KEY,
   tenant_id TEXT DEFAULT 'tenant-root-platform',
+  branch_id TEXT DEFAULT 'BR-LHR-01',
+  wing_id TEXT DEFAULT 'WNG-LHR-SR',
   student_id TEXT,
   student_name TEXT NOT NULL,
   roll_no TEXT,
@@ -470,6 +495,8 @@ CREATE TABLE IF NOT EXISTS local_school_concessions (
 CREATE TABLE IF NOT EXISTS local_school_complaints (
   id TEXT PRIMARY KEY,
   tenant_id TEXT DEFAULT 'tenant-root-platform',
+  branch_id TEXT DEFAULT 'BR-LHR-01',
+  wing_id TEXT DEFAULT 'WNG-LHR-SR',
   parent_name TEXT NOT NULL,
   student_name TEXT NOT NULL,
   category TEXT NOT NULL,
@@ -487,6 +514,8 @@ CREATE TABLE IF NOT EXISTS local_school_complaints (
 CREATE TABLE IF NOT EXISTS local_school_lesson_plans (
   id TEXT PRIMARY KEY,
   tenant_id TEXT DEFAULT 'tenant-root-platform',
+  branch_id TEXT DEFAULT 'BR-LHR-01',
+  wing_id TEXT DEFAULT 'WNG-LHR-SR',
   teacher_id TEXT,
   teacher_name TEXT NOT NULL,
   subject TEXT NOT NULL,
@@ -504,6 +533,8 @@ CREATE TABLE IF NOT EXISTS local_school_lesson_plans (
 CREATE TABLE IF NOT EXISTS local_school_substitutions (
   id TEXT PRIMARY KEY,
   tenant_id TEXT DEFAULT 'tenant-root-platform',
+  branch_id TEXT DEFAULT 'BR-LHR-01',
+  wing_id TEXT DEFAULT 'WNG-LHR-SR',
   absent_teacher TEXT NOT NULL,
   substitute_teacher TEXT NOT NULL,
   grade TEXT NOT NULL,
@@ -520,6 +551,8 @@ CREATE TABLE IF NOT EXISTS local_school_substitutions (
 CREATE TABLE IF NOT EXISTS local_school_audit_logs (
   id TEXT PRIMARY KEY,
   tenant_id TEXT DEFAULT 'tenant-root-platform',
+  branch_id TEXT DEFAULT 'BR-LHR-01',
+  wing_id TEXT DEFAULT 'WNG-LHR-SR',
   timestamp TEXT NOT NULL,
   operator_name TEXT NOT NULL,
   operator_role TEXT NOT NULL,
@@ -538,6 +571,8 @@ CREATE TABLE IF NOT EXISTS local_school_audit_logs (
 CREATE TABLE IF NOT EXISTS local_school_reconciliation (
   id TEXT PRIMARY KEY,
   tenant_id TEXT DEFAULT 'tenant-root-platform',
+  branch_id TEXT DEFAULT 'BR-LHR-01',
+  wing_id TEXT DEFAULT 'WNG-LHR-SR',
   date TEXT NOT NULL,
   counter_cash REAL DEFAULT 0,
   bank_meezan REAL DEFAULT 0,
@@ -577,6 +612,8 @@ CREATE TABLE IF NOT EXISTS local_school_workspaces (
 CREATE TABLE IF NOT EXISTS local_school_petty_vouchers (
   id TEXT PRIMARY KEY,
   tenant_id TEXT DEFAULT 'tenant-root-platform',
+  branch_id TEXT DEFAULT 'BR-LHR-01',
+  wing_id TEXT DEFAULT 'WNG-LHR-SR',
   voucher_no TEXT NOT NULL,
   date TEXT NOT NULL,
   category TEXT NOT NULL,
@@ -632,4 +669,12 @@ CREATE TABLE IF NOT EXISTS local_school_table_cells (
   PRIMARY KEY (tenant_id, table_id, row_key, col_id)
 );
 
-
+-- Multi-Branch & Wing Query Indexes
+CREATE INDEX IF NOT EXISTS idx_school_wings_tenant_branch ON local_school_wings (tenant_id, branch_id);
+CREATE INDEX IF NOT EXISTS idx_school_students_branch_wing ON local_school_students (tenant_id, branch_id, wing_id);
+CREATE INDEX IF NOT EXISTS idx_school_fees_branch_wing ON local_school_fees (tenant_id, branch_id, wing_id);
+CREATE INDEX IF NOT EXISTS idx_school_attendance_branch_wing ON local_school_attendance (tenant_id, branch_id, wing_id);
+CREATE INDEX IF NOT EXISTS idx_school_teachers_branch_wing ON local_school_teachers (tenant_id, branch_id, wing_id);
+CREATE INDEX IF NOT EXISTS idx_school_admissions_branch_wing ON local_school_admissions (tenant_id, branch_id, wing_id);
+CREATE INDEX IF NOT EXISTS idx_school_reconciliation_branch ON local_school_reconciliation (tenant_id, branch_id);
+CREATE INDEX IF NOT EXISTS idx_school_petty_branch ON local_school_petty_vouchers (tenant_id, branch_id);

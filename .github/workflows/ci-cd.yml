@@ -62,6 +62,27 @@ jobs:
       - name: Build production bundle
         run: npm run build
 
+  go-backend-verify:
+    name: Go Backend Build & Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Go Toolchain
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          check-latest: true
+
+      - name: Build Go Gateway, Backup, Guardian & Recovery Packages
+        run: |
+          go build ./backend/desktop_wails ./backend/backup/... ./backend/guardian/... ./backend/code_source_recovery/... ./backend/softcodesolution_platform/...
+
+      - name: Run Go Unit & Recovery Tests
+        run: |
+          go test ./backend/desktop_wails ./backend/backup/... ./backend/guardian/... ./backend/code_source_recovery/...
+
   concurrency-load-gate:
     name: Concurrency & SQLite WAL Load Gate
     needs: [backend-lint-test-backup]

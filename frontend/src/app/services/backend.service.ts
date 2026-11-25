@@ -513,6 +513,10 @@ export class BackendService {
     let tenantId = 'tenant-root-platform';
     let userRole = '';
     let userName = '';
+    let rawAccountRole = '';
+    let branchId = '';
+    let wingId = '';
+    let wingScopeLocked: boolean | undefined;
     try {
       const raw = typeof localStorage !== 'undefined' ? localStorage.getItem('user_data') : null;
       if (raw) {
@@ -521,37 +525,149 @@ export class BackendService {
           tenantId = String(parsed.tenantId || parsed.tenant_id).trim();
         }
         if (parsed?.role) {
-          userRole = String(parsed.role).trim().toLowerCase();
+          rawAccountRole = String(parsed.role).trim().toLowerCase();
+          userRole = rawAccountRole;
         }
         if (parsed?.fullName || parsed?.name) {
           userName = String(parsed.fullName || parsed.name).trim();
         }
       }
       const activeRole = typeof localStorage !== 'undefined' ? String(localStorage.getItem('activeSchoolRole') || '').trim().toLowerCase() : '';
-      if (activeRole && ['accountant', 'principal', 'teacher', 'student', 'parent', 'owner'].includes(activeRole)) {
-        if (!userRole || userRole === 'client_admin' || userRole === 'super_admin' || userRole === 'owner') {
+      if (activeRole && ['accountant', 'principal', 'teacher', 'student', 'parent', 'owner', 'staff'].includes(activeRole)) {
+        if (!userRole || userRole === 'client_admin' || userRole === 'super_admin' || userRole === 'owner' || userRole === 'admin') {
           userRole = activeRole;
         }
       }
       if (!userRole) {
         userRole = 'owner';
       }
+      const isOwnerAccount = !rawAccountRole || ['owner', 'client_admin', 'super_admin', 'admin'].includes(rawAccountRole);
       const portalUserRaw = typeof localStorage !== 'undefined' ? localStorage.getItem('activeSchoolPortalUser') : null;
       if (portalUserRaw) {
         const pu = JSON.parse(portalUserRaw);
         if (pu?.name) userName = String(pu.name).trim();
+        if (!isOwnerAccount) {
+          if (pu?.branchId) branchId = String(pu.branchId).trim();
+          if (pu?.wingId) wingId = String(pu.wingId).trim();
+          if (pu?.wingScopeLocked !== undefined) wingScopeLocked = Boolean(pu.wingScopeLocked);
+        }
       }
     } catch {}
     const headers: Record<string, string> = { 'x-tenant-id': tenantId };
     if (userRole) headers['x-user-role'] = userRole;
     if (userName) headers['x-user-name'] = userName;
+    if (branchId) headers['x-branch-id'] = branchId;
+    if (wingId) headers['x-wing-id'] = wingId;
+    if (wingScopeLocked !== undefined) headers['x-wing-scope-locked'] = wingScopeLocked ? 'true' : 'false';
     if (includeJson) headers['Content-Type'] = 'application/json';
     return headers;
   }
 
-  async getSchoolStudents() {
+  private buildSchoolScopeQuery(branchId?: string, wingId?: string, extra?: Record<string, string | number | undefined>): string {
+    const params = new URLSearchParams();
+    if (branchId && branchId !== 'ALL') params.set('branch_id', branchId);
+    if (wingId && wingId !== 'ALL') params.set('wing_id', wingId);
+    if (extra) {
+      for (const [k, v] of Object.entries(extra)) {
+        if (v !== undefined && v !== null && String(v) !== '') {
+          params.set(k, String(v));
+        }
+      }
+    }
+    const qs = params.toString();
+    return qs ? `?${qs}` : '';
+  }
+
+  async getSchoolBranches(status?: string) {
     try {
-      const res = await fetch('/api/school/students', { headers: this.getSchoolHeaders(false), credentials: 'include' });
+      const q = status ? `?status=${encodeURIComponent(status)}` : '';
+      const res = await fetch(`/api/school/branches${q}`, { headers: this.getSchoolHeaders(false), credentials: 'include' });
+      return await res.json().catch(() => ({ ok: false, branches: [] }));
+    } catch { return { ok: false, branches: [] }; }
+  }
+
+  async createSchoolBranch(payload: any) {
+    try {
+      const res = await fetch('/api/school/branches', {
+        method: 'POST',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async updateSchoolBranch(id: string, payload: any) {
+    try {
+      const res = await fetch(`/api/school/branches/${encodeURIComponent(id)}`, {
+        method: 'PUT',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async deleteSchoolBranch(id: string) {
+    try {
+      const res = await fetch(`/api/school/branches/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        headers: this.getSchoolHeaders(false),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async getSchoolWings(branchId?: string) {
+    try {
+      const q = this.buildSchoolScopeQuery(branchId);
+      const res = await fetch(`/api/school/wings${q}`, { headers: this.getSchoolHeaders(false), credentials: 'include' });
+      return await res.json().catch(() => ({ ok: false, wings: [] }));
+    } catch { return { ok: false, wings: [] }; }
+  }
+
+  async createSchoolWing(payload: any) {
+    try {
+      const res = await fetch('/api/school/wings', {
+        method: 'POST',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async updateSchoolWing(id: string, payload: any) {
+    try {
+      const res = await fetch(`/api/school/wings/${encodeURIComponent(id)}`, {
+        method: 'PUT',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async deleteSchoolWing(id: string) {
+    try {
+      const res = await fetch(`/api/school/wings/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        headers: this.getSchoolHeaders(false),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async getSchoolStudents(branchId?: string, wingId?: string) {
+    try {
+      const q = this.buildSchoolScopeQuery(branchId, wingId);
+      const res = await fetch(`/api/school/students${q}`, { headers: this.getSchoolHeaders(false), credentials: 'include' });
       return await res.json().catch(() => ({ ok: false, students: [] }));
     } catch { return { ok: false, students: [] }; }
   }
@@ -579,9 +695,10 @@ export class BackendService {
     } catch { return { ok: false }; }
   }
 
-  async getSchoolAdmissions() {
+  async getSchoolAdmissions(branchId?: string, wingId?: string) {
     try {
-      const res = await fetch('/api/school/admissions', { headers: this.getSchoolHeaders(false), credentials: 'include' });
+      const q = this.buildSchoolScopeQuery(branchId, wingId);
+      const res = await fetch(`/api/school/admissions${q}`, { headers: this.getSchoolHeaders(false), credentials: 'include' });
       return await res.json().catch(() => ({ ok: false, admissions: [] }));
     } catch { return { ok: false, admissions: [] }; }
   }
@@ -622,9 +739,10 @@ export class BackendService {
     } catch { return { ok: false }; }
   }
 
-  async getSchoolFees() {
+  async getSchoolFees(branchId?: string, wingId?: string) {
     try {
-      const res = await fetch('/api/school/fees', { headers: this.getSchoolHeaders(false), credentials: 'include' });
+      const q = this.buildSchoolScopeQuery(branchId, wingId);
+      const res = await fetch(`/api/school/fees${q}`, { headers: this.getSchoolHeaders(false), credentials: 'include' });
       return await res.json().catch(() => ({ ok: false, fees: [] }));
     } catch { return { ok: false, fees: [] }; }
   }
@@ -712,9 +830,10 @@ export class BackendService {
     } catch { return { ok: false }; }
   }
 
-  async getSchoolTeachers() {
+  async getSchoolTeachers(branchId?: string, wingId?: string) {
     try {
-      const res = await fetch('/api/school/teachers', { headers: this.getSchoolHeaders(false), credentials: 'include' });
+      const q = this.buildSchoolScopeQuery(branchId, wingId);
+      const res = await fetch(`/api/school/teachers${q}`, { headers: this.getSchoolHeaders(false), credentials: 'include' });
       return await res.json().catch(() => ({ ok: false, teachers: [] }));
     } catch { return { ok: false, teachers: [] }; }
   }
@@ -766,9 +885,9 @@ export class BackendService {
     } catch { return { ok: false }; }
   }
 
-  async getSchoolAttendance(category?: string) {
+  async getSchoolAttendance(category?: string, branchId?: string, wingId?: string) {
     try {
-      const q = category ? `?category=${encodeURIComponent(category)}` : '';
+      const q = this.buildSchoolScopeQuery(branchId, wingId, { category });
       const res = await fetch(`/api/school/attendance${q}`, { headers: this.getSchoolHeaders(false), credentials: 'include' });
       return await res.json().catch(() => ({ ok: false, attendance: [] }));
     } catch { return { ok: false, attendance: [] }; }
@@ -820,9 +939,10 @@ export class BackendService {
     } catch { return { ok: false }; }
   }
 
-  async getSchoolStaff() {
+  async getSchoolStaff(branchId?: string, wingId?: string) {
     try {
-      const res = await fetch('/api/school/staff', { headers: this.getSchoolHeaders(false), credentials: 'include' });
+      const q = this.buildSchoolScopeQuery(branchId, wingId);
+      const res = await fetch(`/api/school/staff${q}`, { headers: this.getSchoolHeaders(false), credentials: 'include' });
       return await res.json().catch(() => ({ ok: false, staff: [] }));
     } catch { return { ok: false, staff: [] }; }
   }
@@ -862,9 +982,10 @@ export class BackendService {
     } catch { return { ok: false }; }
   }
 
-  async getSchoolPrincipals() {
+  async getSchoolPrincipals(branchId?: string, wingId?: string) {
     try {
-      const res = await fetch('/api/school/principals', { headers: this.getSchoolHeaders(false), credentials: 'include' });
+      const q = this.buildSchoolScopeQuery(branchId, wingId);
+      const res = await fetch(`/api/school/principals${q}`, { headers: this.getSchoolHeaders(false), credentials: 'include' });
       return await res.json().catch(() => ({ ok: false, principals: [] }));
     } catch { return { ok: false, principals: [] }; }
   }
@@ -1337,9 +1458,10 @@ export class BackendService {
     } catch { return { ok: false }; }
   }
 
-  async getSchoolReconciliations() {
+  async getSchoolReconciliations(branchId?: string, wingId?: string) {
     try {
-      const res = await fetch('/api/school/reconciliation', { headers: this.getSchoolHeaders(false), credentials: 'include' });
+      const q = this.buildSchoolScopeQuery(branchId, wingId);
+      const res = await fetch(`/api/school/reconciliation${q}`, { headers: this.getSchoolHeaders(false), credentials: 'include' });
       return await res.json().catch(() => ({ ok: false, reconciliations: [] }));
     } catch { return { ok: false, reconciliations: [] }; }
   }
@@ -1368,9 +1490,10 @@ export class BackendService {
     } catch { return { ok: false }; }
   }
 
-  async getSchoolPettyVouchers() {
+  async getSchoolPettyVouchers(branchId?: string, wingId?: string) {
     try {
-      const res = await fetch('/api/school/petty-vouchers', { headers: this.getSchoolHeaders(false), credentials: 'include' });
+      const q = this.buildSchoolScopeQuery(branchId, wingId);
+      const res = await fetch(`/api/school/petty-vouchers${q}`, { headers: this.getSchoolHeaders(false), credentials: 'include' });
       return await res.json().catch(() => ({ ok: false, vouchers: [] }));
     } catch { return { ok: false, vouchers: [] }; }
   }
@@ -1398,9 +1521,10 @@ export class BackendService {
     } catch { return { ok: false }; }
   }
 
-  async getSchoolFinanceMonitoring(days: number = 14) {
+  async getSchoolFinanceMonitoring(days: number = 14, branchId?: string, wingId?: string) {
     try {
-      const res = await fetch(`/api/school/finance/monitoring?days=${days}`, {
+      const q = this.buildSchoolScopeQuery(branchId, wingId, { days });
+      const res = await fetch(`/api/school/finance/monitoring${q}`, {
         headers: this.getSchoolHeaders(false),
         credentials: 'include'
       });

@@ -1964,6 +1964,368 @@ test('School Business Biometric Fingerprint Attendance: Profiles CRUD, Encryptio
   assert.equal((await priResetRes.json()).principals.find((p) => p.id === createdPri.id)?.fingerprintEnrolled, false);
 });
 
+test('Multi-branch & multi-wing registry CRUD, scoped SQLite filtering, finance monitoring, and locked-role 403 enforcement', async () => {
+  const tenantId = 'tenant-multibranch-e2e';
+  const otherTenant = 'tenant-multibranch-other';
+  const ownerHeaders = { 'Content-Type': 'application/json', 'x-tenant-id': tenantId, 'x-user-role': 'owner', 'x-user-name': 'Group Owner' };
+  const otherOwnerHeaders = { 'Content-Type': 'application/json', 'x-tenant-id': otherTenant, 'x-user-role': 'owner' };
+
+  // 1. Default seeded branches (3) & wings (12) + Owner CRUD + non-owner 403 OWNER_ONLY_FORBIDDEN
+  const listBranchesRes = await fetch(`${baseUrl}/api/school/branches`, { headers: ownerHeaders });
+  assert.equal(listBranchesRes.status, 200);
+  const seededBranches = (await listBranchesRes.json()).branches;
+  assert.equal(seededBranches.length, 3);
+
+  const listWingsRes = await fetch(`${baseUrl}/api/school/wings`, { headers: ownerHeaders });
+  assert.equal(listWingsRes.status, 200);
+  const seededWings = (await listWingsRes.json()).wings;
+  assert.equal(seededWings.length, 12);
+
+  const nonOwnerBranchAttempt = await fetch(`${baseUrl}/api/school/branches`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-tenant-id': tenantId, 'x-user-role': 'principal', 'x-branch-id': 'BR-ISB-02' },
+    body: JSON.stringify({ code: 'PEW-04', name: 'Peshawar Campus' })
+  });
+  assert.equal(nonOwnerBranchAttempt.status, 403);
+  assert.equal((await nonOwnerBranchAttempt.json()).error, 'OWNER_ONLY_FORBIDDEN');
+
+  const createBranchRes = await fetch(`${baseUrl}/api/school/branches`, {
+    method: 'POST',
+    headers: ownerHeaders,
+    body: JSON.stringify({
+      id: 'BR-MLT-04',
+      code: 'MLT-04',
+      name: 'Multan Cantt Campus',
+      city: 'Multan',
+      principalName: 'Prof. Tariq Hashmi',
+      establishedYear: '2025'
+    })
+  });
+  assert.equal(createBranchRes.status, 201);
+  const createdBranch = (await createBranchRes.json()).branch;
+  assert.equal(createdBranch.id, 'BR-MLT-04');
+  assert.equal(createdBranch.city, 'Multan');
+
+  const updateBranchRes = await fetch(`${baseUrl}/api/school/branches/BR-MLT-04`, {
+    method: 'PUT',
+    headers: ownerHeaders,
+    body: JSON.stringify({ name: 'Multan Executive Campus', status: 'ACTIVE' })
+  });
+  assert.equal(updateBranchRes.status, 200);
+  assert.equal((await updateBranchRes.json()).branch.name, 'Multan Executive Campus');
+
+  const createWingRes = await fetch(`${baseUrl}/api/school/wings`, {
+    method: 'POST',
+    headers: ownerHeaders,
+    body: JSON.stringify({
+      id: 'WNG-MLT-SNR',
+      branchId: 'BR-MLT-04',
+      code: 'MLT-SNR',
+      name: 'Multan Senior Science Wing',
+      type: 'Senior',
+      gradeRange: 'Class 9 - 10'
+    })
+  });
+  assert.equal(createWingRes.status, 201);
+
+  const filteredWingsRes = await fetch(`${baseUrl}/api/school/wings?branch_id=BR-MLT-04`, { headers: ownerHeaders });
+  const filteredWings = (await filteredWingsRes.json()).wings;
+  assert.equal(filteredWings.length, 1);
+  assert.equal(filteredWings[0].id, 'WNG-MLT-SNR');
+
+  // Cross-tenant branch isolation
+  const otherUpdateBranch = await fetch(`${baseUrl}/api/school/branches/BR-MLT-04`, {
+    method: 'PUT',
+    headers: otherOwnerHeaders,
+    body: JSON.stringify({ name: 'Hijacked Branch' })
+  });
+  assert.equal(otherUpdateBranch.status, 404);
+
+  const delWingRes = await fetch(`${baseUrl}/api/school/wings/WNG-MLT-SNR`, { method: 'DELETE', headers: ownerHeaders });
+  assert.equal(delWingRes.status, 200);
+  const delBranchRes = await fetch(`${baseUrl}/api/school/branches/BR-MLT-04`, { method: 'DELETE', headers: ownerHeaders });
+  assert.equal(delBranchRes.status, 200);
+
+  // 2. Seed records across BR-LHR-01 (Lahore Senior) & BR-ISB-02 (Islamabad Girls vs Senior)
+  // Admission -> Approval preserves branchId/wingId onto student record
+  const admIsbRes = await fetch(`${baseUrl}/api/school/admissions`, {
+    method: 'POST',
+    headers: ownerHeaders,
+    body: JSON.stringify({
+      branchId: 'BR-ISB-02',
+      wingId: 'WNG-ISB-GRL',
+      applicant: 'Ayesha Kamran',
+      grade: 'Grade 9',
+      fatherName: 'Kamran Haider',
+      phone: '+92-333-8800112'
+    })
+  });
+  assert.equal(admIsbRes.status, 201);
+  const admIsb = (await admIsbRes.json()).admission;
+  assert.equal(admIsb.branchId, 'BR-ISB-02');
+  assert.equal(admIsb.wingId, 'WNG-ISB-GRL');
+
+  const approveIsbRes = await fetch(`${baseUrl}/api/school/admissions/${admIsb.id}/approve`, {
+    method: 'POST',
+    headers: ownerHeaders,
+    body: JSON.stringify({ remarks: 'Approved for F-10 Girls Wing' })
+  });
+  assert.equal(approveIsbRes.status, 200);
+  const stuIsbGirl = (await approveIsbRes.json()).student;
+  assert.equal(stuIsbGirl.branchId, 'BR-ISB-02');
+  assert.equal(stuIsbGirl.wingId, 'WNG-ISB-GRL');
+
+  // Create second student in BR-ISB-02 / WNG-ISB-SNR & third student in BR-LHR-01 / WNG-LHR-SNR
+  const stuIsbSeniorRes = await fetch(`${baseUrl}/api/school/students`, {
+    method: 'POST',
+    headers: ownerHeaders,
+    body: JSON.stringify({
+      branchId: 'BR-ISB-02',
+      wingId: 'WNG-ISB-SNR',
+      fullName: 'Saad Salman',
+      grade: 'Grade 10',
+      guardianName: 'Salman Ali',
+      feeAmount: 24000,
+      dueBakaya: 24000,
+      feeStatus: 'PENDING'
+    })
+  });
+  assert.equal(stuIsbSeniorRes.status, 201);
+  const stuIsbSenior = (await stuIsbSeniorRes.json()).student;
+
+  const stuLhrRes = await fetch(`${baseUrl}/api/school/students`, {
+    method: 'POST',
+    headers: ownerHeaders,
+    body: JSON.stringify({
+      branchId: 'BR-LHR-01',
+      wingId: 'WNG-LHR-SNR',
+      fullName: 'Bilal Raza Lahore',
+      grade: 'Grade 10',
+      guardianName: 'Raza Khan',
+      feeAmount: 20000,
+      dueBakaya: 20000,
+      feeStatus: 'OVERDUE'
+    })
+  });
+  assert.equal(stuLhrRes.status, 201);
+  const stuLhr = (await stuLhrRes.json()).student;
+
+  // Owner queries filtered by branch & wing
+  const isbStudentsRes = await fetch(`${baseUrl}/api/school/students?branch_id=BR-ISB-02`, { headers: ownerHeaders });
+  const isbStudents = (await isbStudentsRes.json()).students;
+  assert.equal(isbStudents.length, 2);
+  assert.ok(isbStudents.every((s) => s.branchId === 'BR-ISB-02'));
+
+  const isbGirlsOnlyRes = await fetch(`${baseUrl}/api/school/students?branch_id=BR-ISB-02&wing_id=WNG-ISB-GRL`, { headers: ownerHeaders });
+  const isbGirlsOnly = (await isbGirlsOnlyRes.json()).students;
+  assert.equal(isbGirlsOnly.length, 1);
+  assert.equal(isbGirlsOnly[0].id, stuIsbGirl.id);
+
+  // Fees, Reconciliation, Petty Vouchers across branches + Finance Monitoring filtering
+  const feeIsbRes = await fetch(`${baseUrl}/api/school/fees`, {
+    method: 'POST',
+    headers: ownerHeaders,
+    body: JSON.stringify({
+      branchId: 'BR-ISB-02',
+      wingId: 'WNG-ISB-GRL',
+      studentId: stuIsbGirl.id,
+      studentName: stuIsbGirl.fullName,
+      grade: 'Grade 9',
+      tuition: 25000,
+      labFee: 0,
+      status: 'PAID',
+      paidAmount: 25000,
+      collectorRole: 'accountant',
+      paymentMode: 'Cash Counter'
+    })
+  });
+  assert.equal(feeIsbRes.status, 201);
+
+  const feeLhrRes = await fetch(`${baseUrl}/api/school/fees`, {
+    method: 'POST',
+    headers: ownerHeaders,
+    body: JSON.stringify({
+      branchId: 'BR-LHR-01',
+      wingId: 'WNG-LHR-SNR',
+      studentId: stuLhr.id,
+      studentName: stuLhr.fullName,
+      grade: 'Grade 10',
+      tuition: 40000,
+      labFee: 0,
+      status: 'PAID',
+      paidAmount: 40000,
+      collectorRole: 'accountant',
+      paymentMode: 'Bank Transfer (Meezan)'
+    })
+  });
+  assert.equal(feeLhrRes.status, 201);
+
+  const recLhrRes = await fetch(`${baseUrl}/api/school/reconciliation`, {
+    method: 'POST',
+    headers: ownerHeaders,
+    body: JSON.stringify({
+      branchId: 'BR-LHR-01',
+      wingId: 'WNG-LHR-SNR',
+      date: '2026-04-10',
+      counterCashReceived: 10000,
+      bankDepositedMeezan: 30000,
+      totalSystemBilled: 40000,
+      submittedByRole: 'accountant'
+    })
+  });
+  assert.equal(recLhrRes.status, 201);
+  const recLhr = (await recLhrRes.json()).reconciliation;
+
+  const monIsbRes = await fetch(`${baseUrl}/api/school/finance/monitoring?branch_id=BR-ISB-02`, { headers: ownerHeaders });
+  assert.equal(monIsbRes.status, 200);
+  const monIsb = await monIsbRes.json();
+  assert.equal(monIsb.branchId, 'BR-ISB-02');
+  assert.equal(monIsb.summary.cashFlow.grossRevenue, 25000);
+  assert.equal(monIsb.summary.pendingDues.totalDueBakaya, 24000);
+
+  const monAllRes = await fetch(`${baseUrl}/api/school/finance/monitoring`, { headers: ownerHeaders });
+  const monAll = await monAllRes.json();
+  assert.equal(monAll.branchId, 'ALL');
+  assert.equal(monAll.summary.cashFlow.grossRevenue, 65000);
+
+  // Secondary academic resources across branches (homework + submission + concession + substitution)
+  const hwSnrRes = await fetch(`${baseUrl}/api/school/homework`, {
+    method: 'POST',
+    headers: ownerHeaders,
+    body: JSON.stringify({
+      branchId: 'BR-ISB-02',
+      wingId: 'WNG-ISB-SNR',
+      title: 'Senior Physics Worksheet',
+      subject: 'Physics',
+      description: 'Solve chapter 3 kinematics problems',
+      grade: 'Grade 10'
+    })
+  });
+  assert.equal(hwSnrRes.status, 201);
+  const hwSnr = (await hwSnrRes.json()).homework;
+  assert.equal(hwSnr.branchId, 'BR-ISB-02');
+  assert.equal(hwSnr.wingId, 'WNG-ISB-SNR');
+
+  const subRes = await fetch(`${baseUrl}/api/school/homework/${hwSnr.id}/submit`, {
+    method: 'POST',
+    headers: ownerHeaders,
+    body: JSON.stringify({
+      studentId: stuIsbSenior.id,
+      studentName: stuIsbSenior.fullName,
+      grade: 'Grade 10',
+      answerText: 'Completed all 10 physics exercises'
+    })
+  });
+  assert.equal(subRes.status, 201);
+  assert.equal((await subRes.json()).submission.wingId, 'WNG-ISB-SNR');
+
+  // 3. Locked Campus Principal (BR-ISB-02, Campus-Wide)
+  const isbPrincipalHeaders = {
+    'Content-Type': 'application/json',
+    'x-tenant-id': tenantId,
+    'x-user-role': 'principal',
+    'x-user-name': 'Ms. Ayesha Siddiqa',
+    'x-branch-id': 'BR-ISB-02',
+    'x-wing-scope-locked': 'false'
+  };
+
+  // Unfiltered GET auto-scopes to BR-ISB-02
+  const priGetStudents = await fetch(`${baseUrl}/api/school/students`, { headers: isbPrincipalHeaders });
+  assert.equal(priGetStudents.status, 200);
+  const priStudents = (await priGetStudents.json()).students;
+  assert.equal(priStudents.length, 2);
+  assert.ok(priStudents.every((s) => s.branchId === 'BR-ISB-02'));
+
+  // Cross-branch query rejected with 403 BRANCH_SCOPE_FORBIDDEN
+  const priCrossQuery = await fetch(`${baseUrl}/api/school/students?branch_id=BR-LHR-01`, { headers: isbPrincipalHeaders });
+  assert.equal(priCrossQuery.status, 403);
+  assert.equal((await priCrossQuery.json()).error, 'BRANCH_SCOPE_FORBIDDEN');
+
+  // Cross-branch POST rejected with 403 BRANCH_SCOPE_FORBIDDEN
+  const priCrossWrite = await fetch(`${baseUrl}/api/school/students`, {
+    method: 'POST',
+    headers: isbPrincipalHeaders,
+    body: JSON.stringify({ branchId: 'BR-LHR-01', fullName: 'Cross Campus Inject', grade: 'Grade 8' })
+  });
+  assert.equal(priCrossWrite.status, 403);
+  assert.equal((await priCrossWrite.json()).error, 'BRANCH_SCOPE_FORBIDDEN');
+
+  // Cross-branch record mutation / verify / delete rejected with 403 BRANCH_SCOPE_FORBIDDEN
+  const priCrossUpdate = await fetch(`${baseUrl}/api/school/students/${stuLhr.id}`, {
+    method: 'PUT',
+    headers: isbPrincipalHeaders,
+    body: JSON.stringify({ section: 'Z' })
+  });
+  assert.equal(priCrossUpdate.status, 403);
+  assert.equal((await priCrossUpdate.json()).error, 'BRANCH_SCOPE_FORBIDDEN');
+
+  const priCrossVerify = await fetch(`${baseUrl}/api/school/reconciliation/${recLhr.id}/verify`, {
+    method: 'PUT',
+    headers: isbPrincipalHeaders,
+    body: JSON.stringify({ ownerApprovalStatus: 'Approved' })
+  });
+  assert.equal(priCrossVerify.status, 403);
+  assert.equal((await priCrossVerify.json()).error, 'BRANCH_SCOPE_FORBIDDEN');
+
+  // Writing without explicit branchId stamps assigned BR-ISB-02 automatically
+  const priCreateSubRes = await fetch(`${baseUrl}/api/school/substitutions`, {
+    method: 'POST',
+    headers: isbPrincipalHeaders,
+    body: JSON.stringify({
+      absentTeacher: 'Dr. Rehan Alvi',
+      substituteTeacher: 'Ms. Sarah Jenkins',
+      grade: 'Grade 10',
+      subject: 'Physics'
+    })
+  });
+  assert.equal(priCreateSubRes.status, 201);
+  assert.equal((await priCreateSubRes.json()).substitution.branchId, 'BR-ISB-02');
+
+  // 4. Wing-Locked Principal (BR-ISB-02 + WNG-ISB-GRL, x-wing-scope-locked: true)
+  const wingLockedHeaders = {
+    'Content-Type': 'application/json',
+    'x-tenant-id': tenantId,
+    'x-user-role': 'principal',
+    'x-user-name': 'Ms. Sarah Jenkins',
+    'x-branch-id': 'BR-ISB-02',
+    'x-wing-id': 'WNG-ISB-GRL',
+    'x-wing-scope-locked': 'true'
+  };
+
+  const wlStudentsRes = await fetch(`${baseUrl}/api/school/students`, { headers: wingLockedHeaders });
+  assert.equal(wlStudentsRes.status, 200);
+  const wlStudents = (await wlStudentsRes.json()).students;
+  assert.equal(wlStudents.length, 1);
+  assert.equal(wlStudents[0].wingId, 'WNG-ISB-GRL');
+
+  // Cross-wing query & write & edit rejected with 403 WING_SCOPE_FORBIDDEN
+  const wlCrossWingQuery = await fetch(`${baseUrl}/api/school/students?wing_id=WNG-ISB-SNR`, { headers: wingLockedHeaders });
+  assert.equal(wlCrossWingQuery.status, 403);
+  assert.equal((await wlCrossWingQuery.json()).error, 'WING_SCOPE_FORBIDDEN');
+
+  const wlCrossWingWrite = await fetch(`${baseUrl}/api/school/homework`, {
+    method: 'POST',
+    headers: wingLockedHeaders,
+    body: JSON.stringify({
+      branchId: 'BR-ISB-02',
+      wingId: 'WNG-ISB-SNR',
+      title: 'Blocked Senior Wing Homework',
+      subject: 'Physics',
+      description: 'Should fail wing lock'
+    })
+  });
+  assert.equal(wlCrossWingWrite.status, 403);
+  assert.equal((await wlCrossWingWrite.json()).error, 'WING_SCOPE_FORBIDDEN');
+
+  const wlCrossWingEdit = await fetch(`${baseUrl}/api/school/homework/${hwSnr.id}`, {
+    method: 'PUT',
+    headers: wingLockedHeaders,
+    body: JSON.stringify({ title: 'Hijacked Homework' })
+  });
+  assert.equal(wlCrossWingEdit.status, 403);
+  assert.equal((await wlCrossWingEdit.json()).error, 'WING_SCOPE_FORBIDDEN');
+});
+
 
 
 

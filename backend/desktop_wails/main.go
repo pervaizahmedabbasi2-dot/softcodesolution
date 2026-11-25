@@ -26,12 +26,12 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
 )
 
-//go:embed frontend/dist/softcode-ui
+//go:embed embedded_fallback
 var assets embed.FS
 
 const (
 	appName           = "softcodesolution"
-	embeddedAssetPath = "frontend/dist/softcode-ui/browser"
+	embeddedAssetPath = "embedded_fallback"
 	defaultPreview = "0.0.0.0:3000"
 	auditDir          = "logs"
 	auditFileName     = "guardian-audit.log"
@@ -96,12 +96,13 @@ func main() {
 
 	app := NewApp()
 
+	assetFS := resolveWebAssetsFS()
 	err = wails.Run(&options.App{
 		Title:  appName,
 		Width:  1024,
 		Height: 768,
 		AssetServer: &assetserver.Options{
-			Assets: assets,
+			Assets: assetFS,
 		},
 		OnStartup: app.startup,
 		OnShutdown: func(ctx context.Context) {
@@ -312,17 +313,32 @@ func openSoftCodeBackupDB(ctx context.Context) (*sql.DB, error) {
 
 	return db, nil
 }
+func resolveWebAssetsFS() fs.FS {
+	candidates := []string{
+		filepath.Join("frontend", "dist", "softcode-ui", "browser"),
+		filepath.Join("dist", "softcode-ui", "browser"),
+		"dist",
+		filepath.Join("..", "..", "frontend", "dist", "softcode-ui", "browser"),
+		filepath.Join("..", "..", "dist", "softcode-ui", "browser"),
+	}
+	for _, candidate := range candidates {
+		if fileExists(filepath.Join(candidate, "index.html")) {
+			return os.DirFS(candidate)
+		}
+	}
+	subFS, err := fs.Sub(assets, embeddedAssetPath)
+	if err != nil {
+		return assets
+	}
+	return subFS
+}
+
 func startFirebasePreviewServer(
 	ctx context.Context,
 	cfg runtimeConfig,
 	backupService *backup.Service,
 ) {
-	subFS, err := fs.Sub(assets, embeddedAssetPath)
-	if err != nil {
-		log.Println("Preview asset error:", err)
-		audit("preview_asset_error", err.Error())
-		return
-	}
+	subFS := resolveWebAssetsFS()
 
 	mux := http.NewServeMux()
 	registerHTTPRoutes(mux, backupService)

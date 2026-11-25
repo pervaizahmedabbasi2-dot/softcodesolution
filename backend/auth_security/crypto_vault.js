@@ -553,9 +553,33 @@ export class SoftCodeCryptoVault {
                   }
                 }
               }
+            } else if (method === 'DELETE') {
+              const deletedId = String(body.id || req?.params?.id || '').trim();
+              if (deletedId && vault.sqliteDb) {
+                try {
+                  vault.sqliteDb
+                    .prepare('DELETE FROM encrypted_domain_records WHERE tenant_id = ? AND domain_key = ? AND id LIKE ?')
+                    .run(tid, domainKey, `${tid}::${domainKey}::%::${deletedId}`);
+                } catch {}
+              }
             } else if (method === 'GET') {
               const queryCategory = String(req?.query?.category || '').trim().toLowerCase();
               const hasFilterQuery = Object.keys(req?.query || {}).some((qk) => qk !== 'tenantId');
+              const roleHeader = String(req?.headers?.['x-user-role'] || '').trim().toLowerCase();
+              const isOwnerRole = !roleHeader || ['owner', 'super_admin', 'client_admin', 'admin'].includes(roleHeader);
+              const headerBranch = !isOwnerRole ? String(req?.headers?.['x-branch-id'] || '').trim() : '';
+              const wingLockHeader = String(req?.headers?.['x-wing-scope-locked'] || '').trim().toLowerCase();
+              const isWingLocked = !isOwnerRole && Boolean(headerBranch) && (wingLockHeader === 'true' || wingLockHeader === '1' || wingLockHeader === 'yes');
+              const headerWing = isWingLocked ? String(req?.headers?.['x-wing-id'] || '').trim() : '';
+              const bodyBranch = String(body.branchId || '').trim();
+              const bodyWing = String(body.wingId || '').trim();
+              const activeBranchFilter = (bodyBranch && bodyBranch.toUpperCase() !== 'ALL')
+                ? bodyBranch
+                : (headerBranch && headerBranch.toUpperCase() !== 'ALL' ? headerBranch : '');
+              const activeWingFilter = (bodyWing && bodyWing.toUpperCase() !== 'ALL')
+                ? bodyWing
+                : (headerWing && headerWing.toUpperCase() !== 'ALL' ? headerWing : '');
+
               for (const [k, v] of Object.entries(body)) {
                 if (!Array.isArray(v) || SKIP_OBJECT_KEYS.has(k)) continue;
                 let persisted = vault.loadDecryptedDomainRecords(domainKey, k, tid);
@@ -565,6 +589,18 @@ export class SoftCodeCryptoVault {
                   );
                 } else if (hasFilterQuery) {
                   persisted = [];
+                }
+                if (activeBranchFilter && persisted.length) {
+                  persisted = persisted.filter((item) => {
+                    if (k === 'branches') return String(item?.id || '').trim() === activeBranchFilter;
+                    return String(item?.branchId || item?.branch_id || '').trim() === activeBranchFilter;
+                  });
+                }
+                if (activeWingFilter && persisted.length) {
+                  persisted = persisted.filter((item) => {
+                    if (k === 'wings') return String(item?.id || '').trim() === activeWingFilter;
+                    return String(item?.wingId || item?.wing_id || '').trim() === activeWingFilter;
+                  });
                 }
                 const merged = [...v];
                 const seen = new Set(merged.map((item) => item?.id).filter(Boolean));

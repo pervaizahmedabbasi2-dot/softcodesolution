@@ -70,7 +70,8 @@
             ''
               set -e
 
-              cd ~/softcodesolution
+              REPO_ROOT="$(pwd)"
+              cd "$REPO_ROOT"
 
               echo "========================================"
               echo " SoftCodeSolution IDX AUTO START"
@@ -95,7 +96,7 @@
               sqlite3 --version || true
 
               # =====================================================
-              # 1. POSTGRESQL AUTO START
+              # 1. POSTGRESQL AUTO INIT & START
               # =====================================================
 
               export PGDATA="$HOME/.softcodesolution-postgres"
@@ -103,12 +104,10 @@
               export PGPORT="5432"
 
               if [ ! -s "$PGDATA/PG_VERSION" ]; then
-                echo "ERROR: PostgreSQL cluster does not exist:"
-                echo "$PGDATA"
-                echo "Refusing initdb or database deletion."
-                exit 1
+                echo "Initializing fresh PostgreSQL cluster at $PGDATA..."
+                mkdir -p "$PGDATA"
+                initdb -D "$PGDATA" -U "$(whoami)" -A trust --encoding=UTF8 --locale=C.UTF-8 || initdb -D "$PGDATA" -U "$(whoami)" -A trust
               fi
-
 
               if pg_isready -h 127.0.0.1 -p 5432 >/dev/null 2>&1; then
                 echo "PostgreSQL already running."
@@ -156,24 +155,30 @@
               fi
 
               # =====================================================
-              # 4. SQLITE LOCAL DB AUTO APPLY
+              # 4. SQLITE LOCAL DB & DOMAIN SCHEMAS AUTO APPLY
               # =====================================================
 
+              mkdir -p backend/auth/database
+              if [ -f backend/softcodesolution_platform/platform_schema.sql ]; then
+                sqlite3 backend/auth/database/local_softcodesolution.db \
+                  < backend/softcodesolution_platform/platform_schema.sql || true
+              fi
               if [ -f backend/auth/database/local_schema.sql ]; then
                 echo "Applying backend/auth/database/local_schema.sql..."
-                mkdir -p backend/auth/database
                 sqlite3 backend/auth/database/local_softcodesolution.db \
                   < backend/auth/database/local_schema.sql || true
-              else
-                echo "Warning: backend/auth/database/local_schema.sql not found."
               fi
+              for schema_file in backend/*/*_schema.sql; do
+                if [ -f "$schema_file" ] && [ "$schema_file" != "backend/softcodesolution_platform/platform_schema.sql" ]; then
+                  sqlite3 backend/auth/database/local_softcodesolution.db < "$schema_file" || true
+                fi
+              done
 
               # =====================================================
               # 5. FRONTEND INSTALL + BUILD
-              # Go embed needs frontend/dist/softcode-ui/browser before go run .
               # =====================================================
 
-              cd ~/softcodesolution/frontend
+              cd "$REPO_ROOT/frontend"
 
               if [ ! -f package.json ]; then
                 echo "Error: frontend/package.json nahi mila"
@@ -185,7 +190,7 @@
                 npm install
               fi
 
-              echo "Building Angular frontend for Go embed..."
+              echo "Building Angular frontend..."
               npm run build
 
               # =====================================================
@@ -225,7 +230,7 @@ EOF
               # 7. GO WEB BACKEND AUTO START
               # =====================================================
 
-              cd ~/softcodesolution
+              cd "$REPO_ROOT"
 
               echo "Checking Go backend on port 8080..."
 
@@ -234,36 +239,36 @@ EOF
               else
                 echo "Starting Go backend on port 8080..."
 
-                nohup bash -lc '
-                  cd ~/softcodesolution
+                nohup bash -lc "
+                  cd \"$REPO_ROOT\"
 
-                  export PGHOST="127.0.0.1"
-                  export PGPORT="5432"
+                  export PGHOST=\"127.0.0.1\"
+                  export PGPORT=\"5432\"
 
-                  export SCS_IDX_MODE="1"
-                  export SCS_DB_HOST="127.0.0.1"
-                  export SCS_DB_PORT="5432"
-                  export SCS_DB_USER="$(whoami)"
-                  export SCS_DB_PASSWORD=""
-                  export SCS_DB_NAME="softcodesolution"
-                  export SCS_DB_SSLMODE="disable"
+                  export SCS_IDX_MODE=\"1\"
+                  export SCS_DB_HOST=\"127.0.0.1\"
+                  export SCS_DB_PORT=\"5432\"
+                  export SCS_DB_USER=\"$(whoami)\"
+                  export SCS_DB_PASSWORD=\"\"
+                  export SCS_DB_NAME=\"softcodesolution\"
+                  export SCS_DB_SSLMODE=\"disable\"
 
-                  export SCS_OFFSITE_ROOT="$HOME/.softcodesolution-offsite"
-                  export SCS_OFFSITE_RETENTION_DAYS="30"
-                  export GO_API_PORT="8080"
-                  export SCS_ALLOWED_ORIGIN="*"
+                  export SCS_OFFSITE_ROOT=\"\$HOME/.softcodesolution-offsite\"
+                  export SCS_OFFSITE_RETENTION_DAYS=\"30\"
+                  export GO_API_PORT=\"8080\"
+                  export SCS_ALLOWED_ORIGIN=\"*\"
 
-                  export SOFTCODE_WEB_ONLY="1"
-                  export SOFTCODE_LICENSE_REQUIRED="false"
-                  export SOFTCODE_PREVIEW_ADDR="127.0.0.1:8080"
-                  export SOFTCODE_POSTGRES_DB="softcodesolution"
-                  export SOFTCODE_POSTGRES_SCHEMA="backend/auth/database/cloud_schema.sql"
-                  export SOFTCODE_SQLITE_DB="backend/auth/database/local_softcodesolution.db"
-                  export SOFTCODE_SQLITE_SCHEMA="backend/auth/database/local_schema.sql"
+                  export SOFTCODE_WEB_ONLY=\"1\"
+                  export SOFTCODE_LICENSE_REQUIRED=\"false\"
+                  export SOFTCODE_PREVIEW_ADDR=\"127.0.0.1:8080\"
+                  export SOFTCODE_POSTGRES_DB=\"softcodesolution\"
+                  export SOFTCODE_POSTGRES_SCHEMA=\"backend/auth/database/cloud_schema.sql\"
+                  export SOFTCODE_SQLITE_DB=\"backend/auth/database/local_softcodesolution.db\"
+                  export SOFTCODE_SQLITE_SCHEMA=\"backend/auth/database/local_schema.sql\"
 
                   go mod tidy
-                  go run .
-                ' > "$HOME/softcodesolution-backend.log" 2>&1 &
+                  go run ./backend/desktop_wails
+                " > "$HOME/softcodesolution-backend.log" 2>&1 &
               fi
 
               echo "Waiting for backend..."
@@ -290,12 +295,12 @@ EOF
               # 8. ANGULAR FRONTEND AUTO START
               # =====================================================
 
-              cd ~/softcodesolution/frontend
+              cd "$REPO_ROOT/frontend"
 
               echo "Starting Angular frontend on IDX port: $PORT"
               echo "Frontend /api, /healthz, /readyz will proxy to Go backend 8080"
 
-              /home/user/softcodesolution/node_modules/.bin/ng serve \
+              npx ng serve \
                 --host 0.0.0.0 \
                 --port "$PORT" \
                 --proxy-config proxy.conf.json

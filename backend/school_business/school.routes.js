@@ -185,6 +185,62 @@ export const SCHOOL_COMPLIANCE_ITEMS = [
 ];
 
 const ROOT_TENANT_ID = 'tenant-root-platform';
+const DEFAULT_BRANCH_ID = 'BR-LHR-01';
+const DEFAULT_WING_ID = 'WNG-LHR-SR';
+
+export const SCHOOL_BRANCHES = [
+  {
+    id: 'BR-LHR-01',
+    code: 'LHR-01',
+    name: 'Lahore Main Campus',
+    city: 'Lahore',
+    address: 'Gulberg III Main Boulevard, Lahore',
+    phone: '+92 42 35761201',
+    principalName: 'Prof. Dr. Tahir Mahmood Malik',
+    accountantName: 'Muhammad Rizwan',
+    establishedYear: '2016',
+    status: 'ACTIVE'
+  },
+  {
+    id: 'BR-ISB-02',
+    code: 'ISB-02',
+    name: 'Islamabad F-10 Campus',
+    city: 'Islamabad',
+    address: 'Sector F-10/3 Markaz Road, Islamabad',
+    phone: '+92 51 9283741',
+    principalName: 'Ms. Ayesha Siddiqa',
+    accountantName: 'Usman Tariq',
+    establishedYear: '2019',
+    status: 'ACTIVE'
+  },
+  {
+    id: 'BR-KHI-03',
+    code: 'KHI-03',
+    name: 'Karachi Clifton Campus',
+    city: 'Karachi',
+    address: 'Block 4 Clifton Marine Drive, Karachi',
+    phone: '+92 21 35834410',
+    principalName: 'Prof. Tariq Javed',
+    accountantName: 'Salman Raza',
+    establishedYear: '2022',
+    status: 'ACTIVE'
+  }
+];
+
+export const SCHOOL_WINGS = [
+  { id: 'WNG-LHR-MON', branchId: 'BR-LHR-01', code: 'LHR-MON', name: 'Montessori & Early Years Wing', type: 'Montessori', gradeRange: 'Playgroup - Prep', headName: 'Ms. Hina Naeem', status: 'ACTIVE' },
+  { id: 'WNG-LHR-JNR', branchId: 'BR-LHR-01', code: 'LHR-JNR', name: 'Junior Primary Wing', type: 'Junior', gradeRange: 'Class 1 - Class 5', headName: 'Ms. Amna Tariq', status: 'ACTIVE' },
+  { id: 'WNG-LHR-MID', branchId: 'BR-LHR-01', code: 'LHR-MID', name: 'Middle School Wing', type: 'Middle', gradeRange: 'Class 6 - Class 8', headName: 'Sir Farhan Iqbal', status: 'ACTIVE' },
+  { id: 'WNG-LHR-SNR', branchId: 'BR-LHR-01', code: 'LHR-SNR', name: 'Senior & O-Level Wing', type: 'Senior', gradeRange: 'Class 9 - Class 10 / O-Level', headName: 'Prof. Tariq Mehmood', status: 'ACTIVE' },
+  { id: 'WNG-ISB-MON', branchId: 'BR-ISB-02', code: 'ISB-MON', name: 'F-10 Montessori Wing', type: 'Montessori', gradeRange: 'Playgroup - KG', headName: 'Ms. Sana Khalid', status: 'ACTIVE' },
+  { id: 'WNG-ISB-JNR', branchId: 'BR-ISB-02', code: 'ISB-JNR', name: 'F-10 Junior Wing', type: 'Junior', gradeRange: 'Class 1 - Class 5', headName: 'Ms. Zunaira Raza', status: 'ACTIVE' },
+  { id: 'WNG-ISB-GRL', branchId: 'BR-ISB-02', code: 'ISB-GRL', name: 'F-10 Girls Wing', type: 'Girls', gradeRange: 'Class 6 - Class 10', headName: 'Ms. Sarah Jenkins', status: 'ACTIVE' },
+  { id: 'WNG-ISB-SNR', branchId: 'BR-ISB-02', code: 'ISB-SNR', name: 'F-10 Senior Science Wing', type: 'Senior', gradeRange: 'Class 9 - Class 10', headName: 'Dr. Rehan Alvi', status: 'ACTIVE' },
+  { id: 'WNG-KHI-MON', branchId: 'BR-KHI-03', code: 'KHI-MON', name: 'Clifton Early Years Wing', type: 'Montessori', gradeRange: 'Playgroup - Prep', headName: 'Ms. Mahnoor Shah', status: 'ACTIVE' },
+  { id: 'WNG-KHI-JNR', branchId: 'BR-KHI-03', code: 'KHI-JNR', name: 'Clifton Junior Wing', type: 'Junior', gradeRange: 'Class 1 - Class 5', headName: 'Ms. Rabia Qureshi', status: 'ACTIVE' },
+  { id: 'WNG-KHI-MID', branchId: 'BR-KHI-03', code: 'KHI-MID', name: 'Clifton Middle Wing', type: 'Middle', gradeRange: 'Class 6 - Class 8', headName: 'Engr. Bilal Hashmi', status: 'ACTIVE' },
+  { id: 'WNG-KHI-SNR', branchId: 'BR-KHI-03', code: 'KHI-SNR', name: 'Clifton Senior & Cambridge Wing', type: 'Senior', gradeRange: 'Class 9 - O-Level', headName: 'Prof. Asadullah Qazi', status: 'ACTIVE' }
+];
 
 function ensureColumnMigrations(sqliteDb) {
   if (!sqliteDb) return;
@@ -498,9 +554,37 @@ function ensureColumnMigrations(sqliteDb) {
         is_synced INTEGER DEFAULT 0,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       );
+      CREATE TABLE IF NOT EXISTS local_school_branches (
+        id TEXT PRIMARY KEY,
+        tenant_id TEXT DEFAULT 'tenant-root-platform',
+        code TEXT NOT NULL,
+        name TEXT NOT NULL,
+        city TEXT,
+        address TEXT,
+        phone TEXT,
+        principal_name TEXT,
+        accountant_name TEXT,
+        established_year TEXT,
+        status TEXT DEFAULT 'ACTIVE',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE TABLE IF NOT EXISTS local_school_wings (
+        id TEXT PRIMARY KEY,
+        tenant_id TEXT DEFAULT 'tenant-root-platform',
+        branch_id TEXT NOT NULL,
+        code TEXT NOT NULL,
+        name TEXT NOT NULL,
+        wing_type TEXT DEFAULT 'General',
+        grade_range TEXT,
+        head_name TEXT,
+        status TEXT DEFAULT 'ACTIVE',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
       CREATE TABLE IF NOT EXISTS local_school_messages (
         id TEXT PRIMARY KEY,
         tenant_id TEXT DEFAULT 'tenant-root-platform',
+        branch_id TEXT DEFAULT 'BR-LHR-01',
+        wing_id TEXT DEFAULT 'WNG-LHR-SR',
         sender TEXT NOT NULL,
         sender_role TEXT DEFAULT 'parent',
         recipient TEXT NOT NULL,
@@ -517,6 +601,36 @@ function ensureColumnMigrations(sqliteDb) {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       );
     `);
+    safeAddCol('local_school_branches', 'established_year', 'TEXT');
+    const branchScopedTables = [
+      'local_school_students',
+      'local_school_fees',
+      'local_school_attendance',
+      'local_school_staff',
+      'local_school_principals',
+      'local_school_face_profiles',
+      'local_school_fingerprint_profiles',
+      'local_school_teachers',
+      'local_school_exams',
+      'local_school_results',
+      'local_school_admissions',
+      'local_school_homework',
+      'local_school_homework_submissions',
+      'local_school_study_materials',
+      'local_school_messages',
+      'local_school_leaves',
+      'local_school_concessions',
+      'local_school_complaints',
+      'local_school_lesson_plans',
+      'local_school_substitutions',
+      'local_school_audit_logs',
+      'local_school_reconciliation',
+      'local_school_petty_vouchers'
+    ];
+    for (const tbl of branchScopedTables) {
+      safeAddCol(tbl, 'branch_id', "TEXT DEFAULT 'BR-LHR-01'");
+      safeAddCol(tbl, 'wing_id', "TEXT DEFAULT 'WNG-LHR-SR'");
+    }
   } catch {}
 }
 
@@ -564,12 +678,442 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
   const dec = (tid, v) => (v == null ? '' : vault.decryptField(tid, v));
   const enc = (tid, v) => (v == null || v === '' ? '' : vault.encryptField(tid, String(v)));
 
+  const normalizeScopeVal = (raw) => {
+    const s = String(raw || '').trim();
+    if (!s || s.toUpperCase() === 'ALL') return '';
+    return s;
+  };
+
+  const isWingLockedHeader = (req) => {
+    const v = String(req?.headers?.['x-wing-scope-locked'] || '').trim().toLowerCase();
+    return v === 'true' || v === '1' || v === 'yes';
+  };
+
+  const resolveBranchWingScope = (req) => {
+    const role = resolveUserRole(req);
+    const isOwner = !role || OWNER_ROLES.has(role);
+    const assignedBranchId = normalizeScopeVal(req?.headers?.['x-branch-id']);
+    const assignedWingId = normalizeScopeVal(req?.headers?.['x-wing-id']);
+    const wingLocked = isWingLockedHeader(req);
+    const queryBranchId = normalizeScopeVal(req?.query?.branch_id ?? req?.query?.branchId);
+    const queryWingId = normalizeScopeVal(req?.query?.wing_id ?? req?.query?.wingId);
+    const bodyBranchId = normalizeScopeVal(req?.body?.branchId ?? req?.body?.branch_id);
+    const bodyWingId = normalizeScopeVal(req?.body?.wingId ?? req?.body?.wing_id);
+
+    const isBranchLocked = !isOwner && Boolean(assignedBranchId);
+    const isWingLocked = isBranchLocked && wingLocked && Boolean(assignedWingId);
+
+    if (isBranchLocked) {
+      if (queryBranchId && queryBranchId !== assignedBranchId) {
+        return {
+          errorStatus: 403,
+          errorCode: 'BRANCH_SCOPE_FORBIDDEN',
+          errorMessage: `Role '${role}' is locked to branch '${assignedBranchId}' and cannot access branch '${queryBranchId}'.`
+        };
+      }
+      if (bodyBranchId && bodyBranchId !== assignedBranchId) {
+        return {
+          errorStatus: 403,
+          errorCode: 'BRANCH_SCOPE_FORBIDDEN',
+          errorMessage: `Role '${role}' is locked to branch '${assignedBranchId}' and cannot write to branch '${bodyBranchId}'.`
+        };
+      }
+    }
+
+    if (isWingLocked) {
+      if (queryWingId && queryWingId !== assignedWingId) {
+        return {
+          errorStatus: 403,
+          errorCode: 'WING_SCOPE_FORBIDDEN',
+          errorMessage: `Role '${role}' is locked to wing '${assignedWingId}' and cannot access wing '${queryWingId}'.`
+        };
+      }
+      if (bodyWingId && bodyWingId !== assignedWingId) {
+        return {
+          errorStatus: 403,
+          errorCode: 'WING_SCOPE_FORBIDDEN',
+          errorMessage: `Role '${role}' is locked to wing '${assignedWingId}' and cannot write to wing '${bodyWingId}'.`
+        };
+      }
+    }
+
+    const branchFilter = isBranchLocked ? assignedBranchId : (queryBranchId || assignedBranchId || '');
+    const wingFilter = isWingLocked ? assignedWingId : (queryWingId || (isBranchLocked ? '' : assignedWingId) || '');
+    const writeBranchId = bodyBranchId || assignedBranchId || queryBranchId || DEFAULT_BRANCH_ID;
+    const writeWingId = bodyWingId || (isWingLocked ? assignedWingId : (queryWingId || assignedWingId)) || DEFAULT_WING_ID;
+
+    return {
+      errorStatus: 0,
+      isOwner,
+      isBranchLocked,
+      isWingLocked,
+      assignedBranchId,
+      assignedWingId,
+      branchFilter,
+      wingFilter,
+      writeBranchId,
+      writeWingId
+    };
+  };
+
+  const sendScopeError = (res, scope) =>
+    res.status(scope.errorStatus || 403).json({
+      ok: false,
+      error: scope.errorCode || 'BRANCH_SCOPE_FORBIDDEN',
+      message: scope.errorMessage || 'Branch or wing access forbidden.'
+    });
+
+  const assertRecordScopeAllowed = (scope, row) => {
+    if (!row || !scope) return null;
+    const recBranch = String(row.branch_id || row.branchId || '').trim();
+    const recWing = String(row.wing_id || row.wingId || '').trim();
+    if (scope.isBranchLocked && recBranch && recBranch !== scope.assignedBranchId) {
+      return {
+        status: 403,
+        error: 'BRANCH_SCOPE_FORBIDDEN',
+        message: `Record belongs to branch '${recBranch}', outside locked branch '${scope.assignedBranchId}'.`
+      };
+    }
+    if (scope.isWingLocked && recWing && recWing !== scope.assignedWingId) {
+      return {
+        status: 403,
+        error: 'WING_SCOPE_FORBIDDEN',
+        message: `Record belongs to wing '${recWing}', outside locked wing '${scope.assignedWingId}'.`
+      };
+    }
+    return null;
+  };
+
+  const buildScopeSql = (scope, alias = '') => {
+    const prefix = alias ? `${alias}.` : '';
+    const clauses = [];
+    const params = [];
+    if (scope?.branchFilter) {
+      clauses.push(`${prefix}branch_id = ?`);
+      params.push(scope.branchFilter);
+    }
+    if (scope?.wingFilter) {
+      clauses.push(`${prefix}wing_id = ?`);
+      params.push(scope.wingFilter);
+    }
+    return {
+      sql: clauses.length ? ` AND ${clauses.join(' AND ')}` : '',
+      params
+    };
+  };
+
+  const mapBranchRow = (r, tid) => ({
+    id: r.id,
+    tenantId: r.tenant_id || tid,
+    code: r.code,
+    name: r.name,
+    city: r.city || '',
+    address: r.address || '',
+    phone: r.phone || '',
+    principalName: r.principal_name || '',
+    accountantName: r.accountant_name || '',
+    establishedYear: r.established_year || '',
+    status: r.status || 'ACTIVE'
+  });
+
+  const mapWingRow = (r, tid) => ({
+    id: r.id,
+    tenantId: r.tenant_id || tid,
+    branchId: r.branch_id,
+    code: r.code,
+    name: r.name,
+    type: r.wing_type || 'General',
+    gradeRange: r.grade_range || '',
+    headName: r.head_name || '',
+    status: r.status || 'ACTIVE'
+  });
+
+  const ensureTenantBranchesAndWings = (tid) => {
+    if (!sqliteDb) return;
+    try {
+      const bCnt = sqliteDb.prepare('SELECT COUNT(*) AS cnt FROM local_school_branches WHERE tenant_id = ?').get(tid);
+      if (!bCnt || Number(bCnt.cnt || 0) === 0) {
+        const insBranch = sqliteDb.prepare(`
+          INSERT OR IGNORE INTO local_school_branches
+          (id, tenant_id, code, name, city, address, phone, principal_name, accountant_name, established_year, status)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `);
+        for (const b of SCHOOL_BRANCHES) {
+          const scopedId = tid === ROOT_TENANT_ID ? b.id : `${b.id}::${tid}`;
+          // Keep clean canonical IDs if not yet used in table, else scope per tenant
+          const existsGlobal = sqliteDb.prepare('SELECT id FROM local_school_branches WHERE id = ?').get(b.id);
+          const finalId = existsGlobal ? scopedId : b.id;
+          insBranch.run(finalId, tid, b.code, b.name, b.city, b.address, b.phone, b.principalName, b.accountantName || '', b.establishedYear || '', b.status || 'ACTIVE');
+        }
+      }
+      const wCnt = sqliteDb.prepare('SELECT COUNT(*) AS cnt FROM local_school_wings WHERE tenant_id = ?').get(tid);
+      if (!wCnt || Number(wCnt.cnt || 0) === 0) {
+        const tenantBranches = sqliteDb.prepare('SELECT id, code FROM local_school_branches WHERE tenant_id = ?').all(tid);
+        const branchIdByCode = new Map(tenantBranches.map((tb) => [tb.code, tb.id]));
+        const insWing = sqliteDb.prepare(`
+          INSERT OR IGNORE INTO local_school_wings
+          (id, tenant_id, branch_id, code, name, wing_type, grade_range, head_name, status)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `);
+        for (const w of SCHOOL_WINGS) {
+          const baseCode = w.branchId.replace(/^BR-/, '');
+          const mappedBranchId = branchIdByCode.get(baseCode) || w.branchId;
+          const existsGlobal = sqliteDb.prepare('SELECT id FROM local_school_wings WHERE id = ?').get(w.id);
+          const finalWingId = existsGlobal ? `${w.id}::${tid}` : w.id;
+          insWing.run(finalWingId, tid, mappedBranchId, w.code, w.name, w.type, w.gradeRange, w.headName, w.status || 'ACTIVE');
+        }
+      }
+    } catch {}
+  };
+
+  const getBranchWingNameMaps = (tid) => {
+    const branchNames = new Map(SCHOOL_BRANCHES.map((b) => [b.id, b.name]));
+    const wingNames = new Map(SCHOOL_WINGS.map((w) => [w.id, w.name]));
+    if (sqliteDb) {
+      try {
+        for (const b of sqliteDb.prepare('SELECT id, name FROM local_school_branches WHERE tenant_id = ?').all(tid)) {
+          branchNames.set(b.id, b.name);
+        }
+        for (const w of sqliteDb.prepare('SELECT id, name FROM local_school_wings WHERE tenant_id = ?').all(tid)) {
+          wingNames.set(w.id, w.name);
+        }
+      } catch {}
+    }
+    return {
+      branchName: (bid) => branchNames.get(bid) || (bid === 'ALL' ? 'All Branches' : 'Main Campus'),
+      wingName: (wid) => wingNames.get(wid) || (wid === 'ALL' ? 'All Wings' : 'General Campus Wing')
+    };
+  };
+
+  // =========================================================================
+  // MULTI-BRANCH & MULTI-WING REGISTRY CRUD APIs
+  // =========================================================================
+  router.get('/branches', (req, res) => {
+    const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
+    let branches = [];
+    if (sqliteDb) {
+      ensureTenantBranchesAndWings(tid);
+      const rows = sqliteDb.prepare('SELECT * FROM local_school_branches WHERE tenant_id = ? ORDER BY created_at ASC, id ASC').all(tid);
+      branches = rows.map((r) => mapBranchRow(r, tid));
+    } else {
+      branches = SCHOOL_BRANCHES.map((b) => ({ ...b, tenantId: tid }));
+    }
+    if (scope.branchFilter) {
+      branches = branches.filter((b) => b.id === scope.branchFilter || b.code === scope.branchFilter);
+    }
+    const statusFilter = String(req.query?.status || '').trim().toUpperCase();
+    if (statusFilter) {
+      branches = branches.filter((b) => String(b.status || '').toUpperCase() === statusFilter);
+    }
+    res.json({ ok: true, tenantId: tid, branches });
+  });
+
+  router.post('/branches', requireOwnerRole, async (req, res) => {
+    const tid = resolveTenantId(req);
+    const b = req.body || {};
+    const name = String(b.name || '').trim();
+    const code = String(b.code || '').trim().toUpperCase();
+    if (!name || !code) {
+      return res.status(400).json({ ok: false, message: 'Branch name and code are required.' });
+    }
+    if (sqliteDb) ensureTenantBranchesAndWings(tid);
+    const branchId = String(b.id || `BR-${code.replace(/[^A-Z0-9-]/g, '')}-${Date.now().toString().slice(-4)}`).trim();
+    const branch = {
+      id: branchId,
+      tenantId: tid,
+      code,
+      name,
+      city: String(b.city || '').trim(),
+      address: String(b.address || '').trim(),
+      phone: String(b.phone || '').trim(),
+      principalName: String(b.principalName || '').trim(),
+      accountantName: String(b.accountantName || '').trim(),
+      establishedYear: String(b.establishedYear || new Date().getFullYear()).trim(),
+      status: String(b.status || 'ACTIVE').toUpperCase()
+    };
+    if (sqliteDb) {
+      sqliteDb.prepare(`
+        INSERT OR REPLACE INTO local_school_branches
+        (id, tenant_id, code, name, city, address, phone, principal_name, accountant_name, established_year, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        branch.id, tid, branch.code, branch.name, branch.city, branch.address, branch.phone,
+        branch.principalName, branch.accountantName, branch.establishedYear, branch.status
+      );
+      recordAudit(tid, {
+        branchId: branch.id,
+        operatorName: String(req.headers['x-user-name'] || 'School Owner'),
+        operatorRole: 'School Owner',
+        actionType: 'Campus Branch Registered',
+        category: 'Administrative',
+        entityId: branch.id,
+        entityDescription: `${branch.name} (${branch.code}) · ${branch.city || 'Campus'}`,
+        details: `Created/updated branch ${branch.name} under tenant ${tid}.`,
+        severity: 'Normal Audit'
+      });
+    }
+    res.status(201).json({ ok: true, branch });
+  });
+
+  router.put('/branches/:id', requireOwnerRole, (req, res) => {
+    const tid = resolveTenantId(req);
+    const id = req.params.id;
+    const b = req.body || {};
+    if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
+    ensureTenantBranchesAndWings(tid);
+    const existing = sqliteDb.prepare('SELECT * FROM local_school_branches WHERE id = ? AND tenant_id = ?').get(id, tid);
+    if (!existing) return res.status(404).json({ ok: false, message: 'Branch not found for this tenant' });
+    sqliteDb.prepare(`
+      UPDATE local_school_branches SET
+        code = COALESCE(?, code),
+        name = COALESCE(?, name),
+        city = COALESCE(?, city),
+        address = COALESCE(?, address),
+        phone = COALESCE(?, phone),
+        principal_name = COALESCE(?, principal_name),
+        accountant_name = COALESCE(?, accountant_name),
+        established_year = COALESCE(?, established_year),
+        status = COALESCE(?, status)
+      WHERE id = ? AND tenant_id = ?
+    `).run(
+      b.code ? String(b.code).trim().toUpperCase() : null,
+      b.name !== undefined ? String(b.name).trim() : null,
+      b.city ?? null,
+      b.address ?? null,
+      b.phone ?? null,
+      b.principalName ?? null,
+      b.accountantName ?? null,
+      b.establishedYear ?? null,
+      b.status ? String(b.status).toUpperCase() : null,
+      id, tid
+    );
+    const updated = sqliteDb.prepare('SELECT * FROM local_school_branches WHERE id = ? AND tenant_id = ?').get(id, tid);
+    res.json({ ok: true, branch: mapBranchRow(updated, tid) });
+  });
+
+  router.delete('/branches/:id', requireOwnerRole, (req, res) => {
+    const tid = resolveTenantId(req);
+    const id = req.params.id;
+    if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
+    ensureTenantBranchesAndWings(tid);
+    const existing = sqliteDb.prepare('SELECT * FROM local_school_branches WHERE id = ? AND tenant_id = ?').get(id, tid);
+    if (!existing) return res.status(404).json({ ok: false, message: 'Branch not found for this tenant' });
+    sqliteDb.prepare('DELETE FROM local_school_wings WHERE branch_id = ? AND tenant_id = ?').run(id, tid);
+    sqliteDb.prepare('DELETE FROM local_school_branches WHERE id = ? AND tenant_id = ?').run(id, tid);
+    res.json({ ok: true, id });
+  });
+
+  router.get('/wings', (req, res) => {
+    const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
+    let wings = [];
+    if (sqliteDb) {
+      ensureTenantBranchesAndWings(tid);
+      const rows = sqliteDb.prepare('SELECT * FROM local_school_wings WHERE tenant_id = ? ORDER BY created_at ASC, id ASC').all(tid);
+      wings = rows.map((r) => mapWingRow(r, tid));
+    } else {
+      wings = SCHOOL_WINGS.map((w) => ({ ...w, tenantId: tid }));
+    }
+    if (scope.branchFilter) {
+      wings = wings.filter((w) => w.branchId === scope.branchFilter);
+    }
+    if (scope.wingFilter) {
+      wings = wings.filter((w) => w.id === scope.wingFilter);
+    }
+    res.json({ ok: true, tenantId: tid, wings });
+  });
+
+  router.post('/wings', requireOwnerRole, (req, res) => {
+    const tid = resolveTenantId(req);
+    const w = req.body || {};
+    const branchId = String(w.branchId || w.branch_id || '').trim();
+    const name = String(w.name || '').trim();
+    if (!branchId || !name) {
+      return res.status(400).json({ ok: false, message: 'branchId and wing name are required.' });
+    }
+    if (sqliteDb) {
+      ensureTenantBranchesAndWings(tid);
+      const branchExists = sqliteDb.prepare('SELECT id FROM local_school_branches WHERE id = ? AND tenant_id = ?').get(branchId, tid);
+      if (!branchExists) {
+        return res.status(404).json({ ok: false, message: `Parent branch '${branchId}' not found for this tenant.` });
+      }
+    }
+    const type = String(w.type || w.wingType || 'General').trim();
+    const code = String(w.code || `${branchId.replace(/^BR-/, '')}-${type.slice(0, 3).toUpperCase()}`).trim().toUpperCase();
+    const wing = {
+      id: String(w.id || `WNG-${Date.now()}-${Math.floor(10 + Math.random() * 90)}`).trim(),
+      tenantId: tid,
+      branchId,
+      code,
+      name,
+      type,
+      gradeRange: String(w.gradeRange || '').trim(),
+      headName: String(w.headName || '').trim(),
+      status: String(w.status || 'ACTIVE').toUpperCase()
+    };
+    if (sqliteDb) {
+      sqliteDb.prepare(`
+        INSERT OR REPLACE INTO local_school_wings
+        (id, tenant_id, branch_id, code, name, wing_type, grade_range, head_name, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(wing.id, tid, wing.branchId, wing.code, wing.name, wing.type, wing.gradeRange, wing.headName, wing.status);
+    }
+    res.status(201).json({ ok: true, wing });
+  });
+
+  router.put('/wings/:id', requireOwnerRole, (req, res) => {
+    const tid = resolveTenantId(req);
+    const id = req.params.id;
+    const w = req.body || {};
+    if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
+    ensureTenantBranchesAndWings(tid);
+    const existing = sqliteDb.prepare('SELECT * FROM local_school_wings WHERE id = ? AND tenant_id = ?').get(id, tid);
+    if (!existing) return res.status(404).json({ ok: false, message: 'Wing not found for this tenant' });
+    sqliteDb.prepare(`
+      UPDATE local_school_wings SET
+        branch_id = COALESCE(?, branch_id),
+        code = COALESCE(?, code),
+        name = COALESCE(?, name),
+        wing_type = COALESCE(?, wing_type),
+        grade_range = COALESCE(?, grade_range),
+        head_name = COALESCE(?, head_name),
+        status = COALESCE(?, status)
+      WHERE id = ? AND tenant_id = ?
+    `).run(
+      w.branchId ?? null,
+      w.code ? String(w.code).trim().toUpperCase() : null,
+      w.name !== undefined ? String(w.name).trim() : null,
+      w.type ?? w.wingType ?? null,
+      w.gradeRange ?? null,
+      w.headName ?? null,
+      w.status ? String(w.status).toUpperCase() : null,
+      id, tid
+    );
+    const updated = sqliteDb.prepare('SELECT * FROM local_school_wings WHERE id = ? AND tenant_id = ?').get(id, tid);
+    res.json({ ok: true, wing: mapWingRow(updated, tid) });
+  });
+
+  router.delete('/wings/:id', requireOwnerRole, (req, res) => {
+    const tid = resolveTenantId(req);
+    const id = req.params.id;
+    if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
+    ensureTenantBranchesAndWings(tid);
+    const info = sqliteDb.prepare('DELETE FROM local_school_wings WHERE id = ? AND tenant_id = ?').run(id, tid);
+    if (!info.changes) return res.status(404).json({ ok: false, message: 'Wing not found for this tenant' });
+    res.json({ ok: true, id });
+  });
+
   const recordAudit = (tid, entry) => {
     const id = entry.id || ('AUD-' + Date.now() + '-' + Math.floor(100 + Math.random() * 900));
     const ts = entry.timestamp || new Date().toISOString().replace('T', ' ').substring(0, 19);
     const full = {
       id,
       tenantId: tid,
+      branchId: String(entry.branchId || entry.branch_id || DEFAULT_BRANCH_ID),
+      wingId: String(entry.wingId || entry.wing_id || DEFAULT_WING_ID),
       timestamp: ts,
       operatorName: String(entry.operatorName || 'Authorized Admin'),
       operatorRole: String(entry.operatorRole || 'Principal'),
@@ -586,10 +1130,10 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       try {
         sqliteDb.prepare(`
           INSERT OR REPLACE INTO local_school_audit_logs
-          (id, tenant_id, timestamp, operator_name, operator_role, action_type, category, entity_id, entity_description, details, severity, verified_by, ip_address)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          (id, tenant_id, branch_id, wing_id, timestamp, operator_name, operator_role, action_type, category, entity_id, entity_description, details, severity, verified_by, ip_address)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `).run(
-          full.id, tid, full.timestamp, full.operatorName, full.operatorRole, full.actionType,
+          full.id, tid, full.branchId, full.wingId, full.timestamp, full.operatorName, full.operatorRole, full.actionType,
           full.category, full.entityId, full.entityDescription, full.details, full.severity, full.verifiedBy, full.ipAddress
         );
       } catch {
@@ -599,63 +1143,93 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     return full;
   };
 
-  const mapStudentRow = (r, tid) => ({
-    id: r.id,
-    tenantId: r.tenant_id || tid,
-    rollNo: r.roll_no,
-    fullName: dec(r.tenant_id || tid, r.full_name),
-    grade: r.grade,
-    section: r.section || 'A',
-    gender: r.gender || 'Male',
-    dob: r.dob || '',
-    studentBForm: dec(r.tenant_id || tid, r.student_bform),
-    passportNo: dec(r.tenant_id || tid, r.passport_no),
-    nationality: r.nationality || 'Pakistani',
-    bloodGroup: r.blood_group || 'B+',
-    guardianName: dec(r.tenant_id || tid, r.guardian_name),
-    guardianRelation: r.guardian_relation || 'Father',
-    guardianCnic: dec(r.tenant_id || tid, r.guardian_cnic),
-    guardianOccupation: r.guardian_occupation || '',
-    guardianEmail: dec(r.tenant_id || tid, r.guardian_email),
-    phone: dec(r.tenant_id || tid, r.phone),
-    emergencyContact: dec(r.tenant_id || tid, r.emergency_contact),
-    address: dec(r.tenant_id || tid, r.address),
-    previousSchool: r.previous_school || '',
-    medicalConditions: r.medical_conditions || 'None',
-    feeAmount: Number(r.fee_amount ?? 18000),
-    dueBakaya: Number(r.due_bakaya ?? 0),
-    feeStatus: r.fee_status || 'PENDING',
-    attendanceRate: r.attendance_rate || '96%',
-    admissionDate: r.admission_date || '',
-    status: r.status || 'ACTIVE',
-    isSynced: r.is_synced === 1
-  });
+  const mapStudentRow = (r, tid, nameMaps = null) => {
+    const branchId = r.branch_id || DEFAULT_BRANCH_ID;
+    const wingId = r.wing_id || DEFAULT_WING_ID;
+    return {
+      id: r.id,
+      tenantId: r.tenant_id || tid,
+      branchId,
+      branchName: nameMaps ? nameMaps.branchName(branchId) : undefined,
+      wingId,
+      wingName: nameMaps ? nameMaps.wingName(wingId) : undefined,
+      rollNo: r.roll_no,
+      fullName: dec(r.tenant_id || tid, r.full_name),
+      grade: r.grade,
+      section: r.section || 'A',
+      gender: r.gender || 'Male',
+      dob: r.dob || '',
+      studentBForm: dec(r.tenant_id || tid, r.student_bform),
+      passportNo: dec(r.tenant_id || tid, r.passport_no),
+      nationality: r.nationality || 'Pakistani',
+      bloodGroup: r.blood_group || 'B+',
+      guardianName: dec(r.tenant_id || tid, r.guardian_name),
+      guardianRelation: r.guardian_relation || 'Father',
+      guardianCnic: dec(r.tenant_id || tid, r.guardian_cnic),
+      guardianOccupation: r.guardian_occupation || '',
+      guardianEmail: dec(r.tenant_id || tid, r.guardian_email),
+      phone: dec(r.tenant_id || tid, r.phone),
+      emergencyContact: dec(r.tenant_id || tid, r.emergency_contact),
+      address: dec(r.tenant_id || tid, r.address),
+      previousSchool: r.previous_school || '',
+      medicalConditions: r.medical_conditions || 'None',
+      feeAmount: Number(r.fee_amount ?? 18000),
+      dueBakaya: Number(r.due_bakaya ?? 0),
+      feeStatus: r.fee_status || 'PENDING',
+      attendanceRate: r.attendance_rate || '96%',
+      admissionDate: r.admission_date || '',
+      status: r.status || 'ACTIVE',
+      isSynced: r.is_synced === 1
+    };
+  };
 
   // =========================================================================
   // STUDENTS DIRECTORY & LIFECYCLE
   // =========================================================================
   router.get('/students', async (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
+    const nameMaps = getBranchWingNameMaps(tid);
     let list = [];
+    let totalTenantRows = 0;
     if (sqliteDb) {
       try {
+        const cntRow = sqliteDb.prepare('SELECT COUNT(*) AS cnt FROM local_school_students WHERE tenant_id = ?').get(tid);
+        totalTenantRows = Number(cntRow?.cnt || 0);
+        const scopeSql = buildScopeSql(scope);
         const rows = sqliteDb
-          .prepare('SELECT * FROM local_school_students WHERE tenant_id = ? ORDER BY created_at DESC')
-          .all(tid);
-        list = rows.map((r) => mapStudentRow(r, tid));
+          .prepare(`SELECT * FROM local_school_students WHERE tenant_id = ?${scopeSql.sql} ORDER BY created_at DESC`)
+          .all(tid, ...scopeSql.params);
+        list = rows.map((r) => mapStudentRow(r, tid, nameMaps));
       } catch {}
     }
-    if (list.length === 0 && tid === ROOT_TENANT_ID) {
+    if (totalTenantRows === 0 && list.length === 0 && tid === ROOT_TENANT_ID) {
       const rawList = getCollectionDocs ? await getCollectionDocs('school_students', defaultStudentsSeed) : defaultStudentsSeed;
       list = rawList
         .filter((r) => !r.tenant_id || r.tenant_id === tid)
-        .map((r) => vault.decryptFields(r.tenant_id || tid, r, ['fullName', 'guardianName', 'phone', 'studentBForm', 'guardianCnic', 'guardianEmail', 'emergencyContact', 'address', 'passportNo']));
+        .map((r) => {
+          const decRow = vault.decryptFields(r.tenant_id || tid, r, ['fullName', 'guardianName', 'phone', 'studentBForm', 'guardianCnic', 'guardianEmail', 'emergencyContact', 'address', 'passportNo']);
+          const branchId = decRow.branchId || decRow.branch_id || DEFAULT_BRANCH_ID;
+          const wingId = decRow.wingId || decRow.wing_id || DEFAULT_WING_ID;
+          return {
+            ...decRow,
+            branchId,
+            branchName: nameMaps.branchName(branchId),
+            wingId,
+            wingName: nameMaps.wingName(wingId)
+          };
+        })
+        .filter((r) => (!scope.branchFilter || r.branchId === scope.branchFilter) && (!scope.wingFilter || r.wingId === scope.wingFilter));
     }
-    res.json({ ok: true, tenantId: tid, students: list });
+    res.json({ ok: true, tenantId: tid, branchId: scope.branchFilter || 'ALL', wingId: scope.wingFilter || 'ALL', students: list });
   });
 
   router.post('/students', rejectRestrictedRole(['student', 'parent', 'accountant']), async (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
+    const nameMaps = getBranchWingNameMaps(tid);
     const s = req.body || {};
     const fullName = String(s.fullName || s.name || '').trim();
     const grade = String(s.grade || s.classGrade || '').trim();
@@ -669,9 +1243,15 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     }
 
     const uniqSuffix = `${Date.now().toString().slice(-5)}${Math.floor(10 + Math.random() * 90)}`;
+    const branchId = scope.writeBranchId;
+    const wingId = scope.writeWingId;
     const newStudent = {
       id: s.id || ('STD-' + Date.now() + '-' + Math.floor(10 + Math.random() * 90)),
       tenantId: tid,
+      branchId,
+      branchName: nameMaps.branchName(branchId),
+      wingId,
+      wingName: nameMaps.wingName(wingId),
       rollNo: String(s.rollNo || `SCH-${new Date().getFullYear()}-${uniqSuffix}`).trim(),
       fullName,
       grade,
@@ -711,13 +1291,13 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       try {
         sqliteDb.prepare(`
           INSERT INTO local_school_students (
-            id, tenant_id, roll_no, full_name, grade, section, gender, dob, student_bform, blood_group,
+            id, tenant_id, branch_id, wing_id, roll_no, full_name, grade, section, gender, dob, student_bform, blood_group,
             guardian_name, guardian_relation, guardian_cnic, guardian_occupation, guardian_email, phone,
             emergency_contact, address, previous_school, medical_conditions, fee_amount, due_bakaya,
             fee_status, attendance_rate, admission_date, status, is_synced, created_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
         `).run(
-          newStudent.id, tid, newStudent.rollNo, encFullName, newStudent.grade, newStudent.section,
+          newStudent.id, tid, newStudent.branchId, newStudent.wingId, newStudent.rollNo, encFullName, newStudent.grade, newStudent.section,
           newStudent.gender, newStudent.dob, encBForm, newStudent.bloodGroup, encGuardian,
           newStudent.guardianRelation, encCnic, newStudent.guardianOccupation, encEmail, encPhone,
           encEmerg, encAddr, newStudent.previousSchool, newStudent.medicalConditions,
@@ -759,6 +1339,8 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
   router.put('/students/:id', rejectRestrictedRole(['student', 'parent', 'accountant']), async (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     const id = req.params.id;
     const u = req.body || {};
 
@@ -769,6 +1351,8 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     if (!existing) {
       return res.status(404).json({ ok: false, message: 'Student not found for this tenant' });
     }
+    const scopeErr = assertRecordScopeAllowed(scope, existing);
+    if (scopeErr) return res.status(scopeErr.status).json({ ok: false, error: scopeErr.error, message: scopeErr.message });
 
     const fullName = u.fullName ?? u.name;
     const guardianName = u.guardianName ?? u.guardian;
@@ -781,9 +1365,13 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     const encEmail = u.guardianEmail !== undefined ? enc(tid, u.guardianEmail) : null;
     const encEmerg = u.emergencyContact !== undefined ? enc(tid, u.emergencyContact) : null;
     const encAddr = u.address !== undefined ? enc(tid, u.address) : null;
+    const reqBranchId = normalizeScopeVal(u.branchId ?? u.branch_id) || null;
+    const reqWingId = normalizeScopeVal(u.wingId ?? u.wing_id) || null;
 
     sqliteDb.prepare(`
       UPDATE local_school_students SET
+        branch_id = COALESCE(?, branch_id),
+        wing_id = COALESCE(?, wing_id),
         roll_no = COALESCE(?, roll_no),
         full_name = COALESCE(?, full_name),
         grade = COALESCE(?, grade),
@@ -810,6 +1398,7 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
         is_synced = 0
       WHERE id = ? AND tenant_id = ?
     `).run(
+      reqBranchId, reqWingId,
       u.rollNo ?? null, encName, u.grade ?? null, u.section ?? null, u.gender ?? null, u.dob ?? null,
       encBForm, u.bloodGroup ?? null, encGuardian, u.guardianRelation ?? null, encCnic,
       u.guardianOccupation ?? null, encEmail, encPhone, encEmerg, encAddr,
@@ -820,10 +1409,10 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     );
 
     const updatedRow = sqliteDb.prepare('SELECT * FROM local_school_students WHERE id = ? AND tenant_id = ?').get(id, tid);
-    const updated = mapStudentRow(updatedRow, tid);
+    const updated = mapStudentRow(updatedRow, tid, getBranchWingNameMaps(tid));
 
     if (db) {
-      const cloudUpdates = { ...u, tenant_id: tid };
+      const cloudUpdates = { ...u, tenant_id: tid, branchId: updated.branchId, wingId: updated.wingId };
       if (encName) cloudUpdates.fullName = encName;
       if (encGuardian) cloudUpdates.guardianName = encGuardian;
       if (encPhone) cloudUpdates.phone = encPhone;
@@ -835,14 +1424,20 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
   router.delete('/students/:id', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     const id = req.params.id;
     if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
-    const existing = sqliteDb.prepare('SELECT id, full_name FROM local_school_students WHERE id = ? AND tenant_id = ?').get(id, tid);
+    const existing = sqliteDb.prepare('SELECT id, branch_id, wing_id, full_name FROM local_school_students WHERE id = ? AND tenant_id = ?').get(id, tid);
     if (!existing) {
       return res.status(404).json({ ok: false, message: 'Student not found for this tenant' });
     }
+    const scopeErr = assertRecordScopeAllowed(scope, existing);
+    if (scopeErr) return res.status(scopeErr.status).json({ ok: false, error: scopeErr.error, message: scopeErr.message });
     sqliteDb.prepare('DELETE FROM local_school_students WHERE id = ? AND tenant_id = ?').run(id, tid);
     recordAudit(tid, {
+      branchId: existing.branch_id || scope.writeBranchId,
+      wingId: existing.wing_id || scope.writeWingId,
       operatorName: String(req.headers['x-user-name'] || 'Campus Admin'),
       operatorRole: String(req.headers['x-user-role'] || 'Principal'),
       actionType: 'Student Registry Deletion',
@@ -856,6 +1451,8 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
   router.post('/students/promote', rejectRestrictedRole(['student', 'parent', 'teacher', 'accountant']), async (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     const { fromGrade, toGrade, studentIds } = req.body || {};
     if (!toGrade) {
       return res.status(400).json({ ok: false, message: 'Target grade (toGrade) is required.' });
@@ -863,13 +1460,22 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     let count = 0;
     if (sqliteDb) {
       if (Array.isArray(studentIds) && studentIds.length > 0) {
+        for (const sid of studentIds) {
+          const existing = sqliteDb.prepare('SELECT id, branch_id, wing_id FROM local_school_students WHERE id = ? AND tenant_id = ?').get(sid, tid);
+          if (!existing) continue;
+          const scopeErr = assertRecordScopeAllowed(scope, existing);
+          if (scopeErr) return res.status(scopeErr.status).json({ ok: false, error: scopeErr.error, message: scopeErr.message });
+        }
         const stmt = sqliteDb.prepare('UPDATE local_school_students SET grade = ?, is_synced = 0 WHERE id = ? AND tenant_id = ?');
         for (const sid of studentIds) {
           const info = stmt.run(toGrade, sid, tid);
           count += info.changes || 0;
         }
       } else if (fromGrade) {
-        const info = sqliteDb.prepare('UPDATE local_school_students SET grade = ?, is_synced = 0 WHERE grade = ? AND tenant_id = ?').run(toGrade, fromGrade, tid);
+        const scopeSql = buildScopeSql(scope);
+        const info = sqliteDb
+          .prepare(`UPDATE local_school_students SET grade = ?, is_synced = 0 WHERE grade = ? AND tenant_id = ?${scopeSql.sql}`)
+          .run(toGrade, fromGrade, tid, ...scopeSql.params);
         count = info.changes || 0;
       }
     }
@@ -878,10 +1484,14 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
   router.post('/students/slc', rejectRestrictedRole(['student', 'parent', 'teacher', 'accountant']), async (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     const { studentId, reason, conduct } = req.body || {};
     if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
     const row = sqliteDb.prepare('SELECT * FROM local_school_students WHERE id = ? AND tenant_id = ?').get(studentId, tid);
     if (!row) return res.status(404).json({ ok: false, message: 'Student not found for this tenant' });
+    const scopeErr = assertRecordScopeAllowed(scope, row);
+    if (scopeErr) return res.status(scopeErr.status).json({ ok: false, error: scopeErr.error, message: scopeErr.message });
 
     const newStatus = 'ALUMNI / SLC ISSUED';
     const slcDate = new Date().toISOString().split('T')[0];
@@ -889,7 +1499,7 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     sqliteDb.prepare('UPDATE local_school_students SET status = ?, is_synced = 0 WHERE id = ? AND tenant_id = ?').run(newStatus, studentId, tid);
 
     const updated = {
-      ...mapStudentRow(row, tid),
+      ...mapStudentRow(row, tid, getBranchWingNameMaps(tid)),
       status: newStatus,
       slcDate,
       slcSerial,
@@ -897,6 +1507,8 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       slcConduct: conduct || 'Exemplary & Diligent'
     };
     recordAudit(tid, {
+      branchId: updated.branchId,
+      wingId: updated.wingId,
       actionType: 'Student Leaving Certificate (SLC)',
       category: 'Administrative',
       entityId: slcSerial,
@@ -913,45 +1525,57 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
   // =========================================================================
   // ADMISSIONS APPLICATIONS PIPELINE
   // =========================================================================
-  const mapAdmissionRow = (r, tid) => ({
-    id: r.id,
-    tenantId: r.tenant_id || tid,
-    applicant: dec(r.tenant_id || tid, r.applicant),
-    appliedFor: r.applied_for,
-    section: r.section || 'A',
-    rollNo: r.roll_no || '',
-    fatherName: dec(r.tenant_id || tid, r.father_name),
-    relation: r.relation || 'Father',
-    fatherCnic: dec(r.tenant_id || tid, r.father_cnic),
-    studentBForm: dec(r.tenant_id || tid, r.student_bform),
-    dob: r.dob || '',
-    gender: r.gender || 'Male',
-    bloodGroup: r.blood_group || 'B+',
-    phone: dec(r.tenant_id || tid, r.phone),
-    email: dec(r.tenant_id || tid, r.email),
-    fatherOccupation: r.father_occupation || '',
-    address: dec(r.tenant_id || tid, r.address),
-    previousSchool: r.previous_school || '',
-    medicalNotes: r.medical_notes || 'None',
-    emergencyContact: dec(r.tenant_id || tid, r.emergency_contact),
-    admissionFee: Number(r.admission_fee ?? 25000),
-    tuitionFee: Number(r.tuition_fee ?? 18000),
-    discount: Number(r.discount ?? 0),
-    initialPaymentStatus: r.initial_payment_status || 'Paid',
-    score: r.score || 'Pending Assessment',
-    status: r.status || 'Pending',
-    source: r.source || 'School Office Direct',
-    decisionRemarks: r.decision_remarks || '',
-    date: r.date || ''
-  });
+  const mapAdmissionRow = (r, tid, nameMaps = null) => {
+    const branchId = r.branch_id || DEFAULT_BRANCH_ID;
+    const wingId = r.wing_id || DEFAULT_WING_ID;
+    return {
+      id: r.id,
+      tenantId: r.tenant_id || tid,
+      branchId,
+      branchName: nameMaps ? nameMaps.branchName(branchId) : undefined,
+      wingId,
+      wingName: nameMaps ? nameMaps.wingName(wingId) : undefined,
+      applicant: dec(r.tenant_id || tid, r.applicant),
+      appliedFor: r.applied_for,
+      section: r.section || 'A',
+      rollNo: r.roll_no || '',
+      fatherName: dec(r.tenant_id || tid, r.father_name),
+      relation: r.relation || 'Father',
+      fatherCnic: dec(r.tenant_id || tid, r.father_cnic),
+      studentBForm: dec(r.tenant_id || tid, r.student_bform),
+      dob: r.dob || '',
+      gender: r.gender || 'Male',
+      bloodGroup: r.blood_group || 'B+',
+      phone: dec(r.tenant_id || tid, r.phone),
+      email: dec(r.tenant_id || tid, r.email),
+      fatherOccupation: r.father_occupation || '',
+      address: dec(r.tenant_id || tid, r.address),
+      previousSchool: r.previous_school || '',
+      medicalNotes: r.medical_notes || 'None',
+      emergencyContact: dec(r.tenant_id || tid, r.emergency_contact),
+      admissionFee: Number(r.admission_fee ?? 25000),
+      tuitionFee: Number(r.tuition_fee ?? 18000),
+      discount: Number(r.discount ?? 0),
+      initialPaymentStatus: r.initial_payment_status || 'Paid',
+      score: r.score || 'Pending Assessment',
+      status: r.status || 'Pending',
+      source: r.source || 'School Office Direct',
+      decisionRemarks: r.decision_remarks || '',
+      date: r.date || ''
+    };
+  };
 
   router.get('/admissions', (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
+    const nameMaps = getBranchWingNameMaps(tid);
     let list = [];
     if (sqliteDb) {
       try {
-        const rows = sqliteDb.prepare('SELECT * FROM local_school_admissions WHERE tenant_id = ? ORDER BY created_at DESC').all(tid);
-        list = rows.map((r) => mapAdmissionRow(r, tid));
+        const scopeSql = buildScopeSql(scope);
+        const rows = sqliteDb.prepare(`SELECT * FROM local_school_admissions WHERE tenant_id = ?${scopeSql.sql} ORDER BY created_at DESC`).all(tid, ...scopeSql.params);
+        list = rows.map((r) => mapAdmissionRow(r, tid, nameMaps));
       } catch {}
     }
     res.json({ ok: true, tenantId: tid, admissions: list });
@@ -959,6 +1583,9 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
   router.post('/admissions', (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
+    const nameMaps = getBranchWingNameMaps(tid);
     const a = req.body || {};
     const applicant = String(a.applicant || a.fullName || '').trim();
     const appliedFor = String(a.appliedFor || a.grade || '').trim();
@@ -975,16 +1602,18 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     if (admFee < 0 || tuiFee < 0 || discount < 0) {
       return res.status(400).json({ ok: false, message: 'Fee values cannot be negative.' });
     }
+    const branchId = scope.writeBranchId;
+    const wingId = scope.writeWingId;
 
     if (sqliteDb) {
       sqliteDb.prepare(`
         INSERT INTO local_school_admissions (
-          id, tenant_id, applicant, applied_for, section, roll_no, father_name, relation, father_cnic, student_bform,
+          id, tenant_id, branch_id, wing_id, applicant, applied_for, section, roll_no, father_name, relation, father_cnic, student_bform,
           dob, gender, blood_group, phone, email, father_occupation, address, previous_school, emergency_contact,
           medical_notes, admission_fee, tuition_fee, discount, initial_payment_status, score, status, source, decision_remarks, date
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
-        id, tid, enc(tid, applicant), appliedFor, a.section || 'A', a.rollNo || '',
+        id, tid, branchId, wingId, enc(tid, applicant), appliedFor, a.section || 'A', a.rollNo || '',
         enc(tid, fatherName), a.relation || 'Father', enc(tid, a.fatherCnic || ''), enc(tid, a.studentBForm || ''),
         a.dob || '', a.gender || 'Male', a.bloodGroup || 'B+', enc(tid, phone), enc(tid, a.email || ''),
         a.fatherOccupation || '', enc(tid, a.address || ''), a.previousSchool || '', enc(tid, a.emergencyContact || ''),
@@ -995,7 +1624,8 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     }
 
     const saved = {
-      id, tenantId: tid, applicant, appliedFor, section: a.section || 'A', rollNo: a.rollNo || '',
+      id, tenantId: tid, branchId, branchName: nameMaps.branchName(branchId), wingId, wingName: nameMaps.wingName(wingId),
+      applicant, appliedFor, section: a.section || 'A', rollNo: a.rollNo || '',
       fatherName, relation: a.relation || 'Father', fatherCnic: a.fatherCnic || '', studentBForm: a.studentBForm || '',
       dob: a.dob || '', gender: a.gender || 'Male', bloodGroup: a.bloodGroup || 'B+', phone, email: a.email || '',
       fatherOccupation: a.fatherOccupation || '', address: a.address || '', previousSchool: a.previousSchool || '',
@@ -1009,14 +1639,20 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
   router.put('/admissions/:id', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     const id = req.params.id;
     const u = req.body || {};
     if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
     const row = sqliteDb.prepare('SELECT * FROM local_school_admissions WHERE id = ? AND tenant_id = ?').get(id, tid);
     if (!row) return res.status(404).json({ ok: false, message: 'Admission application not found' });
+    const scopeErr = assertRecordScopeAllowed(scope, row);
+    if (scopeErr) return res.status(scopeErr.status).json({ ok: false, error: scopeErr.error, message: scopeErr.message });
 
     sqliteDb.prepare(`
       UPDATE local_school_admissions SET
+        branch_id = COALESCE(?, branch_id),
+        wing_id = COALESCE(?, wing_id),
         applicant = COALESCE(?, applicant),
         applied_for = COALESCE(?, applied_for),
         section = COALESCE(?, section),
@@ -1027,6 +1663,8 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
         decision_remarks = COALESCE(?, decision_remarks)
       WHERE id = ? AND tenant_id = ?
     `).run(
+      normalizeScopeVal(u.branchId ?? u.branch_id) || null,
+      normalizeScopeVal(u.wingId ?? u.wing_id) || null,
       u.applicant ? enc(tid, u.applicant) : null,
       u.appliedFor ?? null,
       u.section ?? null,
@@ -1038,17 +1676,21 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       id, tid
     );
     const updated = sqliteDb.prepare('SELECT * FROM local_school_admissions WHERE id = ? AND tenant_id = ?').get(id, tid);
-    res.json({ ok: true, admission: mapAdmissionRow(updated, tid) });
+    res.json({ ok: true, admission: mapAdmissionRow(updated, tid, getBranchWingNameMaps(tid)) });
   });
 
   router.post('/admissions/:id/approve', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     const id = req.params.id;
     if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
     const row = sqliteDb.prepare('SELECT * FROM local_school_admissions WHERE id = ? AND tenant_id = ?').get(id, tid);
     if (!row) return res.status(404).json({ ok: false, message: 'Admission application not found' });
+    const scopeErr = assertRecordScopeAllowed(scope, row);
+    if (scopeErr) return res.status(scopeErr.status).json({ ok: false, error: scopeErr.error, message: scopeErr.message });
 
-    const adm = mapAdmissionRow(row, tid);
+    const adm = mapAdmissionRow(row, tid, getBranchWingNameMaps(tid));
     sqliteDb.prepare('UPDATE local_school_admissions SET status = ?, decision_remarks = ? WHERE id = ? AND tenant_id = ?')
       .run('Approved', String(req.body?.remarks || 'Approved and Enrolled into Active Student Directory'), id, tid);
 
@@ -1059,13 +1701,13 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
     sqliteDb.prepare(`
       INSERT INTO local_school_students (
-        id, tenant_id, roll_no, full_name, grade, section, gender, dob, student_bform, blood_group,
+        id, tenant_id, branch_id, wing_id, roll_no, full_name, grade, section, gender, dob, student_bform, blood_group,
         guardian_name, guardian_relation, guardian_cnic, guardian_occupation, guardian_email, phone,
         emergency_contact, address, previous_school, medical_conditions, fee_amount, due_bakaya,
         fee_status, attendance_rate, admission_date, status, is_synced, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
     `).run(
-      stdId, tid, rollNo, enc(tid, adm.applicant), adm.appliedFor, adm.section || 'A', adm.gender || 'Male',
+      stdId, tid, adm.branchId, adm.wingId, rollNo, enc(tid, adm.applicant), adm.appliedFor, adm.section || 'A', adm.gender || 'Male',
       adm.dob || '', enc(tid, adm.studentBForm), adm.bloodGroup || 'B+', enc(tid, adm.fatherName),
       adm.relation || 'Father', enc(tid, adm.fatherCnic), adm.fatherOccupation || '', enc(tid, adm.email),
       enc(tid, adm.phone), enc(tid, adm.emergencyContact), enc(tid, adm.address), adm.previousSchool || '',
@@ -1073,63 +1715,93 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       adm.initialPaymentStatus === 'Paid' ? 'PAID' : 'PENDING', '100%', admissionDate, 'ACTIVE', new Date().toISOString()
     );
 
-    const enrolled = mapStudentRow(sqliteDb.prepare('SELECT * FROM local_school_students WHERE id = ?').get(stdId), tid);
+    const enrolled = mapStudentRow(sqliteDb.prepare('SELECT * FROM local_school_students WHERE id = ?').get(stdId), tid, getBranchWingNameMaps(tid));
     res.json({ ok: true, message: `${adm.applicant} approved and enrolled cleanly.`, student: enrolled });
   });
 
   router.delete('/admissions/:id', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
-    const info = sqliteDb.prepare('DELETE FROM local_school_admissions WHERE id = ? AND tenant_id = ?').run(req.params.id, tid);
-    if (!info.changes) return res.status(404).json({ ok: false, message: 'Admission application not found' });
+    const row = sqliteDb.prepare('SELECT id, branch_id, wing_id FROM local_school_admissions WHERE id = ? AND tenant_id = ?').get(req.params.id, tid);
+    if (!row) return res.status(404).json({ ok: false, message: 'Admission application not found' });
+    const scopeErr = assertRecordScopeAllowed(scope, row);
+    if (scopeErr) return res.status(scopeErr.status).json({ ok: false, error: scopeErr.error, message: scopeErr.message });
+    sqliteDb.prepare('DELETE FROM local_school_admissions WHERE id = ? AND tenant_id = ?').run(req.params.id, tid);
     res.json({ ok: true, id: req.params.id });
   });
 
   // =========================================================================
   // FEES & ACCOUNTANT BILLING LEDGER
   // =========================================================================
-  const mapFeeRow = (r, tid) => ({
-    id: r.id,
-    tenantId: r.tenant_id || tid,
-    challanNo: r.challan_no,
-    studentId: r.student_id || '',
-    studentName: dec(r.tenant_id || tid, r.student_name),
-    rollNo: r.roll_no,
-    grade: r.grade,
-    month: r.month,
-    tuition: Number(r.tuition || 0),
-    labFee: Number(r.lab_fee || 0),
-    discount: Number(r.discount || 0),
-    total: Number(r.total || 0),
-    paidAmount: Number(r.paid_amount ?? (r.status === 'PAID' ? r.total : 0)),
-    status: r.status || 'PENDING',
-    paymentMode: r.payment_mode || '',
-    resourceReference: r.resource_reference || '',
-    collectedBy: r.collected_by || '',
-    collectorRole: r.collector_role || 'owner',
-    notes: r.notes || '',
-    dueDate: r.due_date || '',
-    paidDate: r.paid_date || '',
-    isSynced: r.is_synced === 1
-  });
+  const mapFeeRow = (r, tid, nameMaps = null) => {
+    const branchId = r.branch_id || DEFAULT_BRANCH_ID;
+    const wingId = r.wing_id || DEFAULT_WING_ID;
+    return {
+      id: r.id,
+      tenantId: r.tenant_id || tid,
+      branchId,
+      branchName: nameMaps ? nameMaps.branchName(branchId) : undefined,
+      wingId,
+      wingName: nameMaps ? nameMaps.wingName(wingId) : undefined,
+      challanNo: r.challan_no,
+      studentId: r.student_id || '',
+      studentName: dec(r.tenant_id || tid, r.student_name),
+      rollNo: r.roll_no,
+      grade: r.grade,
+      month: r.month,
+      tuition: Number(r.tuition || 0),
+      labFee: Number(r.lab_fee || 0),
+      discount: Number(r.discount || 0),
+      total: Number(r.total || 0),
+      paidAmount: Number(r.paid_amount ?? (r.status === 'PAID' ? r.total : 0)),
+      status: r.status || 'PENDING',
+      paymentMode: r.payment_mode || '',
+      resourceReference: r.resource_reference || '',
+      collectedBy: r.collected_by || '',
+      collectorRole: r.collector_role || 'owner',
+      notes: r.notes || '',
+      dueDate: r.due_date || '',
+      paidDate: r.paid_date || '',
+      isSynced: r.is_synced === 1
+    };
+  };
 
   router.get('/fees', async (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
+    const nameMaps = getBranchWingNameMaps(tid);
     let list = [];
+    let totalTenantRows = 0;
     if (sqliteDb) {
       try {
-        const rows = sqliteDb.prepare('SELECT * FROM local_school_fees WHERE tenant_id = ? ORDER BY created_at DESC').all(tid);
-        list = rows.map((r) => mapFeeRow(r, tid));
+        const cntRow = sqliteDb.prepare('SELECT COUNT(*) AS cnt FROM local_school_fees WHERE tenant_id = ?').get(tid);
+        totalTenantRows = Number(cntRow?.cnt || 0);
+        const scopeSql = buildScopeSql(scope);
+        const rows = sqliteDb.prepare(`SELECT * FROM local_school_fees WHERE tenant_id = ?${scopeSql.sql} ORDER BY created_at DESC`).all(tid, ...scopeSql.params);
+        list = rows.map((r) => mapFeeRow(r, tid, nameMaps));
       } catch {}
     }
-    if (list.length === 0 && tid === ROOT_TENANT_ID) {
-      list = getCollectionDocs ? await getCollectionDocs('school_fees', defaultFeesSeed) : defaultFeesSeed;
+    if (totalTenantRows === 0 && list.length === 0 && tid === ROOT_TENANT_ID) {
+      const rawFees = getCollectionDocs ? await getCollectionDocs('school_fees', defaultFeesSeed) : defaultFeesSeed;
+      list = rawFees
+        .map((f) => {
+          const branchId = f.branchId || f.branch_id || DEFAULT_BRANCH_ID;
+          const wingId = f.wingId || f.wing_id || DEFAULT_WING_ID;
+          return { ...f, branchId, branchName: nameMaps.branchName(branchId), wingId, wingName: nameMaps.wingName(wingId) };
+        })
+        .filter((f) => (!scope.branchFilter || f.branchId === scope.branchFilter) && (!scope.wingFilter || f.wingId === scope.wingFilter));
     }
     res.json({ ok: true, tenantId: tid, fees: list });
   });
 
   router.post('/fees', rejectRestrictedRole(['student', 'parent']), async (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
+    const nameMaps = getBranchWingNameMaps(tid);
     const f = req.body || {};
     const studentName = String(f.studentName || '').trim();
     if (!studentName) {
@@ -1146,10 +1818,16 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
     const reqRole = resolveUserRole(req);
     const collectorRole = String(f.collectorRole || reqRole || 'owner').toLowerCase();
+    const branchId = scope.writeBranchId;
+    const wingId = scope.writeWingId;
 
     const newFee = {
       id: f.id || ('FEE-' + Date.now() + '-' + Math.floor(10 + Math.random() * 90)),
       tenantId: tid,
+      branchId,
+      branchName: nameMaps.branchName(branchId),
+      wingId,
+      wingName: nameMaps.wingName(wingId),
       challanNo: f.challanNo || (`CHLN-${new Date().getFullYear()}-${Date.now().toString().slice(-4)}${Math.floor(10 + Math.random() * 90)}`),
       studentId: String(f.studentId || ''),
       studentName,
@@ -1173,17 +1851,19 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     if (sqliteDb) {
       sqliteDb.prepare(`
         INSERT INTO local_school_fees (
-          id, tenant_id, challan_no, student_id, student_name, roll_no, grade, month, tuition, lab_fee,
+          id, tenant_id, branch_id, wing_id, challan_no, student_id, student_name, roll_no, grade, month, tuition, lab_fee,
           discount, total, status, payment_mode, resource_reference, collected_by, collector_role, due_date, paid_date, is_synced, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
       `).run(
-        newFee.id, tid, newFee.challanNo, newFee.studentId, encStudentName, newFee.rollNo, newFee.grade,
+        newFee.id, tid, newFee.branchId, newFee.wingId, newFee.challanNo, newFee.studentId, encStudentName, newFee.rollNo, newFee.grade,
         newFee.month, newFee.tuition, newFee.labFee, newFee.discount, newFee.total, newFee.status,
         newFee.paymentMode, newFee.resourceReference, newFee.collectedBy, newFee.collectorRole, newFee.dueDate, newFee.paidDate,
         new Date().toISOString()
       );
       if (collectorRole === 'accountant') {
         recordAudit(tid, {
+          branchId: newFee.branchId,
+          wingId: newFee.wingId,
           operatorName: newFee.collectedBy || 'Accountant / Fee Clerk',
           operatorRole: 'Accountant / Fee Clerk',
           actionType: 'Fee Challan Generated',
@@ -1216,6 +1896,9 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
   router.post('/fees/bulk-generate', rejectRestrictedRole(['student', 'parent']), async (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
+    const nameMaps = getBranchWingNameMaps(tid);
     const body = req.body || {};
     const month = body.month || 'April 2026';
     const dueDate = body.dueDate;
@@ -1229,14 +1912,21 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     }
 
     let targetStudents = [];
+    let totalTenantStudents = 0;
     if (sqliteDb) {
-      const rows = sqliteDb.prepare('SELECT * FROM local_school_students WHERE tenant_id = ?').all(tid);
+      const cntRow = sqliteDb.prepare('SELECT COUNT(*) AS cnt FROM local_school_students WHERE tenant_id = ?').get(tid);
+      totalTenantStudents = Number(cntRow?.cnt || 0);
+      const scopeSql = buildScopeSql(scope);
+      const rows = sqliteDb.prepare(`SELECT * FROM local_school_students WHERE tenant_id = ?${scopeSql.sql}`).all(tid, ...scopeSql.params);
       targetStudents = rows
-        .map((r) => mapStudentRow(r, tid))
+        .map((r) => mapStudentRow(r, tid, nameMaps))
         .filter((s) => !String(s.status || '').includes('ALUMNI') && (!Array.isArray(grades) || grades.length === 0 || grades.some((g) => s.grade.includes(g) || g === s.grade)));
     }
-    if (targetStudents.length === 0 && tid === ROOT_TENANT_ID) {
-      targetStudents = defaultStudentsSeed.filter((s) => !Array.isArray(grades) || grades.length === 0 || grades.some((g) => s.grade.includes(g) || g === s.grade));
+    if (totalTenantStudents === 0 && targetStudents.length === 0 && tid === ROOT_TENANT_ID) {
+      targetStudents = defaultStudentsSeed
+        .map((s) => ({ ...s, branchId: s.branchId || DEFAULT_BRANCH_ID, wingId: s.wingId || DEFAULT_WING_ID }))
+        .filter((s) => (!scope.branchFilter || s.branchId === scope.branchFilter) && (!scope.wingFilter || s.wingId === scope.wingFilter))
+        .filter((s) => !Array.isArray(grades) || grades.length === 0 || grades.some((g) => s.grade.includes(g) || g === s.grade));
     }
 
     const resolvedDue = dueDate || new Date(Date.now() + 15 * 86400000).toISOString().split('T')[0];
@@ -1251,9 +1941,15 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
         const tuitionAmt = Number(st.feeAmount || baseTuition);
         const labAmt = Number(labFee);
         const total = tuitionAmt + labAmt;
+        const stBranchId = st.branchId || scope.writeBranchId;
+        const stWingId = st.wingId || scope.writeWingId;
         const challan = {
           id: 'FEE-' + Date.now() + '-' + Math.floor(100 + Math.random() * 900),
           tenantId: tid,
+          branchId: stBranchId,
+          branchName: nameMaps.branchName(stBranchId),
+          wingId: stWingId,
+          wingName: nameMaps.wingName(stWingId),
           challanNo: 'CHLN-' + month.replace(/\s+/g, '').substring(0, 4).toUpperCase() + '-' + Math.floor(1000 + Math.random() * 9000),
           studentId: st.id,
           studentName: st.fullName,
@@ -1273,11 +1969,11 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
         if (sqliteDb) {
           sqliteDb.prepare(`
             INSERT INTO local_school_fees (
-              id, tenant_id, challan_no, student_id, student_name, roll_no, grade, month,
+              id, tenant_id, branch_id, wing_id, challan_no, student_id, student_name, roll_no, grade, month,
               tuition, lab_fee, discount, total, paid_amount, status, collector_role, due_date, is_synced, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, 0, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, 0, ?)
           `).run(
-            challan.id, tid, challan.challanNo, challan.studentId, encName, challan.rollNo, challan.grade,
+            challan.id, tid, challan.branchId, challan.wingId, challan.challanNo, challan.studentId, encName, challan.rollNo, challan.grade,
             challan.month, challan.tuition, challan.labFee, 0, challan.total, 'PENDING', challan.collectorRole, resolvedDue,
             new Date().toISOString()
           );
@@ -1291,6 +1987,8 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
     if (generated.length > 0) {
       recordAudit(tid, {
+        branchId: scope.writeBranchId,
+        wingId: scope.writeWingId,
         operatorName: reqRole === 'accountant' ? 'Accountant / Fee Clerk' : 'Admin Desk',
         operatorRole: reqRole === 'accountant' ? 'Accountant / Fee Clerk' : 'Principal',
         actionType: 'Bulk Challan Generation',
@@ -1313,6 +2011,9 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
   router.post('/fees/collect', async (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
+    const nameMaps = getBranchWingNameMaps(tid);
     const body = req.body || {};
     const {
       id,
@@ -1339,6 +2040,8 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     if (sqliteDb && id) {
       const row = sqliteDb.prepare('SELECT * FROM local_school_fees WHERE id = ? AND tenant_id = ?').get(id, tid);
       if (row) {
+        const scopeErr = assertRecordScopeAllowed(scope, row);
+        if (scopeErr) return res.status(scopeErr.status).json({ ok: false, error: scopeErr.error, message: scopeErr.message });
         const totalDue = Number(row.total || 0);
         const previouslyPaid = Number(row.paid_amount || 0);
         const appliedPay = numPaidNow > 0 ? numPaidNow : Math.max(0, totalDue - previouslyPaid);
@@ -1349,7 +2052,15 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
           SET status = ?, paid_amount = ?, paid_date = ?, payment_mode = ?, resource_reference = ?, collected_by = ?, collector_role = ?, notes = ?, is_synced = 0
           WHERE id = ? AND tenant_id = ?
         `).run(nextStatus, cumulativePaid, paidDate, paymentMode, resourceReference, collectedBy, collectorRole, String(notes || ''), id, tid);
-        updatedFee = mapFeeRow(sqliteDb.prepare('SELECT * FROM local_school_fees WHERE id = ? AND tenant_id = ?').get(id, tid), tid);
+        updatedFee = mapFeeRow(sqliteDb.prepare('SELECT * FROM local_school_fees WHERE id = ? AND tenant_id = ?').get(id, tid), tid, nameMaps);
+      }
+    }
+
+    if (sqliteDb && studentId && !updatedFee) {
+      const targetStuRow = sqliteDb.prepare('SELECT id, branch_id, wing_id FROM local_school_students WHERE id = ? AND tenant_id = ?').get(studentId, tid);
+      if (targetStuRow) {
+        const scopeErr = assertRecordScopeAllowed(scope, targetStuRow);
+        if (scopeErr) return res.status(scopeErr.status).json({ ok: false, error: scopeErr.error, message: scopeErr.message });
       }
     }
 
@@ -1360,21 +2071,23 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       const feeStatus = partialPayment ? 'PARTIAL' : 'PAID';
       sqliteDb.prepare(`
         INSERT INTO local_school_fees (
-          id, tenant_id, challan_no, student_id, student_name, roll_no, grade, month, tuition, lab_fee,
+          id, tenant_id, branch_id, wing_id, challan_no, student_id, student_name, roll_no, grade, month, tuition, lab_fee,
           discount, total, paid_amount, status, payment_mode, resource_reference, collected_by, collector_role, notes, due_date, paid_date, is_synced, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
       `).run(
-        feeId, tid, resolvedChallanNo, String(studentId || ''), encStuName, String(rollNo), String(grade),
+        feeId, tid, scope.writeBranchId, scope.writeWingId, resolvedChallanNo, String(studentId || ''), encStuName, String(rollNo), String(grade),
         String(month), numPaidNow, numPaidNow, numPaidNow, feeStatus, String(paymentMode), String(resourceReference),
         String(collectedBy), collectorRole, String(notes || ''), paidDate, paidDate, new Date().toISOString()
       );
-      updatedFee = mapFeeRow(sqliteDb.prepare('SELECT * FROM local_school_fees WHERE id = ? AND tenant_id = ?').get(feeId, tid), tid);
+      updatedFee = mapFeeRow(sqliteDb.prepare('SELECT * FROM local_school_fees WHERE id = ? AND tenant_id = ?').get(feeId, tid), tid, nameMaps);
     }
 
     const targetStdId = studentId || updatedFee?.studentId;
     if (sqliteDb && targetStdId) {
-      const stRow = sqliteDb.prepare('SELECT due_bakaya, fee_amount FROM local_school_students WHERE id = ? AND tenant_id = ?').get(targetStdId, tid);
+      const stRow = sqliteDb.prepare('SELECT due_bakaya, fee_amount, branch_id, wing_id FROM local_school_students WHERE id = ? AND tenant_id = ?').get(targetStdId, tid);
       if (stRow) {
+        const scopeErr = assertRecordScopeAllowed(scope, stRow);
+        if (scopeErr) return res.status(scopeErr.status).json({ ok: false, error: scopeErr.error, message: scopeErr.message });
         const currentDue = Number(stRow.due_bakaya ?? stRow.fee_amount ?? 0);
         if (partialPayment && numPaidNow > 0) {
           const remaining = Math.max(0, currentDue - numPaidNow);
@@ -1390,6 +2103,8 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
     if (updatedFee) {
       recordAudit(tid, {
+        branchId: updatedFee.branchId,
+        wingId: updatedFee.wingId,
         operatorName: collectedBy || (collectorRole === 'accountant' ? 'Accountant / Fee Clerk' : 'Principal Office'),
         operatorRole: collectorRole === 'accountant' ? 'Accountant / Fee Clerk' : (collectorRole === 'principal' ? 'Principal' : 'School Owner'),
         actionType: updatedFee.status === 'PARTIAL' ? 'Partial Fee Installment Collected' : 'Fee Receipt Collected',
@@ -1423,12 +2138,18 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
   router.delete('/fees/:id', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     const id = req.params.id;
     if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
     const row = sqliteDb.prepare('SELECT * FROM local_school_fees WHERE id = ? AND tenant_id = ?').get(id, tid);
     if (!row) return res.status(404).json({ ok: false, message: 'Fee challan not found for this tenant' });
+    const scopeErr = assertRecordScopeAllowed(scope, row);
+    if (scopeErr) return res.status(scopeErr.status).json({ ok: false, error: scopeErr.error, message: scopeErr.message });
     sqliteDb.prepare('DELETE FROM local_school_fees WHERE id = ? AND tenant_id = ?').run(id, tid);
     recordAudit(tid, {
+      branchId: row.branch_id || scope.writeBranchId,
+      wingId: row.wing_id || scope.writeWingId,
       actionType: 'Fee Voucher Deletion',
       category: 'Financial',
       entityId: row.challan_no || id,
@@ -1441,54 +2162,79 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
   // =========================================================================
   // TEACHERS & FACULTY PAYROLL
   // =========================================================================
-  const mapTeacherRow = (r, tid) => ({
-    id: r.id,
-    tenantId: r.tenant_id || tid,
-    empCode: r.emp_code,
-    name: dec(r.tenant_id || tid, r.name),
-    fatherName: dec(r.tenant_id || tid, r.father_name),
-    designation: r.designation,
-    department: r.department,
-    subject: r.subject || r.department,
-    qualification: r.qualification || 'Masters',
-    classes: r.classes || 'All Assigned',
-    inchargeClass: r.incharge_class || '',
-    gender: r.gender || 'Male',
-    dob: r.dob || '',
-    bloodGroup: r.blood_group || 'B+',
-    cnic: dec(r.tenant_id || tid, r.cnic),
-    passportNo: dec(r.tenant_id || tid, r.passport_no),
-    nationality: r.nationality || 'Pakistani',
-    phone: dec(r.tenant_id || tid, r.phone),
-    emergencyContact: dec(r.tenant_id || tid, r.emergency_contact),
-    email: dec(r.tenant_id || tid, r.email),
-    address: dec(r.tenant_id || tid, r.address),
-    salary: dec(r.tenant_id || tid, r.salary),
-    basicSalary: Number(r.basic_salary || 0),
-    salaryStatus: r.salary_status || 'Pending',
-    lastSalaryMonth: r.last_salary_month || 'Current',
-    salaryPaid: String(r.salary_status || '').toLowerCase() === 'paid',
-    status: r.status || 'ACTIVE',
-    isSynced: r.is_synced === 1
-  });
+  const mapTeacherRow = (r, tid, nameMaps = null) => {
+    const branchId = r.branch_id || DEFAULT_BRANCH_ID;
+    const wingId = r.wing_id || DEFAULT_WING_ID;
+    return {
+      id: r.id,
+      tenantId: r.tenant_id || tid,
+      branchId,
+      branchName: nameMaps ? nameMaps.branchName(branchId) : undefined,
+      wingId,
+      wingName: nameMaps ? nameMaps.wingName(wingId) : undefined,
+      empCode: r.emp_code,
+      name: dec(r.tenant_id || tid, r.name),
+      fatherName: dec(r.tenant_id || tid, r.father_name),
+      designation: r.designation,
+      department: r.department,
+      subject: r.subject || r.department,
+      qualification: r.qualification || 'Masters',
+      classes: r.classes || 'All Assigned',
+      inchargeClass: r.incharge_class || '',
+      gender: r.gender || 'Male',
+      dob: r.dob || '',
+      bloodGroup: r.blood_group || 'B+',
+      cnic: dec(r.tenant_id || tid, r.cnic),
+      passportNo: dec(r.tenant_id || tid, r.passport_no),
+      nationality: r.nationality || 'Pakistani',
+      phone: dec(r.tenant_id || tid, r.phone),
+      emergencyContact: dec(r.tenant_id || tid, r.emergency_contact),
+      email: dec(r.tenant_id || tid, r.email),
+      address: dec(r.tenant_id || tid, r.address),
+      salary: dec(r.tenant_id || tid, r.salary),
+      basicSalary: Number(r.basic_salary || 0),
+      salaryStatus: r.salary_status || 'Pending',
+      lastSalaryMonth: r.last_salary_month || 'Current',
+      salaryPaid: String(r.salary_status || '').toLowerCase() === 'paid',
+      status: r.status || 'ACTIVE',
+      isSynced: r.is_synced === 1
+    };
+  };
 
   router.get('/teachers', async (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
+    const nameMaps = getBranchWingNameMaps(tid);
     let list = [];
+    let totalTenantRows = 0;
     if (sqliteDb) {
       try {
-        const rows = sqliteDb.prepare('SELECT * FROM local_school_teachers WHERE tenant_id = ? ORDER BY created_at DESC').all(tid);
-        list = rows.map((r) => mapTeacherRow(r, tid));
+        const cntRow = sqliteDb.prepare('SELECT COUNT(*) AS cnt FROM local_school_teachers WHERE tenant_id = ?').get(tid);
+        totalTenantRows = Number(cntRow?.cnt || 0);
+        const scopeSql = buildScopeSql(scope);
+        const rows = sqliteDb.prepare(`SELECT * FROM local_school_teachers WHERE tenant_id = ?${scopeSql.sql} ORDER BY created_at DESC`).all(tid, ...scopeSql.params);
+        list = rows.map((r) => mapTeacherRow(r, tid, nameMaps));
       } catch {}
     }
-    if (list.length === 0 && tid === ROOT_TENANT_ID) {
-      list = getCollectionDocs ? await getCollectionDocs('school_teachers', defaultTeachersSeed) : defaultTeachersSeed;
+    if (totalTenantRows === 0 && list.length === 0 && tid === ROOT_TENANT_ID) {
+      const rawTeachers = getCollectionDocs ? await getCollectionDocs('school_teachers', defaultTeachersSeed) : defaultTeachersSeed;
+      list = rawTeachers
+        .map((t) => {
+          const branchId = t.branchId || t.branch_id || DEFAULT_BRANCH_ID;
+          const wingId = t.wingId || t.wing_id || DEFAULT_WING_ID;
+          return { ...t, branchId, branchName: nameMaps.branchName(branchId), wingId, wingName: nameMaps.wingName(wingId) };
+        })
+        .filter((t) => (!scope.branchFilter || t.branchId === scope.branchFilter) && (!scope.wingFilter || t.wingId === scope.wingFilter));
     }
     res.json({ ok: true, tenantId: tid, teachers: list });
   });
 
   router.post('/teachers', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
+    const nameMaps = getBranchWingNameMaps(tid);
     const t = req.body || {};
     const name = String(t.name || '').trim();
     const subject = String(t.subject || t.department || '').trim();
@@ -1499,10 +2245,16 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     if (!Number.isFinite(basicSalary) || basicSalary < 0) {
       return res.status(400).json({ ok: false, message: 'basicSalary must be a valid non-negative number.' });
     }
+    const branchId = scope.writeBranchId;
+    const wingId = scope.writeWingId;
 
     const teacher = {
       id: t.id || ('t-' + Date.now() + '-' + Math.floor(10 + Math.random() * 90)),
       tenantId: tid,
+      branchId,
+      branchName: nameMaps.branchName(branchId),
+      wingId,
+      wingName: nameMaps.wingName(wingId),
       empCode: String(t.empCode || `EMP-${new Date().getFullYear()}-${Date.now().toString().slice(-4)}`),
       name,
       fatherName: String(t.fatherName || ''),
@@ -1532,12 +2284,12 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     if (sqliteDb) {
       sqliteDb.prepare(`
         INSERT INTO local_school_teachers (
-          id, tenant_id, emp_code, name, father_name, designation, department, subject, qualification, classes,
+          id, tenant_id, branch_id, wing_id, emp_code, name, father_name, designation, department, subject, qualification, classes,
           incharge_class, gender, dob, blood_group, cnic, passport_no, nationality, phone, emergency_contact, email, address,
           salary, basic_salary, salary_status, last_salary_month, status, is_synced, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
       `).run(
-        teacher.id, tid, teacher.empCode, enc(tid, teacher.name), enc(tid, teacher.fatherName),
+        teacher.id, tid, teacher.branchId, teacher.wingId, teacher.empCode, enc(tid, teacher.name), enc(tid, teacher.fatherName),
         teacher.designation, teacher.department, teacher.subject, teacher.qualification, teacher.classes,
         teacher.inchargeClass, teacher.gender, teacher.dob, teacher.bloodGroup,
         enc(tid, teacher.cnic), enc(tid, teacher.passportNo), teacher.nationality,
@@ -1551,14 +2303,20 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
   router.put('/teachers/:id', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     const id = req.params.id;
     const u = req.body || {};
     if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
     const row = sqliteDb.prepare('SELECT * FROM local_school_teachers WHERE id = ? AND tenant_id = ?').get(id, tid);
     if (!row) return res.status(404).json({ ok: false, message: 'Teacher not found for this tenant' });
+    const scopeErr = assertRecordScopeAllowed(scope, row);
+    if (scopeErr) return res.status(scopeErr.status).json({ ok: false, error: scopeErr.error, message: scopeErr.message });
 
     sqliteDb.prepare(`
       UPDATE local_school_teachers SET
+        branch_id = COALESCE(?, branch_id),
+        wing_id = COALESCE(?, wing_id),
         name = COALESCE(?, name),
         designation = COALESCE(?, designation),
         department = COALESCE(?, department),
@@ -1576,6 +2334,8 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
         is_synced = 0
       WHERE id = ? AND tenant_id = ?
     `).run(
+      normalizeScopeVal(u.branchId ?? u.branch_id) || null,
+      normalizeScopeVal(u.wingId ?? u.wing_id) || null,
       u.name ? enc(tid, u.name) : null, u.designation ?? null, u.department ?? null,
       u.subject ?? null, u.qualification ?? null, u.classes ?? null, u.inchargeClass ?? null,
       u.phone ? enc(tid, u.phone) : null, u.email ? enc(tid, u.email) : null,
@@ -1584,33 +2344,44 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       u.salaryStatus ?? null, u.lastSalaryMonth ?? null, u.status ?? null, id, tid
     );
     const updated = sqliteDb.prepare('SELECT * FROM local_school_teachers WHERE id = ? AND tenant_id = ?').get(id, tid);
-    res.json({ ok: true, teacher: mapTeacherRow(updated, tid) });
+    res.json({ ok: true, teacher: mapTeacherRow(updated, tid, getBranchWingNameMaps(tid)) });
   });
 
   router.delete('/teachers/:id', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
-    const info = sqliteDb.prepare('DELETE FROM local_school_teachers WHERE id = ? AND tenant_id = ?').run(req.params.id, tid);
-    if (!info.changes) return res.status(404).json({ ok: false, message: 'Teacher not found for this tenant' });
+    const row = sqliteDb.prepare('SELECT id, branch_id, wing_id FROM local_school_teachers WHERE id = ? AND tenant_id = ?').get(req.params.id, tid);
+    if (!row) return res.status(404).json({ ok: false, message: 'Teacher not found for this tenant' });
+    const scopeErr = assertRecordScopeAllowed(scope, row);
+    if (scopeErr) return res.status(scopeErr.status).json({ ok: false, error: scopeErr.error, message: scopeErr.message });
+    sqliteDb.prepare('DELETE FROM local_school_teachers WHERE id = ? AND tenant_id = ?').run(req.params.id, tid);
     res.json({ ok: true, id: req.params.id });
   });
 
   router.post('/teachers/salary/disburse', rejectRestrictedRole(['student', 'parent', 'teacher', 'accountant']), async (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     const { teacherId, month, amount } = req.body || {};
     const targetMonth = String(month || 'March 2026');
     if (sqliteDb) {
       const row = sqliteDb.prepare('SELECT * FROM local_school_teachers WHERE id = ? AND tenant_id = ?').get(teacherId, tid);
       if (row) {
+        const scopeErr = assertRecordScopeAllowed(scope, row);
+        if (scopeErr) return res.status(scopeErr.status).json({ ok: false, error: scopeErr.error, message: scopeErr.message });
         sqliteDb.prepare(`
           UPDATE local_school_teachers
           SET salary_status = 'Paid', last_salary_month = ?, is_synced = 0
           WHERE id = ? AND tenant_id = ?
         `).run(targetMonth, teacherId, tid);
-        const updated = mapTeacherRow(sqliteDb.prepare('SELECT * FROM local_school_teachers WHERE id = ? AND tenant_id = ?').get(teacherId, tid), tid);
+        const updated = mapTeacherRow(sqliteDb.prepare('SELECT * FROM local_school_teachers WHERE id = ? AND tenant_id = ?').get(teacherId, tid), tid, getBranchWingNameMaps(tid));
         updated.lastSalaryDisbursed = new Date().toISOString().split('T')[0];
         updated.lastDisbursedAmount = amount || updated.salary;
         recordAudit(tid, {
+          branchId: updated.branchId,
+          wingId: updated.wingId,
           actionType: 'Faculty Payroll Disbursement',
           category: 'Financial',
           entityId: updated.id,
@@ -1763,57 +2534,87 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     return { allowed: true };
   };
 
-  const mapStaffRow = (r, tid) => ({
-    id: r.id,
-    tenantId: r.tenant_id || tid,
-    empCode: r.emp_code,
-    name: dec(r.tenant_id || tid, r.name),
-    fatherName: dec(r.tenant_id || tid, r.father_name),
-    cnic: dec(r.tenant_id || tid, r.cnic),
-    passportNo: dec(r.tenant_id || tid, r.passport_no),
-    nationality: r.nationality || 'Pakistani',
-    gender: r.gender || 'Male',
-    dob: r.dob || '',
-    bloodGroup: r.blood_group || 'B+',
-    roleTitle: r.role_title,
-    department: r.department || 'Administration',
-    phone: dec(r.tenant_id || tid, r.phone),
-    emergencyContact: dec(r.tenant_id || tid, r.emergency_contact),
-    address: dec(r.tenant_id || tid, r.address),
-    shift: r.shift || 'Morning (07:30 AM - 03:00 PM)',
-    status: r.status || 'ACTIVE',
-    attendanceStatus: r.attendance_status || 'Absent',
-    faceEnrolled: r.face_enrolled === 1,
-    fingerprintEnrolled: r.fingerprint_enrolled === 1,
-    liteEnabled: r.lite_enabled !== 0
-  });
+  const mapStaffRow = (r, tid, nameMaps = null) => {
+    const branchId = r.branch_id || DEFAULT_BRANCH_ID;
+    const wingId = r.wing_id || DEFAULT_WING_ID;
+    return {
+      id: r.id,
+      tenantId: r.tenant_id || tid,
+      branchId,
+      branchName: nameMaps ? nameMaps.branchName(branchId) : undefined,
+      wingId,
+      wingName: nameMaps ? nameMaps.wingName(wingId) : undefined,
+      empCode: r.emp_code,
+      name: dec(r.tenant_id || tid, r.name),
+      fatherName: dec(r.tenant_id || tid, r.father_name),
+      cnic: dec(r.tenant_id || tid, r.cnic),
+      passportNo: dec(r.tenant_id || tid, r.passport_no),
+      nationality: r.nationality || 'Pakistani',
+      gender: r.gender || 'Male',
+      dob: r.dob || '',
+      bloodGroup: r.blood_group || 'B+',
+      roleTitle: r.role_title,
+      department: r.department || 'Administration',
+      phone: dec(r.tenant_id || tid, r.phone),
+      emergencyContact: dec(r.tenant_id || tid, r.emergency_contact),
+      address: dec(r.tenant_id || tid, r.address),
+      shift: r.shift || 'Morning (07:30 AM - 03:00 PM)',
+      status: r.status || 'ACTIVE',
+      attendanceStatus: r.attendance_status || 'Absent',
+      faceEnrolled: r.face_enrolled === 1,
+      fingerprintEnrolled: r.fingerprint_enrolled === 1,
+      liteEnabled: r.lite_enabled !== 0
+    };
+  };
 
   router.get('/staff', (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
+    const nameMaps = getBranchWingNameMaps(tid);
     let staff = [];
+    let totalTenantRows = 0;
     if (sqliteDb) {
       try {
-        const rows = sqliteDb.prepare('SELECT * FROM local_school_staff WHERE tenant_id = ? ORDER BY created_at DESC').all(tid);
-        staff = rows.map((r) => mapStaffRow(r, tid));
+        const cntRow = sqliteDb.prepare('SELECT COUNT(*) AS cnt FROM local_school_staff WHERE tenant_id = ?').get(tid);
+        totalTenantRows = Number(cntRow?.cnt || 0);
+        const scopeSql = buildScopeSql(scope);
+        const rows = sqliteDb.prepare(`SELECT * FROM local_school_staff WHERE tenant_id = ?${scopeSql.sql} ORDER BY created_at DESC`).all(tid, ...scopeSql.params);
+        staff = rows.map((r) => mapStaffRow(r, tid, nameMaps));
       } catch {}
     }
-    if (staff.length === 0 && tid === ROOT_TENANT_ID) {
-      staff = SCHOOL_STAFF.map((s) => ({ ...s, tenantId: tid }));
+    if (totalTenantRows === 0 && staff.length === 0 && tid === ROOT_TENANT_ID) {
+      staff = SCHOOL_STAFF
+        .map((s) => {
+          const branchId = s.branchId || DEFAULT_BRANCH_ID;
+          const wingId = s.wingId || DEFAULT_WING_ID;
+          return { ...s, tenantId: tid, branchId, branchName: nameMaps.branchName(branchId), wingId, wingName: nameMaps.wingName(wingId) };
+        })
+        .filter((s) => (!scope.branchFilter || s.branchId === scope.branchFilter) && (!scope.wingFilter || s.wingId === scope.wingFilter));
     }
     res.json({ ok: true, tenantId: tid, staff });
   });
 
   router.post('/staff', rejectRestrictedRole(['student', 'parent']), async (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
+    const nameMaps = getBranchWingNameMaps(tid);
     const b = req.body || {};
     const name = String(b.name || '').trim();
     const roleTitle = String(b.roleTitle || b.designation || '').trim();
     if (!name || !roleTitle) {
       return res.status(400).json({ ok: false, message: 'Staff name and roleTitle are required.' });
     }
+    const branchId = scope.writeBranchId;
+    const wingId = scope.writeWingId;
     const staffItem = {
       id: b.id || ('STF-' + Date.now() + '-' + Math.floor(10 + Math.random() * 90)),
       tenantId: tid,
+      branchId,
+      branchName: nameMaps.branchName(branchId),
+      wingId,
+      wingName: nameMaps.wingName(wingId),
       empCode: String(b.empCode || `STF-${new Date().getFullYear()}-${Date.now().toString().slice(-4)}`).trim(),
       name,
       fatherName: String(b.fatherName || '').trim(),
@@ -1838,10 +2639,10 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     if (sqliteDb) {
       sqliteDb.prepare(`
         INSERT OR REPLACE INTO local_school_staff
-        (id, tenant_id, emp_code, name, father_name, cnic, passport_no, nationality, gender, dob, blood_group, role_title, department, phone, emergency_contact, address, shift, status, attendance_status, face_enrolled, fingerprint_enrolled, lite_enabled, is_synced, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
+        (id, tenant_id, branch_id, wing_id, emp_code, name, father_name, cnic, passport_no, nationality, gender, dob, blood_group, role_title, department, phone, emergency_contact, address, shift, status, attendance_status, face_enrolled, fingerprint_enrolled, lite_enabled, is_synced, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
       `).run(
-        staffItem.id, tid, staffItem.empCode, enc(tid, staffItem.name), enc(tid, staffItem.fatherName),
+        staffItem.id, tid, staffItem.branchId, staffItem.wingId, staffItem.empCode, enc(tid, staffItem.name), enc(tid, staffItem.fatherName),
         enc(tid, staffItem.cnic), enc(tid, staffItem.passportNo), staffItem.nationality, staffItem.gender,
         staffItem.dob, staffItem.bloodGroup, staffItem.roleTitle, staffItem.department,
         enc(tid, staffItem.phone), enc(tid, staffItem.emergencyContact), enc(tid, staffItem.address),
@@ -1857,13 +2658,19 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
   router.put('/staff/:id', rejectRestrictedRole(['student', 'parent']), (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     const id = req.params.id;
     const b = req.body || {};
     if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
     const row = sqliteDb.prepare('SELECT * FROM local_school_staff WHERE id = ? AND tenant_id = ?').get(id, tid);
     if (!row) return res.status(404).json({ ok: false, message: 'Staff record not found for this tenant' });
+    const scopeErr = assertRecordScopeAllowed(scope, row);
+    if (scopeErr) return res.status(scopeErr.status).json({ ok: false, error: scopeErr.error, message: scopeErr.message });
     sqliteDb.prepare(`
       UPDATE local_school_staff SET
+        branch_id = COALESCE(?, branch_id),
+        wing_id = COALESCE(?, wing_id),
         name = COALESCE(?, name),
         father_name = COALESCE(?, father_name),
         cnic = COALESCE(?, cnic),
@@ -1884,6 +2691,8 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
         lite_enabled = COALESCE(?, lite_enabled)
       WHERE id = ? AND tenant_id = ?
     `).run(
+      normalizeScopeVal(b.branchId ?? b.branch_id) || null,
+      normalizeScopeVal(b.wingId ?? b.wing_id) || null,
       b.name ? enc(tid, b.name) : null,
       b.fatherName !== undefined ? enc(tid, b.fatherName) : null,
       b.cnic !== undefined ? enc(tid, b.cnic) : null,
@@ -1905,72 +2714,106 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       id, tid
     );
     const updated = sqliteDb.prepare('SELECT * FROM local_school_staff WHERE id = ? AND tenant_id = ?').get(id, tid);
-    res.json({ ok: true, staff: mapStaffRow(updated, tid) });
+    res.json({ ok: true, staff: mapStaffRow(updated, tid, getBranchWingNameMaps(tid)) });
   });
 
   router.delete('/staff/:id', rejectRestrictedRole(['student', 'parent', 'teacher', 'accountant']), (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     const id = req.params.id;
     if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
-    const row = sqliteDb.prepare('SELECT id FROM local_school_staff WHERE id = ? AND tenant_id = ?').get(id, tid);
+    const row = sqliteDb.prepare('SELECT id, branch_id, wing_id FROM local_school_staff WHERE id = ? AND tenant_id = ?').get(id, tid);
     if (!row) return res.status(404).json({ ok: false, message: 'Staff record not found for this tenant' });
+    const scopeErr = assertRecordScopeAllowed(scope, row);
+    if (scopeErr) return res.status(scopeErr.status).json({ ok: false, error: scopeErr.error, message: scopeErr.message });
     sqliteDb.prepare('DELETE FROM local_school_staff WHERE id = ? AND tenant_id = ?').run(id, tid);
     try { sqliteDb.prepare('DELETE FROM encrypted_domain_records WHERE tenant_id = ? AND domain_key = ? AND id LIKE ?').run(tid, 'school_business', `%:${id}`); } catch {}
     res.json({ ok: true, id });
   });
 
-  const mapPrincipalRow = (r, tid) => ({
-    id: r.id,
-    tenantId: r.tenant_id || tid,
-    empCode: r.emp_code,
-    name: dec(r.tenant_id || tid, r.name),
-    fatherName: dec(r.tenant_id || tid, r.father_name),
-    cnic: dec(r.tenant_id || tid, r.cnic),
-    passportNo: dec(r.tenant_id || tid, r.passport_no),
-    nationality: r.nationality || 'Pakistani',
-    gender: r.gender || 'Male',
-    dob: r.dob || '',
-    bloodGroup: r.blood_group || 'O+',
-    roleTitle: r.role_title,
-    department: r.department || 'Executive Directorate',
-    phone: dec(r.tenant_id || tid, r.phone),
-    emergencyContact: dec(r.tenant_id || tid, r.emergency_contact),
-    email: dec(r.tenant_id || tid, r.email),
-    address: dec(r.tenant_id || tid, r.address),
-    shift: r.shift || 'Full Day (07:30 AM - 04:00 PM)',
-    status: r.status || 'ACTIVE',
-    attendanceStatus: r.attendance_status || 'Absent',
-    faceEnrolled: r.face_enrolled === 1,
-    fingerprintEnrolled: r.fingerprint_enrolled === 1,
-    liteEnabled: r.lite_enabled !== 0
-  });
+  const mapPrincipalRow = (r, tid, nameMaps = null) => {
+    const branchId = r.branch_id || DEFAULT_BRANCH_ID;
+    const wingId = r.wing_id || DEFAULT_WING_ID;
+    return {
+      id: r.id,
+      tenantId: r.tenant_id || tid,
+      branchId,
+      branchName: nameMaps ? nameMaps.branchName(branchId) : undefined,
+      wingId,
+      wingName: nameMaps ? nameMaps.wingName(wingId) : undefined,
+      empCode: r.emp_code,
+      name: dec(r.tenant_id || tid, r.name),
+      fatherName: dec(r.tenant_id || tid, r.father_name),
+      cnic: dec(r.tenant_id || tid, r.cnic),
+      passportNo: dec(r.tenant_id || tid, r.passport_no),
+      nationality: r.nationality || 'Pakistani',
+      gender: r.gender || 'Male',
+      dob: r.dob || '',
+      bloodGroup: r.blood_group || 'O+',
+      roleTitle: r.role_title,
+      department: r.department || 'Executive Directorate',
+      phone: dec(r.tenant_id || tid, r.phone),
+      emergencyContact: dec(r.tenant_id || tid, r.emergency_contact),
+      email: dec(r.tenant_id || tid, r.email),
+      address: dec(r.tenant_id || tid, r.address),
+      shift: r.shift || 'Full Day (07:30 AM - 04:00 PM)',
+      status: r.status || 'ACTIVE',
+      attendanceStatus: r.attendance_status || 'Absent',
+      faceEnrolled: r.face_enrolled === 1,
+      fingerprintEnrolled: r.fingerprint_enrolled === 1,
+      liteEnabled: r.lite_enabled !== 0
+    };
+  };
 
   router.get('/principals', (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
+    const nameMaps = getBranchWingNameMaps(tid);
     let principals = [];
+    let totalTenantRows = 0;
     if (sqliteDb) {
       try {
-        const rows = sqliteDb.prepare('SELECT * FROM local_school_principals WHERE tenant_id = ? ORDER BY created_at DESC').all(tid);
-        principals = rows.map((r) => mapPrincipalRow(r, tid));
+        const cntRow = sqliteDb.prepare('SELECT COUNT(*) AS cnt FROM local_school_principals WHERE tenant_id = ?').get(tid);
+        totalTenantRows = Number(cntRow?.cnt || 0);
+        const scopeSql = buildScopeSql(scope);
+        const rows = sqliteDb.prepare(`SELECT * FROM local_school_principals WHERE tenant_id = ?${scopeSql.sql} ORDER BY created_at DESC`).all(tid, ...scopeSql.params);
+        principals = rows.map((r) => mapPrincipalRow(r, tid, nameMaps));
       } catch {}
     }
-    if (principals.length === 0 && tid === ROOT_TENANT_ID) {
-      principals = SCHOOL_PRINCIPALS.map((p) => ({ ...p, tenantId: tid }));
+    if (totalTenantRows === 0 && principals.length === 0 && tid === ROOT_TENANT_ID) {
+      principals = SCHOOL_PRINCIPALS
+        .map((p) => {
+          const branchId = p.branchId || DEFAULT_BRANCH_ID;
+          const wingId = p.wingId || DEFAULT_WING_ID;
+          return { ...p, tenantId: tid, branchId, branchName: nameMaps.branchName(branchId), wingId, wingName: nameMaps.wingName(wingId) };
+        })
+        .filter((p) => (!scope.branchFilter || p.branchId === scope.branchFilter) && (!scope.wingFilter || p.wingId === scope.wingFilter));
     }
     res.json({ ok: true, tenantId: tid, principals });
   });
 
   router.post('/principals', rejectRestrictedRole(['student', 'parent', 'teacher', 'accountant']), async (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
+    const nameMaps = getBranchWingNameMaps(tid);
     const b = req.body || {};
     const name = String(b.name || '').trim();
     const roleTitle = String(b.roleTitle || b.designation || 'Principal & Academic Director').trim();
     if (!name || !roleTitle) {
       return res.status(400).json({ ok: false, message: 'Principal name and roleTitle are required.' });
     }
+    const branchId = scope.writeBranchId;
+    const wingId = scope.writeWingId;
     const principalItem = {
       id: b.id || ('PRI-' + Date.now() + '-' + Math.floor(10 + Math.random() * 90)),
       tenantId: tid,
+      branchId,
+      branchName: nameMaps.branchName(branchId),
+      wingId,
+      wingName: nameMaps.wingName(wingId),
       empCode: String(b.empCode || `DIR-${new Date().getFullYear()}-${Date.now().toString().slice(-3)}`).trim(),
       name,
       fatherName: String(b.fatherName || '').trim(),
@@ -1996,10 +2839,10 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     if (sqliteDb) {
       sqliteDb.prepare(`
         INSERT OR REPLACE INTO local_school_principals
-        (id, tenant_id, emp_code, name, father_name, cnic, passport_no, nationality, gender, dob, blood_group, role_title, department, phone, emergency_contact, email, address, shift, status, attendance_status, face_enrolled, fingerprint_enrolled, lite_enabled, is_synced, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
+        (id, tenant_id, branch_id, wing_id, emp_code, name, father_name, cnic, passport_no, nationality, gender, dob, blood_group, role_title, department, phone, emergency_contact, email, address, shift, status, attendance_status, face_enrolled, fingerprint_enrolled, lite_enabled, is_synced, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
       `).run(
-        principalItem.id, tid, principalItem.empCode, enc(tid, principalItem.name), enc(tid, principalItem.fatherName),
+        principalItem.id, tid, principalItem.branchId, principalItem.wingId, principalItem.empCode, enc(tid, principalItem.name), enc(tid, principalItem.fatherName),
         enc(tid, principalItem.cnic), enc(tid, principalItem.passportNo), principalItem.nationality, principalItem.gender,
         principalItem.dob, principalItem.bloodGroup, principalItem.roleTitle, principalItem.department,
         enc(tid, principalItem.phone), enc(tid, principalItem.emergencyContact), enc(tid, principalItem.email),
@@ -2007,6 +2850,8 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
         principalItem.faceEnrolled ? 1 : 0, principalItem.fingerprintEnrolled ? 1 : 0, principalItem.liteEnabled ? 1 : 0, new Date().toISOString()
       );
       recordAudit(tid, {
+        branchId: principalItem.branchId,
+        wingId: principalItem.wingId,
         operatorName: String(req.headers['x-user-name'] || 'School Owner'),
         operatorRole: String(req.headers['x-user-role'] || 'School Owner'),
         actionType: 'Principal / Vice Principal Registered',
@@ -2021,6 +2866,8 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       setDoc(doc(db, 'school_principals', principalItem.id), {
         id: principalItem.id,
         tenant_id: tid,
+        branchId: principalItem.branchId,
+        wingId: principalItem.wingId,
         empCode: principalItem.empCode,
         name: enc(tid, principalItem.name),
         fatherName: enc(tid, principalItem.fatherName),
@@ -2054,13 +2901,19 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
   router.put('/principals/:id', rejectRestrictedRole(['student', 'parent', 'teacher', 'accountant']), (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     const id = req.params.id;
     const b = req.body || {};
     if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
     const row = sqliteDb.prepare('SELECT * FROM local_school_principals WHERE id = ? AND tenant_id = ?').get(id, tid);
     if (!row) return res.status(404).json({ ok: false, message: 'Principal record not found for this tenant' });
+    const scopeErr = assertRecordScopeAllowed(scope, row);
+    if (scopeErr) return res.status(scopeErr.status).json({ ok: false, error: scopeErr.error, message: scopeErr.message });
     sqliteDb.prepare(`
       UPDATE local_school_principals SET
+        branch_id = COALESCE(?, branch_id),
+        wing_id = COALESCE(?, wing_id),
         name = COALESCE(?, name),
         father_name = COALESCE(?, father_name),
         cnic = COALESCE(?, cnic),
@@ -2083,6 +2936,8 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
         is_synced = 0
       WHERE id = ? AND tenant_id = ?
     `).run(
+      normalizeScopeVal(b.branchId ?? b.branch_id) || null,
+      normalizeScopeVal(b.wingId ?? b.wing_id) || null,
       b.name ? enc(tid, b.name) : null,
       b.fatherName !== undefined ? enc(tid, b.fatherName) : null,
       b.cnic !== undefined ? enc(tid, b.cnic) : null,
@@ -2105,15 +2960,19 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       id, tid
     );
     const updated = sqliteDb.prepare('SELECT * FROM local_school_principals WHERE id = ? AND tenant_id = ?').get(id, tid);
-    res.json({ ok: true, principal: mapPrincipalRow(updated, tid) });
+    res.json({ ok: true, principal: mapPrincipalRow(updated, tid, getBranchWingNameMaps(tid)) });
   });
 
   router.delete('/principals/:id', rejectRestrictedRole(['student', 'parent', 'teacher', 'accountant', 'principal']), (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     const id = req.params.id;
     if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
-    const row = sqliteDb.prepare('SELECT id FROM local_school_principals WHERE id = ? AND tenant_id = ?').get(id, tid);
+    const row = sqliteDb.prepare('SELECT id, branch_id, wing_id FROM local_school_principals WHERE id = ? AND tenant_id = ?').get(id, tid);
     if (!row) return res.status(404).json({ ok: false, message: 'Principal record not found for this tenant' });
+    const scopeErr = assertRecordScopeAllowed(scope, row);
+    if (scopeErr) return res.status(scopeErr.status).json({ ok: false, error: scopeErr.error, message: scopeErr.message });
     sqliteDb.prepare('DELETE FROM local_school_principals WHERE id = ? AND tenant_id = ?').run(id, tid);
     try { sqliteDb.prepare('DELETE FROM encrypted_domain_records WHERE tenant_id = ? AND domain_key = ? AND id LIKE ?').run(tid, 'school_business', `%:${id}`); } catch {}
     res.json({ ok: true, id });
@@ -2237,16 +3096,21 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
   router.get('/attendance/face-profiles', async (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     const category = String(req.query?.category || '').trim().toLowerCase();
     let profiles = [];
     if (sqliteDb) {
       try {
+        const scopeSql = buildScopeSql(scope);
         const rows = category
-          ? sqliteDb.prepare('SELECT * FROM local_school_face_profiles WHERE tenant_id = ? AND member_category = ? ORDER BY updated_at DESC').all(tid, category)
-          : sqliteDb.prepare('SELECT * FROM local_school_face_profiles WHERE tenant_id = ? ORDER BY updated_at DESC').all(tid);
+          ? sqliteDb.prepare(`SELECT * FROM local_school_face_profiles WHERE tenant_id = ? AND member_category = ?${scopeSql.sql} ORDER BY updated_at DESC`).all(tid, category, ...scopeSql.params)
+          : sqliteDb.prepare(`SELECT * FROM local_school_face_profiles WHERE tenant_id = ?${scopeSql.sql} ORDER BY updated_at DESC`).all(tid, ...scopeSql.params);
         profiles = rows.map((r) => ({
           id: r.id,
           tenantId: r.tenant_id || tid,
+          branchId: r.branch_id || DEFAULT_BRANCH_ID,
+          wingId: r.wing_id || DEFAULT_WING_ID,
           memberId: r.member_id,
           memberCategory: r.member_category,
           memberName: dec(r.tenant_id || tid, r.member_name),
@@ -2270,9 +3134,12 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
           .filter((p) => (!p.tenant_id || p.tenant_id === tid) && (!category || p.memberCategory === category))
           .map((p) => ({
             ...p,
+            branchId: p.branchId || p.branch_id || DEFAULT_BRANCH_ID,
+            wingId: p.wingId || p.wing_id || DEFAULT_WING_ID,
             memberName: dec(p.tenant_id || tid, p.memberName || ''),
             isSynced: true
-          }));
+          }))
+          .filter((p) => (!scope.branchFilter || p.branchId === scope.branchFilter) && (!scope.wingFilter || p.wingId === scope.wingFilter));
       } catch {}
     }
     if (profiles.some((p) => isMaskedField(p.memberName))) {
@@ -2294,6 +3161,8 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
   router.post('/attendance/face-profiles', (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     const role = resolveUserRole(req);
     const b = req.body || {};
     const memberId = String(b.memberId || '').trim();
@@ -2320,6 +3189,8 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     const profile = {
       id,
       tenantId: tid,
+      branchId: scope.writeBranchId,
+      wingId: scope.writeWingId,
       memberId,
       memberCategory,
       memberName,
@@ -2338,10 +3209,10 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     if (sqliteDb) {
       sqliteDb.prepare(`
         INSERT OR REPLACE INTO local_school_face_profiles
-        (id, tenant_id, member_id, member_category, member_name, member_code, grade_or_dept, face_descriptor_json, face_photo_data, face_hash, quality_score, lite_enabled, enrolled_by, enrolled_at, is_synced, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
+        (id, tenant_id, branch_id, wing_id, member_id, member_category, member_name, member_code, grade_or_dept, face_descriptor_json, face_photo_data, face_hash, quality_score, lite_enabled, enrolled_by, enrolled_at, is_synced, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
       `).run(
-        profile.id, tid, profile.memberId, profile.memberCategory, enc(tid, profile.memberName),
+        profile.id, tid, profile.branchId, profile.wingId, profile.memberId, profile.memberCategory, enc(tid, profile.memberName),
         profile.memberCode, profile.gradeOrDept, JSON.stringify(profile.faceDescriptor), profile.facePhotoData,
         profile.faceHash, profile.qualityScore, profile.liteEnabled ? 1 : 0, profile.enrolledBy, profile.enrolledAt, new Date().toISOString()
       );
@@ -2359,6 +3230,8 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       setDoc(doc(db, 'school_face_profiles', id), {
         id: profile.id,
         tenant_id: tid,
+        branchId: profile.branchId,
+        wingId: profile.wingId,
         memberId: profile.memberId,
         memberCategory: profile.memberCategory,
         memberName: enc(tid, profile.memberName),
@@ -2386,11 +3259,15 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
   router.delete('/attendance/face-profiles/:id', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     const role = resolveUserRole(req);
     const id = req.params.id;
     if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
-    const row = sqliteDb.prepare('SELECT id, member_id, member_category FROM local_school_face_profiles WHERE id = ? AND tenant_id = ?').get(id, tid);
+    const row = sqliteDb.prepare('SELECT id, branch_id, wing_id, member_id, member_category FROM local_school_face_profiles WHERE id = ? AND tenant_id = ?').get(id, tid);
     if (!row) return res.status(404).json({ ok: false, message: 'Face profile not found for this tenant' });
+    const scopeErr = assertRecordScopeAllowed(scope, row);
+    if (scopeErr) return res.status(scopeErr.status).json({ ok: false, error: scopeErr.error, message: scopeErr.message });
     const policy = loadTenantAttendancePolicy(tid);
     const permCheck = canRolePerformAttendanceAction(policy, role, String(row.member_category || 'student').toLowerCase(), 'enroll');
     if (!permCheck.allowed) {
@@ -2415,16 +3292,21 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
   // -------------------------------------------------------------------------
   router.get('/attendance/fingerprint-profiles', async (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     const category = String(req.query?.category || '').trim().toLowerCase();
     let profiles = [];
     if (sqliteDb) {
       try {
+        const scopeSql = buildScopeSql(scope);
         const rows = category
-          ? sqliteDb.prepare('SELECT * FROM local_school_fingerprint_profiles WHERE tenant_id = ? AND member_category = ? ORDER BY updated_at DESC').all(tid, category)
-          : sqliteDb.prepare('SELECT * FROM local_school_fingerprint_profiles WHERE tenant_id = ? ORDER BY updated_at DESC').all(tid);
+          ? sqliteDb.prepare(`SELECT * FROM local_school_fingerprint_profiles WHERE tenant_id = ? AND member_category = ?${scopeSql.sql} ORDER BY updated_at DESC`).all(tid, category, ...scopeSql.params)
+          : sqliteDb.prepare(`SELECT * FROM local_school_fingerprint_profiles WHERE tenant_id = ?${scopeSql.sql} ORDER BY updated_at DESC`).all(tid, ...scopeSql.params);
         profiles = rows.map((r) => ({
           id: r.id,
           tenantId: r.tenant_id || tid,
+          branchId: r.branch_id || DEFAULT_BRANCH_ID,
+          wingId: r.wing_id || DEFAULT_WING_ID,
           memberId: r.member_id,
           memberCategory: r.member_category,
           memberName: dec(r.tenant_id || tid, r.member_name),
@@ -2452,9 +3334,12 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
           .filter((p) => (!p.tenant_id || p.tenant_id === tid) && (!category || p.memberCategory === category))
           .map((p) => ({
             ...p,
+            branchId: p.branchId || p.branch_id || DEFAULT_BRANCH_ID,
+            wingId: p.wingId || p.wing_id || DEFAULT_WING_ID,
             memberName: dec(p.tenant_id || tid, p.memberName || ''),
             isSynced: true
-          }));
+          }))
+          .filter((p) => (!scope.branchFilter || p.branchId === scope.branchFilter) && (!scope.wingFilter || p.wingId === scope.wingFilter));
       } catch {}
     }
     if (profiles.some((p) => isMaskedField(p.memberName))) {
@@ -2476,6 +3361,8 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
   router.post('/attendance/fingerprint-profiles', (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     const role = resolveUserRole(req);
     const b = req.body || {};
     const memberId = String(b.memberId || '').trim();
@@ -2507,6 +3394,8 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     const profile = {
       id,
       tenantId: tid,
+      branchId: scope.writeBranchId,
+      wingId: scope.writeWingId,
       memberId,
       memberCategory,
       memberName,
@@ -2529,10 +3418,10 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     if (sqliteDb) {
       sqliteDb.prepare(`
         INSERT OR REPLACE INTO local_school_fingerprint_profiles
-        (id, tenant_id, member_id, member_category, member_name, member_code, grade_or_dept, finger_label, scanner_type, credential_id, public_key_spki, fingerprint_descriptor_json, fingerprint_preview_data, fingerprint_hash, quality_score, lite_enabled, enrolled_by, enrolled_at, is_synced, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
+        (id, tenant_id, branch_id, wing_id, member_id, member_category, member_name, member_code, grade_or_dept, finger_label, scanner_type, credential_id, public_key_spki, fingerprint_descriptor_json, fingerprint_preview_data, fingerprint_hash, quality_score, lite_enabled, enrolled_by, enrolled_at, is_synced, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
       `).run(
-        profile.id, tid, profile.memberId, profile.memberCategory, enc(tid, profile.memberName),
+        profile.id, tid, profile.branchId, profile.wingId, profile.memberId, profile.memberCategory, enc(tid, profile.memberName),
         profile.memberCode, profile.gradeOrDept, profile.fingerLabel, profile.scannerType,
         profile.credentialId, profile.publicKeySpki, JSON.stringify(profile.fingerprintDescriptor),
         profile.fingerprintPreviewData, profile.fingerprintHash, profile.qualityScore,
@@ -2552,6 +3441,8 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       setDoc(doc(db, 'school_fingerprint_profiles', id), {
         id: profile.id,
         tenant_id: tid,
+        branchId: profile.branchId,
+        wingId: profile.wingId,
         memberId: profile.memberId,
         memberCategory: profile.memberCategory,
         memberName: enc(tid, profile.memberName),
@@ -2583,11 +3474,15 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
   router.delete('/attendance/fingerprint-profiles/:id', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     const role = resolveUserRole(req);
     const id = req.params.id;
     if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
-    const row = sqliteDb.prepare('SELECT id, member_id, member_category FROM local_school_fingerprint_profiles WHERE id = ? AND tenant_id = ?').get(id, tid);
+    const row = sqliteDb.prepare('SELECT id, branch_id, wing_id, member_id, member_category FROM local_school_fingerprint_profiles WHERE id = ? AND tenant_id = ?').get(id, tid);
     if (!row) return res.status(404).json({ ok: false, message: 'Fingerprint profile not found for this tenant' });
+    const scopeErr = assertRecordScopeAllowed(scope, row);
+    if (scopeErr) return res.status(scopeErr.status).json({ ok: false, error: scopeErr.error, message: scopeErr.message });
     const policy = loadTenantAttendancePolicy(tid);
     const permCheck = canRolePerformAttendanceAction(policy, role, String(row.member_category || 'student').toLowerCase(), 'enroll');
     if (!permCheck.allowed) {
@@ -2649,14 +3544,17 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
   router.get('/attendance', async (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     const categoryFilter = String(req.query?.category || '').trim().toLowerCase();
     const policy = loadTenantAttendancePolicy(tid);
     let list = [];
     if (sqliteDb) {
       try {
+        const scopeSql = buildScopeSql(scope);
         const rows = categoryFilter
-          ? sqliteDb.prepare('SELECT * FROM local_school_attendance WHERE tenant_id = ? AND member_category = ? ORDER BY created_at DESC LIMIT 300').all(tid, categoryFilter)
-          : sqliteDb.prepare('SELECT * FROM local_school_attendance WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 300').all(tid);
+          ? sqliteDb.prepare(`SELECT * FROM local_school_attendance WHERE tenant_id = ? AND member_category = ?${scopeSql.sql} ORDER BY created_at DESC LIMIT 300`).all(tid, categoryFilter, ...scopeSql.params)
+          : sqliteDb.prepare(`SELECT * FROM local_school_attendance WHERE tenant_id = ?${scopeSql.sql} ORDER BY created_at DESC LIMIT 300`).all(tid, ...scopeSql.params);
         list = rows.map((r) => {
           const tsRaw = r.created_at ? new Date(r.created_at) : null;
           const derivedTime = tsRaw && !Number.isNaN(tsRaw.getTime())
@@ -2671,6 +3569,8 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
           return {
             id: r.id,
             tenantId: r.tenant_id || tid,
+            branchId: r.branch_id || DEFAULT_BRANCH_ID,
+            wingId: r.wing_id || DEFAULT_WING_ID,
             studentId: r.student_id,
             rollNo: r.roll_no,
             studentName: dec(r.tenant_id || tid, r.student_name),
@@ -2703,10 +3603,13 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
           .filter((r) => (!r.tenant_id || r.tenant_id === tid) && (!categoryFilter || String(r.memberCategory || 'student').toLowerCase() === categoryFilter))
           .map((r) => ({
             ...r,
+            branchId: r.branchId || r.branch_id || DEFAULT_BRANCH_ID,
+            wingId: r.wingId || r.wing_id || DEFAULT_WING_ID,
             studentName: dec(r.tenant_id || tid, r.studentName || ''),
             memberCategory: r.memberCategory || 'student',
             isSynced: true
-          }));
+          }))
+          .filter((r) => (!scope.branchFilter || r.branchId === scope.branchFilter) && (!scope.wingFilter || r.wingId === scope.wingFilter));
       } catch {}
     }
     if (list.some((r) => isMaskedField(r.studentName))) {
@@ -2722,6 +3625,8 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
   router.post('/attendance', async (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     const role = resolveUserRole(req);
     const body = req.body || {};
     const memberCategory = String(body.memberCategory || 'student').trim().toLowerCase();
@@ -2759,6 +3664,8 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     if (!studentName) {
       return res.status(400).json({ ok: false, message: 'studentName is required to log attendance.' });
     }
+    const branchId = scope.writeBranchId;
+    const wingId = scope.writeWingId;
     const grade = String(body.grade || body.gradeOrDept || 'Grade 10');
     const status = String(body.status || 'PRESENT').toUpperCase();
     const date = String(body.date || new Date().toISOString().split('T')[0]);
@@ -2785,10 +3692,10 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     if (sqliteDb) {
       sqliteDb.prepare(`
         INSERT OR REPLACE INTO local_school_attendance
-        (id, tenant_id, student_id, roll_no, student_name, grade, member_category, status, date, check_in_time, scheduled_start_time, late_minutes, late_by_label, punch_type, gate_name, verification_mode, confidence_score, verified_by, marked_by_role, remarks, is_synced)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+        (id, tenant_id, branch_id, wing_id, student_id, roll_no, student_name, grade, member_category, status, date, check_in_time, scheduled_start_time, late_minutes, late_by_label, punch_type, gate_name, verification_mode, confidence_score, verified_by, marked_by_role, remarks, is_synced)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
       `).run(
-        recId, tid, studentId, rollNo, enc(tid, studentName), grade, memberCategory, status, date,
+        recId, tid, branchId, wingId, studentId, rollNo, enc(tid, studentName), grade, memberCategory, status, date,
         checkInTime, scheduledStartTime, Number.isFinite(lateMinutes) ? lateMinutes : 0, lateByLabel,
         punchType, gateName, mode, confidenceScore, verifiedBy, markedByRole, remarks
       );
@@ -2808,6 +3715,8 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     const record = {
       id: recId,
       tenantId: tid,
+      branchId,
+      wingId,
       studentId,
       rollNo,
       studentName,
@@ -2850,22 +3759,25 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
   router.post('/attendance/mark-all', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     const date = String(req.body?.date || new Date().toISOString().split('T')[0]);
     const gradeFilter = String(req.body?.grade || '').trim();
     const category = String(req.body?.memberCategory || 'student').trim().toLowerCase();
     let marked = 0;
     if (sqliteDb) {
-      const rows = sqliteDb.prepare('SELECT * FROM local_school_students WHERE tenant_id = ?').all(tid);
+      const scopeSql = buildScopeSql(scope);
+      const rows = sqliteDb.prepare(`SELECT * FROM local_school_students WHERE tenant_id = ?${scopeSql.sql}`).all(tid, ...scopeSql.params);
       const insertStmt = sqliteDb.prepare(`
         INSERT OR REPLACE INTO local_school_attendance
-        (id, tenant_id, student_id, roll_no, student_name, grade, member_category, status, date, gate_name, verification_mode, confidence_score, verified_by, marked_by_role, is_synced)
-        VALUES (?, ?, ?, ?, ?, ?, ?, 'PRESENT', ?, 'Bulk Roster Sync', 'manual_bulk', 100, 'Owner Bulk Policy', ?, 0)
+        (id, tenant_id, branch_id, wing_id, student_id, roll_no, student_name, grade, member_category, status, date, gate_name, verification_mode, confidence_score, verified_by, marked_by_role, is_synced)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'PRESENT', ?, 'Bulk Roster Sync', 'manual_bulk', 100, 'Owner Bulk Policy', ?, 0)
       `);
       const actorRole = resolveUserRole(req) || 'owner';
       for (const r of rows) {
         if (String(r.status || '').includes('ALUMNI')) continue;
         if (gradeFilter && r.grade !== gradeFilter) continue;
-        insertStmt.run(`att-${tid}-${r.id}-${date}`, tid, r.id, r.roll_no, r.full_name, r.grade, category, date, actorRole);
+        insertStmt.run(`att-${tid}-${r.id}-${date}`, tid, r.branch_id || scope.writeBranchId, r.wing_id || scope.writeWingId, r.id, r.roll_no, r.full_name, r.grade, category, date, actorRole);
         marked++;
       }
     }
@@ -2885,13 +3797,18 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
   // =========================================================================
   router.get('/exams', (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     let list = [];
     if (sqliteDb) {
       try {
-        const rows = sqliteDb.prepare('SELECT * FROM local_school_exams WHERE tenant_id = ? ORDER BY created_at DESC').all(tid);
+        const scopeSql = buildScopeSql(scope);
+        const rows = sqliteDb.prepare(`SELECT * FROM local_school_exams WHERE tenant_id = ?${scopeSql.sql} ORDER BY created_at DESC`).all(tid, ...scopeSql.params);
         list = rows.map((r) => ({
           id: r.id,
           tenantId: r.tenant_id || tid,
+          branchId: r.branch_id || DEFAULT_BRANCH_ID,
+          wingId: r.wing_id || DEFAULT_WING_ID,
           examCode: r.exam_code,
           title: r.title,
           grade: r.grade,
@@ -2908,6 +3825,8 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
   router.post('/exams', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     const b = req.body || {};
     const totalMarks = Number(b.totalMarks ?? 100);
     const passingMarks = Number(b.passingMarks ?? 40);
@@ -2920,30 +3839,37 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     const grade = String(b.grade || 'Grade 10');
     const subject = String(b.subject || 'General Science');
     const examDate = String(b.examDate || new Date().toISOString().split('T')[0]);
+    const branchId = scope.writeBranchId;
+    const wingId = scope.writeWingId;
 
     if (sqliteDb) {
       sqliteDb.prepare(`
-        INSERT OR REPLACE INTO local_school_exams (id, tenant_id, exam_code, title, grade, subject, total_marks, passing_marks, exam_date, is_synced)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
-      `).run(examId, tid, examCode, title, grade, subject, totalMarks, passingMarks, examDate);
+        INSERT OR REPLACE INTO local_school_exams (id, tenant_id, branch_id, wing_id, exam_code, title, grade, subject, total_marks, passing_marks, exam_date, is_synced)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+      `).run(examId, tid, branchId, wingId, examCode, title, grade, subject, totalMarks, passingMarks, examDate);
     }
 
     res.status(201).json({
       ok: true,
       message: `Exam schedule ${title} created for ${grade}`,
-      exam: { id: examId, tenantId: tid, examCode, title, grade, subject, totalMarks, passingMarks, examDate }
+      exam: { id: examId, tenantId: tid, branchId, wingId, examCode, title, grade, subject, totalMarks, passingMarks, examDate }
     });
   });
 
   router.get('/results', (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     let list = [];
     if (sqliteDb) {
       try {
-        const rows = sqliteDb.prepare('SELECT * FROM local_school_results WHERE tenant_id = ? ORDER BY created_at DESC').all(tid);
+        const scopeSql = buildScopeSql(scope);
+        const rows = sqliteDb.prepare(`SELECT * FROM local_school_results WHERE tenant_id = ?${scopeSql.sql} ORDER BY created_at DESC`).all(tid, ...scopeSql.params);
         list = rows.map((r) => ({
           id: r.id,
           tenantId: r.tenant_id || tid,
+          branchId: r.branch_id || DEFAULT_BRANCH_ID,
+          wingId: r.wing_id || DEFAULT_WING_ID,
           examId: r.exam_id,
           studentId: r.student_id,
           rollNo: r.roll_no,
@@ -2964,6 +3890,8 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
   router.post('/results', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     const b = req.body || {};
     const marksObtained = Number(b.marksObtained);
     const totalMarks = Number(b.totalMarks ?? 100);
@@ -2980,19 +3908,21 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     const percentage = Math.round((marksObtained / totalMarks) * 100);
     const gradeLetter = percentage >= 90 ? 'A+' : percentage >= 80 ? 'A' : percentage >= 70 ? 'B' : percentage >= 60 ? 'C' : percentage >= 40 ? 'D' : 'F';
     const remarks = String(b.remarks || (percentage >= 80 ? 'Exemplary Result' : percentage >= 50 ? 'Satisfactory Performance' : 'Requires Extra Coaching'));
+    const branchId = scope.writeBranchId;
+    const wingId = scope.writeWingId;
 
     if (sqliteDb) {
       sqliteDb.prepare(`
         INSERT OR REPLACE INTO local_school_results
-        (id, tenant_id, exam_id, student_id, roll_no, student_name, grade, subject, marks_obtained, total_marks, percentage, grade_letter, remarks, is_synced)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
-      `).run(resId, tid, examId, studentId, rollNo, enc(tid, studentName), grade, subject, marksObtained, totalMarks, percentage, gradeLetter, remarks);
+        (id, tenant_id, branch_id, wing_id, exam_id, student_id, roll_no, student_name, grade, subject, marks_obtained, total_marks, percentage, grade_letter, remarks, is_synced)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+      `).run(resId, tid, branchId, wingId, examId, studentId, rollNo, enc(tid, studentName), grade, subject, marksObtained, totalMarks, percentage, gradeLetter, remarks);
     }
 
     res.status(201).json({
       ok: true,
       message: `Result & Report Card generated for ${studentName} (${rollNo}): ${gradeLetter} (${percentage}%)`,
-      result: { id: resId, tenantId: tid, examId, studentId, rollNo, studentName, grade, subject, marksObtained, totalMarks, percentage, gradeLetter, remarks }
+      result: { id: resId, tenantId: tid, branchId, wingId, examId, studentId, rollNo, studentName, grade, subject, marksObtained, totalMarks, percentage, gradeLetter, remarks }
     });
   });
 
@@ -3053,11 +3983,16 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
   // =========================================================================
   router.get('/homework', (req, res) => {
     const tid = resolveTenantId(req);
-    const rows = sqliteDb ? sqliteDb.prepare('SELECT * FROM local_school_homework WHERE tenant_id = ? ORDER BY created_at DESC').all(tid) : [];
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
+    const scopeSql = buildScopeSql(scope);
+    const rows = sqliteDb
+      ? sqliteDb.prepare(`SELECT * FROM local_school_homework WHERE tenant_id = ?${scopeSql.sql} ORDER BY created_at DESC`).all(tid, ...scopeSql.params)
+      : [];
     const countMap = new Map();
     if (sqliteDb) {
       try {
-        const subCounts = sqliteDb.prepare('SELECT homework_id, COUNT(*) AS cnt FROM local_school_homework_submissions WHERE tenant_id = ? GROUP BY homework_id').all(tid);
+        const subCounts = sqliteDb.prepare(`SELECT homework_id, COUNT(*) AS cnt FROM local_school_homework_submissions WHERE tenant_id = ?${scopeSql.sql} GROUP BY homework_id`).all(tid, ...scopeSql.params);
         for (const sc of subCounts) countMap.set(sc.homework_id, Number(sc.cnt || 0));
       } catch {}
     }
@@ -3065,6 +4000,8 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       ok: true,
       homework: rows.map((r) => ({
         id: r.id,
+        branchId: r.branch_id || DEFAULT_BRANCH_ID,
+        wingId: r.wing_id || DEFAULT_WING_ID,
         title: r.title,
         subject: r.subject,
         grade: r.grade,
@@ -3094,6 +4031,8 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
   router.post('/homework', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     const h = req.body || {};
     if (!String(h.title || '').trim() || !String(h.subject || '').trim() || !String(h.description || '').trim()) {
       return res.status(400).json({ ok: false, message: 'Homework title, subject, and description are required.' });
@@ -3116,6 +4055,8 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
     const item = {
       id: h.id || ('HW-' + Date.now()),
+      branchId: scope.writeBranchId,
+      wingId: scope.writeWingId,
       title: String(h.title).trim(),
       subject: String(h.subject).trim(),
       grade: String(h.grade || 'Class 10-A').trim(),
@@ -3143,10 +4084,10 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     if (sqliteDb) {
       sqliteDb.prepare(`
         INSERT OR REPLACE INTO local_school_homework
-        (id, tenant_id, title, subject, grade, section, chapter_topic, assigned_date, due_date, due_time, submission_mode, priority, estimated_minutes, external_link, description, teacher_name, teacher_id, attachment_name, attachment_type, attachment_data, resource_kind, max_marks, status, submissions_count, total_count)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (id, tenant_id, branch_id, wing_id, title, subject, grade, section, chapter_topic, assigned_date, due_date, due_time, submission_mode, priority, estimated_minutes, external_link, description, teacher_name, teacher_id, attachment_name, attachment_type, attachment_data, resource_kind, max_marks, status, submissions_count, total_count)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
-        item.id, tid, item.title, item.subject, item.grade, item.section, item.chapterTopic,
+        item.id, tid, item.branchId, item.wingId, item.title, item.subject, item.grade, item.section, item.chapterTopic,
         item.assignedDate, item.dueDate, item.dueTime, item.submissionMode, item.priority, item.estimatedMinutes, item.externalLink,
         item.description, item.teacherName, item.teacherId,
         item.attachmentName, item.attachmentType, item.attachmentData,
@@ -3159,9 +4100,13 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
   router.put('/homework/:id', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     if (!sqliteDb) return res.status(503).json({ ok: false });
     const existing = sqliteDb.prepare('SELECT * FROM local_school_homework WHERE id = ? AND tenant_id = ?').get(req.params.id, tid);
     if (!existing) return res.status(404).json({ ok: false, message: 'Homework not found' });
+    const scopeErr = assertRecordScopeAllowed(scope, existing);
+    if (scopeErr) return res.status(scopeErr.status).json({ ok: false, error: scopeErr.error, message: scopeErr.message });
 
     const h = req.body || {};
     const att = (h.attachmentData !== undefined || h.attachmentName !== undefined)
@@ -3178,8 +4123,12 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
     const estMinsRaw = Number(h.estimatedMinutes ?? existing.estimated_minutes ?? 30);
     const estimatedMinutes = Number.isFinite(estMinsRaw) && estMinsRaw >= 5 && estMinsRaw <= 600 ? Math.round(estMinsRaw) : 30;
+    const nextBranchId = normalizeScopeVal(h.branchId ?? h.branch_id) ? scope.writeBranchId : (existing.branch_id || DEFAULT_BRANCH_ID);
+    const nextWingId = normalizeScopeVal(h.wingId ?? h.wing_id) ? scope.writeWingId : (existing.wing_id || DEFAULT_WING_ID);
 
     const next = {
+      branchId: nextBranchId,
+      wingId: nextWingId,
       title: String(h.title ?? existing.title).trim(),
       subject: String(h.subject ?? existing.subject).trim(),
       grade: String(h.grade ?? existing.grade).trim(),
@@ -3204,10 +4153,10 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
     sqliteDb.prepare(`
       UPDATE local_school_homework
-      SET title = ?, subject = ?, grade = ?, section = ?, chapter_topic = ?, assigned_date = ?, due_date = ?, due_time = ?, submission_mode = ?, priority = ?, estimated_minutes = ?, external_link = ?, description = ?, teacher_name = ?, resource_kind = ?, max_marks = ?, status = ?, attachment_name = ?, attachment_type = ?, attachment_data = ?
+      SET branch_id = ?, wing_id = ?, title = ?, subject = ?, grade = ?, section = ?, chapter_topic = ?, assigned_date = ?, due_date = ?, due_time = ?, submission_mode = ?, priority = ?, estimated_minutes = ?, external_link = ?, description = ?, teacher_name = ?, resource_kind = ?, max_marks = ?, status = ?, attachment_name = ?, attachment_type = ?, attachment_data = ?
       WHERE id = ? AND tenant_id = ?
     `).run(
-      next.title, next.subject, next.grade, next.section, next.chapterTopic,
+      next.branchId, next.wingId, next.title, next.subject, next.grade, next.section, next.chapterTopic,
       next.assignedDate, next.dueDate, next.dueTime, next.submissionMode, next.priority, next.estimatedMinutes, next.externalLink,
       next.description, next.teacherName,
       next.resourceKind, next.maxMarks, next.status,
@@ -3219,7 +4168,14 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
   router.delete('/homework/:id', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     if (!sqliteDb) return res.status(503).json({ ok: false });
+    const existing = sqliteDb.prepare('SELECT id, branch_id, wing_id FROM local_school_homework WHERE id = ? AND tenant_id = ?').get(req.params.id, tid);
+    if (existing) {
+      const scopeErr = assertRecordScopeAllowed(scope, existing);
+      if (scopeErr) return res.status(scopeErr.status).json({ ok: false, error: scopeErr.error, message: scopeErr.message });
+    }
     sqliteDb.prepare('DELETE FROM local_school_homework_submissions WHERE homework_id = ? AND tenant_id = ?').run(req.params.id, tid);
     sqliteDb.prepare('DELETE FROM local_school_homework WHERE id = ? AND tenant_id = ?').run(req.params.id, tid);
     res.json({ ok: true, id: req.params.id });
@@ -3228,6 +4184,8 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
   // Two-Way Homework Submissions (Student Submit + Teacher Review/Grading)
   const mapSubmissionRow = (r, tid) => ({
     id: r.id,
+    branchId: r.branch_id || DEFAULT_BRANCH_ID,
+    wingId: r.wing_id || DEFAULT_WING_ID,
     homeworkId: r.homework_id,
     studentId: r.student_id,
     rollNo: r.roll_no || '',
@@ -3249,30 +4207,38 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
   router.get('/homework-submissions', (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     if (!sqliteDb) return res.json({ ok: true, submissions: [] });
+    const scopeSql = buildScopeSql(scope);
     const hwId = String(req.query?.homeworkId || '').trim();
     const stuId = String(req.query?.studentId || '').trim();
     let rows = [];
     if (hwId) {
-      rows = sqliteDb.prepare('SELECT * FROM local_school_homework_submissions WHERE tenant_id = ? AND homework_id = ? ORDER BY created_at DESC').all(tid, hwId);
+      rows = sqliteDb.prepare(`SELECT * FROM local_school_homework_submissions WHERE tenant_id = ? AND homework_id = ?${scopeSql.sql} ORDER BY created_at DESC`).all(tid, hwId, ...scopeSql.params);
     } else if (stuId) {
-      rows = sqliteDb.prepare('SELECT * FROM local_school_homework_submissions WHERE tenant_id = ? AND student_id = ? ORDER BY created_at DESC').all(tid, stuId);
+      rows = sqliteDb.prepare(`SELECT * FROM local_school_homework_submissions WHERE tenant_id = ? AND student_id = ?${scopeSql.sql} ORDER BY created_at DESC`).all(tid, stuId, ...scopeSql.params);
     } else {
-      rows = sqliteDb.prepare('SELECT * FROM local_school_homework_submissions WHERE tenant_id = ? ORDER BY created_at DESC').all(tid);
+      rows = sqliteDb.prepare(`SELECT * FROM local_school_homework_submissions WHERE tenant_id = ?${scopeSql.sql} ORDER BY created_at DESC`).all(tid, ...scopeSql.params);
     }
     res.json({ ok: true, submissions: rows.map((r) => mapSubmissionRow(r, tid)) });
   });
 
   router.get('/homework/:id/submissions', (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
+    const scopeSql = buildScopeSql(scope);
     const rows = sqliteDb
-      ? sqliteDb.prepare('SELECT * FROM local_school_homework_submissions WHERE tenant_id = ? AND homework_id = ? ORDER BY created_at DESC').all(tid, req.params.id)
+      ? sqliteDb.prepare(`SELECT * FROM local_school_homework_submissions WHERE tenant_id = ? AND homework_id = ?${scopeSql.sql} ORDER BY created_at DESC`).all(tid, req.params.id, ...scopeSql.params)
       : [];
     res.json({ ok: true, submissions: rows.map((r) => mapSubmissionRow(r, tid)) });
   });
 
   router.post('/homework/:id/submit', rejectRestrictedRole(['accountant']), (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     const homeworkId = String(req.params.id || '').trim();
     const b = req.body || {};
     const studentId = String(b.studentId || '').trim();
@@ -3291,6 +4257,12 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       return res.status(400).json({ ok: false, message: 'External link must start with https:// or http://' });
     }
 
+    const hwRow = sqliteDb ? sqliteDb.prepare('SELECT max_marks, branch_id, wing_id FROM local_school_homework WHERE id = ? AND tenant_id = ?').get(homeworkId, tid) : null;
+    if (hwRow) {
+      const scopeErr = assertRecordScopeAllowed(scope, hwRow);
+      if (scopeErr) return res.status(scopeErr.status).json({ ok: false, error: scopeErr.error, message: scopeErr.message });
+    }
+
     let existingSub = null;
     if (sqliteDb) {
       existingSub = sqliteDb.prepare(
@@ -3300,11 +4272,14 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
     const subId = existingSub?.id || b.id || ('HSUB-' + Date.now() + '-' + Math.floor(10 + Math.random() * 90));
     const submittedAt = new Date().toISOString();
-    const hwRow = sqliteDb ? sqliteDb.prepare('SELECT max_marks FROM local_school_homework WHERE id = ? AND tenant_id = ?').get(homeworkId, tid) : null;
     const maxMarks = Number(b.maxMarks ?? hwRow?.max_marks ?? 10);
+    const branchId = hwRow?.branch_id || scope.writeBranchId;
+    const wingId = hwRow?.wing_id || scope.writeWingId;
 
     const submission = {
       id: subId,
+      branchId,
+      wingId,
       homeworkId,
       studentId,
       rollNo: String(b.rollNo || '').trim(),
@@ -3327,10 +4302,10 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     if (sqliteDb) {
       sqliteDb.prepare(`
         INSERT OR REPLACE INTO local_school_homework_submissions
-        (id, tenant_id, homework_id, student_id, roll_no, student_name, grade, answer_text, attachment_name, attachment_type, attachment_data, external_link, status, marks_obtained, max_marks, teacher_remarks, reviewed_by, reviewed_at, submitted_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Submitted', NULL, ?, '', '', '', ?)
+        (id, tenant_id, branch_id, wing_id, homework_id, student_id, roll_no, student_name, grade, answer_text, attachment_name, attachment_type, attachment_data, external_link, status, marks_obtained, max_marks, teacher_remarks, reviewed_by, reviewed_at, submitted_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Submitted', NULL, ?, '', '', '', ?)
       `).run(
-        submission.id, tid, homeworkId, studentId, submission.rollNo, enc(tid, studentName),
+        submission.id, tid, branchId, wingId, homeworkId, studentId, submission.rollNo, enc(tid, studentName),
         submission.grade, submission.answerText, submission.attachmentName, submission.attachmentType,
         submission.attachmentData, submission.externalLink, maxMarks, submittedAt
       );
@@ -3346,9 +4321,13 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
   router.put('/homework/submissions/:subId/review', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     if (!sqliteDb) return res.status(503).json({ ok: false });
     const existing = sqliteDb.prepare('SELECT * FROM local_school_homework_submissions WHERE id = ? AND tenant_id = ?').get(req.params.subId, tid);
     if (!existing) return res.status(404).json({ ok: false, message: 'Submission record not found' });
+    const scopeErr = assertRecordScopeAllowed(scope, existing);
+    if (scopeErr) return res.status(scopeErr.status).json({ ok: false, error: scopeErr.error, message: scopeErr.message });
 
     const b = req.body || {};
     const status = ['Checked', 'Approved', 'Needs Revision', 'Submitted'].includes(String(b.status))
@@ -3389,13 +4368,18 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
   // Teacher Uploaded Study Notes, Worksheets & Past Papers
   router.get('/study-materials', (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
+    const scopeSql = buildScopeSql(scope);
     const rows = sqliteDb
-      ? sqliteDb.prepare('SELECT * FROM local_school_study_materials WHERE tenant_id = ? ORDER BY created_at DESC').all(tid)
+      ? sqliteDb.prepare(`SELECT * FROM local_school_study_materials WHERE tenant_id = ?${scopeSql.sql} ORDER BY created_at DESC`).all(tid, ...scopeSql.params)
       : [];
     res.json({
       ok: true,
       materials: rows.map((r) => ({
         id: r.id,
+        branchId: r.branch_id || DEFAULT_BRANCH_ID,
+        wingId: r.wing_id || DEFAULT_WING_ID,
         title: r.title,
         subject: r.subject,
         grade: r.grade,
@@ -3416,6 +4400,8 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
   router.post('/study-materials', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     const m = req.body || {};
     if (!String(m.title || '').trim() || !String(m.subject || '').trim()) {
       return res.status(400).json({ ok: false, message: 'Material title and subject are required.' });
@@ -3428,6 +4414,8 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     }
     const item = {
       id: m.id || ('MAT-' + Date.now()),
+      branchId: scope.writeBranchId,
+      wingId: scope.writeWingId,
       title: String(m.title).trim(),
       subject: String(m.subject).trim(),
       grade: String(m.grade || 'Class 10-A').trim(),
@@ -3446,10 +4434,10 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     if (sqliteDb) {
       sqliteDb.prepare(`
         INSERT OR REPLACE INTO local_school_study_materials
-        (id, tenant_id, title, subject, grade, material_type, description, attachment_name, attachment_type, attachment_data, external_url, file_size, uploaded_by, teacher_id, downloads_count)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (id, tenant_id, branch_id, wing_id, title, subject, grade, material_type, description, attachment_name, attachment_type, attachment_data, external_url, file_size, uploaded_by, teacher_id, downloads_count)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
-        item.id, tid, item.title, item.subject, item.grade, item.materialType, item.description,
+        item.id, tid, item.branchId, item.wingId, item.title, item.subject, item.grade, item.materialType, item.description,
         item.attachmentName, item.attachmentType, item.attachmentData, item.externalUrl,
         item.fileSize, item.uploadedBy, item.teacherId, item.downloadsCount
       );
@@ -3459,7 +4447,14 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
   router.put('/study-materials/:id/download', (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     if (!sqliteDb) return res.json({ ok: true });
+    const existing = sqliteDb.prepare('SELECT id, branch_id, wing_id FROM local_school_study_materials WHERE id = ? AND tenant_id = ?').get(req.params.id, tid);
+    if (existing) {
+      const scopeErr = assertRecordScopeAllowed(scope, existing);
+      if (scopeErr) return res.status(scopeErr.status).json({ ok: false, error: scopeErr.error, message: scopeErr.message });
+    }
     sqliteDb.prepare('UPDATE local_school_study_materials SET downloads_count = COALESCE(downloads_count, 0) + 1 WHERE id = ? AND tenant_id = ?')
       .run(req.params.id, tid);
     res.json({ ok: true, id: req.params.id });
@@ -3467,7 +4462,14 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
   router.delete('/study-materials/:id', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     if (!sqliteDb) return res.status(503).json({ ok: false });
+    const existing = sqliteDb.prepare('SELECT id, branch_id, wing_id FROM local_school_study_materials WHERE id = ? AND tenant_id = ?').get(req.params.id, tid);
+    if (existing) {
+      const scopeErr = assertRecordScopeAllowed(scope, existing);
+      if (scopeErr) return res.status(scopeErr.status).json({ ok: false, error: scopeErr.error, message: scopeErr.message });
+    }
     sqliteDb.prepare('DELETE FROM local_school_study_materials WHERE id = ? AND tenant_id = ?').run(req.params.id, tid);
     res.json({ ok: true, id: req.params.id });
   });
@@ -3475,13 +4477,18 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
   // Two-Way Parent <-> Teacher Messaging
   router.get('/messages', (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
+    const scopeSql = buildScopeSql(scope);
     const rows = sqliteDb
-      ? sqliteDb.prepare('SELECT * FROM local_school_messages WHERE tenant_id = ? ORDER BY created_at DESC').all(tid)
+      ? sqliteDb.prepare(`SELECT * FROM local_school_messages WHERE tenant_id = ?${scopeSql.sql} ORDER BY created_at DESC`).all(tid, ...scopeSql.params)
       : [];
     res.json({
       ok: true,
       messages: rows.map((r) => ({
         id: r.id,
+        branchId: r.branch_id || DEFAULT_BRANCH_ID,
+        wingId: r.wing_id || DEFAULT_WING_ID,
         sender: dec(tid, r.sender),
         senderRole: r.sender_role || 'parent',
         recipient: dec(tid, r.recipient),
@@ -3500,12 +4507,16 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
   router.post('/messages', rejectRestrictedRole(['accountant']), (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     const b = req.body || {};
     if (!String(b.subject || '').trim() || !String(b.message || '').trim()) {
       return res.status(400).json({ ok: false, message: 'Message subject and body are required.' });
     }
     const item = {
       id: b.id || ('MSG-' + Date.now()),
+      branchId: scope.writeBranchId,
+      wingId: scope.writeWingId,
       sender: String(b.sender || 'Portal User').trim(),
       senderRole: String(b.senderRole || resolveUserRole(req) || 'parent'),
       recipient: String(b.recipient || 'Faculty').trim(),
@@ -3522,10 +4533,10 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     if (sqliteDb) {
       sqliteDb.prepare(`
         INSERT OR REPLACE INTO local_school_messages
-        (id, tenant_id, sender, sender_role, recipient, child_id, student_name, subject, message, date, reply, reply_by, reply_date, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (id, tenant_id, branch_id, wing_id, sender, sender_role, recipient, child_id, student_name, subject, message, date, reply, reply_by, reply_date, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
-        item.id, tid, enc(tid, item.sender), item.senderRole, enc(tid, item.recipient),
+        item.id, tid, item.branchId, item.wingId, enc(tid, item.sender), item.senderRole, enc(tid, item.recipient),
         item.childId, enc(tid, item.studentName), item.subject, enc(tid, item.message),
         item.date, item.reply ? enc(tid, item.reply) : '', item.replyBy, item.replyDate, item.status
       );
@@ -3535,25 +4546,38 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
   router.put('/messages/:id/reply', rejectRestrictedRole(['student', 'accountant']), (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     if (!sqliteDb) return res.status(503).json({ ok: false });
+    const existing = sqliteDb.prepare('SELECT id, branch_id, wing_id FROM local_school_messages WHERE id = ? AND tenant_id = ?').get(req.params.id, tid);
+    if (!existing) return res.status(404).json({ ok: false, message: 'Message not found' });
+    const scopeErr = assertRecordScopeAllowed(scope, existing);
+    if (scopeErr) return res.status(scopeErr.status).json({ ok: false, error: scopeErr.error, message: scopeErr.message });
     const reply = String(req.body?.reply || '').trim();
     if (!reply) return res.status(400).json({ ok: false, message: 'Reply text is required.' });
     const replyBy = String(req.body?.replyBy || req.headers['x-user-name'] || 'Faculty').trim();
     const replyDate = new Date().toISOString().split('T')[0];
-    const info = sqliteDb.prepare(
+    sqliteDb.prepare(
       'UPDATE local_school_messages SET reply = ?, reply_by = ?, reply_date = ?, status = ? WHERE id = ? AND tenant_id = ?'
     ).run(enc(tid, reply), replyBy, replyDate, 'Replied', req.params.id, tid);
-    if (!info.changes) return res.status(404).json({ ok: false, message: 'Message not found' });
     res.json({ ok: true, id: req.params.id, reply, replyBy, replyDate, status: 'Replied' });
   });
 
   router.get('/leaves', (req, res) => {
     const tid = resolveTenantId(req);
-    const rows = sqliteDb ? sqliteDb.prepare('SELECT * FROM local_school_leaves WHERE tenant_id = ? ORDER BY created_at DESC').all(tid) : [];
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
+    const scopeSql = buildScopeSql(scope);
+    const rows = sqliteDb
+      ? sqliteDb.prepare(`SELECT * FROM local_school_leaves WHERE tenant_id = ?${scopeSql.sql} ORDER BY created_at DESC`).all(tid, ...scopeSql.params)
+      : [];
     res.json({
       ok: true,
       leaves: rows.map((r) => ({
-        id: r.id, childId: r.child_id, childName: dec(tid, r.child_name),
+        id: r.id,
+        branchId: r.branch_id || DEFAULT_BRANCH_ID,
+        wingId: r.wing_id || DEFAULT_WING_ID,
+        childId: r.child_id, childName: dec(tid, r.child_name),
         fromDate: r.from_date, toDate: r.to_date, reason: dec(tid, r.reason),
         status: r.status, submittedDate: r.submitted_date, leaveType: r.leave_type
       }))
@@ -3562,12 +4586,16 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
   router.post('/leaves', (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     const l = req.body || {};
     if (!String(l.fromDate || '').trim() || !String(l.toDate || '').trim() || !String(l.reason || '').trim()) {
       return res.status(400).json({ ok: false, message: 'fromDate, toDate, and reason are required for leave requests.' });
     }
     const item = {
       id: l.id || ('LV-' + Date.now()),
+      branchId: scope.writeBranchId,
+      wingId: scope.writeWingId,
       childId: String(l.childId || 'STD-1'),
       childName: String(l.childName || 'Student'),
       fromDate: String(l.fromDate),
@@ -3580,28 +4608,41 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     if (sqliteDb) {
       sqliteDb.prepare(`
         INSERT OR REPLACE INTO local_school_leaves
-        (id, tenant_id, child_id, child_name, from_date, to_date, reason, status, submitted_date, leave_type)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `).run(item.id, tid, item.childId, enc(tid, item.childName), item.fromDate, item.toDate, enc(tid, item.reason), item.status, item.submittedDate, item.leaveType);
+        (id, tenant_id, branch_id, wing_id, child_id, child_name, from_date, to_date, reason, status, submitted_date, leave_type)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(item.id, tid, item.branchId, item.wingId, item.childId, enc(tid, item.childName), item.fromDate, item.toDate, enc(tid, item.reason), item.status, item.submittedDate, item.leaveType);
     }
     res.status(201).json({ ok: true, leave: item });
   });
 
   router.put('/leaves/:id', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     if (!sqliteDb) return res.status(503).json({ ok: false });
-    const info = sqliteDb.prepare('UPDATE local_school_leaves SET status = ? WHERE id = ? AND tenant_id = ?').run(String(req.body?.status || 'Approved'), req.params.id, tid);
-    if (!info.changes) return res.status(404).json({ ok: false, message: 'Leave request not found' });
+    const existing = sqliteDb.prepare('SELECT id, branch_id, wing_id FROM local_school_leaves WHERE id = ? AND tenant_id = ?').get(req.params.id, tid);
+    if (!existing) return res.status(404).json({ ok: false, message: 'Leave request not found' });
+    const scopeErr = assertRecordScopeAllowed(scope, existing);
+    if (scopeErr) return res.status(scopeErr.status).json({ ok: false, error: scopeErr.error, message: scopeErr.message });
+    sqliteDb.prepare('UPDATE local_school_leaves SET status = ? WHERE id = ? AND tenant_id = ?').run(String(req.body?.status || 'Approved'), req.params.id, tid);
     res.json({ ok: true, id: req.params.id, status: req.body?.status || 'Approved' });
   });
 
   router.get('/concessions', (req, res) => {
     const tid = resolveTenantId(req);
-    const rows = sqliteDb ? sqliteDb.prepare('SELECT * FROM local_school_concessions WHERE tenant_id = ? ORDER BY created_at DESC').all(tid) : [];
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
+    const scopeSql = buildScopeSql(scope);
+    const rows = sqliteDb
+      ? sqliteDb.prepare(`SELECT * FROM local_school_concessions WHERE tenant_id = ?${scopeSql.sql} ORDER BY created_at DESC`).all(tid, ...scopeSql.params)
+      : [];
     res.json({
       ok: true,
       concessions: rows.map((r) => ({
-        id: r.id, studentId: r.student_id, studentName: dec(tid, r.student_name), rollNo: r.roll_no,
+        id: r.id,
+        branchId: r.branch_id || DEFAULT_BRANCH_ID,
+        wingId: r.wing_id || DEFAULT_WING_ID,
+        studentId: r.student_id, studentName: dec(tid, r.student_name), rollNo: r.roll_no,
         grade: r.grade, guardianName: dec(tid, r.guardian_name), guardianOccupation: r.guardian_occupation,
         guardianIncome: r.guardian_income, regularFee: r.regular_fee, revisedFee: r.revised_fee,
         requestedDiscount: r.requested_discount, category: r.category, reason: r.reason,
@@ -3612,12 +4653,16 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
   router.post('/concessions', (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     const c = req.body || {};
     if (!String(c.studentName || '').trim() || !String(c.grade || '').trim()) {
       return res.status(400).json({ ok: false, message: 'studentName and grade are required.' });
     }
     const item = {
       id: c.id || ('CON-' + Date.now()),
+      branchId: scope.writeBranchId,
+      wingId: scope.writeWingId,
       studentId: String(c.studentId || ''),
       studentName: String(c.studentName).trim(),
       rollNo: String(c.rollNo || ''),
@@ -3636,10 +4681,10 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     if (sqliteDb) {
       sqliteDb.prepare(`
         INSERT OR REPLACE INTO local_school_concessions
-        (id, tenant_id, student_id, student_name, roll_no, grade, guardian_name, guardian_occupation, guardian_income, regular_fee, revised_fee, requested_discount, category, reason, status, approved_by)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (id, tenant_id, branch_id, wing_id, student_id, student_name, roll_no, grade, guardian_name, guardian_occupation, guardian_income, regular_fee, revised_fee, requested_discount, category, reason, status, approved_by)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
-        item.id, tid, item.studentId, enc(tid, item.studentName), item.rollNo, item.grade,
+        item.id, tid, item.branchId, item.wingId, item.studentId, enc(tid, item.studentName), item.rollNo, item.grade,
         enc(tid, item.guardianName), item.guardianOccupation, item.guardianIncome,
         item.regularFee, item.revisedFee, item.requestedDiscount, item.category, item.reason, item.status, item.approvedBy
       );
@@ -3649,12 +4694,19 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
   router.put('/concessions/:id', rejectRestrictedRole(['student', 'parent', 'teacher', 'accountant']), (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     if (!sqliteDb) return res.status(503).json({ ok: false });
+    const existing = sqliteDb.prepare('SELECT id, branch_id, wing_id FROM local_school_concessions WHERE id = ? AND tenant_id = ?').get(req.params.id, tid);
+    if (!existing) return res.status(404).json({ ok: false, message: 'Concession record not found' });
+    const scopeErr = assertRecordScopeAllowed(scope, existing);
+    if (scopeErr) return res.status(scopeErr.status).json({ ok: false, error: scopeErr.error, message: scopeErr.message });
     const status = String(req.body?.status || 'Approved');
     const approvedBy = String(req.body?.approvedBy || 'Principal Office');
-    const info = sqliteDb.prepare('UPDATE local_school_concessions SET status = ?, approved_by = ? WHERE id = ? AND tenant_id = ?').run(status, approvedBy, req.params.id, tid);
-    if (!info.changes) return res.status(404).json({ ok: false, message: 'Concession record not found' });
+    sqliteDb.prepare('UPDATE local_school_concessions SET status = ?, approved_by = ? WHERE id = ? AND tenant_id = ?').run(status, approvedBy, req.params.id, tid);
     recordAudit(tid, {
+      branchId: existing.branch_id || scope.writeBranchId,
+      wingId: existing.wing_id || scope.writeWingId,
       actionType: 'Fee Waiver / Concession',
       category: 'Financial',
       entityId: req.params.id,
@@ -3666,11 +4718,19 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
   router.get('/complaints', (req, res) => {
     const tid = resolveTenantId(req);
-    const rows = sqliteDb ? sqliteDb.prepare('SELECT * FROM local_school_complaints WHERE tenant_id = ? ORDER BY created_at DESC').all(tid) : [];
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
+    const scopeSql = buildScopeSql(scope);
+    const rows = sqliteDb
+      ? sqliteDb.prepare(`SELECT * FROM local_school_complaints WHERE tenant_id = ?${scopeSql.sql} ORDER BY created_at DESC`).all(tid, ...scopeSql.params)
+      : [];
     res.json({
       ok: true,
       complaints: rows.map((r) => ({
-        id: r.id, parentName: dec(tid, r.parent_name), studentName: dec(tid, r.student_name),
+        id: r.id,
+        branchId: r.branch_id || DEFAULT_BRANCH_ID,
+        wingId: r.wing_id || DEFAULT_WING_ID,
+        parentName: dec(tid, r.parent_name), studentName: dec(tid, r.student_name),
         category: r.category, subject: r.subject, priority: r.priority,
         assignedIncharge: r.assigned_incharge, investigationNotes: r.investigation_notes,
         status: r.status, date: r.date
@@ -3680,12 +4740,16 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
   router.post('/complaints', (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     const c = req.body || {};
     if (!String(c.subject || '').trim()) {
       return res.status(400).json({ ok: false, message: 'Complaint subject is required.' });
     }
     const item = {
       id: c.id || ('CMP-' + Date.now()),
+      branchId: scope.writeBranchId,
+      wingId: scope.writeWingId,
       parentName: String(c.parentName || 'Parent / Guardian'),
       studentName: String(c.studentName || 'Student'),
       category: String(c.category || 'General'),
@@ -3699,31 +4763,44 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     if (sqliteDb) {
       sqliteDb.prepare(`
         INSERT OR REPLACE INTO local_school_complaints
-        (id, tenant_id, parent_name, student_name, category, subject, priority, assigned_incharge, investigation_notes, status, date)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `).run(item.id, tid, enc(tid, item.parentName), enc(tid, item.studentName), item.category, item.subject, item.priority, item.assignedIncharge, item.investigationNotes, item.status, item.date);
+        (id, tenant_id, branch_id, wing_id, parent_name, student_name, category, subject, priority, assigned_incharge, investigation_notes, status, date)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(item.id, tid, item.branchId, item.wingId, enc(tid, item.parentName), enc(tid, item.studentName), item.category, item.subject, item.priority, item.assignedIncharge, item.investigationNotes, item.status, item.date);
     }
     res.status(201).json({ ok: true, complaint: item });
   });
 
   router.put('/complaints/:id', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     if (!sqliteDb) return res.status(503).json({ ok: false });
+    const existing = sqliteDb.prepare('SELECT id, branch_id, wing_id FROM local_school_complaints WHERE id = ? AND tenant_id = ?').get(req.params.id, tid);
+    if (!existing) return res.status(404).json({ ok: false, message: 'Complaint not found' });
+    const scopeErr = assertRecordScopeAllowed(scope, existing);
+    if (scopeErr) return res.status(scopeErr.status).json({ ok: false, error: scopeErr.error, message: scopeErr.message });
     const status = String(req.body?.status || 'Resolved');
     const notes = req.body?.investigationNotes;
-    const info = sqliteDb.prepare('UPDATE local_school_complaints SET status = ?, investigation_notes = COALESCE(?, investigation_notes) WHERE id = ? AND tenant_id = ?')
+    sqliteDb.prepare('UPDATE local_school_complaints SET status = ?, investigation_notes = COALESCE(?, investigation_notes) WHERE id = ? AND tenant_id = ?')
       .run(status, notes ?? null, req.params.id, tid);
-    if (!info.changes) return res.status(404).json({ ok: false, message: 'Complaint not found' });
     res.json({ ok: true, id: req.params.id, status });
   });
 
   router.get('/lesson-plans', (req, res) => {
     const tid = resolveTenantId(req);
-    const rows = sqliteDb ? sqliteDb.prepare('SELECT * FROM local_school_lesson_plans WHERE tenant_id = ? ORDER BY created_at DESC').all(tid) : [];
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
+    const scopeSql = buildScopeSql(scope);
+    const rows = sqliteDb
+      ? sqliteDb.prepare(`SELECT * FROM local_school_lesson_plans WHERE tenant_id = ?${scopeSql.sql} ORDER BY created_at DESC`).all(tid, ...scopeSql.params)
+      : [];
     res.json({
       ok: true,
       lessonPlans: rows.map((r) => ({
-        id: r.id, teacherId: r.teacher_id, teacherName: r.teacher_name, subject: r.subject,
+        id: r.id,
+        branchId: r.branch_id || DEFAULT_BRANCH_ID,
+        wingId: r.wing_id || DEFAULT_WING_ID,
+        teacherId: r.teacher_id, teacherName: r.teacher_name, subject: r.subject,
         grade: r.grade, topic: r.topic, objective: r.objective, date: r.date,
         status: r.status, moderatorNotes: r.moderator_notes
       }))
@@ -3732,12 +4809,16 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
   router.post('/lesson-plans', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     const lp = req.body || {};
     if (!String(lp.topic || '').trim() || !String(lp.subject || '').trim()) {
       return res.status(400).json({ ok: false, message: 'Lesson plan subject and topic are required.' });
     }
     const item = {
       id: lp.id || ('LP-' + Date.now()),
+      branchId: scope.writeBranchId,
+      wingId: scope.writeWingId,
       teacherId: String(lp.teacherId || ''),
       teacherName: String(lp.teacherName || 'Faculty'),
       subject: String(lp.subject).trim(),
@@ -3751,39 +4832,57 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     if (sqliteDb) {
       sqliteDb.prepare(`
         INSERT OR REPLACE INTO local_school_lesson_plans
-        (id, tenant_id, teacher_id, teacher_name, subject, grade, topic, objective, date, status, moderator_notes)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `).run(item.id, tid, item.teacherId, item.teacherName, item.subject, item.grade, item.topic, item.objective, item.date, item.status, item.moderatorNotes);
+        (id, tenant_id, branch_id, wing_id, teacher_id, teacher_name, subject, grade, topic, objective, date, status, moderator_notes)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(item.id, tid, item.branchId, item.wingId, item.teacherId, item.teacherName, item.subject, item.grade, item.topic, item.objective, item.date, item.status, item.moderatorNotes);
     }
     res.status(201).json({ ok: true, lessonPlan: item });
   });
 
   router.put('/lesson-plans/:id', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     if (!sqliteDb) return res.status(503).json({ ok: false });
+    const existing = sqliteDb.prepare('SELECT id, branch_id, wing_id FROM local_school_lesson_plans WHERE id = ? AND tenant_id = ?').get(req.params.id, tid);
+    if (!existing) return res.status(404).json({ ok: false, message: 'Lesson plan not found' });
+    const scopeErr = assertRecordScopeAllowed(scope, existing);
+    if (scopeErr) return res.status(scopeErr.status).json({ ok: false, error: scopeErr.error, message: scopeErr.message });
     const status = String(req.body?.status || 'Approved');
-    const info = sqliteDb.prepare('UPDATE local_school_lesson_plans SET status = ?, moderator_notes = COALESCE(?, moderator_notes) WHERE id = ? AND tenant_id = ?')
+    sqliteDb.prepare('UPDATE local_school_lesson_plans SET status = ?, moderator_notes = COALESCE(?, moderator_notes) WHERE id = ? AND tenant_id = ?')
       .run(status, req.body?.moderatorNotes ?? null, req.params.id, tid);
-    if (!info.changes) return res.status(404).json({ ok: false, message: 'Lesson plan not found' });
     res.json({ ok: true, id: req.params.id, status });
   });
 
   router.delete('/lesson-plans/:id', requireOwnerRole, (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     if (!sqliteDb) return res.status(503).json({ ok: false });
-    const info = sqliteDb.prepare('DELETE FROM local_school_lesson_plans WHERE id = ? AND tenant_id = ?')
+    const existing = sqliteDb.prepare('SELECT id, branch_id, wing_id FROM local_school_lesson_plans WHERE id = ? AND tenant_id = ?').get(req.params.id, tid);
+    if (!existing) return res.status(404).json({ ok: false, message: 'Lesson plan not found' });
+    const scopeErr = assertRecordScopeAllowed(scope, existing);
+    if (scopeErr) return res.status(scopeErr.status).json({ ok: false, error: scopeErr.error, message: scopeErr.message });
+    sqliteDb.prepare('DELETE FROM local_school_lesson_plans WHERE id = ? AND tenant_id = ?')
       .run(req.params.id, tid);
-    if (!info.changes) return res.status(404).json({ ok: false, message: 'Lesson plan not found' });
     res.json({ ok: true, id: req.params.id });
   });
 
   router.get('/substitutions', (req, res) => {
     const tid = resolveTenantId(req);
-    const rows = sqliteDb ? sqliteDb.prepare('SELECT * FROM local_school_substitutions WHERE tenant_id = ? ORDER BY created_at DESC').all(tid) : [];
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
+    const scopeSql = buildScopeSql(scope);
+    const rows = sqliteDb
+      ? sqliteDb.prepare(`SELECT * FROM local_school_substitutions WHERE tenant_id = ?${scopeSql.sql} ORDER BY created_at DESC`).all(tid, ...scopeSql.params)
+      : [];
     res.json({
       ok: true,
       substitutions: rows.map((r) => ({
-        id: r.id, absentTeacher: r.absent_teacher, substituteTeacher: r.substitute_teacher,
+        id: r.id,
+        branchId: r.branch_id || DEFAULT_BRANCH_ID,
+        wingId: r.wing_id || DEFAULT_WING_ID,
+        absentTeacher: r.absent_teacher, substituteTeacher: r.substitute_teacher,
         grade: r.grade, subject: r.subject, period: r.period, date: r.date, notes: r.notes, status: r.status
       }))
     });
@@ -3791,12 +4890,16 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
   router.post('/substitutions', rejectRestrictedRole(['student', 'parent', 'accountant']), (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     const s = req.body || {};
     if (!String(s.absentTeacher || '').trim() || !String(s.substituteTeacher || '').trim()) {
       return res.status(400).json({ ok: false, message: 'absentTeacher and substituteTeacher are required.' });
     }
     const item = {
       id: s.id || ('SUB-' + Date.now()),
+      branchId: scope.writeBranchId,
+      wingId: scope.writeWingId,
       absentTeacher: String(s.absentTeacher).trim(),
       substituteTeacher: String(s.substituteTeacher).trim(),
       grade: String(s.grade || 'Grade 10'),
@@ -3809,9 +4912,9 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     if (sqliteDb) {
       sqliteDb.prepare(`
         INSERT OR REPLACE INTO local_school_substitutions
-        (id, tenant_id, absent_teacher, substitute_teacher, grade, subject, period, date, notes, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `).run(item.id, tid, item.absentTeacher, item.substituteTeacher, item.grade, item.subject, item.period, item.date, item.notes, item.status);
+        (id, tenant_id, branch_id, wing_id, absent_teacher, substitute_teacher, grade, subject, period, date, notes, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(item.id, tid, item.branchId, item.wingId, item.absentTeacher, item.substituteTeacher, item.grade, item.subject, item.period, item.date, item.notes, item.status);
     }
     res.status(201).json({ ok: true, substitution: item });
   });
@@ -3821,80 +4924,129 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
   // =========================================================================
   router.get('/audit-logs', (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     let logs = [];
+    let totalTenantRows = 0;
     if (sqliteDb) {
       try {
-        const rows = sqliteDb.prepare('SELECT * FROM local_school_audit_logs WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 200').all(tid);
+        const cntRow = sqliteDb.prepare('SELECT COUNT(*) AS cnt FROM local_school_audit_logs WHERE tenant_id = ?').get(tid);
+        totalTenantRows = Number(cntRow?.cnt || 0);
+        const scopeSql = buildScopeSql(scope);
+        const rows = sqliteDb.prepare(`SELECT * FROM local_school_audit_logs WHERE tenant_id = ?${scopeSql.sql} ORDER BY created_at DESC LIMIT 200`).all(tid, ...scopeSql.params);
         logs = rows.map((r) => ({
-          id: r.id, timestamp: r.timestamp, operatorName: r.operator_name, operatorRole: r.operator_role,
+          id: r.id,
+          branchId: r.branch_id || DEFAULT_BRANCH_ID,
+          wingId: r.wing_id || DEFAULT_WING_ID,
+          timestamp: r.timestamp, operatorName: r.operator_name, operatorRole: r.operator_role,
           actionType: r.action_type, category: r.category, entityId: r.entity_id,
           entityDescription: r.entity_description, details: r.details, severity: r.severity,
           verifiedBy: r.verified_by, ipAddress: r.ip_address
         }));
       } catch {}
     }
-    if (logs.length === 0 && tid === ROOT_TENANT_ID) {
-      logs = SCHOOL_AUDIT_LOGS;
+    if (totalTenantRows === 0 && tid === ROOT_TENANT_ID) {
+      logs = SCHOOL_AUDIT_LOGS.map((l) => ({
+        ...l,
+        branchId: l.branchId || DEFAULT_BRANCH_ID,
+        wingId: l.wingId || DEFAULT_WING_ID
+      })).filter((l) => {
+        if (scope.branchFilter && l.branchId !== scope.branchFilter) return false;
+        if (scope.wingFilter && l.wingId !== scope.wingFilter) return false;
+        return true;
+      });
     }
     res.json({ ok: true, tenantId: tid, logs });
   });
 
   router.post('/audit-logs', (req, res) => {
     const tid = resolveTenantId(req);
-    const newEntry = recordAudit(tid, req.body || {});
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
+    const newEntry = recordAudit(tid, {
+      ...(req.body || {}),
+      branchId: scope.writeBranchId,
+      wingId: scope.writeWingId
+    });
     res.status(201).json({ ok: true, log: newEntry });
   });
 
-  const mapReconciliationRow = (r) => ({
-    id: r.id,
-    date: r.date,
-    counterCashReceived: Number(r.counter_cash || 0),
-    bankDepositedMeezan: Number(r.bank_meezan || 0),
-    bankDepositedHBL: Number(r.bank_hbl || 0),
-    onlineDigitalKuickPay: Number(r.online_digital || 0),
-    totalSystemBilled: Number(r.total_billed || 0),
-    actualCollected: Number(r.actual_collected || 0),
-    varianceAmount: Number(r.variance_amount || 0),
-    reconciliationStatus: r.status || 'Balanced & Cleared',
-    cashierName: r.cashier_name || 'Accountant / Fee Clerk',
-    verifiedByAuditor: r.verified_by_auditor || 'Pending Owner Review',
-    submittedByRole: r.submitted_by_role || 'accountant',
-    principalCollected: Number(r.principal_collected || 0),
-    accountantCollected: Number(r.accountant_collected || 0),
-    onlineCollected: Number(r.online_collected || 0),
-    openingVaultCash: Number(r.opening_vault_cash || 0),
-    pettyExpenses: Number(r.petty_expenses || 0),
-    closingVaultCash: Number(r.closing_vault_cash || 0),
-    bankDepositSlipNo: r.bank_deposit_slip_no || '',
-    ownerApprovalStatus: r.owner_approval_status || 'Pending Owner Review',
-    ownerRemarks: r.owner_remarks || '',
-    approvedBy: r.approved_by || '',
-    approvedAt: r.approved_at || '',
-    notes: r.notes || ''
-  });
+  const mapReconciliationRow = (r, nameMaps = null) => {
+    const branchId = r.branch_id || DEFAULT_BRANCH_ID;
+    const wingId = r.wing_id || DEFAULT_WING_ID;
+    return {
+      id: r.id,
+      branchId,
+      branchName: nameMaps ? nameMaps.branchName(branchId) : undefined,
+      wingId,
+      wingName: nameMaps ? nameMaps.wingName(wingId) : undefined,
+      date: r.date,
+      counterCashReceived: Number(r.counter_cash || 0),
+      bankDepositedMeezan: Number(r.bank_meezan || 0),
+      bankDepositedHBL: Number(r.bank_hbl || 0),
+      onlineDigitalKuickPay: Number(r.online_digital || 0),
+      totalSystemBilled: Number(r.total_billed || 0),
+      actualCollected: Number(r.actual_collected || 0),
+      varianceAmount: Number(r.variance_amount || 0),
+      reconciliationStatus: r.status || 'Balanced & Cleared',
+      cashierName: r.cashier_name || 'Accountant / Fee Clerk',
+      verifiedByAuditor: r.verified_by_auditor || 'Pending Owner Review',
+      submittedByRole: r.submitted_by_role || 'accountant',
+      principalCollected: Number(r.principal_collected || 0),
+      accountantCollected: Number(r.accountant_collected || 0),
+      onlineCollected: Number(r.online_collected || 0),
+      openingVaultCash: Number(r.opening_vault_cash || 0),
+      pettyExpenses: Number(r.petty_expenses || 0),
+      closingVaultCash: Number(r.closing_vault_cash || 0),
+      bankDepositSlipNo: r.bank_deposit_slip_no || '',
+      ownerApprovalStatus: r.owner_approval_status || 'Pending Owner Review',
+      ownerRemarks: r.owner_remarks || '',
+      approvedBy: r.approved_by || '',
+      approvedAt: r.approved_at || '',
+      notes: r.notes || ''
+    };
+  };
 
   router.get('/reconciliation', (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
+    const nameMaps = getBranchWingNameMaps(tid);
     let reconciliations = [];
+    let totalTenantRows = 0;
     if (sqliteDb) {
       try {
-        const rows = sqliteDb.prepare('SELECT * FROM local_school_reconciliation WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 100').all(tid);
-        reconciliations = rows.map(mapReconciliationRow);
+        const cntRow = sqliteDb.prepare('SELECT COUNT(*) AS cnt FROM local_school_reconciliation WHERE tenant_id = ?').get(tid);
+        totalTenantRows = Number(cntRow?.cnt || 0);
+        const scopeSql = buildScopeSql(scope);
+        const rows = sqliteDb.prepare(`SELECT * FROM local_school_reconciliation WHERE tenant_id = ?${scopeSql.sql} ORDER BY created_at DESC LIMIT 100`).all(tid, ...scopeSql.params);
+        reconciliations = rows.map((r) => mapReconciliationRow(r, nameMaps));
       } catch {}
     }
-    if (reconciliations.length === 0 && tid === ROOT_TENANT_ID) {
+    if (totalTenantRows === 0 && tid === ROOT_TENANT_ID) {
       reconciliations = SCHOOL_FEE_RECONCILIATION.map((rec) => ({
         ...rec,
+        branchId: rec.branchId || DEFAULT_BRANCH_ID,
+        branchName: nameMaps.branchName(rec.branchId || DEFAULT_BRANCH_ID),
+        wingId: rec.wingId || DEFAULT_WING_ID,
+        wingName: nameMaps.wingName(rec.wingId || DEFAULT_WING_ID),
         submittedByRole: 'accountant',
         ownerApprovalStatus: 'Verified & Approved by Owner',
         approvedBy: 'School Owner Executive'
-      }));
+      })).filter((rec) => {
+        if (scope.branchFilter && rec.branchId !== scope.branchFilter) return false;
+        if (scope.wingFilter && rec.wingId !== scope.wingFilter) return false;
+        return true;
+      });
     }
     res.json({ ok: true, tenantId: tid, reconciliations });
   });
 
   router.post('/reconciliation', rejectRestrictedRole(['student', 'parent']), async (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
+    const nameMaps = getBranchWingNameMaps(tid);
     const r = req.body || {};
     const counterCashReceived = Number(r.counterCashReceived || 0);
     const bankDepositedMeezan = Number(r.bankDepositedMeezan || 0);
@@ -3918,9 +5070,15 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     const ownerApprovalStatus = String(
       r.ownerApprovalStatus || (isAccountantSubmission ? 'Pending Owner Review' : 'Verified & Approved by Owner')
     );
+    const branchId = scope.writeBranchId;
+    const wingId = scope.writeWingId;
 
     const newRec = {
       id: r.id || ('DCL-' + Date.now()),
+      branchId,
+      branchName: String(r.branchName || nameMaps.branchName(branchId)),
+      wingId,
+      wingName: String(r.wingName || nameMaps.wingName(wingId)),
       date: String(r.date || new Date().toISOString().split('T')[0]),
       counterCashReceived,
       bankDepositedMeezan,
@@ -3951,15 +5109,15 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       sqliteDb.prepare(`
         INSERT OR REPLACE INTO local_school_reconciliation
         (
-          id, tenant_id, date, counter_cash, bank_meezan, bank_hbl, online_digital,
+          id, tenant_id, branch_id, wing_id, date, counter_cash, bank_meezan, bank_hbl, online_digital,
           total_billed, actual_collected, variance_amount, status, cashier_name, verified_by_auditor,
           submitted_by_role, principal_collected, accountant_collected, online_collected,
           opening_vault_cash, petty_expenses, closing_vault_cash, bank_deposit_slip_no,
           owner_approval_status, owner_remarks, approved_by, approved_at, notes
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
-        newRec.id, tid, newRec.date, counterCashReceived, bankDepositedMeezan, bankDepositedHBL,
+        newRec.id, tid, branchId, wingId, newRec.date, counterCashReceived, bankDepositedMeezan, bankDepositedHBL,
         onlineDigitalKuickPay, totalSystemBilled, actualCollected, varianceAmount,
         newRec.reconciliationStatus, newRec.cashierName, newRec.verifiedByAuditor,
         newRec.submittedByRole, principalCollected, accountantCollected, onlineCollected,
@@ -3968,6 +5126,8 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       );
 
       recordAudit(tid, {
+        branchId,
+        wingId,
         operatorName: newRec.cashierName,
         operatorRole: isAccountantSubmission ? 'Accountant / Fee Clerk' : 'Accounts Controller',
         actionType: 'Daily Closing Submission',
@@ -3995,12 +5155,16 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
   router.put('/reconciliation/:id/verify', rejectRestrictedRole(['student', 'parent', 'teacher', 'accountant']), async (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     const id = req.params.id;
     const b = req.body || {};
     if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
 
     const row = sqliteDb.prepare('SELECT * FROM local_school_reconciliation WHERE id = ? AND tenant_id = ?').get(id, tid);
     if (!row) return res.status(404).json({ ok: false, message: 'Daily Closing / Reconciliation record not found' });
+    const scopeErr = assertRecordScopeAllowed(scope, row);
+    if (scopeErr) return res.status(scopeErr.status).json({ ok: false, error: scopeErr.error, message: scopeErr.message });
 
     const ownerApprovalStatus = String(b.ownerApprovalStatus || 'Verified & Approved by Owner');
     const ownerRemarks = String(b.ownerRemarks || (ownerApprovalStatus.includes('Flag') ? 'Flagged by School Owner for counter review.' : 'Verified and approved by School Owner.'));
@@ -4016,11 +5180,15 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       WHERE id = ? AND tenant_id = ?
     `).run(ownerApprovalStatus, ownerRemarks, approvedBy, approvedAt, verifiedByAuditor, id, tid);
 
+    const nameMaps = getBranchWingNameMaps(tid);
     const updated = mapReconciliationRow(
-      sqliteDb.prepare('SELECT * FROM local_school_reconciliation WHERE id = ? AND tenant_id = ?').get(id, tid)
+      sqliteDb.prepare('SELECT * FROM local_school_reconciliation WHERE id = ? AND tenant_id = ?').get(id, tid),
+      nameMaps
     );
 
     recordAudit(tid, {
+      branchId: updated.branchId,
+      wingId: updated.wingId,
       operatorName: approvedBy,
       operatorRole: 'School Owner',
       actionType: 'Owner Daily Closing Oversight',
@@ -4048,27 +5216,39 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
   // =========================================================================
   // PETTY CASH VOUCHERS & OWNER REAL-TIME FINANCIAL MONITORING DASHBOARD
   // =========================================================================
-  const mapPettyVoucherRow = (v) => ({
-    id: v.id,
-    tenantId: v.tenant_id,
-    voucherNo: v.voucher_no,
-    date: v.date,
-    category: v.category || 'Stationery & Office',
-    description: v.description,
-    amount: Number(v.amount || 0),
-    paidTo: v.paid_to || 'Campus Vendor',
-    recordedBy: v.recorded_by || 'Accountant / Fee Clerk',
-    collectorRole: v.collector_role || 'accountant',
-    closingId: v.closing_id || ''
-  });
+  const mapPettyVoucherRow = (v, nameMaps = null) => {
+    const branchId = v.branch_id || DEFAULT_BRANCH_ID;
+    const wingId = v.wing_id || DEFAULT_WING_ID;
+    return {
+      id: v.id,
+      tenantId: v.tenant_id,
+      branchId,
+      branchName: nameMaps ? nameMaps.branchName(branchId) : undefined,
+      wingId,
+      wingName: nameMaps ? nameMaps.wingName(wingId) : undefined,
+      voucherNo: v.voucher_no,
+      date: v.date,
+      category: v.category || 'Stationery & Office',
+      description: v.description,
+      amount: Number(v.amount || 0),
+      paidTo: v.paid_to || 'Campus Vendor',
+      recordedBy: v.recorded_by || 'Accountant / Fee Clerk',
+      collectorRole: v.collector_role || 'accountant',
+      closingId: v.closing_id || ''
+    };
+  };
 
   router.get('/petty-vouchers', (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
+    const nameMaps = getBranchWingNameMaps(tid);
     let vouchers = [];
     if (sqliteDb) {
       try {
-        const rows = sqliteDb.prepare('SELECT * FROM local_school_petty_vouchers WHERE tenant_id = ? ORDER BY date DESC, created_at DESC LIMIT 200').all(tid);
-        vouchers = rows.map(mapPettyVoucherRow);
+        const scopeSql = buildScopeSql(scope);
+        const rows = sqliteDb.prepare(`SELECT * FROM local_school_petty_vouchers WHERE tenant_id = ?${scopeSql.sql} ORDER BY date DESC, created_at DESC LIMIT 200`).all(tid, ...scopeSql.params);
+        vouchers = rows.map((r) => mapPettyVoucherRow(r, nameMaps));
       } catch {}
     }
     res.json({ ok: true, tenantId: tid, vouchers });
@@ -4076,6 +5256,9 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
   router.post('/petty-vouchers', rejectRestrictedRole(['student', 'parent', 'teacher']), (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
+    const nameMaps = getBranchWingNameMaps(tid);
     const b = req.body || {};
     const description = String(b.description || '').trim();
     const amount = Number(b.amount || 0);
@@ -4083,9 +5266,15 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       return res.status(400).json({ ok: false, message: 'Voucher description and positive amount are required.' });
     }
     const reqRole = resolveUserRole(req) || 'accountant';
+    const branchId = scope.writeBranchId;
+    const wingId = scope.writeWingId;
     const voucher = {
       id: b.id || ('PV-' + Date.now() + '-' + Math.floor(10 + Math.random() * 90)),
       tenantId: tid,
+      branchId,
+      branchName: String(b.branchName || nameMaps.branchName(branchId)),
+      wingId,
+      wingName: String(b.wingName || nameMaps.wingName(wingId)),
       voucherNo: String(b.voucherNo || ('PCV-' + new Date().getFullYear() + '-' + Math.floor(1000 + Math.random() * 9000))),
       date: String(b.date || new Date().toISOString().split('T')[0]),
       category: String(b.category || 'Stationery & Supplies'),
@@ -4100,14 +5289,16 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     if (sqliteDb) {
       sqliteDb.prepare(`
         INSERT OR REPLACE INTO local_school_petty_vouchers
-        (id, tenant_id, voucher_no, date, category, description, amount, paid_to, recorded_by, collector_role, closing_id, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (id, tenant_id, branch_id, wing_id, voucher_no, date, category, description, amount, paid_to, recorded_by, collector_role, closing_id, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
-        voucher.id, tid, voucher.voucherNo, voucher.date, voucher.category, voucher.description,
+        voucher.id, tid, branchId, wingId, voucher.voucherNo, voucher.date, voucher.category, voucher.description,
         voucher.amount, voucher.paidTo, voucher.recordedBy, voucher.collectorRole, voucher.closingId,
         new Date().toISOString()
       );
       recordAudit(tid, {
+        branchId,
+        wingId,
         operatorName: voucher.recordedBy,
         operatorRole: reqRole === 'accountant' ? 'Accountant / Fee Clerk' : 'Accounts Office',
         actionType: 'Petty Cash Voucher Logged',
@@ -4124,37 +5315,56 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
 
   router.delete('/petty-vouchers/:id', rejectRestrictedRole(['student', 'parent', 'teacher']), (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
     const id = req.params.id;
     if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
     const row = sqliteDb.prepare('SELECT * FROM local_school_petty_vouchers WHERE id = ? AND tenant_id = ?').get(id, tid);
     if (!row) return res.status(404).json({ ok: false, message: 'Petty cash voucher not found.' });
+    const scopeErr = assertRecordScopeAllowed(scope, row);
+    if (scopeErr) return res.status(scopeErr.status).json({ ok: false, error: scopeErr.error, message: scopeErr.message });
     sqliteDb.prepare('DELETE FROM local_school_petty_vouchers WHERE id = ? AND tenant_id = ?').run(id, tid);
     res.json({ ok: true, id });
   });
 
   router.get('/finance/monitoring', rejectRestrictedRole(['student', 'parent']), (req, res) => {
     const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
+    const nameMaps = getBranchWingNameMaps(tid);
     const daysParam = Math.min(90, Math.max(7, Number(req.query?.days || 14)));
     let fees = [];
     let students = [];
     let reconciliations = [];
     let pettyVouchers = [];
     let teachers = [];
+    let totalTenantFees = 0;
+    let totalTenantStudents = 0;
 
     if (sqliteDb) {
       try {
-        fees = sqliteDb.prepare('SELECT * FROM local_school_fees WHERE tenant_id = ? ORDER BY created_at DESC').all(tid).map((r) => mapFeeRow(r, tid));
-        students = sqliteDb.prepare('SELECT * FROM local_school_students WHERE tenant_id = ?').all(tid).map((r) => mapStudentRow(r, tid));
-        reconciliations = sqliteDb.prepare('SELECT * FROM local_school_reconciliation WHERE tenant_id = ? ORDER BY date DESC, created_at DESC LIMIT 100').all(tid).map(mapReconciliationRow);
-        pettyVouchers = sqliteDb.prepare('SELECT * FROM local_school_petty_vouchers WHERE tenant_id = ? ORDER BY date DESC, created_at DESC LIMIT 200').all(tid).map(mapPettyVoucherRow);
-        teachers = sqliteDb.prepare('SELECT * FROM local_school_teachers WHERE tenant_id = ?').all(tid);
+        totalTenantFees = Number(sqliteDb.prepare('SELECT COUNT(*) AS cnt FROM local_school_fees WHERE tenant_id = ?').get(tid)?.cnt || 0);
+        totalTenantStudents = Number(sqliteDb.prepare('SELECT COUNT(*) AS cnt FROM local_school_students WHERE tenant_id = ?').get(tid)?.cnt || 0);
+        const scopeSql = buildScopeSql(scope);
+        fees = sqliteDb.prepare(`SELECT * FROM local_school_fees WHERE tenant_id = ?${scopeSql.sql} ORDER BY created_at DESC`).all(tid, ...scopeSql.params).map((r) => mapFeeRow(r, tid, nameMaps));
+        students = sqliteDb.prepare(`SELECT * FROM local_school_students WHERE tenant_id = ?${scopeSql.sql}`).all(tid, ...scopeSql.params).map((r) => mapStudentRow(r, tid, nameMaps));
+        reconciliations = sqliteDb.prepare(`SELECT * FROM local_school_reconciliation WHERE tenant_id = ?${scopeSql.sql} ORDER BY date DESC, created_at DESC LIMIT 100`).all(tid, ...scopeSql.params).map((r) => mapReconciliationRow(r, nameMaps));
+        pettyVouchers = sqliteDb.prepare(`SELECT * FROM local_school_petty_vouchers WHERE tenant_id = ?${scopeSql.sql} ORDER BY date DESC, created_at DESC LIMIT 200`).all(tid, ...scopeSql.params).map((r) => mapPettyVoucherRow(r, nameMaps));
+        teachers = sqliteDb.prepare(`SELECT * FROM local_school_teachers WHERE tenant_id = ?${scopeSql.sql}`).all(tid, ...scopeSql.params);
       } catch {}
     }
 
-    if (fees.length === 0 && students.length === 0 && tid === ROOT_TENANT_ID) {
-      fees = defaultFeesSeed;
-      students = defaultStudentsSeed;
-      reconciliations = SCHOOL_FEE_RECONCILIATION;
+    if (totalTenantFees === 0 && totalTenantStudents === 0 && tid === ROOT_TENANT_ID) {
+      const seedMatchesScope = (item) => {
+        const bId = item.branchId || DEFAULT_BRANCH_ID;
+        const wId = item.wingId || DEFAULT_WING_ID;
+        if (scope.branchFilter && bId !== scope.branchFilter) return false;
+        if (scope.wingFilter && wId !== scope.wingFilter) return false;
+        return true;
+      };
+      fees = defaultFeesSeed.filter(seedMatchesScope);
+      students = defaultStudentsSeed.filter(seedMatchesScope);
+      reconciliations = SCHOOL_FEE_RECONCILIATION.filter(seedMatchesScope);
     }
 
     const paidFees = fees.filter((f) => String(f.status).toUpperCase() === 'PAID' || String(f.status).toUpperCase() === 'PARTIAL');
@@ -4284,6 +5494,10 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     res.json({
       ok: true,
       tenantId: tid,
+      branchId: scope.branchFilter || 'ALL',
+      branchName: nameMaps.branchName(scope.branchFilter || 'ALL'),
+      wingId: scope.wingFilter || 'ALL',
+      wingName: nameMaps.wingName(scope.wingFilter || 'ALL'),
       summary: {
         cashFlow: {
           openingVaultCash,
