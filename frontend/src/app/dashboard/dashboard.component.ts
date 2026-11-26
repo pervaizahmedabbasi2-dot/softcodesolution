@@ -220,7 +220,12 @@ import {
   RefreshCw,
   Maximize2,
   Upload,
-  Lightbulb
+  Lightbulb,
+  BadgeCheck,
+  FileSpreadsheet,
+  Grid,
+  Sliders,
+  Monitor
 } from 'lucide-angular';
 
 type BackendRole = 'super_admin' | 'client_admin' | 'client_user' | 'support';
@@ -7171,5 +7176,36 @@ export const dashboardIcons = {
     Upload,
     upload: Upload,
     Lightbulb,
-    lightbulb: Lightbulb
+    lightbulb: Lightbulb,
+    BadgeCheck,
+    'badge-check': BadgeCheck,
+    FileSpreadsheet,
+    'file-spreadsheet': FileSpreadsheet,
+    Grid,
+    grid: Grid,
+    Sliders,
+    sliders: Sliders,
+    Monitor,
+    monitor: Monitor,
+    KeyRound,
+    'key-round': KeyRound,
+    ShoppingCart,
+    'shopping-cart': ShoppingCart,
+    UtensilsCrossed,
+    'utensils-crossed': UtensilsCrossed,
+    BedDouble,
+    'bed-double': BedDouble,
+    Pill,
+    pill: Pill,
+    Dumbbell,
+    dumbbell: Dumbbell,
+    Scissors,
+    scissors: Scissors,
+    Car,
+    car: Car,
+    Scale,
+    scale: Scale,
+    Plane,
+    plane: Plane,
+    'x-circle': XCircle
   };

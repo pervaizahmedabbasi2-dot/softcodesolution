@@ -1,3 +1,18 @@
+export interface PdfBrandingOptions {
+  schoolName?: string;
+  headerAccentColor?: string;
+  footerNote?: string;
+}
+
+function hexToRgb01(hex?: string, fallback: [number, number, number] = [0.11, 0.16, 0.30]): [number, number, number] {
+  const c = String(hex || '').trim();
+  if (!/^#[0-9a-fA-F]{6}$/.test(c)) return fallback;
+  const r = parseInt(c.slice(1, 3), 16) / 255;
+  const g = parseInt(c.slice(3, 5), 16) / 255;
+  const b = parseInt(c.slice(5, 7), 16) / 255;
+  return [r, g, b];
+}
+
 export interface PdfStudentCardSection {
   title: string;
   items: Array<{ label: string; value: string }>;
@@ -275,12 +290,17 @@ export function downloadStudentsTablePdf(params: {
   filename: string;
   footerLabel?: string;
   emptyMessage?: string;
+  branding?: PdfBrandingOptions;
 }): void {
   const PAGE_W = 841.89; // A4 Landscape
   const PAGE_H = 595.28;
   const MARGIN_X = 28;
   const CONTENT_W = PAGE_W - MARGIN_X * 2;
   const BOTTOM_LIMIT = PAGE_H - 36;
+  const bannerRgb = hexToRgb01(params.branding?.headerAccentColor, [0.11, 0.16, 0.30]);
+  const brandTitle = params.branding?.schoolName
+    ? `${params.branding.schoolName} - ${params.title}`
+    : params.title;
 
   const doc = new PdfCanvasBuilder(PAGE_W, PAGE_H);
   const headers = params.headers.length > 0 ? params.headers : ['Record'];
@@ -303,10 +323,10 @@ export function downloadStudentsTablePdf(params: {
 
   const drawPageHeader = (isFirst: boolean): number => {
     const bannerH = isFirst ? 52 : 34;
-    doc.fillRect(MARGIN_X, 20, CONTENT_W, bannerH, 0.11, 0.16, 0.30);
-    doc.drawText(params.title, MARGIN_X + 14, 39, isFirst ? 13 : 10.5, true, [1, 1, 1]);
+    doc.fillRect(MARGIN_X, 20, CONTENT_W, bannerH, bannerRgb[0], bannerRgb[1], bannerRgb[2]);
+    doc.drawText(brandTitle, MARGIN_X + 14, 39, isFirst ? 13 : 10.5, true, [1, 1, 1]);
     if (isFirst) {
-      doc.drawText(params.subtitle, MARGIN_X + 14, 57, 8.2, false, [0.80, 0.86, 0.98]);
+      doc.drawText(params.subtitle, MARGIN_X + 14, 57, 8.2, false, [0.85, 0.90, 0.99]);
     }
     const headerTop = 20 + bannerH + 8;
 
@@ -377,7 +397,8 @@ export function downloadStudentsTablePdf(params: {
     });
   }
 
-  const footerPrefix = params.footerLabel || 'SoftCode School ERP | Row-Wise Student Master Export';
+  const defaultBrandName = params.branding?.schoolName || 'SoftCode School ERP';
+  const footerPrefix = params.footerLabel || `${defaultBrandName} | Row-Wise Student Master Export`;
   doc.stampFooters(`${footerPrefix} | Generated ${new Date().toLocaleString()}`);
   triggerPdfDownload(doc.buildBytes(), params.filename);
 }
@@ -388,19 +409,24 @@ export function downloadStudentsCardsPdf(params: {
   cards: PdfStudentCardEntry[];
   filename: string;
   singleDossierMode?: boolean;
+  branding?: PdfBrandingOptions;
 }): void {
   const PAGE_W = 595.28; // A4 Portrait
   const PAGE_H = 841.89;
   const MARGIN_X = 28;
   const CONTENT_W = PAGE_W - MARGIN_X * 2;
   const BOTTOM_LIMIT = PAGE_H - 36;
+  const bannerRgb = hexToRgb01(params.branding?.headerAccentColor, [0.19, 0.22, 0.56]);
+  const brandTitle = params.branding?.schoolName
+    ? `${params.branding.schoolName} - ${params.title}`
+    : params.title;
 
   const doc = new PdfCanvasBuilder(PAGE_W, PAGE_H);
 
   const drawDocHeader = (isFirst: boolean): number => {
     const h = isFirst ? 50 : 30;
-    doc.fillRect(MARGIN_X, 22, CONTENT_W, h, 0.19, 0.22, 0.56);
-    doc.drawText(params.title, MARGIN_X + 12, 40, isFirst ? 12.5 : 10, true, [1, 1, 1]);
+    doc.fillRect(MARGIN_X, 22, CONTENT_W, h, bannerRgb[0], bannerRgb[1], bannerRgb[2]);
+    doc.drawText(brandTitle, MARGIN_X + 12, 40, isFirst ? 12.5 : 10, true, [1, 1, 1]);
     if (isFirst) {
       doc.drawText(params.subtitle, MARGIN_X + 12, 57, 8, false, [0.85, 0.88, 0.99]);
     }
@@ -501,7 +527,8 @@ export function downloadStudentsCardsPdf(params: {
     cursorY += 14;
   });
 
-  doc.stampFooters(`SoftCode School ERP | Student Profile Dossier Export | Generated ${new Date().toLocaleString()}`);
+  const dossierBrand = params.branding?.schoolName || 'SoftCode School ERP';
+  doc.stampFooters(`${dossierBrand} | Student Profile Dossier Export | Generated ${new Date().toLocaleString()}`);
   triggerPdfDownload(doc.buildBytes(), params.filename);
 }
 
@@ -512,19 +539,24 @@ export function downloadTableCardsPdf(params: {
   filename: string;
   footerLabel?: string;
   emptyMessage?: string;
+  branding?: PdfBrandingOptions;
 }): void {
   const PAGE_W = 595.28; // A4 Portrait
   const PAGE_H = 841.89;
   const MARGIN_X = 28;
   const CONTENT_W = PAGE_W - MARGIN_X * 2;
   const BOTTOM_LIMIT = PAGE_H - 36;
+  const bannerRgb = hexToRgb01(params.branding?.headerAccentColor, [0.19, 0.22, 0.56]);
+  const brandTitle = params.branding?.schoolName
+    ? `${params.branding.schoolName} - ${params.title}`
+    : params.title;
 
   const doc = new PdfCanvasBuilder(PAGE_W, PAGE_H);
 
   const drawDocHeader = (isFirst: boolean): number => {
     const h = isFirst ? 50 : 30;
-    doc.fillRect(MARGIN_X, 22, CONTENT_W, h, 0.19, 0.22, 0.56);
-    doc.drawText(params.title, MARGIN_X + 12, 40, isFirst ? 12.5 : 10, true, [1, 1, 1]);
+    doc.fillRect(MARGIN_X, 22, CONTENT_W, h, bannerRgb[0], bannerRgb[1], bannerRgb[2]);
+    doc.drawText(brandTitle, MARGIN_X + 12, 40, isFirst ? 12.5 : 10, true, [1, 1, 1]);
     if (isFirst) {
       doc.drawText(params.subtitle, MARGIN_X + 12, 57, 8, false, [0.85, 0.88, 0.99]);
     }
@@ -607,7 +639,8 @@ export function downloadTableCardsPdf(params: {
     });
   }
 
-  const footerPrefix = params.footerLabel || 'SoftCode School ERP | Cards Export';
+  const cardsBrand = params.branding?.schoolName || 'SoftCode School ERP';
+  const footerPrefix = params.footerLabel || `${cardsBrand} | Cards Export`;
   doc.stampFooters(`${footerPrefix} | Generated ${new Date().toLocaleString()}`);
   triggerPdfDownload(doc.buildBytes(), params.filename);
 }

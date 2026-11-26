@@ -72,6 +72,10 @@ export const PRINT_SECTION_META: Record<PrintSectionKey, PrintSectionMeta> = {
   }
 };
 
+export type SchoolCurrencyCode = 'PKR' | 'USD' | 'AED' | 'SAR' | 'GBP';
+
+export type PrintChallanLogoCorner = 'top-right' | 'top-left' | 'top-center';
+
 export interface SchoolPrintBrandingConfig {
   schoolName: string;
   campusTagline: string;
@@ -82,7 +86,11 @@ export interface SchoolPrintBrandingConfig {
   signatoryTitle: string;
   monogramInitials: string;
   headerAccentColor: string;
+  currencySymbol: SchoolCurrencyCode;
   defaultPaperWidth: '80mm' | '58mm';
+  thermalDualCopy: boolean;
+  autoKickCashDrawer: boolean;
+  autoCutThermal: boolean;
   stampLabel: 'PAID' | 'VERIFIED' | 'ORIGINAL' | 'NONE';
   footerNote: string;
   showLogoCrest: boolean;
@@ -95,6 +103,22 @@ export interface SchoolPrintBrandingConfig {
   sectionOrder: PrintSectionKey[];
   hiddenSections: PrintSectionKey[];
   verificationOrder: PrintVerificationOrder;
+  challanLogoCorner: PrintChallanLogoCorner;
+  challanRefLabel: string;
+  challanDueDateLabel: string;
+  challanTuitionLabel: string;
+  challanLabLabel: string;
+  challanExamLabel: string;
+  challanActivityLabel: string;
+  challanLeftSignLabel: string;
+  challanRightSignLabel: string;
+  idCardValidThru: string;
+  idCardBadgeLabel: string;
+  stickerFooterNote: string;
+  dmcExamTitle: string;
+  dmcSessionLabel: string;
+  salaryMonthLabel: string;
+  salaryPayModeLabel: string;
 }
 
 export const DEFAULT_SCHOOL_PRINT_BRANDING: SchoolPrintBrandingConfig = {
@@ -107,24 +131,56 @@ export const DEFAULT_SCHOOL_PRINT_BRANDING: SchoolPrintBrandingConfig = {
   signatoryTitle: 'Principal & Controller of Examinations',
   monogramInitials: 'SPA',
   headerAccentColor: '#0f172a',
+  currencySymbol: 'PKR',
   defaultPaperWidth: '80mm',
-  stampLabel: 'VERIFIED',
+  thermalDualCopy: false,
+  autoKickCashDrawer: false,
+  autoCutThermal: true,
+  stampLabel: 'PAID',
   footerNote: 'Computer-generated official document. Verify barcode or 2D QR at the Campus Accounts Desk.',
   showLogoCrest: true,
   showQrVerification: true,
   showBarcodeVerification: true,
   logoDataUrl: '',
-  logoPlacement: 'left',
+  logoPlacement: 'top',
   logoSizePx: 44,
   headerAlign: 'center',
   sectionOrder: [...DEFAULT_PRINT_SECTION_ORDER],
   hiddenSections: [],
-  verificationOrder: 'barcode_first'
+  verificationOrder: 'barcode_first',
+  challanLogoCorner: 'top-right',
+  challanRefLabel: 'REF: 2026-OCT',
+  challanDueDateLabel: '10th Oct 2026',
+  challanTuitionLabel: 'Monthly Tuition Fee',
+  challanLabLabel: 'Science & IT Lab Fund',
+  challanExamLabel: 'Exam & Transcripts Fee',
+  challanActivityLabel: 'Sports & Activity Fund',
+  challanLeftSignLabel: 'Parent / Depositor Sign',
+  challanRightSignLabel: 'Bank Teller Stamp & Sign',
+  idCardValidThru: 'Mar 2027',
+  idCardBadgeLabel: 'Official Gate Card',
+  stickerFooterNote: 'Scan with USB / Gate Scanner',
+  dmcExamTitle: 'Mid-Term Examination 2026',
+  dmcSessionLabel: 'Session 2026-27',
+  salaryMonthLabel: 'October 2026',
+  salaryPayModeLabel: 'Direct Bank IBFT'
 };
 
 export function sanitizeBrandingLogoUrl(raw?: string): string {
   const val = String(raw || '').trim();
   if (/^data:image\/(?:png|jpeg|jpg|webp|gif);base64,[A-Za-z0-9+/=]+$/i.test(val)) {
+    return val;
+  }
+  return '';
+}
+
+function sanitizeCardPhotoUrl(raw?: string): string {
+  const val = String(raw || '').trim();
+  if (!val) return '';
+  if (/^data:image\/(?:png|jpeg|jpg|webp|gif);base64,[A-Za-z0-9+/=]+$/i.test(val)) {
+    return val;
+  }
+  if (/^https?:\/\/[^\s"'<>]+$/i.test(val)) {
     return val;
   }
   return '';
@@ -155,26 +211,55 @@ export function normalizeSchoolPrintBranding(
   );
 
   const placement: PrintLogoPlacement =
-    src.logoPlacement === 'top' || src.logoPlacement === 'right' ? src.logoPlacement : 'left';
+    src.logoPlacement === 'left' || src.logoPlacement === 'right' ? src.logoPlacement : 'top';
   const align: PrintHeaderAlign =
     src.headerAlign === 'left' || src.headerAlign === 'right' ? src.headerAlign : 'center';
   const verOrder: PrintVerificationOrder =
     src.verificationOrder === 'qr_first' || src.verificationOrder === 'side_by_side'
       ? src.verificationOrder
       : 'barcode_first';
+  const challanLogoCorner: PrintChallanLogoCorner =
+    src.challanLogoCorner === 'top-left' || src.challanLogoCorner === 'top-center'
+      ? src.challanLogoCorner
+      : 'top-right';
   const logoSizePx = Math.min(84, Math.max(24, Number(src.logoSizePx || DEFAULT_SCHOOL_PRINT_BRANDING.logoSizePx)));
+  const allowedCurrencies: SchoolCurrencyCode[] = ['PKR', 'USD', 'AED', 'SAR', 'GBP'];
+  const currencySymbol: SchoolCurrencyCode = allowedCurrencies.includes(src.currencySymbol as SchoolCurrencyCode)
+    ? (src.currencySymbol as SchoolCurrencyCode)
+    : 'PKR';
 
   return {
     ...DEFAULT_SCHOOL_PRINT_BRANDING,
     ...src,
     schoolName: String(src.schoolName || fallbackSchoolName || DEFAULT_SCHOOL_PRINT_BRANDING.schoolName),
+    currencySymbol,
+    defaultPaperWidth: src.defaultPaperWidth === '58mm' ? '58mm' : '80mm',
+    thermalDualCopy: Boolean(src.thermalDualCopy),
+    autoKickCashDrawer: Boolean(src.autoKickCashDrawer),
+    autoCutThermal: src.autoCutThermal !== false,
     logoDataUrl: sanitizeBrandingLogoUrl(src.logoDataUrl),
     logoPlacement: placement,
     logoSizePx,
     headerAlign: align,
     sectionOrder: dedupedOrder,
     hiddenSections,
-    verificationOrder: verOrder
+    verificationOrder: verOrder,
+    challanLogoCorner,
+    challanRefLabel: String(src.challanRefLabel || DEFAULT_SCHOOL_PRINT_BRANDING.challanRefLabel),
+    challanDueDateLabel: String(src.challanDueDateLabel || DEFAULT_SCHOOL_PRINT_BRANDING.challanDueDateLabel),
+    challanTuitionLabel: String(src.challanTuitionLabel || DEFAULT_SCHOOL_PRINT_BRANDING.challanTuitionLabel),
+    challanLabLabel: String(src.challanLabLabel || DEFAULT_SCHOOL_PRINT_BRANDING.challanLabLabel),
+    challanExamLabel: String(src.challanExamLabel || DEFAULT_SCHOOL_PRINT_BRANDING.challanExamLabel),
+    challanActivityLabel: String(src.challanActivityLabel || DEFAULT_SCHOOL_PRINT_BRANDING.challanActivityLabel),
+    challanLeftSignLabel: String(src.challanLeftSignLabel || DEFAULT_SCHOOL_PRINT_BRANDING.challanLeftSignLabel),
+    challanRightSignLabel: String(src.challanRightSignLabel || DEFAULT_SCHOOL_PRINT_BRANDING.challanRightSignLabel),
+    idCardValidThru: String(src.idCardValidThru || DEFAULT_SCHOOL_PRINT_BRANDING.idCardValidThru),
+    idCardBadgeLabel: String(src.idCardBadgeLabel || DEFAULT_SCHOOL_PRINT_BRANDING.idCardBadgeLabel),
+    stickerFooterNote: String(src.stickerFooterNote || DEFAULT_SCHOOL_PRINT_BRANDING.stickerFooterNote),
+    dmcExamTitle: String(src.dmcExamTitle || DEFAULT_SCHOOL_PRINT_BRANDING.dmcExamTitle),
+    dmcSessionLabel: String(src.dmcSessionLabel || DEFAULT_SCHOOL_PRINT_BRANDING.dmcSessionLabel),
+    salaryMonthLabel: String(src.salaryMonthLabel || DEFAULT_SCHOOL_PRINT_BRANDING.salaryMonthLabel),
+    salaryPayModeLabel: String(src.salaryPayModeLabel || DEFAULT_SCHOOL_PRINT_BRANDING.salaryPayModeLabel)
   };
 }
 
@@ -192,11 +277,11 @@ export interface SchoolDocumentFormatMeta {
 export const SCHOOL_DOCUMENT_CATALOG: SchoolDocumentFormatMeta[] = [
   {
     id: 'thermal_receipt',
-    title: 'Choti Billing Raseed (Fee Receipt)',
+    title: 'Thermal Fee Receipt (POS Slip)',
     urduHint: '80mm / 58mm Thermal Roll',
     paperBadge: '80mm / 58mm Roll',
     machineType: 'Thermal Receipt Printer (USB / Wi-Fi / Bluetooth)',
-    usedFor: 'Instant counter fee raseed jab student cash, JazzCash, Easypaisa, ya Raast se fee jama karaye.',
+    usedFor: 'Instant counter fee receipt when a student pays via Cash, JazzCash, EasyPaisa, or Raast.',
     printedFrom: 'Accountant Collect Fee Counter · Fee Payment Modal · Gateway Transactions',
     sampleCode: 'CH-2026-1001'
   },
@@ -205,8 +290,8 @@ export const SCHOOL_DOCUMENT_CATALOG: SchoolDocumentFormatMeta[] = [
     title: '3-Copy Bank Fee Challan',
     urduHint: 'Bank · School · Student Copy',
     paperBadge: 'A4 Landscape',
-    machineType: 'A4 Laser / Inkjet Office Printer (ya Save PDF)',
-    usedFor: 'Monthly aur admission fee bank counter (Meezan/HBL/1Bill/Raast) mein jama karane ke liye.',
+    machineType: 'A4 Laser / Inkjet Office Printer (or Save PDF)',
+    usedFor: 'For paying monthly and admission fees at partner bank counters (Meezan, HBL, 1Bill, or Raast).',
     printedFrom: 'Students Table (Printer icon) · Admissions · Fees & Finance Tab',
     sampleCode: 'CH-2026-1001'
   },
@@ -215,8 +300,8 @@ export const SCHOOL_DOCUMENT_CATALOG: SchoolDocumentFormatMeta[] = [
     title: 'Student & Staff Gate ID Card',
     urduHint: 'Barcode + 2D QR Gate Badge',
     paperBadge: 'CR80 / A4 Cutout',
-    machineType: 'A4 Printer (Laminate/Cutout) ya PVC Card Printer',
-    usedFor: 'Subah school gate par USB barcode scanner se 1-second Student/Teacher attendance aur Gate Security ke liye.',
+    machineType: 'A4 Printer (Cutout / Lamination) or PVC Card Printer',
+    usedFor: 'For 1-second student and staff gate attendance scanning and campus security verification.',
     printedFrom: 'Students Dossier · Teachers/Staff Hub · Attendance Verification Hub',
     sampleCode: 'STU-1001'
   },
@@ -226,7 +311,7 @@ export const SCHOOL_DOCUMENT_CATALOG: SchoolDocumentFormatMeta[] = [
     urduHint: '3-Column Self-Adhesive Grid',
     paperBadge: 'A4 Portrait Grid',
     machineType: 'A4 Laser / Inkjet Printer (A4 Sticker Paper)',
-    usedFor: 'Notebooks, old ID cards, library books, ya fee folders par STU-/EMP-/CH- barcode sticker chipkane ke liye.',
+    usedFor: 'Self-adhesive STU-, EMP-, and CH- barcode labels for notebooks, ID cards, library books, and folders.',
     printedFrom: 'Printer & Scanner Terminal -> Student Stickers / Staff EMP Stickers',
     sampleCode: 'STU-1001'
   },
@@ -235,8 +320,8 @@ export const SCHOOL_DOCUMENT_CATALOG: SchoolDocumentFormatMeta[] = [
     title: 'Official Exam Result Card (DMC)',
     urduHint: 'Subject Marks, GPA & Rank',
     paperBadge: 'A4 Portrait',
-    machineType: 'A4 Laser / Inkjet Office Printer (ya WhatsApp PDF)',
-    usedFor: 'Term-wise / Annual result parents ko dene aur official board record file rakhne ke liye.',
+    machineType: 'A4 Laser / Inkjet Office Printer (or WhatsApp PDF)',
+    usedFor: 'For issuing term-wise or annual official exam transcripts (DMC) to parents and academic archives.',
     printedFrom: 'Examinations & Grades Tab · Student Portal Academics · Reports',
     sampleCode: 'DMC-2026-1001'
   },
@@ -245,8 +330,8 @@ export const SCHOOL_DOCUMENT_CATALOG: SchoolDocumentFormatMeta[] = [
     title: 'Staff & Faculty Monthly Salary Slip',
     urduHint: 'Pay, Allowances & Deductions',
     paperBadge: 'A4 Portrait',
-    machineType: 'A4 Laser / Inkjet Office Printer (ya Save PDF)',
-    usedFor: 'Teachers, Principals aur Support Staff ko mahana tankhwah aur deductions ka signed record dene ke liye.',
+    machineType: 'A4 Laser / Inkjet Office Printer (or Save PDF)',
+    usedFor: 'For issuing monthly salary, allowances, and deduction statements to faculty and staff.',
     printedFrom: 'Teachers & Staff Payroll Tab · Finance Arrears & Salary Reports',
     sampleCode: 'PAY-2026-301'
   }
@@ -266,8 +351,11 @@ function safeAccent(color?: string): string {
   return /^#[0-9a-fA-F]{6}$/.test(c) ? c : '#0f172a';
 }
 
-function formatPkr(n: number): string {
-  return Number(n || 0).toLocaleString('en-PK');
+function formatMoney(n: number, currency: string = 'PKR'): string {
+  const num = Number(n || 0);
+  if (!Number.isFinite(num)) return '0';
+  if (currency === 'PKR') return num.toLocaleString('en-PK');
+  return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function renderLogoOrCrestHtml(
@@ -294,6 +382,7 @@ export interface A4ChallanPrintData {
   grade: string;
   guardianName: string;
   bankName: string;
+  bankBranchName?: string;
   branchCode: string;
   accountTitle: string;
   accountNumber: string;
@@ -304,8 +393,13 @@ export interface A4ChallanPrintData {
   labFee: number;
   examFee: number;
   activityFee: number;
+  feeItems?: Array<{ label: string; amount: number }>;
+  previousArrears?: number;
+  discountAmount?: number;
+  paidAmount?: number;
+  balanceDue?: number;
   lateFine: number;
-  statusLabel: 'PAID' | 'UNPAID' | 'PENDING';
+  statusLabel: 'PAID' | 'UNPAID' | 'PENDING' | 'PARTIAL';
 }
 
 export function buildA4BankChallanHtml(
@@ -313,55 +407,92 @@ export function buildA4BankChallanHtml(
   rawBranding: SchoolPrintBrandingConfig
 ): string {
   const branding = normalizeSchoolPrintBranding(rawBranding);
+  const cur = branding.currencySymbol || 'PKR';
   const accent = safeAccent(branding.headerAccentColor);
-  const totalWithin = Number(data.tuitionFee || 0) + Number(data.labFee || 0) + Number(data.examFee || 0) + Number(data.activityFee || 0);
-  const totalAfter = totalWithin + Number(data.lateFine || 0);
+  const feeRows: Array<{ label: string; amount: number }> =
+    Array.isArray(data.feeItems) && data.feeItems.length > 0
+      ? data.feeItems.map((it) => ({ label: String(it.label || 'Fee Item'), amount: Math.max(0, Number(it.amount || 0)) }))
+      : [
+          { label: branding.challanTuitionLabel || 'Monthly Tuition Fee', amount: Math.max(0, Number(data.tuitionFee || 0)) },
+          ...(Number(data.labFee || 0) > 0 ? [{ label: branding.challanLabLabel || 'Science & IT Lab Fund', amount: Number(data.labFee) }] : []),
+          ...(Number(data.examFee || 0) > 0 ? [{ label: branding.challanExamLabel || 'Exam & Transcripts Fee', amount: Number(data.examFee) }] : []),
+          ...(Number(data.activityFee || 0) > 0 ? [{ label: branding.challanActivityLabel || 'Sports & Activity Fund', amount: Number(data.activityFee) }] : [])
+        ];
+  const baseTotal = feeRows.reduce((s, r) => s + Number(r.amount || 0), 0);
+  const arrears = Math.max(0, Number(data.previousArrears || 0));
+  const discount = Math.max(0, Number(data.discountAmount || 0));
+  const paidAlready = Math.max(0, Number(data.paidAmount || 0));
+  const totalWithin =
+    typeof data.balanceDue === 'number' && Number.isFinite(data.balanceDue)
+      ? Math.max(0, data.balanceDue)
+      : Math.max(0, baseTotal + arrears - discount - paidAlready);
+  const lateFine = Math.max(0, Number(data.lateFine || 0));
+  const totalAfter = totalWithin + lateFine;
   const barcodeSvg = branding.showBarcodeVerification
     ? buildCode128SvgMarkup(data.challanNo, 28, '#0f172a')
     : '';
-  const qrPayload = `CHALLAN:${data.challanNo}|NAME:${data.studentName}|ROLL:${data.rollNo}|DUE:PKR ${totalWithin}|STATUS:${data.statusLabel}`;
+  const qrPayload = `CHALLAN:${data.challanNo}|NAME:${data.studentName}|ROLL:${data.rollNo}|DUE:${cur} ${totalWithin}|STATUS:${data.statusLabel}`;
   const qrSvg = branding.showQrVerification
     ? buildQrCodeSvgMarkup(qrPayload, 50, accent, 2, 'M')
     : '';
   const challanLogoSize = Math.min(46, Math.max(24, Math.round(branding.logoSizePx * 0.72)));
-  const badgeHtml = renderLogoOrCrestHtml(branding, accent, challanLogoSize, 10, 5);
+  const badgeHtml = renderLogoOrCrestHtml(branding, accent, challanLogoSize, 10, 6);
   const hidden = new Set(branding.hiddenSections);
+  const logoCorner = branding.challanLogoCorner || 'top-right';
+  const refBadgeText = branding.challanRefLabel || data.issueMonth;
 
-  const headerTextAlign = branding.logoPlacement === 'top'
-    ? branding.headerAlign
-    : (branding.logoPlacement === 'left' ? 'left' : 'right');
-
-  const brandHeaderBlock = branding.logoPlacement === 'top'
-    ? `<div style="text-align:${headerTextAlign};">
-        ${badgeHtml ? `<div style="margin-bottom:4px;">${badgeHtml}</div>` : ''}
-        <div class="school-name">${escapeHtml(branding.schoolName)}</div>
-        <div class="school-meta">${escapeHtml(branding.registrationNo)}</div>
-        <div class="school-meta">${escapeHtml(branding.phone)}</div>
-      </div>`
-    : `<div class="brand-row" style="flex-direction:${branding.logoPlacement === 'right' ? 'row-reverse' : 'row'};">
-        ${badgeHtml}
-        <div class="brand-txt" style="text-align:${headerTextAlign};flex:1;">
-          <div class="school-name">${escapeHtml(branding.schoolName)}</div>
-          <div class="school-meta">${escapeHtml(branding.registrationNo)}</div>
-          <div class="school-meta">${escapeHtml(branding.phone)}</div>
-        </div>
-      </div>`;
+  const feeRowsHtml = feeRows
+    .map((r) => `<tr><td>${escapeHtml(r.label)}</td><td class="right mono">${formatMoney(r.amount, cur)}</td></tr>`)
+    .join('');
 
   const copies = ['Student Copy', 'School Copy', 'Bank Branch Copy'];
   const columnsHtml = copies
     .map((copyName) => {
-      const blocks: Record<PrintSectionKey, string> = {
-        header: `
-          <div class="copy-top" style="border-bottom: 2px solid ${accent};">
-            ${brandHeaderBlock}
+      const headerHtml = logoCorner === 'top-center'
+        ? `<div class="copy-top" style="border-bottom: 2px solid ${accent};">
+            <div style="text-align:center;">
+              ${badgeHtml ? `<div style="margin-bottom:4px;display:flex;justify-content:center;">${badgeHtml}</div>` : ''}
+              <div class="school-name">${escapeHtml(branding.schoolName)}</div>
+              <div class="school-meta">${escapeHtml(branding.registrationNo)} · ${escapeHtml(branding.phone)}</div>
+            </div>
             <div class="copy-tag-row">
               <span class="copy-badge" style="background:${accent};">${escapeHtml(copyName)}</span>
-              <span class="ref-mono">${escapeHtml(data.issueMonth)}</span>
+              <span class="ref-mono">${escapeHtml(refBadgeText)}</span>
             </div>
-          </div>`,
+          </div>`
+        : (logoCorner === 'top-left'
+          ? `<div class="copy-top" style="border-bottom: 2px solid ${accent};">
+              <div class="brand-row">
+                ${badgeHtml}
+                <div class="brand-txt" style="flex:1;min-width:0;">
+                  <div class="school-name">${escapeHtml(branding.schoolName)}</div>
+                  <div class="school-meta">${escapeHtml(branding.registrationNo)}</div>
+                </div>
+              </div>
+              <div class="copy-tag-row">
+                <span class="copy-badge" style="background:${accent};">${escapeHtml(copyName)}</span>
+                <span class="ref-mono">${escapeHtml(refBadgeText)}</span>
+              </div>
+            </div>`
+          : `<div class="copy-top" style="border-bottom: 2px solid ${accent};">
+              <div class="copy-tag-row" style="margin-top:0;align-items:flex-start;gap:8px;">
+                <div style="flex:1;min-width:0;">
+                  <span class="copy-badge" style="background:${accent};">${escapeHtml(copyName)}</span>
+                  <div class="school-name" style="margin-top:5px;">${escapeHtml(branding.schoolName)}</div>
+                  <div class="school-meta">${escapeHtml(branding.registrationNo)}</div>
+                </div>
+                <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0;">
+                  <span class="ref-mono">${escapeHtml(refBadgeText)}</span>
+                  ${badgeHtml}
+                </div>
+              </div>
+            </div>`);
+
+      const blocks: Record<PrintSectionKey, string> = {
+        header: headerHtml,
         meta: `
           <div class="bank-box">
-            <div class="bank-title">${escapeHtml(data.bankName)} · Code ${escapeHtml(data.branchCode)}</div>
+            <div class="bank-title">${escapeHtml(data.bankName)}${data.bankBranchName ? ` (${escapeHtml(data.bankBranchName)})` : ''} · Code ${escapeHtml(data.branchCode)}</div>
             <div><strong>A/C Title:</strong> ${escapeHtml(data.accountTitle)}</div>
             <div class="mono"><strong>A/C #:</strong> ${escapeHtml(data.accountNumber)}</div>
             <div class="mono"><strong>IBAN:</strong> ${escapeHtml(data.iban)}</div>
@@ -374,24 +505,24 @@ export function buildA4BankChallanHtml(
             <tr><td>Student</td><td class="bold">${escapeHtml(data.studentName)}</td></tr>
             <tr><td>Guardian</td><td>${escapeHtml(data.guardianName)}</td></tr>
             <tr><td>Class / Roll</td><td class="bold">${escapeHtml(data.grade)} · #${escapeHtml(data.rollNo)}</td></tr>
-            <tr><td>Due Date</td><td class="bold due">${escapeHtml(data.dueDate)}</td></tr>
+            <tr><td>Due Date</td><td class="bold due">${escapeHtml(data.dueDate || branding.challanDueDateLabel)}</td></tr>
           </table>`,
         amounts: `
           <div>
             <table class="fee-tbl">
-              <thead><tr><th>Particulars</th><th class="right">PKR</th></tr></thead>
+              <thead><tr><th>Particulars</th><th class="right">${escapeHtml(cur)}</th></tr></thead>
               <tbody>
-                <tr><td>Monthly Tuition Fee</td><td class="right mono">${formatPkr(data.tuitionFee)}</td></tr>
-                <tr><td>Science &amp; IT Lab Fund</td><td class="right mono">${formatPkr(data.labFee)}</td></tr>
-                <tr><td>Examination &amp; Stationery</td><td class="right mono">${formatPkr(data.examFee)}</td></tr>
-                <tr><td>Sports &amp; Activity Fund</td><td class="right mono">${formatPkr(data.activityFee)}</td></tr>
+                ${feeRowsHtml}
+                ${arrears > 0 ? `<tr><td>Previous Arrears</td><td class="right mono">+${formatMoney(arrears, cur)}</td></tr>` : ''}
+                ${discount > 0 ? `<tr><td>Concession / Scholarship</td><td class="right mono">-${formatMoney(discount, cur)}</td></tr>` : ''}
+                ${paidAlready > 0 ? `<tr><td>Already Paid / Credited</td><td class="right mono">-${formatMoney(paidAlready, cur)}</td></tr>` : ''}
               </tbody>
             </table>
             <div class="totals" style="border-color:${accent};">
-              <div class="tot-row"><span>Payable Within Due Date</span><span class="mono bold">PKR ${formatPkr(totalWithin)}</span></div>
-              <div class="tot-row late"><span>After Due Date (+${formatPkr(data.lateFine)})</span><span class="mono bold">PKR ${formatPkr(totalAfter)}</span></div>
+              <div class="tot-row"><span>Payable Within Due Date</span><span class="mono bold">${escapeHtml(cur)} ${formatMoney(totalWithin, cur)}</span></div>
+              <div class="tot-row late"><span>After Due Date (+${formatMoney(lateFine, cur)})</span><span class="mono bold">${escapeHtml(cur)} ${formatMoney(totalAfter, cur)}</span></div>
             </div>
-            ${branding.stampLabel !== 'NONE' ? `<div class="stamp-inline">${escapeHtml(data.statusLabel === 'PAID' ? 'PAID / CLEARED' : branding.stampLabel)}</div>` : ''}
+            ${branding.stampLabel !== 'NONE' ? `<div class="stamp-inline">${escapeHtml(data.statusLabel === 'PAID' ? 'PAID / CLEARED' : (data.statusLabel === 'PARTIAL' ? 'PARTIAL BALANCE' : branding.stampLabel))}</div>` : ''}
           </div>`,
         verification: (() => {
           if (!barcodeSvg && !qrSvg) return '';
@@ -409,8 +540,8 @@ export function buildA4BankChallanHtml(
         footer: `
           <div class="bottom-block">
             <div class="signs">
-              <div><div class="line"></div><span>Depositor Sign</span></div>
-              <div><div class="line"></div><span>Bank / Bursar Stamp</span></div>
+              <div><div class="line"></div><span>${escapeHtml(branding.challanLeftSignLabel || 'Parent / Depositor Sign')}</span></div>
+              <div><div class="line"></div><span>${escapeHtml(branding.challanRightSignLabel || 'Bank Teller Stamp & Sign')}</span></div>
             </div>
             <div class="foot">${escapeHtml(branding.footerNote)}</div>
           </div>`
@@ -482,22 +613,29 @@ export interface StudentIdCardPrintData {
   validThrough: string;
   campusBranch: string;
   initials: string;
+  photoDataUrl?: string;
+  bloodGroup?: string;
+  issueDate?: string;
+  cardTypeLabel?: string;
 }
 
-export function buildStudentIdCardPrintHtml(
+function buildSingleIdCardPairHtml(
   data: StudentIdCardPrintData,
-  rawBranding: SchoolPrintBrandingConfig
+  branding: SchoolPrintBrandingConfig,
+  accent: string
 ): string {
-  const branding = normalizeSchoolPrintBranding(rawBranding);
-  const accent = safeAccent(branding.headerAccentColor);
-  const barcodeSvg = buildCode128SvgMarkup(data.code, 28, '#0f172a');
-  const qrSvg = buildQrCodeSvgMarkup(
-    `ID:${data.code}|NAME:${data.holderName}|SCHOOL:${branding.schoolName}|VALID:${data.validThrough}`,
-    66,
-    accent,
-    2,
-    'M'
-  );
+  const barcodeSvg = branding.showBarcodeVerification !== false
+    ? buildCode128SvgMarkup(data.code, 28, '#0f172a')
+    : '';
+  const qrSvg = branding.showQrVerification !== false
+    ? buildQrCodeSvgMarkup(
+        `ID:${data.code}|NAME:${data.holderName}|SCHOOL:${branding.schoolName}|VALID:${data.validThrough}`,
+        66,
+        accent,
+        2,
+        'M'
+      )
+    : '';
   const safeLogo = sanitizeBrandingLogoUrl(branding.logoDataUrl);
   const cardBadgeHtml = safeLogo
     ? `<img src="${safeLogo}" alt="Logo" style="width:26px;height:26px;object-fit:contain;border-radius:4px;background:#fff;padding:1px;flex-shrink:0;" />`
@@ -506,79 +644,127 @@ export function buildStudentIdCardPrintHtml(
       : '');
   const headDirection = branding.logoPlacement === 'right' ? 'row-reverse' : 'row';
   const headTextAlign = branding.logoPlacement === 'right' ? 'right' : 'left';
+  const safePhoto = sanitizeCardPhotoUrl(data.photoDataUrl);
+  const avatarInner = safePhoto
+    ? `<img src="${escapeHtml(safePhoto)}" alt="" referrerpolicy="no-referrer" style="width:100%;height:100%;object-fit:cover;display:block;" />`
+    : escapeHtml(data.initials);
 
-  return `<!doctype html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <title>Gate ID Card - ${escapeHtml(data.code)}</title>
-  <style>
-    @page { size: A4 portrait; margin: 15mm; }
+  return `
+    <div class="card-pair">
+      <div class="card">
+        <div class="card-head" style="flex-direction:${headDirection};">
+          ${cardBadgeHtml}
+          <div style="flex:1;text-align:${headTextAlign};min-width:0;">
+            <div class="h-title">${escapeHtml(branding.schoolName)}</div>
+            <div class="h-sub">${escapeHtml(data.campusBranch)} · ${escapeHtml(data.cardTypeLabel || branding.idCardBadgeLabel || 'Official Gate Card')}</div>
+          </div>
+        </div>
+        <div class="front-body">
+          <div class="avatar">${avatarInner}</div>
+          <div class="info">
+            <div class="holder">${escapeHtml(data.holderName)}</div>
+            <div><strong>Class / Dept:</strong> ${escapeHtml(data.roleOrGrade)}</div>
+            <div><strong>ID Code:</strong> <span class="mono">${escapeHtml(data.code)}</span></div>
+            <div><strong>Guardian / Unit:</strong> ${escapeHtml(data.guardianOrDept)}</div>
+            <div><strong>Valid Thru:</strong> ${escapeHtml(data.validThrough || branding.idCardValidThru)}${data.bloodGroup ? ` · <strong>Blood:</strong> ${escapeHtml(data.bloodGroup)}` : ''}</div>
+          </div>
+        </div>
+        <div class="front-foot">
+          <div class="bar-box">${barcodeSvg}</div>
+          <div class="sign">${escapeHtml(branding.signatoryTitle)}</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="h-title">EMERGENCY &amp; VERIFICATION DETAILS</div>
+            <div class="h-sub">${escapeHtml(branding.registrationNo)}</div>
+          </div>
+        </div>
+        <div class="back-body">
+          <div>
+            <div><strong>Campus Address:</strong> ${escapeHtml(branding.address)}</div>
+            <div><strong>Emergency Helpline:</strong> ${escapeHtml(data.phone || branding.phone)}</div>
+            ${data.issueDate ? `<div><strong>Issued On:</strong> ${escapeHtml(data.issueDate)}</div>` : ''}
+            <div><strong>Portal:</strong> ${escapeHtml(branding.website)}</div>
+            <div style="margin-top:4px; color:#475569;">Scan Code-128 or 2D QR at campus gate to mark attendance. If found, return to Campus Office.</div>
+          </div>
+          <div>${qrSvg}</div>
+        </div>
+        <div class="back-foot">${escapeHtml(branding.footerNote)}</div>
+      </div>
+    </div>`;
+}
+
+function getIdCardStyles(accent: string): string {
+  return `
+    @page { size: A4 portrait; margin: 12mm; }
     * { box-sizing: border-box; }
     body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #0f172a; background: #fff; }
-    .wrap { display: flex; flex-wrap: wrap; gap: 12mm; justify-content: flex-start; }
+    .sheet-hdr { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #94a3b8; padding-bottom: 6px; margin-bottom: 8mm; font-size: 10px; color: #475569; }
+    .wrap { display: flex; flex-direction: column; gap: 8mm; }
+    .card-pair { display: flex; flex-wrap: wrap; gap: 10mm; justify-content: flex-start; padding-bottom: 6mm; border-bottom: 1px dashed #cbd5e1; page-break-inside: avoid; }
     .card { width: 85.6mm; height: 54mm; border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; page-break-inside: avoid; }
     .card-head { background: ${accent}; color: #fff; padding: 6px 10px; display: flex; align-items: center; gap: 7px; }
     .crest { width: 24px; height: 24px; border-radius: 5px; background: rgba(255,255,255,0.18); font-weight: 900; font-size: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .h-title { font-size: 9.5px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.3px; }
-    .h-sub { font-size: 7.5px; opacity: 0.85; }
+    .h-title { font-size: 9.5px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .h-sub { font-size: 7.5px; opacity: 0.85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .front-body { padding: 7px 10px; display: flex; align-items: center; gap: 9px; flex: 1; }
-    .avatar { width: 42px; height: 48px; border-radius: 6px; border: 1.5px solid ${accent}; background: #f1f5f9; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 14px; color: ${accent}; flex-shrink: 0; }
+    .avatar { width: 42px; height: 48px; border-radius: 6px; border: 1.5px solid ${accent}; background: #f1f5f9; overflow: hidden; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 14px; color: ${accent}; flex-shrink: 0; }
     .info { flex: 1; min-width: 0; font-size: 8.5px; line-height: 1.35; }
-    .holder { font-size: 11px; font-weight: 900; color: #0f172a; margin-bottom: 2px; }
+    .holder { font-size: 11px; font-weight: 900; color: #0f172a; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .mono { font-family: monospace; font-weight: 800; }
     .front-foot { border-top: 1px solid #e2e8f0; padding: 4px 10px; display: flex; align-items: center; justify-content: space-between; background: #f8fafc; }
     .bar-box { width: 52mm; }
     .sign { font-size: 7px; font-weight: 800; text-transform: uppercase; color: #475569; text-align: right; }
     .back-body { padding: 8px 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px; flex: 1; font-size: 8px; line-height: 1.45; }
     .back-foot { background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 4px 10px; font-size: 7.5px; text-align: center; color: #475569; }
-  </style>
+  `;
+}
+
+export function buildStudentIdCardPrintHtml(
+  data: StudentIdCardPrintData,
+  rawBranding: SchoolPrintBrandingConfig
+): string {
+  const branding = normalizeSchoolPrintBranding(rawBranding);
+  const accent = safeAccent(branding.headerAccentColor);
+  return `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Gate ID Card - ${escapeHtml(data.code)}</title>
+  <style>${getIdCardStyles(accent)}</style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="card">
-      <div class="card-head" style="flex-direction:${headDirection};">
-        ${cardBadgeHtml}
-        <div style="flex:1;text-align:${headTextAlign};">
-          <div class="h-title">${escapeHtml(branding.schoolName)}</div>
-          <div class="h-sub">${escapeHtml(data.campusBranch)} · OFFICIAL GATE CARD</div>
-        </div>
-      </div>
-      <div class="front-body">
-        <div class="avatar">${escapeHtml(data.initials)}</div>
-        <div class="info">
-          <div class="holder">${escapeHtml(data.holderName)}</div>
-          <div><strong>Class / Dept:</strong> ${escapeHtml(data.roleOrGrade)}</div>
-          <div><strong>ID Code:</strong> <span class="mono">${escapeHtml(data.code)}</span></div>
-          <div><strong>Guardian / Unit:</strong> ${escapeHtml(data.guardianOrDept)}</div>
-          <div><strong>Valid Thru:</strong> ${escapeHtml(data.validThrough)}</div>
-        </div>
-      </div>
-      <div class="front-foot">
-        <div class="bar-box">${barcodeSvg}</div>
-        <div class="sign">${escapeHtml(branding.signatoryTitle)}</div>
-      </div>
-    </div>
+  <div class="wrap">${buildSingleIdCardPairHtml(data, branding, accent)}</div>
+</body>
+</html>`;
+}
 
-    <div class="card">
-      <div class="card-head">
-        <div>
-          <div class="h-title">EMERGENCY &amp; VERIFICATION DETAILS</div>
-          <div class="h-sub">${escapeHtml(branding.registrationNo)}</div>
-        </div>
-      </div>
-      <div class="back-body">
-        <div>
-          <div><strong>Campus Address:</strong> ${escapeHtml(branding.address)}</div>
-          <div><strong>Emergency Helpline:</strong> ${escapeHtml(data.phone || branding.phone)}</div>
-          <div><strong>Portal:</strong> ${escapeHtml(branding.website)}</div>
-          <div style="margin-top:4px; color:#475569;">Scan Code-128 or 2D QR at campus gate to mark attendance. If found, return to Campus Office.</div>
-        </div>
-        <div>${qrSvg}</div>
-      </div>
-      <div class="back-foot">${escapeHtml(branding.footerNote)}</div>
-    </div>
+export function buildBulkIdCardSheetHtml(
+  cards: StudentIdCardPrintData[],
+  rawBranding: SchoolPrintBrandingConfig
+): string {
+  const branding = normalizeSchoolPrintBranding(rawBranding);
+  const accent = safeAccent(branding.headerAccentColor);
+  const pairsHtml = (cards || [])
+    .map((card) => buildSingleIdCardPairHtml(card, branding, accent))
+    .join('\n');
+
+  return `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Bulk CR80 Gate ID Cards - ${escapeHtml(branding.schoolName)}</title>
+  <style>${getIdCardStyles(accent)}</style>
+</head>
+<body>
+  <div class="sheet-hdr">
+    <strong>${escapeHtml(branding.schoolName)} — Bulk CR80 Gate ID Card Sheet (${cards.length} Cards · Front &amp; Back)</strong>
+    <span>Cut along dashed lines &amp; laminate</span>
   </div>
+  <div class="wrap">${pairsHtml}</div>
 </body>
 </html>`;
 }
@@ -601,6 +787,10 @@ export interface ResultDmcPrintData {
   grade: string;
   subjects: ResultDmcSubject[];
   classRank: string;
+  resultStatus?: string;
+  passingPercent?: number;
+  attendancePercent?: string;
+  principalRemarks?: string;
 }
 
 export function buildResultDmcHtml(
@@ -611,9 +801,26 @@ export function buildResultDmcHtml(
   const accent = safeAccent(branding.headerAccentColor);
   const totalMax = data.subjects.reduce((a, b) => a + Number(b.maxMarks || 0), 0);
   const totalObt = data.subjects.reduce((a, b) => a + Number(b.obtainedMarks || 0), 0);
-  const pct = totalMax > 0 ? ((totalObt / totalMax) * 100).toFixed(1) : '0.0';
+  const pctNum = totalMax > 0 ? (totalObt / totalMax) * 100 : 0;
+  const pct = pctNum.toFixed(1);
+  const passThreshold = Number(data.passingPercent ?? 40);
+  const failedSubjects = data.subjects.filter((s) => {
+    const mMax = Number(s.maxMarks || 0);
+    const mObt = Number(s.obtainedMarks || 0);
+    const subPct = mMax > 0 ? (mObt / mMax) * 100 : 0;
+    return String(s.grade || '').trim().toUpperCase() === 'F' || subPct < passThreshold;
+  }).length;
+  const computedResultStatus = data.resultStatus
+    ? String(data.resultStatus).toUpperCase()
+    : (pctNum < passThreshold || failedSubjects >= 2
+      ? 'FAIL · DETAINED'
+      : (failedSubjects === 1 ? 'COMPARTMENT' : 'PASS · PROMOTED'));
+  const statusColor = computedResultStatus.includes('FAIL')
+    ? '#b91c1c'
+    : (computedResultStatus.includes('COMPARTMENT') ? '#b45309' : '#065f46');
+
   const qrSvg = branding.showQrVerification
-    ? buildQrCodeSvgMarkup(`DMC:${data.dmcNo}|ROLL:${data.rollNo}|SCORE:${totalObt}/${totalMax}|PCT:${pct}%`, 68, accent, 2, 'M')
+    ? buildQrCodeSvgMarkup(`DMC:${data.dmcNo}|ROLL:${data.rollNo}|SCORE:${totalObt}/${totalMax}|PCT:${pct}%|RES:${computedResultStatus}`, 68, accent, 2, 'M')
     : '';
   const barcodeSvg = branding.showBarcodeVerification
     ? buildCode128SvgMarkup(data.dmcNo, 26, '#0f172a')
@@ -657,12 +864,13 @@ export function buildResultDmcHtml(
     header: `
       <div style="border-bottom:2px solid ${accent};padding-bottom:10px;">
         ${headerInnerHtml}
-        <div class="doc-title">Detailed Marks Certificate (Official Academic Transcript) — ${escapeHtml(data.examTitle)}</div>
+        <div class="doc-title">Detailed Marks Certificate (Official Academic Transcript) — ${escapeHtml(data.examTitle || branding.dmcExamTitle)}</div>
       </div>`,
     meta: `
       <div style="display:flex;justify-content:space-between;align-items:center;border:1px solid #e2e8f0;padding:6px 12px;font-size:10px;background:#f8fafc;">
         <div class="mono bold">DMC #: ${escapeHtml(data.dmcNo)}</div>
-        <div>Session: <strong>${escapeHtml(data.session)}</strong></div>
+        <div>Session: <strong>${escapeHtml(data.session || branding.dmcSessionLabel)}</strong></div>
+        ${data.attendancePercent ? `<div>Attendance: <strong>${escapeHtml(data.attendancePercent)}</strong></div>` : ''}
         <div>Helpline: <strong>${escapeHtml(branding.phone)}</strong></div>
       </div>`,
     person: `
@@ -691,8 +899,9 @@ export function buildResultDmcHtml(
           <div><div class="sum-lbl">Total Marks</div><div class="sum-val mono">${totalObt} / ${totalMax}</div></div>
           <div><div class="sum-lbl">Percentage</div><div class="sum-val mono">${pct}%</div></div>
           <div><div class="sum-lbl">Class Rank</div><div class="sum-val">${escapeHtml(data.classRank)}</div></div>
-          <div><div class="sum-lbl">Result Status</div><div class="sum-val">PASS · PROMOTED</div></div>
+          <div><div class="sum-lbl">Result Status</div><div class="sum-val" style="color:${statusColor};">${escapeHtml(computedResultStatus)}</div></div>
         </div>
+        ${data.principalRemarks ? `<div style="margin-top:8px;border:1px dashed #cbd5e1;padding:6px 10px;font-size:10px;color:#334155;"><strong>Principal / Controller Remarks:</strong> ${escapeHtml(data.principalRemarks)}</div>` : ''}
       </div>`,
     verification: (() => {
       if (!barcodeSvg && !qrSvg) return '';
@@ -776,6 +985,7 @@ export interface SalarySlipPrintData {
   taxDeduction: number;
   advanceDeduction: number;
   paymentMode: string;
+  statusLabel?: string;
 }
 
 export function buildSalarySlipHtml(
@@ -783,12 +993,13 @@ export function buildSalarySlipHtml(
   rawBranding: SchoolPrintBrandingConfig
 ): string {
   const branding = normalizeSchoolPrintBranding(rawBranding);
+  const cur = branding.currencySymbol || 'PKR';
   const accent = safeAccent(branding.headerAccentColor);
   const gross = Number(data.basicPay || 0) + Number(data.houseAllowance || 0) + Number(data.medicalAllowance || 0);
   const deductions = Number(data.taxDeduction || 0) + Number(data.advanceDeduction || 0);
   const net = gross - deductions;
   const qrSvg = branding.showQrVerification
-    ? buildQrCodeSvgMarkup(`PAY:${data.slipNo}|EMP:${data.empCode}|NET:PKR ${net}|MONTH:${data.payMonth}`, 62, accent, 2, 'M')
+    ? buildQrCodeSvgMarkup(`PAY:${data.slipNo}|EMP:${data.empCode}|NET:${cur} ${net}|MONTH:${data.payMonth}`, 62, accent, 2, 'M')
     : '';
   const barcodeSvg = branding.showBarcodeVerification
     ? buildCode128SvgMarkup(data.empCode, 26, '#0f172a')
@@ -816,14 +1027,14 @@ export function buildSalarySlipHtml(
         ${headerHtml}
         <div class="banner">
           <span>OFFICIAL MONTHLY SALARY DISBURSEMENT SLIP</span>
-          <span>${escapeHtml(data.payMonth)}</span>
+          <span>${escapeHtml(data.payMonth || branding.salaryMonthLabel)}${data.statusLabel ? ` · ${escapeHtml(data.statusLabel)}` : ''}</span>
         </div>
       </div>`,
     meta: `
       <div style="display:flex;justify-content:space-between;border:1px solid #e2e8f0;background:#f8fafc;padding:6px 10px;font-size:10px;">
         <span class="mono bold">Slip #: ${escapeHtml(data.slipNo)}</span>
-        <span>Pay Period: <strong>${escapeHtml(data.payMonth)}</strong></span>
-        <span>Mode: <strong>${escapeHtml(data.paymentMode)}</strong></span>
+        <span>Pay Period: <strong>${escapeHtml(data.payMonth || branding.salaryMonthLabel)}</strong></span>
+        <span>Mode: <strong>${escapeHtml(data.paymentMode || branding.salaryPayModeLabel)}</strong></span>
       </div>`,
     person: `
       <div class="grid">
@@ -837,27 +1048,27 @@ export function buildSalarySlipHtml(
       <div>
         <div class="tbl-wrap">
           <table>
-            <thead><tr><th>Earnings</th><th class="right">PKR</th></tr></thead>
+            <thead><tr><th>Earnings</th><th class="right">${escapeHtml(cur)}</th></tr></thead>
             <tbody>
-              <tr><td>Basic Monthly Salary</td><td class="right mono">${formatPkr(data.basicPay)}</td></tr>
-              <tr><td>House Rent Allowance</td><td class="right mono">${formatPkr(data.houseAllowance)}</td></tr>
-              <tr><td>Medical &amp; Conveyance</td><td class="right mono">${formatPkr(data.medicalAllowance)}</td></tr>
-              <tr><td class="bold">Gross Earnings</td><td class="right mono bold">${formatPkr(gross)}</td></tr>
+              <tr><td>Basic Monthly Salary</td><td class="right mono">${formatMoney(data.basicPay, cur)}</td></tr>
+              <tr><td>House Rent Allowance</td><td class="right mono">${formatMoney(data.houseAllowance, cur)}</td></tr>
+              <tr><td>Medical &amp; Conveyance</td><td class="right mono">${formatMoney(data.medicalAllowance, cur)}</td></tr>
+              <tr><td class="bold">Gross Earnings</td><td class="right mono bold">${formatMoney(gross, cur)}</td></tr>
             </tbody>
           </table>
           <table>
-            <thead><tr><th>Deductions</th><th class="right">PKR</th></tr></thead>
+            <thead><tr><th>Deductions</th><th class="right">${escapeHtml(cur)}</th></tr></thead>
             <tbody>
-              <tr><td>Income Tax / WHT</td><td class="right mono">${formatPkr(data.taxDeduction)}</td></tr>
-              <tr><td>Advance / Leave Recovery</td><td class="right mono">${formatPkr(data.advanceDeduction)}</td></tr>
+              <tr><td>Income Tax / WHT</td><td class="right mono">${formatMoney(data.taxDeduction, cur)}</td></tr>
+              <tr><td>Advance / Leave Recovery</td><td class="right mono">${formatMoney(data.advanceDeduction, cur)}</td></tr>
               <tr><td>&nbsp;</td><td>&nbsp;</td></tr>
-              <tr><td class="bold">Total Deductions</td><td class="right mono bold">${formatPkr(deductions)}</td></tr>
+              <tr><td class="bold">Total Deductions</td><td class="right mono bold">${formatMoney(deductions, cur)}</td></tr>
             </tbody>
           </table>
         </div>
         <div class="net-box">
           <div><strong>NET PAYABLE SALARY DISBURSED</strong><div style="font-size:9px;color:#475569;">Verified via Campus Payroll &amp; Accounts Ledger</div></div>
-          <div class="net-amt mono">PKR ${formatPkr(net)}</div>
+          <div class="net-amt mono">${escapeHtml(cur)} ${formatMoney(net, cur)}</div>
         </div>
       </div>`,
     verification: (() => {
@@ -923,3 +1134,305 @@ export function buildSalarySlipHtml(
 </body>
 </html>`;
 }
+
+export interface AdmitCardPrintData {
+  admitCode: string;
+  studentName: string;
+  guardianName: string;
+  rollNo: string;
+  grade: string;
+  examTitle: string;
+  examCenter: string;
+  session: string;
+  seatNo?: string;
+  photoDataUrl?: string;
+  initials: string;
+  scheduleRows?: Array<{ subject: string; date: string; time: string }>;
+}
+
+export function buildAdmitCardPrintHtml(
+  data: AdmitCardPrintData,
+  rawBranding: SchoolPrintBrandingConfig
+): string {
+  const branding = normalizeSchoolPrintBranding(rawBranding);
+  const accent = safeAccent(branding.headerAccentColor);
+  const badgeHtml = renderLogoOrCrestHtml(branding, accent, Math.min(54, branding.logoSizePx), 14, 7);
+  const safePhoto = sanitizeCardPhotoUrl(data.photoDataUrl);
+  const photoHtml = safePhoto
+    ? `<img src="${escapeHtml(safePhoto)}" alt="" referrerpolicy="no-referrer" style="width:74px;height:88px;object-fit:cover;border-radius:6px;border:1.5px solid ${accent};" />`
+    : `<div style="width:74px;height:88px;border-radius:6px;border:1.5px solid ${accent};background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:20px;color:${accent};">${escapeHtml(data.initials)}</div>`;
+  const barcodeSvg = branding.showBarcodeVerification !== false
+    ? buildCode128SvgMarkup(data.admitCode, 30, '#0f172a')
+    : '';
+  const qrSvg = branding.showQrVerification !== false
+    ? buildQrCodeSvgMarkup(`ADMIT:${data.admitCode}|ROLL:${data.rollNo}|EXAM:${data.examTitle}|NAME:${data.studentName}`, 64, accent, 2, 'M')
+    : '';
+
+  const scheduleRows = data.scheduleRows && data.scheduleRows.length > 0
+    ? data.scheduleRows
+    : [
+        { subject: 'Core Paper I (English)', date: 'As per Date Sheet', time: '09:00 AM - 12:00 PM' },
+        { subject: 'Core Paper II (Mathematics / Science)', date: 'As per Date Sheet', time: '09:00 AM - 12:00 PM' },
+        { subject: 'Core Paper III (Computing / Electives)', date: 'As per Date Sheet', time: '09:00 AM - 12:00 PM' }
+      ];
+
+  const rowsHtml = scheduleRows
+    .map((r, i) => `<tr><td class="mono">${i + 1}</td><td class="bold">${escapeHtml(r.subject)}</td><td>${escapeHtml(r.date)}</td><td class="mono">${escapeHtml(r.time)}</td></tr>`)
+    .join('');
+
+  return `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Exam Admit Card - ${escapeHtml(data.rollNo)}</title>
+  <style>
+    @page { size: A4 portrait; margin: 14mm; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #0f172a; background: #fff; font-size: 11px; }
+    .card { border: 2px solid ${accent}; padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+    .hdr { display: flex; align-items: center; gap: 12px; border-bottom: 2px solid ${accent}; padding-bottom: 10px; }
+    .school { font-size: 16px; font-weight: 900; text-transform: uppercase; }
+    .sub { font-size: 9.5px; color: #475569; }
+    .banner { background: ${accent}; color: #fff; padding: 6px 12px; font-weight: 900; font-size: 12px; display: flex; justify-content: space-between; text-transform: uppercase; }
+    .top-grid { display: flex; justify-content: space-between; gap: 14px; border: 1px solid #e2e8f0; padding: 10px 12px; background: #f8fafc; }
+    .stu-fields { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 16px; }
+    .f-row { display: flex; justify-content: space-between; border-bottom: 1px dotted #cbd5e1; padding: 2px 0; }
+    table { width: 100%; border-collapse: collapse; }
+    th { background: #f1f5f9; text-align: left; padding: 6px 8px; font-size: 9.5px; text-transform: uppercase; border-bottom: 1px solid #cbd5e1; }
+    td { padding: 6px 8px; border-bottom: 1px solid #e2e8f0; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .bold { font-weight: 800; }
+    .rules { border: 1px dashed #94a3b8; padding: 8px 12px; font-size: 9.5px; color: #334155; line-height: 1.45; }
+    .ver { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .signs { display: flex; justify-content: space-between; margin-top: 10px; padding-top: 10px; border-top: 1px solid #cbd5e1; }
+    .sig { width: 170px; text-align: center; font-size: 9.5px; }
+    .sig-line { height: 24px; border-bottom: 1px solid #0f172a; margin-bottom: 4px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="hdr">
+      ${badgeHtml}
+      <div style="flex:1;">
+        <div class="school">${escapeHtml(branding.schoolName)}</div>
+        <div class="sub">${escapeHtml(branding.registrationNo)} · ${escapeHtml(branding.address)} · ${escapeHtml(branding.phone)}</div>
+      </div>
+    </div>
+    <div class="banner">
+      <span>OFFICIAL EXAMINATION ADMIT CARD / ROLL NUMBER SLIP</span>
+      <span>${escapeHtml(data.session)}</span>
+    </div>
+    <div class="top-grid">
+      <div class="stu-fields">
+        <div class="f-row"><span>Admit Slip #</span><span class="mono bold">${escapeHtml(data.admitCode)}</span></div>
+        <div class="f-row"><span>Roll Number</span><span class="mono bold">#${escapeHtml(data.rollNo)}</span></div>
+        <div class="f-row"><span>Candidate Name</span><span class="bold">${escapeHtml(data.studentName)}</span></div>
+        <div class="f-row"><span>Father / Guardian</span><span>${escapeHtml(data.guardianName)}</span></div>
+        <div class="f-row"><span>Class / Grade</span><span class="bold">${escapeHtml(data.grade)}</span></div>
+        <div class="f-row"><span>Exam Title</span><span class="bold">${escapeHtml(data.examTitle)}</span></div>
+        <div class="f-row"><span>Exam Hall / Center</span><span>${escapeHtml(data.examCenter)}</span></div>
+        <div class="f-row"><span>Desk / Seat #</span><span class="mono bold">${escapeHtml(data.seatNo || `DESK-${data.rollNo}`)}</span></div>
+      </div>
+      <div>${photoHtml}</div>
+    </div>
+    <table>
+      <thead><tr><th>#</th><th>Paper / Subject</th><th>Exam Date</th><th>Reporting &amp; Timing</th></tr></thead>
+      <tbody>${rowsHtml}</tbody>
+    </table>
+    <div class="rules">
+      <strong>Examination Hall Instructions:</strong> Candidates must reach the Examination Hall 20 minutes prior with this Admit Card &amp; Student Gate ID Card. Mobile phones, smartwatches, and programmable calculators are strictly prohibited.
+    </div>
+    <div class="ver">
+      <div>${barcodeSvg}<div class="mono" style="font-size:9px;margin-top:2px;">${escapeHtml(data.admitCode)}</div></div>
+      <div>${qrSvg}</div>
+    </div>
+    <div class="signs">
+      <div class="sig"><div class="sig-line"></div><strong>Candidate Signature</strong></div>
+      <div class="sig"><div class="sig-line"></div><strong>${escapeHtml(branding.signatoryTitle)}</strong></div>
+    </div>
+    <div style="text-align:center;font-size:8.5px;color:#64748b;">${escapeHtml(branding.footerNote)}</div>
+  </div>
+</body>
+</html>`;
+}
+
+export interface GatePassPrintData {
+  passCode: string;
+  visitorName: string;
+  cnicOrId: string;
+  phone: string;
+  purpose: string;
+  personToMeet: string;
+  vehiclePlate?: string;
+  checkInTime: string;
+  status: string;
+  issuedBy?: string;
+}
+
+export function buildGatePassPrintHtml(
+  data: GatePassPrintData,
+  rawBranding: SchoolPrintBrandingConfig
+): string {
+  const branding = normalizeSchoolPrintBranding(rawBranding);
+  const accent = safeAccent(branding.headerAccentColor);
+  const badgeHtml = renderLogoOrCrestHtml(branding, accent, Math.min(44, branding.logoSizePx), 11, 5);
+  const barcodeSvg = branding.showBarcodeVerification !== false
+    ? buildCode128SvgMarkup(data.passCode, 28, '#0f172a')
+    : '';
+  const qrSvg = branding.showQrVerification !== false
+    ? buildQrCodeSvgMarkup(`GATEPASS:${data.passCode}|VISITOR:${data.visitorName}|CNIC:${data.cnicOrId}|STATUS:${data.status}`, 58, accent, 2, 'M')
+    : '';
+
+  return `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Campus Visitor Gate Pass - ${escapeHtml(data.passCode)}</title>
+  <style>
+    @page { size: A5 portrait; margin: 10mm; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #0f172a; background: #fff; font-size: 11px; }
+    .pass { border: 2px solid ${accent}; border-radius: 8px; padding: 14px; max-width: 135mm; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; }
+    .hdr { display: flex; align-items: center; gap: 10px; border-bottom: 2px solid ${accent}; padding-bottom: 8px; }
+    .school { font-size: 14px; font-weight: 900; text-transform: uppercase; }
+    .sub { font-size: 9px; color: #475569; }
+    .tag { background: ${accent}; color: #fff; padding: 5px 10px; font-weight: 900; font-size: 11px; display: flex; justify-content: space-between; text-transform: uppercase; border-radius: 4px; }
+    .row { display: flex; justify-content: space-between; border-bottom: 1px dotted #e2e8f0; padding: 4px 0; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .bold { font-weight: 800; }
+    .ver { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-top: 6px; border-top: 1px dashed #cbd5e1; }
+    .signs { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; text-align: center; font-size: 9px; margin-top: 10px; }
+    .line { height: 22px; border-bottom: 1px solid #0f172a; margin-bottom: 3px; }
+  </style>
+</head>
+<body>
+  <div class="pass">
+    <div class="hdr">
+      ${badgeHtml}
+      <div>
+        <div class="school">${escapeHtml(branding.schoolName)}</div>
+        <div class="sub">${escapeHtml(branding.address)} · ${escapeHtml(branding.phone)}</div>
+      </div>
+    </div>
+    <div class="tag">
+      <span>CAMPUS SECURITY VISITOR GATE PASS</span>
+      <span>${escapeHtml(data.status)}</span>
+    </div>
+    <div>
+      <div class="row"><span>Gate Pass ID</span><span class="mono bold">${escapeHtml(data.passCode)}</span></div>
+      <div class="row"><span>Visitor Name</span><span class="bold">${escapeHtml(data.visitorName)}</span></div>
+      <div class="row"><span>CNIC / Govt ID</span><span class="mono">${escapeHtml(data.cnicOrId)}</span></div>
+      <div class="row"><span>Contact Phone</span><span class="mono">${escapeHtml(data.phone)}</span></div>
+      <div class="row"><span>Person / Office to Visit</span><span class="bold">${escapeHtml(data.personToMeet)}</span></div>
+      <div class="row"><span>Purpose of Visit</span><span>${escapeHtml(data.purpose)}</span></div>
+      ${data.vehiclePlate ? `<div class="row"><span>Vehicle Registration</span><span class="mono bold">${escapeHtml(data.vehiclePlate)}</span></div>` : ''}
+      <div class="row"><span>Entry Check-In Time</span><span class="mono">${escapeHtml(data.checkInTime)}</span></div>
+      ${data.issuedBy ? `<div class="row"><span>Security Officer</span><span>${escapeHtml(data.issuedBy)}</span></div>` : ''}
+    </div>
+    <div class="ver">
+      <div>${barcodeSvg}<div class="mono" style="font-size:8.5px;margin-top:2px;">${escapeHtml(data.passCode)}</div></div>
+      <div>${qrSvg}</div>
+    </div>
+    <div class="signs">
+      <div><div class="line"></div><strong>Security Gate Officer</strong></div>
+      <div><div class="line"></div><strong>Host / ${escapeHtml(branding.signatoryTitle)}</strong></div>
+    </div>
+    <div style="text-align:center;font-size:8.5px;color:#64748b;">Return this pass at Main Gate upon exit. ${escapeHtml(branding.footerNote)}</div>
+  </div>
+</body>
+</html>`;
+}
+
+export interface BorrowSlipPrintData {
+  slipId: string;
+  bookTitle: string;
+  bookIsbn: string;
+  accessionCode?: string;
+  borrowerName: string;
+  borrowerRole: string;
+  borrowerId: string;
+  issueDate: string;
+  dueDate: string;
+  status: string;
+  fineAmount?: number;
+  dailyFineRate?: number;
+}
+
+export function buildBorrowSlipPrintHtml(
+  data: BorrowSlipPrintData,
+  rawBranding: SchoolPrintBrandingConfig
+): string {
+  const branding = normalizeSchoolPrintBranding(rawBranding);
+  const cur = branding.currencySymbol || 'PKR';
+  const accent = safeAccent(branding.headerAccentColor);
+  const badgeHtml = renderLogoOrCrestHtml(branding, accent, Math.min(44, branding.logoSizePx), 11, 5);
+  const barcodeSvg = branding.showBarcodeVerification !== false
+    ? buildCode128SvgMarkup(data.accessionCode || data.bookIsbn || data.slipId, 28, '#0f172a')
+    : '';
+  const qrSvg = branding.showQrVerification !== false
+    ? buildQrCodeSvgMarkup(`LIB:${data.slipId}|ISBN:${data.bookIsbn}|MEMBER:${data.borrowerId}|DUE:${data.dueDate}`, 56, accent, 2, 'M')
+    : '';
+
+  return `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Library Circulation Slip - ${escapeHtml(data.slipId)}</title>
+  <style>
+    @page { size: A5 portrait; margin: 10mm; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #0f172a; background: #fff; font-size: 11px; }
+    .slip { border: 2px solid ${accent}; border-radius: 8px; padding: 14px; max-width: 135mm; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; }
+    .hdr { display: flex; align-items: center; gap: 10px; border-bottom: 2px solid ${accent}; padding-bottom: 8px; }
+    .school { font-size: 14px; font-weight: 900; text-transform: uppercase; }
+    .sub { font-size: 9px; color: #475569; }
+    .tag { background: ${accent}; color: #fff; padding: 5px 10px; font-weight: 900; font-size: 11px; display: flex; justify-content: space-between; text-transform: uppercase; border-radius: 4px; }
+    .row { display: flex; justify-content: space-between; border-bottom: 1px dotted #e2e8f0; padding: 4px 0; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .bold { font-weight: 800; }
+    .fine-box { border: 1px solid #cbd5e1; background: #f8fafc; padding: 6px 10px; border-radius: 4px; display: flex; justify-content: space-between; font-size: 10px; }
+    .ver { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-top: 6px; border-top: 1px dashed #cbd5e1; }
+    .signs { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; text-align: center; font-size: 9px; margin-top: 10px; }
+    .line { height: 22px; border-bottom: 1px solid #0f172a; margin-bottom: 3px; }
+  </style>
+</head>
+<body>
+  <div class="slip">
+    <div class="hdr">
+      ${badgeHtml}
+      <div>
+        <div class="school">${escapeHtml(branding.schoolName)}</div>
+        <div class="sub">Central Library &amp; Learning Resource Desk · ${escapeHtml(branding.phone)}</div>
+      </div>
+    </div>
+    <div class="tag">
+      <span>LIBRARY BOOK CIRCULATION RECEIPT</span>
+      <span>${escapeHtml(data.status)}</span>
+    </div>
+    <div>
+      <div class="row"><span>Circulation Slip #</span><span class="mono bold">${escapeHtml(data.slipId)}</span></div>
+      <div class="row"><span>Book Title</span><span class="bold">${escapeHtml(data.bookTitle)}</span></div>
+      <div class="row"><span>ISBN / Accession</span><span class="mono">${escapeHtml(data.bookIsbn)}</span></div>
+      <div class="row"><span>Borrower Name</span><span class="bold">${escapeHtml(data.borrowerName)} (${escapeHtml(data.borrowerRole)})</span></div>
+      <div class="row"><span>Member / Roll ID</span><span class="mono bold">${escapeHtml(data.borrowerId)}</span></div>
+      <div class="row"><span>Issue Date</span><span class="mono">${escapeHtml(data.issueDate)}</span></div>
+      <div class="row"><span>Return Due Date</span><span class="mono bold" style="color:#b91c1c;">${escapeHtml(data.dueDate)}</span></div>
+    </div>
+    <div class="fine-box">
+      <span>Overdue Fine Policy: <strong>${escapeHtml(cur)} ${formatMoney(data.dailyFineRate ?? 20, cur)}/day</strong></span>
+      <span>Accrued Fine: <strong class="mono">${escapeHtml(cur)} ${formatMoney(data.fineAmount ?? 0, cur)}</strong></span>
+    </div>
+    <div class="ver">
+      <div>${barcodeSvg}<div class="mono" style="font-size:8.5px;margin-top:2px;">${escapeHtml(data.accessionCode || data.bookIsbn || data.slipId)}</div></div>
+      <div>${qrSvg}</div>
+    </div>
+    <div class="signs">
+      <div><div class="line"></div><strong>Borrower Signature</strong></div>
+      <div><div class="line"></div><strong>Campus Librarian</strong></div>
+    </div>
+    <div style="text-align:center;font-size:8.5px;color:#64748b;">${escapeHtml(branding.footerNote)}</div>
+  </div>
+</body>
+</html>`;
+}
+

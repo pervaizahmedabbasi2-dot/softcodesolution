@@ -570,15 +570,17 @@
                   </div>
                   <span class="px-1.5 py-0.5 rounded-md text-[10px] font-extrabold border shrink-0 tabular-nums" [class]="currentTab === 'payment_gateway' ? 'bg-white/20 text-white border-white/20' : 'bg-emerald-50 text-emerald-700 border-emerald-200/70'">{{ enabledSchoolPaymentGateways.length }}</span>
                 </button>
-                <button (click)="setTab('print_studio')" class="w-full flex items-center justify-between px-3 py-2 rounded-2xl text-left transition-all duration-200 cursor-pointer group" [class]="currentTab === 'print_studio' ? 'bg-gradient-to-r from-indigo-600 via-indigo-600 to-blue-600 text-white shadow-md shadow-indigo-600/30 border border-indigo-500/20 font-extrabold' : 'scs-nav-3d-idle text-slate-700 hover:text-slate-900 font-bold'">
-                  <div class="flex items-center gap-2.5 min-w-0">
-                    <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105" [class]="currentTab === 'print_studio' ? 'bg-white/20 text-white' : 'bg-gradient-to-tr from-slate-800 via-slate-900 to-indigo-700 text-white shadow-2xs'">
-                      <lucide-icon [name]="'printer'" class="w-4 h-4"></lucide-icon>
+                @if (canManagePrintStudio) {
+                  <button (click)="setTab('print_studio')" class="w-full flex items-center justify-between px-3 py-2 rounded-2xl text-left transition-all duration-200 cursor-pointer group" [class]="currentTab === 'print_studio' ? 'bg-gradient-to-r from-indigo-600 via-indigo-600 to-blue-600 text-white shadow-md shadow-indigo-600/30 border border-indigo-500/20 font-extrabold' : 'scs-nav-3d-idle text-slate-700 hover:text-slate-900 font-bold'">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                      <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105" [class]="currentTab === 'print_studio' ? 'bg-white/20 text-white' : 'bg-gradient-to-tr from-slate-800 via-slate-900 to-indigo-700 text-white shadow-2xs'">
+                        <lucide-icon [name]="'printer'" class="w-4 h-4"></lucide-icon>
+                      </div>
+                      <span class="text-xs truncate">Print &amp; Hardware Studio</span>
                     </div>
-                    <span class="text-xs truncate">Print &amp; Hardware Studio</span>
-                  </div>
-                  <span class="px-1.5 py-0.5 rounded-md text-[10px] font-extrabold border shrink-0" [class]="currentTab === 'print_studio' ? 'bg-white/20 text-white border-white/20' : 'bg-slate-100 text-slate-700 border-slate-200/80'">A4/80mm</span>
-                </button>
+                    <span class="px-1.5 py-0.5 rounded-md text-[10px] font-extrabold border shrink-0" [class]="currentTab === 'print_studio' ? 'bg-white/20 text-white border-white/20' : 'bg-slate-100 text-slate-700 border-slate-200/80'">A4/80mm</span>
+                  </button>
+                }
                 <button (click)="setTab('settings')" class="w-full flex items-center justify-between px-3 py-2 rounded-2xl text-left transition-all duration-200 cursor-pointer group" [class]="currentTab === 'settings' ? 'bg-gradient-to-r from-indigo-600 via-indigo-600 to-blue-600 text-white shadow-md shadow-indigo-600/30 border border-indigo-500/20 font-extrabold' : 'scs-nav-3d-idle text-slate-700 hover:text-slate-900 font-bold'">
                   <div class="flex items-center gap-2.5 min-w-0">
                     <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105" [class]="currentTab === 'settings' ? 'bg-white/20 text-white' : 'bg-gradient-to-tr from-emerald-500 via-emerald-600 to-teal-600 text-white shadow-2xs'">
@@ -1034,16 +1036,16 @@
                 <mat-icon class="!text-[18px] !w-[18px] !h-[18px] text-slate-900">print</mat-icon>
                 <span>Print Formats &amp; Hardware Studio</span>
                 <span class="text-slate-300">·</span>
-                <span class="font-mono text-emerald-700">{{ printBranding.defaultPaperWidth }} Raseed + A4 Sheets</span>
+                <span class="font-mono text-emerald-700">{{ printBranding.defaultPaperWidth }} Receipt + A4 Sheets</span>
               </div>
               <h3 class="font-black text-slate-900 text-base sm:text-lg tracking-tight">
-                Choti Raseed, 3-Copy Bank Challan, ID Cards &amp; Printer / Scanner Setup
+                Thermal Fee Receipt, 3-Copy Bank Challan, ID Cards &amp; Printer / Scanner Setup
               </h3>
               <p class="text-xs text-slate-600 leading-relaxed">
-                Dekhen har school document (<strong>80mm / 58mm Choti Fee Raseed</strong>, <strong>A4 3-Copy Bank Challan</strong>, <strong>Gate ID Card</strong>, <strong>Barcode Stickers</strong>, <strong>Result DMC</strong> aur <strong>Salary Slip</strong>) print hone par kaisa dikhta hai, apna school name / logo crest / helpline customize karen, aur thermal printer, A4 printer ya barcode scanner lagane ka complete tareeqa seekhen.
+                Preview every institutional document (<strong>80mm / 58mm Thermal Fee Receipt</strong>, <strong>A4 3-Copy Bank Challan</strong>, <strong>Gate ID Card</strong>, <strong>Barcode Stickers</strong>, <strong>Result DMC</strong>, and <strong>Salary Slip</strong>), customize your school name, logo, and layout order, and configure thermal printers, A4 printers, or barcode scanners.
               </p>
               <div class="flex items-center gap-4 flex-wrap pt-1 text-[11px] font-bold text-slate-700">
-                <span>1. 80mm / 58mm Thermal Raseed</span>
+                <span>1. 80mm / 58mm Thermal Receipt</span>
                 <span class="text-slate-300">·</span>
                 <span>2. A4 Challan, DMC &amp; Salary</span>
                 <span class="text-slate-300">·</span>
@@ -1059,11 +1061,13 @@
                 <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-indigo-600">qr_code_scanner</mat-icon>
                 <span>Quick Scanner Terminal</span>
               </button>
-              <button type="button" (click)="setTab('print_studio')"
-                class="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs cursor-pointer inline-flex items-center gap-1.5 shadow-sm transition-colors">
-                <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">print</mat-icon>
-                <span>Open Print &amp; Hardware Studio</span>
-              </button>
+              @if (canManagePrintStudio) {
+                <button type="button" (click)="setTab('print_studio')"
+                  class="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs cursor-pointer inline-flex items-center gap-1.5 shadow-sm transition-colors">
+                  <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">print</mat-icon>
+                  <span>Open Print &amp; Hardware Studio</span>
+                </button>
+              }
             </div>
           </div>
 
@@ -1805,6 +1809,12 @@
                   title="Download Card / Widget-Wise PDF with full student details and custom fields">
                   <lucide-icon [name]="'printer'" class="w-3.5 h-3.5"></lucide-icon>
                   <span>Cards PDF</span>
+                </button>
+                <button type="button" (click)="printBulkStudentIdCards(filteredStudents)"
+                  class="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-2xs active:scale-95 transition-all cursor-pointer whitespace-nowrap"
+                  title="Print A4 Bulk CR80 Gate ID Card Sheet (Front & Back) for filtered students">
+                  <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">badge</mat-icon>
+                  <span>Bulk ID Cards</span>
                 </button>
                 @if (isOwnerPortal) {
                   <button type="button" (click)="openAddStudentModal()"
@@ -10571,8 +10581,8 @@
         </div>
       }
 
-      <!-- TAB 9B: PRINT & HARDWARE STUDIO -->
-      @if (currentTab === 'print_studio') {
+      <!-- TAB 9B: PRINT & HARDWARE STUDIO (SCHOOL OWNER ONLY) -->
+      @if (currentTab === 'print_studio' && canManagePrintStudio) {
         <app-school-print-studio
           [branding]="printBranding"
           [schoolName]="schoolName"
@@ -10596,6 +10606,7 @@
           (printThermalTest)="printHardwareTestPage($event)"
           (printStickers)="printBarcodeStickerSheet()"
           (printStaffStickers)="printPersonnelBarcodeStickerSheet()"
+          (printBulkIdCards)="printBulkStudentIdCards()"
           (connectSerialPrinter)="connectWebSerialThermalPrinter()"
           (disconnectSerialPrinter)="disconnectWebSerialThermalPrinter()"
           (openHardwareTerminal)="openHardwareTerminalModal($event)"
@@ -23735,7 +23746,7 @@
       <div class="apple-card rounded-3xl max-w-5xl w-full p-6 space-y-6 printable-voucher max-h-[92vh] overflow-y-auto custom-scrollbar bg-white">
         
         <!-- Voucher Header & Actions -->
-        <div class="flex items-center justify-between pb-4 border-b border-slate-200">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-200">
           <div>
             <div class="flex items-center gap-2">
               <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300">Official Bank Challan</span>
@@ -23745,6 +23756,18 @@
             <p class="text-xs text-slate-500">{{ primaryVoucherBankGateway?.bankName || 'Meezan Bank Ltd / HBL' }} Authorized Deposit Instrument · Student, School &amp; Bank Copies</p>
           </div>
           <div class="flex items-center gap-2 flex-wrap">
+            @if (canManagePrintStudio) {
+              <button
+                type="button"
+                (click)="toggleVoucherCustomizer()"
+                class="px-3.5 py-2 rounded-xl border font-extrabold text-xs cursor-pointer flex items-center gap-1.5 shadow-xs transition-all active:scale-95"
+                [class]="isVoucherCustomizerOpen
+                  ? 'bg-slate-900 text-white border-slate-900'
+                  : 'bg-white text-slate-800 border-slate-300 hover:bg-slate-50'">
+                <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">tune</mat-icon>
+                <span>Customize &amp; Logo</span>
+              </button>
+            }
             <button type="button" (click)="printThermalReceiptForStudentChallan(voucherStudent)" class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs cursor-pointer flex items-center gap-1.5 shadow-md transition-all active:scale-95">
               <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-emerald-400">receipt_long</mat-icon>
               <span>80mm Thermal Slip</span>
@@ -23754,14 +23777,294 @@
               <span>Branded A4 3-Copy PDF</span>
             </button>
             <button (click)="printVoucher()" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs cursor-pointer flex items-center gap-1.5 shadow-md transition-all active:scale-95">
-              <lucide-icon [name]="'printer'" class="w-4 h-4"></lucide-icon>
+              <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">print</mat-icon>
               <span>Print Official 3-Copy Voucher</span>
             </button>
             <button (click)="closeFeeChallanVoucher()" class="p-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 transition-colors cursor-pointer">
-              <lucide-icon [name]="'x'" class="w-5 h-5"></lucide-icon>
+              <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">close</mat-icon>
             </button>
           </div>
         </div>
+
+        <!-- OWNER-ONLY CHALLAN CUSTOMIZATION & LOGO STUDIO DRAWER -->
+        @if (canManagePrintStudio && isVoucherCustomizerOpen) {
+          <div class="rounded-2xl bg-slate-50 border border-slate-200 p-4 sm:p-5 space-y-4 text-xs">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-3">
+              <div>
+                <h4 class="font-black text-slate-900 text-sm">Owner Challan Designer — Logo Upload, Corner Position &amp; Reset</h4>
+                <p class="text-[11px] text-slate-500">Top-right dummy crest is active by default. Upload your school logo, customize fields or section order, or reset cleanly.</p>
+              </div>
+              <div class="flex items-center gap-2 shrink-0 flex-wrap">
+                <button
+                  type="button"
+                  (click)="resetVoucherToDefault()"
+                  class="px-3 py-1.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 font-bold text-xs cursor-pointer inline-flex items-center gap-1">
+                  <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">restart_alt</mat-icon>
+                  <span>Reset to Default</span>
+                </button>
+                <button
+                  type="button"
+                  (click)="saveVoucherCustomization()"
+                  class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs cursor-pointer inline-flex items-center gap-1.5 shadow-xs">
+                  <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">save</mat-icon>
+                  <span>Save &amp; Apply Changes</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+              <!-- Column 1: School Logo Upload & Corner Position (5 cols) -->
+              <div class="lg:col-span-5 space-y-3 bg-white border border-slate-200 rounded-xl p-3.5">
+                <div class="flex items-center justify-between">
+                  <span class="font-black text-slate-900">1. School Logo &amp; Corner Placement</span>
+                  @if (safeVoucherLogoUrl) {
+                    <button
+                      type="button"
+                      (click)="removeVoucherLogo()"
+                      class="text-[11px] font-bold text-rose-600 hover:text-rose-700 cursor-pointer inline-flex items-center gap-1">
+                      <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">delete</mat-icon>
+                      <span>Use Dummy Crest</span>
+                    </button>
+                  }
+                </div>
+
+                <div
+                  (dragover)="onVoucherLogoDragOver($event)"
+                  (dragleave)="onVoucherLogoDragLeave($event)"
+                  (drop)="onVoucherLogoDrop($event)"
+                  class="border-2 border-dashed rounded-xl p-3 transition-colors"
+                  [class]="voucherLogoDragOver ? 'border-indigo-500 bg-indigo-50' : 'border-slate-300 bg-slate-50/70'">
+                  <div class="flex items-center justify-between gap-2.5 flex-wrap">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                      @if (safeVoucherLogoUrl) {
+                        <img
+                          [src]="safeVoucherLogoUrl"
+                          alt="School logo"
+                          referrerpolicy="no-referrer"
+                          class="w-10 h-10 object-contain rounded-lg border border-slate-200 bg-white p-0.5 shrink-0" />
+                      } @else {
+                        <div class="w-10 h-10 rounded-lg border border-slate-300 bg-white text-slate-900 font-black text-xs flex items-center justify-center shrink-0">
+                          {{ printBranding.monogramInitials || 'SPA' }}
+                        </div>
+                      }
+                      <div class="min-w-0">
+                        <div class="font-bold text-slate-900 truncate">{{ safeVoucherLogoUrl ? 'Custom Logo Active' : 'Dummy Logo Active' }}</div>
+                        <div class="text-[10px] text-slate-500">PNG / JPG / WebP / SVG</div>
+                      </div>
+                    </div>
+                    <label class="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-bold text-[11px] cursor-pointer inline-flex items-center gap-1 shrink-0">
+                      <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">upload_file</mat-icon>
+                      <span>{{ isProcessingVoucherLogo ? 'Uploading...' : (safeVoucherLogoUrl ? 'Change Logo' : 'Upload Logo') }}</span>
+                      <input type="file" accept="image/*" (change)="onVoucherLogoFileSelected($event)" class="hidden" />
+                    </label>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2.5 text-[11px]">
+                  <div>
+                    <span class="block font-bold text-slate-600 mb-1">Logo Corner</span>
+                    <div class="grid grid-cols-3 gap-1">
+                      <button
+                        type="button"
+                        (click)="setVoucherChallanLogoCorner('top-right')"
+                        class="py-1.5 rounded-lg border font-bold cursor-pointer"
+                        [class]="(printBranding.challanLogoCorner || 'top-right') === 'top-right' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-200'">
+                        Right
+                      </button>
+                      <button
+                        type="button"
+                        (click)="setVoucherChallanLogoCorner('top-left')"
+                        class="py-1.5 rounded-lg border font-bold cursor-pointer"
+                        [class]="printBranding.challanLogoCorner === 'top-left' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-200'">
+                        Left
+                      </button>
+                      <button
+                        type="button"
+                        (click)="setVoucherChallanLogoCorner('top-center')"
+                        class="py-1.5 rounded-lg border font-bold cursor-pointer"
+                        [class]="printBranding.challanLogoCorner === 'top-center' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-200'">
+                        Center
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block font-bold text-slate-600 mb-1">Dummy Crest Text</label>
+                    <input
+                      type="text"
+                      maxlength="4"
+                      [value]="printBranding.monogramInitials || 'SPA'"
+                      (input)="updateVoucherBrandingText('monogramInitials', $any($event.target).value)"
+                      class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 font-mono font-black uppercase text-slate-900" />
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-between gap-3 text-[11px] pt-1">
+                  <label class="inline-flex items-center gap-1.5 font-bold text-slate-700 cursor-pointer shrink-0">
+                    <input
+                      type="checkbox"
+                      [checked]="printBranding.showLogoCrest"
+                      (change)="updateVoucherBrandingBool('showLogoCrest', $any($event.target).checked)"
+                      class="accent-slate-900" />
+                    <span>Show Corner Logo</span>
+                  </label>
+                  <div class="flex items-center gap-2 flex-1">
+                    <span class="font-bold text-slate-600 shrink-0">{{ printBranding.logoSizePx || 44 }}px</span>
+                    <input
+                      type="range"
+                      min="28"
+                      max="76"
+                      step="2"
+                      [value]="printBranding.logoSizePx || 44"
+                      (input)="updateVoucherBrandingNumber('logoSizePx', $any($event.target).value)"
+                      class="flex-1 accent-slate-900 cursor-pointer" />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Column 2: Custom Challan Text Fields (4 cols) -->
+              <div class="lg:col-span-4 space-y-2.5 bg-white border border-slate-200 rounded-xl p-3.5 text-[11px]">
+                <span class="block font-black text-slate-900 text-xs">2. Customize Challan Labels</span>
+                <div class="grid grid-cols-2 gap-2">
+                  <div>
+                    <label class="block font-bold text-slate-600 mb-0.5">Ref Badge</label>
+                    <input
+                      type="text"
+                      [value]="printBranding.challanRefLabel || 'REF: 2026-OCT'"
+                      (input)="updateVoucherBrandingText('challanRefLabel', $any($event.target).value)"
+                      class="w-full px-2 py-1 rounded-lg border border-slate-200 font-mono font-bold text-slate-900" />
+                  </div>
+                  <div>
+                    <label class="block font-bold text-slate-600 mb-0.5">Due Date Label</label>
+                    <input
+                      type="text"
+                      [value]="printBranding.challanDueDateLabel || '10th Oct 2026'"
+                      (input)="updateVoucherBrandingText('challanDueDateLabel', $any($event.target).value)"
+                      class="w-full px-2 py-1 rounded-lg border border-slate-200 font-bold text-slate-900" />
+                  </div>
+                  <div>
+                    <label class="block font-bold text-slate-600 mb-0.5">Tuition Row</label>
+                    <input
+                      type="text"
+                      [value]="printBranding.challanTuitionLabel || 'Monthly Tuition Fee'"
+                      (input)="updateVoucherBrandingText('challanTuitionLabel', $any($event.target).value)"
+                      class="w-full px-2 py-1 rounded-lg border border-slate-200 text-slate-900" />
+                  </div>
+                  <div>
+                    <label class="block font-bold text-slate-600 mb-0.5">Lab Fund Row</label>
+                    <input
+                      type="text"
+                      [value]="printBranding.challanLabLabel || 'Science & IT Lab Fund'"
+                      (input)="updateVoucherBrandingText('challanLabLabel', $any($event.target).value)"
+                      class="w-full px-2 py-1 rounded-lg border border-slate-200 text-slate-900" />
+                  </div>
+                  <div>
+                    <label class="block font-bold text-slate-600 mb-0.5">Exam Fee Row</label>
+                    <input
+                      type="text"
+                      [value]="printBranding.challanExamLabel || 'Exam & Transcripts Fee'"
+                      (input)="updateVoucherBrandingText('challanExamLabel', $any($event.target).value)"
+                      class="w-full px-2 py-1 rounded-lg border border-slate-200 text-slate-900" />
+                  </div>
+                  <div>
+                    <label class="block font-bold text-slate-600 mb-0.5">Activity Fund Row</label>
+                    <input
+                      type="text"
+                      [value]="printBranding.challanActivityLabel || 'Sports & Activity Fund'"
+                      (input)="updateVoucherBrandingText('challanActivityLabel', $any($event.target).value)"
+                      class="w-full px-2 py-1 rounded-lg border border-slate-200 text-slate-900" />
+                  </div>
+                  <div>
+                    <label class="block font-bold text-slate-600 mb-0.5">Left Signatory</label>
+                    <input
+                      type="text"
+                      [value]="printBranding.challanLeftSignLabel || 'Parent / Depositor Sign'"
+                      (input)="updateVoucherBrandingText('challanLeftSignLabel', $any($event.target).value)"
+                      class="w-full px-2 py-1 rounded-lg border border-slate-200 text-slate-900" />
+                  </div>
+                  <div>
+                    <label class="block font-bold text-slate-600 mb-0.5">Right Signatory</label>
+                    <input
+                      type="text"
+                      [value]="printBranding.challanRightSignLabel || 'Bank Teller Stamp & Sign'"
+                      (input)="updateVoucherBrandingText('challanRightSignLabel', $any($event.target).value)"
+                      class="w-full px-2 py-1 rounded-lg border border-slate-200 text-slate-900" />
+                  </div>
+                </div>
+                <div>
+                  <label class="block font-bold text-slate-600 mb-0.5">Challan Authorization Note</label>
+                  <input
+                    type="text"
+                    [value]="printBranding.footerNote || schoolGatewaySettings.receiptFooterNote"
+                    (input)="updateVoucherBrandingText('footerNote', $any($event.target).value)"
+                    class="w-full px-2 py-1 rounded-lg border border-slate-200 text-slate-900" />
+                </div>
+              </div>
+
+              <!-- Column 3: Section Order & Show/Hide (3 cols) -->
+              <div class="lg:col-span-3 space-y-2 bg-white border border-slate-200 rounded-xl p-3.5 text-[11px]">
+                <span class="block font-black text-slate-900 text-xs">3. Blocks Order (Drag / ↑ ↓)</span>
+                <div class="space-y-1">
+                  @for (secKey of voucherSectionOrder; track secKey; let idx = $index) {
+                    <div
+                      draggable="true"
+                      (dragstart)="onVoucherSectionDragStart($event, secKey)"
+                      (dragover)="onVoucherSectionDragOver($event, secKey)"
+                      (drop)="onVoucherSectionDrop($event, secKey)"
+                      (dragend)="onVoucherSectionDragEnd()"
+                      class="flex items-center justify-between gap-1 px-2 py-1 rounded-lg border bg-slate-50 cursor-grab active:cursor-grabbing"
+                      [class]="dragOverVoucherSectionKey === secKey
+                        ? 'border-indigo-500 bg-indigo-50'
+                        : (isVoucherSectionHidden(secKey) ? 'border-slate-200 opacity-50' : 'border-slate-200')">
+                      <span class="font-bold text-slate-800 truncate text-[10.5px]">{{ getVoucherSectionMeta(secKey).label }}</span>
+                      <div class="flex items-center gap-0.5 shrink-0">
+                        <button
+                          type="button"
+                          (click)="moveVoucherSection(secKey, -1)"
+                          [disabled]="!canMoveVoucherSection(idx, -1)"
+                          class="w-6 h-6 rounded border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-30 flex items-center justify-center cursor-pointer">
+                          <mat-icon class="!text-[13px] !w-[13px] !h-[13px]">arrow_upward</mat-icon>
+                        </button>
+                        <button
+                          type="button"
+                          (click)="moveVoucherSection(secKey, 1)"
+                          [disabled]="!canMoveVoucherSection(idx, 1)"
+                          class="w-6 h-6 rounded border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-30 flex items-center justify-center cursor-pointer">
+                          <mat-icon class="!text-[13px] !w-[13px] !h-[13px]">arrow_downward</mat-icon>
+                        </button>
+                        @if (!getVoucherSectionMeta(secKey).locked) {
+                          <button
+                            type="button"
+                            (click)="toggleVoucherSectionVisibility(secKey)"
+                            class="w-6 h-6 rounded border border-slate-200 bg-white hover:bg-slate-100 flex items-center justify-center cursor-pointer">
+                            <mat-icon class="!text-[13px] !w-[13px] !h-[13px]">{{ isVoucherSectionHidden(secKey) ? 'visibility_off' : 'visibility' }}</mat-icon>
+                          </button>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+                <div class="flex items-center gap-3 pt-1 text-[10.5px] font-bold text-slate-700">
+                  <label class="inline-flex items-center gap-1 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      [checked]="printBranding.showBarcodeVerification"
+                      (change)="updateVoucherBrandingBool('showBarcodeVerification', $any($event.target).checked)"
+                      class="accent-slate-900" />
+                    <span>Barcode</span>
+                  </label>
+                  <label class="inline-flex items-center gap-1 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      [checked]="printBranding.showQrVerification"
+                      (change)="updateVoucherBrandingBool('showQrVerification', $any($event.target).checked)"
+                      class="accent-slate-900" />
+                    <span>2D QR</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
 
         <!-- 3-Column Voucher Layout (Student Copy | School Copy | Bank Copy) -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-5 text-xs font-sans">
@@ -23769,125 +24072,220 @@
           <!-- Copy Loop for Student, School, Bank -->
           @for (copyType of ['Student Copy', 'School Copy', 'Bank Branch Copy']; track copyType) {
             <div class="p-5 rounded-2xl bg-white flex flex-col justify-between text-slate-900 space-y-4 scs-tile-3d border border-slate-200/90">
-              
-              <div class="space-y-4">
-                <!-- Copy Badge & Ref -->
-                <div class="flex items-center justify-between">
-                  <span class="text-[10px] font-black uppercase px-2.5 py-1 rounded-md bg-gradient-to-r from-emerald-600 to-teal-600 text-white tracking-wide">
-                    {{ copyType }}
-                  </span>
-                  <span class="text-[10px] font-mono text-slate-500 font-extrabold uppercase tracking-tight">REF: 2026-OCT</span>
-                </div>
+              @for (secKey of voucherSectionOrder; track secKey) {
+                @if (!isVoucherSectionHidden(secKey)) {
+                  @switch (secKey) {
+                    @case ('header') {
+                      <!-- Copy Badge, Ref & School Logo (Default Top-Right Corner) -->
+                      @if (printBranding.challanLogoCorner === 'top-center') {
+                        <div class="space-y-2 pb-1">
+                          <div class="flex flex-col items-center gap-1 text-center">
+                            @if (safeVoucherLogoUrl) {
+                              <img
+                                [src]="safeVoucherLogoUrl"
+                                alt="School logo"
+                                referrerpolicy="no-referrer"
+                                [style.width.px]="(printBranding.logoSizePx || 44) * 0.85"
+                                [style.height.px]="(printBranding.logoSizePx || 44) * 0.85"
+                                class="object-contain rounded-lg border border-slate-200 bg-white p-0.5 shrink-0" />
+                            } @else if (printBranding.showLogoCrest) {
+                              <div class="w-9 h-9 rounded-xl border border-slate-300 bg-slate-50 text-slate-900 font-black text-[10.5px] flex items-center justify-center shrink-0 tracking-wider shadow-2xs">
+                                {{ printBranding.monogramInitials || 'SPA' }}
+                              </div>
+                            }
+                          </div>
+                          <div class="flex items-center justify-between gap-2">
+                            <span class="text-[10px] font-black uppercase px-2.5 py-1 rounded-md bg-gradient-to-r from-emerald-600 to-teal-600 text-white tracking-wide">
+                              {{ copyType }}
+                            </span>
+                            <span class="text-[10px] font-mono text-slate-500 font-extrabold uppercase tracking-tight">
+                              {{ printBranding.challanRefLabel || 'REF: 2026-OCT' }}
+                            </span>
+                          </div>
+                        </div>
+                      } @else if (printBranding.challanLogoCorner === 'top-left') {
+                        <div class="flex items-start justify-between gap-2">
+                          <div class="flex items-center gap-2 min-w-0">
+                            @if (safeVoucherLogoUrl) {
+                              <img
+                                [src]="safeVoucherLogoUrl"
+                                alt="School logo"
+                                referrerpolicy="no-referrer"
+                                [style.width.px]="(printBranding.logoSizePx || 44) * 0.78"
+                                [style.height.px]="(printBranding.logoSizePx || 44) * 0.78"
+                                class="object-contain rounded-lg border border-slate-200 bg-white p-0.5 shrink-0" />
+                            } @else if (printBranding.showLogoCrest) {
+                              <div class="w-8 h-8 rounded-lg border border-slate-300 bg-slate-50 text-slate-900 font-black text-[10px] flex items-center justify-center shrink-0 tracking-wider">
+                                {{ printBranding.monogramInitials || 'SPA' }}
+                              </div>
+                            }
+                            <span class="text-[10px] font-black uppercase px-2.5 py-1 rounded-md bg-gradient-to-r from-emerald-600 to-teal-600 text-white tracking-wide shrink-0">
+                              {{ copyType }}
+                            </span>
+                          </div>
+                          <span class="text-[10px] font-mono text-slate-500 font-extrabold uppercase tracking-tight shrink-0 pt-1">
+                            {{ printBranding.challanRefLabel || 'REF: 2026-OCT' }}
+                          </span>
+                        </div>
+                      } @else {
+                        <!-- Default Clean Layout + Top-Right Corner School Logo / Dummy Crest -->
+                        <div class="flex items-start justify-between gap-2">
+                          <span class="text-[10px] font-black uppercase px-2.5 py-1 rounded-md bg-gradient-to-r from-emerald-600 to-teal-600 text-white tracking-wide shrink-0">
+                            {{ copyType }}
+                          </span>
+                          <div class="flex items-center gap-2 shrink-0">
+                            <span class="text-[10px] font-mono text-slate-500 font-extrabold uppercase tracking-tight">
+                              {{ printBranding.challanRefLabel || 'REF: 2026-OCT' }}
+                            </span>
+                            @if (safeVoucherLogoUrl) {
+                              <img
+                                [src]="safeVoucherLogoUrl"
+                                alt="School logo"
+                                referrerpolicy="no-referrer"
+                                [style.width.px]="(printBranding.logoSizePx || 44) * 0.78"
+                                [style.height.px]="(printBranding.logoSizePx || 44) * 0.78"
+                                class="object-contain rounded-lg border border-slate-200 bg-white p-0.5 shrink-0 shadow-2xs" />
+                            } @else if (printBranding.showLogoCrest) {
+                              <div
+                                title="Dummy School Logo — Customize in Owner Designer"
+                                class="w-8 h-8 rounded-lg border border-slate-300 bg-slate-50 text-slate-900 font-black text-[10px] flex items-center justify-center shrink-0 tracking-wider shadow-2xs">
+                                {{ printBranding.monogramInitials || 'SPA' }}
+                              </div>
+                            }
+                          </div>
+                        </div>
+                      }
+                    }
 
-                <!-- Bank Details (Dynamic Owner Gateway Config) -->
-                <div class="space-y-1">
-                  <div class="flex items-center justify-between gap-2">
-                    <span class="font-black text-slate-950 text-xs tracking-tight uppercase truncate">{{ primaryVoucherBankGateway?.bankName || 'MEEZAN BANK LTD / HBL' }}</span>
-                    <span class="text-[10px] font-mono font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md shrink-0">Code: {{ primaryVoucherBankGateway?.branchCode || '0102' }}</span>
-                  </div>
-                  <p class="text-[11px] font-bold text-slate-700 truncate">A/C Title: <span class="font-black text-slate-950">{{ primaryVoucherBankGateway?.accountTitle || schoolName || 'SOFTCODE INTERNATIONAL SCHOOL' }}</span></p>
-                  <p class="text-[11px] font-mono font-bold text-slate-800 truncate">A/C #: <span class="font-black">{{ primaryVoucherBankGateway?.accountNumber || '0102-0105829102' }}</span></p>
-                  <p class="text-[10px] font-mono text-slate-500 truncate">IBAN: {{ primaryVoucherBankGateway?.iban || 'PK36MEZN0001020105829102' }}</p>
-                  @if (primaryVoucherRaastGateway?.raastId) {
-                    <p class="text-[10px] font-mono text-emerald-700 font-bold truncate">Raast IBFT: {{ primaryVoucherRaastGateway?.raastId }}</p>
+                    @case ('meta') {
+                      <!-- Bank Details (Dynamic Owner Gateway Config) -->
+                      <div class="space-y-1">
+                        <div class="flex items-center justify-between gap-2">
+                          <span class="font-black text-slate-950 text-xs tracking-tight uppercase truncate">{{ primaryVoucherBankGateway?.bankName || 'MEEZAN BANK LTD / HBL' }}</span>
+                          <span class="text-[10px] font-mono font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md shrink-0">Code: {{ primaryVoucherBankGateway?.branchCode || '0102' }}</span>
+                        </div>
+                        <p class="text-[11px] font-bold text-slate-700 truncate">A/C Title: <span class="font-black text-slate-950">{{ primaryVoucherBankGateway?.accountTitle || printBranding.schoolName || schoolName || 'SOFTCODE INTERNATIONAL SCHOOL' }}</span></p>
+                        <p class="text-[11px] font-mono font-bold text-slate-800 truncate">A/C #: <span class="font-black">{{ primaryVoucherBankGateway?.accountNumber || '0102-0105829102' }}</span></p>
+                        <p class="text-[10px] font-mono text-slate-500 truncate">IBAN: {{ primaryVoucherBankGateway?.iban || 'PK36MEZN0001020105829102' }}</p>
+                        @if (primaryVoucherRaastGateway?.raastId) {
+                          <p class="text-[10px] font-mono text-emerald-700 font-bold truncate">Raast IBFT: {{ primaryVoucherRaastGateway?.raastId }}</p>
+                        }
+                        @if (primaryVoucherOneBillGateway) {
+                          <p class="text-[10px] font-mono text-indigo-700 font-bold truncate">1Bill ID: {{ schoolGatewaySettings.oneBillPrefix || '10089' }}-{{ voucherStudent?.rollNo || '1030' }}</p>
+                        }
+                      </div>
+                    }
+
+                    @case ('person') {
+                      <!-- Student & Challan Details -->
+                      <div class="space-y-1.5 text-[11px]">
+                        <div class="flex justify-between items-center">
+                          <span class="text-slate-500 font-bold">Challan No:</span>
+                          <span class="font-mono font-black text-slate-950">CH-2026-{{ voucherStudent?.rollNo || '1030' }}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                          <span class="text-slate-500 font-bold">Student Name:</span>
+                          <span class="font-black text-slate-950 truncate max-w-[160px]">{{ voucherStudent?.name || 'Pervaiz Ahmed Abbasi' }}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                          <span class="text-slate-500 font-bold">Father / Guardian:</span>
+                          <span class="font-bold text-slate-900 truncate max-w-[160px]">{{ voucherStudent?.guardian || 'Ghansi' }}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                          <span class="text-slate-500 font-bold">Class &amp; Section:</span>
+                          <span class="font-black text-slate-950">{{ voucherStudent?.grade || 'Class 1' }}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                          <span class="text-slate-500 font-bold">Roll Number:</span>
+                          <span class="font-mono font-black text-slate-950">{{ voucherStudent?.rollNo || '1030' }}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                          <span class="text-slate-600 font-extrabold">Due Date:</span>
+                          <span class="font-mono font-black text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md">{{ printBranding.challanDueDateLabel || '10th Oct 2026' }}</span>
+                        </div>
+                      </div>
+                    }
+
+                    @case ('amounts') {
+                      <!-- Itemized Fee Breakdown & Unified Payable Highlight -->
+                      <div class="space-y-3">
+                        <div class="space-y-1.5 text-[11px]">
+                          <div class="flex justify-between items-center text-[10px] font-black uppercase tracking-wider text-slate-400">
+                            <span>Fee Description</span>
+                            <span>Amount ({{ printBranding.currencySymbol || 'PKR' }})</span>
+                          </div>
+                          <div class="flex justify-between items-center">
+                            <span class="text-slate-800 font-medium">{{ printBranding.challanTuitionLabel || 'Monthly Tuition Fee' }}</span>
+                            <span class="font-mono font-black text-slate-950">{{ formatCurrency(voucherTuitionFee) }}</span>
+                          </div>
+                          <div class="flex justify-between items-center">
+                            <span class="text-slate-800 font-medium">{{ printBranding.challanLabLabel || 'Science & IT Lab Fund' }}</span>
+                            <span class="font-mono font-bold text-slate-800">1,500</span>
+                          </div>
+                          <div class="flex justify-between items-center">
+                            <span class="text-slate-800 font-medium">{{ printBranding.challanExamLabel || 'Exam & Transcripts Fee' }}</span>
+                            <span class="font-mono font-bold text-slate-800">1,200</span>
+                          </div>
+                          <div class="flex justify-between items-center">
+                            <span class="text-slate-800 font-medium">{{ printBranding.challanActivityLabel || 'Sports & Activity Fund' }}</span>
+                            <span class="font-mono font-bold text-slate-800">800</span>
+                          </div>
+                        </div>
+
+                        <div class="rounded-xl p-3 bg-gradient-to-r from-indigo-50 via-emerald-50/70 to-rose-50/60 space-y-1.5">
+                          <div class="flex justify-between items-center">
+                            <span class="text-[11px] font-black text-slate-950">Payable Within Due Date:</span>
+                            <span class="font-mono font-black text-sm text-indigo-950">{{ printBranding.currencySymbol || 'PKR' }} {{ formatCurrency(voucherWithinDueTotal) }}</span>
+                          </div>
+                          <div class="flex justify-between items-center">
+                            <span class="text-[11px] font-black text-rose-700">Payable After Due Date (+{{ schoolGatewaySettings.lateFeeFinePkr || 500 }}):</span>
+                            <span class="font-mono font-black text-xs text-rose-700">{{ printBranding.currencySymbol || 'PKR' }} {{ formatCurrency(voucherWithinDueTotal + (schoolGatewaySettings.lateFeeFinePkr || 500)) }}</span>
+                          </div>
+                        </div>
+                        @if (printBranding.footerNote || schoolGatewaySettings.receiptFooterNote) {
+                          <p class="text-[9px] text-slate-500 font-medium leading-tight">{{ printBranding.footerNote || schoolGatewaySettings.receiptFooterNote }}</p>
+                        }
+                      </div>
+                    }
+
+                    @case ('verification') {
+                      <!-- Scannable Code-128 Barcode & Raast/Bank 2D QR Code -->
+                      @if (printBranding.showBarcodeVerification || printBranding.showQrVerification) {
+                        <div
+                          class="flex items-center justify-between gap-2 pt-1"
+                          [class]="printBranding.verificationOrder === 'qr_first' ? 'flex-row-reverse' : 'flex-row'">
+                          @if (printBranding.showBarcodeVerification) {
+                            <div class="min-w-0 flex-1 text-left">
+                              <app-school-barcode [value]="voucherBarcodeValue" [label]="voucherBarcodeValue" [height]="32" [barWidth]="1.1" />
+                            </div>
+                          }
+                          @if (printBranding.showQrVerification) {
+                            <div class="shrink-0 bg-white p-1 rounded-lg border border-slate-200">
+                              <app-school-qr-code [value]="voucherQrPayload" [size]="50" [label]="'VERIFY QR'" />
+                            </div>
+                          }
+                        </div>
+                      }
+                    }
+
+                    @case ('footer') {
+                      <!-- Signatures -->
+                      <div class="pt-2">
+                        <div class="grid grid-cols-2 gap-3 text-[9px] font-bold text-slate-600 text-center">
+                          <div>
+                            <div class="h-4"></div>
+                            <span class="block pt-1 border-t border-slate-300">{{ printBranding.challanLeftSignLabel || 'Parent / Depositor Sign' }}</span>
+                          </div>
+                          <div>
+                            <div class="h-4"></div>
+                            <span class="block pt-1 border-t border-slate-300">{{ printBranding.challanRightSignLabel || 'Bank Teller Stamp & Sign' }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    }
                   }
-                  @if (primaryVoucherOneBillGateway) {
-                    <p class="text-[10px] font-mono text-indigo-700 font-bold truncate">1Bill ID: {{ schoolGatewaySettings.oneBillPrefix || '10089' }}-{{ voucherStudent?.rollNo || '1030' }}</p>
-                  }
-                </div>
-
-                <!-- Student & Challan Details (Borderless, inside the same single card) -->
-                <div class="space-y-1.5 text-[11px]">
-                  <div class="flex justify-between items-center">
-                    <span class="text-slate-500 font-bold">Challan No:</span>
-                    <span class="font-mono font-black text-slate-950">CH-2026-{{ voucherStudent?.rollNo || '1030' }}</span>
-                  </div>
-                  <div class="flex justify-between items-center">
-                    <span class="text-slate-500 font-bold">Student Name:</span>
-                    <span class="font-black text-slate-950 truncate max-w-[160px]">{{ voucherStudent?.name || 'Pervaiz Ahmed Abbasi' }}</span>
-                  </div>
-                  <div class="flex justify-between items-center">
-                    <span class="text-slate-500 font-bold">Father / Guardian:</span>
-                    <span class="font-bold text-slate-900 truncate max-w-[160px]">{{ voucherStudent?.guardian || 'Ghansi' }}</span>
-                  </div>
-                  <div class="flex justify-between items-center">
-                    <span class="text-slate-500 font-bold">Class &amp; Section:</span>
-                    <span class="font-black text-slate-950">{{ voucherStudent?.grade || 'Class 1' }}</span>
-                  </div>
-                  <div class="flex justify-between items-center">
-                    <span class="text-slate-500 font-bold">Roll Number:</span>
-                    <span class="font-mono font-black text-slate-950">{{ voucherStudent?.rollNo || '1030' }}</span>
-                  </div>
-                  <div class="flex justify-between items-center">
-                    <span class="text-slate-600 font-extrabold">Due Date:</span>
-                    <span class="font-mono font-black text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md">10th Oct 2026</span>
-                  </div>
-                </div>
-
-                <!-- Itemized Fee Breakdown (Borderless, inside the same single card) -->
-                <div class="space-y-1.5 text-[11px]">
-                  <div class="flex justify-between items-center text-[10px] font-black uppercase tracking-wider text-slate-400">
-                    <span>Fee Description</span>
-                    <span>Amount (PKR)</span>
-                  </div>
-                  <div class="flex justify-between items-center">
-                    <span class="text-slate-800 font-medium">Monthly Tuition Fee</span>
-                    <span class="font-mono font-black text-slate-950">{{ formatCurrency(voucherTuitionFee) }}</span>
-                  </div>
-                  <div class="flex justify-between items-center">
-                    <span class="text-slate-800 font-medium">Science &amp; IT Lab Fund</span>
-                    <span class="font-mono font-bold text-slate-800">1,500</span>
-                  </div>
-                  <div class="flex justify-between items-center">
-                    <span class="text-slate-800 font-medium">Exam &amp; Transcripts Fee</span>
-                    <span class="font-mono font-bold text-slate-800">1,200</span>
-                  </div>
-                  <div class="flex justify-between items-center">
-                    <span class="text-slate-800 font-medium">Sports &amp; Activity Fund</span>
-                    <span class="font-mono font-bold text-slate-800">800</span>
-                  </div>
-                </div>
-
-                <!-- Single Unified Highlight for Payable Totals -->
-                <div class="rounded-xl p-3 bg-gradient-to-r from-indigo-50 via-emerald-50/70 to-rose-50/60 space-y-1.5">
-                  <div class="flex justify-between items-center">
-                    <span class="text-[11px] font-black text-slate-950">Payable Within Due Date:</span>
-                    <span class="font-mono font-black text-sm text-indigo-950">PKR {{ formatCurrency(voucherWithinDueTotal) }}</span>
-                  </div>
-                  <div class="flex justify-between items-center">
-                    <span class="text-[11px] font-black text-rose-700">Payable After Due Date (+{{ schoolGatewaySettings.lateFeeFinePkr || 500 }}):</span>
-                    <span class="font-mono font-black text-xs text-rose-700">PKR {{ formatCurrency(voucherWithinDueTotal + (schoolGatewaySettings.lateFeeFinePkr || 500)) }}</span>
-                  </div>
-                </div>
-                @if (schoolGatewaySettings.receiptFooterNote) {
-                  <p class="text-[9px] text-slate-500 font-medium leading-tight">{{ schoolGatewaySettings.receiptFooterNote }}</p>
                 }
-              </div>
-
-              <!-- Signatures & Barcode (Borderless inside the same single card) -->
-              <div class="space-y-3 pt-2">
-                <div class="grid grid-cols-2 gap-3 text-[9px] font-bold text-slate-600 text-center">
-                  <div>
-                    <div class="h-4"></div>
-                    <span class="block pt-1 border-t border-slate-300">Parent / Depositor Sign</span>
-                  </div>
-                  <div>
-                    <div class="h-4"></div>
-                    <span class="block pt-1 border-t border-slate-300">Bank Teller Stamp &amp; Sign</span>
-                  </div>
-                </div>
-
-                <!-- Scannable Code-128 Barcode & Raast/Bank 2D QR Code -->
-                <div class="flex items-center justify-between gap-2 pt-1">
-                  <div class="min-w-0 flex-1 text-left">
-                    <app-school-barcode [value]="voucherBarcodeValue" [label]="voucherBarcodeValue" [height]="32" [barWidth]="1.1" />
-                  </div>
-                  <div class="shrink-0 bg-white p-1 rounded-lg border border-slate-200">
-                    <app-school-qr-code [value]="voucherQrPayload" [size]="50" [label]="'VERIFY QR'" />
-                  </div>
-                </div>
-              </div>
-
+              }
             </div>
           }
 
@@ -25010,17 +25408,22 @@
               </div>
 
               <div>
-                <span class="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1.5">Default Receipt Paper Profile</span>
+                <div class="flex items-center justify-between gap-2 mb-1.5">
+                  <span class="block text-[10px] font-black uppercase tracking-wider text-slate-500">Default Receipt Paper Profile</span>
+                  @if (!canManagePrintStudio) {
+                    <span class="px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 text-[9px] font-black uppercase tracking-wider">Owner Locked</span>
+                  }
+                </div>
                 <div class="grid grid-cols-3 gap-1.5">
-                  <button type="button" (click)="hardwarePrinterPaper = '80mm'" class="py-2 px-2 rounded-xl border font-black text-[11px] cursor-pointer"
+                  <button type="button" [disabled]="!canManagePrintStudio" (click)="onStudioPaperSizeChange('80mm')" class="py-2 px-2 rounded-xl border font-black text-[11px] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                     [class]="hardwarePrinterPaper === '80mm' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-200'">
                     80mm Thermal
                   </button>
-                  <button type="button" (click)="hardwarePrinterPaper = '58mm'" class="py-2 px-2 rounded-xl border font-black text-[11px] cursor-pointer"
+                  <button type="button" [disabled]="!canManagePrintStudio" (click)="onStudioPaperSizeChange('58mm')" class="py-2 px-2 rounded-xl border font-black text-[11px] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                     [class]="hardwarePrinterPaper === '58mm' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-200'">
                     58mm Compact
                   </button>
-                  <button type="button" (click)="hardwarePrinterPaper = 'a4'" class="py-2 px-2 rounded-xl border font-black text-[11px] cursor-pointer"
+                  <button type="button" [disabled]="!canManagePrintStudio" (click)="onStudioPaperSizeChange('a4')" class="py-2 px-2 rounded-xl border font-black text-[11px] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                     [class]="hardwarePrinterPaper === 'a4' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-200'">
                     A4 Laser 3-Copy
                   </button>

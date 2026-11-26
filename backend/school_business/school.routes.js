@@ -6554,6 +6554,161 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     res.json({ ok: true, tenantId: tid, tableId: canonical, rowKey, deletedColId: colId, schema: allSchemas[canonical] || null, schemas: allSchemas });
   });
 
+  const normalizeServerPrintBranding = (raw, fallbackSchoolName = '') => {
+    const src = raw && typeof raw === 'object' ? raw : {};
+    const validSections = ['header', 'meta', 'person', 'amounts', 'verification', 'footer'];
+    const lockedSections = new Set(['header', 'amounts']);
+    const sectionOrder = [];
+    if (Array.isArray(src.sectionOrder)) {
+      for (const s of src.sectionOrder) {
+        if (validSections.includes(s) && !sectionOrder.includes(s)) sectionOrder.push(s);
+      }
+    }
+    for (const s of validSections) {
+      if (!sectionOrder.includes(s)) sectionOrder.push(s);
+    }
+    const hiddenSections = Array.isArray(src.hiddenSections)
+      ? src.hiddenSections.filter((s) => validSections.includes(s) && !lockedSections.has(s))
+      : [];
+    const logoRaw = String(src.logoDataUrl || '').trim();
+    const logoDataUrl =
+      logoRaw.length <= 750000 && /^data:image\/(?:png|jpeg|jpg|webp|gif);base64,[A-Za-z0-9+/=]+$/i.test(logoRaw)
+        ? logoRaw
+        : '';
+    const accent = /^#[0-9a-fA-F]{6}$/.test(String(src.headerAccentColor || '').trim())
+      ? String(src.headerAccentColor).trim()
+      : '#0f172a';
+    const stampAllowed = new Set(['PAID', 'VERIFIED', 'ORIGINAL', 'NONE']);
+    const currencyAllowed = new Set(['PKR', 'USD', 'AED', 'SAR', 'GBP']);
+    return {
+      schoolName: String(src.schoolName || fallbackSchoolName || 'SoftCode Premier Academy').trim().slice(0, 140),
+      campusTagline: String(src.campusTagline || '').trim().slice(0, 180),
+      registrationNo: String(src.registrationNo || '').trim().slice(0, 120),
+      address: String(src.address || '').trim().slice(0, 220),
+      phone: String(src.phone || '').trim().slice(0, 60),
+      website: String(src.website || '').trim().slice(0, 120),
+      signatoryTitle: String(src.signatoryTitle || 'Principal & Controller of Examinations').trim().slice(0, 120),
+      monogramInitials: String(src.monogramInitials || 'SPA').trim().toUpperCase().slice(0, 4),
+      headerAccentColor: accent,
+      defaultPaperWidth: src.defaultPaperWidth === '58mm' ? '58mm' : '80mm',
+      stampLabel: stampAllowed.has(src.stampLabel) ? src.stampLabel : 'VERIFIED',
+      currencySymbol: currencyAllowed.has(src.currencySymbol) ? src.currencySymbol : 'PKR',
+      thermalDualCopy: Boolean(src.thermalDualCopy),
+      autoKickCashDrawer: Boolean(src.autoKickCashDrawer),
+      autoCutThermal: src.autoCutThermal !== false,
+      footerNote: String(src.footerNote || '').trim().slice(0, 300),
+      showLogoCrest: src.showLogoCrest !== false,
+      showQrVerification: src.showQrVerification !== false,
+      showBarcodeVerification: src.showBarcodeVerification !== false,
+      logoDataUrl,
+      logoPlacement: src.logoPlacement === 'top' || src.logoPlacement === 'right' ? src.logoPlacement : 'left',
+      logoSizePx: Math.min(84, Math.max(24, Number(src.logoSizePx) || 44)),
+      headerAlign: src.headerAlign === 'left' || src.headerAlign === 'right' ? src.headerAlign : 'center',
+      sectionOrder,
+      hiddenSections,
+      verificationOrder:
+        src.verificationOrder === 'qr_first' || src.verificationOrder === 'side_by_side'
+          ? src.verificationOrder
+          : 'barcode_first'
+    };
+  };
+
+  const readWorkspaceSnapshot = async (tid) => {
+    let payload = null;
+    let schoolName = '';
+    if (sqliteDb) {
+      try {
+        const row = sqliteDb.prepare('SELECT school_name, payload_json FROM local_school_workspaces WHERE tenant_id = ?').get(tid);
+        if (row?.payload_json) {
+          payload = JSON.parse(row.payload_json);
+          schoolName = String(row.school_name || payload?.schoolName || '');
+        }
+      } catch {}
+    }
+    if (!payload && db) {
+      try {
+        const snap = await getDoc(doc(db, 'school_workspaces', tid));
+        if (snap.exists()) {
+          payload = snap.data() || {};
+          schoolName = String(payload.schoolName || '');
+        }
+      } catch {}
+    }
+    return { payload: payload && typeof payload === 'object' ? payload : {}, schoolName };
+  };
+
+  router.get('/print-branding', async (req, res) => {
+    const tid = resolveTenantId(req);
+    const { payload, schoolName } = await readWorkspaceSnapshot(tid);
+    const printBranding = payload.printBranding
+      ? normalizeServerPrintBranding(payload.printBranding, schoolName)
+      : null;
+    res.json({ ok: true, tenantId: tid, schoolName, printBranding });
+  });
+
+  router.put('/print-branding', requireOwnerRole, async (req, res) => {
+    const tid = resolveTenantId(req);
+    const { payload, schoolName } = await readWorkspaceSnapshot(tid);
+    const incoming = req.body?.printBranding || req.body || {};
+    const normalized = normalizeServerPrintBranding(incoming, schoolName || payload.schoolName);
+    const nextSchoolName = normalized.schoolName || schoolName || String(payload.schoolName || '');
+    const nextSettingsForm = payload.settingsForm && typeof payload.settingsForm === 'object'
+      ? {
+          ...payload.settingsForm,
+          schoolName: nextSchoolName || payload.settingsForm.schoolName,
+          phone: normalized.phone || payload.settingsForm.phone
+        }
+      : payload.settingsForm;
+
+    const nextPayload = {
+      ...payload,
+      schoolName: nextSchoolName,
+      ...(nextSettingsForm ? { settingsForm: nextSettingsForm } : {}),
+      printBranding: normalized
+    };
+
+    if (sqliteDb) {
+      sqliteDb.prepare(`
+        INSERT OR REPLACE INTO local_school_workspaces (tenant_id, school_name, payload_json, updated_at)
+        VALUES (?, ?, ?, ?)
+      `).run(tid, nextSchoolName, JSON.stringify(nextPayload), new Date().toISOString());
+    }
+    if (db) {
+      try {
+        await setDoc(doc(db, 'school_workspaces', tid), {
+          schoolName: nextSchoolName,
+          ...(nextSettingsForm ? { settingsForm: nextSettingsForm } : {}),
+          printBranding: normalized,
+          tenant_id: tid,
+          updatedAt: new Date().toISOString()
+        }, { merge: true });
+      } catch {}
+    }
+    res.json({ ok: true, tenantId: tid, printBranding: normalized });
+  });
+
+  router.delete('/print-branding', requireOwnerRole, async (req, res) => {
+    const tid = resolveTenantId(req);
+    const { payload, schoolName } = await readWorkspaceSnapshot(tid);
+    const { printBranding: _removed, ...restPayload } = payload;
+    if (sqliteDb) {
+      sqliteDb.prepare(`
+        INSERT OR REPLACE INTO local_school_workspaces (tenant_id, school_name, payload_json, updated_at)
+        VALUES (?, ?, ?, ?)
+      `).run(tid, schoolName, JSON.stringify(restPayload), new Date().toISOString());
+    }
+    if (db) {
+      try {
+        await setDoc(doc(db, 'school_workspaces', tid), {
+          printBranding: null,
+          tenant_id: tid,
+          updatedAt: new Date().toISOString()
+        }, { merge: true });
+      } catch {}
+    }
+    res.json({ ok: true, tenantId: tid, reset: true });
+  });
+
   // Per-tenant Workspace State Snapshot (settings, notices, classes, timetable, calendar, etc.)
   router.get('/workspace', async (req, res) => {
     const tid = resolveTenantId(req);
@@ -6609,11 +6764,38 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
   router.put('/workspace', rejectRestrictedRole(['student', 'parent']), async (req, res) => {
     const tid = resolveTenantId(req);
     const body = req.body || {};
-    const isOwner = OWNER_ROLES.has(resolveUserRole(req));
-    const { tableSchemas: incomingSchemas, ...restBody } = body;
-    const workspacePayload = isOwner && incomingSchemas !== undefined
-      ? { ...restBody, tableSchemas: incomingSchemas }
-      : restBody;
+    const role = resolveUserRole(req);
+    const isOwner = Boolean(role && OWNER_ROLES.has(role));
+    const {
+      tableSchemas: incomingSchemas,
+      printBranding: incomingPrintBranding,
+      schoolName: incomingSchoolName,
+      settingsForm: incomingSettingsForm,
+      ...restBody
+    } = body;
+
+    let workspacePayload;
+    if (isOwner) {
+      workspacePayload = {
+        ...restBody,
+        ...(incomingSchoolName !== undefined ? { schoolName: incomingSchoolName } : {}),
+        ...(incomingSettingsForm !== undefined ? { settingsForm: incomingSettingsForm } : {}),
+        ...(incomingPrintBranding !== undefined
+          ? { printBranding: normalizeServerPrintBranding(incomingPrintBranding, incomingSchoolName) }
+          : {}),
+        ...(incomingSchemas !== undefined ? { tableSchemas: incomingSchemas } : {})
+      };
+    } else {
+      // Preserve Owner-controlled branding, identity & tableSchemas when non-owner operational portals sync workspace state
+      const existing = await readWorkspaceSnapshot(tid);
+      workspacePayload = {
+        ...restBody,
+        ...(existing.payload.schoolName ? { schoolName: existing.payload.schoolName } : {}),
+        ...(existing.payload.settingsForm ? { settingsForm: existing.payload.settingsForm } : {}),
+        ...(existing.payload.printBranding ? { printBranding: existing.payload.printBranding } : {})
+      };
+    }
+
     const schoolName = String(workspacePayload.schoolName || '');
     const serialized = JSON.stringify(workspacePayload);
     if (sqliteDb) {
@@ -6650,7 +6832,7 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
         }
       } catch {}
     }
-    res.json({ ok: true, tenantId: tid });
+    res.json({ ok: true, tenantId: tid, ownerProtected: !isOwner });
   });
 
   // =========================================================================

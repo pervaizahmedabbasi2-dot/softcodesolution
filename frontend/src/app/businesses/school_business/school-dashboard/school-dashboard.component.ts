@@ -88,11 +88,13 @@ import { SchoolCustomFormFieldsComponent } from '../components/school-custom-for
 import { SchoolBarcodeComponent, SchoolQrCodeComponent } from '../components/school-barcode/school-barcode.component';
 import {
   BarcodeStickerItem,
+  EscPosRasterBitmap,
   ThermalFeeReceiptData,
   ThermalPaperWidth,
   buildBarcodeStickerSheetHtml,
   buildEscPosReceiptBytes,
   buildThermalFeeReceiptHtml,
+  imageDataUrlToEscPosRaster,
   printHtmlInHiddenFrame
 } from '../utils/thermal-print.util';
 import { SchoolTableSchemaService, SchoolCustomColumn, TableColumnPositionOption } from '../services/school-table-schema.service';
@@ -100,10 +102,23 @@ import { PdfStudentCardEntry, downloadStudentsCardsPdf, downloadStudentsTablePdf
 import { PasskeyManagerComponent } from '../../../auth_security/passkey-manager/passkey-manager.component';
 import { SchoolPrintStudioComponent } from '../components/school-print-studio/school-print-studio.component';
 import {
+  DEFAULT_PRINT_SECTION_ORDER,
   DEFAULT_SCHOOL_PRINT_BRANDING,
+  PRINT_SECTION_META,
+  PrintChallanLogoCorner,
+  PrintSectionKey,
+  PrintSectionMeta,
   SchoolPrintBrandingConfig,
   buildA4BankChallanHtml,
-  normalizeSchoolPrintBranding
+  buildAdmitCardPrintHtml,
+  buildBorrowSlipPrintHtml,
+  buildBulkIdCardSheetHtml,
+  buildGatePassPrintHtml,
+  buildResultDmcHtml,
+  buildSalarySlipHtml,
+  buildStudentIdCardPrintHtml,
+  normalizeSchoolPrintBranding,
+  sanitizeBrandingLogoUrl
 } from '../utils/school-print-templates.util';
 
 export type SchoolDashboardTab = 'overview' | 'stage_wise' | 'feed' | 'events' | 'students' | 'teachers' | 'admissions' | 'attendance' | 'finance' | 'invoices' | 'expenses' | 'payment_gateway' | 'transport' | 'library' | 'exams' | 'timetable' | 'hostel' | 'labs' | 'alumni' | 'portals' | 'reports' | 'visitors' | 'assets' | 'print_studio' | 'settings' | 'audit' | 'lesson_plans' | 'appraisals' | 'inspections' | 'exam_moderation' | 'parent_complaints' | 'substitutions' | 'syllabus' | 'safeguarding' | 'directives';
@@ -1688,7 +1703,8 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
       subtitle: `Roll #${student.rollNo} | ${student.id} | ${student.grade} (${student.section || 'A'}) | Complete Record`,
       cards: [this.buildPdfCardEntryForStudent(student)],
       filename: `student_dossier_${safeRoll}_${safeName}.pdf`,
-      singleDossierMode: true
+      singleDossierMode: true,
+      branding: this.printBranding
     });
     this.showToast(`Downloaded complete PDF dossier for ${student.name}`, 'success');
   }
@@ -1938,7 +1954,8 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
         }
       ],
       filename: `staff_dossier_${safeCode}_${safeName}.pdf`,
-      footerLabel: `SoftCode School ERP | ${staff.categoryRole} Dossier`
+      footerLabel: `${this.printBranding?.schoolName || this.schoolName || 'Campus ERP'} | ${staff.categoryRole} Dossier`,
+      branding: this.printBranding
     });
     this.showToast(`Downloaded complete PDF dossier for ${staff.name}`, 'success');
   }
@@ -2247,6 +2264,9 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
   }
   get isOwnerPortal(): boolean {
     return this._currentPortalRole === 'owner';
+  }
+  get canManagePrintStudio(): boolean {
+    return this.isOwnerPortal && this.isOwnerSession;
   }
   currentTab: SchoolDashboardTab = 'overview';
   principalTab: 'overview' | 'stage_wise' | 'master_registries' | 'supervision' | 'substitutions' | 'syllabus' | 'inspections' | 'discipline' | 'directives' | 'appraisals' | 'exam_moderation' | 'academic_reports' | 'faculty_tasks' | 'teacher_leaves' | 'student_certificates' | 'ptm_interventions' | 'admissions_review' | 'fee_oversight' | 'parent_complaints' | 'safeguarding' | 'facilities_transport' | 'library' | 'biometric_attendance' = 'overview';
@@ -3744,6 +3764,11 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
 
   // --- PRINTER & BARCODE SCANNER HARDWARE STATE ---
   printBranding: SchoolPrintBrandingConfig = { ...DEFAULT_SCHOOL_PRINT_BRANDING };
+  isVoucherCustomizerOpen: boolean = false;
+  isProcessingVoucherLogo: boolean = false;
+  voucherLogoDragOver: boolean = false;
+  draggedVoucherSectionKey: PrintSectionKey | null = null;
+  dragOverVoucherSectionKey: PrintSectionKey | null = null;
   isHardwareTerminalModalOpen: boolean = false;
   hardwarePrinterPaper: 'a4' | '80mm' | '58mm' = '80mm';
   hardwareScannerMode: 'auto' | 'fee' | 'attendance' | 'library' = 'auto';
@@ -10763,8 +10788,9 @@ INSTRUCTIONS:
   async loadStateFromBackend(): Promise<void> {
     try {
       await this.flushOfflineSyncQueue();
-      const [wsRes, stuRes, tchRes, admRes, feeRes, hwRes, hwSubRes, matRes, msgRes, lvRes, conRes, cmpRes, lpRes, subRes, audRes, recRes, pvRes, monRes, stfRes, priRes, polRes, fpRes, fgRes, attRes, _tsRes, pgGwRes, pgTxRes] = await Promise.all([
+      const [wsRes, brandingRes, stuRes, tchRes, admRes, feeRes, hwRes, hwSubRes, matRes, msgRes, lvRes, conRes, cmpRes, lpRes, subRes, audRes, recRes, pvRes, monRes, stfRes, priRes, polRes, fpRes, fgRes, attRes, _tsRes, pgGwRes, pgTxRes] = await Promise.all([
         this.backend.getSchoolWorkspace().catch(() => null),
+        this.backend.getSchoolPrintBranding().catch(() => null),
         this.backend.getSchoolStudents().catch(() => null),
         this.backend.getSchoolTeachers().catch(() => null),
         this.backend.getSchoolAdmissions().catch(() => null),
@@ -10797,7 +10823,14 @@ INSTRUCTIONS:
         const w = wsRes.workspace;
         if (w.schoolName) this.schoolName = w.schoolName;
         if (w.settingsForm) this.settingsForm = { ...this.settingsForm, ...w.settingsForm };
-        if (w.printBranding) this.printBranding = normalizeSchoolPrintBranding(w.printBranding, this.schoolName);
+        const effectiveBranding = (brandingRes?.ok && brandingRes.printBranding) || w.printBranding;
+        if (effectiveBranding) {
+          this.printBranding = normalizeSchoolPrintBranding(effectiveBranding, this.schoolName);
+          if (this.printBranding.defaultPaperWidth === '58mm' || this.printBranding.defaultPaperWidth === '80mm') {
+            this.hardwarePrinterPaper = this.printBranding.defaultPaperWidth;
+          }
+          void this.refreshEscPosLogoBitmap();
+        }
         if (Array.isArray(w.announcements) && w.announcements.length > 0) this.announcements = w.announcements;
         if (Array.isArray(w.timetables) && w.timetables.length > 0) this.timetables = w.timetables;
         if (Array.isArray(w.parentMessages) && w.parentMessages.length > 0) this.parentMessages = w.parentMessages;
@@ -11447,11 +11480,17 @@ INSTRUCTIONS:
       this.setScopedItem('scs_school_branch_scope_v1', this.selectedBranchScope);
       this.setScopedItem('scs_school_wing_scope_v1', this.selectedWingScope);
       this.setScopedItem('scs_school_acc_autoprint_v1', this.accountantAutoPrintThermal ? '1' : '0');
-      this.setScopedItem('scs_school_print_branding_v1', JSON.stringify(this.printBranding));
+      if (this.canManagePrintStudio) {
+        this.setScopedItem('scs_school_print_branding_v1', JSON.stringify(this.printBranding));
+      }
       void this.backend.saveSchoolWorkspace({
-        schoolName: this.schoolName,
-        settingsForm: this.settingsForm,
-        printBranding: this.printBranding,
+        ...(this.canManagePrintStudio
+          ? {
+              schoolName: this.schoolName,
+              settingsForm: this.settingsForm,
+              printBranding: this.printBranding
+            }
+          : {}),
         announcements: this.announcements,
         timetables: this.timetables,
         parentMessages: this.parentMessages,
@@ -15042,6 +15081,10 @@ INSTRUCTIONS:
         }
       } catch {}
     }
+    if (nextTab === 'print_studio' && !this.canManagePrintStudio) {
+      this.showToast('Access Restricted: Print & Hardware Studio is restricted to the School Owner.', 'warning');
+      return;
+    }
     if (this.currentTab === nextTab) {
       this.cdr.detectChanges();
       this.resetScrollToTop();
@@ -18372,12 +18415,344 @@ INSTRUCTIONS:
 
   closeFeeChallanVoucher() {
     this.isFeeChallanVoucherOpen = false;
+    this.isVoucherCustomizerOpen = false;
     this.voucherStudent = null;
     this.cdr.detectChanges();
   }
 
   printVoucher() {
-    window.print();
+    void this.printBrandedA4ChallanForVoucher(this.voucherStudent);
+  }
+
+  get safeVoucherLogoUrl(): string {
+    return sanitizeBrandingLogoUrl(this.printBranding?.logoDataUrl);
+  }
+
+  get voucherSectionOrder(): PrintSectionKey[] {
+    const order = this.printBranding?.sectionOrder;
+    return Array.isArray(order) && order.length > 0 ? order : DEFAULT_PRINT_SECTION_ORDER;
+  }
+
+  getVoucherSectionMeta(key: PrintSectionKey): PrintSectionMeta {
+    return PRINT_SECTION_META[key];
+  }
+
+  isVoucherSectionHidden(key: PrintSectionKey): boolean {
+    return Array.isArray(this.printBranding?.hiddenSections) && this.printBranding.hiddenSections.includes(key);
+  }
+
+  canMoveVoucherSection(index: number, delta: -1 | 1): boolean {
+    const next = index + delta;
+    return next >= 0 && next < this.voucherSectionOrder.length;
+  }
+
+  toggleVoucherCustomizer(): void {
+    if (!this.canManagePrintStudio) {
+      this.showToast('Access Restricted: Only the School Business Owner can customize challan layout & logo.', 'warning');
+      return;
+    }
+    this.isVoucherCustomizerOpen = !this.isVoucherCustomizerOpen;
+    this.cdr.detectChanges();
+  }
+
+  updateVoucherBrandingText(
+    field:
+      | 'schoolName'
+      | 'monogramInitials'
+      | 'challanRefLabel'
+      | 'challanDueDateLabel'
+      | 'challanTuitionLabel'
+      | 'challanLabLabel'
+      | 'challanExamLabel'
+      | 'challanActivityLabel'
+      | 'challanLeftSignLabel'
+      | 'challanRightSignLabel'
+      | 'footerNote',
+    rawValue: string
+  ): void {
+    if (!this.canManagePrintStudio) return;
+    const nextVal = field === 'monogramInitials' ? rawValue.toUpperCase().slice(0, 4) : rawValue;
+    this.printBranding = {
+      ...this.printBranding,
+      [field]: nextVal
+    };
+    this.cdr.detectChanges();
+  }
+
+  updateVoucherBrandingNumber(field: 'logoSizePx', rawValue: string | number): void {
+    if (!this.canManagePrintStudio) return;
+    const num = Math.min(80, Math.max(24, Number(rawValue) || 44));
+    this.printBranding = {
+      ...this.printBranding,
+      [field]: num
+    };
+    this.cdr.detectChanges();
+  }
+
+  updateVoucherBrandingBool(
+    field: 'showLogoCrest' | 'showQrVerification' | 'showBarcodeVerification',
+    checked: boolean
+  ): void {
+    if (!this.canManagePrintStudio) return;
+    this.printBranding = {
+      ...this.printBranding,
+      [field]: Boolean(checked)
+    };
+    this.cdr.detectChanges();
+  }
+
+  setVoucherChallanLogoCorner(corner: PrintChallanLogoCorner): void {
+    if (!this.canManagePrintStudio) return;
+    this.printBranding = {
+      ...this.printBranding,
+      challanLogoCorner: corner
+    };
+    this.cdr.detectChanges();
+  }
+
+  moveVoucherSection(key: PrintSectionKey, delta: -1 | 1): void {
+    if (!this.canManagePrintStudio) return;
+    const current = [...this.voucherSectionOrder];
+    const idx = current.indexOf(key);
+    const targetIdx = idx + delta;
+    if (idx === -1 || targetIdx < 0 || targetIdx >= current.length) return;
+    const swap = current[targetIdx];
+    current[targetIdx] = current[idx];
+    current[idx] = swap;
+    this.printBranding = {
+      ...this.printBranding,
+      sectionOrder: current
+    };
+    this.cdr.detectChanges();
+  }
+
+  onVoucherSectionDragStart(event: DragEvent, key: PrintSectionKey): void {
+    if (!this.canManagePrintStudio) return;
+    this.draggedVoucherSectionKey = key;
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', key);
+    }
+  }
+
+  onVoucherSectionDragOver(event: DragEvent, key: PrintSectionKey): void {
+    if (!this.canManagePrintStudio) return;
+    event.preventDefault();
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'move';
+    }
+    this.dragOverVoucherSectionKey = key;
+  }
+
+  onVoucherSectionDrop(event: DragEvent, targetKey: PrintSectionKey): void {
+    if (!this.canManagePrintStudio) return;
+    event.preventDefault();
+    const fromKey =
+      this.draggedVoucherSectionKey ||
+      (event.dataTransfer?.getData('text/plain') as PrintSectionKey | undefined);
+    this.draggedVoucherSectionKey = null;
+    this.dragOverVoucherSectionKey = null;
+    if (!fromKey || fromKey === targetKey) return;
+    const current = [...this.voucherSectionOrder];
+    const fromIdx = current.indexOf(fromKey);
+    const toIdx = current.indexOf(targetKey);
+    if (fromIdx === -1 || toIdx === -1) return;
+    const [moved] = current.splice(fromIdx, 1);
+    current.splice(toIdx, 0, moved);
+    this.printBranding = {
+      ...this.printBranding,
+      sectionOrder: current
+    };
+    this.cdr.detectChanges();
+  }
+
+  onVoucherSectionDragEnd(): void {
+    this.draggedVoucherSectionKey = null;
+    this.dragOverVoucherSectionKey = null;
+  }
+
+  toggleVoucherSectionVisibility(key: PrintSectionKey): void {
+    if (!this.canManagePrintStudio || PRINT_SECTION_META[key]?.locked) return;
+    const current = [...(this.printBranding.hiddenSections || [])];
+    const idx = current.indexOf(key);
+    if (idx >= 0) {
+      current.splice(idx, 1);
+    } else {
+      current.push(key);
+    }
+    this.printBranding = {
+      ...this.printBranding,
+      hiddenSections: current
+    };
+    this.cdr.detectChanges();
+  }
+
+  removeVoucherLogo(): void {
+    if (!this.canManagePrintStudio) return;
+    this.printBranding = {
+      ...this.printBranding,
+      logoDataUrl: '',
+      showLogoCrest: true
+    };
+    this.showToast('Custom logo removed. Top-right dummy crest restored.', 'info');
+    this.cdr.detectChanges();
+  }
+
+  onVoucherLogoDragOver(event: DragEvent): void {
+    if (!this.canManagePrintStudio) return;
+    event.preventDefault();
+    this.voucherLogoDragOver = true;
+  }
+
+  onVoucherLogoDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    this.voucherLogoDragOver = false;
+  }
+
+  onVoucherLogoDrop(event: DragEvent): void {
+    if (!this.canManagePrintStudio) return;
+    event.preventDefault();
+    this.voucherLogoDragOver = false;
+    const file = event.dataTransfer?.files?.[0];
+    if (file) {
+      void this.processVoucherLogoFile(file);
+    }
+  }
+
+  onVoucherLogoFileSelected(event: Event): void {
+    const inputEl = event.target as HTMLInputElement | null;
+    const file = inputEl?.files?.[0];
+    if (file && this.canManagePrintStudio) {
+      void this.processVoucherLogoFile(file);
+    }
+    if (inputEl) {
+      inputEl.value = '';
+    }
+  }
+
+  private async processVoucherLogoFile(file: File): Promise<void> {
+    if (!file.type.startsWith('image/')) {
+      this.showToast('Please select a valid PNG, JPG, WebP, or SVG school logo.', 'warning');
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      this.showToast('Logo file size must be under 8MB.', 'warning');
+      return;
+    }
+    this.isProcessingVoucherLogo = true;
+    this.cdr.detectChanges();
+    try {
+      const scaled = await this.scaleVoucherLogoToPng(file);
+      const safe = sanitizeBrandingLogoUrl(scaled);
+      if (!safe) {
+        this.showToast('Unable to decode image file. Please choose a PNG or JPG logo.', 'warning');
+        return;
+      }
+      this.printBranding = {
+        ...this.printBranding,
+        logoDataUrl: safe,
+        showLogoCrest: true
+      };
+      this.savePrintBranding(this.printBranding);
+      this.showToast('School logo uploaded & saved in top-right corner across all challan copies.', 'success');
+    } catch {
+      this.showToast('Error loading logo file. Please try another PNG or JPG.', 'warning');
+    } finally {
+      this.isProcessingVoucherLogo = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  private scaleVoucherLogoToPng(file: File): Promise<string> {
+    const isSvg = file.type === 'image/svg+xml' || file.name.toLowerCase().endsWith('.svg');
+    const loadImg = (src: string, fallbackW = 140, fallbackH = 140): Promise<string> =>
+      new Promise((resolve, reject) => {
+        if (typeof document === 'undefined' || typeof Image === 'undefined') {
+          resolve(src);
+          return;
+        }
+        const img = new Image();
+        img.onerror = () => reject(new Error('Image decode failed'));
+        img.onload = () => {
+          const maxDim = 260;
+          const w = img.naturalWidth || fallbackW;
+          const h = img.naturalHeight || fallbackH;
+          const scale = Math.min(1, maxDim / Math.max(w, h));
+          const tw = Math.max(24, Math.round(w * scale));
+          const th = Math.max(24, Math.round(h * scale));
+          const canvas = document.createElement('canvas');
+          canvas.width = tw;
+          canvas.height = th;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            resolve(src);
+            return;
+          }
+          ctx.clearRect(0, 0, tw, th);
+          ctx.drawImage(img, 0, 0, tw, th);
+          resolve(canvas.toDataURL('image/png'));
+        };
+        img.src = src;
+      });
+
+    if (isSvg) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error('SVG read failed'));
+        reader.onload = () => {
+          let svgText = String(reader.result || '').trim();
+          if (!svgText) {
+            reject(new Error('Empty SVG'));
+            return;
+          }
+          const vb = svgText.match(/viewBox\s*=\s*["']\s*[\d.-]+\s+[\d.-]+\s+([\d.]+)\s+([\d.]+)\s*["']/i);
+          let tw = 260;
+          let th = 260;
+          if (vb) {
+            const vw = parseFloat(vb[1]);
+            const vh = parseFloat(vb[2]);
+            if (vw > 0 && vh > 0) {
+              const r = vw / vh;
+              if (r >= 1) {
+                th = Math.max(40, Math.round(260 / r));
+              } else {
+                tw = Math.max(40, Math.round(260 * r));
+              }
+            }
+          }
+          svgText = svgText.replace(/<svg\b([^>]*)>/i, (_full, attrs: string) => {
+            const cleaned = attrs
+              .replace(/\swidth\s*=\s*["'][^"']*["']/gi, '')
+              .replace(/\sheight\s*=\s*["'][^"']*["']/gi, '');
+            return `<svg${cleaned} width="${tw}" height="${th}">`;
+          });
+          loadImg(`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgText)}`, tw, th).then(resolve, reject);
+        };
+        reader.readAsText(file);
+      });
+    }
+
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error('File read failed'));
+      reader.onload = () => {
+        loadImg(String(reader.result || '')).then(resolve, reject);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  saveVoucherCustomization(): void {
+    if (!this.canManagePrintStudio) {
+      this.showToast('Access Restricted: Only the School Business Owner can save challan customization.', 'warning');
+      return;
+    }
+    this.savePrintBranding(this.printBranding);
+    this.showToast('Challan logo, corner layout, and labels saved across Modal & A4 PDF.', 'success');
+  }
+
+  resetVoucherToDefault(): void {
+    this.resetPrintBranding();
   }
 
   // --- TEACHER CRUD ---
@@ -19901,8 +20276,31 @@ INSTRUCTIONS:
     this.cdr.detectChanges();
   }
 
-  printBorrowSlip(): void {
-    if (typeof window !== 'undefined') window.print();
+  async printBorrowSlip(): Promise<void> {
+    const rec = this.selectedCirculationSlip;
+    if (!rec) return;
+    const html = buildBorrowSlipPrintHtml(
+      {
+        slipId: rec.issueNo || rec.id,
+        bookTitle: rec.bookTitle,
+        bookIsbn: rec.isbn || 'N/A',
+        accessionCode: rec.bookId || rec.isbn,
+        borrowerName: rec.borrowerName,
+        borrowerRole: rec.borrowerType,
+        borrowerId: rec.borrowerId,
+        issueDate: rec.issueDate,
+        dueDate: rec.dueDate,
+        status: rec.status,
+        fineAmount: Number(rec.fineAmount || 0),
+        dailyFineRate: Number(this.dailyFineRatePKR || 50)
+      },
+      this.printBranding
+    );
+    const ok = await printHtmlInHiddenFrame(html);
+    this.showToast(
+      ok ? `Prepared branded Library Circulation Slip (${rec.issueNo || rec.id}).` : 'Print dialog unavailable in this view.',
+      ok ? 'success' : 'warning'
+    );
   }
 
   exportLibraryCirculationCSV(): void {
@@ -21577,8 +21975,29 @@ INSTRUCTIONS:
     this.cdr.detectChanges();
   }
 
-  printGatePassVoucher() {
-    if (typeof window !== 'undefined') window.print();
+  async printGatePassVoucher(): Promise<void> {
+    const v = this.activeGatePassVisitor;
+    if (!v) return;
+    const html = buildGatePassPrintHtml(
+      {
+        passCode: v.gatePassNo || v.badgeNo || v.id,
+        visitorName: v.visitorName,
+        cnicOrId: v.cnicOrPhone,
+        phone: v.cnicOrPhone,
+        purpose: v.purpose,
+        personToMeet: v.personToMeet,
+        vehiclePlate: v.vehicleNo,
+        checkInTime: v.checkInTime,
+        status: v.status,
+        issuedBy: 'Campus Security Desk'
+      },
+      this.printBranding
+    );
+    const ok = await printHtmlInHiddenFrame(html);
+    this.showToast(
+      ok ? `Prepared branded Gate Pass (${v.gatePassNo || v.id}) for printing.` : 'Print dialog unavailable in this view.',
+      ok ? 'success' : 'warning'
+    );
   }
 
   // --- STUDENT MEDICAL RECORDS CRUD ---
@@ -21899,8 +22318,36 @@ INSTRUCTIONS:
     this.cdr.detectChanges();
   }
 
-  printPaySlip() {
-    if (typeof window !== 'undefined') window.print();
+  async printPaySlip(): Promise<void> {
+    const p = this.activePaySlipStaff;
+    if (!p) return;
+    const allow = Number(p.allowances || 0);
+    const houseAllowance = Math.round(allow * 0.65);
+    const medicalAllowance = Math.max(0, allow - houseAllowance);
+    const html = buildSalarySlipHtml(
+      {
+        slipNo: p.id,
+        payMonth: p.month || this.printBranding.salaryMonthLabel || 'October 2026',
+        empCode: p.staffId,
+        employeeName: p.staffName,
+        designation: p.role,
+        department: 'Campus Faculty & Staff',
+        bankAccount: p.paymentMethod || 'Direct Bank Deposit',
+        basicPay: Number(p.baseSalary || 0),
+        houseAllowance,
+        medicalAllowance,
+        taxDeduction: Number(p.deductions || 0),
+        advanceDeduction: 0,
+        paymentMode: p.paymentMethod || this.printBranding.salaryPayModeLabel || 'Bank Transfer',
+        statusLabel: p.status
+      },
+      this.printBranding
+    );
+    const ok = await printHtmlInHiddenFrame(html);
+    this.showToast(
+      ok ? `Prepared branded Salary Slip (${p.id}) for ${p.staffName}.` : 'Print dialog unavailable in this view.',
+      ok ? 'success' : 'warning'
+    );
   }
 
   exportBankSalaryAdviceCSV(selectedMonth?: string): void {
@@ -22427,8 +22874,82 @@ INSTRUCTIONS:
     this.cdr.detectChanges();
   }
 
-  printCard() {
-    if (typeof window !== 'undefined') window.print();
+  async printCard(): Promise<void> {
+    if (this.isAdmitCardModalOpen && this.selectedCardStudent) {
+      const stu = this.selectedCardStudent;
+      const html = buildAdmitCardPrintHtml(
+        {
+          admitCode: this.admitCardBarcodeValue,
+          studentName: stu.name,
+          guardianName: stu.guardian || 'Parent / Guardian',
+          rollNo: stu.rollNo || '1001',
+          grade: `${stu.grade || 'Class'}${stu.section ? ` (${stu.section})` : ''}`,
+          examTitle: this.dmcExamTitle || 'Annual Terminal Examinations 2026',
+          examCenter: stu.branchName || this.activeScopeSummaryLabel || 'Main Campus Examination Hall',
+          session: this.dmcAcademicYear || '2025 - 2026',
+          seatNo: `DESK-${stu.rollNo || '1001'}`,
+          photoDataUrl: stu.image,
+          initials: this.getStaffInitials(stu.name)
+        },
+        this.printBranding
+      );
+      const ok = await printHtmlInHiddenFrame(html);
+      this.showToast(
+        ok ? `Prepared branded Exam Admit Card for ${stu.name}.` : 'Print dialog unavailable in this view.',
+        ok ? 'success' : 'warning'
+      );
+      return;
+    }
+
+    if (this.selectedCardPersonnel) {
+      const p = this.selectedCardPersonnel;
+      const html = buildStudentIdCardPrintHtml(
+        {
+          holderName: p.name,
+          roleOrGrade: `${p.roleTitle} · ${p.department}`,
+          code: this.idCardBarcodeValue,
+          guardianOrDept: p.department,
+          phone: p.phone || this.printBranding.phone,
+          validThrough: this.printBranding.idCardValidThru || 'Mar 2027',
+          campusBranch: p.branchName || this.activeScopeSummaryLabel || 'Main Campus',
+          initials: this.getStaffInitials(p.name),
+          photoDataUrl: p.image,
+          cardTypeLabel: `${String(p.category || 'STAFF').toUpperCase()} GATE CARD`
+        },
+        this.printBranding
+      );
+      const ok = await printHtmlInHiddenFrame(html);
+      this.showToast(
+        ok ? `Prepared CR80 Gate ID Card for ${p.name}.` : 'Print dialog unavailable in this view.',
+        ok ? 'success' : 'warning'
+      );
+      return;
+    }
+
+    if (this.selectedCardStudent) {
+      const stu = this.selectedCardStudent;
+      const html = buildStudentIdCardPrintHtml(
+        {
+          holderName: stu.name,
+          roleOrGrade: `${stu.grade || 'Class'}${stu.section ? ` (${stu.section})` : ''}`,
+          code: this.idCardBarcodeValue,
+          guardianOrDept: stu.guardian || 'Guardian',
+          phone: stu.guardianPhone || this.printBranding.phone,
+          validThrough: this.printBranding.idCardValidThru || 'Mar 2027',
+          campusBranch: stu.branchName || this.activeScopeSummaryLabel || 'Main Campus',
+          initials: this.getStaffInitials(stu.name),
+          photoDataUrl: stu.image,
+          bloodGroup: stu.bloodGroup,
+          cardTypeLabel: this.printBranding.idCardBadgeLabel || 'STUDENT GATE CARD'
+        },
+        this.printBranding
+      );
+      const ok = await printHtmlInHiddenFrame(html);
+      this.showToast(
+        ok ? `Prepared CR80 Student ID Card for ${stu.name}.` : 'Print dialog unavailable in this view.',
+        ok ? 'success' : 'warning'
+      );
+    }
   }
 
   // --- DETAILED MARKS CERTIFICATE (DMC) / OFFICIAL REPORT CARD MODAL ---
@@ -22449,10 +22970,37 @@ INSTRUCTIONS:
     this.cdr.detectChanges();
   }
 
-  printStudentDMC(): void {
-    if (typeof window !== 'undefined') {
-      window.print();
-    }
+  async printStudentDMC(): Promise<void> {
+    const res = this.selectedDMCResult;
+    if (!res || !res.student) return;
+    const stu = res.student;
+    const subjects = this.getStudentDMCSubjectBreakdown(res).map((s) => ({
+      subject: s.name,
+      maxMarks: s.maxTotal,
+      obtainedMarks: s.obtainedTotal,
+      grade: s.grade,
+      remarks: s.remarks
+    }));
+    const html = buildResultDmcHtml(
+      {
+        dmcNo: `DMC-2026-${stu.rollNo || stu.id}`,
+        examTitle: this.printBranding.dmcExamTitle || this.dmcExamTitle || 'Annual Terminal Examinations 2026',
+        session: this.printBranding.dmcSessionLabel || this.dmcAcademicYear || '2025 - 2026',
+        studentName: stu.name,
+        guardianName: stu.guardian || 'Guardian',
+        rollNo: stu.rollNo || '1001',
+        grade: `${stu.grade || 'Class'}${stu.section ? ` (${stu.section})` : ''}`,
+        subjects,
+        classRank: res.rank ? `#${res.rank}` : 'Evaluated',
+        attendancePercent: stu.attendance || '96%'
+      },
+      this.printBranding
+    );
+    const ok = await printHtmlInHiddenFrame(html);
+    this.showToast(
+      ok ? `Prepared branded Official DMC for ${stu.name} (Roll #${stu.rollNo}).` : 'Print dialog unavailable in this view.',
+      ok ? 'success' : 'warning'
+    );
   }
 
   shareDMCWhatsApp(res: any): void {
@@ -23018,7 +23566,8 @@ INSTRUCTIONS:
       subtitle: `Filter: ${this.selectedGradeFilter} | Fee: ${this.selectedFeeFilter} | ${rows.length} Student Records | ${headers.length} Columns`,
       headers,
       rows,
-      filename: `students_table_rowwise_${currentClassLabel}_${dateStamp}.pdf`
+      filename: `students_table_rowwise_${currentClassLabel}_${dateStamp}.pdf`,
+      branding: this.printBranding
     });
     this.isStudentExportMenuOpen = false;
     this.showToast(`Downloaded Row-Wise Table PDF for ${rows.length} student record(s)!`, 'success');
@@ -23038,7 +23587,8 @@ INSTRUCTIONS:
       subtitle: `Filter: ${this.selectedGradeFilter} | Fee: ${this.selectedFeeFilter} | ${cards.length} Complete Student Dossiers`,
       cards,
       filename: `students_cards_widgetwise_${currentClassLabel}_${dateStamp}.pdf`,
-      singleDossierMode: false
+      singleDossierMode: false,
+      branding: this.printBranding
     });
     this.isStudentExportMenuOpen = false;
     this.showToast(`Downloaded Card / Widget-Wise PDF for ${cards.length} student(s)!`, 'success');
@@ -26006,8 +26556,6 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
         studentLeavingCertificates: this.studentLeavingCertificates,
         complianceAuditList: this.complianceAuditList,
         smsGatewayConfig: this.smsGatewayConfig,
-        settingsForm: this.settingsForm,
-        schoolName: this.schoolName,
         announcements: this.announcements,
         schoolStaff: this.schoolStaff,
         schoolPrincipals: this.schoolPrincipals,
@@ -26022,7 +26570,14 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
         dailyInspectionLogs: this.dailyInspectionLogs,
         selectedBranchScope: this.selectedBranchScope,
         selectedWingScope: this.selectedWingScope,
-        ...(this.isOwnerPortal ? { tableSchemas: this.tableSchemaService.exportSchemas() } : {})
+        ...(this.canManagePrintStudio
+          ? {
+              settingsForm: this.settingsForm,
+              schoolName: this.schoolName,
+              printBranding: this.printBranding,
+              tableSchemas: this.tableSchemaService.exportSchemas()
+            }
+          : {})
       };
       const ok = await this.firebaseDb.saveSchoolData(this.activeTenantId, payload);
       this.lastCloudSyncTimestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -26041,6 +26596,17 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     try {
       const cloudData = await this.firebaseDb.loadSchoolData(this.activeTenantId);
       if (cloudData) {
+        if (cloudData.schoolName) this.schoolName = cloudData.schoolName;
+        if (cloudData.settingsForm && typeof cloudData.settingsForm === 'object') {
+          this.settingsForm = { ...this.settingsForm, ...cloudData.settingsForm };
+        }
+        if (cloudData.printBranding && typeof cloudData.printBranding === 'object') {
+          this.printBranding = normalizeSchoolPrintBranding(cloudData.printBranding, this.schoolName);
+          if (this.printBranding.defaultPaperWidth === '58mm' || this.printBranding.defaultPaperWidth === '80mm') {
+            this.hardwarePrinterPaper = this.printBranding.defaultPaperWidth;
+          }
+          void this.refreshEscPosLogoBitmap();
+        }
         if (Array.isArray(cloudData.schoolBranchRecords) && cloudData.schoolBranchRecords.length > 0) {
           this.schoolBranchRecords = cloudData.schoolBranchRecords;
         }
@@ -27522,7 +28088,26 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     this.showToast('Disconnected direct USB Serial printer. Reverted to OS Print Dialog.', 'info');
   }
 
+  private cachedEscPosLogoBmp: EscPosRasterBitmap | null = null;
+  private cachedEscPosLogoUrl: string = '';
+
+  private async refreshEscPosLogoBitmap(): Promise<void> {
+    const logoUrl = String(this.printBranding?.logoDataUrl || '').trim();
+    if (!logoUrl) {
+      this.cachedEscPosLogoBmp = null;
+      this.cachedEscPosLogoUrl = '';
+      return;
+    }
+    if (logoUrl === this.cachedEscPosLogoUrl && this.cachedEscPosLogoBmp) return;
+    this.cachedEscPosLogoUrl = logoUrl;
+    this.cachedEscPosLogoBmp = await imageDataUrlToEscPosRaster(logoUrl, 200);
+  }
+
   savePrintBranding(config: SchoolPrintBrandingConfig): void {
+    if (!this.canManagePrintStudio) {
+      this.showToast('Access Restricted: Only the School Owner can save custom print branding.', 'warning');
+      return;
+    }
     this.printBranding = normalizeSchoolPrintBranding(config, this.schoolName);
     if (this.printBranding.schoolName) {
       this.schoolName = this.printBranding.schoolName;
@@ -27534,26 +28119,40 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     if (this.printBranding.defaultPaperWidth === '58mm' || this.printBranding.defaultPaperWidth === '80mm') {
       this.hardwarePrinterPaper = this.printBranding.defaultPaperWidth;
     }
+    void this.refreshEscPosLogoBitmap();
     this.saveStateToStorage();
+    void this.backend.saveSchoolPrintBranding(this.printBranding).catch(() => null);
     this.cdr.detectChanges();
   }
 
   resetPrintBranding(): void {
+    if (!this.canManagePrintStudio) {
+      this.showToast('Access Restricted: Only the School Owner can reset print branding.', 'warning');
+      return;
+    }
     this.printBranding = normalizeSchoolPrintBranding({
       ...DEFAULT_SCHOOL_PRINT_BRANDING,
       schoolName: this.schoolName || DEFAULT_SCHOOL_PRINT_BRANDING.schoolName
     });
     this.hardwarePrinterPaper = this.printBranding.defaultPaperWidth;
+    this.cachedEscPosLogoBmp = null;
+    this.cachedEscPosLogoUrl = '';
     this.saveStateToStorage();
+    void this.backend.resetSchoolPrintBranding().catch(() => null);
     this.showToast('Reset print design, logo & layout to default institutional format.', 'info');
     this.cdr.detectChanges();
   }
 
   onStudioPaperSizeChange(paper: 'a4' | '80mm' | '58mm'): void {
+    if (!this.canManagePrintStudio) {
+      this.showToast('Access Restricted: Only the School Owner can change the campus default paper profile.', 'warning');
+      return;
+    }
     this.hardwarePrinterPaper = paper;
     if (paper === '80mm' || paper === '58mm') {
       this.printBranding = { ...this.printBranding, defaultPaperWidth: paper };
       this.saveStateToStorage();
+      void this.backend.saveSchoolPrintBranding(this.printBranding).catch(() => null);
     }
     this.cdr.detectChanges();
   }
@@ -27564,11 +28163,19 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     const clearance = this.getStudentFeeClearanceState(target);
     const challan = `CH-2026-${target.rollNo || '1030'}`;
     const gw = this.primaryVoucherBankGateway;
+    const tuition = Number(target.feeAmount ?? this.voucherTuitionFee);
+    const safeTuition = Number.isFinite(tuition) && tuition >= 0 ? tuition : 12500;
+    const arrears = Number((target as any).dueBakaya || 0);
+    const discount = Number((target as any).discount || 0);
+    const paidAmt = clearance.verifiedTxn
+      ? Number(clearance.verifiedTxn.totalAmount || clearance.verifiedTxn.baseAmount || 0)
+      : (clearance.verifiedReceipt ? Number(clearance.verifiedReceipt.amount || 0) : 0);
+
     const html = buildA4BankChallanHtml(
       {
         challanNo: challan,
-        issueMonth: 'CURRENT SESSION',
-        dueDate: '10th of Month',
+        issueMonth: this.printBranding.challanRefLabel || 'REF: 2026-OCT',
+        dueDate: this.printBranding.challanDueDateLabel || '10th Oct 2026',
         studentName: target.name,
         rollNo: target.rollNo || '1030',
         grade: target.grade || 'Class 1',
@@ -27580,12 +28187,15 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
         iban: gw?.iban || 'PK36MEZN0001020105829102',
         oneBillId: this.primaryVoucherOneBillGateway ? `${this.schoolGatewaySettings.oneBillPrefix || '10089'}-${target.rollNo || '1030'}` : undefined,
         raastId: this.primaryVoucherRaastGateway?.raastId || undefined,
-        tuitionFee: this.voucherTuitionFee,
+        tuitionFee: safeTuition,
         labFee: 1500,
         examFee: 1200,
         activityFee: 800,
+        previousArrears: arrears,
+        discountAmount: discount,
+        paidAmount: paidAmt > 0 ? paidAmt : undefined,
         lateFine: Number(this.schoolGatewaySettings?.lateFeeFinePkr || 500),
-        statusLabel: clearance.isPaid ? 'PAID' : (clearance.hasPendingSlip ? 'PENDING' : 'UNPAID')
+        statusLabel: clearance.isPaid ? 'PAID' : (clearance.isPartial ? 'PARTIAL' : (clearance.hasPendingSlip ? 'PENDING' : 'UNPAID'))
       },
       this.printBranding
     );
@@ -27596,7 +28206,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     );
   }
 
-  private withPrintBranding(base: ThermalFeeReceiptData): ThermalFeeReceiptData {
+  private withPrintBranding(base: ThermalFeeReceiptData, paperWidth: ThermalPaperWidth = '80mm'): ThermalFeeReceiptData {
     const b = normalizeSchoolPrintBranding(this.printBranding, this.schoolName);
     return {
       ...base,
@@ -27618,18 +28228,29 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       stampLabel: b.stampLabel,
       showQr: b.showQrVerification,
       showBarcode: b.showBarcodeVerification,
+      currency: base.currency || b.currencySymbol,
+      dualCopy: base.dualCopy ?? b.thermalDualCopy,
+      kickDrawer: base.kickDrawer ?? b.autoKickCashDrawer,
+      autoCut: base.autoCut ?? b.autoCutThermal,
+      paperWidth,
+      logoRasterBitmap: this.cachedEscPosLogoBmp,
       footerNote: base.footerNote || b.footerNote
     };
   }
 
   private async dispatchThermalReceiptPrint(data: ThermalFeeReceiptData, paperOverride?: ThermalPaperWidth): Promise<void> {
-    const branded = this.withPrintBranding(data);
     const defaultPaper: ThermalPaperWidth = this.printBranding?.defaultPaperWidth === '58mm' ? '58mm' : (this.hardwarePrinterPaper === '58mm' ? '58mm' : '80mm');
     const paper: ThermalPaperWidth = paperOverride || defaultPaper;
+    const branded = this.withPrintBranding(data, paper);
     if (this.serialThermalConnected && this.serialThermalPort?.writable) {
       try {
+        if (!branded.logoRasterBitmap && branded.logoDataUrl) {
+          branded.logoRasterBitmap = await imageDataUrlToEscPosRaster(branded.logoDataUrl, 200);
+          this.cachedEscPosLogoBmp = branded.logoRasterBitmap;
+          this.cachedEscPosLogoUrl = branded.logoDataUrl;
+        }
         const writer = this.serialThermalPort.writable.getWriter();
-        await writer.write(buildEscPosReceiptBytes(branded));
+        await writer.write(buildEscPosReceiptBytes(branded, Boolean(branded.kickDrawer)));
         writer.releaseLock();
         this.showToast(`Sent ESC/POS thermal receipt (${branded.txnRef}) directly to ${this.serialThermalLabel || 'USB Printer'}.`, 'success');
         return;
@@ -27649,13 +28270,17 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
 
   async printThermalReceiptForTransaction(tx: SchoolPaymentTransaction, paperOverride?: ThermalPaperWidth): Promise<void> {
     const challan = tx.challanNo || `CH-2026-${tx.rollNo || tx.txnRef}`;
+    const cur = this.printBranding?.currencySymbol || tx.currency || 'PKR';
     const data: ThermalFeeReceiptData = {
       schoolName: this.printBranding?.schoolName || this.schoolName || 'SoftCode International School',
       branchName: tx.branchName || this.activeScopeSummaryLabel,
       receiptTitle: tx.status === 'VERIFIED' || tx.status === 'SETTLED' ? 'VERIFIED FEE RECEIPT' : 'FEE DEPOSIT SLIP',
       txnRef: tx.txnRef,
       challanNo: challan,
-      qrPayload: `REC:${tx.txnRef}|CHALLAN:${challan}|NAME:${tx.studentName}|ROLL:${tx.rollNo || ''}|AMT:PKR ${tx.totalAmount || tx.baseAmount || 0}|STATUS:${tx.status}`,
+      billingMonth: tx.month || new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+      cashierName: tx.verifiedBy || tx.submittedByName || 'Accounts Desk',
+      currency: cur,
+      qrPayload: `REC:${tx.txnRef}|CHALLAN:${challan}|NAME:${tx.studentName}|ROLL:${tx.rollNo || ''}|AMT:${cur} ${tx.totalAmount || tx.baseAmount || 0}|STATUS:${tx.status}`,
       studentName: tx.studentName,
       rollNo: tx.rollNo || '—',
       grade: tx.grade || 'Campus',
@@ -27677,13 +28302,17 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     if (!rec) return;
     const recNo = rec.receiptNo || rec.challanNo || rec.id;
     const amt = Number(rec.amount || rec.amountPaid || 0);
+    const cur = this.printBranding?.currencySymbol || 'PKR';
     const data: ThermalFeeReceiptData = {
       schoolName: this.printBranding?.schoolName || this.schoolName || 'SoftCode International School',
       branchName: rec.branchName || this.activeScopeSummaryLabel,
       receiptTitle: rec.collectorRole === 'accountant' ? 'ACCOUNTANT COUNTER FEE RECEIPT' : 'OFFICE FEE RECEIPT',
       txnRef: recNo,
       challanNo: rec.challanNo || recNo,
-      qrPayload: `REC:${recNo}|CHALLAN:${rec.challanNo || recNo}|NAME:${rec.studentName}|ROLL:${rec.rollNo || ''}|AMT:PKR ${amt}|MODE:${rec.paymentResource || 'Counter'}`,
+      billingMonth: rec.monthsPaid || rec.month || new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+      cashierName: rec.collectedBy || 'Accountant Desk',
+      currency: cur,
+      qrPayload: `REC:${recNo}|CHALLAN:${rec.challanNo || recNo}|NAME:${rec.studentName}|ROLL:${rec.rollNo || ''}|AMT:${cur} ${amt}|MODE:${rec.paymentResource || 'Counter'}`,
       studentName: rec.studentName,
       rollNo: rec.rollNo || '—',
       grade: rec.grade || 'Campus',
@@ -27707,23 +28336,35 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     const clearance = this.getStudentFeeClearanceState(target);
     const tx = clearance.verifiedTxn || clearance.pendingSlipTxn;
     const challan = `CH-2026-${target.rollNo || '1030'}`;
-    const totalAmt = tx ? Number(tx.totalAmount) : this.voucherWithinDueTotal;
+    const cur = this.printBranding?.currencySymbol || 'PKR';
+    const tuition = Number(target.feeAmount ?? this.voucherTuitionFee);
+    const safeTuition = Number.isFinite(tuition) && tuition >= 0 ? tuition : 12500;
+    const baseFee = safeTuition + 3500;
+    const arrears = Number((target as any).dueBakaya || 0);
+    const discount = Number((target as any).discount || 0);
+    const totalAmt = tx ? Number(tx.totalAmount) : Math.max(0, baseFee + arrears - discount);
     const data: ThermalFeeReceiptData = {
       schoolName: this.printBranding?.schoolName || this.schoolName || 'SoftCode International School',
       branchName: (target as any).branchName || this.activeScopeSummaryLabel,
       receiptTitle: clearance.isPaid ? 'VERIFIED FEE RECEIPT' : 'BANK / COUNTER FEE CHALLAN',
       txnRef: tx?.txnRef || challan,
       challanNo: challan,
-      qrPayload: `CHALLAN:${challan}|NAME:${target.name}|ROLL:${target.rollNo || '1030'}|AMT:PKR ${totalAmt}|STATUS:${clearance.isPaid ? 'PAID' : 'UNPAID'}`,
+      billingMonth: new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+      cashierName: tx?.verifiedBy || 'Fee Counter',
+      currency: cur,
+      qrPayload: `CHALLAN:${challan}|NAME:${target.name}|ROLL:${target.rollNo || '1030'}|AMT:${cur} ${totalAmt}|STATUS:${clearance.isPaid ? 'PAID' : 'UNPAID'}`,
       studentName: target.name,
       rollNo: target.rollNo || '1030',
       grade: target.grade || 'Class 1',
       guardianName: target.guardian || '',
       gatewayName: tx?.gatewayName || this.primaryVoucherBankGateway?.bankName || 'School Fee Counter',
-      baseAmount: tx ? Number(tx.baseAmount) : this.voucherWithinDueTotal,
+      baseAmount: tx ? Number(tx.baseAmount) : baseFee,
+      previousArrears: arrears,
+      discountAmount: discount,
       gatewayFee: tx ? Number(tx.gatewayFee) : 0,
       totalAmount: totalAmt,
-      status: clearance.isPaid ? 'PAID' : (clearance.hasPendingSlip ? 'PENDING_VERIFICATION' : 'UNPAID CHALLAN'),
+      balanceRemaining: clearance.isPartial ? clearance.remainingPayable : 0,
+      status: clearance.isPaid ? 'PAID' : (clearance.isPartial ? 'PARTIAL' : (clearance.hasPendingSlip ? 'PENDING_VERIFICATION' : 'UNPAID CHALLAN')),
       paidAtLabel: new Date().toLocaleString(),
       verifiedBy: tx?.verifiedBy || '',
       proofReference: tx?.proofReference || '',
@@ -27733,12 +28374,16 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
   }
 
   async printHardwareTestPage(paperOverride?: ThermalPaperWidth): Promise<void> {
+    const cur = this.printBranding?.currencySymbol || 'PKR';
     const sampleData: ThermalFeeReceiptData = {
       schoolName: this.printBranding?.schoolName || this.schoolName || 'SoftCode International School',
       branchName: this.activeScopeSummaryLabel,
       receiptTitle: 'HARDWARE PRINTER & SCANNER TEST',
       txnRef: 'TEST-2026-1001',
       challanNo: `CH-2026-${this.scopedActiveStudents?.[0]?.rollNo || '1001'}`,
+      billingMonth: 'Calibration Test',
+      cashierName: this.isOwnerSession ? 'School Owner' : 'Fee Counter',
+      currency: cur,
       qrPayload: `TEST-2026-1001|SCHOOL:${this.printBranding?.schoolName || this.schoolName || 'SoftCode'}`,
       studentName: this.scopedActiveStudents?.[0]?.name || 'Test Student',
       rollNo: this.scopedActiveStudents?.[0]?.rollNo || '1001',
@@ -27754,8 +28399,41 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     await this.dispatchThermalReceiptPrint(sampleData, paperOverride);
   }
 
+  async printBulkStudentIdCards(students?: StudentRecord[]): Promise<void> {
+    const list = (students && students.length > 0 ? students : this.scopedActiveStudents).slice(0, 24);
+    if (list.length === 0) {
+      this.showToast('No students available to generate CR80 Bulk ID Card sheet.', 'warning');
+      return;
+    }
+    const cards = list.map((s) => ({
+      holderName: s.name,
+      roleOrGrade: `${s.grade || 'Class'}${s.section ? ` (${s.section})` : ''}`,
+      code: `STU-${s.rollNo || s.id}`,
+      guardianOrDept: s.guardian || 'Guardian',
+      phone: s.guardianPhone || this.printBranding.phone,
+      validThrough: this.printBranding.idCardValidThru || 'Mar 2027',
+      campusBranch: s.branchName || this.activeScopeSummaryLabel || 'Main Campus',
+      initials: this.getStaffInitials(s.name),
+      photoDataUrl: s.image,
+      bloodGroup: s.bloodGroup,
+      cardTypeLabel: this.printBranding.idCardBadgeLabel || 'STUDENT GATE CARD'
+    }));
+    const html = buildBulkIdCardSheetHtml(cards, this.printBranding);
+    const ok = await printHtmlInHiddenFrame(html);
+    this.showToast(
+      ok ? `Prepared Bulk A4 CR80 ID Card Sheet (${cards.length} Front & Back pairs) for printing.` : 'Print dialog unavailable in this view.',
+      ok ? 'success' : 'warning'
+    );
+  }
+
   async printCurrentIdCardSticker(): Promise<void> {
     const brandName = this.printBranding?.schoolName || this.schoolName || 'SoftCode School';
+    const stickerOpts = {
+      monogramInitials: this.printBranding?.monogramInitials,
+      showLogoCrest: this.printBranding?.showLogoCrest,
+      footerNote: this.printBranding?.stickerFooterNote,
+      accentColor: this.printBranding?.headerAccentColor
+    };
     if (this.selectedCardPersonnel) {
       const p = this.selectedCardPersonnel;
       const item: BarcodeStickerItem = {
@@ -27764,7 +28442,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
         code: this.idCardBarcodeValue,
         meta: `Staff Gate ID: ${p.empCode}`
       };
-      const html = buildBarcodeStickerSheetHtml(brandName, [item], this.printBranding?.logoDataUrl);
+      const html = buildBarcodeStickerSheetHtml(brandName, [item], this.printBranding?.logoDataUrl, stickerOpts);
       const ok = await printHtmlInHiddenFrame(html);
       this.showToast(
         ok ? `Prepared EMP Code-128 Gate Sticker for ${p.name}.` : 'Unable to launch sticker print job.',
@@ -27794,7 +28472,12 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
         meta: `${p.department || 'Campus'} · ${p.branchName || ''}`
       };
     });
-    const html = buildBarcodeStickerSheetHtml(brandName, items, this.printBranding?.logoDataUrl);
+    const html = buildBarcodeStickerSheetHtml(brandName, items, this.printBranding?.logoDataUrl, {
+      monogramInitials: this.printBranding?.monogramInitials,
+      showLogoCrest: this.printBranding?.showLogoCrest,
+      footerNote: this.printBranding?.stickerFooterNote,
+      accentColor: this.printBranding?.headerAccentColor
+    });
     const ok = await printHtmlInHiddenFrame(html);
     this.showToast(
       ok ? `Prepared ${items.length} Staff/Faculty EMP Code-128 Gate Stickers for printing.` : 'Unable to launch sticker print job.',
@@ -27815,7 +28498,12 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       code: `STU-${s.rollNo || s.id}`,
       meta: `Challan: CH-2026-${s.rollNo || '1001'}`
     }));
-    const html = buildBarcodeStickerSheetHtml(brandName, items, this.printBranding?.logoDataUrl);
+    const html = buildBarcodeStickerSheetHtml(brandName, items, this.printBranding?.logoDataUrl, {
+      monogramInitials: this.printBranding?.monogramInitials,
+      showLogoCrest: this.printBranding?.showLogoCrest,
+      footerNote: this.printBranding?.stickerFooterNote,
+      accentColor: this.printBranding?.headerAccentColor
+    });
     const ok = await printHtmlInHiddenFrame(html);
     this.showToast(
       ok ? `Prepared ${items.length} Code-128 Student/Challan barcode sticker labels for printing.` : 'Unable to launch sticker print job.',

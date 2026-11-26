@@ -3,6 +3,12 @@ import { buildQrCodeSvgMarkup } from './qr-code.util';
 
 export type ThermalPaperWidth = '80mm' | '58mm';
 
+export interface EscPosRasterBitmap {
+  widthBytes: number;
+  height: number;
+  data: number[];
+}
+
 export interface ThermalFeeReceiptData {
   schoolName: string;
   branchName?: string;
@@ -13,6 +19,7 @@ export interface ThermalFeeReceiptData {
   campusWebsite?: string;
   monogramInitials?: string;
   logoDataUrl?: string;
+  logoRasterBitmap?: EscPosRasterBitmap | null;
   logoPlacement?: 'left' | 'top' | 'right';
   logoSizePx?: number;
   headerAlign?: 'left' | 'center' | 'right';
@@ -26,20 +33,32 @@ export interface ThermalFeeReceiptData {
   receiptTitle?: string;
   txnRef: string;
   challanNo: string;
+  billingMonth?: string;
   qrPayload?: string;
   studentName: string;
   rollNo: string;
   grade: string;
   guardianName?: string;
+  cashierName?: string;
   gatewayName: string;
+  currency?: string;
   baseAmount: number;
+  previousArrears?: number;
+  discountAmount?: number;
+  lateFine?: number;
   gatewayFee: number;
   totalAmount: number;
+  balanceRemaining?: number;
   status: string;
   paidAtLabel: string;
   verifiedBy?: string;
   proofReference?: string;
   footerNote?: string;
+  dualCopy?: boolean;
+  copyLabel?: string;
+  paperWidth?: ThermalPaperWidth;
+  kickDrawer?: boolean;
+  autoCut?: boolean;
 }
 
 export interface BarcodeStickerItem {
@@ -127,6 +146,11 @@ function formatMoney(amount: number, currency = 'PKR'): string {
   return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+function formatMoneyLabel(amount: number, currency = 'PKR'): string {
+  const cur = String(currency || 'PKR').toUpperCase();
+  return `${cur} ${formatMoney(amount, cur)}`;
+}
+
 export function printHtmlInHiddenFrame(htmlDocument: string): Promise<boolean> {
   return new Promise((resolve) => {
     if (typeof document === 'undefined') {
@@ -191,20 +215,88 @@ function sanitizePrintImageDataUrl(raw?: string): string {
   return '';
 }
 
-export function buildThermalFeeReceiptHtml(data: ThermalFeeReceiptData, paperWidth: ThermalPaperWidth = '80mm'): string {
+export function imageDataUrlToEscPosRaster(
+  dataUrl?: string,
+  maxWidthPx = 200
+): Promise<EscPosRasterBitmap | null> {
+  return new Promise((resolve) => {
+    const safeUrl = sanitizePrintImageDataUrl(dataUrl);
+    if (!safeUrl || typeof document === 'undefined' || typeof Image === 'undefined') {
+      resolve(null);
+      return;
+    }
+    const img = new Image();
+    img.onerror = () => resolve(null);
+    img.onload = () => {
+      try {
+        const natW = img.naturalWidth || 120;
+        const natH = img.naturalHeight || 120;
+        const clampedMax = Math.max(48, Math.min(384, Math.round(maxWidthPx)));
+        const scale = Math.min(1, clampedMax / Math.max(1, natW));
+        const rawW = Math.max(8, Math.round(natW * scale));
+        const width = Math.ceil(rawW / 8) * 8;
+        const height = Math.max(8, Math.min(240, Math.round(natH * scale)));
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(null);
+          return;
+        }
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, width, height);
+        const offsetX = Math.floor((width - rawW) / 2);
+        ctx.drawImage(img, offsetX, 0, rawW, height);
+        const pixels = ctx.getImageData(0, 0, width, height).data;
+        const widthBytes = width / 8;
+        const bytes: number[] = [];
+        for (let y = 0; y < height; y++) {
+          for (let bx = 0; bx < widthBytes; bx++) {
+            let b = 0;
+            for (let bit = 0; bit < 8; bit++) {
+              const x = bx * 8 + bit;
+              const idx = (y * width + x) * 4;
+              const r = pixels[idx];
+              const g = pixels[idx + 1];
+              const bl = pixels[idx + 2];
+              const alpha = pixels[idx + 3];
+              const lum = 0.299 * r + 0.587 * g + 0.114 * bl;
+              if (alpha > 96 && lum < 168) {
+                b |= 1 << (7 - bit);
+              }
+            }
+            bytes.push(b);
+          }
+        }
+        resolve({ widthBytes, height, data: bytes });
+      } catch {
+        resolve(null);
+      }
+    };
+    img.src = safeUrl;
+  });
+}
+
+function buildSingleThermalCopyHtml(
+  data: ThermalFeeReceiptData,
+  paperWidth: ThermalPaperWidth,
+  copyBadge?: string
+): string {
+  const cur = String(data.currency || 'PKR').toUpperCase();
   const barcodeCode = data.challanNo || data.txnRef || `CH-2026-${data.rollNo}`;
-  const svgBarcode = buildCode128SvgMarkup(barcodeCode, paperWidth === '58mm' ? 30 : 36, '#000000');
-  const qrText = data.qrPayload || `CHALLAN:${barcodeCode}|TXN:${data.txnRef}|ROLL:${data.rollNo}|AMT:${Number(data.totalAmount || 0)}|STATUS:${data.status}`;
-  const svgQr = buildQrCodeSvgMarkup(qrText, paperWidth === '58mm' ? 62 : 76, '#000000', 2, 'M');
-  const pageMm = paperWidth === '58mm' ? '58mm' : '80mm';
-  const bodyFontPx = paperWidth === '58mm' ? '10px' : '11px';
+  const svgBarcode = buildCode128SvgMarkup(barcodeCode, paperWidth === '58mm' ? 28 : 34, '#000000');
+  const qrText =
+    data.qrPayload ||
+    `CHALLAN:${barcodeCode}|TXN:${data.txnRef}|ROLL:${data.rollNo}|AMT:${cur} ${Number(data.totalAmount || 0)}|STATUS:${data.status}`;
+  const svgQr = buildQrCodeSvgMarkup(qrText, paperWidth === '58mm' ? 58 : 72, '#000000', 2, 'M');
   const showBarcode = data.showBarcode !== false;
   const showQr = data.showQr !== false;
   const monogram = (data.monogramInitials || '').trim().slice(0, 4);
   const stamp = (data.stampLabel || '').trim();
   const safeLogo = sanitizePrintImageDataUrl(data.logoDataUrl);
   const logoPlacement = data.logoPlacement || 'top';
-  const logoSize = Math.min(84, Math.max(24, Number(data.logoSizePx || 44)));
+  const logoSize = Math.min(72, Math.max(24, Number(data.logoSizePx || 44)));
   const align = data.headerAlign || 'center';
   const verifOrder = data.verificationOrder || 'barcode_first';
   const hidden = new Set(data.hiddenSections || []);
@@ -212,87 +304,135 @@ export function buildThermalFeeReceiptHtml(data: ThermalFeeReceiptData, paperWid
     'header', 'meta', 'person', 'amounts', 'verification', 'footer'
   ];
   const order = (data.sectionOrder && data.sectionOrder.length > 0) ? data.sectionOrder : defaultOrder;
+  const effectiveCopyBadge = copyBadge || data.copyLabel || '';
 
   const badgeHtml = safeLogo
-    ? `<img src="${safeLogo}" alt="Logo" style="width:${logoSize}px;height:${logoSize}px;object-fit:contain;display:inline-block;" />`
+    ? `<div class="logo-frame"><img src="${safeLogo}" alt="Logo" style="width:${logoSize}px;height:${logoSize}px;object-fit:contain;display:block;" /></div>`
     : (monogram ? `<div class="crest">${escapeHtml(monogram)}</div>` : '');
 
   const headerTextHtml = `
     <div style="flex:1;min-width:0;text-align:${logoPlacement === 'top' ? align : (logoPlacement === 'left' ? 'left' : 'right')};">
-      <div class="title">${escapeHtml(data.schoolName || 'SoftCode Enterprise')}</div>
+      <div class="title">${escapeHtml(data.schoolName || 'SoftCode Premier Academy')}</div>
       ${data.campusTagline ? `<div class="tagline">${escapeHtml(data.campusTagline)}</div>` : ''}
-      ${data.branchName ? `<div class="sub">${escapeHtml(data.branchName)}</div>` : ''}
-      ${data.registrationNo ? `<div class="sub">Reg / BISE: ${escapeHtml(data.registrationNo)}</div>` : ''}
-      ${data.campusAddress ? `<div class="sub">${escapeHtml(data.campusAddress)}</div>` : ''}
-      ${data.campusPhone ? `<div class="sub">Helpline: ${escapeHtml(data.campusPhone)}</div>` : ''}
     </div>`;
 
   const headerLayoutHtml = logoPlacement === 'left'
-    ? `<div style="display:flex;align-items:center;gap:8px;">${badgeHtml}${headerTextHtml}</div>`
+    ? `<div style="display:flex;align-items:center;gap:9px;">${badgeHtml}${headerTextHtml}</div>`
     : (logoPlacement === 'right'
-      ? `<div style="display:flex;align-items:center;gap:8px;">${headerTextHtml}${badgeHtml}</div>`
-      : `<div style="text-align:${align};">${badgeHtml}${headerTextHtml}</div>`);
+      ? `<div style="display:flex;align-items:center;gap:9px;">${headerTextHtml}${badgeHtml}</div>`
+      : `<div style="display:flex;flex-direction:column;align-items:${align === 'left' ? 'flex-start' : (align === 'right' ? 'flex-end' : 'center')};gap:5px;">${badgeHtml}${headerTextHtml}</div>`);
+
+  const headerContactHtml = `
+    <div class="contact-block" style="text-align:${align};">
+      ${data.branchName ? `<div class="sub">${escapeHtml(data.branchName)}</div>` : ''}
+      ${data.registrationNo ? `<div class="sub-muted">${escapeHtml(data.registrationNo)}</div>` : ''}
+      ${data.campusAddress ? `<div class="sub-muted">${escapeHtml(data.campusAddress)}</div>` : ''}
+      ${data.campusPhone ? `<div class="sub-phone">Tel: ${escapeHtml(data.campusPhone)}</div>` : ''}
+    </div>`;
+
+  const arrears = Number(data.previousArrears || 0);
+  const discount = Number(data.discountAmount || 0);
+  const lateFine = Number(data.lateFine || 0);
+  const gatewayFee = Number(data.gatewayFee || 0);
+  const balanceRemaining = Number(data.balanceRemaining || 0);
+  const normalizedStatus = String(data.status || '').trim().toUpperCase();
+  const normalizedStamp = stamp.toUpperCase();
+  const singleBadgeText = (normalizedStamp && normalizedStamp !== 'NONE')
+    ? stamp
+    : (normalizedStatus || 'PAID');
+  const showPartialBadge = balanceRemaining > 0 && singleBadgeText.toUpperCase() !== 'PARTIAL';
 
   const sectionHtmlMap: Record<string, string> = {
     header: `
-      <div>
+      <div class="sec-header">
+        ${effectiveCopyBadge ? `<div class="copy-strip">${escapeHtml(effectiveCopyBadge)}</div>` : ''}
         ${headerLayoutHtml}
-        <div class="hr-solid"></div>
-        <div class="center">
-          <div class="sub bold">${escapeHtml(data.receiptTitle || 'OFFICIAL THERMAL FEE RECEIPT')}</div>
-          <div class="badge-row">
-            <span class="badge">${escapeHtml(data.status)}</span>
-            ${stamp && stamp.toUpperCase() !== 'NONE' ? `<span class="stamp">${escapeHtml(stamp)}</span>` : ''}
-          </div>
+        ${headerContactHtml}
+        <div class="doc-rule">
+          <span class="doc-title">${escapeHtml(data.receiptTitle || 'FEE PAYMENT RECEIPT')}</span>
+          <span class="badge-pill">${escapeHtml(singleBadgeText)}</span>
         </div>
+        ${showPartialBadge ? `<div class="badge-row"><span class="badge-outline">PARTIAL PAYMENT</span></div>` : ''}
       </div>`,
     meta: `
-      <div class="hr"></div>
-      <div class="row"><span>Receipt / Ref:</span><span>${escapeHtml(data.txnRef)}</span></div>
-      <div class="row"><span>Challan / Ref #:</span><span>${escapeHtml(data.challanNo)}</span></div>
-      <div class="row"><span>Date / Time:</span><span>${escapeHtml(data.paidAtLabel)}</span></div>`,
+      <div class="sec-block sec-meta">
+        <div class="kv-row"><span class="lbl">Receipt No</span><span class="val">${escapeHtml(data.txnRef)}</span></div>
+        <div class="kv-row"><span class="lbl">Challan Ref</span><span class="val">${escapeHtml(data.challanNo)}</span></div>
+        ${data.billingMonth ? `<div class="kv-row"><span class="lbl">Fee Month</span><span class="val">${escapeHtml(data.billingMonth)}</span></div>` : ''}
+        <div class="kv-row"><span class="lbl">Date</span><span class="val">${escapeHtml(data.paidAtLabel)}</span></div>
+      </div>`,
     person: `
-      <div class="hr"></div>
-      <div class="row"><span>Payer:</span><span>${escapeHtml(data.studentName)}</span></div>
-      <div class="row"><span>ID / Ref:</span><span>#${escapeHtml(data.rollNo)}</span></div>
-      <div class="row"><span>Category:</span><span>${escapeHtml(data.grade)}</span></div>
-      ${data.guardianName ? `<div class="row"><span>Guardian / Contact:</span><span>${escapeHtml(data.guardianName)}</span></div>` : ''}`,
+      <div class="sec-block">
+        <div class="sec-cap">STUDENT DETAILS</div>
+        <div class="kv-row"><span class="lbl">Student Name</span><span class="val">${escapeHtml(data.studentName)}</span></div>
+        <div class="kv-row"><span class="lbl">Roll / ID</span><span class="val">#${escapeHtml(data.rollNo)}</span></div>
+        <div class="kv-row"><span class="lbl">Class</span><span class="val">${escapeHtml(data.grade)}</span></div>
+        ${data.guardianName ? `<div class="kv-row"><span class="lbl">Guardian</span><span class="val">${escapeHtml(data.guardianName)}</span></div>` : ''}
+        ${data.cashierName ? `<div class="kv-row"><span class="lbl">Received By</span><span class="val">${escapeHtml(data.cashierName)}</span></div>` : ''}
+      </div>`,
     amounts: `
-      <div class="hr"></div>
-      <div class="row"><span>Channel:</span><span>${escapeHtml(data.gatewayName)}</span></div>
-      ${data.proofReference ? `<div class="row"><span>TID / Slip Ref:</span><span>${escapeHtml(data.proofReference)}</span></div>` : ''}
-      <div class="row"><span>Base Amount:</span><span>PKR ${formatMoney(data.baseAmount, 'PKR')}</span></div>
-      <div class="row"><span>Gateway Charges:</span><span>PKR ${formatMoney(data.gatewayFee, 'PKR')}</span></div>
-      <div class="total-box">
-        <div class="total-row">
-          <span>TOTAL PAID</span>
-          <span>PKR ${formatMoney(data.totalAmount, 'PKR')}</span>
+      <div class="sec-block">
+        <div class="tbl-head">
+          <span>PARTICULARS</span>
+          <span>AMOUNT (${escapeHtml(cur)})</span>
         </div>
-      </div>
-      ${data.verifiedBy ? `<div class="row"><span>Verified By:</span><span>${escapeHtml(data.verifiedBy)}</span></div>` : ''}`,
+        <div class="kv-row"><span class="lbl">Payment Mode</span><span class="val">${escapeHtml(data.gatewayName)}</span></div>
+        ${data.proofReference ? `<div class="kv-row"><span class="lbl">Ref / Slip No</span><span class="val">${escapeHtml(data.proofReference)}</span></div>` : ''}
+        <div class="kv-row"><span class="lbl">Tuition &amp; Academic Fee</span><span class="val">${formatMoney(data.baseAmount, cur)}</span></div>
+        ${arrears > 0 ? `<div class="kv-row"><span class="lbl">Previous Arrears</span><span class="val">+${formatMoney(arrears, cur)}</span></div>` : ''}
+        ${lateFine > 0 ? `<div class="kv-row"><span class="lbl">Late Fee Fine</span><span class="val">+${formatMoney(lateFine, cur)}</span></div>` : ''}
+        ${discount > 0 ? `<div class="kv-row"><span class="lbl">Concession / Discount</span><span class="val">-${formatMoney(discount, cur)}</span></div>` : ''}
+        ${gatewayFee > 0 ? `<div class="kv-row"><span class="lbl">Gateway / Service Fee</span><span class="val">${formatMoney(gatewayFee, cur)}</span></div>` : ''}
+        <div class="total-box">
+          <div class="total-row">
+            <span>TOTAL PAID</span>
+            <span>${formatMoneyLabel(data.totalAmount, cur)}</span>
+          </div>
+          ${balanceRemaining > 0 ? `<div class="bal-row"><span>BALANCE REMAINING</span><span>${formatMoneyLabel(balanceRemaining, cur)}</span></div>` : ''}
+        </div>
+        ${data.verifiedBy ? `<div class="kv-row"><span class="lbl">Authorized By</span><span class="val">${escapeHtml(data.verifiedBy)}</span></div>` : ''}
+      </div>`,
     verification: (() => {
+      if (!showBarcode && !showQr) return '';
       const bBlock = showBarcode ? `<div class="barcode-wrap">${svgBarcode}<div class="barcode-label">${escapeHtml(barcodeCode)}</div></div>` : '';
-      const qBlock = showQr ? `<div class="qr-wrap">${svgQr}<div class="qr-cap">SCAN 2D QR TO VERIFY</div></div>` : '';
-      if (verifOrder === 'side_by_side' && showBarcode && showQr) {
-        return `<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:6px;">
-          <div style="flex:1;min-width:0;text-align:center;">${svgBarcode}<div class="barcode-label">${escapeHtml(barcodeCode)}</div></div>
-          <div style="shrink:0;text-align:center;">${svgQr}</div>
-        </div>`;
-      }
-      return verifOrder === 'qr_first' ? `${qBlock}${bBlock}` : `${bBlock}${qBlock}`;
+      const qBlock = showQr ? `<div class="qr-wrap">${svgQr}<div class="qr-cap">SCAN TO VERIFY RECEIPT</div></div>` : '';
+      const inner = (verifOrder === 'side_by_side' && showBarcode && showQr)
+        ? `<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+            <div style="flex:1;min-width:0;text-align:center;">${svgBarcode}<div class="barcode-label">${escapeHtml(barcodeCode)}</div></div>
+            <div style="flex-shrink:0;text-align:center;">${svgQr}</div>
+          </div>`
+        : (verifOrder === 'qr_first' ? `${qBlock}${bBlock}` : `${bBlock}${qBlock}`);
+      return `<div class="ver-box">
+        <div class="ver-cap">VERIFICATION</div>
+        ${inner}
+      </div>`;
     })(),
     footer: `
-      ${data.signatoryTitle ? `<div class="sign-line">${escapeHtml(data.signatoryTitle)}</div>` : ''}
-      <div class="footer">
-        ${escapeHtml(data.footerNote || 'Scan barcode or QR at Counter to verify authenticity.')}<br/>
-        ${data.campusWebsite ? `${escapeHtml(data.campusWebsite)} · ` : ''}${paperWidth} Institutional Slip
+      <div class="sec-footer">
+        ${data.signatoryTitle ? `<div class="sign-line">${escapeHtml(data.signatoryTitle)}</div>` : ''}
+        <div class="footer">
+          <div>${escapeHtml(data.footerNote || 'Computer-generated official receipt. Verify barcode or QR at Campus Accounts.')}</div>
+          <div class="foot-meta">${data.campusWebsite ? `${escapeHtml(data.campusWebsite)} · ` : ''}${paperWidth.toUpperCase()} POS</div>
+        </div>
       </div>`
   };
 
-  const renderedBody = order
+  return order
     .filter((k) => !hidden.has(k))
     .map((k) => sectionHtmlMap[k] || '')
     .join('\n');
+}
+
+export function buildThermalFeeReceiptHtml(data: ThermalFeeReceiptData, paperWidth: ThermalPaperWidth = '80mm'): string {
+  const effectivePaper: ThermalPaperWidth = paperWidth || data.paperWidth || '80mm';
+  const pageMm = effectivePaper === '58mm' ? '58mm' : '80mm';
+  const bodyFontPx = effectivePaper === '58mm' ? '9.5px' : '10.5px';
+
+  const bodyContent = data.dualCopy
+    ? `${buildSingleThermalCopyHtml(data, effectivePaper, 'STUDENT / GUARDIAN COPY')}
+       <div class="tear-line"><span>✂ TEAR / CUT — OFFICE COPY BELOW</span></div>
+       ${buildSingleThermalCopyHtml(data, effectivePaper, 'OFFICE / ACCOUNTS COPY')}`
+    : buildSingleThermalCopyHtml(data, effectivePaper);
 
   return `<!doctype html>
 <html>
@@ -302,32 +442,48 @@ export function buildThermalFeeReceiptHtml(data: ThermalFeeReceiptData, paperWid
   <style>
     @page { size: ${pageMm} auto; margin: 2mm; }
     * { box-sizing: border-box; }
-    body { margin: 0; padding: 5px 6px; width: ${pageMm}; max-width: 100%; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: ${bodyFontPx}; line-height: 1.35; color: #000; background: #fff; }
-    .center { text-align: center; }
-    .bold { font-weight: 800; }
-    .crest { display: inline-block; border: 2px solid #000; padding: 2px 7px; font-size: 11px; font-weight: 900; letter-spacing: 1px; margin-bottom: 3px; }
-    .title { font-size: 13px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.4px; }
-    .tagline { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; margin-top: 1px; }
-    .sub { font-size: 9.5px; color: #111; }
-    .hr { border-top: 1px dashed #000; margin: 6px 0; }
-    .hr-solid { border-top: 1.5px solid #000; margin: 5px 0; }
-    .row { display: flex; justify-content: space-between; gap: 6px; margin: 2px 0; }
-    .row span:last-child { text-align: right; font-weight: 700; }
-    .total-box { border: 1.5px solid #000; padding: 5px 6px; margin: 6px 0; }
-    .total-row { display: flex; justify-content: space-between; font-size: 12px; font-weight: 900; }
-    .badge-row { display: flex; justify-content: center; gap: 4px; flex-wrap: wrap; margin-top: 3px; }
-    .badge { display: inline-block; border: 1px solid #000; padding: 1px 6px; font-size: 9.5px; font-weight: 900; text-transform: uppercase; }
-    .stamp { display: inline-block; border: 1.5px solid #000; padding: 1px 6px; font-size: 9.5px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; }
-    .barcode-wrap { margin-top: 7px; text-align: center; }
-    .barcode-label { font-size: 10px; font-weight: 800; letter-spacing: 1px; margin-top: 2px; }
-    .qr-wrap { margin-top: 6px; display: flex; flex-direction: column; align-items: center; }
-    .qr-cap { font-size: 8px; font-weight: 800; letter-spacing: 0.4px; margin-top: 2px; }
-    .sign-line { margin-top: 10px; border-top: 1px solid #000; padding-top: 2px; font-size: 9px; font-weight: 800; text-align: center; text-transform: uppercase; }
-    .footer { font-size: 8.5px; text-align: center; margin-top: 7px; }
+    body { margin: 0; padding: 6px; width: ${pageMm}; max-width: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: ${bodyFontPx}; line-height: 1.38; color: #000; background: #fff; font-variant-numeric: tabular-nums; }
+    .sec-header { margin-bottom: 5px; }
+    .copy-strip { text-align: center; font-size: 8px; font-weight: 900; letter-spacing: 1px; border: 1px solid #000; padding: 2px 4px; margin-bottom: 6px; text-transform: uppercase; background: #f4f4f5; }
+    .logo-frame { border: 1px solid #000; border-radius: 4px; padding: 2px; background: #fff; flex-shrink: 0; }
+    .crest { display: inline-flex; align-items: center; justify-content: center; border: 2px solid #000; border-radius: 5px; padding: 4px 9px; font-size: 12px; font-weight: 900; letter-spacing: 1.4px; flex-shrink: 0; background: #fff; }
+    .title { font-size: ${effectivePaper === '58mm' ? '11.5px' : '13px'}; font-weight: 900; text-transform: uppercase; letter-spacing: 0.3px; line-height: 1.18; }
+    .tagline { font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.25px; margin-top: 2px; color: #222; }
+    .contact-block { margin-top: 4px; line-height: 1.32; }
+    .sub { font-size: 9px; font-weight: 700; color: #111; }
+    .sub-muted { font-size: 8.5px; color: #222; }
+    .sub-phone { font-size: 8.5px; font-weight: 600; color: #111; }
+    .doc-rule { margin-top: 7px; border-top: 1.5px solid #000; border-bottom: 1.5px solid #000; padding: 4px 2px; display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+    .doc-title { font-size: 9.5px; font-weight: 900; letter-spacing: 0.8px; text-transform: uppercase; }
+    .badge-pill { background: #000; color: #fff; padding: 1px 7px; font-size: 8px; font-weight: 900; letter-spacing: 0.8px; text-transform: uppercase; border-radius: 2px; }
+    .badge-row { display: flex; justify-content: center; gap: 5px; margin-top: 4px; }
+    .badge-outline { border: 1px solid #000; padding: 1px 6px; font-size: 8px; font-weight: 900; text-transform: uppercase; border-radius: 2px; }
+    .sec-block { margin: 6px 0; border-top: 1px dashed #000; padding-top: 5px; }
+    .sec-meta { border-top: none; padding-top: 2px; }
+    .sec-cap { font-size: 8.5px; font-weight: 900; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 3px; color: #000; }
+    .tbl-head { display: flex; justify-content: space-between; font-size: 8.5px; font-weight: 900; letter-spacing: 0.7px; text-transform: uppercase; border-bottom: 1.5px solid #000; padding-bottom: 3px; margin-bottom: 4px; }
+    .kv-row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 2px 0; border-bottom: 1px dotted #d4d4d8; font-size: ${effectivePaper === '58mm' ? '9px' : '10px'}; }
+    .kv-row:last-child { border-bottom: none; }
+    .kv-row .lbl { font-weight: 600; color: #27272a; flex-shrink: 0; }
+    .kv-row .val { font-weight: 700; color: #000; text-align: right; }
+    .total-box { border-top: 2px solid #000; border-bottom: 2px solid #000; margin: 7px 0 4px; }
+    .total-row { display: flex; justify-content: space-between; align-items: center; background: #000; color: #fff; padding: 5px 7px; font-size: ${effectivePaper === '58mm' ? '11px' : '12px'}; font-weight: 900; }
+    .bal-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 7px; font-size: 9.5px; font-weight: 900; background: #fff; color: #000; border-top: 1px solid #000; }
+    .ver-box { border-top: 1px dashed #000; padding-top: 6px; margin-top: 6px; text-align: center; }
+    .ver-cap { font-size: 8px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+    .barcode-wrap { text-align: center; }
+    .barcode-label { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 9px; font-weight: 800; letter-spacing: 1px; margin-top: 2px; }
+    .qr-wrap { margin-top: 5px; display: flex; flex-direction: column; align-items: center; }
+    .qr-cap { font-size: 7.5px; font-weight: 800; letter-spacing: 0.5px; margin-top: 2px; }
+    .sec-footer { margin-top: 6px; }
+    .sign-line { margin-top: 22px; border-top: 1px solid #000; padding-top: 3px; font-size: 8.5px; font-weight: 800; text-align: center; text-transform: uppercase; letter-spacing: 0.4px; }
+    .footer { font-size: 8px; text-align: center; margin-top: 6px; line-height: 1.35; }
+    .foot-meta { font-weight: 800; margin-top: 2px; letter-spacing: 0.5px; }
+    .tear-line { border-top: 1.5px dashed #000; margin: 14px 0 12px; text-align: center; font-size: 8px; font-weight: 900; letter-spacing: 0.6px; padding-top: 4px; }
   </style>
 </head>
 <body>
-  ${renderedBody}
+  ${bodyContent}
 </body>
 </html>`;
 }
@@ -583,14 +739,37 @@ export function buildWaybill4x6Html(waybill: ShippingWaybillData): string {
 </html>`;
 }
 
-export function buildBarcodeStickerSheetHtml(brandName: string, items: BarcodeStickerItem[], logoDataUrl?: string): string {
+export interface BarcodeStickerSheetOptions {
+  monogramInitials?: string;
+  showLogoCrest?: boolean;
+  footerNote?: string;
+  accentColor?: string;
+}
+
+export function buildBarcodeStickerSheetHtml(
+  brandName: string,
+  items: BarcodeStickerItem[],
+  logoDataUrl?: string,
+  options?: BarcodeStickerSheetOptions
+): string {
   const safeLogo = sanitizePrintImageDataUrl(logoDataUrl);
+  const accent = /^#[0-9a-fA-F]{6}$/.test(String(options?.accentColor || '').trim())
+    ? String(options?.accentColor).trim()
+    : '#0f172a';
+  const showCrest = options?.showLogoCrest !== false;
+  const monogram = String(options?.monogramInitials || 'SPA').trim().slice(0, 4) || 'SPA';
+  const stickerFooter = String(options?.footerNote || '').trim();
   const cards = items
     .map((item) => {
       const svg = buildCode128SvgMarkup(item.code, 40, '#000000');
+      const crestHtml = safeLogo
+        ? `<img src="${safeLogo}" alt="" style="width:14px;height:14px;object-fit:contain;border-radius:2px;flex-shrink:0;" />`
+        : (showCrest
+          ? `<span style="display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:3px;background:${accent};color:#fff;font-size:6.5px;font-weight:900;flex-shrink:0;">${escapeHtml(monogram)}</span>`
+          : '');
       return `<div class="sticker">
         <div style="display:flex;align-items:center;justify-content:center;gap:4px;">
-          ${safeLogo ? `<img src="${safeLogo}" alt="" style="width:14px;height:14px;object-fit:contain;" />` : ''}
+          ${crestHtml}
           <div class="s-school">${escapeHtml(brandName)}</div>
         </div>
         <div class="s-title">${escapeHtml(item.title)}</div>
@@ -598,6 +777,7 @@ export function buildBarcodeStickerSheetHtml(brandName: string, items: BarcodeSt
         <div class="s-bar">${svg}</div>
         <div class="s-code">${escapeHtml(item.code)}</div>
         <div class="s-meta">${escapeHtml(item.meta)}</div>
+        ${stickerFooter ? `<div class="s-foot">${escapeHtml(stickerFooter)}</div>` : ''}
       </div>`;
     })
     .join('');
@@ -619,6 +799,7 @@ export function buildBarcodeStickerSheetHtml(brandName: string, items: BarcodeSt
     .s-bar { margin: 2px 0; }
     .s-code { font-family: monospace; font-size: 9px; font-weight: 900; letter-spacing: 0.8px; }
     .s-meta { font-size: 8px; color: #64748b; margin-top: 2px; }
+    .s-foot { font-size: 7px; font-weight: 700; color: #64748b; margin-top: 2px; }
   </style>
 </head>
 <body>
@@ -630,47 +811,207 @@ export function buildBarcodeStickerSheetHtml(brandName: string, items: BarcodeSt
 export function buildEscPosReceiptBytes(data: ThermalFeeReceiptData, kickDrawer = false): Uint8Array {
   const encoder = new TextEncoder();
   const chunks: number[] = [];
+  const paper: ThermalPaperWidth = data.paperWidth || '80mm';
+  const cols = paper === '58mm' ? 32 : 48;
+  const cur = String(data.currency || 'PKR').toUpperCase();
+  const shouldKick = kickDrawer || Boolean(data.kickDrawer);
+  const shouldCut = data.autoCut !== false;
+  const dashLine = '-'.repeat(cols);
+  const eqLine = '='.repeat(cols);
+
+  const cleanAscii = (v: unknown): string => String(v || '').replace(/[^\x20-\x7E]/g, ' ').replace(/\s+/g, ' ').trim();
   const pushBytes = (...b: number[]) => chunks.push(...b);
   const pushLine = (text: string) => {
-    const clean = String(text || '').replace(/[^\x20-\x7E]/g, ' ');
+    const clean = cleanAscii(text);
     for (const byte of encoder.encode(clean + '\n')) chunks.push(byte);
   };
-
-  pushBytes(0x1b, 0x40);
-  if (kickDrawer) pushBytes(...buildCashDrawerKickBytes(0));
-  pushBytes(0x1b, 0x61, 0x01);
-  pushBytes(0x1b, 0x45, 0x01);
-  pushLine(data.schoolName || 'SOFTCODE ENTERPRISE');
-  pushBytes(0x1b, 0x45, 0x00);
-  if (data.branchName) pushLine(data.branchName);
-  pushLine(data.receiptTitle || 'THERMAL RECEIPT');
-  pushLine(`STATUS: ${data.status}`);
-  pushLine('--------------------------------');
-  pushBytes(0x1b, 0x61, 0x00);
-  pushLine(`Ref:     ${data.txnRef}`);
-  pushLine(`Challan: ${data.challanNo}`);
-  pushLine(`Date:    ${data.paidAtLabel}`);
-  pushLine(`Payer:   ${data.studentName}`);
-  pushLine(`ID #:    ${data.rollNo} (${data.grade})`);
-  pushLine(`Channel: ${data.gatewayName}`);
-  if (data.proofReference) pushLine(`TID:     ${data.proofReference}`);
-  pushLine('--------------------------------');
-  pushLine(`Base:    PKR ${formatMoney(data.baseAmount, 'PKR')}`);
-  pushLine(`Charges: PKR ${formatMoney(data.gatewayFee, 'PKR')}`);
-  pushBytes(0x1b, 0x45, 0x01);
-  pushLine(`TOTAL:   PKR ${formatMoney(data.totalAmount, 'PKR')}`);
-  pushBytes(0x1b, 0x45, 0x00);
-  pushLine('--------------------------------');
-  pushBytes(0x1b, 0x61, 0x01);
-  const codeData = (data.challanNo || data.txnRef).replace(/[^\x20-\x7E]/g, '').slice(0, 24);
-  if (codeData.length > 0) {
-    pushBytes(0x1d, 0x68, 48, 0x1d, 0x77, 2, 0x1d, 0x48, 2);
+  const pushWrapped = (text: string) => {
+    const words = cleanAscii(text).split(' ').filter(Boolean);
+    let line = '';
+    for (const w of words) {
+      if (!line) {
+        line = w.slice(0, cols);
+      } else if (line.length + 1 + w.length <= cols) {
+        line += ' ' + w;
+      } else {
+        pushLine(line);
+        line = w.slice(0, cols);
+      }
+    }
+    if (line) pushLine(line);
+  };
+  const pushPair = (left: string, right: string) => {
+    const l = cleanAscii(left);
+    const r = cleanAscii(right);
+    if (l.length + r.length + 1 <= cols) {
+      pushLine(`${l}${' '.repeat(cols - l.length - r.length)}${r}`);
+    } else {
+      const maxL = Math.max(8, cols - r.length - 1);
+      const lTrim = l.slice(0, maxL);
+      const pad = Math.max(1, cols - lTrim.length - r.length);
+      pushLine(`${lTrim}${' '.repeat(pad)}${r}`);
+    }
+  };
+  const pushRasterLogo = (bmp?: EscPosRasterBitmap | null) => {
+    if (!bmp || !bmp.widthBytes || !bmp.height || !bmp.data?.length) return;
+    const xL = bmp.widthBytes & 0xff;
+    const xH = (bmp.widthBytes >> 8) & 0xff;
+    const yL = bmp.height & 0xff;
+    const yH = (bmp.height >> 8) & 0xff;
+    pushBytes(0x1b, 0x61, 0x01); // Center
+    pushBytes(0x1d, 0x76, 0x30, 0x00, xL, xH, yL, yH, ...bmp.data);
+    pushBytes(0x0a);
+  };
+  const pushEscPosQr = (payload: string) => {
+    const rawBytes = Array.from(encoder.encode(cleanAscii(payload).slice(0, 220)));
+    if (rawBytes.length === 0) return;
+    const storeLen = rawBytes.length + 3;
+    const pL = storeLen & 0xff;
+    const pH = (storeLen >> 8) & 0xff;
+    // QR Model 2, module size (4 for 58mm, 5 for 80mm), EC Level M (49)
+    pushBytes(0x1d, 0x28, 0x6b, 0x04, 0x00, 0x31, 0x41, 0x32, 0x00);
+    pushBytes(0x1d, 0x28, 0x6b, 0x03, 0x00, 0x31, 0x43, paper === '58mm' ? 0x04 : 0x05);
+    pushBytes(0x1d, 0x28, 0x6b, 0x03, 0x00, 0x31, 0x45, 0x31);
+    pushBytes(0x1d, 0x28, 0x6b, pL, pH, 0x31, 0x50, 0x30, ...rawBytes);
+    pushBytes(0x1d, 0x28, 0x6b, 0x03, 0x00, 0x31, 0x51, 0x30);
+    pushLine('');
+  };
+  const pushEscPosCode128 = (code: string) => {
+    const codeData = (code || '').replace(/[^\x20-\x7E]/g, '').slice(0, 24);
+    if (!codeData) return;
+    pushBytes(0x1d, 0x68, paper === '58mm' ? 44 : 54, 0x1d, 0x77, 2, 0x1d, 0x48, 2);
     const codeBytes = Array.from(encoder.encode(`{B${codeData}`));
     pushBytes(0x1d, 0x6b, 73, codeBytes.length, ...codeBytes);
     pushLine('');
+  };
+
+  const hidden = new Set(data.hiddenSections || []);
+  const defaultOrder: Array<'header' | 'meta' | 'person' | 'amounts' | 'verification' | 'footer'> = [
+    'header', 'meta', 'person', 'amounts', 'verification', 'footer'
+  ];
+  const order = (data.sectionOrder && data.sectionOrder.length > 0) ? data.sectionOrder : defaultOrder;
+  const arrears = Number(data.previousArrears || 0);
+  const discount = Number(data.discountAmount || 0);
+  const lateFine = Number(data.lateFine || 0);
+  const balanceRemaining = Number(data.balanceRemaining || 0);
+  const stamp = cleanAscii(data.stampLabel);
+  const verOrder = data.verificationOrder || 'barcode_first';
+  const showBarcode = data.showBarcode !== false;
+  const showQr = data.showQr !== false;
+  const barcodeCode = data.challanNo || data.txnRef || `CH-2026-${data.rollNo}`;
+  const qrPayload =
+    data.qrPayload ||
+    `CHALLAN:${barcodeCode}|TXN:${data.txnRef}|ROLL:${data.rollNo}|AMT:${cur} ${Number(data.totalAmount || 0)}|STATUS:${data.status}`;
+
+  const renderCopy = (copyTitle?: string) => {
+    for (const sec of order) {
+      if (hidden.has(sec)) continue;
+      if (sec === 'header') {
+        pushBytes(0x1b, 0x61, 0x01);
+        if (copyTitle) {
+          pushBytes(0x1b, 0x45, 0x01);
+          pushLine(`[ ${copyTitle} ]`);
+          pushBytes(0x1b, 0x45, 0x00);
+        }
+        pushRasterLogo(data.logoRasterBitmap);
+        pushBytes(0x1b, 0x45, 0x01, 0x1b, 0x21, 0x18);
+        pushWrapped(data.schoolName || 'SOFTCODE ENTERPRISE');
+        pushBytes(0x1b, 0x21, 0x00, 0x1b, 0x45, 0x00);
+        if (data.campusTagline) pushWrapped(data.campusTagline);
+        if (data.branchName) pushWrapped(data.branchName);
+        if (data.registrationNo) pushWrapped(`Reg: ${data.registrationNo}`);
+        if (data.campusAddress) pushWrapped(data.campusAddress);
+        if (data.campusPhone) pushWrapped(`Helpline: ${data.campusPhone}`);
+        pushLine(eqLine);
+        pushBytes(0x1b, 0x45, 0x01);
+        pushLine(data.receiptTitle || 'OFFICIAL THERMAL FEE RECEIPT');
+        const badges = [
+          `STATUS: ${data.status}`,
+          balanceRemaining > 0 ? 'PARTIAL' : '',
+          stamp && stamp.toUpperCase() !== 'NONE' ? `[${stamp}]` : ''
+        ].filter(Boolean).join(' ');
+        pushLine(badges);
+        pushBytes(0x1b, 0x45, 0x00);
+      } else if (sec === 'meta') {
+        pushBytes(0x1b, 0x61, 0x00);
+        pushLine(dashLine);
+        pushPair('Receipt Ref:', data.txnRef);
+        pushPair('Challan #:', data.challanNo);
+        if (data.billingMonth) pushPair('Billing Month:', data.billingMonth);
+        pushPair('Date / Time:', data.paidAtLabel);
+      } else if (sec === 'person') {
+        pushBytes(0x1b, 0x61, 0x00);
+        pushLine(dashLine);
+        pushPair('Student:', data.studentName);
+        pushPair('Roll / Class:', `#${data.rollNo} (${data.grade})`);
+        if (data.guardianName) pushPair('Guardian:', data.guardianName);
+        if (data.cashierName) pushPair('Cashier:', data.cashierName);
+      } else if (sec === 'amounts') {
+        pushBytes(0x1b, 0x61, 0x00);
+        pushLine(dashLine);
+        pushPair('Channel:', data.gatewayName);
+        if (data.proofReference) pushPair('TID / Slip:', data.proofReference);
+        pushPair('Tuition & Fee:', formatMoneyLabel(data.baseAmount, cur));
+        if (arrears > 0) pushPair('Prev Arrears:', `+${formatMoneyLabel(arrears, cur)}`);
+        if (lateFine > 0) pushPair('Late Fine:', `+${formatMoneyLabel(lateFine, cur)}`);
+        if (discount > 0) pushPair('Discount:', `-${formatMoneyLabel(discount, cur)}`);
+        pushPair('Charges:', formatMoneyLabel(data.gatewayFee, cur));
+        pushLine(eqLine);
+        pushBytes(0x1b, 0x45, 0x01, 0x1b, 0x21, 0x10);
+        pushPair('TOTAL PAID:', formatMoneyLabel(data.totalAmount, cur));
+        pushBytes(0x1b, 0x21, 0x00, 0x1b, 0x45, 0x00);
+        if (balanceRemaining > 0) {
+          pushPair('BAL REMAINING:', formatMoneyLabel(balanceRemaining, cur));
+        }
+        pushLine(eqLine);
+        if (data.verifiedBy) pushPair('Verified By:', data.verifiedBy);
+      } else if (sec === 'verification') {
+        pushBytes(0x1b, 0x61, 0x01);
+        if (verOrder === 'qr_first') {
+          if (showQr) pushEscPosQr(qrPayload);
+          if (showBarcode) pushEscPosCode128(barcodeCode);
+        } else {
+          if (showBarcode) pushEscPosCode128(barcodeCode);
+          if (showQr) pushEscPosQr(qrPayload);
+        }
+      } else if (sec === 'footer') {
+        pushBytes(0x1b, 0x61, 0x01);
+        if (data.signatoryTitle) {
+          pushLine('');
+          pushLine('');
+          pushLine('------------------------');
+          pushLine(data.signatoryTitle);
+        }
+        pushLine(dashLine);
+        pushWrapped(data.footerNote || 'Thank you - Verified Institutional Receipt');
+        if (data.campusWebsite) pushWrapped(data.campusWebsite);
+      }
+    }
+  };
+
+  pushBytes(0x1b, 0x40); // ESC @ Initialize printer
+  if (shouldKick) pushBytes(...buildCashDrawerKickBytes(0));
+
+  if (data.dualCopy) {
+    renderCopy('STUDENT / GUARDIAN COPY');
+    pushBytes(0x0a, 0x0a);
+    if (shouldCut) {
+      pushBytes(0x1d, 0x56, 0x42, 0x10); // Partial cut between copies
+    } else {
+      pushBytes(0x1b, 0x61, 0x01);
+      pushLine(dashLine);
+      pushLine('TEAR HERE - OFFICE COPY');
+      pushLine(dashLine);
+    }
+    renderCopy('OFFICE / ACCOUNTS COPY');
+  } else {
+    renderCopy(data.copyLabel);
   }
-  pushLine(data.footerNote || 'Thank you - Verified Thermal Receipt');
-  pushBytes(0x0a, 0x0a, 0x0a, 0x1d, 0x56, 0x41, 0x10);
+
+  pushBytes(0x0a, 0x0a, 0x0a);
+  if (shouldCut) {
+    pushBytes(0x1d, 0x56, 0x41, 0x10); // Full/feed cut
+  }
   return new Uint8Array(chunks);
 }
 

@@ -1446,6 +1446,39 @@ export class BackendService {
     } catch { return { ok: false }; }
   }
 
+  async getSchoolPrintBranding() {
+    try {
+      const res = await fetch('/api/school/print-branding', {
+        headers: this.getSchoolHeaders(false),
+        credentials: 'include'
+      });
+      return await res.json().catch(() => ({ ok: false, printBranding: null }));
+    } catch { return { ok: false, printBranding: null }; }
+  }
+
+  async saveSchoolPrintBranding(printBranding: any) {
+    try {
+      const res = await fetch('/api/school/print-branding', {
+        method: 'PUT',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify({ printBranding }),
+        credentials: 'include'
+      });
+      return await res.json().catch(() => ({ ok: false }));
+    } catch { return { ok: false }; }
+  }
+
+  async resetSchoolPrintBranding() {
+    try {
+      const res = await fetch('/api/school/print-branding', {
+        method: 'DELETE',
+        headers: this.getSchoolHeaders(false),
+        credentials: 'include'
+      });
+      return await res.json().catch(() => ({ ok: false }));
+    } catch { return { ok: false }; }
+  }
+
   async saveSchoolExamResult(payload: any) {
     try {
       const res = await fetch('/api/school/results', {
