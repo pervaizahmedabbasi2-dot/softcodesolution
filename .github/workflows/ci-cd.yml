@@ -75,11 +75,11 @@ jobs:
           go-version-file: go.mod
           check-latest: true
 
-      - name: Build Go Gateway, Backup, Guardian & Recovery Packages
+      - name: Build Go Gateway, Domain Modules, Backup, Guardian & Recovery Packages
         run: |
-          go build ./backend/desktop_wails ./backend/backup/... ./backend/guardian/... ./backend/code_source_recovery/... ./backend/softcodesolution_platform/...
+          go build ./backend/desktop_wails ./backend/backup/... ./backend/guardian/... ./backend/code_source_recovery/... ./backend/softcodesolution_platform/... ./backend/school_business/... ./backend/retail_pos/... ./backend/pharmacy_store/... ./backend/logistics_courier/...
 
-      - name: Run Go Unit & Recovery Tests
+      - name: Run Go Unit, Phase 3 Parity & Recovery Tests
         run: |
           go test ./backend/desktop_wails ./backend/backup/... ./backend/guardian/... ./backend/code_source_recovery/...
 
