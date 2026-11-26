@@ -6,6 +6,16 @@ export type ThermalPaperWidth = '80mm' | '58mm';
 export interface ThermalFeeReceiptData {
   schoolName: string;
   branchName?: string;
+  campusTagline?: string;
+  registrationNo?: string;
+  campusAddress?: string;
+  campusPhone?: string;
+  campusWebsite?: string;
+  monogramInitials?: string;
+  signatoryTitle?: string;
+  stampLabel?: string;
+  showQr?: boolean;
+  showBarcode?: boolean;
   receiptTitle?: string;
   txnRef: string;
   challanNo: string;
@@ -173,6 +183,10 @@ export function buildThermalFeeReceiptHtml(data: ThermalFeeReceiptData, paperWid
   const svgQr = buildQrCodeSvgMarkup(qrText, paperWidth === '58mm' ? 62 : 76, '#000000', 2, 'M');
   const pageMm = paperWidth === '58mm' ? '58mm' : '80mm';
   const bodyFontPx = paperWidth === '58mm' ? '10px' : '11px';
+  const showBarcode = data.showBarcode !== false;
+  const showQr = data.showQr !== false;
+  const monogram = (data.monogramInitials || '').trim().slice(0, 4);
+  const stamp = (data.stampLabel || '').trim();
 
   return `<!doctype html>
 <html>
@@ -182,30 +196,45 @@ export function buildThermalFeeReceiptHtml(data: ThermalFeeReceiptData, paperWid
   <style>
     @page { size: ${pageMm} auto; margin: 2mm; }
     * { box-sizing: border-box; }
-    body { margin: 0; padding: 4px 6px; width: ${pageMm}; max-width: 100%; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: ${bodyFontPx}; line-height: 1.35; color: #000; background: #fff; }
+    body { margin: 0; padding: 5px 6px; width: ${pageMm}; max-width: 100%; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: ${bodyFontPx}; line-height: 1.35; color: #000; background: #fff; }
     .center { text-align: center; }
     .bold { font-weight: 800; }
+    .crest { display: inline-block; border: 2px solid #000; padding: 2px 7px; font-size: 11px; font-weight: 900; letter-spacing: 1px; margin-bottom: 3px; }
     .title { font-size: 13px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.4px; }
-    .sub { font-size: 10px; color: #222; }
+    .tagline { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; margin-top: 1px; }
+    .sub { font-size: 9.5px; color: #111; }
     .hr { border-top: 1px dashed #000; margin: 6px 0; }
+    .hr-solid { border-top: 1.5px solid #000; margin: 5px 0; }
     .row { display: flex; justify-content: space-between; gap: 6px; margin: 2px 0; }
     .row span:last-child { text-align: right; font-weight: 700; }
     .total-box { border: 1.5px solid #000; padding: 5px 6px; margin: 6px 0; }
     .total-row { display: flex; justify-content: space-between; font-size: 12px; font-weight: 900; }
-    .badge { display: inline-block; border: 1px solid #000; padding: 1px 6px; font-size: 10px; font-weight: 900; text-transform: uppercase; margin-top: 3px; }
-    .barcode-wrap { margin-top: 8px; text-align: center; }
+    .badge-row { display: flex; justify-content: center; gap: 4px; flex-wrap: wrap; margin-top: 3px; }
+    .badge { display: inline-block; border: 1px solid #000; padding: 1px 6px; font-size: 9.5px; font-weight: 900; text-transform: uppercase; }
+    .stamp { display: inline-block; border: 1.5px solid #000; padding: 1px 6px; font-size: 9.5px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; }
+    .barcode-wrap { margin-top: 7px; text-align: center; }
     .barcode-label { font-size: 10px; font-weight: 800; letter-spacing: 1px; margin-top: 2px; }
     .qr-wrap { margin-top: 6px; display: flex; flex-direction: column; align-items: center; }
     .qr-cap { font-size: 8px; font-weight: 800; letter-spacing: 0.4px; margin-top: 2px; }
-    .footer { font-size: 9px; text-align: center; margin-top: 8px; }
+    .sign-line { margin-top: 10px; border-top: 1px solid #000; padding-top: 2px; font-size: 9px; font-weight: 800; text-align: center; text-transform: uppercase; }
+    .footer { font-size: 8.5px; text-align: center; margin-top: 7px; }
   </style>
 </head>
 <body>
   <div class="center">
+    ${monogram ? `<div class="crest">${escapeHtml(monogram)}</div>` : ''}
     <div class="title">${escapeHtml(data.schoolName || 'SoftCode Enterprise')}</div>
+    ${data.campusTagline ? `<div class="tagline">${escapeHtml(data.campusTagline)}</div>` : ''}
     ${data.branchName ? `<div class="sub">${escapeHtml(data.branchName)}</div>` : ''}
+    ${data.registrationNo ? `<div class="sub">Reg / BISE: ${escapeHtml(data.registrationNo)}</div>` : ''}
+    ${data.campusAddress ? `<div class="sub">${escapeHtml(data.campusAddress)}</div>` : ''}
+    ${data.campusPhone ? `<div class="sub">Helpline: ${escapeHtml(data.campusPhone)}</div>` : ''}
+    <div class="hr-solid"></div>
     <div class="sub bold">${escapeHtml(data.receiptTitle || 'OFFICIAL THERMAL FEE RECEIPT')}</div>
-    <div class="badge">${escapeHtml(data.status)}</div>
+    <div class="badge-row">
+      <span class="badge">${escapeHtml(data.status)}</span>
+      ${stamp && stamp.toUpperCase() !== 'NONE' ? `<span class="stamp">${escapeHtml(stamp)}</span>` : ''}
+    </div>
   </div>
   <div class="hr"></div>
   <div class="row"><span>Receipt / Ref:</span><span>${escapeHtml(data.txnRef)}</span></div>
@@ -228,17 +257,18 @@ export function buildThermalFeeReceiptHtml(data: ThermalFeeReceiptData, paperWid
     </div>
   </div>
   ${data.verifiedBy ? `<div class="row"><span>Verified By:</span><span>${escapeHtml(data.verifiedBy)}</span></div>` : ''}
-  <div class="barcode-wrap">
+  ${showBarcode ? `<div class="barcode-wrap">
     ${svgBarcode}
     <div class="barcode-label">${escapeHtml(barcodeCode)}</div>
-  </div>
-  <div class="qr-wrap">
+  </div>` : ''}
+  ${showQr ? `<div class="qr-wrap">
     ${svgQr}
     <div class="qr-cap">SCAN 2D QR TO VERIFY RECEIPT</div>
-  </div>
+  </div>` : ''}
+  ${data.signatoryTitle ? `<div class="sign-line">${escapeHtml(data.signatoryTitle)}</div>` : ''}
   <div class="footer">
     ${escapeHtml(data.footerNote || 'Scan barcode or QR at Counter to verify authenticity.')}<br/>
-    Printed via SoftCode Hardware Engine (${paperWidth})
+    ${data.campusWebsite ? `${escapeHtml(data.campusWebsite)} · ` : ''}${paperWidth} Institutional Slip
   </div>
 </body>
 </html>`;

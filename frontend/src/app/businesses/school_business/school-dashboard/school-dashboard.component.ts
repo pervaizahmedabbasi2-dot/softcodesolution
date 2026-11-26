@@ -98,8 +98,14 @@ import {
 import { SchoolTableSchemaService, SchoolCustomColumn, TableColumnPositionOption } from '../services/school-table-schema.service';
 import { PdfStudentCardEntry, downloadStudentsCardsPdf, downloadStudentsTablePdf, downloadTableCardsPdf } from '../services/school-pdf-export.util';
 import { PasskeyManagerComponent } from '../../../auth_security/passkey-manager/passkey-manager.component';
+import { SchoolPrintStudioComponent } from '../components/school-print-studio/school-print-studio.component';
+import {
+  DEFAULT_SCHOOL_PRINT_BRANDING,
+  SchoolPrintBrandingConfig,
+  buildA4BankChallanHtml
+} from '../utils/school-print-templates.util';
 
-export type SchoolDashboardTab = 'overview' | 'stage_wise' | 'feed' | 'events' | 'students' | 'teachers' | 'admissions' | 'attendance' | 'finance' | 'invoices' | 'expenses' | 'payment_gateway' | 'transport' | 'library' | 'exams' | 'timetable' | 'hostel' | 'labs' | 'alumni' | 'portals' | 'reports' | 'visitors' | 'assets' | 'settings' | 'audit' | 'lesson_plans' | 'appraisals' | 'inspections' | 'exam_moderation' | 'parent_complaints' | 'substitutions' | 'syllabus' | 'safeguarding' | 'directives';
+export type SchoolDashboardTab = 'overview' | 'stage_wise' | 'feed' | 'events' | 'students' | 'teachers' | 'admissions' | 'attendance' | 'finance' | 'invoices' | 'expenses' | 'payment_gateway' | 'transport' | 'library' | 'exams' | 'timetable' | 'hostel' | 'labs' | 'alumni' | 'portals' | 'reports' | 'visitors' | 'assets' | 'print_studio' | 'settings' | 'audit' | 'lesson_plans' | 'appraisals' | 'inspections' | 'exam_moderation' | 'parent_complaints' | 'substitutions' | 'syllabus' | 'safeguarding' | 'directives';
 export type SchoolPortalRole = 'owner' | 'principal' | 'teacher' | 'student' | 'parent' | 'accountant';
 
 export interface PersonnelIdCardData {
@@ -1097,7 +1103,7 @@ export interface PrincipalFeeCollectionRecord {
 @Component({
   selector: 'app-school-dashboard',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule, FormsModule, MatIconModule, DataTableComponent, AuditReconciliationTrendsComponent, AnalyticsDashboardComponent, SchoolAttendanceHubComponent, SchoolTableDirective, SchoolTableColumnModalComponent, SchoolCustomFormFieldsComponent, SchoolBarcodeComponent, SchoolQrCodeComponent, PasskeyManagerComponent],
+  imports: [CommonModule, LucideAngularModule, FormsModule, MatIconModule, DataTableComponent, AuditReconciliationTrendsComponent, AnalyticsDashboardComponent, SchoolAttendanceHubComponent, SchoolPrintStudioComponent, SchoolTableDirective, SchoolTableColumnModalComponent, SchoolCustomFormFieldsComponent, SchoolBarcodeComponent, SchoolQrCodeComponent, PasskeyManagerComponent],
   templateUrl: './school-dashboard.component.html',
   host: {
     '(window:keydown)': 'onHardwareScannerKeydown($event)'
@@ -3087,7 +3093,7 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
     const ownerExplicitTabs = new Set([
       'students', 'teachers', 'admissions', 'attendance', 'finance', 'payment_gateway',
       'transport', 'exams', 'timetable', 'portals', 'reports', 'settings',
-      'hostel', 'labs', 'alumni', 'expenses', 'invoices', 'audit',
+      'hostel', 'labs', 'alumni', 'expenses', 'invoices', 'audit', 'print_studio',
       'lesson_plans', 'appraisals', 'inspections', 'exam_moderation',
       'parent_complaints', 'substitutions', 'syllabus', 'safeguarding', 'directives'
     ]);
@@ -3554,7 +3560,8 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
     salary_report: true,
     notices: true,
     admin_settings: true,
-    password_change: true
+    password_change: true,
+    print_studio: true
   };
 
   releaseAllModules(): void {
@@ -3572,6 +3579,7 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
   getTabIcon(id: string): string {
     switch (id) {
       case 'portals': return 'shield-check';
+      case 'print_studio': return 'printer';
       case 'settings': return 'settings';
       case 'overview': return 'layout-dashboard';
       case 'students': return 'users';
@@ -3630,6 +3638,7 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
     alumni: 1,
     visitors: 1,
     assets: 1,
+    print_studio: 1,
     settings: 1,
     audit: 1,
     lesson_plans: 1,
@@ -3733,6 +3742,7 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
   checkoutScreenshotUploading: boolean = false;
 
   // --- PRINTER & BARCODE SCANNER HARDWARE STATE ---
+  printBranding: SchoolPrintBrandingConfig = { ...DEFAULT_SCHOOL_PRINT_BRANDING };
   isHardwareTerminalModalOpen: boolean = false;
   hardwarePrinterPaper: 'a4' | '80mm' | '58mm' = '80mm';
   hardwareScannerMode: 'auto' | 'fee' | 'attendance' | 'library' = 'auto';
@@ -5636,6 +5646,7 @@ INSTRUCTIONS:
     { id: 'assets', label: 'Assets & Inventory', shortLabel: 'Assets', icon: Layers, badge: 'Stock' },
     { id: 'portals', label: 'Role Portals & RBAC', shortLabel: 'Portals', icon: ShieldCheck, count: '5 Portals' },
     { id: 'audit', label: 'Campus Audit & Compliance', shortLabel: 'Audit Hub', icon: ShieldCheck, badge: '98.4%' },
+    { id: 'print_studio', label: 'Print & Hardware Studio', shortLabel: 'Print Studio', icon: Printer, badge: 'A4/80mm' },
     { id: 'settings', label: 'School Settings', shortLabel: 'Settings', icon: Settings }
   ];
 
@@ -10082,6 +10093,7 @@ INSTRUCTIONS:
       this.setPrincipalTab(targetPrincipalTab);
     }
     else if (a === 'audit' || a === 'school_audit' || a === 'school-audit' || a === 'compliance') this.setTab('audit');
+    else if (a === 'print_studio' || a === 'print-studio' || a === 'hardware') this.setTab('print_studio');
     else if (a === 'admin_settings' || a === 'admin-settings' || a === 'settings') this.setTab('settings');
     else if (a === 'password_change' || a === 'password-change') this.openPasswordModal();
     else if (a === 'logout') this.showToast('Super Admin Logged Out Successfully', 'info');
@@ -10394,6 +10406,23 @@ INSTRUCTIONS:
           this.settingsForm = { ...this.settingsForm, ...parsedSettings };
           if (parsedSettings.schoolName) this.schoolName = parsedSettings.schoolName;
         } catch {}
+      }
+
+      const savedPrintBranding = this.getScopedItem('scs_school_print_branding_v1');
+      if (savedPrintBranding) {
+        try {
+          const parsedBranding = JSON.parse(savedPrintBranding);
+          this.printBranding = { ...DEFAULT_SCHOOL_PRINT_BRANDING, ...parsedBranding };
+          if (this.printBranding.defaultPaperWidth === '58mm' || this.printBranding.defaultPaperWidth === '80mm') {
+            this.hardwarePrinterPaper = this.printBranding.defaultPaperWidth;
+          }
+        } catch {}
+      } else {
+        this.printBranding = {
+          ...DEFAULT_SCHOOL_PRINT_BRANDING,
+          schoolName: this.schoolName || DEFAULT_SCHOOL_PRINT_BRANDING.schoolName,
+          phone: this.settingsForm.phone || DEFAULT_SCHOOL_PRINT_BRANDING.phone
+        };
       }
 
       if (savedStaffLeaves) this.staffLeaveRequests = JSON.parse(savedStaffLeaves);
@@ -10767,6 +10796,7 @@ INSTRUCTIONS:
         const w = wsRes.workspace;
         if (w.schoolName) this.schoolName = w.schoolName;
         if (w.settingsForm) this.settingsForm = { ...this.settingsForm, ...w.settingsForm };
+        if (w.printBranding) this.printBranding = { ...DEFAULT_SCHOOL_PRINT_BRANDING, ...w.printBranding };
         if (Array.isArray(w.announcements) && w.announcements.length > 0) this.announcements = w.announcements;
         if (Array.isArray(w.timetables) && w.timetables.length > 0) this.timetables = w.timetables;
         if (Array.isArray(w.parentMessages) && w.parentMessages.length > 0) this.parentMessages = w.parentMessages;
@@ -11416,9 +11446,11 @@ INSTRUCTIONS:
       this.setScopedItem('scs_school_branch_scope_v1', this.selectedBranchScope);
       this.setScopedItem('scs_school_wing_scope_v1', this.selectedWingScope);
       this.setScopedItem('scs_school_acc_autoprint_v1', this.accountantAutoPrintThermal ? '1' : '0');
+      this.setScopedItem('scs_school_print_branding_v1', JSON.stringify(this.printBranding));
       void this.backend.saveSchoolWorkspace({
         schoolName: this.schoolName,
         settingsForm: this.settingsForm,
+        printBranding: this.printBranding,
         announcements: this.announcements,
         timetables: this.timetables,
         parentMessages: this.parentMessages,
@@ -21449,6 +21481,11 @@ INSTRUCTIONS:
   // --- SETTINGS SAVE ---
   saveSettings() {
     this.schoolName = this.settingsForm.schoolName;
+    this.printBranding = {
+      ...this.printBranding,
+      schoolName: this.settingsForm.schoolName || this.printBranding.schoolName,
+      phone: this.settingsForm.phone || this.printBranding.phone
+    };
     this.setScopedItem('scs_school_settings_v2', JSON.stringify(this.settingsForm));
     this.saveStateToStorage();
     this.showToast('Campus Configuration & Settings updated successfully!', 'success');
@@ -27484,24 +27521,119 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     this.showToast('Disconnected direct USB Serial printer. Reverted to OS Print Dialog.', 'info');
   }
 
+  savePrintBranding(config: SchoolPrintBrandingConfig): void {
+    this.printBranding = { ...DEFAULT_SCHOOL_PRINT_BRANDING, ...config };
+    if (this.printBranding.schoolName) {
+      this.schoolName = this.printBranding.schoolName;
+      this.settingsForm.schoolName = this.printBranding.schoolName;
+    }
+    if (this.printBranding.phone) {
+      this.settingsForm.phone = this.printBranding.phone;
+    }
+    if (this.printBranding.defaultPaperWidth === '58mm' || this.printBranding.defaultPaperWidth === '80mm') {
+      this.hardwarePrinterPaper = this.printBranding.defaultPaperWidth;
+    }
+    this.saveStateToStorage();
+    this.cdr.detectChanges();
+  }
+
+  resetPrintBranding(): void {
+    this.printBranding = {
+      ...DEFAULT_SCHOOL_PRINT_BRANDING,
+      schoolName: this.schoolName || DEFAULT_SCHOOL_PRINT_BRANDING.schoolName
+    };
+    this.hardwarePrinterPaper = this.printBranding.defaultPaperWidth;
+    this.saveStateToStorage();
+    this.showToast('Reset print branding to default institutional format.', 'info');
+    this.cdr.detectChanges();
+  }
+
+  onStudioPaperSizeChange(paper: 'a4' | '80mm' | '58mm'): void {
+    this.hardwarePrinterPaper = paper;
+    if (paper === '80mm' || paper === '58mm') {
+      this.printBranding = { ...this.printBranding, defaultPaperWidth: paper };
+      this.saveStateToStorage();
+    }
+    this.cdr.detectChanges();
+  }
+
+  async printBrandedA4ChallanForVoucher(stu?: StudentRecord | null): Promise<void> {
+    const target = stu || this.voucherStudent;
+    if (!target) return;
+    const clearance = this.getStudentFeeClearanceState(target);
+    const challan = `CH-2026-${target.rollNo || '1030'}`;
+    const gw = this.primaryVoucherBankGateway;
+    const html = buildA4BankChallanHtml(
+      {
+        challanNo: challan,
+        issueMonth: 'CURRENT SESSION',
+        dueDate: '10th of Month',
+        studentName: target.name,
+        rollNo: target.rollNo || '1030',
+        grade: target.grade || 'Class 1',
+        guardianName: target.guardian || 'Guardian',
+        bankName: gw?.bankName || 'Meezan Bank Ltd / HBL',
+        branchCode: gw?.branchCode || '0102',
+        accountTitle: gw?.accountTitle || this.printBranding.schoolName || this.schoolName,
+        accountNumber: gw?.accountNumber || '0102-0105829102',
+        iban: gw?.iban || 'PK36MEZN0001020105829102',
+        oneBillId: this.primaryVoucherOneBillGateway ? `${this.schoolGatewaySettings.oneBillPrefix || '10089'}-${target.rollNo || '1030'}` : undefined,
+        raastId: this.primaryVoucherRaastGateway?.raastId || undefined,
+        tuitionFee: this.voucherTuitionFee,
+        labFee: 1500,
+        examFee: 1200,
+        activityFee: 800,
+        lateFine: Number(this.schoolGatewaySettings?.lateFeeFinePkr || 500),
+        statusLabel: clearance.isPaid ? 'PAID' : (clearance.hasPendingSlip ? 'PENDING' : 'UNPAID')
+      },
+      this.printBranding
+    );
+    const ok = await printHtmlInHiddenFrame(html);
+    this.showToast(
+      ok ? `Prepared branded A4 3-Copy Bank Challan (${challan}) for printing / PDF.` : 'Print dialog unavailable in this view.',
+      ok ? 'success' : 'warning'
+    );
+  }
+
+  private withPrintBranding(base: ThermalFeeReceiptData): ThermalFeeReceiptData {
+    const b = this.printBranding || DEFAULT_SCHOOL_PRINT_BRANDING;
+    return {
+      ...base,
+      schoolName: b.schoolName || base.schoolName,
+      campusTagline: b.campusTagline,
+      registrationNo: b.registrationNo,
+      campusAddress: b.address,
+      campusPhone: b.phone,
+      campusWebsite: b.website,
+      monogramInitials: b.showLogoCrest ? b.monogramInitials : '',
+      signatoryTitle: b.signatoryTitle,
+      stampLabel: b.stampLabel,
+      showQr: b.showQrVerification,
+      showBarcode: b.showBarcodeVerification,
+      footerNote: base.footerNote || b.footerNote
+    };
+  }
+
   private async dispatchThermalReceiptPrint(data: ThermalFeeReceiptData, paperOverride?: ThermalPaperWidth): Promise<void> {
-    const paper: ThermalPaperWidth = paperOverride || (this.hardwarePrinterPaper === '58mm' ? '58mm' : '80mm');
+    const branded = this.withPrintBranding(data);
+    const defaultPaper: ThermalPaperWidth = this.printBranding?.defaultPaperWidth === '58mm' ? '58mm' : (this.hardwarePrinterPaper === '58mm' ? '58mm' : '80mm');
+    const paper: ThermalPaperWidth = paperOverride || defaultPaper;
     if (this.serialThermalConnected && this.serialThermalPort?.writable) {
       try {
         const writer = this.serialThermalPort.writable.getWriter();
-        await writer.write(buildEscPosReceiptBytes(data));
+        await writer.write(buildEscPosReceiptBytes(branded));
         writer.releaseLock();
-        this.showToast(`Sent ESC/POS thermal receipt (${data.txnRef}) directly to ${this.serialThermalLabel || 'USB Printer'}.`, 'success');
+        this.showToast(`Sent ESC/POS thermal receipt (${branded.txnRef}) directly to ${this.serialThermalLabel || 'USB Printer'}.`, 'success');
         return;
       } catch {
         this.serialThermalConnected = false;
       }
     }
-    const html = buildThermalFeeReceiptHtml(data, paper);
+    const html = buildThermalFeeReceiptHtml(branded, paper);
     const ok = await printHtmlInHiddenFrame(html);
     this.showToast(
       ok
-        ? `Opened ${paper} Thermal Receipt print job for ${data.txnRef}.`
+        ? `Opened ${paper} Thermal Receipt print job for ${branded.txnRef}.`
         : 'Print dialog unavailable in this view.',
       ok ? 'success' : 'warning'
     );
@@ -27510,7 +27642,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
   async printThermalReceiptForTransaction(tx: SchoolPaymentTransaction, paperOverride?: ThermalPaperWidth): Promise<void> {
     const challan = tx.challanNo || `CH-2026-${tx.rollNo || tx.txnRef}`;
     const data: ThermalFeeReceiptData = {
-      schoolName: this.schoolName || 'SoftCode International School',
+      schoolName: this.printBranding?.schoolName || this.schoolName || 'SoftCode International School',
       branchName: tx.branchName || this.activeScopeSummaryLabel,
       receiptTitle: tx.status === 'VERIFIED' || tx.status === 'SETTLED' ? 'VERIFIED FEE RECEIPT' : 'FEE DEPOSIT SLIP',
       txnRef: tx.txnRef,
@@ -27528,7 +27660,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       paidAtLabel: new Date(tx.verifiedAt || tx.createdAt || Date.now()).toLocaleString(),
       verifiedBy: tx.verifiedBy || '',
       proofReference: tx.proofReference || '',
-      footerNote: this.schoolGatewaySettings?.receiptFooterNote || ''
+      footerNote: this.schoolGatewaySettings?.receiptFooterNote || this.printBranding?.footerNote || ''
     };
     await this.dispatchThermalReceiptPrint(data, paperOverride);
   }
@@ -27538,7 +27670,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     const recNo = rec.receiptNo || rec.challanNo || rec.id;
     const amt = Number(rec.amount || rec.amountPaid || 0);
     const data: ThermalFeeReceiptData = {
-      schoolName: this.schoolName || 'SoftCode International School',
+      schoolName: this.printBranding?.schoolName || this.schoolName || 'SoftCode International School',
       branchName: rec.branchName || this.activeScopeSummaryLabel,
       receiptTitle: rec.collectorRole === 'accountant' ? 'ACCOUNTANT COUNTER FEE RECEIPT' : 'OFFICE FEE RECEIPT',
       txnRef: recNo,
@@ -27556,7 +27688,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       paidAtLabel: rec.timestamp || new Date().toLocaleString(),
       verifiedBy: rec.collectedBy || 'Accountant Desk',
       proofReference: rec.resourceReference || recNo,
-      footerNote: this.schoolGatewaySettings?.receiptFooterNote || 'Verified official counter receipt.'
+      footerNote: this.schoolGatewaySettings?.receiptFooterNote || this.printBranding?.footerNote || 'Verified official counter receipt.'
     };
     await this.dispatchThermalReceiptPrint(data, paperOverride);
   }
@@ -27569,7 +27701,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     const challan = `CH-2026-${target.rollNo || '1030'}`;
     const totalAmt = tx ? Number(tx.totalAmount) : this.voucherWithinDueTotal;
     const data: ThermalFeeReceiptData = {
-      schoolName: this.schoolName || 'SoftCode International School',
+      schoolName: this.printBranding?.schoolName || this.schoolName || 'SoftCode International School',
       branchName: (target as any).branchName || this.activeScopeSummaryLabel,
       receiptTitle: clearance.isPaid ? 'VERIFIED FEE RECEIPT' : 'BANK / COUNTER FEE CHALLAN',
       txnRef: tx?.txnRef || challan,
@@ -27587,19 +27719,19 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       paidAtLabel: new Date().toLocaleString(),
       verifiedBy: tx?.verifiedBy || '',
       proofReference: tx?.proofReference || '',
-      footerNote: this.schoolGatewaySettings?.receiptFooterNote || ''
+      footerNote: this.schoolGatewaySettings?.receiptFooterNote || this.printBranding?.footerNote || ''
     };
     await this.dispatchThermalReceiptPrint(data, paperOverride);
   }
 
-  async printHardwareTestPage(): Promise<void> {
+  async printHardwareTestPage(paperOverride?: ThermalPaperWidth): Promise<void> {
     const sampleData: ThermalFeeReceiptData = {
-      schoolName: this.schoolName || 'SoftCode International School',
+      schoolName: this.printBranding?.schoolName || this.schoolName || 'SoftCode International School',
       branchName: this.activeScopeSummaryLabel,
       receiptTitle: 'HARDWARE PRINTER & SCANNER TEST',
       txnRef: 'TEST-2026-1001',
       challanNo: `CH-2026-${this.scopedActiveStudents?.[0]?.rollNo || '1001'}`,
-      qrPayload: `TEST-2026-1001|SCHOOL:${this.schoolName || 'SoftCode'}`,
+      qrPayload: `TEST-2026-1001|SCHOOL:${this.printBranding?.schoolName || this.schoolName || 'SoftCode'}`,
       studentName: this.scopedActiveStudents?.[0]?.name || 'Test Student',
       rollNo: this.scopedActiveStudents?.[0]?.rollNo || '1001',
       grade: this.scopedActiveStudents?.[0]?.grade || 'Class 10-A',
@@ -27611,10 +27743,11 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       paidAtLabel: new Date().toLocaleString(),
       footerNote: 'Scan the Code-128 barcode above with your USB/Bluetooth scanner to test auto-lookup.'
     };
-    await this.dispatchThermalReceiptPrint(sampleData);
+    await this.dispatchThermalReceiptPrint(sampleData, paperOverride);
   }
 
   async printCurrentIdCardSticker(): Promise<void> {
+    const brandName = this.printBranding?.schoolName || this.schoolName || 'SoftCode School';
     if (this.selectedCardPersonnel) {
       const p = this.selectedCardPersonnel;
       const item: BarcodeStickerItem = {
@@ -27623,7 +27756,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
         code: this.idCardBarcodeValue,
         meta: `Staff Gate ID: ${p.empCode}`
       };
-      const html = buildBarcodeStickerSheetHtml(this.schoolName || 'SoftCode School', [item]);
+      const html = buildBarcodeStickerSheetHtml(brandName, [item]);
       const ok = await printHtmlInHiddenFrame(html);
       this.showToast(
         ok ? `Prepared EMP Code-128 Gate Sticker for ${p.name}.` : 'Unable to launch sticker print job.',
@@ -27637,6 +27770,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
   }
 
   async printPersonnelBarcodeStickerSheet(): Promise<void> {
+    const brandName = this.printBranding?.schoolName || this.schoolName || 'SoftCode School';
     const records = (this.allCampusPersonnelRecords || []).slice(0, 18);
     if (records.length === 0) {
       this.showToast('No Principal, Teacher, Accountant, or Staff records available for sticker printing.', 'warning');
@@ -27652,7 +27786,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
         meta: `${p.department || 'Campus'} · ${p.branchName || ''}`
       };
     });
-    const html = buildBarcodeStickerSheetHtml(this.schoolName || 'SoftCode School', items);
+    const html = buildBarcodeStickerSheetHtml(brandName, items);
     const ok = await printHtmlInHiddenFrame(html);
     this.showToast(
       ok ? `Prepared ${items.length} Staff/Faculty EMP Code-128 Gate Stickers for printing.` : 'Unable to launch sticker print job.',
@@ -27661,6 +27795,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
   }
 
   async printBarcodeStickerSheet(students?: StudentRecord[]): Promise<void> {
+    const brandName = this.printBranding?.schoolName || this.schoolName || 'SoftCode School';
     const list = (students && students.length > 0 ? students : this.scopedActiveStudents.slice(0, 12));
     if (list.length === 0) {
       this.showToast('No students available to generate barcode sticker labels.', 'warning');
@@ -27672,7 +27807,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       code: `STU-${s.rollNo || s.id}`,
       meta: `Challan: CH-2026-${s.rollNo || '1001'}`
     }));
-    const html = buildBarcodeStickerSheetHtml(this.schoolName || 'SoftCode School', items);
+    const html = buildBarcodeStickerSheetHtml(brandName, items);
     const ok = await printHtmlInHiddenFrame(html);
     this.showToast(
       ok ? `Prepared ${items.length} Code-128 Student/Challan barcode sticker labels for printing.` : 'Unable to launch sticker print job.',
