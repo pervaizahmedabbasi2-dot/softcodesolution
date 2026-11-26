@@ -2804,6 +2804,108 @@ test('School Payment Slip Screenshot Upload, Cross-Portal Parent-to-Student Paid
   assert.equal((await dupStudentRes.json()).error, 'STUDENT_ALREADY_PAID');
 });
 
+test('School Business Hardware: Barcode Lookup (Challan / Student ID / Txn Ref) & Barcode Gate Attendance Mode', async () => {
+  const tenantId = `school-hw-tenant-${Date.now()}`;
+  const otherTenantId = `school-hw-other-${Date.now()}`;
+  const ownerHeaders = { 'Content-Type': 'application/json', 'x-tenant-id': tenantId, 'x-user-role': 'owner', 'x-user-name': 'School Owner' };
+  const otherHeaders = { 'Content-Type': 'application/json', 'x-tenant-id': otherTenantId, 'x-user-role': 'owner' };
+
+  // Seed student & open fee challan
+  const stuRes = await fetch(`${baseUrl}/api/school/students`, {
+    method: 'POST',
+    headers: ownerHeaders,
+    body: JSON.stringify({
+      fullName: 'Hamza Tariq',
+      rollNo: '4050',
+      rollNumber: '4050',
+      grade: 'Class 9-B',
+      section: 'B',
+      guardianName: 'Tariq Mahmood',
+      guardianPhone: '0301-4455667',
+      feeAmount: 24000,
+      feeStatus: 'Pending',
+      dueBakaya: 24000
+    })
+  });
+  assert.equal(stuRes.status, 201);
+  const stu = (await stuRes.json()).student;
+
+  const feeRes = await fetch(`${baseUrl}/api/school/fees`, {
+    method: 'POST',
+    headers: ownerHeaders,
+    body: JSON.stringify({
+      challanNo: 'CH-2026-4050',
+      studentId: stu.id,
+      studentName: stu.fullName,
+      rollNo: '4050',
+      grade: 'Class 9-B',
+      month: 'November 2026',
+      tuition: 24000,
+      labFee: 0,
+      total: 24000,
+      status: 'PENDING'
+    })
+  });
+  assert.equal(feeRes.status, 201);
+
+  // Lookup by Code-128 challan barcode
+  const chLookupRes = await fetch(`${baseUrl}/api/school/barcode-lookup?code=${encodeURIComponent('CH-2026-4050')}`, { headers: ownerHeaders });
+  assert.equal(chLookupRes.status, 200);
+  const chLookup = await chLookupRes.json();
+  assert.equal(chLookup.ok, true);
+  assert.equal(chLookup.matchType, 'challan');
+  assert.equal(chLookup.student.rollNo, '4050');
+  assert.equal(chLookup.openChallan.challanNo, 'CH-2026-4050');
+
+  // Lookup by Student ID Card barcode (STU-4050)
+  const stuLookupRes = await fetch(`${baseUrl}/api/school/barcode-lookup?code=${encodeURIComponent('STU-4050')}`, { headers: ownerHeaders });
+  assert.equal(stuLookupRes.status, 200);
+  const stuLookup = await stuLookupRes.json();
+  assert.equal(stuLookup.ok, true);
+  assert.equal(stuLookup.student.id, stu.id);
+
+  // Tenant isolation check
+  const crossTenantRes = await fetch(`${baseUrl}/api/school/barcode-lookup?code=${encodeURIComponent('CH-2026-4050')}`, { headers: otherHeaders });
+  assert.equal(crossTenantRes.status, 200);
+  const crossTenant = await crossTenantRes.json();
+  assert.equal(crossTenant.matchType, 'none');
+  assert.equal(crossTenant.student, null);
+
+  // Strict policy allows barcode_scanner hardware verification mode
+  const polRes = await fetch(`${baseUrl}/api/school/attendance/policy`, {
+    method: 'PUT',
+    headers: ownerHeaders,
+    body: JSON.stringify({
+      requireCameraForAllAttendance: true,
+      roleAccess: {
+        principal: { enabled: true, canScanStudents: true, canScanTeachers: true, canScanStaff: true, canScanPrincipal: false, canEnrollFaces: true, liteModeAllowed: true, manualFallbackAllowed: false, canExportReports: true, selfCheckInEnabled: false }
+      }
+    })
+  });
+  assert.equal(polRes.status, 200);
+
+  const principalHeaders = { 'Content-Type': 'application/json', 'x-tenant-id': tenantId, 'x-user-role': 'principal', 'x-user-name': 'Gate Principal' };
+  const attRes = await fetch(`${baseUrl}/api/school/attendance`, {
+    method: 'POST',
+    headers: principalHeaders,
+    body: JSON.stringify({
+      studentId: stu.id,
+      rollNo: stu.rollNo,
+      studentName: stu.fullName,
+      grade: stu.grade,
+      memberCategory: 'student',
+      verificationMode: 'barcode_scanner',
+      punchType: 'IN',
+      status: 'PRESENT'
+    })
+  });
+  assert.equal(attRes.status, 200);
+  const attJson = await attRes.json();
+  assert.equal(attJson.record.verificationMode, 'barcode_scanner');
+  assert.ok(attJson.record.gateName.includes('Barcode Gate Scanner'));
+});
+
+
 
 
 

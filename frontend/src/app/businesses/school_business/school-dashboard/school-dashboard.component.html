@@ -69,6 +69,11 @@
                 <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">account_tree</mat-icon>
                 <span>Branches &amp; Wings</span>
               </button>
+              <button type="button" (click)="openHardwareTerminalModal('auto')"
+                class="px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-white font-bold text-[11px] cursor-pointer shadow-2xs inline-flex items-center gap-1.5 transition-all active:scale-95">
+                <mat-icon class="!text-[14px] !w-[14px] !h-[14px] text-emerald-400">qr_code_scanner</mat-icon>
+                <span>Printer &amp; Scanner</span>
+              </button>
             </div>
           </div>
         </div>
@@ -9128,8 +9133,11 @@
                               <lucide-icon [name]="'pencil'" class="w-3.5 h-3.5 text-indigo-600"></lucide-icon>
                             </button>
                           }
-                          <button type="button" (click)="printGatewayTransactionVoucher(tx)" title="Print Fee Voucher" class="p-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 cursor-pointer transition-colors">
+                          <button type="button" (click)="printGatewayTransactionVoucher(tx)" title="Print 3-Copy Fee Voucher" class="p-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 cursor-pointer transition-colors">
                             <lucide-icon [name]="'printer'" class="w-3.5 h-3.5"></lucide-icon>
+                          </button>
+                          <button type="button" (click)="printThermalReceiptForTransaction(tx)" title="Print Thermal Receipt (80mm / 58mm)" class="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white cursor-pointer transition-colors">
+                            <mat-icon class="!text-[14px] !w-[14px] !h-[14px] text-emerald-400">receipt_long</mat-icon>
                           </button>
                           @if (isOwnerPortal) {
                             <button type="button" (click)="deleteGatewayTransaction(tx)" title="Delete Payment Record" class="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 cursor-pointer transition-colors">
@@ -18681,9 +18689,14 @@
                         <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase" [class]="getTxnStatusBadgeClass(tx.status)">{{ tx.status }}</span>
                       </td>
                       <td class="px-3 py-2.5 text-right">
-                        <button type="button" (click)="printGatewayTransactionVoucher(tx)" class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 font-bold text-[10px] cursor-pointer">
-                          Challan
-                        </button>
+                        <div class="inline-flex items-center gap-1">
+                          <button type="button" (click)="printGatewayTransactionVoucher(tx)" class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 font-bold text-[10px] cursor-pointer">
+                            Challan
+                          </button>
+                          <button type="button" (click)="printThermalReceiptForTransaction(tx)" class="px-2 py-1 rounded-lg bg-slate-900 text-white font-bold text-[10px] cursor-pointer">
+                            Thermal
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   }
@@ -20378,9 +20391,14 @@
                         <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase" [class]="getTxnStatusBadgeClass(tx.status)">{{ tx.status }}</span>
                       </td>
                       <td class="px-3 py-2.5 text-right">
-                        <button type="button" (click)="printGatewayTransactionVoucher(tx)" class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 font-bold text-[10px] cursor-pointer">
-                          View Voucher
-                        </button>
+                        <div class="inline-flex items-center gap-1">
+                          <button type="button" (click)="printGatewayTransactionVoucher(tx)" class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 font-bold text-[10px] cursor-pointer">
+                            View Voucher
+                          </button>
+                          <button type="button" (click)="printThermalReceiptForTransaction(tx)" class="px-2 py-1 rounded-lg bg-slate-900 text-white font-bold text-[10px] cursor-pointer">
+                            Thermal
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   }
@@ -21075,6 +21093,10 @@
             <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-indigo-600">fingerprint</mat-icon>
             <span>Passkey</span>
           </button>
+          <button (click)="openHardwareTerminalModal('fee')" class="px-4 py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs cursor-pointer flex items-center gap-1.5 shadow-xs active:scale-95">
+            <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-emerald-400">qr_code_scanner</mat-icon>
+            <span>Printer &amp; Scanner</span>
+          </button>
           @if (isOwnerSession) {
             <button (click)="exitToOwner()" class="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-black text-xs cursor-pointer flex items-center gap-2 shadow-md active:scale-95">
               <lucide-icon [name]="'arrow-left'" class="w-3.5 h-3.5"></lucide-icon>
@@ -21522,10 +21544,17 @@
           @if (accountantTab === 'collect') {
             <div class="grid grid-cols-1 lg:grid-cols-5 gap-5">
               <div class="lg:col-span-2 apple-card scs-surface-3d rounded-2xl p-5 space-y-4">
-                <h3 class="font-black text-slate-900 text-sm flex items-center gap-2">
-                  <lucide-icon [name]="'wallet'" class="w-4 h-4 text-emerald-600"></lucide-icon>
-                  Receive Cash / Bank Slip at Accountant Counter
-                </h3>
+                <div class="flex items-center justify-between gap-2 flex-wrap">
+                  <h3 class="font-black text-slate-900 text-sm flex items-center gap-2">
+                    <lucide-icon [name]="'wallet'" class="w-4 h-4 text-emerald-600"></lucide-icon>
+                    Receive Cash / Bank Slip at Accountant Counter
+                  </h3>
+                  <button type="button" (click)="openHardwareTerminalModal('fee')"
+                    class="px-2.5 py-1 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-[10px] cursor-pointer inline-flex items-center gap-1">
+                    <mat-icon class="!text-[13px] !w-[13px] !h-[13px] text-emerald-400">qr_code_scanner</mat-icon>
+                    <span>Scan Challan</span>
+                  </button>
+                </div>
                 <div class="space-y-3 text-xs">
                   @if (hasCustomFieldsAtSlot('fee_receipts_cashiering', '__first__')) {
                     <app-school-custom-form-fields
@@ -23593,7 +23622,11 @@
             <h3 class="font-black text-slate-900 text-lg mt-1">3-Copy Official Bank Fee Challan Voucher</h3>
             <p class="text-xs text-slate-500">{{ primaryVoucherBankGateway?.bankName || 'Meezan Bank Ltd / HBL' }} Authorized Deposit Instrument · Student, School &amp; Bank Copies</p>
           </div>
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 flex-wrap">
+            <button type="button" (click)="printThermalReceiptForStudentChallan(voucherStudent)" class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs cursor-pointer flex items-center gap-1.5 shadow-md transition-all active:scale-95">
+              <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-emerald-400">receipt_long</mat-icon>
+              <span>80mm Thermal Slip</span>
+            </button>
             <button (click)="printVoucher()" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs cursor-pointer flex items-center gap-1.5 shadow-md transition-all active:scale-95">
               <lucide-icon [name]="'printer'" class="w-4 h-4"></lucide-icon>
               <span>Print Official 3-Copy Voucher</span>
@@ -23718,32 +23751,9 @@
                   </div>
                 </div>
 
-                <!-- Barcode -->
+                <!-- Scannable Code-128 Barcode -->
                 <div class="text-center pt-1">
-                  <div class="flex items-center justify-center gap-[2px] h-7 my-1">
-                    <span class="w-[2px] h-full bg-slate-950"></span>
-                    <span class="w-[1px] h-full bg-slate-950"></span>
-                    <span class="w-[3px] h-full bg-slate-950"></span>
-                    <span class="w-[1px] h-full bg-slate-950"></span>
-                    <span class="w-[2px] h-full bg-slate-950"></span>
-                    <span class="w-[4px] h-full bg-slate-950"></span>
-                    <span class="w-[1px] h-full bg-slate-950"></span>
-                    <span class="w-[2px] h-full bg-slate-950"></span>
-                    <span class="w-[3px] h-full bg-slate-950"></span>
-                    <span class="w-[1px] h-full bg-slate-950"></span>
-                    <span class="w-[2px] h-full bg-slate-950"></span>
-                    <span class="w-[4px] h-full bg-slate-950"></span>
-                    <span class="w-[1px] h-full bg-slate-950"></span>
-                    <span class="w-[3px] h-full bg-slate-950"></span>
-                    <span class="w-[2px] h-full bg-slate-950"></span>
-                    <span class="w-[1px] h-full bg-slate-950"></span>
-                    <span class="w-[4px] h-full bg-slate-950"></span>
-                    <span class="w-[2px] h-full bg-slate-950"></span>
-                    <span class="w-[1px] h-full bg-slate-950"></span>
-                    <span class="w-[3px] h-full bg-slate-950"></span>
-                    <span class="w-[2px] h-full bg-slate-950"></span>
-                  </div>
-                  <p class="text-[9px] font-mono font-black text-slate-900 tracking-widest uppercase">CH2026-{{ voucherStudent?.rollNo || '1030' }}</p>
+                  <app-school-barcode [value]="voucherBarcodeValue" [label]="voucherBarcodeValue" [height]="32" [barWidth]="1.2" />
                 </div>
               </div>
 
@@ -24742,9 +24752,15 @@
         </div>
 
         <div class="px-6 py-4 bg-white border-t border-slate-200 flex flex-wrap items-center justify-between gap-2 shrink-0">
-          <button type="button" (click)="printGatewayTransactionVoucher(slipTx)" class="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold text-xs cursor-pointer">
-            Download / Print Challan
-          </button>
+          <div class="flex items-center gap-2 flex-wrap">
+            <button type="button" (click)="printGatewayTransactionVoucher(slipTx)" class="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold text-xs cursor-pointer">
+              Download / Print Challan
+            </button>
+            <button type="button" (click)="printThermalReceiptForTransaction(slipTx)" class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs cursor-pointer inline-flex items-center gap-1.5">
+              <mat-icon class="!text-[15px] !w-[15px] !h-[15px] text-emerald-400">receipt_long</mat-icon>
+              <span>Thermal Receipt</span>
+            </button>
+          </div>
           <div class="flex items-center gap-2">
             @if (slipTx.status === 'PENDING_VERIFICATION' && currentPortalRole !== 'student' && currentPortalRole !== 'parent' && currentPortalRole !== 'teacher') {
               <button type="button" (click)="verifyFromSlipPreviewModal('REJECTED')" class="px-4 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs cursor-pointer">
@@ -24758,6 +24774,202 @@
               Close
             </button>
           </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ========================================================================= -->
+  <!-- HARDWARE TERMINAL: PRINTERS (80mm/58mm/ESC-POS) & BARCODE SCANNER HUB     -->
+  <!-- ========================================================================= -->
+  @if (isHardwareTerminalModalOpen) {
+    <div class="fixed inset-0 z-50 bg-slate-950/65 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 animate-fade-in">
+      <div class="apple-card modal-white-card rounded-3xl max-w-3xl w-full bg-white border border-slate-200 shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+        <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between gap-3 shrink-0">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-400">
+              <mat-icon class="!text-[22px] !w-[22px] !h-[22px]">qr_code_scanner</mat-icon>
+            </div>
+            <div>
+              <h3 class="font-black text-base tracking-tight">School Hardware Terminal — Printer &amp; Barcode Scanner</h3>
+              <p class="text-[11px] text-slate-300">USB / Bluetooth Barcode Scanner, 80mm / 58mm Thermal Fee Receipts &amp; A4 Sticker Labels</p>
+            </div>
+          </div>
+          <button type="button" (click)="closeHardwareTerminalModal()" class="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white cursor-pointer">
+            <lucide-icon [name]="'x'" class="w-4 h-4"></lucide-icon>
+          </button>
+        </div>
+
+        <div class="p-6 overflow-y-auto custom-scrollbar space-y-5 text-xs">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Left: USB / Bluetooth Barcode Scanner Console -->
+            <div class="rounded-2xl border border-slate-200 p-4 space-y-3 bg-slate-50/70">
+              <div class="flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2">
+                  <mat-icon class="!text-[18px] !w-[18px] !h-[18px] text-indigo-600">qr_code_scanner</mat-icon>
+                  <span class="font-black text-slate-900 text-sm">Barcode Scanner Control</span>
+                </div>
+                <label class="inline-flex items-center gap-1.5 font-bold text-[11px] text-slate-700 cursor-pointer">
+                  <input type="checkbox" [(ngModel)]="hardwareGlobalScannerEnabled" class="accent-emerald-600">
+                  <span>Auto USB Listen</span>
+                </label>
+              </div>
+
+              <div>
+                <span class="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1.5">Scanner Target Mode</span>
+                <div class="grid grid-cols-4 gap-1 bg-slate-200/70 p-1 rounded-xl">
+                  <button type="button" (click)="hardwareScannerMode = 'auto'" class="py-1.5 rounded-lg font-black text-[10px] cursor-pointer transition-all"
+                    [class]="hardwareScannerMode === 'auto' ? 'bg-slate-900 text-white shadow-2xs' : 'text-slate-700'">Auto</button>
+                  <button type="button" (click)="hardwareScannerMode = 'fee'" class="py-1.5 rounded-lg font-black text-[10px] cursor-pointer transition-all"
+                    [class]="hardwareScannerMode === 'fee' ? 'bg-emerald-600 text-white shadow-2xs' : 'text-slate-700'">Fee Slip</button>
+                  <button type="button" (click)="hardwareScannerMode = 'attendance'" class="py-1.5 rounded-lg font-black text-[10px] cursor-pointer transition-all"
+                    [class]="hardwareScannerMode === 'attendance' ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-700'">Gate IN/OUT</button>
+                  <button type="button" (click)="hardwareScannerMode = 'library'" class="py-1.5 rounded-lg font-black text-[10px] cursor-pointer transition-all"
+                    [class]="hardwareScannerMode === 'library' ? 'bg-amber-600 text-white shadow-2xs' : 'text-slate-700'">Library</button>
+                </div>
+              </div>
+
+              @if (hardwareScannerMode === 'attendance') {
+                <div class="flex items-center justify-between bg-indigo-50 border border-indigo-200 rounded-xl px-3 py-2">
+                  <span class="font-bold text-indigo-900 text-[11px]">Gate Direction:</span>
+                  <div class="flex items-center gap-1">
+                    <button type="button" (click)="hardwareAttendancePunch = 'IN'" class="px-3 py-1 rounded-lg font-black text-[10px] cursor-pointer"
+                      [class]="hardwareAttendancePunch === 'IN' ? 'bg-emerald-600 text-white' : 'bg-white text-slate-700'">Gate IN</button>
+                    <button type="button" (click)="hardwareAttendancePunch = 'OUT'" class="px-3 py-1 rounded-lg font-black text-[10px] cursor-pointer"
+                      [class]="hardwareAttendancePunch === 'OUT' ? 'bg-amber-600 text-white' : 'bg-white text-slate-700'">Gate OUT</button>
+                  </div>
+                </div>
+              }
+
+              <div class="space-y-1.5">
+                <label class="block font-bold text-slate-700">Scan Barcode Here (USB Scanner ya Manual Entry):</label>
+                <div class="flex gap-2">
+                  <input id="school-hardware-scan-input"
+                         data-scanner-input="true"
+                         type="text"
+                         [(ngModel)]="hardwareManualScanInput"
+                         (keyup.enter)="processHardwareBarcodeScan(hardwareManualScanInput, 'manual')"
+                         placeholder="e.g. CH-2026-1001, STU-1001, 978-..."
+                         class="flex-1 px-3 py-2 rounded-xl bg-white border border-slate-300 font-mono font-bold text-slate-900 text-xs focus:outline-emerald-600">
+                  <button type="button" (click)="processHardwareBarcodeScan(hardwareManualScanInput, 'manual')" [disabled]="hardwareScanBusy"
+                    class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs cursor-pointer disabled:opacity-50">
+                    {{ hardwareScanBusy ? '...' : 'Scan' }}
+                  </button>
+                </div>
+                <p class="text-[10px] text-slate-500">Plug any USB or Bluetooth HID Barcode Scanner — keyboard burst automatically resolves Challan, Student ID, Gate Attendance, or Book ISBN.</p>
+              </div>
+
+              <label class="inline-flex items-center gap-2 font-bold text-[11px] text-slate-700 cursor-pointer">
+                <input type="checkbox" [(ngModel)]="hardwareAutoBeep" class="accent-emerald-600">
+                <span>Audible confirmation beep on scan</span>
+              </label>
+            </div>
+
+            <!-- Right: Thermal & Laser Printer Setup -->
+            <div class="rounded-2xl border border-slate-200 p-4 space-y-3 bg-slate-50/70">
+              <div class="flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2">
+                  <mat-icon class="!text-[18px] !w-[18px] !h-[18px] text-emerald-600">print</mat-icon>
+                  <span class="font-black text-slate-900 text-sm">Printer Paper &amp; USB ESC/POS</span>
+                </div>
+                <span class="px-2 py-0.5 rounded-md text-[10px] font-black"
+                  [class]="serialThermalConnected ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-700'">
+                  {{ serialThermalConnected ? 'USB Direct Ready' : 'OS Driver Ready' }}
+                </span>
+              </div>
+
+              <div>
+                <span class="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1.5">Default Receipt Paper Profile</span>
+                <div class="grid grid-cols-3 gap-1.5">
+                  <button type="button" (click)="hardwarePrinterPaper = '80mm'" class="py-2 px-2 rounded-xl border font-black text-[11px] cursor-pointer"
+                    [class]="hardwarePrinterPaper === '80mm' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-200'">
+                    80mm Thermal
+                  </button>
+                  <button type="button" (click)="hardwarePrinterPaper = '58mm'" class="py-2 px-2 rounded-xl border font-black text-[11px] cursor-pointer"
+                    [class]="hardwarePrinterPaper === '58mm' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-200'">
+                    58mm Compact
+                  </button>
+                  <button type="button" (click)="hardwarePrinterPaper = 'a4'" class="py-2 px-2 rounded-xl border font-black text-[11px] cursor-pointer"
+                    [class]="hardwarePrinterPaper === 'a4' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-200'">
+                    A4 Laser 3-Copy
+                  </button>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2">
+                <button type="button" (click)="printHardwareTestPage()"
+                  class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[11px] cursor-pointer flex items-center justify-center gap-1.5">
+                  <lucide-icon [name]="'printer'" class="w-3.5 h-3.5"></lucide-icon>
+                  <span>Print Thermal Test</span>
+                </button>
+                <button type="button" (click)="printBarcodeStickerSheet()"
+                  class="px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-[11px] cursor-pointer flex items-center justify-center gap-1.5">
+                  <lucide-icon [name]="'qr-code'" class="w-3.5 h-3.5"></lucide-icon>
+                  <span>Print Sticker Sheet</span>
+                </button>
+              </div>
+
+              <div class="pt-1 border-t border-slate-200/80 flex items-center justify-between gap-2 flex-wrap">
+                <span class="text-[10px] font-bold text-slate-600">
+                  @if (serialThermalConnected) {
+                    Connected: {{ serialThermalLabel }}
+                  } @else {
+                    Optional direct USB ESC/POS (Chrome/Edge):
+                  }
+                </span>
+                @if (serialThermalConnected) {
+                  <button type="button" (click)="disconnectWebSerialThermalPrinter()" class="px-2.5 py-1 rounded-lg bg-rose-50 text-rose-700 font-bold text-[10px] cursor-pointer">
+                    Disconnect USB
+                  </button>
+                } @else {
+                  <button type="button" (click)="connectWebSerialThermalPrinter()" class="px-2.5 py-1 rounded-lg bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 font-bold text-[10px] cursor-pointer inline-flex items-center gap-1">
+                    <mat-icon class="!text-[13px] !w-[13px] !h-[13px]">usb</mat-icon>
+                    <span>Connect USB Serial</span>
+                  </button>
+                }
+              </div>
+            </div>
+          </div>
+
+          @if (hardwareLastScanResult) {
+            <div class="rounded-2xl border p-3.5 flex items-start justify-between gap-3"
+              [class]="hardwareLastScanResult.status === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-950' : (hardwareLastScanResult.status === 'warning' ? 'bg-amber-50 border-amber-200 text-amber-950' : 'bg-indigo-50 border-indigo-200 text-indigo-950')">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="font-black text-xs">{{ hardwareLastScanResult.actionTitle }}</span>
+                  <span class="px-2 py-0.5 rounded bg-white/80 font-mono font-bold text-[10px]">{{ hardwareLastScanResult.code }}</span>
+                </div>
+                <p class="text-[11px] font-medium mt-0.5">{{ hardwareLastScanResult.detail }}</p>
+              </div>
+              <span class="text-[10px] font-mono font-bold opacity-75 shrink-0">{{ hardwareLastScanResult.scannedAt }}</span>
+            </div>
+          }
+
+          @if (hardwareScanHistory.length > 0) {
+            <div class="space-y-1.5">
+              <span class="text-[10px] font-black uppercase tracking-wider text-slate-500">Recent Session Scans ({{ hardwareScanHistory.length }})</span>
+              <div class="max-h-36 overflow-y-auto custom-scrollbar divide-y divide-slate-100 border border-slate-200 rounded-xl bg-white">
+                @for (item of hardwareScanHistory; track $index) {
+                  <div class="px-3 py-2 flex items-center justify-between gap-2 text-[11px]">
+                    <div class="min-w-0">
+                      <span class="font-mono font-black text-slate-900">{{ item.code }}</span>
+                      <span class="mx-1.5 text-slate-300">·</span>
+                      <span class="font-bold text-slate-700">{{ item.actionTitle }}</span>
+                      <span class="text-slate-500 ml-1 truncate">— {{ item.detail }}</span>
+                    </div>
+                    <span class="font-mono text-[10px] text-slate-400 shrink-0">{{ item.scannedAt }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+
+        <div class="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-2 shrink-0">
+          <span class="text-[10px] font-bold text-slate-500">Works globally when typing cursor is not inside another text box.</span>
+          <button type="button" (click)="closeHardwareTerminalModal()" class="px-4 py-2 rounded-xl bg-slate-900 text-white font-bold text-xs cursor-pointer">
+            Done
+          </button>
         </div>
       </div>
     </div>
@@ -26411,20 +26623,24 @@
             </div>
           </div>
 
-          <!-- RFID Barcode & QR Footer -->
-          <div class="flex items-center justify-between pt-1 relative z-10">
-            <div class="text-left">
-              <span class="text-[9px] text-slate-500 font-bold block">RFID GATE ID: {{ selectedCardStudent.id }}</span>
-              <span class="text-[9px] font-mono text-slate-900 font-bold tracking-widest">||| |||| || |||</span>
+          <!-- Scannable Code-128 Barcode & QR Footer -->
+          <div class="flex items-center justify-between gap-2 pt-1 relative z-10">
+            <div class="text-left min-w-0 flex-1">
+              <span class="text-[9px] text-slate-500 font-bold block mb-0.5">RFID / GATE ID: {{ selectedCardStudent.id }}</span>
+              <app-school-barcode [value]="idCardBarcodeValue" [label]="idCardBarcodeValue" [height]="28" [barWidth]="1.1" />
             </div>
-            <div class="bg-white p-1.5 rounded-xl shadow-xs border border-slate-200">
+            <div class="bg-white p-1.5 rounded-xl shadow-xs border border-slate-200 shrink-0">
               <lucide-icon [name]="'qr-code'" class="w-8 h-8 text-slate-900"></lucide-icon>
             </div>
           </div>
         </div>
 
-        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-200">
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-200 flex-wrap">
           <button (click)="closeIdCardModal()" class="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold text-xs cursor-pointer">Close</button>
+          <button type="button" (click)="printBarcodeStickerSheet([selectedCardStudent])" class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs cursor-pointer flex items-center gap-1.5">
+            <lucide-icon [name]="'qr-code'" class="w-3.5 h-3.5 text-emerald-400"></lucide-icon>
+            <span>Sticker Label</span>
+          </button>
           <button (click)="printCard()" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs cursor-pointer shadow flex items-center gap-1.5">
             <lucide-icon [name]="'printer'" class="w-3.5 h-3.5"></lucide-icon>
             <span>Print ID Card</span>
@@ -26486,6 +26702,10 @@
                 <span class="font-bold text-slate-900">Oct 30 (09:00 AM - Hall A)</span>
               </div>
             </div>
+          </div>
+
+          <div class="pt-1 text-center">
+            <app-school-barcode [value]="admitCardBarcodeValue" [label]="admitCardBarcodeValue" [height]="30" [barWidth]="1.2" />
           </div>
         </div>
 
@@ -32828,7 +33048,7 @@
         <div class="space-y-1 text-xs">
           <label class="block font-bold text-slate-700">Or Type / Key-In ISBN Barcode Number:</label>
           <div class="flex gap-2">
-            <input type="text" [(ngModel)]="manualIsbnInput" (keyup.enter)="processManualIsbnScan()"
+            <input type="text" data-scanner-input="true" [(ngModel)]="manualIsbnInput" (keyup.enter)="processManualIsbnScan()"
               placeholder="e.g. 978-0-13-468599-1 or CIR-1001"
               class="flex-1 px-3 py-2 rounded-xl bg-white border border-slate-200 font-mono font-bold text-slate-900 text-xs focus:outline-indigo-600">
             <button (click)="processManualIsbnScan()" type="button" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs cursor-pointer active:scale-95 transition-all">

@@ -3938,13 +3938,15 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     }
     const mode = String(body.verificationMode || body.verification_mode || 'face_camera');
     const isFingerprintScan = mode.startsWith('fingerprint') || mode.startsWith('biometric_finger');
+    const isBarcodeScan = mode.startsWith('barcode') || mode.startsWith('rfid');
     const isBiometricScan =
       mode.startsWith('face_camera') ||
       mode.startsWith('face_kiosk') ||
       isFingerprintScan ||
       mode.startsWith('biometric');
+    const isHardwareScan = isBiometricScan || isBarcodeScan;
     const policy = loadTenantAttendancePolicy(tid);
-    const permCheck = canRolePerformAttendanceAction(policy, role, memberCategory, isBiometricScan ? 'camera' : 'manual');
+    const permCheck = canRolePerformAttendanceAction(policy, role, memberCategory, isHardwareScan ? 'camera' : 'manual');
     if (!permCheck.allowed) {
       return res.status(403).json({
         ok: false,
@@ -3974,11 +3976,11 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     const date = String(body.date || new Date().toISOString().split('T')[0]);
     const punchType = String(body.punchType || 'IN').toUpperCase() === 'OUT' ? 'OUT' : 'IN';
     const gateName = String(
-      body.gateName || (isFingerprintScan ? `Biometric Fingerprint Terminal · ${punchType}` : `Camera Face Terminal · ${punchType}`)
+      body.gateName || (isFingerprintScan ? `Biometric Fingerprint Terminal · ${punchType}` : (isBarcodeScan ? `Barcode Gate Scanner · ${punchType}` : `Camera Face Terminal · ${punchType}`))
     );
-    const confidenceScore = Number(body.confidenceScore ?? 0);
+    const confidenceScore = Number(body.confidenceScore ?? (isBarcodeScan ? 100 : 0));
     const verifiedBy = String(
-      body.verifiedBy || (isFingerprintScan ? 'Biometric Fingerprint Verification' : 'Camera Face Verification')
+      body.verifiedBy || (isFingerprintScan ? 'Biometric Fingerprint Verification' : (isBarcodeScan ? `Barcode ID Card Scanner · ${punchType}` : 'Camera Face Verification'))
     );
     const markedByRole = String(body.markedByRole || role || 'kiosk');
     const remarks = String(body.remarks || '').trim();
@@ -7753,6 +7755,118 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       severity: 'Compliance Flag'
     });
     res.json({ ok: true, id });
+  });
+
+  // --- HARDWARE BARCODE SCANNER UNIFIED LOOKUP (Challan #, Txn Ref, Student ID / Roll #, RFID) ---
+  router.get('/barcode-lookup', (req, res) => {
+    const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
+    if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
+
+    const rawCode = String(req.query.code || '').trim();
+    if (!rawCode) {
+      return res.status(400).json({ ok: false, message: 'code query parameter is required.' });
+    }
+
+    const norm = rawCode.toLowerCase();
+    const strippedRollMatch = rawCode.match(/^(?:ch|chln|stu|st|adm|roll)[-_]?(?:\d{4}[-_])?(.+)$/i);
+    const candidateRoll = strippedRollMatch ? strippedRollMatch[1].trim().toLowerCase() : '';
+    const nameMaps = getBranchWingNameMaps(tid);
+    const scopeSql = buildScopeSql(scope);
+
+    let studentRow = null;
+    let feeRows = [];
+    let txnRows = [];
+
+    try {
+      const txCandidates = sqliteDb.prepare(
+        `SELECT * FROM local_school_payment_transactions WHERE tenant_id = ?${scopeSql.sql} ORDER BY created_at DESC`
+      ).all(tid, ...scopeSql.params);
+      txnRows = txCandidates.filter((r) => {
+        const ref = String(r.txn_ref || '').trim().toLowerCase();
+        const ch = String(r.challan_no || '').trim().toLowerCase();
+        const id = String(r.id || '').trim().toLowerCase();
+        const roll = String(r.roll_no || '').trim().toLowerCase();
+        return ref === norm || ch === norm || id === norm || (roll && (roll === norm || (candidateRoll && roll === candidateRoll)));
+      });
+
+      const feeCandidates = sqliteDb.prepare(
+        `SELECT * FROM local_school_fees WHERE tenant_id = ?${scopeSql.sql} ORDER BY created_at DESC`
+      ).all(tid, ...scopeSql.params);
+      feeRows = feeCandidates.filter((r) => {
+        const ch = String(r.challan_no || '').trim().toLowerCase();
+        const id = String(r.id || '').trim().toLowerCase();
+        const sid = String(r.student_id || '').trim().toLowerCase();
+        const roll = String(r.roll_no || '').trim().toLowerCase();
+        return ch === norm || id === norm || sid === norm ||
+          (roll && (roll === norm || (candidateRoll && roll === candidateRoll)));
+      });
+
+      const stuCandidates = sqliteDb.prepare(
+        `SELECT * FROM local_school_students WHERE tenant_id = ?${scopeSql.sql}`
+      ).all(tid, ...scopeSql.params);
+      studentRow = stuCandidates.find((s) => {
+        const sid = String(s.id || '').trim().toLowerCase();
+        const roll = String(s.roll_no || '').trim().toLowerCase();
+        const rfid = String(s.rfid_card || '').trim().toLowerCase();
+        return sid === norm || roll === norm || (rfid && rfid === norm) ||
+          (candidateRoll && (roll === candidateRoll || sid === candidateRoll));
+      }) || null;
+
+      if (!studentRow && (feeRows[0] || txnRows[0])) {
+        const targetSid = String((feeRows[0] || txnRows[0]).student_id || '').trim().toLowerCase();
+        const targetRoll = String((feeRows[0] || txnRows[0]).roll_no || '').trim().toLowerCase();
+        studentRow = stuCandidates.find((s) =>
+          (targetSid && String(s.id || '').trim().toLowerCase() === targetSid) ||
+          (targetRoll && String(s.roll_no || '').trim().toLowerCase() === targetRoll)
+        ) || null;
+      }
+
+      if (studentRow && feeRows.length === 0) {
+        const sId = String(studentRow.id || '').trim().toLowerCase();
+        const sRoll = String(studentRow.roll_no || '').trim().toLowerCase();
+        feeRows = feeCandidates.filter((r) =>
+          (sId && String(r.student_id || '').trim().toLowerCase() === sId) ||
+          (sRoll && String(r.roll_no || '').trim().toLowerCase() === sRoll)
+        );
+      }
+      if (studentRow && txnRows.length === 0) {
+        const sId = String(studentRow.id || '').trim().toLowerCase();
+        const sRoll = String(studentRow.roll_no || '').trim().toLowerCase();
+        txnRows = txCandidates.filter((r) =>
+          (sId && String(r.student_id || '').trim().toLowerCase() === sId) ||
+          (sRoll && String(r.roll_no || '').trim().toLowerCase() === sRoll)
+        );
+      }
+    } catch {}
+
+    const mappedFees = feeRows.map((r) => mapFeeRow(r, tid, nameMaps));
+    const mappedTxns = txnRows.map((r) => mapPaymentTransactionRow(r, tid, nameMaps));
+    const openChallan = mappedFees.find((f) => ['PENDING', 'OVERDUE', 'PARTIAL'].includes(String(f.status || '').toUpperCase())) || null;
+    const paidChallan = mappedFees.find((f) => String(f.status || '').toUpperCase() === 'PAID') || null;
+    const latestTransaction = mappedTxns[0] || null;
+    const student = studentRow ? mapStudentRow(studentRow, tid, nameMaps) : null;
+
+    let matchType = 'none';
+    if (latestTransaction && (String(latestTransaction.txnRef || '').toLowerCase() === norm || String(latestTransaction.challanNo || '').toLowerCase() === norm)) {
+      matchType = 'transaction';
+    } else if (openChallan || paidChallan) {
+      matchType = 'challan';
+    } else if (student) {
+      matchType = 'student';
+    }
+
+    res.json({
+      ok: true,
+      code: rawCode,
+      normalizedCode: candidateRoll || norm,
+      matchType,
+      student,
+      openChallan,
+      paidChallan,
+      latestTransaction
+    });
   });
 
   return router;

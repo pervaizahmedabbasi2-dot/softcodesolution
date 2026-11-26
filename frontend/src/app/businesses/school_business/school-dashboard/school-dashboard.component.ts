@@ -84,6 +84,16 @@ import {
 import { SchoolTableDirective } from '../directives/school-table.directive';
 import { SchoolTableColumnModalComponent } from '../components/school-table-column-modal/school-table-column-modal.component';
 import { SchoolCustomFormFieldsComponent } from '../components/school-custom-form-fields/school-custom-form-fields.component';
+import { SchoolBarcodeComponent } from '../components/school-barcode/school-barcode.component';
+import {
+  BarcodeStickerItem,
+  ThermalFeeReceiptData,
+  ThermalPaperWidth,
+  buildBarcodeStickerSheetHtml,
+  buildEscPosReceiptBytes,
+  buildThermalFeeReceiptHtml,
+  printHtmlInHiddenFrame
+} from '../utils/thermal-print.util';
 import { SchoolTableSchemaService, SchoolCustomColumn, TableColumnPositionOption } from '../services/school-table-schema.service';
 import { PdfStudentCardEntry, downloadStudentsCardsPdf, downloadStudentsTablePdf, downloadTableCardsPdf } from '../services/school-pdf-export.util';
 import { PasskeyManagerComponent } from '../../../auth_security/passkey-manager/passkey-manager.component';
@@ -1071,8 +1081,11 @@ export interface PrincipalFeeCollectionRecord {
 @Component({
   selector: 'app-school-dashboard',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule, FormsModule, MatIconModule, DataTableComponent, AuditReconciliationTrendsComponent, AnalyticsDashboardComponent, SchoolAttendanceHubComponent, SchoolTableDirective, SchoolTableColumnModalComponent, SchoolCustomFormFieldsComponent, PasskeyManagerComponent],
+  imports: [CommonModule, LucideAngularModule, FormsModule, MatIconModule, DataTableComponent, AuditReconciliationTrendsComponent, AnalyticsDashboardComponent, SchoolAttendanceHubComponent, SchoolTableDirective, SchoolTableColumnModalComponent, SchoolCustomFormFieldsComponent, SchoolBarcodeComponent, PasskeyManagerComponent],
   templateUrl: './school-dashboard.component.html',
+  host: {
+    '(window:keydown)': 'onHardwareScannerKeydown($event)'
+  },
   styles: [`
     .glass-surface {
       background: rgba(255, 255, 255, 0.98);
@@ -3702,6 +3715,36 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
   isSlipScreenshotModalOpen: boolean = false;
   previewSlipTransaction: SchoolPaymentTransaction | null = null;
   checkoutScreenshotUploading: boolean = false;
+
+  // --- PRINTER & BARCODE SCANNER HARDWARE STATE ---
+  isHardwareTerminalModalOpen: boolean = false;
+  hardwarePrinterPaper: 'a4' | '80mm' | '58mm' = '80mm';
+  hardwareScannerMode: 'auto' | 'fee' | 'attendance' | 'library' = 'auto';
+  hardwareAttendancePunch: 'IN' | 'OUT' = 'IN';
+  hardwareAutoBeep: boolean = true;
+  hardwareGlobalScannerEnabled: boolean = true;
+  hardwareManualScanInput: string = '';
+  hardwareScanBusy: boolean = false;
+  serialThermalConnected: boolean = false;
+  serialThermalLabel: string = '';
+  private serialThermalPort: any = null;
+  private scannerBuffer: string = '';
+  private scannerLastKeyAt: number = 0;
+  private scannerResetTimer: ReturnType<typeof setTimeout> | null = null;
+  hardwareLastScanResult: {
+    code: string;
+    status: 'success' | 'warning' | 'info';
+    actionTitle: string;
+    detail: string;
+    scannedAt: string;
+  } | null = null;
+  hardwareScanHistory: Array<{
+    code: string;
+    status: 'success' | 'warning' | 'info';
+    actionTitle: string;
+    detail: string;
+    scannedAt: string;
+  }> = [];
   teachersSearchQuery: string = '';
   admissionsSearchQuery: string = '';
   selectedAdmissionFilter: 'all' | 'Approved' | 'Interview Scheduled' | 'Under Review' | 'Rejected' = 'all';
@@ -9590,6 +9633,16 @@ INSTRUCTIONS:
     if (this.offlineSyncIntervalId !== null) {
       clearInterval(this.offlineSyncIntervalId);
       this.offlineSyncIntervalId = null;
+    }
+    if (this.scannerResetTimer !== null) {
+      clearTimeout(this.scannerResetTimer);
+      this.scannerResetTimer = null;
+    }
+    if (this.serialThermalPort && typeof this.serialThermalPort.close === 'function') {
+      try {
+        void this.serialThermalPort.close();
+      } catch {}
+      this.serialThermalPort = null;
     }
     if (typeof window !== 'undefined') {
       window.removeEventListener('online', this.boundOnlineSyncHandler);
@@ -26784,5 +26837,511 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     if (typeof window !== 'undefined') {
       window.print();
     }
+  }
+
+  // =========================================================================
+  // SCHOOL HARDWARE ENGINE: THERMAL PRINTERS (80mm/58mm/ESC-POS) & USB SCANNER
+  // =========================================================================
+
+  get isWebSerialSupported(): boolean {
+    return typeof navigator !== 'undefined' && 'serial' in navigator;
+  }
+
+  get voucherBarcodeValue(): string {
+    return `CH-2026-${this.voucherStudent?.rollNo || '1030'}`;
+  }
+
+  get idCardBarcodeValue(): string {
+    return `STU-${this.selectedCardStudent?.rollNo || this.selectedCardStudent?.id || '1001'}`;
+  }
+
+  get admitCardBarcodeValue(): string {
+    return `ADM-${this.selectedCardStudent?.rollNo || '1001'}`;
+  }
+
+  openHardwareTerminalModal(initialMode?: 'auto' | 'fee' | 'attendance' | 'library'): void {
+    if (initialMode) {
+      this.hardwareScannerMode = initialMode;
+    }
+    this.isHardwareTerminalModalOpen = true;
+    this.cdr.detectChanges();
+    setTimeout(() => {
+      if (typeof document !== 'undefined') {
+        const inp = document.getElementById('school-hardware-scan-input') as HTMLInputElement | null;
+        inp?.focus();
+      }
+    }, 80);
+  }
+
+  closeHardwareTerminalModal(): void {
+    this.isHardwareTerminalModalOpen = false;
+    this.cdr.detectChanges();
+  }
+
+  private playScanBeep(tone: 'ok' | 'warn' = 'ok'): void {
+    if (!this.hardwareAutoBeep || typeof window === 'undefined') return;
+    try {
+      const AudioCtx = (window as any).AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = tone === 'ok' ? 1480 : 420;
+      gain.gain.setValueAtTime(0.08, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + (tone === 'ok' ? 0.09 : 0.2));
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + (tone === 'ok' ? 0.1 : 0.21));
+      setTimeout(() => {
+        try { void ctx.close(); } catch {}
+      }, 300);
+    } catch {}
+  }
+
+  onHardwareScannerKeydown(event: KeyboardEvent): void {
+    if (!this.hardwareGlobalScannerEnabled || !event) return;
+    if (event.ctrlKey || event.altKey || event.metaKey) return;
+
+    const target = event.target as HTMLElement | null;
+    const isDesignatedScannerInput = target?.getAttribute('data-scanner-input') === 'true';
+    const tag = (target?.tagName || '').toUpperCase();
+    const isTypingInFormField = !isDesignatedScannerInput && (
+      tag === 'INPUT' ||
+      tag === 'TEXTAREA' ||
+      tag === 'SELECT' ||
+      Boolean(target?.isContentEditable)
+    );
+    if (isTypingInFormField) {
+      return;
+    }
+
+    const now = Date.now();
+    const delta = now - this.scannerLastKeyAt;
+    if (delta > 65) {
+      this.scannerBuffer = '';
+    }
+    this.scannerLastKeyAt = now;
+
+    if (event.key === 'Enter' || event.key === 'Tab') {
+      const captured = this.scannerBuffer.trim();
+      this.scannerBuffer = '';
+      if (this.scannerResetTimer !== null) {
+        clearTimeout(this.scannerResetTimer);
+        this.scannerResetTimer = null;
+      }
+      if (!isDesignatedScannerInput && captured.length >= 4) {
+        event.preventDefault();
+        void this.processHardwareBarcodeScan(captured, 'usb_hid');
+      }
+      return;
+    }
+
+    if (event.key.length === 1 && !isDesignatedScannerInput) {
+      this.scannerBuffer += event.key;
+      if (this.scannerResetTimer !== null) {
+        clearTimeout(this.scannerResetTimer);
+      }
+      this.scannerResetTimer = setTimeout(() => {
+        this.scannerBuffer = '';
+        this.scannerResetTimer = null;
+      }, 140);
+    }
+  }
+
+  private recordHardwareScanEvent(
+    code: string,
+    status: 'success' | 'warning' | 'info',
+    actionTitle: string,
+    detail: string
+  ): void {
+    const entry = {
+      code,
+      status,
+      actionTitle,
+      detail,
+      scannedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    };
+    this.hardwareLastScanResult = entry;
+    this.hardwareScanHistory = [entry, ...this.hardwareScanHistory].slice(0, 15);
+    this.cdr.detectChanges();
+  }
+
+  async processHardwareBarcodeScan(rawCode: string, source: 'usb_hid' | 'manual' | 'camera' = 'manual'): Promise<void> {
+    const code = String(rawCode || '').trim();
+    if (!code) {
+      this.showToast('Scan or enter a Challan #, Student ID, Roll #, or ISBN barcode.', 'warning');
+      return;
+    }
+    if (this.hardwareScanBusy) return;
+    this.hardwareScanBusy = true;
+    this.hardwareManualScanInput = '';
+    this.cdr.detectChanges();
+
+    try {
+      const norm = code.toLowerCase();
+      const sourceLabel = source === 'usb_hid' ? 'USB Scanner' : (source === 'camera' ? 'Camera Scanner' : 'Manual Scan');
+
+      // 1. Check Library Books / Circulation first if in library mode or clear ISBN match
+      const matchedBook = (this.libraryBooks || []).find((b) =>
+        b.isbn.toLowerCase() === norm ||
+        b.isbn.replace(/[^0-9a-z]/gi, '').toLowerCase() === norm.replace(/[^0-9a-z]/gi, '') ||
+        b.id.toLowerCase() === norm
+      );
+      const matchedCirc = (this.libraryCirculations || []).find((c) =>
+        (c.issueNo || '').toLowerCase() === norm || (c.id || '').toLowerCase() === norm
+      );
+      if (this.hardwareScannerMode === 'library' || matchedBook || matchedCirc) {
+        if (matchedBook) {
+          this.playScanBeep('ok');
+          const activeLoan = (this.libraryCirculations || []).find(
+            (c) => (c.bookId === matchedBook.id || c.isbn === matchedBook.isbn) && c.status !== 'Returned'
+          );
+          if (activeLoan) {
+            this.returnCirculationBook(activeLoan);
+            const msg = `Checked in "${matchedBook.title}" from ${activeLoan.borrowerName}.`;
+            this.recordHardwareScanEvent(code, 'success', 'Library Book Returned', msg);
+            this.showToast(`${sourceLabel}: ${msg}`, 'success');
+          } else {
+            this.checkoutForm.bookId = matchedBook.id;
+            const msg = `Matched ISBN "${matchedBook.title}" — ready for checkout.`;
+            this.recordHardwareScanEvent(code, 'info', 'Library Book Found', msg);
+            this.showToast(`${sourceLabel}: ${msg}`, 'info');
+          }
+          return;
+        }
+        if (matchedCirc) {
+          this.playScanBeep('ok');
+          if (matchedCirc.status !== 'Returned') {
+            this.returnCirculationBook(matchedCirc);
+            const msg = `Returned "${matchedCirc.bookTitle}" (${matchedCirc.issueNo}).`;
+            this.recordHardwareScanEvent(code, 'success', 'Library Circulation Returned', msg);
+            this.showToast(`${sourceLabel}: ${msg}`, 'success');
+          } else {
+            const msg = `Circulation ${matchedCirc.issueNo} is already marked Returned.`;
+            this.recordHardwareScanEvent(code, 'info', 'Already Returned', msg);
+            this.showToast(`${sourceLabel}: ${msg}`, 'info');
+          }
+          return;
+        }
+      }
+
+      // 2. Local lookup + live Backend lookup for Challans, Transactions, Students
+      const apiRes = await this.backend.lookupSchoolBarcode(
+        code,
+        this.selectedBranchScope !== 'ALL' ? this.selectedBranchScope : undefined,
+        this.selectedWingScope !== 'ALL' ? this.selectedWingScope : undefined
+      );
+
+      let student: any = apiRes?.student
+        ? (this.activeStudents || []).find((s) => s.id === apiRes.student.id || s.rollNo === apiRes.student.rollNo) || apiRes.student
+        : null;
+      let openChallan = apiRes?.openChallan || null;
+      let paidChallan = apiRes?.paidChallan || null;
+      let latestTxn: SchoolPaymentTransaction | null = apiRes?.latestTransaction || null;
+
+      if (!student) {
+        const stripped = code.replace(/^(?:CH|CHLN|STU|ST|ADM|ROLL)[-_]?(?:\d{4}[-_])?/i, '').trim().toLowerCase();
+        student = (this.activeStudents || []).find((s) =>
+          String(s.id || '').toLowerCase() === norm ||
+          String(s.rollNo || '').toLowerCase() === norm ||
+          (stripped && (String(s.rollNo || '').toLowerCase() === stripped || String(s.id || '').toLowerCase() === stripped))
+        ) || null;
+      }
+      if (!latestTxn) {
+        latestTxn = (this.schoolPaymentTransactions || []).find((t) =>
+          String(t.txnRef || '').toLowerCase() === norm ||
+          String(t.challanNo || '').toLowerCase() === norm ||
+          String(t.id || '').toLowerCase() === norm
+        ) || null;
+      }
+      if (!openChallan && !paidChallan) {
+        const matchedChallan = (this.accountantGeneratedChallans || []).find((c) =>
+          String(c.challanNo || '').toLowerCase() === norm ||
+          String(c.id || '').toLowerCase() === norm
+        );
+        if (matchedChallan) {
+          if (String(matchedChallan.status || '').toUpperCase() === 'PAID') paidChallan = matchedChallan;
+          else openChallan = matchedChallan;
+        }
+      }
+
+      if (!student && !openChallan && !paidChallan && !latestTxn) {
+        this.playScanBeep('warn');
+        const msg = `No Student ID, Fee Challan, Transaction Ref, or Library ISBN matched "${code}".`;
+        this.recordHardwareScanEvent(code, 'warning', 'Barcode Not Found', msg);
+        this.showToast(`${sourceLabel}: ${msg}`, 'warning');
+        return;
+      }
+
+      const isFeeCode =
+        this.hardwareScannerMode === 'fee' ||
+        /^(?:ch|chln|fee|txn|pay|gw)/i.test(code) ||
+        apiRes?.matchType === 'challan' ||
+        apiRes?.matchType === 'transaction';
+
+      const isAttendanceCode =
+        this.hardwareScannerMode === 'attendance' ||
+        (!isFeeCode && (this.hardwareScannerMode === 'auto' && (/^(?:stu|st|adm|rfid)/i.test(code) || this.currentTab === 'attendance' || this.currentPortalRole === 'teacher' || this.currentPortalRole === 'principal')));
+
+      if (isAttendanceCode && student && this.hardwareScannerMode !== 'fee') {
+        const studentDisplayName = student.name || student.fullName || `Roll #${student.rollNo}`;
+        const punch = this.hardwareAttendancePunch;
+        const attRes = await this.backend.saveSchoolAttendance({
+          studentId: student.id,
+          rollNo: student.rollNo || code,
+          studentName: studentDisplayName,
+          grade: student.grade || 'Class 10-A',
+          memberCategory: 'student',
+          status: 'PRESENT',
+          punchType: punch,
+          verificationMode: 'barcode_scanner',
+          confidenceScore: 100,
+          gateName: `Barcode Gate Scanner · ${punch}`,
+          verifiedBy: `Barcode ID Card Scanner (${punch})`,
+          markedByRole: this.currentPortalRole,
+          branchId: student.branchId || undefined,
+          wingId: student.wingId || undefined
+        });
+        if (!attRes?.ok) {
+          this.playScanBeep('warn');
+          const msg = attRes?.message || 'Permission denied or error logging barcode attendance.';
+          this.recordHardwareScanEvent(code, 'warning', 'Attendance Scan Rejected', msg);
+          this.showToast(msg, 'warning');
+          return;
+        }
+        this.playScanBeep('ok');
+        this.activeStudents = (this.activeStudents || []).map((s) =>
+          s.id === student.id || s.rollNo === student.rollNo ? { ...s, status: 'Present' } : s
+        );
+        this.recomputeAttendanceSummary();
+        this.saveStateToStorage();
+        const msg = `${studentDisplayName} (#${student.rollNo}) marked PRESENT · Gate ${punch}.`;
+        this.recordHardwareScanEvent(code, 'success', `Attendance ${punch} Recorded`, msg);
+        this.showToast(`${sourceLabel}: ${msg}`, 'success');
+        return;
+      }
+
+      // Fee / Challan Verification or Collection Flow
+      const clearance = student ? this.getStudentFeeClearanceState(student) : null;
+      const alreadyPaid = Boolean(
+        clearance?.isPaid ||
+        (paidChallan && !openChallan) ||
+        (latestTxn && (latestTxn.status === 'VERIFIED' || latestTxn.status === 'SETTLED') && !openChallan)
+      );
+
+      if (alreadyPaid) {
+        this.playScanBeep('ok');
+        const stuLabel = student?.name || student?.fullName || latestTxn?.studentName || paidChallan?.studentName || code;
+        const refLabel = latestTxn?.txnRef || paidChallan?.challanNo || code;
+        const msg = `${stuLabel} (${refLabel}) is already VERIFIED PAID. Duplicate collection blocked.`;
+        this.recordHardwareScanEvent(code, 'info', 'Fee Already Paid (Verified)', msg);
+        this.showToast(`${sourceLabel}: ${msg}`, 'info');
+        if (latestTxn) {
+          this.openSlipScreenshotModal(latestTxn);
+        }
+        return;
+      }
+
+      if (clearance?.hasPendingSlip && clearance.pendingSlipTxn) {
+        this.playScanBeep('info' as any);
+        const pendingTx = clearance.pendingSlipTxn;
+        const msg = `Pending digital slip ${pendingTx.txnRef} awaiting Accountant/Owner verification.`;
+        this.recordHardwareScanEvent(code, 'info', 'Pending Slip Verification', msg);
+        this.showToast(`${sourceLabel}: ${msg}`, 'info');
+        if (this.currentPortalRole === 'owner' || this.currentPortalRole === 'accountant' || this.currentPortalRole === 'principal') {
+          this.openSlipScreenshotModal(pendingTx);
+        }
+        return;
+      }
+
+      // Unpaid Challan -> route to collection / checkout
+      this.playScanBeep('ok');
+      const targetName = student?.name || student?.fullName || openChallan?.studentName || 'Student';
+      const targetChallan = openChallan?.challanNo || `CH-2026-${student?.rollNo || '1001'}`;
+      const targetAmount = Number(openChallan?.total || student?.dueBakaya || student?.feeAmount || 25000);
+
+      if (this.currentPortalRole === 'accountant') {
+        if (student?.id) {
+          this.onAccountantCollectStudentSelect(student.id);
+        } else {
+          this.accountantCollectForm.studentName = targetName;
+          this.accountantCollectForm.challanNo = targetChallan;
+          this.accountantCollectForm.amount = targetAmount;
+        }
+        this.setAccountantTab('collect');
+        this.closeHardwareTerminalModal();
+        const msg = `Loaded unpaid challan ${targetChallan} (PKR ${this.formatCurrency(targetAmount)}) into Counter Collect form.`;
+        this.recordHardwareScanEvent(code, 'success', 'Ready at Fee Counter', msg);
+        this.showToast(`${sourceLabel}: ${msg}`, 'success');
+      } else if (this.currentPortalRole === 'student' || this.currentPortalRole === 'parent') {
+        this.closeHardwareTerminalModal();
+        this.openPortalOnlineCheckout(this.currentPortalRole);
+        this.recordHardwareScanEvent(code, 'success', 'Checkout Opened', `Opened payment form for ${targetChallan}.`);
+      } else {
+        // Owner / Principal: pre-fill Fee Voucher / Online Checkout preview
+        if (student) {
+          this.closeHardwareTerminalModal();
+          this.openFeeChallanVoucher(student);
+        }
+        const msg = `Unpaid challan ${targetChallan} (PKR ${this.formatCurrency(targetAmount)}) for ${targetName} opened.`;
+        this.recordHardwareScanEvent(code, 'success', 'Unpaid Challan Matched', msg);
+        this.showToast(`${sourceLabel}: ${msg}`, 'success');
+      }
+    } finally {
+      this.hardwareScanBusy = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  async connectWebSerialThermalPrinter(): Promise<void> {
+    if (!this.isWebSerialSupported) {
+      this.showToast('Web Serial ESC/POS direct print requires Chrome/Edge desktop. Standard OS Thermal Print Dialog remains ready.', 'info');
+      return;
+    }
+    try {
+      const serialApi = (navigator as any).serial;
+      const port = await serialApi.requestPort();
+      await port.open({ baudRate: 9600 });
+      this.serialThermalPort = port;
+      this.serialThermalConnected = true;
+      const info = typeof port.getInfo === 'function' ? port.getInfo() : {};
+      this.serialThermalLabel = info?.usbVendorId
+        ? `USB Thermal (VID:${info.usbVendorId.toString(16).toUpperCase()})`
+        : 'USB/Bluetooth Serial Thermal Printer';
+      this.cdr.detectChanges();
+      this.showToast(`Connected ${this.serialThermalLabel} for direct ESC/POS printing.`, 'success');
+    } catch (err: any) {
+      this.serialThermalConnected = false;
+      this.showToast(err?.name === 'NotFoundError' ? 'Printer selection cancelled.' : 'Could not open serial port; using OS Thermal Print Dialog instead.', 'info');
+    }
+  }
+
+  async disconnectWebSerialThermalPrinter(): Promise<void> {
+    if (this.serialThermalPort && typeof this.serialThermalPort.close === 'function') {
+      try { await this.serialThermalPort.close(); } catch {}
+    }
+    this.serialThermalPort = null;
+    this.serialThermalConnected = false;
+    this.serialThermalLabel = '';
+    this.cdr.detectChanges();
+    this.showToast('Disconnected direct USB Serial printer. Reverted to OS Print Dialog.', 'info');
+  }
+
+  private async dispatchThermalReceiptPrint(data: ThermalFeeReceiptData, paperOverride?: ThermalPaperWidth): Promise<void> {
+    const paper: ThermalPaperWidth = paperOverride || (this.hardwarePrinterPaper === '58mm' ? '58mm' : '80mm');
+    if (this.serialThermalConnected && this.serialThermalPort?.writable) {
+      try {
+        const writer = this.serialThermalPort.writable.getWriter();
+        await writer.write(buildEscPosReceiptBytes(data));
+        writer.releaseLock();
+        this.showToast(`Sent ESC/POS thermal receipt (${data.txnRef}) directly to ${this.serialThermalLabel || 'USB Printer'}.`, 'success');
+        return;
+      } catch {
+        this.serialThermalConnected = false;
+      }
+    }
+    const html = buildThermalFeeReceiptHtml(data, paper);
+    const ok = await printHtmlInHiddenFrame(html);
+    this.showToast(
+      ok
+        ? `Opened ${paper} Thermal Receipt print job for ${data.txnRef}.`
+        : 'Print dialog unavailable in this view.',
+      ok ? 'success' : 'warning'
+    );
+  }
+
+  async printThermalReceiptForTransaction(tx: SchoolPaymentTransaction, paperOverride?: ThermalPaperWidth): Promise<void> {
+    const data: ThermalFeeReceiptData = {
+      schoolName: this.schoolName || 'SoftCode International School',
+      branchName: tx.branchName || this.activeScopeSummaryLabel,
+      receiptTitle: tx.status === 'VERIFIED' || tx.status === 'SETTLED' ? 'VERIFIED FEE RECEIPT' : 'FEE DEPOSIT SLIP',
+      txnRef: tx.txnRef,
+      challanNo: tx.challanNo || `CH-2026-${tx.rollNo || tx.txnRef}`,
+      studentName: tx.studentName,
+      rollNo: tx.rollNo || '—',
+      grade: tx.grade || 'Campus',
+      guardianName: tx.guardianName || tx.payerAccountTitle || '',
+      gatewayName: tx.gatewayName,
+      baseAmount: Number(tx.baseAmount || 0),
+      gatewayFee: Number(tx.gatewayFee || 0),
+      totalAmount: Number(tx.totalAmount || tx.baseAmount || 0),
+      status: tx.status,
+      paidAtLabel: new Date(tx.verifiedAt || tx.createdAt || Date.now()).toLocaleString(),
+      verifiedBy: tx.verifiedBy || '',
+      proofReference: tx.proofReference || '',
+      footerNote: this.schoolGatewaySettings?.receiptFooterNote || ''
+    };
+    await this.dispatchThermalReceiptPrint(data, paperOverride);
+  }
+
+  async printThermalReceiptForStudentChallan(stu?: StudentRecord | null, paperOverride?: ThermalPaperWidth): Promise<void> {
+    const target = stu || this.voucherStudent;
+    if (!target) return;
+    const clearance = this.getStudentFeeClearanceState(target);
+    const tx = clearance.verifiedTxn || clearance.pendingSlipTxn;
+    const data: ThermalFeeReceiptData = {
+      schoolName: this.schoolName || 'SoftCode International School',
+      branchName: (target as any).branchName || this.activeScopeSummaryLabel,
+      receiptTitle: clearance.isPaid ? 'VERIFIED FEE RECEIPT' : 'BANK / COUNTER FEE CHALLAN',
+      txnRef: tx?.txnRef || `CH-2026-${target.rollNo || '1030'}`,
+      challanNo: `CH-2026-${target.rollNo || '1030'}`,
+      studentName: target.name,
+      rollNo: target.rollNo || '1030',
+      grade: target.grade || 'Class 1',
+      guardianName: target.guardian || '',
+      gatewayName: tx?.gatewayName || this.primaryVoucherBankGateway?.bankName || 'School Fee Counter',
+      baseAmount: tx ? Number(tx.baseAmount) : this.voucherWithinDueTotal,
+      gatewayFee: tx ? Number(tx.gatewayFee) : 0,
+      totalAmount: tx ? Number(tx.totalAmount) : this.voucherWithinDueTotal,
+      status: clearance.isPaid ? 'PAID' : (clearance.hasPendingSlip ? 'PENDING_VERIFICATION' : 'UNPAID CHALLAN'),
+      paidAtLabel: new Date().toLocaleString(),
+      verifiedBy: tx?.verifiedBy || '',
+      proofReference: tx?.proofReference || '',
+      footerNote: this.schoolGatewaySettings?.receiptFooterNote || ''
+    };
+    await this.dispatchThermalReceiptPrint(data, paperOverride);
+  }
+
+  async printHardwareTestPage(): Promise<void> {
+    const sampleData: ThermalFeeReceiptData = {
+      schoolName: this.schoolName || 'SoftCode International School',
+      branchName: this.activeScopeSummaryLabel,
+      receiptTitle: 'HARDWARE PRINTER & SCANNER TEST',
+      txnRef: 'TEST-2026-1001',
+      challanNo: `CH-2026-${this.scopedActiveStudents?.[0]?.rollNo || '1001'}`,
+      studentName: this.scopedActiveStudents?.[0]?.name || 'Test Student',
+      rollNo: this.scopedActiveStudents?.[0]?.rollNo || '1001',
+      grade: this.scopedActiveStudents?.[0]?.grade || 'Class 10-A',
+      gatewayName: 'Hardware Calibration Test',
+      baseAmount: 25000,
+      gatewayFee: 0,
+      totalAmount: 25000,
+      status: 'TEST_PRINT',
+      paidAtLabel: new Date().toLocaleString(),
+      footerNote: 'Scan the Code-128 barcode above with your USB/Bluetooth scanner to test auto-lookup.'
+    };
+    await this.dispatchThermalReceiptPrint(sampleData);
+  }
+
+  async printBarcodeStickerSheet(students?: StudentRecord[]): Promise<void> {
+    const list = (students && students.length > 0 ? students : this.scopedActiveStudents.slice(0, 12));
+    if (list.length === 0) {
+      this.showToast('No students available to generate barcode sticker labels.', 'warning');
+      return;
+    }
+    const items: BarcodeStickerItem[] = list.map((s) => ({
+      title: s.name,
+      subtitle: `${s.grade} · Roll #${s.rollNo}`,
+      code: `STU-${s.rollNo || s.id}`,
+      meta: `Challan: CH-2026-${s.rollNo || '1001'}`
+    }));
+    const html = buildBarcodeStickerSheetHtml(this.schoolName || 'SoftCode School', items);
+    const ok = await printHtmlInHiddenFrame(html);
+    this.showToast(
+      ok ? `Prepared ${items.length} Code-128 Student/Challan barcode sticker labels for printing.` : 'Unable to launch sticker print job.',
+      ok ? 'success' : 'warning'
+    );
   }
 }

@@ -1666,6 +1666,17 @@ export class BackendService {
     } catch { return { ok: false }; }
   }
 
+  async lookupSchoolBarcode(code: string, branchId?: string, wingId?: string) {
+    try {
+      const q = this.buildSchoolScopeQuery(branchId, wingId, { code: String(code || '').trim() });
+      const res = await fetch(`/api/school/barcode-lookup${q}`, {
+        headers: this.getSchoolHeaders(false),
+        credentials: 'include'
+      });
+      return await res.json().catch(() => ({ ok: false, matchType: 'none' }));
+    } catch { return { ok: false, matchType: 'none' }; }
+  }
+
   // --- DYNAMIC TABLE SCHEMAS, CUSTOM FORM FIELDS & CROSS-PORTAL DATA CRUD ---
   async getSchoolTableSchemas() {
     try {
