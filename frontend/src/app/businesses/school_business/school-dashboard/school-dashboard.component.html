@@ -556,6 +556,15 @@
                   </div>
                   <span class="px-1.5 py-0.5 rounded-md text-[10px] font-extrabold border shrink-0" [class]="currentTab === 'assets' ? 'bg-white/20 text-white border-white/20' : 'bg-amber-50 text-amber-800 border-amber-200/70'">{{ schoolAssets.length }}</span>
                 </button>
+                <button (click)="setTab('payment_gateway')" class="w-full flex items-center justify-between px-3 py-2 rounded-2xl text-left transition-all duration-200 cursor-pointer group" [class]="currentTab === 'payment_gateway' ? 'bg-gradient-to-r from-indigo-600 via-indigo-600 to-blue-600 text-white shadow-md shadow-indigo-600/30 border border-indigo-500/20 font-extrabold' : 'scs-nav-3d-idle text-slate-700 hover:text-slate-900 font-bold'">
+                  <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105" [class]="currentTab === 'payment_gateway' ? 'bg-white/20 text-white' : 'bg-gradient-to-tr from-emerald-500 via-teal-600 to-cyan-600 text-white shadow-2xs'">
+                      <lucide-icon [name]="'wallet-cards'" class="w-4 h-4"></lucide-icon>
+                    </div>
+                    <span class="text-xs truncate">Gateway Setting</span>
+                  </div>
+                  <span class="px-1.5 py-0.5 rounded-md text-[10px] font-extrabold border shrink-0 tabular-nums" [class]="currentTab === 'payment_gateway' ? 'bg-white/20 text-white border-white/20' : 'bg-emerald-50 text-emerald-700 border-emerald-200/70'">{{ enabledSchoolPaymentGateways.length }}</span>
+                </button>
                 <button (click)="setTab('settings')" class="w-full flex items-center justify-between px-3 py-2 rounded-2xl text-left transition-all duration-200 cursor-pointer group" [class]="currentTab === 'settings' ? 'bg-gradient-to-r from-indigo-600 via-indigo-600 to-blue-600 text-white shadow-md shadow-indigo-600/30 border border-indigo-500/20 font-extrabold' : 'scs-nav-3d-idle text-slate-700 hover:text-slate-900 font-bold'">
                   <div class="flex items-center gap-2.5 min-w-0">
                     <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105" [class]="currentTab === 'settings' ? 'bg-white/20 text-white' : 'bg-gradient-to-tr from-emerald-500 via-emerald-600 to-teal-600 text-white shadow-2xs'">
@@ -989,6 +998,17 @@
                   <lucide-icon [name]="'download'" class="w-7 h-7 stroke-[2.2] drop-shadow-xs"></lucide-icon>
                 </div>
                 <span class="text-xs sm:text-sm font-black text-slate-800 leading-tight tracking-tight text-center">Export Data</span>
+              </button>
+
+              <!-- Action 9: Gateway Setting Option Card (Emerald-Cyan 3D White Card) -->
+              <button type="button" (click)="setTab('payment_gateway')" class="rounded-2xl p-5 sm:p-6 bg-white border border-slate-200/90 text-center transition-all duration-300 ease-out cursor-pointer hover:-translate-y-1.5 hover:scale-[1.02] active:translate-y-0 active:scale-[0.97] flex flex-col items-center justify-center space-y-2.5 min-h-[120px] group scs-tile-3d">
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-600 via-teal-600 to-cyan-600 text-white shadow-md shadow-emerald-500/30 flex items-center justify-center group-hover:scale-110 group-hover:-translate-y-0.5 group-hover:shadow-lg group-hover:shadow-emerald-500/40 transition-all duration-300 border border-white/30">
+                  <lucide-icon [name]="'wallet-cards'" class="w-7 h-7 stroke-[2.2] drop-shadow-xs"></lucide-icon>
+                </div>
+                <div class="space-y-0.5">
+                  <span class="text-xs sm:text-sm font-black text-slate-800 leading-tight tracking-tight text-center block">Gateway Setting</span>
+                  <span class="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/70">{{ enabledSchoolPaymentGateways.length }} Active · PK Pay</span>
+                </div>
               </button>
             </div>
           </div>
@@ -8807,89 +8827,183 @@
         <div class="space-y-6 min-w-0 w-full max-w-full">
           <div class="rounded-[28px] p-6 scs-surface-3d relative overflow-hidden flex items-center justify-between flex-wrap gap-4">
             <div class="relative z-10">
-              <div class="flex items-center gap-2">
-                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/15 text-emerald-700 border border-emerald-300/70">Omni-Channel FinTech</span>
-                <span class="text-xs text-slate-500 font-mono font-bold">Live Automatic Reconciliation</span>
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/15 text-emerald-700 border border-emerald-300/70">Pakistan Native FinTech</span>
+                <span class="text-xs text-slate-500 font-mono font-bold">Raast · JazzCash · Easypaisa · 1Bill · Banks</span>
+                @if (isOwnerPortal) {
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-indigo-50 text-indigo-700 border border-indigo-200">Owner Full Control</span>
+                }
               </div>
-              <h2 class="text-lg font-black text-slate-900 mt-1">Payment Gateway & Online Fee Collection Hub</h2>
+              <h2 class="text-lg font-black text-slate-900 mt-1">Gateway Setting &amp; Online Fee Collection Hub</h2>
               <p class="text-xs text-slate-600 max-w-2xl mt-0.5">
-                Manage online fee gateways (JazzCash, EasyPaisa, Visa/MasterCard, 1Bill, Bank Transfers). Students and Parents can pay tuition fee vouchers directly from their mobile app or web portal.
+                Configure Pakistani banks, wallets, Raast IBFT &amp; 1Bill fee channels per branch/wing, customize portal availability &amp; surcharges, and verify student/parent payment slips into official fee receipts.
               </p>
             </div>
-            <div class="flex items-center gap-2 relative z-10">
-              <button (click)="openAddFinanceModal()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-xs cursor-pointer flex items-center gap-1.5 shadow-md shadow-emerald-600/20">
+            <div class="flex items-center gap-2 flex-wrap relative z-10">
+              @if (isOwnerPortal) {
+                <button type="button" (click)="openGatewaySettingsModal()" class="px-3.5 py-2 rounded-xl bg-white border border-slate-200 hover:border-indigo-300 text-slate-800 font-extrabold text-xs cursor-pointer flex items-center gap-1.5 shadow-2xs">
+                  <lucide-icon [name]="'sliders-horizontal'" class="w-3.5 h-3.5 text-indigo-600"></lucide-icon>
+                  <span>Gateway Settings</span>
+                </button>
+                <button type="button" (click)="openGatewayConfigModal()" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs cursor-pointer flex items-center gap-1.5 shadow-md shadow-indigo-600/20">
+                  <lucide-icon [name]="'plus'" class="w-3.5 h-3.5"></lucide-icon>
+                  <span>+ Add Custom / PK Gateway</span>
+                </button>
+              }
+              <button type="button" (click)="openPortalOnlineCheckout('owner')" class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-xs cursor-pointer flex items-center gap-1.5 shadow-md shadow-emerald-600/20">
                 <lucide-icon [name]="'plus'" class="w-3.5 h-3.5"></lucide-icon>
                 <span>+ Collect Online Fee</span>
               </button>
             </div>
           </div>
 
-          <!-- Active Gateway Merchant Cards -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3.5 sm:gap-4">
-            <div class="apple-card scs-tile-3d rounded-2xl p-4 space-y-2 border-l-4 border-l-rose-500 min-w-0 overflow-hidden">
-              <div class="flex items-center justify-between gap-2 flex-wrap">
-                <span class="text-xs font-black text-slate-900">JazzCash Merchant</span>
-                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 shrink-0">CONNECTED</span>
-              </div>
-              <p class="text-xs text-slate-500">Auto Voucher Matching via API</p>
-              <p class="text-base font-black text-slate-900 font-mono break-words">PKR 18,450,000 <span class="text-[10px] text-slate-400 font-normal">This Month</span></p>
+          <!-- Gateway KPI Summary Strip -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3.5">
+            <div class="apple-card scs-tile-3d rounded-2xl p-4 space-y-1">
+              <span class="text-[10px] font-black uppercase tracking-wider text-slate-500">Active PK Channels</span>
+              <p class="text-xl font-black text-slate-900 font-mono">{{ enabledSchoolPaymentGateways.length }} / {{ scopedSchoolPaymentGateways.length }}</p>
+              <span class="text-[11px] text-emerald-700 font-bold">Live across enabled portals</span>
             </div>
-
-            <div class="apple-card scs-tile-3d rounded-2xl p-4 space-y-2 border-l-4 border-l-emerald-500 min-w-0 overflow-hidden">
-              <div class="flex items-center justify-between gap-2 flex-wrap">
-                <span class="text-xs font-black text-slate-900">EasyPaisa Direct</span>
-                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 shrink-0">CONNECTED</span>
-              </div>
-              <p class="text-xs text-slate-500">Instant Wallet & QR Collection</p>
-              <p class="text-base font-black text-slate-900 font-mono break-words">PKR 12,180,000 <span class="text-[10px] text-slate-400 font-normal">This Month</span></p>
+            <div class="apple-card scs-tile-3d rounded-2xl p-4 space-y-1">
+              <span class="text-[10px] font-black uppercase tracking-wider text-slate-500">Verified Gateway Volume</span>
+              <p class="text-xl font-black text-emerald-700 font-mono">PKR {{ formatCurrency(verifiedGatewayTransactionsTotal) }}</p>
+              <span class="text-[11px] text-slate-500 font-bold">Auto-posted to Fees &amp; Finance</span>
             </div>
-
-            <div class="apple-card scs-tile-3d rounded-2xl p-4 space-y-2 border-l-4 border-l-indigo-500 min-w-0 overflow-hidden">
-              <div class="flex items-center justify-between gap-2 flex-wrap">
-                <span class="text-xs font-black text-slate-900">1Bill / Bank Transfer</span>
-                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 shrink-0">ACTIVE</span>
-              </div>
-              <p class="text-xs text-slate-500">Consumer ID 6-Digit Matching</p>
-              <p class="text-base font-black text-slate-900 font-mono break-words">PKR 4,210,000 <span class="text-[10px] text-slate-400 font-normal">This Month</span></p>
+            <div class="apple-card scs-tile-3d rounded-2xl p-4 space-y-1">
+              <span class="text-[10px] font-black uppercase tracking-wider text-slate-500">Pending Slip Verification</span>
+              <p class="text-xl font-black text-amber-700 font-mono">{{ pendingVerificationGatewayTransactions.length }} · PKR {{ formatCurrency(pendingGatewayTransactionsTotal) }}</p>
+              <span class="text-[11px] text-amber-600 font-bold">Awaiting Owner / Accounts check</span>
             </div>
-
-            <div class="apple-card scs-tile-3d rounded-2xl p-4 space-y-2 border-l-4 border-l-purple-500 min-w-0 overflow-hidden">
-              <div class="flex items-center justify-between gap-2 flex-wrap">
-                <span class="text-xs font-black text-slate-900">Visa / MasterCard</span>
-                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 shrink-0">STRIPE LIVE</span>
-              </div>
-              <p class="text-xs text-slate-500">International Debit & Credit</p>
-              <p class="text-base font-black text-slate-900 font-mono break-words">PKR 500,000 <span class="text-[10px] text-slate-400 font-normal">This Month</span></p>
+            <div class="apple-card scs-tile-3d rounded-2xl p-4 space-y-1">
+              <span class="text-[10px] font-black uppercase tracking-wider text-slate-500">1Bill &amp; Challan Policy</span>
+              <p class="text-xl font-black text-indigo-900 font-mono">{{ schoolGatewaySettings.oneBillPrefix || '10089' }}</p>
+              <span class="text-[11px] text-slate-500 font-bold">Late Fee: PKR {{ formatCurrency(schoolGatewaySettings.lateFeeFinePkr) }} · {{ schoolGatewaySettings.lateFeeGraceDays }}d grace</span>
             </div>
           </div>
 
-          <!-- Live Online Fee Collection Transactions Table -->
+          <!-- Dynamic Configured Pakistan & Custom Gateway Registry -->
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3.5 sm:gap-4">
+            @for (gw of scopedSchoolPaymentGateways; track gw.id) {
+              @let gwStats = getGatewayTxStats(gw);
+              <div class="apple-card scs-tile-3d rounded-2xl p-4 space-y-3 border-l-4 min-w-0 overflow-hidden flex flex-col justify-between"
+                [class]="getGatewayAccentClass(gw) + (gw.isEnabled ? '' : ' opacity-70')">
+                <div class="space-y-2">
+                  <div class="flex items-start justify-between gap-2 flex-wrap">
+                    <div class="min-w-0">
+                      <span class="text-xs font-black text-slate-900 block truncate">{{ gw.displayName }}</span>
+                      <span class="text-[10px] font-mono text-slate-500 uppercase">{{ gw.providerKey }} · {{ gw.verificationMode }}</span>
+                    </div>
+                    <div class="flex items-center gap-1 shrink-0">
+                      @if (gw.isDefault) {
+                        <span class="px-2 py-0.5 rounded text-[9px] font-black bg-indigo-100 text-indigo-800 border border-indigo-200">DEFAULT</span>
+                      }
+                      <span class="px-2 py-0.5 rounded text-[9px] font-black"
+                        [class]="gw.isEnabled ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-500 border border-slate-200'">
+                        {{ gw.isEnabled ? 'ACTIVE' : 'DISABLED' }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div class="text-[11px] text-slate-600 space-y-0.5 bg-slate-50/80 rounded-xl p-2.5 border border-slate-200/70">
+                    @if (gw.accountTitle) {
+                      <p class="truncate"><span class="font-bold text-slate-500">Title:</span> <span class="font-bold text-slate-900">{{ gw.accountTitle }}</span></p>
+                    }
+                    @if (gw.accountNumber) {
+                      <p class="font-mono truncate"><span class="font-sans font-bold text-slate-500">A/C:</span> {{ gw.accountNumber }}</p>
+                    }
+                    @if (gw.iban) {
+                      <p class="font-mono text-[10px] truncate"><span class="font-sans font-bold text-slate-500">IBAN:</span> {{ gw.iban }}</p>
+                    }
+                    @if (gw.raastId) {
+                      <p class="font-mono text-[10px] truncate"><span class="font-sans font-bold text-slate-500">Raast:</span> {{ gw.raastId }}</p>
+                    }
+                    @if (gw.tillId) {
+                      <p class="font-mono text-[10px] truncate"><span class="font-sans font-bold text-slate-500">Till ID:</span> {{ gw.tillId }}</p>
+                    }
+                    @if (gw.billerCode) {
+                      <p class="font-mono text-[10px] truncate"><span class="font-sans font-bold text-slate-500">1Bill Prefix:</span> {{ gw.billerCode }}</p>
+                    }
+                    @if (gw.merchantId) {
+                      <p class="font-mono text-[10px] truncate"><span class="font-sans font-bold text-slate-500">Merchant:</span> {{ gw.merchantId }}</p>
+                    }
+                    @if (gw.hasMerchantSecret && isOwnerPortal) {
+                      <p class="font-mono text-[10px] text-emerald-700 truncate">API Secret: {{ gw.merchantSecretHint || '••••' }} (Vault)</p>
+                    }
+                    @for (cf of gw.customFields || []; track $index) {
+                      <p class="text-[10px] truncate"><span class="font-bold text-slate-500">{{ cf.label }}:</span> {{ cf.value }}</p>
+                    }
+                  </div>
+
+                  <div class="flex items-center justify-between text-[11px] pt-1">
+                    <div>
+                      <p class="font-mono font-black text-slate-900">PKR {{ formatCurrency(gwStats.verifiedAmount) }}</p>
+                      <p class="text-[10px] text-slate-500">{{ gwStats.verifiedCount }} verified · {{ gwStats.pendingCount }} pending</p>
+                    </div>
+                    <div class="text-right">
+                      <span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[10px] font-bold">
+                        {{ gw.feeType === 'none' || !gw.feeValue ? '0% Fee' : (gw.feeType === 'percent' ? '+' + gw.feeValue + '%' : '+PKR ' + gw.feeValue) }}
+                      </span>
+                      <p class="text-[9px] text-slate-400 mt-0.5">{{ gw.branchId === 'ALL' ? 'All Campuses' : resolveBranchName(gw.branchId) }}</p>
+                    </div>
+                  </div>
+                </div>
+
+                @if (isOwnerPortal) {
+                  <div class="pt-2 border-t border-slate-100 flex items-center justify-between gap-1 flex-wrap">
+                    <button type="button" (click)="openGatewayConfigModal(gw)" class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:border-indigo-300 text-indigo-700 font-bold text-[10px] cursor-pointer">
+                      Edit
+                    </button>
+                    <button type="button" (click)="toggleGatewayEnabled(gw)" class="px-2.5 py-1 rounded-lg border font-bold text-[10px] cursor-pointer"
+                      [class]="gw.isEnabled ? 'bg-amber-50 border-amber-200 text-amber-800' : 'bg-emerald-50 border-emerald-200 text-emerald-800'">
+                      {{ gw.isEnabled ? 'Disable' : 'Enable' }}
+                    </button>
+                    @if (!gw.isDefault) {
+                      <button type="button" (click)="setGatewayAsDefault(gw)" class="px-2 py-1 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-700 font-bold text-[10px] cursor-pointer">
+                        Set Default
+                      </button>
+                    }
+                    <button type="button" (click)="deletePaymentGateway(gw)" class="p-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 cursor-pointer" title="Delete Gateway">
+                      <lucide-icon [name]="'trash-2'" class="w-3 h-3"></lucide-icon>
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+            @if (scopedSchoolPaymentGateways.length === 0) {
+              <div class="col-span-full apple-card rounded-2xl p-6 text-center text-xs text-slate-500 font-bold">
+                No payment gateways found for this branch scope.
+              </div>
+            }
+          </div>
+
+          <!-- Live Online Fee Collection Transactions & Slip Verification Table -->
           <div class="apple-card scs-surface-3d rounded-2xl p-4 sm:p-5 space-y-4 min-w-0 w-full max-w-full overflow-hidden">
             <div class="flex items-center justify-between flex-wrap gap-3">
               <div>
-                <h3 class="font-black text-slate-900 text-base">Real-Time Online Fee Collection Stream</h3>
-                <p class="text-xs text-slate-500">Automated challan reconciliation via Webhooks & Payment Gateway Logs</p>
+                <h3 class="font-black text-slate-900 text-base">Real-Time Payment Gateway Transactions &amp; Slip Verification</h3>
+                <p class="text-xs text-slate-500">Persistent PK wallet, Raast, 1Bill, and Bank Challan collection ledger synced to Student Dues &amp; Receipts</p>
               </div>
-              <div class="flex items-center gap-2">
-                <span class="text-xs font-extrabold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200 shadow-2xs">
-                  ✓ Webhooks Synced
-                </span>
-                <button (click)="openAddPaymentModal()" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs cursor-pointer flex items-center gap-1.5 shadow-xs transition-all active:scale-95">
+              <div class="flex items-center gap-2 flex-wrap">
+                <button type="button" (click)="refreshPaymentGatewayData()" class="px-3 py-1.5 rounded-xl bg-white border border-slate-200 hover:border-indigo-300 text-slate-700 font-bold text-xs cursor-pointer flex items-center gap-1.5">
+                  <lucide-icon [name]="'refresh-cw'" class="w-3.5 h-3.5 text-indigo-600"></lucide-icon>
+                  <span>Sync Ledger</span>
+                </button>
+                <button type="button" (click)="openAddPaymentModal()" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs cursor-pointer flex items-center gap-1.5 shadow-xs transition-all active:scale-95">
                   <lucide-icon [name]="'plus'" class="w-3.5 h-3.5"></lucide-icon>
-                  <span>+ Record Online Fee</span>
+                  <span>+ Record Gateway Fee</span>
                 </button>
               </div>
             </div>
 
-            <!-- Top Controls Toolbar (Search + Gateway Filter + Page Size) -->
+            <!-- Top Controls Toolbar (Search + Gateway Filter + Status Filter + Page Size) -->
             <div class="flex items-center justify-between flex-wrap gap-3 p-3 rounded-2xl bg-white border border-slate-200/90 shadow-2xs">
-              <div class="relative flex-1 min-w-0 w-full sm:min-w-[240px]">
+              <div class="relative flex-1 min-w-0 w-full sm:min-w-[220px]">
                 <lucide-icon [name]="'search'" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></lucide-icon>
                 <input type="text" [(ngModel)]="paymentGatewaySearchQuery" (ngModelChange)="currentPage['payment_gateway'] = 1"
-                  placeholder="Search student name, roll #, transaction ref, class, or gateway..."
+                  placeholder="Search TXN ref, challan #, student, roll #, proof TID, class, or gateway..."
                   class="w-full pl-9 pr-8 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-900 placeholder:text-slate-400 focus:outline-indigo-600 shadow-2xs">
                 @if (paymentGatewaySearchQuery) {
-                  <button (click)="paymentGatewaySearchQuery = ''; currentPage['payment_gateway'] = 1" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold">×</button>
+                  <button type="button" (click)="paymentGatewaySearchQuery = ''; currentPage['payment_gateway'] = 1" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold">×</button>
                 }
               </div>
 
@@ -8899,10 +9013,21 @@
                   <select [(ngModel)]="selectedPaymentGatewayFilter" (ngModelChange)="currentPage['payment_gateway'] = 1"
                     class="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700 focus:outline-indigo-600 cursor-pointer shadow-2xs">
                     <option value="All">All Gateways</option>
-                    <option value="JazzCash Direct">JazzCash Direct</option>
-                    <option value="EasyPaisa Wallet">EasyPaisa Wallet</option>
-                    <option value="Stripe Online">Stripe Card</option>
-                    <option value="Meezan Direct">Meezan Direct</option>
+                    @for (gw of scopedSchoolPaymentGateways; track gw.id) {
+                      <option [value]="gw.id">{{ gw.displayName }}</option>
+                    }
+                  </select>
+                </div>
+
+                <div class="flex items-center gap-1.5">
+                  <span class="text-[11px] font-bold text-slate-500">Status:</span>
+                  <select [(ngModel)]="selectedPaymentStatusFilter" (ngModelChange)="currentPage['payment_gateway'] = 1"
+                    class="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700 focus:outline-indigo-600 cursor-pointer shadow-2xs">
+                    <option value="All">All Statuses</option>
+                    <option value="PENDING_VERIFICATION">Pending Verification</option>
+                    <option value="VERIFIED">Verified</option>
+                    <option value="SETTLED">Settled</option>
+                    <option value="REJECTED">Rejected</option>
                   </select>
                 </div>
 
@@ -8921,58 +9046,104 @@
             <!-- Online Fee Transactions Table -->
             <div class="rounded-2xl scs-surface-3d overflow-hidden">
               <div data-scs-table-scroll="1" class="w-full overflow-x-auto custom-scrollbar">
-                <table appSchoolTable="owner_payment_gateway" tableTitle="Online Fee Collection Stream" [canAddRow]="true" addRowLabel="Collect Online Fee" class="w-max min-w-full text-left border-collapse text-xs tabular-nums">
+                <table appSchoolTable="owner_payment_gateway" tableTitle="Online Fee &amp; Deposit Ledger" [canAddRow]="true" addRowLabel="Collect Online Fee" class="w-max min-w-full text-left border-collapse text-xs tabular-nums">
                   <thead class="bg-white text-slate-600 uppercase font-black text-[10px] border-b border-slate-200 select-none">
                     <tr>
-                      <th class="px-4 py-3.5 whitespace-nowrap">Transaction Ref</th>
-                      <th class="px-4 py-3.5 whitespace-nowrap">Student / Particulars</th>
-                      <th class="px-4 py-3.5 whitespace-nowrap">Class</th>
-                      <th class="px-4 py-3.5 whitespace-nowrap">Payment Method</th>
-                      <th class="px-4 py-3.5 whitespace-nowrap">Amount Paid</th>
-                      <th class="px-4 py-3.5 whitespace-nowrap">Verification Status</th>
+                      <th class="px-4 py-3.5 whitespace-nowrap">Deposit Date &amp; TXN / Challan</th>
+                      <th class="px-4 py-3.5 whitespace-nowrap">Student &amp; Depositor</th>
+                      <th class="px-4 py-3.5 whitespace-nowrap">Bank / Wallet &amp; Proof TID</th>
+                      <th class="px-4 py-3.5 whitespace-nowrap">Slip Screenshot</th>
+                      <th class="px-4 py-3.5 whitespace-nowrap">Deposit Breakdown</th>
+                      <th class="px-4 py-3.5 whitespace-nowrap">Verification &amp; Receipt</th>
                       <th class="px-4 py-3.5 text-right whitespace-nowrap">Actions</th>
                     </tr>
                   </thead>
                 <tbody class="divide-y divide-slate-100 font-medium bg-white">
-                  @for (f of getPaginatedItems(filteredPaymentGateway, 'payment_gateway'); track f.id) {
-                    <tr [attr.data-row-key]="f.id" class="hover:bg-slate-50/70 transition-colors">
-                      <td class="px-4 py-3.5 font-mono font-bold text-slate-600">{{ f.challanNo }}</td>
+                  @for (tx of getPaginatedItems(filteredSchoolPaymentTransactions, 'payment_gateway'); track tx.id) {
+                    <tr [attr.data-row-key]="tx.id" class="hover:bg-slate-50/70 transition-colors">
                       <td class="px-4 py-3.5">
-                        <p class="font-black text-slate-900">{{ f.studentName || 'Enrolled Student' }}</p>
-                        <p class="text-[10px] text-slate-400 font-mono mt-0.5">{{ f.title }}</p>
+                        <p class="font-mono font-black text-slate-800">{{ tx.txnRef }}</p>
+                        <p class="font-mono text-[10px] text-indigo-700 font-bold">Challan: {{ tx.challanNo }}</p>
+                        <p class="text-[10px] text-slate-400 mt-0.5">{{ formatTxnDate(tx.createdAt) }}</p>
                       </td>
-                      <td class="px-4 py-3.5 font-bold text-slate-700">{{ f.grade || 'Class 10-A' }}</td>
                       <td class="px-4 py-3.5">
-                        <span class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/80">
-                          {{ f.category || 'JazzCash Direct' }}
+                        <p class="font-black text-slate-900">{{ tx.studentName || 'Enrolled Student' }} <span class="text-[10px] font-bold text-slate-500">({{ tx.grade || 'Campus' }} · #{{ tx.rollNo || '—' }})</span></p>
+                        <p class="text-[10px] text-slate-600 mt-0.5">
+                          <span class="px-1.5 py-0.5 rounded bg-slate-100 font-black uppercase text-[9px] text-slate-700">{{ tx.submittedByRole || 'portal' }}</span>
+                          {{ tx.payerAccountTitle || tx.submittedByName || 'Guardian / Student' }}
+                          @if (tx.payerPhone) {
+                            <span class="font-mono text-slate-500"> · {{ tx.payerPhone }}</span>
+                          }
+                        </p>
+                      </td>
+                      <td class="px-4 py-3.5">
+                        <span class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/80 inline-block">
+                          {{ tx.gatewayName }}
                         </span>
+                        <p class="text-[10px] font-mono text-slate-600 mt-1">TID: {{ tx.proofReference || '—' }}</p>
+                        @if (tx.proofNotes) {
+                          <p class="text-[10px] text-slate-400 max-w-[190px] truncate" [title]="tx.proofNotes">{{ tx.proofNotes }}</p>
+                        }
                       </td>
-                      <td class="px-4 py-3.5 font-mono font-black text-emerald-600">PKR {{ formatCurrency(f.amount) }}</td>
                       <td class="px-4 py-3.5">
-                        <button (click)="togglePaymentStatus(f)" title="Click to toggle status" class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase cursor-pointer transition-all hover:scale-105"
-                          [class]="f.status === 'Verified' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-amber-100 text-amber-800 border border-amber-200'">
-                          {{ f.status }}
-                        </button>
+                        @if (tx.proofScreenshot) {
+                          <button type="button" (click)="openSlipScreenshotModal(tx)" class="inline-flex items-center gap-2 p-1 pr-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 font-bold text-[10px] cursor-pointer transition-colors">
+                            <img [src]="tx.proofScreenshot" alt="Deposit slip thumbnail" referrerpolicy="no-referrer" class="w-8 h-8 rounded-lg object-cover border border-emerald-200 bg-white">
+                            <span>View Slip</span>
+                          </button>
+                        } @else {
+                          <span class="text-[10px] font-bold text-slate-400">No Image</span>
+                        }
+                      </td>
+                      <td class="px-4 py-3.5 font-mono">
+                        <p class="font-black text-emerald-700">PKR {{ formatCurrency(tx.totalAmount) }}</p>
+                        <p class="text-[10px] text-slate-500">Base: {{ formatCurrency(tx.baseAmount) }}</p>
+                        @if (tx.gatewayFee > 0) {
+                          <p class="text-[10px] text-amber-700">Fee: +{{ formatCurrency(tx.gatewayFee) }}</p>
+                        }
+                      </td>
+                      <td class="px-4 py-3.5">
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase inline-block" [class]="getTxnStatusBadgeClass(tx.status)">
+                          {{ tx.status }}
+                        </span>
+                        @if (tx.verifiedBy) {
+                          <p class="text-[10px] text-slate-500 mt-0.5">{{ tx.verifiedBy }}</p>
+                        }
+                        @if (tx.linkedFeeId) {
+                          <p class="text-[10px] font-mono text-emerald-700">Receipt: {{ tx.linkedFeeId }}</p>
+                        }
                       </td>
                       <td class="px-4 py-3.5 text-right">
                         <div class="flex items-center justify-end gap-1.5">
-                          <button (click)="openOwnerRecordCrudModal('finance', 'edit', f)" title="Edit Transaction" class="p-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 cursor-pointer transition-colors">
-                            <lucide-icon [name]="'pencil'" class="w-3.5 h-3.5 text-indigo-600"></lucide-icon>
-                          </button>
-                          <button (click)="openFeeChallanVoucher(scopedActiveStudents[0] || null)" title="Print Fee Voucher" class="p-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 cursor-pointer transition-colors">
+                          @if (tx.status === 'PENDING_VERIFICATION') {
+                            <button type="button" (click)="verifyGatewayTransaction(tx, 'VERIFIED')" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] cursor-pointer">
+                              Verify &amp; Receipt
+                            </button>
+                            <button type="button" (click)="verifyGatewayTransaction(tx, 'REJECTED')" class="px-2 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-[10px] cursor-pointer">
+                              Reject
+                            </button>
+                          }
+                          @if (isOwnerPortal) {
+                            <button type="button" (click)="openEditGatewayTxnModal(tx)" title="Edit Transaction" class="p-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 cursor-pointer transition-colors">
+                              <lucide-icon [name]="'pencil'" class="w-3.5 h-3.5 text-indigo-600"></lucide-icon>
+                            </button>
+                          }
+                          <button type="button" (click)="printGatewayTransactionVoucher(tx)" title="Print Fee Voucher" class="p-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 cursor-pointer transition-colors">
                             <lucide-icon [name]="'printer'" class="w-3.5 h-3.5"></lucide-icon>
                           </button>
-                          <button (click)="deletePaymentRecord(f)" title="Delete Payment Record" class="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 cursor-pointer transition-colors">
-                            <lucide-icon [name]="'trash-2'" class="w-3.5 h-3.5"></lucide-icon>
-                          </button>
+                          @if (isOwnerPortal) {
+                            <button type="button" (click)="deleteGatewayTransaction(tx)" title="Delete Payment Record" class="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 cursor-pointer transition-colors">
+                              <lucide-icon [name]="'trash-2'" class="w-3.5 h-3.5"></lucide-icon>
+                            </button>
+                          }
                         </div>
                       </td>
                     </tr>
                   }
-                  @if (filteredPaymentGateway.length === 0) {
+                  @if (filteredSchoolPaymentTransactions.length === 0) {
                     <tr>
                       <td colspan="7" class="px-4 py-8 text-center text-slate-400 font-bold">
-                        No online fee collection records found matching your search.
+                        No payment gateway transactions found matching your search or filter.
                       </td>
                     </tr>
                   }
@@ -8984,7 +9155,7 @@
             <!-- Standardized High-Fidelity Pagination Bar with Numbers -->
             <div class="flex flex-col sm:flex-row items-center justify-between text-xs pt-2 gap-3">
               <span class="text-slate-500 font-medium tabular-nums">
-                Showing <span class="font-bold text-slate-900">{{ min(filteredPaymentGateway.length, (currentPage['payment_gateway'] - 1) * pageSize + 1) }}</span> - <span class="font-bold text-slate-900">{{ min(filteredPaymentGateway.length, currentPage['payment_gateway'] * pageSize) }}</span> of <span class="font-bold text-slate-900">{{ filteredPaymentGateway.length }}</span> transactions
+                Showing <span class="font-bold text-slate-900">{{ min(filteredSchoolPaymentTransactions.length, (currentPage['payment_gateway'] - 1) * pageSize + 1) }}</span> - <span class="font-bold text-slate-900">{{ min(filteredSchoolPaymentTransactions.length, currentPage['payment_gateway'] * pageSize) }}</span> of <span class="font-bold text-slate-900">{{ filteredSchoolPaymentTransactions.length }}</span> transactions
               </span>
               <div class="flex items-center gap-4 sm:gap-6 select-none">
                 <button
@@ -8996,12 +9167,12 @@
                   <mat-icon>chevron_left</mat-icon>
                 </button>
                 <span class="font-semibold text-slate-500 text-sm tabular-nums whitespace-nowrap">
-                  Page <span class="text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200 mx-1 font-bold">{{ currentPage['payment_gateway'] }}</span> of {{ getTotalPages(filteredPaymentGateway.length) }}
+                  Page <span class="text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200 mx-1 font-bold">{{ currentPage['payment_gateway'] }}</span> of {{ getTotalPages(filteredSchoolPaymentTransactions.length) }}
                 </span>
                 <button
                   type="button"
-                  (click)="nextPageTab('payment_gateway', filteredPaymentGateway.length)"
-                  [disabled]="currentPage['payment_gateway'] >= getTotalPages(filteredPaymentGateway.length)"
+                  (click)="nextPageTab('payment_gateway', filteredSchoolPaymentTransactions.length)"
+                  [disabled]="currentPage['payment_gateway'] >= getTotalPages(filteredSchoolPaymentTransactions.length)"
                   aria-label="Next page"
                   class="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 shadow-xs hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer">
                   <mat-icon>chevron_right</mat-icon>
@@ -14851,8 +15022,83 @@
             <lucide-icon [name]="'shield-check'" class="w-5 h-5 text-indigo-600 shrink-0 mt-0.5"></lucide-icon>
             <div class="text-xs space-y-0.5">
               <strong class="font-black text-indigo-950">Administrative Access Boundary Note:</strong>
-              <p class="text-slate-600">The Principal Portal has policy supervision and concession authorization clearance. Balance sheets, payroll disbursements, and institutional bank accounts remain strictly managed by School Owner / Finance ERP.</p>
+              <p class="text-slate-600">The Principal Portal has policy supervision, digital slip verification, and concession authorization clearance. Balance sheets, payroll disbursements, and Payment Gateway account setup remain strictly managed by School Owner.</p>
             </div>
+          </div>
+
+          <!-- Pending Online Payment Slips Verification Queue (Campus Scoped) -->
+          <div class="apple-card scs-surface-3d rounded-2xl p-4 sm:p-5 space-y-3">
+            <div class="flex items-center justify-between flex-wrap gap-2">
+              <div>
+                <h3 class="font-black text-slate-900 text-sm flex items-center gap-2">
+                  <lucide-icon [name]="'credit-card'" class="w-4 h-4 text-emerald-600"></lucide-icon>
+                  <span>Online Payment Slips Awaiting Verification ({{ pendingVerificationGatewayTransactions.length }})</span>
+                </h3>
+                <p class="text-[11px] text-slate-500">Review Raast / JazzCash / Easypaisa / Bank transfer TIDs submitted by students &amp; parents in {{ activeScopeSummaryLabel }}.</p>
+              </div>
+              <button type="button" (click)="refreshPaymentGatewayData()" class="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold text-xs cursor-pointer">
+                Refresh Queue
+              </button>
+            </div>
+            @if (pendingVerificationGatewayTransactions.length > 0) {
+              <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                <table class="w-full text-left text-xs">
+                  <thead class="bg-slate-50 text-slate-600 uppercase font-black text-[10px] border-b border-slate-200">
+                    <tr>
+                      <th class="px-3 py-2.5">Date &amp; TXN / Challan</th>
+                      <th class="px-3 py-2.5">Student &amp; Depositor</th>
+                      <th class="px-3 py-2.5">PK Channel &amp; Proof TID</th>
+                      <th class="px-3 py-2.5">Slip Image</th>
+                      <th class="px-3 py-2.5 text-right">Amount</th>
+                      <th class="px-3 py-2.5 text-right">Verification</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100 bg-white">
+                    @for (tx of pendingVerificationGatewayTransactions; track tx.id) {
+                      <tr class="hover:bg-slate-50/70">
+                        <td class="px-3 py-2.5">
+                          <span class="font-mono font-bold text-slate-800 block">{{ tx.txnRef }} · {{ tx.challanNo }}</span>
+                          <span class="text-[10px] text-slate-400">{{ formatTxnDate(tx.createdAt) }}</span>
+                        </td>
+                        <td class="px-3 py-2.5">
+                          <span class="font-bold text-slate-900 block">{{ tx.studentName }} <span class="text-slate-500 font-normal">({{ tx.grade }})</span></span>
+                          <span class="text-[10px] text-slate-500 uppercase">{{ tx.submittedByRole || 'portal' }} · {{ tx.payerAccountTitle || tx.submittedByName || tx.payerPhone || '—' }}</span>
+                        </td>
+                        <td class="px-3 py-2.5">
+                          <span class="font-bold text-indigo-700 block">{{ tx.gatewayName }}</span>
+                          <span class="font-mono text-[10px] text-slate-600">TID: {{ tx.proofReference || '—' }}</span>
+                        </td>
+                        <td class="px-3 py-2.5">
+                          @if (tx.proofScreenshot) {
+                            <button type="button" (click)="openSlipScreenshotModal(tx)" class="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 font-bold text-[10px] cursor-pointer">
+                              <img [src]="tx.proofScreenshot" alt="Deposit slip thumbnail" referrerpolicy="no-referrer" class="w-6 h-6 rounded object-cover border border-emerald-200">
+                              <span>View Slip</span>
+                            </button>
+                          } @else {
+                            <span class="text-[10px] text-slate-400 font-medium">No Image</span>
+                          }
+                        </td>
+                        <td class="px-3 py-2.5 text-right font-mono font-black text-emerald-700">PKR {{ formatCurrency(tx.totalAmount) }}</td>
+                        <td class="px-3 py-2.5 text-right">
+                          <div class="flex items-center justify-end gap-1.5">
+                            <button type="button" (click)="verifyGatewayTransaction(tx, 'VERIFIED')" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] cursor-pointer">
+                              Verify &amp; Receipt
+                            </button>
+                            <button type="button" (click)="verifyGatewayTransaction(tx, 'REJECTED')" class="px-2 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-[10px] cursor-pointer">
+                              Reject
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            } @else {
+              <p class="text-xs text-slate-500 font-medium bg-slate-50 rounded-xl p-3 border border-slate-200/70">
+                All submitted digital payment slips in your campus scope have been reconciled.
+              </p>
+            }
           </div>
 
           <!-- Stage-wise Collection Rates -->
@@ -18226,58 +18472,230 @@
         </div>
       }
 
-      <!-- STUDENT TAB 4: FEE STATUS & CHALLAN (UNIFIED BORDERLESS SINGLE CARD) -->
+      <!-- STUDENT TAB 4: FEE STATUS & CHALLAN (UNIFIED BORDERLESS SINGLE CARD + ONLINE PAY) -->
       @if (studentTab === 'fee') {
-        <div class="p-6 sm:p-7 rounded-2xl scs-surface-3d space-y-5">
-          <div class="flex items-start sm:items-center justify-between flex-wrap gap-4">
-            <div class="space-y-1">
+        <div class="space-y-5">
+          <div class="p-6 sm:p-7 rounded-2xl scs-surface-3d space-y-5">
+            <div class="flex items-start sm:items-center justify-between flex-wrap gap-4">
+              <div class="space-y-1">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200">STUDENT FEE CHALLAN</span>
+                  <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full"
+                    [class]="studentFeeClearance.isPaid ? 'bg-emerald-100 text-emerald-800' : (currentStudentProfile?.feeStatus === 'Overdue' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800')">
+                    {{ studentFeeClearance.isPaid ? 'PAID' : (studentFeeClearance.hasPendingSlip ? 'SLIP UNDER REVIEW' : (currentStudentProfile?.feeStatus || 'Pending')) }}
+                  </span>
+                </div>
+                <h3 class="text-lg font-black text-slate-950">Tuition Fee Clearance &amp; Pakistan Digital Checkout</h3>
+                <p class="text-xs text-slate-500">{{ schoolName }} · {{ primaryVoucherBankGateway?.bankName || 'Meezan Bank / HBL' }} &amp; Owner-Approved PK Gateways</p>
+              </div>
               <div class="flex items-center gap-2 flex-wrap">
-                <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200">STUDENT FEE CHALLAN</span>
-                <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full"
-                  [class]="currentStudentProfile?.feeStatus === 'Overdue' ? 'bg-rose-100 text-rose-800' : (currentStudentProfile?.feeStatus === 'Pending' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800')">
-                  {{ currentStudentProfile?.feeStatus || 'Paid' }}
+                @if (studentFeeClearance.isPaid) {
+                  <span class="px-4 py-2.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 font-extrabold text-xs flex items-center gap-1.5">
+                    <lucide-icon [name]="'check-circle-2'" class="w-3.5 h-3.5 text-emerald-600"></lucide-icon>
+                    <span>Already Paid</span>
+                  </span>
+                } @else if (schoolGatewaySettings.allowOnlineStudentPayment && studentEnabledPaymentGateways.length > 0) {
+                  <button type="button" (click)="openPortalOnlineCheckout('student')" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs cursor-pointer shadow-md shadow-emerald-600/20 flex items-center gap-1.5">
+                    <lucide-icon [name]="'credit-card'" class="w-3.5 h-3.5"></lucide-icon>
+                    <span>Pay Online / Upload Slip</span>
+                  </button>
+                }
+                <button type="button" (click)="printStudentFeeChallan()" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs cursor-pointer shadow-md shadow-indigo-600/20 flex items-center gap-1.5">
+                  <lucide-icon [name]="'printer'" class="w-3.5 h-3.5"></lucide-icon>
+                  <span>Download 3-Copy Bank Challan</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Cross-Portal Paid / Pending Slip Sync Notice -->
+            @if (studentFeeClearance.isPaid) {
+              <div class="rounded-xl p-4 bg-emerald-50/90 border border-emerald-200 flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-start gap-3">
+                  <lucide-icon [name]="'check-circle-2'" class="w-5 h-5 text-emerald-600 shrink-0 mt-0.5"></lucide-icon>
+                  <div class="text-xs space-y-0.5">
+                    <p class="font-black text-emerald-950">Fee Paid &amp; Synchronized Across School Portals</p>
+                    <p class="text-emerald-800">
+                      {{ studentFeeClearance.paidByLabel }}
+                      @if (studentFeeClearance.verifiedTxn?.txnRef || studentFeeClearance.verifiedReceipt?.receiptNo) {
+                        · Ref: <span class="font-mono font-bold">{{ studentFeeClearance.verifiedTxn?.txnRef || studentFeeClearance.verifiedReceipt?.receiptNo }}</span>
+                      }
+                    </p>
+                  </div>
+                </div>
+                @if (studentFeeClearance.verifiedTxn?.proofScreenshot) {
+                  <button type="button" (click)="openSlipScreenshotModal(studentFeeClearance.verifiedTxn!)" class="px-3 py-1.5 rounded-lg bg-white border border-emerald-300 text-emerald-800 font-bold text-xs cursor-pointer">
+                    View Deposit Slip
+                  </button>
+                }
+              </div>
+            } @else if (studentFeeClearance.hasPendingSlip && studentFeeClearance.pendingSlipTxn; as pendingTx) {
+              <div class="rounded-xl p-4 bg-amber-50/90 border border-amber-200 flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-start gap-3">
+                  <lucide-icon [name]="'clock'" class="w-5 h-5 text-amber-600 shrink-0 mt-0.5"></lucide-icon>
+                  <div class="text-xs space-y-0.5">
+                    <p class="font-black text-amber-950">Payment Slip Submitted ({{ pendingTx.txnRef }}) — Awaiting School Accounts Verification</p>
+                    <p class="text-amber-800">
+                      Submitted by <span class="uppercase font-bold">{{ pendingTx.submittedByRole || 'portal' }}</span> ({{ pendingTx.payerAccountTitle || pendingTx.submittedByName }}) via {{ pendingTx.gatewayName }} · PKR {{ formatCurrency(pendingTx.totalAmount) }}
+                    </p>
+                  </div>
+                </div>
+                @if (pendingTx.proofScreenshot) {
+                  <button type="button" (click)="openSlipScreenshotModal(pendingTx)" class="px-3 py-1.5 rounded-lg bg-white border border-amber-300 text-amber-900 font-bold text-xs cursor-pointer">
+                    View Uploaded Slip
+                  </button>
+                }
+              </div>
+            }
+
+            <!-- Student & Bank Particulars (Borderless inside the same single card) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs">
+              <div class="space-y-1.5">
+                <div class="flex justify-between"><span class="text-slate-500 font-bold">Student Name:</span><span class="font-black text-slate-950">{{ currentStudentProfile?.name || 'Zayan Ahmed Khan' }}</span></div>
+                <div class="flex justify-between"><span class="text-slate-500 font-bold">Class &amp; Section:</span><span class="font-black text-indigo-700">{{ currentStudentProfile?.grade || 'Class 10-A' }} ({{ currentStudentProfile?.section || 'A' }})</span></div>
+                <div class="flex justify-between"><span class="text-slate-500 font-bold">Roll Number:</span><span class="font-mono font-black text-slate-950">{{ currentStudentProfile?.rollNo || '1001' }}</span></div>
+                <div class="flex justify-between"><span class="text-slate-500 font-bold">Challan &amp; 1Bill Ref:</span><span class="font-mono font-black text-slate-950">CH-2026-{{ currentStudentProfile?.rollNo || '1001' }}</span></div>
+              </div>
+
+              <div class="space-y-1.5">
+                <div class="flex justify-between"><span class="text-slate-500 font-bold">Monthly Tuition Fee:</span><span class="font-mono font-black text-slate-950">PKR {{ formatCurrency(studentMonthlyTuition) }}</span></div>
+                <div class="flex justify-between"><span class="text-slate-500 font-bold">Science &amp; IT Lab Fund:</span><span class="font-mono font-bold text-slate-800">PKR 1,500</span></div>
+                <div class="flex justify-between"><span class="text-slate-500 font-bold">Exam &amp; Transcripts Fee:</span><span class="font-mono font-bold text-slate-800">PKR 1,200</span></div>
+                <div class="flex justify-between"><span class="text-slate-500 font-bold">Sports &amp; Activity Fund:</span><span class="font-mono font-bold text-slate-800">PKR 800</span></div>
+              </div>
+            </div>
+
+            <!-- Single Unified Highlight Strip -->
+            <div class="rounded-xl p-4 bg-white border border-slate-200/80 flex flex-wrap items-center justify-between gap-4">
+              <div class="flex items-center gap-3">
+                <lucide-icon [name]="studentFeeClearance.isPaid ? 'check-circle-2' : (currentStudentProfile?.feeStatus === 'Overdue' ? 'alert-circle' : 'clock')" class="w-5 h-5" [class]="studentFeeClearance.isPaid ? 'text-emerald-600' : (currentStudentProfile?.feeStatus === 'Overdue' ? 'text-rose-600' : 'text-amber-600')"></lucide-icon>
+                <div>
+                  <h4 class="font-black text-slate-950 text-xs">
+                    {{ primaryVoucherBankGateway?.bankName || 'Meezan Bank / HBL' }} · {{ primaryVoucherBankGateway?.accountTitle || schoolName }}
+                  </h4>
+                  <p class="text-[11px] text-slate-600 font-medium font-mono">
+                    A/C: {{ primaryVoucherBankGateway?.accountNumber || '0102-0105829102' }}
+                    @if (primaryVoucherBankGateway?.iban) {
+                      · IBAN: {{ primaryVoucherBankGateway?.iban }}
+                    }
+                    @if (primaryVoucherOneBillGateway) {
+                      · 1Bill: {{ schoolGatewaySettings.oneBillPrefix || '10089' }}-{{ currentStudentProfile?.rollNo || '1001' }}
+                    }
+                  </p>
+                </div>
+              </div>
+              <div class="text-right">
+                <span class="text-[10px] font-black uppercase text-slate-500 block">
+                  {{ studentFeeClearance.isPaid ? 'Remaining Payable (Paid)' : 'Remaining Payable' }}
                 </span>
-              </div>
-              <h3 class="text-lg font-black text-slate-950">Tuition Fee Clearance &amp; Bank Challan</h3>
-              <p class="text-xs text-slate-500">{{ schoolName }} · Authorized Meezan Bank / HBL Deposit Ledger</p>
-            </div>
-            <button (click)="printStudentFeeChallan()" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs cursor-pointer shadow-md shadow-indigo-600/20 flex items-center gap-1.5">
-              <lucide-icon [name]="'printer'" class="w-3.5 h-3.5"></lucide-icon>
-              <span>Download 3-Copy Bank Challan</span>
-            </button>
-          </div>
-
-          <!-- Student & Bank Particulars (Borderless inside the same single card) -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs">
-            <div class="space-y-1.5">
-              <div class="flex justify-between"><span class="text-slate-500 font-bold">Student Name:</span><span class="font-black text-slate-950">{{ currentStudentProfile?.name || 'Zayan Ahmed Khan' }}</span></div>
-              <div class="flex justify-between"><span class="text-slate-500 font-bold">Class &amp; Section:</span><span class="font-black text-indigo-700">{{ currentStudentProfile?.grade || 'Class 10-A' }} ({{ currentStudentProfile?.section || 'A' }})</span></div>
-              <div class="flex justify-between"><span class="text-slate-500 font-bold">Roll Number:</span><span class="font-mono font-black text-slate-950">{{ currentStudentProfile?.rollNo || '1001' }}</span></div>
-              <div class="flex justify-between"><span class="text-slate-500 font-bold">Challan Reference:</span><span class="font-mono font-black text-slate-950">CH-2026-{{ currentStudentProfile?.rollNo || '1001' }}</span></div>
-            </div>
-
-            <div class="space-y-1.5">
-              <div class="flex justify-between"><span class="text-slate-500 font-bold">Monthly Tuition Fee:</span><span class="font-mono font-black text-slate-950">PKR {{ formatCurrency(studentMonthlyTuition) }}</span></div>
-              <div class="flex justify-between"><span class="text-slate-500 font-bold">Science &amp; IT Lab Fund:</span><span class="font-mono font-bold text-slate-800">PKR 1,500</span></div>
-              <div class="flex justify-between"><span class="text-slate-500 font-bold">Exam &amp; Transcripts Fee:</span><span class="font-mono font-bold text-slate-800">PKR 1,200</span></div>
-              <div class="flex justify-between"><span class="text-slate-500 font-bold">Sports &amp; Activity Fund:</span><span class="font-mono font-bold text-slate-800">PKR 800</span></div>
-            </div>
-          </div>
-
-          <!-- Single Unified Highlight Strip -->
-          <div class="rounded-xl p-4 bg-white border border-slate-200/80 flex flex-wrap items-center justify-between gap-4">
-            <div class="flex items-center gap-3">
-              <lucide-icon [name]="currentStudentProfile?.feeStatus === 'Overdue' ? 'alert-circle' : 'check-circle-2'" class="w-5 h-5" [class]="currentStudentProfile?.feeStatus === 'Overdue' ? 'text-rose-600' : 'text-emerald-600'"></lucide-icon>
-              <div>
-                <h4 class="font-black text-slate-950 text-xs">
-                  {{ currentStudentProfile?.feeStatus === 'Overdue' ? 'Fee Payment Due — Deposit at Meezan Bank / HBL' : 'Tuition Fee Account Valid Through November 10, 2026' }}
-                </h4>
-                <p class="text-[11px] text-slate-600 font-medium">A/C: 0102-0105829102 · IBAN: PK36MEZN0001020105829102</p>
+                <span class="font-mono font-black text-base" [class]="studentFeeClearance.isPaid ? 'text-emerald-700' : 'text-indigo-950'">
+                  PKR {{ formatCurrency(studentFeeClearance.remainingPayable) }}
+                </span>
+                <span class="block text-[10px] text-slate-400 font-mono">Monthly Challan: PKR {{ formatCurrency(studentFeeClearance.monthlyChallanTotal) }}</span>
               </div>
             </div>
-            <div class="text-right">
-              <span class="text-[10px] font-black uppercase text-slate-500 block">Total Challan Amount</span>
-              <span class="font-mono font-black text-base text-indigo-950">PKR {{ formatCurrency(studentChallanWithinDueTotal) }}</span>
+
+            <!-- Accepted Pakistan Payment Channels Strip -->
+            @if (studentEnabledPaymentGateways.length > 0) {
+              <div class="space-y-2.5">
+                <h4 class="text-xs font-black uppercase tracking-wider text-slate-600">Accepted Pakistan Payment Channels (Owner Configured)</h4>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  @for (gw of studentEnabledPaymentGateways; track gw.id) {
+                    <div class="rounded-xl p-3.5 bg-white border border-slate-200/90 space-y-1.5 flex flex-col justify-between">
+                      <div class="space-y-1">
+                        <div class="flex items-center justify-between gap-2">
+                          <span class="text-xs font-black text-slate-900">{{ gw.displayName }}</span>
+                          @if (gw.isDefault) {
+                            <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-emerald-100 text-emerald-800">RECOMMENDED</span>
+                          }
+                        </div>
+                        <p class="text-[11px] text-slate-600">{{ gw.instructions }}</p>
+                        @if (gw.raastId || gw.accountNumber || gw.tillId || gw.billerCode) {
+                          <p class="text-[10px] font-mono font-bold text-indigo-800 bg-indigo-50/70 px-2 py-1 rounded-md truncate">
+                            {{ gw.raastId || gw.iban || gw.accountNumber || gw.tillId || gw.billerCode }}
+                          </p>
+                        }
+                      </div>
+                      <div class="flex items-center justify-between gap-2 pt-1.5">
+                        @if (gw.raastId || gw.iban || gw.accountNumber || gw.tillId) {
+                          <button type="button" (click)="copyGatewayDetail(gw.displayName, gw.raastId || gw.iban || gw.accountNumber || gw.tillId)" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[10px] cursor-pointer">
+                            Copy ID
+                          </button>
+                        }
+                        @if (studentFeeClearance.isPaid) {
+                          <span class="ml-auto px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 font-bold text-[10px]">Paid</span>
+                        } @else if (schoolGatewaySettings.allowOnlineStudentPayment) {
+                          <button type="button" (click)="openPortalOnlineCheckout('student', gw.id)" class="ml-auto px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] cursor-pointer">
+                            Pay with {{ gw.displayName }}
+                          </button>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- Student Online Payment & Deposit History -->
+          <div class="apple-card scs-surface-3d rounded-2xl p-5 space-y-3">
+            <h4 class="font-black text-slate-900 text-sm">My Payment &amp; Deposit Record History</h4>
+            <div class="overflow-x-auto border border-slate-200 rounded-xl">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-white text-slate-600 uppercase font-black text-[10px] border-b border-slate-200">
+                  <tr>
+                    <th class="px-3 py-2.5">Deposit Date &amp; TXN</th>
+                    <th class="px-3 py-2.5">Paid By / Depositor</th>
+                    <th class="px-3 py-2.5">Channel &amp; Proof TID</th>
+                    <th class="px-3 py-2.5">Slip Image</th>
+                    <th class="px-3 py-2.5">Deposit Amount</th>
+                    <th class="px-3 py-2.5">Status</th>
+                    <th class="px-3 py-2.5 text-right">Voucher</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 bg-white">
+                  @for (tx of studentPortalPaymentTransactions; track tx.id) {
+                    <tr>
+                      <td class="px-3 py-2.5">
+                        <span class="font-mono font-bold text-slate-800 block">{{ tx.txnRef }}</span>
+                        <span class="text-[10px] text-slate-400">{{ formatTxnDate(tx.createdAt) }}</span>
+                      </td>
+                      <td class="px-3 py-2.5">
+                        <span class="font-bold text-slate-800 block">{{ tx.payerAccountTitle || tx.submittedByName || 'Guardian / Student' }}</span>
+                        <span class="text-[10px] uppercase text-slate-500">{{ tx.submittedByRole || 'portal' }}</span>
+                      </td>
+                      <td class="px-3 py-2.5">
+                        <span class="font-bold text-indigo-700 block">{{ tx.gatewayName }}</span>
+                        <span class="font-mono text-[10px] text-slate-600">{{ tx.proofReference || '—' }}</span>
+                      </td>
+                      <td class="px-3 py-2.5">
+                        @if (tx.proofScreenshot) {
+                          <button type="button" (click)="openSlipScreenshotModal(tx)" class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 font-bold text-[10px] cursor-pointer">
+                            View Slip
+                          </button>
+                        } @else {
+                          <span class="text-[10px] text-slate-400">—</span>
+                        }
+                      </td>
+                      <td class="px-3 py-2.5 font-mono font-black text-emerald-700">PKR {{ formatCurrency(tx.totalAmount) }}</td>
+                      <td class="px-3 py-2.5">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase" [class]="getTxnStatusBadgeClass(tx.status)">{{ tx.status }}</span>
+                      </td>
+                      <td class="px-3 py-2.5 text-right">
+                        <button type="button" (click)="printGatewayTransactionVoucher(tx)" class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 font-bold text-[10px] cursor-pointer">
+                          Challan
+                        </button>
+                      </td>
+                    </tr>
+                  }
+                  @if (studentPortalPaymentTransactions.length === 0) {
+                    <tr>
+                      <td colspan="7" class="px-3 py-6 text-center text-slate-400 font-bold">
+                        No online fee submissions recorded yet for {{ currentStudentProfile?.name || 'this student' }}.
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -19754,57 +20172,227 @@
         </div>
       }
 
-      <!-- PARENT TAB 4: FEE (UNIFIED BORDERLESS SINGLE CARD) -->
+      <!-- PARENT TAB 4: FEE (UNIFIED BORDERLESS SINGLE CARD + ONLINE CHECKOUT) -->
       @if (parentTab === 'fee') {
-        <div class="p-6 sm:p-7 rounded-2xl scs-surface-3d space-y-5">
-          <div class="flex items-start sm:items-center justify-between flex-wrap gap-4">
-            <div class="space-y-1">
-              <div class="flex items-center gap-2 flex-wrap">
-                <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200">WARD FEE CHALLAN LEDGER</span>
-                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase"
-                  [class]="selectedParentChild?.feeStatus === 'Paid' ? 'bg-emerald-100 text-emerald-800' : (selectedParentChild?.feeStatus === 'Overdue' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800')">
-                  {{ selectedParentChild?.feeStatus || 'Pending' }}
-                </span>
+        <div class="space-y-5">
+          <div class="p-6 sm:p-7 rounded-2xl scs-surface-3d space-y-5">
+            <div class="flex items-start sm:items-center justify-between flex-wrap gap-4">
+              <div class="space-y-1">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200">WARD FEE CHALLAN LEDGER</span>
+                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase"
+                    [class]="parentChildFeeClearance.isPaid ? 'bg-emerald-100 text-emerald-800' : (selectedParentChild?.feeStatus === 'Overdue' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800')">
+                    {{ parentChildFeeClearance.isPaid ? 'PAID' : (parentChildFeeClearance.hasPendingSlip ? 'SLIP UNDER REVIEW' : (selectedParentChild?.feeStatus || 'Pending')) }}
+                  </span>
+                </div>
+                <h3 class="text-lg font-black text-slate-950">Monthly Tuition Fee &amp; Pakistan Online Fee Portal</h3>
+                <p class="text-xs text-slate-500">Fee voucher for {{ selectedParentChild?.name }} ({{ selectedParentChild?.grade }}). Verified by {{ schoolName }} finance desk.</p>
               </div>
-              <h3 class="text-lg font-black text-slate-950">Monthly Tuition Fee &amp; Bank Challan</h3>
-              <p class="text-xs text-slate-500">Fee voucher for {{ selectedParentChild?.name }} ({{ selectedParentChild?.grade }}). Verified by {{ schoolName }} finance desk.</p>
+              <div class="flex items-center gap-2 flex-wrap">
+                @if (parentChildFeeClearance.isPaid) {
+                  <span class="px-4 py-2.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 font-extrabold text-xs flex items-center gap-1.5">
+                    <lucide-icon [name]="'check-circle-2'" class="w-3.5 h-3.5 text-emerald-600"></lucide-icon>
+                    <span>Already Paid</span>
+                  </span>
+                } @else if (schoolGatewaySettings.allowOnlineParentPayment && parentEnabledPaymentGateways.length > 0) {
+                  <button type="button" (click)="openPortalOnlineCheckout('parent')" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs cursor-pointer shadow-md shadow-emerald-600/20 flex items-center gap-1.5">
+                    <lucide-icon [name]="'credit-card'" class="w-3.5 h-3.5"></lucide-icon>
+                    <span>Pay Ward Fee Online</span>
+                  </button>
+                }
+                <button type="button" (click)="printStudentFeeChallan()" class="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-extrabold text-xs cursor-pointer shadow-md shadow-purple-600/20 flex items-center gap-1.5">
+                  <lucide-icon [name]="'printer'" class="w-3.5 h-3.5"></lucide-icon>
+                  <span>Print 3-Copy Bank Challan</span>
+                </button>
+              </div>
             </div>
-            <button (click)="printStudentFeeChallan()" class="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-extrabold text-xs cursor-pointer shadow-md shadow-purple-600/20 flex items-center gap-1.5">
-              <lucide-icon [name]="'printer'" class="w-3.5 h-3.5"></lucide-icon>
-              <span>Print 3-Copy Bank Challan</span>
-            </button>
+
+            <!-- Cross-Portal Paid / Pending Slip Sync Notice -->
+            @if (parentChildFeeClearance.isPaid) {
+              <div class="rounded-xl p-4 bg-emerald-50/90 border border-emerald-200 flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-start gap-3">
+                  <lucide-icon [name]="'check-circle-2'" class="w-5 h-5 text-emerald-600 shrink-0 mt-0.5"></lucide-icon>
+                  <div class="text-xs space-y-0.5">
+                    <p class="font-black text-emerald-950">Ward Fee Paid &amp; Automatically Synced with Student Portal</p>
+                    <p class="text-emerald-800">
+                      {{ parentChildFeeClearance.paidByLabel }}
+                      @if (parentChildFeeClearance.verifiedTxn?.txnRef || parentChildFeeClearance.verifiedReceipt?.receiptNo) {
+                        · Ref: <span class="font-mono font-bold">{{ parentChildFeeClearance.verifiedTxn?.txnRef || parentChildFeeClearance.verifiedReceipt?.receiptNo }}</span>
+                      }
+                    </p>
+                  </div>
+                </div>
+                @if (parentChildFeeClearance.verifiedTxn?.proofScreenshot) {
+                  <button type="button" (click)="openSlipScreenshotModal(parentChildFeeClearance.verifiedTxn!)" class="px-3 py-1.5 rounded-lg bg-white border border-emerald-300 text-emerald-800 font-bold text-xs cursor-pointer">
+                    View Deposit Slip
+                  </button>
+                }
+              </div>
+            } @else if (parentChildFeeClearance.hasPendingSlip && parentChildFeeClearance.pendingSlipTxn; as pendingTx) {
+              <div class="rounded-xl p-4 bg-amber-50/90 border border-amber-200 flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-start gap-3">
+                  <lucide-icon [name]="'clock'" class="w-5 h-5 text-amber-600 shrink-0 mt-0.5"></lucide-icon>
+                  <div class="text-xs space-y-0.5">
+                    <p class="font-black text-amber-950">Deposit Slip Submitted ({{ pendingTx.txnRef }}) — Pending School Accounts Verification</p>
+                    <p class="text-amber-800">
+                      Submitted via {{ pendingTx.gatewayName }} · PKR {{ formatCurrency(pendingTx.totalAmount) }} (Once verified, both Parent &amp; Student portals mark Paid automatically)
+                    </p>
+                  </div>
+                </div>
+                @if (pendingTx.proofScreenshot) {
+                  <button type="button" (click)="openSlipScreenshotModal(pendingTx)" class="px-3 py-1.5 rounded-lg bg-white border border-amber-300 text-amber-900 font-bold text-xs cursor-pointer">
+                    View Uploaded Slip
+                  </button>
+                }
+              </div>
+            }
+
+            <!-- Child & Itemized Tuition Details (Borderless inside the same single card) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs">
+              <div class="space-y-1.5">
+                <div class="flex justify-between"><span class="text-slate-500 font-bold">Student Name:</span><span class="font-black text-slate-950">{{ selectedParentChild?.name }}</span></div>
+                <div class="flex justify-between"><span class="text-slate-500 font-bold">Father / Guardian:</span><span class="font-bold text-slate-900">{{ currentGuardianProfile?.name }}</span></div>
+                <div class="flex justify-between"><span class="text-slate-500 font-bold">Class &amp; Roll #:</span><span class="font-black text-indigo-700">{{ selectedParentChild?.grade }} · Roll #{{ selectedParentChild?.rollNo || '1001' }}</span></div>
+                <div class="flex justify-between"><span class="text-slate-500 font-bold">Challan / Receipt #:</span><span class="font-mono font-black text-slate-950">{{ selectedParentChild?.receiptNo || ('CH-2026-' + (selectedParentChild?.rollNo || '1001')) }}</span></div>
+              </div>
+
+              <div class="space-y-1.5">
+                <div class="flex justify-between"><span class="text-slate-500 font-bold">Monthly Tuition Fee:</span><span class="font-mono font-black text-slate-950">PKR {{ formatCurrency(parentChildMonthlyTuition) }}</span></div>
+                <div class="flex justify-between"><span class="text-slate-500 font-bold">Science &amp; IT Lab Fund:</span><span class="font-mono font-bold text-slate-800">PKR 1,500</span></div>
+                <div class="flex justify-between"><span class="text-slate-500 font-bold">Exam &amp; Transcripts Fee:</span><span class="font-mono font-bold text-slate-800">PKR 1,200</span></div>
+                <div class="flex justify-between"><span class="text-slate-500 font-bold">Sports &amp; Activity Fund:</span><span class="font-mono font-bold text-slate-800">PKR 800</span></div>
+              </div>
+            </div>
+
+            <!-- Single Unified Highlight Strip -->
+            <div class="rounded-xl p-4 bg-white border border-slate-200/80 flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <p class="text-xs font-black text-slate-950">
+                  Fee Status: {{ parentChildFeeClearance.isPaid ? 'Paid' : (selectedParentChild?.feeStatus || 'Pending') }} · {{ primaryVoucherBankGateway?.bankName || 'Meezan Bank / HBL' }}
+                </p>
+                <p class="text-[11px] text-slate-600 font-medium font-mono">
+                  A/C: {{ primaryVoucherBankGateway?.accountNumber || '0102-0105829102' }}
+                  @if (primaryVoucherRaastGateway?.raastId) {
+                    · Raast: {{ primaryVoucherRaastGateway?.raastId }}
+                  }
+                  @if (primaryVoucherOneBillGateway) {
+                    · 1Bill: {{ schoolGatewaySettings.oneBillPrefix || '10089' }}-{{ selectedParentChild?.rollNo || '1001' }}
+                  }
+                </p>
+              </div>
+              <div class="text-right">
+                <span class="text-[10px] font-black uppercase text-slate-500 block">
+                  {{ parentChildFeeClearance.isPaid ? 'Remaining Payable (Paid)' : 'Remaining Payable' }}
+                </span>
+                <span class="font-mono font-black text-base" [class]="parentChildFeeClearance.isPaid ? 'text-emerald-700' : 'text-indigo-950'">
+                  PKR {{ formatCurrency(parentChildFeeClearance.remainingPayable) }}
+                </span>
+                <span class="block text-[10px] text-slate-400 font-mono">Monthly Challan: PKR {{ formatCurrency(parentChildFeeClearance.monthlyChallanTotal) }}</span>
+              </div>
+            </div>
+
+            <!-- Parent Accepted Pakistan Gateways -->
+            @if (parentEnabledPaymentGateways.length > 0) {
+              <div class="space-y-2.5">
+                <h4 class="text-xs font-black uppercase tracking-wider text-slate-600">Pay via Pakistan Wallets, Raast IBFT, 1Bill or Banks</h4>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  @for (gw of parentEnabledPaymentGateways; track gw.id) {
+                    <div class="rounded-xl p-3.5 bg-white border border-slate-200/90 space-y-1.5 flex flex-col justify-between">
+                      <div class="space-y-1">
+                        <div class="flex items-center justify-between gap-2">
+                          <span class="text-xs font-black text-slate-900">{{ gw.displayName }}</span>
+                          @if (gw.isDefault) {
+                            <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-emerald-100 text-emerald-800">PRIMARY</span>
+                          }
+                        </div>
+                        <p class="text-[11px] text-slate-600">{{ gw.instructions }}</p>
+                        @if (gw.raastId || gw.accountNumber || gw.tillId || gw.billerCode) {
+                          <p class="text-[10px] font-mono font-bold text-purple-800 bg-purple-50/70 px-2 py-1 rounded-md truncate">
+                            {{ gw.raastId || gw.iban || gw.accountNumber || gw.tillId || gw.billerCode }}
+                          </p>
+                        }
+                      </div>
+                      <div class="flex items-center justify-between gap-2 pt-1.5">
+                        @if (gw.raastId || gw.iban || gw.accountNumber || gw.tillId) {
+                          <button type="button" (click)="copyGatewayDetail(gw.displayName, gw.raastId || gw.iban || gw.accountNumber || gw.tillId)" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[10px] cursor-pointer">
+                            Copy Details
+                          </button>
+                        }
+                        @if (parentChildFeeClearance.isPaid) {
+                          <span class="ml-auto px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 font-bold text-[10px]">Paid</span>
+                        } @else if (schoolGatewaySettings.allowOnlineParentPayment) {
+                          <button type="button" (click)="openPortalOnlineCheckout('parent', gw.id)" class="ml-auto px-3 py-1 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-bold text-[10px] cursor-pointer">
+                            Pay Ward Fee
+                          </button>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
           </div>
 
-          <!-- Child & Itemized Tuition Details (Borderless inside the same single card) -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs">
-            <div class="space-y-1.5">
-              <div class="flex justify-between"><span class="text-slate-500 font-bold">Student Name:</span><span class="font-black text-slate-950">{{ selectedParentChild?.name }}</span></div>
-              <div class="flex justify-between"><span class="text-slate-500 font-bold">Father / Guardian:</span><span class="font-bold text-slate-900">{{ currentGuardianProfile?.name }}</span></div>
-              <div class="flex justify-between"><span class="text-slate-500 font-bold">Class &amp; Roll #:</span><span class="font-black text-indigo-700">{{ selectedParentChild?.grade }} · Roll #{{ selectedParentChild?.rollNo || '1001' }}</span></div>
-              <div class="flex justify-between"><span class="text-slate-500 font-bold">Challan / Receipt #:</span><span class="font-mono font-black text-slate-950">{{ selectedParentChild?.receiptNo || ('CH-2026-' + (selectedParentChild?.rollNo || '1001')) }}</span></div>
-            </div>
-
-            <div class="space-y-1.5">
-              <div class="flex justify-between"><span class="text-slate-500 font-bold">Monthly Tuition Fee:</span><span class="font-mono font-black text-slate-950">PKR {{ formatCurrency(parentChildMonthlyTuition) }}</span></div>
-              <div class="flex justify-between"><span class="text-slate-500 font-bold">Science &amp; IT Lab Fund:</span><span class="font-mono font-bold text-slate-800">PKR 1,500</span></div>
-              <div class="flex justify-between"><span class="text-slate-500 font-bold">Exam &amp; Transcripts Fee:</span><span class="font-mono font-bold text-slate-800">PKR 1,200</span></div>
-              <div class="flex justify-between"><span class="text-slate-500 font-bold">Sports &amp; Activity Fund:</span><span class="font-mono font-bold text-slate-800">PKR 800</span></div>
-            </div>
-          </div>
-
-          <!-- Single Unified Highlight Strip -->
-          <div class="rounded-xl p-4 bg-white border border-slate-200/80 flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <p class="text-xs font-black text-slate-950">
-                Fee Status: {{ selectedParentChild?.feeStatus || 'Pending' }} · Authorized Bank Challan Ledger
-              </p>
-              <p class="text-[11px] text-slate-600 font-medium">
-                Valid Through: <strong>{{ selectedParentChild?.validTill || 'Nov 10, 2026' }}</strong> · Meezan Bank / HBL Code: 0102
-              </p>
-            </div>
-            <div class="text-right">
-              <span class="text-[10px] font-black uppercase text-slate-500 block">Payable Within Due Date</span>
-              <span class="font-mono font-black text-base text-indigo-950">PKR {{ formatCurrency(parentChildChallanWithinDueTotal) }}</span>
+          <!-- Ward Online Payment & Deposit History -->
+          <div class="apple-card scs-surface-3d rounded-2xl p-5 space-y-3">
+            <h4 class="font-black text-slate-900 text-sm">Ward Payment &amp; Deposit Record History</h4>
+            <div class="overflow-x-auto border border-slate-200 rounded-xl">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-white text-slate-600 uppercase font-black text-[10px] border-b border-slate-200">
+                  <tr>
+                    <th class="px-3 py-2.5">Deposit Date &amp; TXN</th>
+                    <th class="px-3 py-2.5">Depositor / Payer</th>
+                    <th class="px-3 py-2.5">Channel &amp; Proof TID</th>
+                    <th class="px-3 py-2.5">Slip Image</th>
+                    <th class="px-3 py-2.5">Deposit Amount</th>
+                    <th class="px-3 py-2.5">Status</th>
+                    <th class="px-3 py-2.5 text-right">Challan</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 bg-white">
+                  @for (tx of parentChildPaymentTransactions; track tx.id) {
+                    <tr>
+                      <td class="px-3 py-2.5">
+                        <span class="font-mono font-bold text-slate-800 block">{{ tx.txnRef }}</span>
+                        <span class="text-[10px] text-slate-400">{{ formatTxnDate(tx.createdAt) }}</span>
+                      </td>
+                      <td class="px-3 py-2.5">
+                        <span class="font-bold text-slate-800 block">{{ tx.payerAccountTitle || tx.submittedByName || 'Guardian' }}</span>
+                        <span class="text-[10px] uppercase text-slate-500">{{ tx.submittedByRole || 'parent' }}</span>
+                      </td>
+                      <td class="px-3 py-2.5">
+                        <span class="font-bold text-indigo-700 block">{{ tx.gatewayName }}</span>
+                        <span class="font-mono text-[10px] text-slate-600">{{ tx.proofReference || '—' }}</span>
+                      </td>
+                      <td class="px-3 py-2.5">
+                        @if (tx.proofScreenshot) {
+                          <button type="button" (click)="openSlipScreenshotModal(tx)" class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 font-bold text-[10px] cursor-pointer">
+                            View Slip
+                          </button>
+                        } @else {
+                          <span class="text-[10px] text-slate-400">—</span>
+                        }
+                      </td>
+                      <td class="px-3 py-2.5 font-mono font-black text-emerald-700">PKR {{ formatCurrency(tx.totalAmount) }}</td>
+                      <td class="px-3 py-2.5">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase" [class]="getTxnStatusBadgeClass(tx.status)">{{ tx.status }}</span>
+                      </td>
+                      <td class="px-3 py-2.5 text-right">
+                        <button type="button" (click)="printGatewayTransactionVoucher(tx)" class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 font-bold text-[10px] cursor-pointer">
+                          View Voucher
+                        </button>
+                      </td>
+                    </tr>
+                  }
+                  @if (parentChildPaymentTransactions.length === 0) {
+                    <tr>
+                      <td colspan="7" class="px-3 py-6 text-center text-slate-400 font-bold">
+                        No online payments submitted yet for {{ selectedParentChild?.name || 'your ward' }}.
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -20984,14 +21572,14 @@
                         <input type="number" [(ngModel)]="accountantCollectForm.amount" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-mono font-black text-emerald-700">
                       </div>
                       <div>
-                        <label class="block font-bold text-slate-700 mb-1">Payment Channel</label>
+                        <label class="block font-bold text-slate-700 mb-1">Payment Channel (Owner Configured)</label>
                         <select [(ngModel)]="accountantCollectForm.paymentResource" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+                          @for (gw of accountantEnabledPaymentGateways; track gw.id) {
+                            <option [value]="gw.displayName">{{ gw.displayName }}</option>
+                          }
                           <option value="Cash at Accountant Fee Counter">Cash at Accountant Fee Counter</option>
                           <option value="Meezan Bank Challan">Meezan Bank Deposit Slip</option>
                           <option value="HBL Bank Challan">HBL Bank Deposit Slip</option>
-                          <option value="JazzCash Wallet">JazzCash Merchant</option>
-                          <option value="EasyPaisa Wallet">EasyPaisa Merchant</option>
-                          <option value="Raast Instant Transfer">Raast IBFT Transfer</option>
                         </select>
                       </div>
                     </div>
@@ -21092,6 +21680,67 @@
                       }
                     </tbody>
                   </table>
+                </div>
+
+                <!-- Pending Online Payment Slips Verification Queue -->
+                <div class="pt-3 border-t border-slate-200 space-y-2.5">
+                  <div class="flex items-center justify-between gap-2">
+                    <h4 class="font-black text-slate-900 text-xs uppercase tracking-wider">Pending Online Payment Slips Verification ({{ pendingVerificationGatewayTransactions.length }})</h4>
+                    <button type="button" (click)="refreshPaymentGatewayData()" class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 font-bold text-[10px] cursor-pointer">Sync Queue</button>
+                  </div>
+                  @if (pendingVerificationGatewayTransactions.length > 0) {
+                    <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                      <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-50 text-slate-600 uppercase font-black text-[10px] border-b border-slate-200">
+                          <tr>
+                            <th class="px-3 py-2">Date &amp; TXN</th>
+                            <th class="px-3 py-2">Student &amp; Depositor</th>
+                            <th class="px-3 py-2">Channel &amp; TID</th>
+                            <th class="px-3 py-2">Slip Image</th>
+                            <th class="px-3 py-2 text-right">Amount</th>
+                            <th class="px-3 py-2 text-right">Verify</th>
+                          </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 bg-white">
+                          @for (tx of pendingVerificationGatewayTransactions; track tx.id) {
+                            <tr>
+                              <td class="px-3 py-2">
+                                <span class="font-mono font-bold text-slate-800 block">{{ tx.txnRef }}</span>
+                                <span class="text-[10px] text-slate-400">{{ formatTxnDate(tx.createdAt) }}</span>
+                              </td>
+                              <td class="px-3 py-2">
+                                <span class="font-bold text-slate-900 block">{{ tx.studentName }} ({{ tx.grade }})</span>
+                                <span class="text-[10px] uppercase text-slate-500">{{ tx.submittedByRole || 'portal' }} · {{ tx.payerAccountTitle || tx.submittedByName || '—' }}</span>
+                              </td>
+                              <td class="px-3 py-2">
+                                <span class="font-bold text-indigo-700">{{ tx.gatewayName }}</span>
+                                <span class="block font-mono text-[10px] text-slate-500">TID: {{ tx.proofReference || '—' }}</span>
+                              </td>
+                              <td class="px-3 py-2">
+                                @if (tx.proofScreenshot) {
+                                  <button type="button" (click)="openSlipScreenshotModal(tx)" class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 font-bold text-[10px] cursor-pointer">
+                                    <img [src]="tx.proofScreenshot" alt="Deposit slip thumbnail" referrerpolicy="no-referrer" class="w-5 h-5 rounded object-cover">
+                                    <span>View Slip</span>
+                                  </button>
+                                } @else {
+                                  <span class="text-[10px] text-slate-400">No Image</span>
+                                }
+                              </td>
+                              <td class="px-3 py-2 text-right font-mono font-black text-emerald-700">PKR {{ formatCurrency(tx.totalAmount) }}</td>
+                              <td class="px-3 py-2 text-right">
+                                <div class="flex items-center justify-end gap-1">
+                                  <button type="button" (click)="verifyGatewayTransaction(tx, 'VERIFIED')" class="px-2 py-1 rounded-lg bg-emerald-600 text-white font-bold text-[10px] cursor-pointer">Verify</button>
+                                  <button type="button" (click)="verifyGatewayTransaction(tx, 'REJECTED')" class="px-2 py-1 rounded-lg bg-rose-50 text-rose-700 font-bold text-[10px] cursor-pointer">Reject</button>
+                                </div>
+                              </td>
+                            </tr>
+                          }
+                        </tbody>
+                      </table>
+                    </div>
+                  } @else {
+                    <p class="text-[11px] text-slate-500">No pending student/parent payment slips in queue.</p>
+                  }
                 </div>
               </div>
             </div>
@@ -22939,10 +23588,10 @@
           <div>
             <div class="flex items-center gap-2">
               <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300">Official Bank Challan</span>
-              <span class="text-xs font-mono font-extrabold text-slate-500">Challan #: CH-2026-{{ voucherStudent.rollNo }}</span>
+              <span class="text-xs font-mono font-extrabold text-slate-500">Challan #: CH-2026-{{ voucherStudent?.rollNo || '1030' }}</span>
             </div>
             <h3 class="font-black text-slate-900 text-lg mt-1">3-Copy Official Bank Fee Challan Voucher</h3>
-            <p class="text-xs text-slate-500">Meezan Bank Ltd / HBL Authorized Deposit Instrument • Student, School & Bank Copies</p>
+            <p class="text-xs text-slate-500">{{ primaryVoucherBankGateway?.bankName || 'Meezan Bank Ltd / HBL' }} Authorized Deposit Instrument · Student, School &amp; Bank Copies</p>
           </div>
           <div class="flex items-center gap-2">
             <button (click)="printVoucher()" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs cursor-pointer flex items-center gap-1.5 shadow-md transition-all active:scale-95">
@@ -22971,15 +23620,21 @@
                   <span class="text-[10px] font-mono text-slate-500 font-extrabold uppercase tracking-tight">REF: 2026-OCT</span>
                 </div>
 
-                <!-- Bank Details (Borderless, inside the same single card) -->
+                <!-- Bank Details (Dynamic Owner Gateway Config) -->
                 <div class="space-y-1">
                   <div class="flex items-center justify-between gap-2">
-                    <span class="font-black text-slate-950 text-xs tracking-tight uppercase">MEEZAN BANK LTD / HBL</span>
-                    <span class="text-[10px] font-mono font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md">Code: 0102</span>
+                    <span class="font-black text-slate-950 text-xs tracking-tight uppercase truncate">{{ primaryVoucherBankGateway?.bankName || 'MEEZAN BANK LTD / HBL' }}</span>
+                    <span class="text-[10px] font-mono font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md shrink-0">Code: {{ primaryVoucherBankGateway?.branchCode || '0102' }}</span>
                   </div>
-                  <p class="text-[11px] font-bold text-slate-700 truncate">A/C Title: <span class="font-black text-slate-950">{{ schoolName || 'SOFTCODE INTERNATIONAL SCHOOL' }}</span></p>
-                  <p class="text-[11px] font-mono font-bold text-slate-800 truncate">A/C #: <span class="font-black">0102-0105829102</span></p>
-                  <p class="text-[10px] font-mono text-slate-500 truncate">IBAN: PK36MEZN0001020105829102</p>
+                  <p class="text-[11px] font-bold text-slate-700 truncate">A/C Title: <span class="font-black text-slate-950">{{ primaryVoucherBankGateway?.accountTitle || schoolName || 'SOFTCODE INTERNATIONAL SCHOOL' }}</span></p>
+                  <p class="text-[11px] font-mono font-bold text-slate-800 truncate">A/C #: <span class="font-black">{{ primaryVoucherBankGateway?.accountNumber || '0102-0105829102' }}</span></p>
+                  <p class="text-[10px] font-mono text-slate-500 truncate">IBAN: {{ primaryVoucherBankGateway?.iban || 'PK36MEZN0001020105829102' }}</p>
+                  @if (primaryVoucherRaastGateway?.raastId) {
+                    <p class="text-[10px] font-mono text-emerald-700 font-bold truncate">Raast IBFT: {{ primaryVoucherRaastGateway?.raastId }}</p>
+                  }
+                  @if (primaryVoucherOneBillGateway) {
+                    <p class="text-[10px] font-mono text-indigo-700 font-bold truncate">1Bill ID: {{ schoolGatewaySettings.oneBillPrefix || '10089' }}-{{ voucherStudent?.rollNo || '1030' }}</p>
+                  }
                 </div>
 
                 <!-- Student & Challan Details (Borderless, inside the same single card) -->
@@ -23041,10 +23696,13 @@
                     <span class="font-mono font-black text-sm text-indigo-950">PKR {{ formatCurrency(voucherWithinDueTotal) }}</span>
                   </div>
                   <div class="flex justify-between items-center">
-                    <span class="text-[11px] font-black text-rose-700">Payable After Due Date (+500):</span>
-                    <span class="font-mono font-black text-xs text-rose-700">PKR {{ formatCurrency(voucherAfterDueTotal) }}</span>
+                    <span class="text-[11px] font-black text-rose-700">Payable After Due Date (+{{ schoolGatewaySettings.lateFeeFinePkr || 500 }}):</span>
+                    <span class="font-mono font-black text-xs text-rose-700">PKR {{ formatCurrency(voucherWithinDueTotal + (schoolGatewaySettings.lateFeeFinePkr || 500)) }}</span>
                   </div>
                 </div>
+                @if (schoolGatewaySettings.receiptFooterNote) {
+                  <p class="text-[9px] text-slate-500 font-medium leading-tight">{{ schoolGatewaySettings.receiptFooterNote }}</p>
+                }
               </div>
 
               <!-- Signatures & Barcode (Borderless inside the same single card) -->
@@ -23283,11 +23941,12 @@
                 <label class="block font-bold text-slate-700 mb-1">Payment Method</label>
                 <select [(ngModel)]="financeForm.paymentMethod"
                   class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold text-slate-900 focus:bg-white focus:outline-indigo-600 cursor-pointer">
+                  @for (gw of enabledSchoolPaymentGateways; track gw.id) {
+                    <option [value]="gw.displayName">{{ gw.displayName }}</option>
+                  }
                   <option value="Meezan Bank">Meezan Bank</option>
                   <option value="HBL Bank">HBL Bank</option>
                   <option value="Cash Counter">Cash Counter Vault</option>
-                  <option value="JazzCash Direct">JazzCash Direct</option>
-                  <option value="EasyPaisa Wallet">EasyPaisa Wallet</option>
                   <option value="Cheque">Bank Cheque</option>
                 </select>
               </div>
@@ -23380,7 +24039,7 @@
         <div class="flex items-center justify-between pb-3 border-b border-slate-200">
           <div>
             <h3 class="font-black text-slate-900 text-base">+ Record Online Fee Collection</h3>
-            <p class="text-xs text-slate-500">Record manual or gateway transaction entry into the master ledger</p>
+            <p class="text-xs text-slate-500">Post gateway fee receipt into Payment Gateway Ledger &amp; Student Fee Dues</p>
           </div>
           <button (click)="closePaymentModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer">
             <lucide-icon [name]="'x'" class="w-5 h-5"></lucide-icon>
@@ -23413,11 +24072,10 @@
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block font-bold text-slate-700 mb-1">Payment Method / Gateway</label>
-              <select [(ngModel)]="paymentForm.category" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold focus:bg-white focus:outline-indigo-600">
-                <option value="JazzCash Direct">JazzCash Direct</option>
-                <option value="EasyPaisa Wallet">EasyPaisa Wallet</option>
-                <option value="Stripe Online">Stripe Online</option>
-                <option value="Meezan Direct">Meezan Direct</option>
+              <select [(ngModel)]="paymentForm.gatewayId" (ngModelChange)="onPaymentFormGatewayChange($event)" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold focus:bg-white focus:outline-indigo-600">
+                @for (gw of enabledSchoolPaymentGateways; track gw.id) {
+                  <option [value]="gw.id">{{ gw.displayName }}</option>
+                }
               </select>
             </div>
             <div>
@@ -23429,9 +24087,31 @@
             </div>
           </div>
 
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">Transaction Ref / Voucher #</label>
-            <input type="text" [(ngModel)]="paymentForm.challanNo" placeholder="PAY-ONLINE-XXXX" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-mono font-bold focus:bg-white focus:outline-indigo-600">
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Challan / Voucher #</label>
+              <input type="text" [(ngModel)]="paymentForm.challanNo" placeholder="PAY-ONLINE-XXXX" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-mono font-bold focus:bg-white focus:outline-indigo-600">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Slip / Wallet TID #</label>
+              <input type="text" [(ngModel)]="paymentForm.proofReference" placeholder="e.g. JC-9921041" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-mono font-bold focus:bg-white focus:outline-indigo-600">
+            </div>
+          </div>
+
+          <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+            <div class="flex items-center justify-between gap-2">
+              <label class="font-bold text-slate-700">Upload Payment Slip Screenshot (Optional)</label>
+              @if (paymentForm.proofScreenshot) {
+                <button type="button" (click)="removeCheckoutScreenshot('ownerPayment')" class="text-[11px] font-bold text-rose-600 hover:underline cursor-pointer">Remove</button>
+              }
+            </div>
+            <input type="file" accept="image/*" (change)="onCheckoutScreenshotSelected($event, 'ownerPayment')" class="block w-full text-xs text-slate-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-indigo-50 file:text-indigo-700 file:font-bold cursor-pointer">
+            @if (paymentForm.proofScreenshot) {
+              <div class="flex items-center gap-3 pt-1">
+                <img [src]="paymentForm.proofScreenshot" alt="Payment slip preview" referrerpolicy="no-referrer" class="w-14 h-14 rounded-xl object-cover border border-slate-200 bg-white">
+                <span class="text-[11px] font-bold text-emerald-700">{{ paymentForm.proofScreenshotName || 'Slip screenshot attached' }}</span>
+              </div>
+            }
           </div>
 
           <app-school-custom-form-fields
@@ -23447,6 +24127,637 @@
           <button (click)="savePayment()" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs cursor-pointer shadow">
             Save Payment Record
           </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- 8B. OWNER ONLY: CONFIGURE / ADD PAKISTAN OR CUSTOM PAYMENT GATEWAY MODAL -->
+  @if (isGatewayConfigModalOpen && isOwnerPortal) {
+    <div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+      <div class="apple-card rounded-3xl max-w-2xl w-full max-h-[92vh] overflow-hidden flex flex-col bg-white shadow-2xl">
+        <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between shrink-0">
+          <div>
+            <h3 class="font-black text-slate-900 text-base">{{ editingGateway ? 'Edit Pakistan / Custom Payment Gateway' : '+ Add New Pakistan or Custom Payment Gateway' }}</h3>
+            <p class="text-xs text-slate-500">School Owner Exclusive Control · All Bank, Raast, 1Bill, Wallet &amp; API settings</p>
+          </div>
+          <button type="button" (click)="closeGatewayConfigModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer">
+            <lucide-icon [name]="'x'" class="w-5 h-5"></lucide-icon>
+          </button>
+        </div>
+
+        <div class="p-6 overflow-y-auto custom-scrollbar space-y-4 text-xs flex-1">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Provider Preset</label>
+              <select [(ngModel)]="gatewayConfigForm.providerKey" (ngModelChange)="onGatewayProviderPresetChange($event)"
+                [disabled]="!!editingGateway"
+                class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+                <option value="raast">Raast Instant IBFT</option>
+                <option value="jazzcash">JazzCash Merchant</option>
+                <option value="easypaisa">Easypaisa Direct / QR</option>
+                <option value="onebill">1Link / 1Bill / KuickPay</option>
+                <option value="meezan_bank">Meezan Bank Ltd</option>
+                <option value="hbl_bank">HBL Habib Bank</option>
+                <option value="sadapay_nayapay">SadaPay / NayaPay</option>
+                <option value="payfast">PayFast / Cards PK</option>
+                <option value="cash_counter">School Cash Counter</option>
+                <option value="custom">Custom Bank / FinTech</option>
+              </select>
+            </div>
+            <div class="sm:col-span-2">
+              <label class="block font-bold text-slate-700 mb-1">Gateway Display Name *</label>
+              <input type="text" [(ngModel)]="gatewayConfigForm.displayName" placeholder="e.g. UBL Omni / Bank Alfalah / JazzCash"
+                class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold text-slate-900">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Category</label>
+              <select [(ngModel)]="gatewayConfigForm.category" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+                <option value="raast_ibft">Raast / IBFT</option>
+                <option value="mobile_wallet">Mobile Wallet (PK)</option>
+                <option value="1link_1bill">1Link / 1Bill Voucher</option>
+                <option value="bank_challan">Bank Counter / Challan</option>
+                <option value="card_gateway">Debit / Credit Card</option>
+                <option value="cash_counter">Cash Counter</option>
+                <option value="custom">Custom Channel</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Verification Mode</label>
+              <select [(ngModel)]="gatewayConfigForm.verificationMode" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+                <option value="slip_review">Slip / TID Review (Accounts/Owner)</option>
+                <option value="auto_instant">Auto Instant Settlement (1Bill/API)</option>
+                <option value="counter_cash">Counter Cash Receipt</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Sort Priority</label>
+              <input type="number" [(ngModel)]="gatewayConfigForm.sortOrder" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-mono font-bold">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Account Title / School Beneficiary</label>
+              <input type="text" [(ngModel)]="gatewayConfigForm.accountTitle" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Bank / Provider Name</label>
+              <input type="text" [(ngModel)]="gatewayConfigForm.bankName" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Account # / Mobile Wallet #</label>
+              <input type="text" [(ngModel)]="gatewayConfigForm.accountNumber" placeholder="0300-XXXXXXX or A/C #" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-mono font-bold">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">PK IBAN (24 chars)</label>
+              <input type="text" [(ngModel)]="gatewayConfigForm.iban" placeholder="PK36MEZN0001020105829102" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-mono font-bold">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Raast ID (Mobile or IBAN)</label>
+              <input type="text" [(ngModel)]="gatewayConfigForm.raastId" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-mono font-bold">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Branch Code</label>
+              <input type="text" [(ngModel)]="gatewayConfigForm.branchCode" placeholder="e.g. 0102" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-mono font-bold">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Till ID (JazzCash / Easypaisa)</label>
+              <input type="text" [(ngModel)]="gatewayConfigForm.tillId" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-mono font-bold">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">1Bill / KuickPay Biller Prefix</label>
+              <input type="text" [(ngModel)]="gatewayConfigForm.billerCode" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-mono font-bold">
+            </div>
+          </div>
+
+          <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+            <h4 class="font-black text-slate-800 text-[11px] uppercase tracking-wider">Merchant API Credentials (Encrypted via Vault)</h4>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Merchant ID</label>
+                <input type="text" [(ngModel)]="gatewayConfigForm.merchantId" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-mono font-bold">
+              </div>
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Merchant Secret / Password</label>
+                <input type="password" [(ngModel)]="gatewayConfigForm.merchantSecret" placeholder="Leave masked to keep existing" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-mono font-bold">
+              </div>
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Integrity Salt / Store Key</label>
+                <input type="password" [(ngModel)]="gatewayConfigForm.integritySalt" placeholder="Encrypted at rest" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-mono font-bold">
+              </div>
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Webhook / Callback URL</label>
+              <input type="text" [(ngModel)]="gatewayConfigForm.webhookUrl" placeholder="https://..." class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-mono">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Surcharge Type</label>
+              <select [(ngModel)]="gatewayConfigForm.feeType" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+                <option value="none">No Surcharge (PKR 0)</option>
+                <option value="fixed">Fixed Fee (PKR)</option>
+                <option value="percent">Percentage (%)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Surcharge Value</label>
+              <input type="number" [(ngModel)]="gatewayConfigForm.feeValue" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-mono font-bold">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Campus Branch Scope</label>
+              <select [(ngModel)]="gatewayConfigForm.branchId" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+                <option value="ALL">All Campus Branches</option>
+                @for (br of schoolBranchRecords; track br.id) {
+                  <option [value]="br.id">{{ br.name }}</option>
+                }
+              </select>
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Academic Wing Scope</label>
+              <select [(ngModel)]="gatewayConfigForm.wingId" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+                <option value="ALL">All Wings</option>
+                @for (wg of schoolWingRecords; track wg.id) {
+                  <option [value]="wg.id">{{ wg.name }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="block font-bold text-slate-700">Allowed Portals (Who can see &amp; use this gateway)</label>
+            <div class="flex items-center gap-3 flex-wrap">
+              @for (pRole of ['owner', 'principal', 'accountant', 'student', 'parent']; track pRole) {
+                <label class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer font-bold capitalize">
+                  <input type="checkbox" [checked]="gatewayConfigForm.allowedPortals?.includes(pRole)" (change)="toggleGatewayAllowedPortal(pRole)" class="accent-indigo-600">
+                  <span>{{ pRole }}</span>
+                </label>
+              }
+            </div>
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Payment Instructions Shown to Students &amp; Parents</label>
+            <textarea [(ngModel)]="gatewayConfigForm.instructions" rows="2" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-medium"></textarea>
+          </div>
+
+          <!-- Owner Custom Key/Value Fields -->
+          <div class="space-y-2 p-3 rounded-2xl bg-slate-50 border border-slate-200">
+            <div class="flex items-center justify-between">
+              <span class="font-black text-slate-800 text-[11px] uppercase">Custom Gateway Fields (e.g. Branch Address, Support WhatsApp)</span>
+              <button type="button" (click)="addGatewayCustomFieldRow()" class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white font-bold text-[10px] cursor-pointer">+ Add Field</button>
+            </div>
+            @for (cf of gatewayConfigForm.customFields || []; track $index) {
+              <div class="grid grid-cols-12 gap-2 items-center">
+                <input type="text" [(ngModel)]="cf.label" placeholder="Field Label" class="col-span-5 px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 font-bold">
+                <input type="text" [(ngModel)]="cf.value" placeholder="Value" class="col-span-6 px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 font-medium">
+                <button type="button" (click)="removeGatewayCustomFieldRow($index)" class="col-span-1 py-1.5 rounded-lg bg-rose-50 text-rose-700 font-black cursor-pointer">×</button>
+              </div>
+            }
+          </div>
+
+          <div class="flex items-center gap-6 pt-1">
+            <label class="inline-flex items-center gap-2 font-bold text-slate-800 cursor-pointer">
+              <input type="checkbox" [(ngModel)]="gatewayConfigForm.isEnabled" class="w-4 h-4 accent-emerald-600">
+              <span>Gateway Active &amp; Visible</span>
+            </label>
+            <label class="inline-flex items-center gap-2 font-bold text-slate-800 cursor-pointer">
+              <input type="checkbox" [(ngModel)]="gatewayConfigForm.isDefault" class="w-4 h-4 accent-indigo-600">
+              <span>Set as Primary Default Gateway</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="px-6 py-4 bg-white border-t border-slate-200 flex items-center justify-end gap-2 shrink-0">
+          <button type="button" (click)="closeGatewayConfigModal()" class="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold text-xs cursor-pointer">Cancel</button>
+          <button type="button" (click)="saveGatewayConfig()" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs cursor-pointer shadow">
+            Save Gateway Configuration
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- 8C. OWNER ONLY: PAYMENT GATEWAY GLOBAL SETTINGS MODAL -->
+  @if (isGatewaySettingsModalOpen && isOwnerPortal) {
+    <div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+      <div class="apple-card rounded-3xl max-w-xl w-full max-h-[92vh] overflow-hidden flex flex-col bg-white shadow-2xl">
+        <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between shrink-0">
+          <div>
+            <h3 class="font-black text-slate-900 text-base">Owner Payment Gateway Settings &amp; Challan Policy</h3>
+            <p class="text-xs text-slate-500">Global controls governing Student/Parent online pay, 1Bill prefix, late fine &amp; receipt footer</p>
+          </div>
+          <button type="button" (click)="closeGatewaySettingsModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer">
+            <lucide-icon [name]="'x'" class="w-5 h-5"></lucide-icon>
+          </button>
+        </div>
+
+        <div class="p-6 overflow-y-auto custom-scrollbar space-y-4 text-xs flex-1">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Settlement Currency</label>
+              <input type="text" [(ngModel)]="gatewaySettingsForm.currency" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-mono font-bold">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">1Bill / KuickPay Biller Prefix</label>
+              <input type="text" [(ngModel)]="gatewaySettingsForm.oneBillPrefix" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-mono font-bold">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Late Fee Grace Days</label>
+              <input type="number" [(ngModel)]="gatewaySettingsForm.lateFeeGraceDays" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-mono font-bold">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Late Fee Fine (PKR)</label>
+              <input type="number" [(ngModel)]="gatewaySettingsForm.lateFeeFinePkr" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-mono font-bold">
+            </div>
+          </div>
+
+          <div class="space-y-2 p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
+            <label class="flex items-center justify-between cursor-pointer font-bold text-slate-800">
+              <span>Allow Online Fee Submission in Student Portal</span>
+              <input type="checkbox" [(ngModel)]="gatewaySettingsForm.allowOnlineStudentPayment" class="w-4 h-4 accent-emerald-600">
+            </label>
+            <label class="flex items-center justify-between cursor-pointer font-bold text-slate-800">
+              <span>Allow Online Fee Submission in Parent Portal</span>
+              <input type="checkbox" [(ngModel)]="gatewaySettingsForm.allowOnlineParentPayment" class="w-4 h-4 accent-emerald-600">
+            </label>
+            <label class="flex items-center justify-between cursor-pointer font-bold text-slate-800">
+              <span>Allow Partial / Installment Online Payments</span>
+              <input type="checkbox" [(ngModel)]="gatewaySettingsForm.allowPartialOnlinePayment" class="w-4 h-4 accent-indigo-600">
+            </label>
+            <label class="flex items-center justify-between cursor-pointer font-bold text-slate-800">
+              <span>Require Transaction / Slip Reference ID on Slip Review Channels</span>
+              <input type="checkbox" [(ngModel)]="gatewaySettingsForm.requireProofReference" class="w-4 h-4 accent-indigo-600">
+            </label>
+            <label class="flex items-center justify-between cursor-pointer font-bold text-slate-800">
+              <span>Auto-Issue Paid Fee Receipt &amp; Reduce Bakaya on Verification</span>
+              <input type="checkbox" [(ngModel)]="gatewaySettingsForm.autoIssueReceiptOnVerify" class="w-4 h-4 accent-emerald-600">
+            </label>
+            <label class="flex items-center justify-between cursor-pointer font-bold text-slate-800">
+              <span>Notify School Owner on Incoming Gateway Payments</span>
+              <input type="checkbox" [(ngModel)]="gatewaySettingsForm.ownerNotifyOnPayment" class="w-4 h-4 accent-indigo-600">
+            </label>
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Official Challan &amp; Receipt Footer Note</label>
+            <textarea [(ngModel)]="gatewaySettingsForm.receiptFooterNote" rows="2" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-medium"></textarea>
+          </div>
+
+          <div class="space-y-2 p-3 rounded-2xl bg-slate-50 border border-slate-200">
+            <div class="flex items-center justify-between">
+              <span class="font-black text-slate-800 text-[11px] uppercase">Custom Payment Policy Rules</span>
+              <button type="button" (click)="addGatewayPolicyRuleRow()" class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white font-bold text-[10px] cursor-pointer">+ Add Policy</button>
+            </div>
+            @for (pf of gatewaySettingsForm.customPolicyFields || []; track $index) {
+              <div class="grid grid-cols-12 gap-2 items-center">
+                <input type="text" [(ngModel)]="pf.label" placeholder="Rule Name" class="col-span-5 px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 font-bold">
+                <input type="text" [(ngModel)]="pf.value" placeholder="Policy Detail" class="col-span-6 px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 font-medium">
+                <button type="button" (click)="removeGatewayPolicyRuleRow($index)" class="col-span-1 py-1.5 rounded-lg bg-rose-50 text-rose-700 font-black cursor-pointer">×</button>
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="px-6 py-4 bg-white border-t border-slate-200 flex items-center justify-end gap-2 shrink-0">
+          <button type="button" (click)="closeGatewaySettingsModal()" class="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold text-xs cursor-pointer">Cancel</button>
+          <button type="button" (click)="saveGatewaySettings()" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs cursor-pointer shadow">
+            Save Gateway Settings
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- 8D. OWNER ONLY: EDIT GATEWAY TRANSACTION MODAL -->
+  @if (isGatewayTxnEditModalOpen && isOwnerPortal) {
+    <div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+      <div class="apple-card rounded-3xl max-w-lg w-full p-6 space-y-4 bg-white shadow-2xl">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+          <div>
+            <h3 class="font-black text-slate-900 text-base">Edit Gateway Transaction ({{ editingGatewayTxn?.txnRef }})</h3>
+            <p class="text-xs text-slate-500">Owner override for amount, proof TID, or settlement status</p>
+          </div>
+          <button type="button" (click)="closeEditGatewayTxnModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer">
+            <lucide-icon [name]="'x'" class="w-5 h-5"></lucide-icon>
+          </button>
+        </div>
+
+        <div class="space-y-3 text-xs">
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Student Name</label>
+              <input type="text" [(ngModel)]="gatewayTxnEditForm.studentName" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Class / Grade</label>
+              <input type="text" [(ngModel)]="gatewayTxnEditForm.grade" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Challan #</label>
+              <input type="text" [(ngModel)]="gatewayTxnEditForm.challanNo" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-mono font-bold">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Base Amount (PKR)</label>
+              <input type="number" [(ngModel)]="gatewayTxnEditForm.baseAmount" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-mono font-bold">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Gateway Surcharge (PKR)</label>
+              <input type="number" [(ngModel)]="gatewayTxnEditForm.gatewayFee" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-mono font-bold">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Status</label>
+              <select [(ngModel)]="gatewayTxnEditForm.status" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+                <option value="PENDING_VERIFICATION">PENDING_VERIFICATION</option>
+                <option value="VERIFIED">VERIFIED</option>
+                <option value="SETTLED">SETTLED</option>
+                <option value="REJECTED">REJECTED</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Proof / TID Reference</label>
+            <input type="text" [(ngModel)]="gatewayTxnEditForm.proofReference" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-mono font-bold">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Notes</label>
+            <input type="text" [(ngModel)]="gatewayTxnEditForm.proofNotes" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-medium">
+          </div>
+          <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+            <div class="flex items-center justify-between">
+              <label class="font-bold text-slate-700">Deposit Slip Screenshot</label>
+              @if (gatewayTxnEditForm.proofScreenshot) {
+                <button type="button" (click)="removeCheckoutScreenshot('txnEdit')" class="text-[11px] font-bold text-rose-600 hover:underline cursor-pointer">Remove Image</button>
+              }
+            </div>
+            <input type="file" accept="image/*" (change)="onCheckoutScreenshotSelected($event, 'txnEdit')" class="block w-full text-xs text-slate-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-indigo-50 file:text-indigo-700 file:font-bold cursor-pointer">
+            @if (gatewayTxnEditForm.proofScreenshot) {
+              <img [src]="gatewayTxnEditForm.proofScreenshot" alt="Deposit slip preview" referrerpolicy="no-referrer" class="w-24 h-24 rounded-xl object-cover border border-slate-200 bg-white">
+            }
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-200">
+          <button type="button" (click)="closeEditGatewayTxnModal()" class="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold text-xs cursor-pointer">Cancel</button>
+          <button type="button" (click)="saveGatewayTxnEdit()" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs cursor-pointer shadow">
+            Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- 8E. INTERACTIVE PAKISTAN ONLINE FEE CHECKOUT & SLIP PROOF MODAL (STUDENT / PARENT / OWNER) -->
+  @if (isPortalCheckoutModalOpen) {
+    <div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+      <div class="apple-card rounded-3xl max-w-xl w-full max-h-[92vh] overflow-hidden flex flex-col bg-white shadow-2xl">
+        <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between shrink-0">
+          <div>
+            <h3 class="font-black text-slate-900 text-base">Pakistan Online Fee Checkout &amp; Digital Slip</h3>
+            <p class="text-xs text-slate-500">Pay via Raast, JazzCash, Easypaisa, 1Bill, SadaPay/NayaPay, Meezan or HBL</p>
+          </div>
+          <button type="button" (click)="closePortalOnlineCheckout()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer">
+            <lucide-icon [name]="'x'" class="w-5 h-5"></lucide-icon>
+          </button>
+        </div>
+
+        <div class="p-6 overflow-y-auto custom-scrollbar space-y-4 text-xs flex-1">
+          @if (portalCheckoutContext === 'owner' && scopedActiveStudents.length > 0) {
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Select Student Account</label>
+              <select [(ngModel)]="portalCheckoutForm.studentId" (ngModelChange)="onPortalCheckoutStudentChange($event)"
+                class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+                @for (stu of scopedActiveStudents; track stu.id) {
+                  <option [value]="stu.id">{{ stu.name }} ({{ stu.grade }} · Roll #{{ stu.rollNo }})</option>
+                }
+              </select>
+            </div>
+          }
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Student Name</label>
+              <input type="text" [(ngModel)]="portalCheckoutForm.studentName" [readonly]="portalCheckoutContext !== 'owner'" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Challan Number</label>
+              <input type="text" [(ngModel)]="portalCheckoutForm.challanNo" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-mono font-bold">
+            </div>
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Choose Pakistan Payment Gateway *</label>
+            <select [(ngModel)]="portalCheckoutForm.gatewayId" class="w-full px-3 py-2.5 rounded-xl bg-white border border-slate-200 font-black text-slate-900">
+              @for (gw of getEnabledGatewaysForPortal(portalCheckoutContext); track gw.id) {
+                <option [value]="gw.id">{{ gw.displayName }} ({{ gw.feeType === 'none' || !gw.feeValue ? '0 Fee' : (gw.feeType === 'percent' ? '+' + gw.feeValue + '%' : '+PKR ' + gw.feeValue) }})</option>
+              }
+            </select>
+          </div>
+
+          @if (selectedPortalCheckoutGateway; as activeGw) {
+            <div class="rounded-2xl p-3.5 bg-emerald-50/70 border border-emerald-200 space-y-1.5">
+              <div class="flex items-center justify-between gap-2">
+                <span class="font-black text-emerald-950">{{ activeGw.displayName }} Payment Details</span>
+                <span class="px-2 py-0.5 rounded bg-white text-emerald-800 text-[10px] font-black border border-emerald-200 uppercase">{{ activeGw.verificationMode }}</span>
+              </div>
+              <p class="text-[11px] text-emerald-900">{{ activeGw.instructions }}</p>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[11px] font-mono pt-1">
+                @if (activeGw.accountTitle) {
+                  <div>Title: <strong>{{ activeGw.accountTitle }}</strong></div>
+                }
+                @if (activeGw.accountNumber) {
+                  <div>A/C: <strong>{{ activeGw.accountNumber }}</strong></div>
+                }
+                @if (activeGw.iban) {
+                  <div class="sm:col-span-2">IBAN: <strong>{{ activeGw.iban }}</strong></div>
+                }
+                @if (activeGw.raastId) {
+                  <div class="sm:col-span-2">Raast ID: <strong>{{ activeGw.raastId }}</strong></div>
+                }
+                @if (activeGw.tillId) {
+                  <div>Till ID: <strong>{{ activeGw.tillId }}</strong></div>
+                }
+                @if (activeGw.billerCode) {
+                  <div>1Bill Code: <strong>{{ schoolGatewaySettings.oneBillPrefix || activeGw.billerCode }}-{{ portalCheckoutForm.rollNo || '1001' }}</strong></div>
+                }
+              </div>
+            </div>
+          }
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Fee Amount (PKR)</label>
+              <input type="number" [(ngModel)]="portalCheckoutForm.baseAmount" [readonly]="!schoolGatewaySettings.allowPartialOnlinePayment && portalCheckoutContext !== 'owner'" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-mono font-black text-emerald-700">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Total Payable Preview</label>
+              <div class="px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-mono font-black text-slate-900">
+                PKR {{ formatCurrency(portalCheckoutFeePreview.totalAmount) }}
+                @if (portalCheckoutFeePreview.gatewayFee > 0) {
+                  <span class="text-[10px] text-slate-500 font-normal">(+{{ formatCurrency(portalCheckoutFeePreview.gatewayFee) }} fee)</span>
+                }
+              </div>
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Sender Mobile / Account Phone</label>
+              <input type="text" [(ngModel)]="portalCheckoutForm.payerPhone" placeholder="03XX-XXXXXXX" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-mono font-bold">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">
+                Transaction / Slip TID #
+                @if (selectedPortalCheckoutGateway?.verificationMode === 'slip_review' && schoolGatewaySettings.requireProofReference) {
+                  <span class="text-rose-600">*</span>
+                }
+              </label>
+              <input type="text" [(ngModel)]="portalCheckoutForm.proofReference" placeholder="e.g. RAAST-8829104 / JC-TID" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-mono font-bold">
+            </div>
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Payment Note / Deposit Details</label>
+            <input type="text" [(ngModel)]="portalCheckoutForm.proofNotes" placeholder="Optional sender name or branch note" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-medium">
+          </div>
+
+          @if (portalCheckoutContext !== 'owner' && (checkoutTargetClearance.isPaid || checkoutTargetClearance.hasPendingSlip)) {
+            <div class="rounded-2xl p-3 bg-amber-50 border border-amber-200 text-xs text-amber-900 font-bold">
+              @if (checkoutTargetClearance.isPaid) {
+                <span>This fee is already Paid ({{ checkoutTargetClearance.paidByLabel }}). Duplicate submission is disabled.</span>
+              } @else {
+                <span>A deposit slip ({{ checkoutTargetClearance.pendingSlipTxn?.txnRef }}) is already pending verification for this student.</span>
+              }
+            </div>
+          }
+
+          <!-- Payment Slip Screenshot Upload -->
+          <div class="rounded-2xl p-3.5 bg-slate-50 border border-dashed border-slate-300 space-y-2.5">
+            <div class="flex items-center justify-between gap-2">
+              <div>
+                <span class="font-black text-slate-800 block">Upload Payment Slip Screenshot</span>
+                <span class="text-[11px] text-slate-500">Attach JazzCash, Easypaisa, Raast, SadaPay or Bank Deposit Slip photo (PNG/JPG/WEBP)</span>
+              </div>
+              @if (portalCheckoutForm.proofScreenshot) {
+                <button type="button" (click)="removeCheckoutScreenshot('portal')" class="px-2.5 py-1 rounded-lg bg-rose-50 text-rose-700 font-bold text-[10px] cursor-pointer">
+                  Remove
+                </button>
+              }
+            </div>
+            <label class="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-white border border-slate-200 hover:border-emerald-400 text-slate-700 font-bold cursor-pointer transition-colors">
+              <lucide-icon [name]="'upload'" class="w-4 h-4 text-emerald-600"></lucide-icon>
+              <span>{{ checkoutScreenshotUploading ? 'Compressing Screenshot...' : (portalCheckoutForm.proofScreenshotName ? ('Selected: ' + portalCheckoutForm.proofScreenshotName) : 'Choose Slip Screenshot Photo') }}</span>
+              <input type="file" accept="image/*" (change)="onCheckoutScreenshotSelected($event, 'portal')" class="hidden">
+            </label>
+            @if (portalCheckoutForm.proofScreenshot) {
+              <div class="flex items-center gap-3 p-2 rounded-xl bg-white border border-emerald-200">
+                <img [src]="portalCheckoutForm.proofScreenshot" alt="Uploaded payment slip preview" referrerpolicy="no-referrer" class="w-16 h-16 rounded-lg object-cover border border-slate-200 shrink-0">
+                <div class="text-[11px] space-y-0.5 min-w-0">
+                  <p class="font-black text-emerald-800 truncate">{{ portalCheckoutForm.proofScreenshotName || 'Deposit Slip Attached' }}</p>
+                  <p class="text-slate-500">Ready to attach to student deposit ledger &amp; verification desk</p>
+                </div>
+              </div>
+            }
+          </div>
+
+          <app-school-custom-form-fields
+            [tableId]="'owner_payment_gateway'"
+            [values]="formCustomValues['payment']"
+            [allowSchemaEdit]="isOwnerPortal"
+            [defaultTitle]="'Online Checkout Custom Fields'"
+            (valuesChange)="updateFormCustomValues('payment', $event)" />
+        </div>
+
+        <div class="px-6 py-4 bg-white border-t border-slate-200 flex items-center justify-end gap-2 shrink-0">
+          <button type="button" (click)="closePortalOnlineCheckout()" class="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold text-xs cursor-pointer">Cancel</button>
+          <button type="button" (click)="submitPortalOnlineCheckout()" [disabled]="checkoutScreenshotUploading || (portalCheckoutContext !== 'owner' && checkoutTargetClearance.isPaid)" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-extrabold text-xs cursor-pointer shadow">
+            Submit Payment · PKR {{ formatCurrency(portalCheckoutFeePreview.totalAmount) }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- 8F. DEPOSIT SLIP SCREENSHOT LIGHTBOX PREVIEW MODAL -->
+  @if (isSlipScreenshotModalOpen && previewSlipTransaction; as slipTx) {
+    <div class="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+      <div class="apple-card rounded-3xl max-w-2xl w-full max-h-[92vh] overflow-hidden flex flex-col bg-white shadow-2xl">
+        <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between shrink-0">
+          <div>
+            <h3 class="font-black text-slate-900 text-base">Deposit Slip Screenshot &amp; Record</h3>
+            <p class="text-xs text-slate-500 font-mono">{{ slipTx.txnRef }} · Challan {{ slipTx.challanNo }} · {{ formatTxnDate(slipTx.createdAt) }}</p>
+          </div>
+          <button type="button" (click)="closeSlipScreenshotModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer">
+            <lucide-icon [name]="'x'" class="w-5 h-5"></lucide-icon>
+          </button>
+        </div>
+
+        <div class="p-6 overflow-y-auto custom-scrollbar space-y-4 text-xs flex-1">
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
+            <div>
+              <span class="text-[10px] font-bold uppercase text-slate-400 block">Student</span>
+              <span class="font-black text-slate-900">{{ slipTx.studentName }} ({{ slipTx.grade }} · #{{ slipTx.rollNo || '—' }})</span>
+            </div>
+            <div>
+              <span class="text-[10px] font-bold uppercase text-slate-400 block">Depositor</span>
+              <span class="font-bold text-slate-800">{{ slipTx.payerAccountTitle || slipTx.submittedByName || 'Guardian' }} ({{ slipTx.submittedByRole || 'portal' }})</span>
+              @if (slipTx.payerPhone) {
+                <span class="block font-mono text-[10px] text-slate-500">{{ slipTx.payerPhone }}</span>
+              }
+            </div>
+            <div>
+              <span class="text-[10px] font-bold uppercase text-slate-400 block">Channel &amp; Proof TID</span>
+              <span class="font-bold text-indigo-700 block">{{ slipTx.gatewayName }}</span>
+              <span class="font-mono text-[10px] text-slate-600">{{ slipTx.proofReference || '—' }}</span>
+            </div>
+            <div>
+              <span class="text-[10px] font-bold uppercase text-slate-400 block">Base + Fee = Total</span>
+              <span class="font-mono font-black text-emerald-700">PKR {{ formatCurrency(slipTx.totalAmount) }}</span>
+              <span class="block font-mono text-[10px] text-slate-500">({{ formatCurrency(slipTx.baseAmount) }} + {{ formatCurrency(slipTx.gatewayFee) }})</span>
+            </div>
+            <div>
+              <span class="text-[10px] font-bold uppercase text-slate-400 block">Status</span>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase inline-block mt-0.5" [class]="getTxnStatusBadgeClass(slipTx.status)">{{ slipTx.status }}</span>
+            </div>
+            <div>
+              <span class="text-[10px] font-bold uppercase text-slate-400 block">Verified / Receipt</span>
+              <span class="font-bold text-slate-700 block">{{ slipTx.verifiedBy || 'Awaiting Verification' }}</span>
+              @if (slipTx.linkedFeeId) {
+                <span class="font-mono text-[10px] text-emerald-700">{{ slipTx.linkedFeeId }}</span>
+              }
+            </div>
+          </div>
+
+          @if (slipTx.proofScreenshot) {
+            <div class="rounded-2xl border border-slate-200 bg-slate-100/70 p-2 flex items-center justify-center">
+              <img [src]="slipTx.proofScreenshot" alt="Deposit Slip Screenshot" referrerpolicy="no-referrer" class="max-h-[420px] w-auto rounded-xl object-contain shadow-sm bg-white">
+            </div>
+          } @else {
+            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-6 text-center text-slate-500 font-bold">
+              No image file attached to this transaction (metadata-only deposit record).
+            </div>
+          }
+        </div>
+
+        <div class="px-6 py-4 bg-white border-t border-slate-200 flex flex-wrap items-center justify-between gap-2 shrink-0">
+          <button type="button" (click)="printGatewayTransactionVoucher(slipTx)" class="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold text-xs cursor-pointer">
+            Download / Print Challan
+          </button>
+          <div class="flex items-center gap-2">
+            @if (slipTx.status === 'PENDING_VERIFICATION' && currentPortalRole !== 'student' && currentPortalRole !== 'parent' && currentPortalRole !== 'teacher') {
+              <button type="button" (click)="verifyFromSlipPreviewModal('REJECTED')" class="px-4 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs cursor-pointer">
+                Reject
+              </button>
+              <button type="button" (click)="verifyFromSlipPreviewModal('VERIFIED')" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs cursor-pointer">
+                Verify &amp; Issue Receipt
+              </button>
+            }
+            <button type="button" (click)="closeSlipScreenshotModal()" class="px-4 py-2 rounded-xl bg-slate-900 text-white font-bold text-xs cursor-pointer">
+              Close
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -29925,12 +31236,10 @@
               <div>
                 <label class="block font-bold text-slate-700 mb-1">Payment Channel / Resource *</label>
                 <select [(ngModel)]="principalFeeCollectForm.paymentResource" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold text-slate-900 focus:bg-white focus:outline-emerald-600">
+                  @for (gw of principalEnabledPaymentGateways; track gw.id) {
+                    <option [value]="gw.displayName">{{ gw.displayName }}</option>
+                  }
                   <option value="Cash In-Hand at Principal Desk">Cash In-Hand at Principal Desk Counter</option>
-                  <option value="Meezan Bank">Meezan Bank (A/C: 0102-010293810)</option>
-                  <option value="HBL">HBL Habib Bank (A/C: 0042-799102938)</option>
-                  <option value="JazzCash">JazzCash Wallet / Merchant</option>
-                  <option value="EasyPaisa">EasyPaisa Merchant Slip</option>
-                  <option value="Raast IBFT">Raast Instant IBFT Transfer</option>
                 </select>
               </div>
               <div>

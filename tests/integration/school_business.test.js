@@ -21,6 +21,7 @@ before(async () => {
     disableFirebase: true,
     disableBackgroundSync: true,
     disableFrontendBuild: true,
+    rateLimitMaxPerMin: 2000,
     quiet: true
   });
 
@@ -2325,6 +2326,485 @@ test('Multi-branch & multi-wing registry CRUD, scoped SQLite filtering, finance 
   assert.equal(wlCrossWingEdit.status, 403);
   assert.equal((await wlCrossWingEdit.json()).error, 'WING_SCOPE_FORBIDDEN');
 });
+
+test('School Business Payment Gateways: PK native auto-seed, Owner-only governance, secret masking, portal checkout, verification & atomic fee settlement', async () => {
+  const tenantId = `school-pg-${Date.now()}`;
+  const otherTenantId = `school-pg-other-${Date.now()}`;
+
+  const ownerHeaders = {
+    'Content-Type': 'application/json',
+    'x-tenant-id': tenantId,
+    'x-user-role': 'owner',
+    'x-user-name': 'School Business Owner'
+  };
+  const accountantHeaders = {
+    'Content-Type': 'application/json',
+    'x-tenant-id': tenantId,
+    'x-user-role': 'accountant',
+    'x-user-name': 'Muhammad Rizwan'
+  };
+  const principalHeaders = {
+    'Content-Type': 'application/json',
+    'x-tenant-id': tenantId,
+    'x-user-role': 'principal',
+    'x-user-name': 'Dr. Tahir Malik'
+  };
+  const parentHeaders = {
+    'Content-Type': 'application/json',
+    'x-tenant-id': tenantId,
+    'x-user-role': 'parent',
+    'x-user-name': 'Tariq Mahmood'
+  };
+  const studentHeaders = {
+    'Content-Type': 'application/json',
+    'x-tenant-id': tenantId,
+    'x-user-role': 'student',
+    'x-user-name': 'Hamza Tariq'
+  };
+  const otherOwnerHeaders = {
+    'Content-Type': 'application/json',
+    'x-tenant-id': otherTenantId,
+    'x-user-role': 'owner',
+    'x-user-name': 'Other School Owner'
+  };
+
+  // 1. Auto-seed 8 Native Pakistan Payment Gateways + default settings on first GET
+    const seedRes = await fetch(`${baseUrl}/api/school/payment-gateways`, { headers: ownerHeaders });
+    assert.equal(seedRes.status, 200);
+    const seedJson = await seedRes.json();
+    assert.equal(seedJson.ok, true);
+    assert.equal(seedJson.gateways.length, 8);
+    assert.equal(seedJson.settings.currency, 'PKR');
+
+    const keys = seedJson.gateways.map((g) => g.providerKey);
+    for (const expectedKey of ['raast', 'jazzcash', 'easypaisa', 'onebill', 'meezan_bank', 'hbl_bank', 'sadapay_nayapay', 'cash_counter']) {
+      assert.ok(keys.includes(expectedKey), `Missing seeded PK gateway: ${expectedKey}`);
+    }
+
+    const jazzCashGw = seedJson.gateways.find((g) => g.providerKey === 'jazzcash');
+    const oneBillGw = seedJson.gateways.find((g) => g.providerKey === 'onebill');
+    assert.ok(jazzCashGw && oneBillGw);
+
+    // 2. Role Enforcement: non-owners CANNOT create, edit, toggle, delete gateways or change settings
+    for (const forbiddenHdrs of [accountantHeaders, principalHeaders, parentHeaders, studentHeaders]) {
+      const createDeny = await fetch(`${baseUrl}/api/school/payment-gateways`, {
+        method: 'POST',
+        headers: forbiddenHdrs,
+        body: JSON.stringify({ providerKey: 'custom', displayName: 'Unauthorized Bank' })
+      });
+      assert.equal(createDeny.status, 403);
+      assert.equal((await createDeny.json()).error, 'OWNER_ONLY_FORBIDDEN');
+
+      const settingsDeny = await fetch(`${baseUrl}/api/school/payment-gateways-settings`, {
+        method: 'PUT',
+        headers: forbiddenHdrs,
+        body: JSON.stringify({ allowOnlineStudentPayment: false })
+      });
+      assert.equal(settingsDeny.status, 403);
+      assert.equal((await settingsDeny.json()).error, 'OWNER_ONLY_FORBIDDEN');
+
+      const toggleDeny = await fetch(`${baseUrl}/api/school/payment-gateways/${jazzCashGw.id}/toggle`, {
+        method: 'PUT',
+        headers: forbiddenHdrs,
+        body: JSON.stringify({ isEnabled: false })
+      });
+      assert.equal(toggleDeny.status, 403);
+    }
+
+    // 3. Owner creates custom Pakistani gateway with encrypted secrets & updates global settings
+    const customCreateRes = await fetch(`${baseUrl}/api/school/payment-gateways`, {
+      method: 'POST',
+      headers: ownerHeaders,
+      body: JSON.stringify({
+        providerKey: 'custom',
+        displayName: 'UBL Omni & Digital Banking',
+        category: 'bank_challan',
+        bankName: 'United Bank Limited (UBL)',
+        branchCode: '0411',
+        accountTitle: 'SoftCode International School',
+        accountNumber: '0411-9988776655',
+        iban: 'PK22UNIL0109000998877665',
+        merchantId: 'UBL-MERCH-771',
+        merchantSecret: 'SUPER-SECRET-UBL-KEY-9912',
+        integritySalt: 'SALT-KEY-4455',
+        feeType: 'fixed',
+        feeValue: 40,
+        verificationMode: 'slip_review',
+        allowedPortals: ['owner', 'principal', 'accountant', 'parent', 'student'],
+        customFields: [{ label: 'Helpdesk', value: '042-111-825-888' }],
+        isEnabled: true
+      })
+    });
+    assert.equal(customCreateRes.status, 201);
+    const createdCustom = (await customCreateRes.json()).gateway;
+    assert.equal(createdCustom.displayName, 'UBL Omni & Digital Banking');
+    assert.equal(createdCustom.hasMerchantSecret, true);
+    assert.equal(createdCustom.merchantSecret, undefined);
+    assert.ok(String(createdCustom.merchantSecretHint || '').endsWith('9912'));
+
+    // Non-owner GET must NOT even see secret hints
+    const parentGwRes = await fetch(`${baseUrl}/api/school/payment-gateways`, { headers: parentHeaders });
+    const parentCustomGw = (await parentGwRes.json()).gateways.find((g) => g.id === createdCustom.id);
+    assert.ok(parentCustomGw);
+    assert.equal(parentCustomGw.merchantSecret, undefined);
+    assert.equal(parentCustomGw.merchantSecretHint, '');
+
+    // Update 1Bill fee to PKR 50 for deterministic surcharge verification
+    const editOneBillRes = await fetch(`${baseUrl}/api/school/payment-gateways/${oneBillGw.id}`, {
+      method: 'PUT',
+      headers: ownerHeaders,
+      body: JSON.stringify({ feeType: 'fixed', feeValue: 50, isEnabled: true })
+    });
+    assert.equal(editOneBillRes.status, 200);
+
+    // Owner updates global gateway settings
+    const updateSettingsRes = await fetch(`${baseUrl}/api/school/payment-gateways-settings`, {
+      method: 'PUT',
+      headers: ownerHeaders,
+      body: JSON.stringify({
+        oneBillPrefix: '10999',
+        lateFeeFinePkr: 750,
+        allowPartialOnlinePayment: true,
+        receiptFooterNote: 'Custom Owner Receipt Footer'
+      })
+    });
+    assert.equal(updateSettingsRes.status, 200);
+    const updatedSettings = (await updateSettingsRes.json()).settings;
+    assert.equal(updatedSettings.oneBillPrefix, '10999');
+    assert.equal(updatedSettings.lateFeeFinePkr, 750);
+
+    // 4. Create student with dueBakaya so gateway settlement updates student dues & fees ledger
+    const stuRes = await fetch(`${baseUrl}/api/school/students`, {
+      method: 'POST',
+      headers: ownerHeaders,
+      body: JSON.stringify({
+        fullName: 'Hamza Tariq',
+        rollNumber: 'PK-7001',
+        grade: 'Class 9-A',
+        guardianName: 'Tariq Mahmood',
+        guardianPhone: '0300-7778899',
+        monthlyTuition: 15000,
+        dueBakaya: 20000,
+        feeStatus: 'Pending'
+      })
+    });
+    assert.equal(stuRes.status, 201);
+    const student = (await stuRes.json()).student;
+
+    // Parent submits JazzCash payment attempting to spoof status:'VERIFIED' -> server MUST force PENDING_VERIFICATION
+    const spoofRes = await fetch(`${baseUrl}/api/school/payment-transactions`, {
+      method: 'POST',
+      headers: parentHeaders,
+      body: JSON.stringify({
+        gatewayId: jazzCashGw.id,
+        studentId: student.id,
+        studentName: student.fullName,
+        rollNo: student.rollNumber,
+        grade: student.grade,
+        challanNo: 'CH-2026-PK-7001',
+        baseAmount: 12000,
+        payerPhone: '0300-7778899',
+        proofReference: 'JC-TID-88441122',
+        status: 'VERIFIED',
+        markVerified: true
+      })
+    });
+    assert.equal(spoofRes.status, 201);
+    const jcTxn = (await spoofRes.json()).transaction;
+    assert.equal(jcTxn.status, 'PENDING_VERIFICATION');
+    assert.equal(jcTxn.linkedFeeId || '', '');
+
+    // Student submits 1Bill auto_instant payment -> server settles immediately & adds PKR 50 surcharge
+    const oneBillPayRes = await fetch(`${baseUrl}/api/school/payment-transactions`, {
+      method: 'POST',
+      headers: studentHeaders,
+      body: JSON.stringify({
+        gatewayId: oneBillGw.id,
+        studentId: student.id,
+        studentName: student.fullName,
+        rollNo: student.rollNumber,
+        grade: student.grade,
+        challanNo: 'CH-1BILL-7001',
+        baseAmount: 5000,
+        proofReference: '1BILL-990011'
+      })
+    });
+    assert.equal(oneBillPayRes.status, 201);
+    const oneBillTxn = (await oneBillPayRes.json()).transaction;
+    assert.equal(oneBillTxn.status, 'VERIFIED');
+    assert.equal(oneBillTxn.gatewayFee, 50);
+    assert.equal(oneBillTxn.totalAmount, 5050);
+    assert.ok(oneBillTxn.linkedFeeId, '1Bill auto_instant payment should create a linked fee receipt');
+
+    // 5. Parent/Student CANNOT self-verify pending slip; Accountant verifies JazzCash slip -> settles dues
+    const selfVerifyDeny = await fetch(`${baseUrl}/api/school/payment-transactions/${jcTxn.id}/verify`, {
+      method: 'PUT',
+      headers: parentHeaders,
+      body: JSON.stringify({ status: 'VERIFIED' })
+    });
+    assert.equal(selfVerifyDeny.status, 403);
+
+    const accVerifyRes = await fetch(`${baseUrl}/api/school/payment-transactions/${jcTxn.id}/verify`, {
+      method: 'PUT',
+      headers: accountantHeaders,
+      body: JSON.stringify({ status: 'VERIFIED', verifiedBy: 'Muhammad Rizwan (Accountant)' })
+    });
+    assert.equal(accVerifyRes.status, 200);
+    const verifiedJcTxn = (await accVerifyRes.json()).transaction;
+    assert.equal(verifiedJcTxn.status, 'VERIFIED');
+    assert.ok(verifiedJcTxn.linkedFeeId, 'Verifying JazzCash slip must create linked fee receipt');
+
+    // Verify student dueBakaya decreased from 20000 - 5000 - 12000 = 3000
+    const stuAfterRes = await fetch(`${baseUrl}/api/school/students`, { headers: ownerHeaders });
+    const updatedStudent = (await stuAfterRes.json()).students.find((s) => s.id === student.id);
+    assert.equal(updatedStudent.dueBakaya, 3000);
+
+    // Verify Fee Receipt & Financial Monitoring reflect gateway collections
+    const feesRes = await fetch(`${baseUrl}/api/school/fees`, { headers: ownerHeaders });
+    const feesList = (await feesRes.json()).fees;
+    assert.ok(feesList.some((f) => f.id === verifiedJcTxn.linkedFeeId && f.status === 'PAID'));
+    assert.ok(feesList.some((f) => f.id === oneBillTxn.linkedFeeId && f.status === 'PAID'));
+
+    const monRes = await fetch(`${baseUrl}/api/school/finance/monitoring`, { headers: ownerHeaders });
+    assert.equal(monRes.status, 200);
+    const monJson = await monRes.json();
+    assert.ok(monJson.summary.paymentGateways);
+    assert.equal(monJson.summary.paymentGateways.pendingVerificationCount, 0);
+    assert.ok(monJson.summary.paymentGateways.verifiedGatewayAmount >= 17050);
+
+    // 6. Owner edits & deletes a transaction and deletes custom gateway; Cross-tenant isolation check
+    const ownerEditTxnRes = await fetch(`${baseUrl}/api/school/payment-transactions/${jcTxn.id}`, {
+      method: 'PUT',
+      headers: ownerHeaders,
+      body: JSON.stringify({ proofNotes: 'Verified via JazzCash Merchant Portal' })
+    });
+    assert.equal(ownerEditTxnRes.status, 200);
+    assert.equal((await ownerEditTxnRes.json()).transaction.proofNotes, 'Verified via JazzCash Merchant Portal');
+
+    const otherTenantGwRes = await fetch(`${baseUrl}/api/school/payment-gateways`, { headers: otherOwnerHeaders });
+    const otherGateways = (await otherTenantGwRes.json()).gateways;
+    assert.ok(!otherGateways.some((g) => g.id === createdCustom.id), 'Cross-tenant gateway leak');
+
+    const otherTxnRes = await fetch(`${baseUrl}/api/school/payment-transactions`, { headers: otherOwnerHeaders });
+    const otherTxns = (await otherTxnRes.json()).transactions;
+    assert.equal(otherTxns.length, 0);
+
+    const ownerDelTxnRes = await fetch(`${baseUrl}/api/school/payment-transactions/${jcTxn.id}`, {
+      method: 'DELETE',
+      headers: ownerHeaders
+    });
+    assert.equal(ownerDelTxnRes.status, 200);
+
+    const ownerDelGwRes = await fetch(`${baseUrl}/api/school/payment-gateways/${createdCustom.id}`, {
+      method: 'DELETE',
+      headers: ownerHeaders
+    });
+    assert.equal(ownerDelGwRes.status, 200);
+});
+
+test('School Payment Slip Screenshot Upload, Cross-Portal Parent-to-Student Paid Sync & Duplicate-Pay Protection', async () => {
+  const tenantId = `school-sync-slip-${Date.now()}`;
+  const ownerHeaders = {
+    'Content-Type': 'application/json',
+    'x-tenant-id': tenantId,
+    'x-user-role': 'owner',
+    'x-user-name': 'School Owner'
+  };
+  const accountantHeaders = {
+    'Content-Type': 'application/json',
+    'x-tenant-id': tenantId,
+    'x-user-role': 'accountant',
+    'x-user-name': 'Accounts Officer'
+  };
+  const parentHeaders = {
+    'Content-Type': 'application/json',
+    'x-tenant-id': tenantId,
+    'x-user-role': 'parent',
+    'x-user-name': 'Ahmed Khan (Father)'
+  };
+  const studentHeaders = {
+    'Content-Type': 'application/json',
+    'x-tenant-id': tenantId,
+    'x-user-role': 'student',
+    'x-user-name': 'Zayan Ahmed Khan'
+  };
+
+  // Seed gateways and fetch Raast IBFT gateway
+  const gwRes = await fetch(`${baseUrl}/api/school/payment-gateways`, { headers: ownerHeaders });
+  assert.equal(gwRes.status, 200);
+  const raastGw = (await gwRes.json()).gateways.find((g) => g.providerKey === 'raast');
+  assert.ok(raastGw);
+
+  // Create student with pending dues + an open accountant challan
+  const stuRes = await fetch(`${baseUrl}/api/school/students`, {
+    method: 'POST',
+    headers: ownerHeaders,
+    body: JSON.stringify({
+      fullName: 'Zayan Ahmed Khan',
+      rollNumber: '1001',
+      grade: 'Class 10-A',
+      guardianName: 'Ahmed Khan',
+      guardianPhone: '0300-1122334',
+      monthlyTuition: 28500,
+      dueBakaya: 32000,
+      feeStatus: 'Pending'
+    })
+  });
+  assert.equal(stuRes.status, 201);
+  const student = (await stuRes.json()).student;
+
+  const challanRes = await fetch(`${baseUrl}/api/school/fees`, {
+    method: 'POST',
+    headers: accountantHeaders,
+    body: JSON.stringify({
+      studentId: student.id,
+      studentName: student.fullName,
+      rollNo: '1001',
+      grade: 'Class 10-A',
+      challanNo: 'CH-2026-1001',
+      month: 'November 2026',
+      tuition: 28500,
+      labFee: 3500,
+      total: 32000,
+      status: 'PENDING'
+    })
+  });
+  assert.equal(challanRes.status, 201);
+  const openChallan = (await challanRes.json()).fee;
+
+  // 1. Reject non-image / malformed proofScreenshot payloads (400)
+  const badSlipRes = await fetch(`${baseUrl}/api/school/payment-transactions`, {
+    method: 'POST',
+    headers: parentHeaders,
+    body: JSON.stringify({
+      gatewayId: raastGw.id,
+      studentId: student.id,
+      studentName: student.fullName,
+      rollNo: '1001',
+      grade: 'Class 10-A',
+      challanNo: 'CH-2026-1001',
+      baseAmount: 32000,
+      proofReference: 'RAAST-BAD-IMG',
+      proofScreenshot: 'data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg=='
+    })
+  });
+  assert.equal(badSlipRes.status, 400);
+
+  // 2. Parent submits valid deposit slip with screenshot image -> saved & visible to Student
+  const sampleSlipPng = 'data:image/png;base64,' + Buffer.from('fake-slip-image-bytes').toString('base64');
+  const parentPayRes = await fetch(`${baseUrl}/api/school/payment-transactions`, {
+    method: 'POST',
+    headers: parentHeaders,
+    body: JSON.stringify({
+      gatewayId: raastGw.id,
+      studentId: student.id,
+      studentName: student.fullName,
+      rollNo: '1001',
+      grade: 'Class 10-A',
+      guardianName: 'Ahmed Khan',
+      challanNo: 'CH-2026-1001',
+      baseAmount: 32000,
+      payerPhone: '0300-1122334',
+      payerAccountTitle: 'Ahmed Khan',
+      submittedByName: 'Ahmed Khan (Father)',
+      proofReference: 'RAAST-99881122',
+      proofNotes: 'Paid via Meezan Raast App',
+      proofScreenshot: sampleSlipPng
+    })
+  });
+  assert.equal(parentPayRes.status, 201);
+  const parentTxn = (await parentPayRes.json()).transaction;
+  assert.equal(parentTxn.hasProofScreenshot, true);
+  assert.equal(parentTxn.proofScreenshot, sampleSlipPng);
+  assert.equal(parentTxn.submittedByRole, 'parent');
+
+  // Student queries transactions -> sees Parent's pending slip and screenshot immediately
+  const stuTxRes = await fetch(`${baseUrl}/api/school/payment-transactions?studentId=${encodeURIComponent(student.id)}`, {
+    headers: studentHeaders
+  });
+  assert.equal(stuTxRes.status, 200);
+  const stuTxList = (await stuTxRes.json()).transactions;
+  const visibleToStudent = stuTxList.find((t) => t.id === parentTxn.id);
+  assert.ok(visibleToStudent);
+  assert.equal(visibleToStudent.proofScreenshot, sampleSlipPng);
+  assert.equal(visibleToStudent.hasProofScreenshot, true);
+
+  // Duplicate pending slip from Student on same challan is blocked with 409 PENDING_SLIP_EXISTS
+  const dupPendingRes = await fetch(`${baseUrl}/api/school/payment-transactions`, {
+    method: 'POST',
+    headers: studentHeaders,
+    body: JSON.stringify({
+      gatewayId: raastGw.id,
+      studentId: student.id,
+      studentName: student.fullName,
+      rollNo: '1001',
+      grade: 'Class 10-A',
+      challanNo: 'CH-2026-1001',
+      baseAmount: 32000,
+      proofReference: 'RAAST-DUP-PENDING'
+    })
+  });
+  assert.equal(dupPendingRes.status, 409);
+  assert.equal((await dupPendingRes.json()).error, 'PENDING_SLIP_EXISTS');
+
+  // 3. Accountant verifies Parent's slip -> settles open challan & updates student to PAID (dueBakaya = 0)
+  const verifyRes = await fetch(`${baseUrl}/api/school/payment-transactions/${parentTxn.id}/verify`, {
+    method: 'PUT',
+    headers: accountantHeaders,
+    body: JSON.stringify({ status: 'VERIFIED', verifiedBy: 'Accounts Officer' })
+  });
+  assert.equal(verifyRes.status, 200);
+  const verifiedTxn = (await verifyRes.json()).transaction;
+  assert.equal(verifiedTxn.status, 'VERIFIED');
+  assert.equal(verifiedTxn.linkedFeeId, openChallan.id);
+
+  // Student profile & open challan now both show PAID / dueBakaya 0 for Student Portal
+  const stuCheckRes = await fetch(`${baseUrl}/api/school/students`, { headers: studentHeaders });
+  const stuCheck = (await stuCheckRes.json()).students.find((s) => s.id === student.id);
+  assert.equal(String(stuCheck.feeStatus).toUpperCase(), 'PAID');
+  assert.equal(stuCheck.dueBakaya, 0);
+
+  const feesCheckRes = await fetch(`${baseUrl}/api/school/fees`, { headers: studentHeaders });
+  const paidFee = (await feesCheckRes.json()).fees.find((f) => f.id === openChallan.id);
+  assert.equal(paidFee.status, 'PAID');
+
+  // 4. Subsequent Student payment attempt on already-paid challan OR student returns 409
+  const dupChallanRes = await fetch(`${baseUrl}/api/school/payment-transactions`, {
+    method: 'POST',
+    headers: studentHeaders,
+    body: JSON.stringify({
+      gatewayId: raastGw.id,
+      studentId: student.id,
+      studentName: student.fullName,
+      rollNo: '1001',
+      grade: 'Class 10-A',
+      challanNo: 'CH-2026-1001',
+      baseAmount: 32000,
+      proofReference: 'RAAST-REPAY-BLOCK'
+    })
+  });
+  assert.equal(dupChallanRes.status, 409);
+  assert.equal((await dupChallanRes.json()).error, 'ALREADY_PAID');
+
+  const dupStudentRes = await fetch(`${baseUrl}/api/school/payment-transactions`, {
+    method: 'POST',
+    headers: studentHeaders,
+    body: JSON.stringify({
+      gatewayId: raastGw.id,
+      studentId: student.id,
+      studentName: student.fullName,
+      rollNo: '1001',
+      grade: 'Class 10-A',
+      challanNo: 'CH-2026-NEW-REF',
+      baseAmount: 32000,
+      proofReference: 'RAAST-REPAY-STUDENT'
+    })
+  });
+  assert.equal(dupStudentRes.status, 409);
+  assert.equal((await dupStudentRes.json()).error, 'STUDENT_ALREADY_PAID');
+});
+
+
 
 
 

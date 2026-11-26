@@ -411,6 +411,86 @@ async function runBackgroundAutoSync() {
       }
     } catch {}
 
+    try {
+      const pendingGateways = sqliteDb.prepare('SELECT * FROM local_school_payment_gateways WHERE is_synced = 0 LIMIT 25').all();
+      for (const gw of pendingGateways) {
+        try {
+          await setDoc(doc(db, 'school_payment_gateways', gw.id), {
+            id: gw.id,
+            tenant_id: gw.tenant_id || 'tenant-root-platform',
+            branchId: gw.branch_id || 'ALL',
+            wingId: gw.wing_id || 'ALL',
+            providerKey: gw.provider_key,
+            displayName: gw.display_name,
+            category: gw.category,
+            accountTitle: gw.account_title || '',
+            accountNumber: gw.account_number || '',
+            iban: gw.iban || '',
+            raastId: gw.raast_id || '',
+            bankName: gw.bank_name || '',
+            branchCode: gw.branch_code || '',
+            tillId: gw.till_id || '',
+            billerCode: gw.biller_code || '',
+            merchantId: gw.merchant_id || '',
+            feeType: gw.fee_type || 'none',
+            feeValue: Number(gw.fee_value || 0),
+            verificationMode: gw.verification_mode || 'slip_review',
+            isEnabled: gw.is_enabled === 1,
+            isDefault: gw.is_default === 1,
+            is_synced: 1,
+            synced_at: new Date().toISOString()
+          });
+          sqliteDb.prepare('UPDATE local_school_payment_gateways SET is_synced = 1 WHERE id = ?').run(gw.id);
+          syncedThisRun += 1;
+        } catch {
+          break;
+        }
+      }
+    } catch {}
+
+    try {
+      const pendingPgTxns = sqliteDb.prepare('SELECT * FROM local_school_payment_transactions WHERE is_synced = 0 LIMIT 25').all();
+      for (const tx of pendingPgTxns) {
+        try {
+          await setDoc(doc(db, 'school_payment_transactions', tx.id), {
+            id: tx.id,
+            tenant_id: tx.tenant_id || 'tenant-root-platform',
+            branchId: tx.branch_id || 'BR-LHR-01',
+            wingId: tx.wing_id || 'WNG-LHR-SR',
+            txnRef: tx.txn_ref,
+            challanNo: tx.challan_no || '',
+            gatewayId: tx.gateway_id,
+            gatewayName: tx.gateway_name,
+            providerKey: tx.provider_key,
+            studentId: tx.student_id || '',
+            studentName: tx.student_name,
+            rollNo: tx.roll_no || '',
+            grade: tx.grade || '',
+            baseAmount: Number(tx.base_amount || 0),
+            gatewayFee: Number(tx.gateway_fee || 0),
+            totalAmount: Number(tx.total_amount || 0),
+            currency: tx.currency || 'PKR',
+            status: tx.status || 'PENDING_VERIFICATION',
+            proofReference: tx.proof_reference || '',
+            proofNotes: tx.proof_notes || '',
+            proofScreenshot: (tx.proof_screenshot && tx.proof_screenshot.length <= 450000) ? tx.proof_screenshot : '',
+            hasProofScreenshot: Boolean(tx.proof_screenshot),
+            submittedByName: tx.submitted_by_name || '',
+            submittedByRole: tx.submitted_by_role || 'parent',
+            verifiedBy: tx.verified_by || '',
+            linkedFeeId: tx.linked_fee_id || '',
+            createdAt: tx.created_at || new Date().toISOString(),
+            is_synced: 1,
+            synced_at: new Date().toISOString()
+          });
+          sqliteDb.prepare('UPDATE local_school_payment_transactions SET is_synced = 1 WHERE id = ?').run(tx.id);
+          syncedThisRun += 1;
+        } catch {
+          break;
+        }
+      }
+    } catch {}
+
     observability.recordSyncRun({ ok: true, syncedCount: syncedThisRun });
   } catch (syncErr) {
     observability.recordSyncRun({ ok: false, error: syncErr });

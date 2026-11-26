@@ -669,6 +669,89 @@ CREATE TABLE IF NOT EXISTS local_school_table_cells (
   PRIMARY KEY (tenant_id, table_id, row_key, col_id)
 );
 
+-- School Payment Gateways Registry (Owner-Controlled Pakistan Native & Custom Channels)
+CREATE TABLE IF NOT EXISTS local_school_payment_gateways (
+  id TEXT PRIMARY KEY,
+  tenant_id TEXT DEFAULT 'tenant-root-platform',
+  branch_id TEXT DEFAULT 'ALL',
+  wing_id TEXT DEFAULT 'ALL',
+  provider_key TEXT NOT NULL,
+  display_name TEXT NOT NULL,
+  category TEXT DEFAULT 'mobile_wallet',
+  account_title TEXT,
+  account_number TEXT,
+  iban TEXT,
+  raast_id TEXT,
+  bank_name TEXT,
+  branch_code TEXT,
+  till_id TEXT,
+  biller_code TEXT,
+  merchant_id TEXT,
+  merchant_secret_enc TEXT,
+  integrity_salt_enc TEXT,
+  webhook_url TEXT,
+  fee_type TEXT DEFAULT 'none',
+  fee_value REAL DEFAULT 0,
+  verification_mode TEXT DEFAULT 'slip_review',
+  instructions TEXT,
+  allowed_portals_json TEXT DEFAULT '["owner","principal","accountant","student","parent"]',
+  custom_fields_json TEXT DEFAULT '[]',
+  is_enabled INTEGER DEFAULT 1,
+  is_default INTEGER DEFAULT 0,
+  sort_order INTEGER DEFAULT 10,
+  is_synced INTEGER DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- School Payment Gateway Global Settings (Strictly Owner-Controlled)
+CREATE TABLE IF NOT EXISTS local_school_gateway_settings (
+  tenant_id TEXT PRIMARY KEY,
+  settings_json TEXT NOT NULL,
+  is_synced INTEGER DEFAULT 0,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- School Payment Gateway Transactions & Verification Ledger
+CREATE TABLE IF NOT EXISTS local_school_payment_transactions (
+  id TEXT PRIMARY KEY,
+  tenant_id TEXT DEFAULT 'tenant-root-platform',
+  branch_id TEXT DEFAULT 'BR-LHR-01',
+  wing_id TEXT DEFAULT 'WNG-LHR-SR',
+  txn_ref TEXT NOT NULL,
+  challan_no TEXT,
+  gateway_id TEXT NOT NULL,
+  gateway_name TEXT NOT NULL,
+  provider_key TEXT NOT NULL,
+  student_id TEXT,
+  student_name TEXT NOT NULL,
+  roll_no TEXT,
+  grade TEXT,
+  guardian_name TEXT,
+  payer_phone TEXT,
+  payer_account_title TEXT,
+  month TEXT,
+  base_amount REAL NOT NULL,
+  gateway_fee REAL DEFAULT 0,
+  total_amount REAL NOT NULL,
+  currency TEXT DEFAULT 'PKR',
+  status TEXT DEFAULT 'PENDING_VERIFICATION',
+  verification_mode TEXT DEFAULT 'slip_review',
+  proof_reference TEXT,
+  proof_notes TEXT,
+  proof_screenshot TEXT DEFAULT '',
+  submitted_by_name TEXT,
+  submitted_by_role TEXT DEFAULT 'parent',
+  verified_by TEXT,
+  verified_at TEXT,
+  rejection_reason TEXT,
+  linked_fee_id TEXT,
+  custom_fields_json TEXT DEFAULT '{}',
+  is_synced INTEGER DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Multi-Branch & Wing Query Indexes
 CREATE INDEX IF NOT EXISTS idx_school_wings_tenant_branch ON local_school_wings (tenant_id, branch_id);
 CREATE INDEX IF NOT EXISTS idx_school_students_branch_wing ON local_school_students (tenant_id, branch_id, wing_id);
@@ -678,3 +761,7 @@ CREATE INDEX IF NOT EXISTS idx_school_teachers_branch_wing ON local_school_teach
 CREATE INDEX IF NOT EXISTS idx_school_admissions_branch_wing ON local_school_admissions (tenant_id, branch_id, wing_id);
 CREATE INDEX IF NOT EXISTS idx_school_reconciliation_branch ON local_school_reconciliation (tenant_id, branch_id);
 CREATE INDEX IF NOT EXISTS idx_school_petty_branch ON local_school_petty_vouchers (tenant_id, branch_id);
+CREATE INDEX IF NOT EXISTS idx_school_pg_gateways_tenant ON local_school_payment_gateways (tenant_id, sort_order);
+CREATE INDEX IF NOT EXISTS idx_school_pg_txns_tenant_status ON local_school_payment_transactions (tenant_id, status, created_at);
+CREATE INDEX IF NOT EXISTS idx_school_pg_txns_student ON local_school_payment_transactions (tenant_id, student_id);
+

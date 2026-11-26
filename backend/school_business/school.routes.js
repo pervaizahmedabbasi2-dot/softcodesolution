@@ -242,6 +242,229 @@ export const SCHOOL_WINGS = [
   { id: 'WNG-KHI-SNR', branchId: 'BR-KHI-03', code: 'KHI-SNR', name: 'Clifton Senior & Cambridge Wing', type: 'Senior', gradeRange: 'Class 9 - O-Level', headName: 'Prof. Asadullah Qazi', status: 'ACTIVE' }
 ];
 
+export function getDefaultSchoolGatewaySettings() {
+  return {
+    currency: 'PKR',
+    allowOnlineStudentPayment: true,
+    allowOnlineParentPayment: true,
+    allowPartialOnlinePayment: false,
+    requireProofReference: true,
+    autoIssueReceiptOnVerify: true,
+    oneBillPrefix: '10089',
+    lateFeeGraceDays: 5,
+    lateFeeFinePkr: 500,
+    receiptFooterNote: 'Authorized by School Owner. Valid across JazzCash, Easypaisa, Raast, 1Bill & Bank Counters.',
+    ownerNotifyOnPayment: true,
+    customPolicyFields: []
+  };
+}
+
+export function getDefaultSchoolPaymentGateways(tenantId = 'tenant-root-platform') {
+  const safeTid = String(tenantId || 'tenant-root-platform').replace(/[^a-zA-Z0-9_-]/g, '_');
+  return [
+    {
+      id: `PGW-${safeTid}-raast`,
+      providerKey: 'raast',
+      displayName: 'Raast Instant IBFT',
+      category: 'raast_ibft',
+      accountTitle: 'SoftCode International School',
+      accountNumber: '0300-8451920',
+      iban: 'PK36MEZN0001020105829102',
+      raastId: '03008451920',
+      bankName: 'State Bank Raast (Meezan Linked)',
+      branchCode: '0102',
+      tillId: '',
+      billerCode: '',
+      merchantId: 'RAAST-PK-01',
+      webhookUrl: '',
+      feeType: 'none',
+      feeValue: 0,
+      verificationMode: 'slip_review',
+      instructions: 'Zero-fee instant State Bank Raast transfer from any Pakistani bank app using Raast ID or IBAN. Submit TRX ID below.',
+      allowedPortals: ['owner', 'principal', 'accountant', 'student', 'parent'],
+      customFields: [{ label: 'Settlement Cycle', value: 'Instant T+0 (SBP Raast)' }],
+      isEnabled: true,
+      isDefault: true,
+      sortOrder: 10
+    },
+    {
+      id: `PGW-${safeTid}-jazzcash`,
+      providerKey: 'jazzcash',
+      displayName: 'JazzCash Merchant & Wallet',
+      category: 'mobile_wallet',
+      accountTitle: 'SoftCode International School',
+      accountNumber: '0300-8451920',
+      iban: '',
+      raastId: '03008451920',
+      bankName: 'JazzCash Mobilink Microfinance',
+      branchCode: '',
+      tillId: '982140',
+      billerCode: '',
+      merchantId: 'JC-PK-8820',
+      webhookUrl: '',
+      feeType: 'none',
+      feeValue: 0,
+      verificationMode: 'slip_review',
+      instructions: 'Open JazzCash App -> Till Pay (Till # 982140) or Send Money to 0300-8451920 -> Enter 11-digit TID below.',
+      allowedPortals: ['owner', 'principal', 'accountant', 'student', 'parent'],
+      customFields: [{ label: 'CNIC Tail / Helpline', value: '042-35761201' }],
+      isEnabled: true,
+      isDefault: false,
+      sortOrder: 20
+    },
+    {
+      id: `PGW-${safeTid}-easypaisa`,
+      providerKey: 'easypaisa',
+      displayName: 'Easypaisa Merchant & QR',
+      category: 'mobile_wallet',
+      accountTitle: 'SoftCode International School',
+      accountNumber: '0345-9182736',
+      iban: '',
+      raastId: '03459182736',
+      bankName: 'Easypaisa Telenor Microfinance',
+      branchCode: '',
+      tillId: '441098',
+      billerCode: '',
+      merchantId: 'EP-PK-4410',
+      webhookUrl: '',
+      feeType: 'none',
+      feeValue: 0,
+      verificationMode: 'slip_review',
+      instructions: 'Open Easypaisa App -> Send Money / QR Pay to 0345-9182736 -> Enter TRX ID in payment form.',
+      allowedPortals: ['owner', 'principal', 'accountant', 'student', 'parent'],
+      customFields: [{ label: 'Merchant QR Code ID', value: 'EP-QR-441098' }],
+      isEnabled: true,
+      isDefault: false,
+      sortOrder: 30
+    },
+    {
+      id: `PGW-${safeTid}-onebill`,
+      providerKey: 'onebill',
+      displayName: '1Link / 1Bill Fee Voucher (KuickPay)',
+      category: '1link_1bill',
+      accountTitle: 'SoftCode Fee Collection',
+      accountNumber: '10089',
+      iban: '',
+      raastId: '',
+      bankName: '1Link / KuickPay All PK Banks',
+      branchCode: '1LINK',
+      tillId: '',
+      billerCode: '10089',
+      merchantId: 'KP-10089',
+      webhookUrl: '',
+      feeType: 'fixed',
+      feeValue: 50,
+      verificationMode: 'auto_instant',
+      instructions: 'Pay from any Pakistani bank app via Bill Payment -> 1Bill Invoice / KuickPay using Biller Prefix 10089 + Challan Number.',
+      allowedPortals: ['owner', 'principal', 'accountant', 'student', 'parent'],
+      customFields: [{ label: '1Bill Consumer Format', value: '10089 + Roll / Challan #' }],
+      isEnabled: true,
+      isDefault: false,
+      sortOrder: 40
+    },
+    {
+      id: `PGW-${safeTid}-meezan`,
+      providerKey: 'meezan_bank',
+      displayName: 'Meezan Bank (Islamic Banking)',
+      category: 'bank_challan',
+      accountTitle: 'SoftCode International School',
+      accountNumber: '0102-0105829102',
+      iban: 'PK36MEZN0001020105829102',
+      raastId: '',
+      bankName: 'Meezan Bank Limited',
+      branchCode: '0102',
+      tillId: '',
+      billerCode: '',
+      merchantId: 'MEZN-0102',
+      webhookUrl: '',
+      feeType: 'none',
+      feeValue: 0,
+      verificationMode: 'slip_review',
+      instructions: 'Deposit 3-Copy Bank Challan at any Meezan Bank branch counter or transfer via Meezan Mobile App and enter Bank Slip / IBFT Ref.',
+      allowedPortals: ['owner', 'principal', 'accountant', 'student', 'parent'],
+      customFields: [{ label: 'Branch Name', value: 'Gulberg III Main Branch, Lahore' }],
+      isEnabled: true,
+      isDefault: false,
+      sortOrder: 50
+    },
+    {
+      id: `PGW-${safeTid}-hbl`,
+      providerKey: 'hbl_bank',
+      displayName: 'HBL (Habib Bank Limited)',
+      category: 'bank_challan',
+      accountTitle: 'SoftCode International School',
+      accountNumber: '0042-799102938',
+      iban: 'PK48HABB0000427991029380',
+      raastId: '',
+      bankName: 'Habib Bank Limited (HBL)',
+      branchCode: '0042',
+      tillId: '',
+      billerCode: '',
+      merchantId: 'HBL-0042',
+      webhookUrl: '',
+      feeType: 'none',
+      feeValue: 0,
+      verificationMode: 'slip_review',
+      instructions: 'Deposit fee challan at HBL Branch or transfer via HBL Mobile / Konnect and submit Reference #.',
+      allowedPortals: ['owner', 'principal', 'accountant', 'student', 'parent'],
+      customFields: [{ label: 'Branch Name', value: 'Liberty Market Branch, Lahore' }],
+      isEnabled: true,
+      isDefault: false,
+      sortOrder: 60
+    },
+    {
+      id: `PGW-${safeTid}-sadapay`,
+      providerKey: 'sadapay_nayapay',
+      displayName: 'SadaPay / NayaPay Wallet',
+      category: 'mobile_wallet',
+      accountTitle: 'SoftCode Accounts Desk',
+      accountNumber: '0312-7744110',
+      iban: 'PK22SADA0000003127744110',
+      raastId: '03127744110',
+      bankName: 'SadaPay / NayaPay PK',
+      branchCode: '',
+      tillId: '',
+      billerCode: '',
+      merchantId: 'SP-NP-PK',
+      webhookUrl: '',
+      feeType: 'none',
+      feeValue: 0,
+      verificationMode: 'slip_review',
+      instructions: 'Send instant Raast or IBFT transfer from SadaPay / NayaPay and enter Transaction Ref #.',
+      allowedPortals: ['owner', 'principal', 'accountant', 'student', 'parent'],
+      customFields: [],
+      isEnabled: true,
+      isDefault: false,
+      sortOrder: 70
+    },
+    {
+      id: `PGW-${safeTid}-cash`,
+      providerKey: 'cash_counter',
+      displayName: 'Cash at School Fee Counter',
+      category: 'cash_counter',
+      accountTitle: 'School Bursar / Accounts Counter',
+      accountNumber: 'COUNTER-DESK',
+      iban: '',
+      raastId: '',
+      bankName: 'Campus Cash Desk',
+      branchCode: 'DESK-01',
+      tillId: '',
+      billerCode: '',
+      merchantId: 'CASH-DESK',
+      webhookUrl: '',
+      feeType: 'none',
+      feeValue: 0,
+      verificationMode: 'counter_cash',
+      instructions: 'Pay cash directly at School Accountant or Principal Fee Desk and collect stamped official receipt.',
+      allowedPortals: ['owner', 'principal', 'accountant'],
+      customFields: [],
+      isEnabled: true,
+      isDefault: false,
+      sortOrder: 80
+    }
+  ];
+}
+
 function ensureColumnMigrations(sqliteDb) {
   if (!sqliteDb) return;
   const safeAddCol = (table, col, def) => {
@@ -320,6 +543,7 @@ function ensureColumnMigrations(sqliteDb) {
   safeAddCol('local_school_face_profiles', 'is_synced', 'INTEGER DEFAULT 0');
   safeAddCol('local_school_staff', 'fingerprint_enrolled', 'INTEGER DEFAULT 0');
   safeAddCol('local_school_principals', 'fingerprint_enrolled', 'INTEGER DEFAULT 0');
+  safeAddCol('local_school_payment_transactions', 'proof_screenshot', "TEXT DEFAULT ''");
 
   const teacherCols = [
     ['tenant_id', "TEXT DEFAULT 'tenant-root-platform'"],
@@ -600,6 +824,85 @@ function ensureColumnMigrations(sqliteDb) {
         is_synced INTEGER DEFAULT 0,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       );
+      CREATE TABLE IF NOT EXISTS local_school_payment_gateways (
+        id TEXT PRIMARY KEY,
+        tenant_id TEXT DEFAULT 'tenant-root-platform',
+        branch_id TEXT DEFAULT 'ALL',
+        wing_id TEXT DEFAULT 'ALL',
+        provider_key TEXT NOT NULL,
+        display_name TEXT NOT NULL,
+        category TEXT DEFAULT 'mobile_wallet',
+        account_title TEXT,
+        account_number TEXT,
+        iban TEXT,
+        raast_id TEXT,
+        bank_name TEXT,
+        branch_code TEXT,
+        till_id TEXT,
+        biller_code TEXT,
+        merchant_id TEXT,
+        merchant_secret_enc TEXT,
+        integrity_salt_enc TEXT,
+        webhook_url TEXT,
+        fee_type TEXT DEFAULT 'none',
+        fee_value REAL DEFAULT 0,
+        verification_mode TEXT DEFAULT 'slip_review',
+        instructions TEXT,
+        allowed_portals_json TEXT DEFAULT '["owner","principal","accountant","student","parent"]',
+        custom_fields_json TEXT DEFAULT '[]',
+        is_enabled INTEGER DEFAULT 1,
+        is_default INTEGER DEFAULT 0,
+        sort_order INTEGER DEFAULT 10,
+        is_synced INTEGER DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE TABLE IF NOT EXISTS local_school_gateway_settings (
+        tenant_id TEXT PRIMARY KEY,
+        settings_json TEXT NOT NULL,
+        is_synced INTEGER DEFAULT 0,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE TABLE IF NOT EXISTS local_school_payment_transactions (
+        id TEXT PRIMARY KEY,
+        tenant_id TEXT DEFAULT 'tenant-root-platform',
+        branch_id TEXT DEFAULT 'BR-LHR-01',
+        wing_id TEXT DEFAULT 'WNG-LHR-SR',
+        txn_ref TEXT NOT NULL,
+        challan_no TEXT,
+        gateway_id TEXT NOT NULL,
+        gateway_name TEXT NOT NULL,
+        provider_key TEXT NOT NULL,
+        student_id TEXT,
+        student_name TEXT NOT NULL,
+        roll_no TEXT,
+        grade TEXT,
+        guardian_name TEXT,
+        payer_phone TEXT,
+        payer_account_title TEXT,
+        month TEXT,
+        base_amount REAL NOT NULL,
+        gateway_fee REAL DEFAULT 0,
+        total_amount REAL NOT NULL,
+        currency TEXT DEFAULT 'PKR',
+        status TEXT DEFAULT 'PENDING_VERIFICATION',
+        verification_mode TEXT DEFAULT 'slip_review',
+        proof_reference TEXT,
+        proof_notes TEXT,
+        submitted_by_name TEXT,
+        submitted_by_role TEXT DEFAULT 'parent',
+        verified_by TEXT,
+        verified_at TEXT,
+        rejection_reason TEXT,
+        linked_fee_id TEXT,
+        custom_fields_json TEXT DEFAULT '{}',
+        is_synced INTEGER DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE INDEX IF NOT EXISTS idx_school_pg_gateways_tenant ON local_school_payment_gateways (tenant_id, sort_order);
+      CREATE INDEX IF NOT EXISTS idx_school_pg_txns_tenant_status ON local_school_payment_transactions (tenant_id, status, created_at);
+      CREATE INDEX IF NOT EXISTS idx_school_pg_txns_student ON local_school_payment_transactions (tenant_id, student_id);
     `);
     safeAddCol('local_school_branches', 'established_year', 'TEXT');
     const branchScopedTables = [
@@ -5398,7 +5701,7 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       const mode = String(f.paymentMode || '').toLowerCase();
       if (mode.includes('meezan')) bankMeezanInflow += amt;
       else if (mode.includes('hbl')) bankHblInflow += amt;
-      else if (mode.includes('jazz') || mode.includes('easy') || mode.includes('kuick') || mode.includes('raast') || mode.includes('online')) digitalInflow += amt;
+      else if (mode.includes('jazz') || mode.includes('easy') || mode.includes('kuick') || mode.includes('1bill') || mode.includes('1link') || mode.includes('raast') || mode.includes('sadapay') || mode.includes('nayapay') || mode.includes('online') || mode.includes('gateway')) digitalInflow += amt;
       else cashInflow += amt;
     }
 
@@ -5540,6 +5843,30 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
           approvedCount: reconciliations.filter((r) => !['Pending Owner Review', 'Flagged by Owner'].includes(r.ownerApprovalStatus || '')).length,
           latestClosing
         },
+        paymentGateways: (() => {
+          let pendingVerificationCount = 0;
+          let pendingVerificationAmount = 0;
+          let verifiedGatewayCount = 0;
+          let verifiedGatewayAmount = 0;
+          if (sqliteDb) {
+            try {
+              const scopeSql = buildScopeSql(scope);
+              const pgRows = sqliteDb.prepare(`SELECT status, total_amount FROM local_school_payment_transactions WHERE tenant_id = ?${scopeSql.sql}`).all(tid, ...scopeSql.params);
+              for (const r of pgRows) {
+                const st = String(r.status || '').toUpperCase();
+                const amt = Number(r.total_amount || 0);
+                if (st === 'PENDING_VERIFICATION') {
+                  pendingVerificationCount++;
+                  pendingVerificationAmount += amt;
+                } else if (st === 'VERIFIED' || st === 'SETTLED') {
+                  verifiedGatewayCount++;
+                  verifiedGatewayAmount += amt;
+                }
+              }
+            } catch {}
+          }
+          return { pendingVerificationCount, pendingVerificationAmount, verifiedGatewayCount, verifiedGatewayAmount };
+        })(),
         pettyVouchers
       }
     });
@@ -6322,6 +6649,1110 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       } catch {}
     }
     res.json({ ok: true, tenantId: tid });
+  });
+
+  // =========================================================================
+  // PAKISTAN-NATIVE SCHOOL PAYMENT GATEWAYS, SETTINGS & TRANSACTIONS (OWNER-CONTROLLED)
+  // =========================================================================
+  const validateGatewayWebhookUrl = (raw) => {
+    const clean = String(raw || '').trim();
+    if (!clean) return { ok: true, value: '' };
+    try {
+      const parsed = new URL(clean);
+      if (!['http:', 'https:'].includes(parsed.protocol)) {
+        return { ok: false, message: 'Webhook URL must use http:// or https://' };
+      }
+      return { ok: true, value: clean };
+    } catch {
+      return { ok: false, message: 'Invalid webhook URL format.' };
+    }
+  };
+
+  const validateProofScreenshot = (raw) => {
+    const clean = String(raw || '').trim();
+    if (!clean) return { ok: true, value: '' };
+    if (!/^data:image\/(png|jpeg|jpg|webp|gif);base64,[A-Za-z0-9+/=\r\n]+$/i.test(clean)) {
+      return { ok: false, message: 'Payment slip screenshot must be a valid PNG, JPG, WEBP, or GIF image.' };
+    }
+    const normalized = clean.replace(/[\r\n]/g, '');
+    if (normalized.length > 650000) {
+      return { ok: false, message: 'Payment slip screenshot is too large. Please upload a smaller or compressed image.' };
+    }
+    return { ok: true, value: normalized };
+  };
+
+  const ensureTenantPaymentGatewaysSeeded = (tid) => {
+    if (!sqliteDb) return;
+    try {
+      const cnt = Number(sqliteDb.prepare('SELECT COUNT(*) AS cnt FROM local_school_payment_gateways WHERE tenant_id = ?').get(tid)?.cnt || 0);
+      if (cnt === 0) {
+        const defaults = getDefaultSchoolPaymentGateways(tid);
+        const now = new Date().toISOString();
+        const stmt = sqliteDb.prepare(`
+          INSERT OR IGNORE INTO local_school_payment_gateways (
+            id, tenant_id, branch_id, wing_id, provider_key, display_name, category,
+            account_title, account_number, iban, raast_id, bank_name, branch_code, till_id, biller_code,
+            merchant_id, merchant_secret_enc, integrity_salt_enc, webhook_url,
+            fee_type, fee_value, verification_mode, instructions, allowed_portals_json, custom_fields_json,
+            is_enabled, is_default, sort_order, is_synced, created_at, updated_at
+          ) VALUES (?, ?, 'ALL', 'ALL', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '', '', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)
+        `);
+        for (const gw of defaults) {
+          stmt.run(
+            gw.id, tid, gw.providerKey, gw.displayName, gw.category,
+            gw.accountTitle, gw.accountNumber, gw.iban, gw.raastId, gw.bankName, gw.branchCode, gw.tillId, gw.billerCode,
+            gw.merchantId, gw.webhookUrl || '', gw.feeType, Number(gw.feeValue || 0), gw.verificationMode,
+            gw.instructions, JSON.stringify(gw.allowedPortals || []), JSON.stringify(gw.customFields || []),
+            gw.isEnabled ? 1 : 0, gw.isDefault ? 1 : 0, Number(gw.sortOrder || 10), now, now
+          );
+        }
+      }
+      const settingsRow = sqliteDb.prepare('SELECT tenant_id FROM local_school_gateway_settings WHERE tenant_id = ?').get(tid);
+      if (!settingsRow) {
+        sqliteDb.prepare(`
+          INSERT OR IGNORE INTO local_school_gateway_settings (tenant_id, settings_json, is_synced, updated_at)
+          VALUES (?, ?, 0, ?)
+        `).run(tid, JSON.stringify(getDefaultSchoolGatewaySettings()), new Date().toISOString());
+      }
+    } catch {}
+  };
+
+  const loadTenantGatewaySettings = (tid) => {
+    const def = getDefaultSchoolGatewaySettings();
+    if (!sqliteDb) return def;
+    try {
+      ensureTenantPaymentGatewaysSeeded(tid);
+      const row = sqliteDb.prepare('SELECT settings_json FROM local_school_gateway_settings WHERE tenant_id = ?').get(tid);
+      if (row && row.settings_json) {
+        const parsed = JSON.parse(row.settings_json);
+        return { ...def, ...(parsed && typeof parsed === 'object' ? parsed : {}) };
+      }
+    } catch {}
+    return def;
+  };
+
+  const mapGatewayRow = (r, tid, isOwner, nameMaps = null) => {
+    let allowedPortals = ['owner', 'principal', 'accountant', 'student', 'parent'];
+    try {
+      const parsed = JSON.parse(r.allowed_portals_json || '[]');
+      if (Array.isArray(parsed) && parsed.length > 0) allowedPortals = parsed;
+    } catch {}
+    let customFields = [];
+    try {
+      const parsed = JSON.parse(r.custom_fields_json || '[]');
+      if (Array.isArray(parsed)) customFields = parsed;
+    } catch {}
+    const branchId = r.branch_id || 'ALL';
+    const wingId = r.wing_id || 'ALL';
+    const rawSecret = r.merchant_secret_enc ? dec(tid, r.merchant_secret_enc) : '';
+    const rawSalt = r.integrity_salt_enc ? dec(tid, r.integrity_salt_enc) : '';
+    const hasMerchantSecret = Boolean(rawSecret);
+    const hasIntegritySalt = Boolean(rawSalt);
+    const maskTail = (s) => (s && s.length > 4 ? `••••${s.slice(-4)}` : (s ? '••••' : ''));
+    return {
+      id: r.id,
+      tenantId: r.tenant_id || tid,
+      branchId,
+      branchName: branchId === 'ALL' ? 'All Campus Branches' : (nameMaps ? nameMaps.branchName(branchId) : branchId),
+      wingId,
+      wingName: wingId === 'ALL' ? 'All Academic Wings' : (nameMaps ? nameMaps.wingName(wingId) : wingId),
+      providerKey: r.provider_key,
+      displayName: r.display_name,
+      category: r.category || 'mobile_wallet',
+      accountTitle: r.account_title || '',
+      accountNumber: r.account_number || '',
+      iban: r.iban || '',
+      raastId: r.raast_id || '',
+      bankName: r.bank_name || '',
+      branchCode: r.branch_code || '',
+      tillId: r.till_id || '',
+      billerCode: r.biller_code || '',
+      merchantId: r.merchant_id || '',
+      hasMerchantSecret: isOwner ? hasMerchantSecret : false,
+      hasIntegritySalt: isOwner ? hasIntegritySalt : false,
+      merchantSecretHint: isOwner ? maskTail(rawSecret) : '',
+      integritySaltHint: isOwner ? maskTail(rawSalt) : '',
+      webhookUrl: isOwner ? (r.webhook_url || '') : '',
+      feeType: r.fee_type || 'none',
+      feeValue: Number(r.fee_value || 0),
+      verificationMode: r.verification_mode || 'slip_review',
+      instructions: r.instructions || '',
+      allowedPortals,
+      customFields,
+      isEnabled: r.is_enabled !== 0,
+      isDefault: r.is_default === 1,
+      sortOrder: Number(r.sort_order || 10),
+      createdAt: r.created_at,
+      updatedAt: r.updated_at
+    };
+  };
+
+  const mapPaymentTransactionRow = (r, tid, nameMaps = null) => {
+    const branchId = r.branch_id || DEFAULT_BRANCH_ID;
+    const wingId = r.wing_id || DEFAULT_WING_ID;
+    let customFields = {};
+    try {
+      const parsed = JSON.parse(r.custom_fields_json || '{}');
+      if (parsed && typeof parsed === 'object') customFields = parsed;
+    } catch {}
+    return {
+      id: r.id,
+      tenantId: r.tenant_id || tid,
+      branchId,
+      branchName: nameMaps ? nameMaps.branchName(branchId) : branchId,
+      wingId,
+      wingName: nameMaps ? nameMaps.wingName(wingId) : wingId,
+      txnRef: r.txn_ref,
+      challanNo: r.challan_no || '',
+      gatewayId: r.gateway_id,
+      gatewayName: r.gateway_name,
+      providerKey: r.provider_key,
+      studentId: r.student_id || '',
+      studentName: dec(tid, r.student_name) || 'Student',
+      rollNo: r.roll_no || '',
+      grade: r.grade || '',
+      guardianName: dec(tid, r.guardian_name) || '',
+      payerPhone: dec(tid, r.payer_phone) || '',
+      payerAccountTitle: dec(tid, r.payer_account_title) || '',
+      month: r.month || 'Current Session Fee',
+      baseAmount: Number(r.base_amount || 0),
+      gatewayFee: Number(r.gateway_fee || 0),
+      totalAmount: Number(r.total_amount || 0),
+      currency: r.currency || 'PKR',
+      status: r.status || 'PENDING_VERIFICATION',
+      verificationMode: r.verification_mode || 'slip_review',
+      proofReference: r.proof_reference || '',
+      proofNotes: r.proof_notes || '',
+      proofScreenshot: r.proof_screenshot || '',
+      hasProofScreenshot: Boolean(r.proof_screenshot),
+      submittedByName: r.submitted_by_name || '',
+      submittedByRole: r.submitted_by_role || 'parent',
+      verifiedBy: r.verified_by || '',
+      verifiedAt: r.verified_at || '',
+      rejectionReason: r.rejection_reason || '',
+      linkedFeeId: r.linked_fee_id || '',
+      customFields,
+      createdAt: r.created_at,
+      updatedAt: r.updated_at
+    };
+  };
+
+  const settleFeeForGatewayTransaction = (tid, txRow, verifierName, verifierRole, scope) => {
+    if (!sqliteDb || !txRow) return '';
+    if (txRow.linked_fee_id) {
+      const existingFee = sqliteDb.prepare('SELECT id FROM local_school_fees WHERE id = ? AND tenant_id = ?').get(txRow.linked_fee_id, tid);
+      if (existingFee) return existingFee.id;
+    }
+    const stuName = dec(tid, txRow.student_name) || 'Student';
+    const baseAmt = Number(txRow.base_amount || txRow.total_amount || 0);
+    const totalPaid = Number(txRow.total_amount || baseAmt);
+    const paidDate = new Date().toISOString().split('T')[0];
+    const modeLabel = `${txRow.gateway_name} (${txRow.provider_key === 'cash_counter' ? 'Counter' : 'Gateway'})`;
+    const proofRef = txRow.proof_reference || txRow.txn_ref;
+    const txBranchId = txRow.branch_id || scope?.writeBranchId || DEFAULT_BRANCH_ID;
+    const txWingId = txRow.wing_id || scope?.writeWingId || DEFAULT_WING_ID;
+
+    let linkedFeeId = '';
+    if (txRow.challan_no) {
+      const existingChallan = sqliteDb.prepare('SELECT * FROM local_school_fees WHERE tenant_id = ? AND challan_no = ?').get(tid, txRow.challan_no);
+      if (existingChallan) {
+        const prevPaid = Number(existingChallan.paid_amount || 0);
+        const totalDue = Number(existingChallan.total || baseAmt);
+        const nextPaid = Math.min(Math.max(totalDue, baseAmt), prevPaid + baseAmt);
+        const nextStatus = nextPaid >= totalDue ? 'PAID' : 'PARTIAL';
+        sqliteDb.prepare(`
+          UPDATE local_school_fees
+          SET status = ?, paid_amount = ?, paid_date = ?, payment_mode = ?, resource_reference = ?, collected_by = ?, collector_role = ?, notes = ?, is_synced = 0
+          WHERE id = ? AND tenant_id = ?
+        `).run(
+          nextStatus,
+          nextPaid,
+          paidDate,
+          modeLabel,
+          proofRef,
+          verifierName || 'Online Gateway Verification',
+          verifierRole || 'owner',
+          `Verified gateway txn ${txRow.txn_ref} (Total PKR ${totalPaid})`,
+          existingChallan.id,
+          tid
+        );
+        linkedFeeId = existingChallan.id;
+      }
+    }
+
+    if (!linkedFeeId && (txRow.student_id || txRow.roll_no)) {
+      const openChallan = txRow.student_id
+        ? sqliteDb.prepare("SELECT * FROM local_school_fees WHERE tenant_id = ? AND student_id = ? AND UPPER(status) IN ('PENDING', 'OVERDUE', 'PARTIAL') ORDER BY created_at DESC LIMIT 1").get(tid, txRow.student_id)
+        : sqliteDb.prepare("SELECT * FROM local_school_fees WHERE tenant_id = ? AND roll_no = ? AND UPPER(status) IN ('PENDING', 'OVERDUE', 'PARTIAL') ORDER BY created_at DESC LIMIT 1").get(tid, txRow.roll_no);
+      if (openChallan) {
+        const prevPaid = Number(openChallan.paid_amount || 0);
+        const totalDue = Number(openChallan.total || baseAmt);
+        const nextPaid = Math.min(Math.max(totalDue, baseAmt), prevPaid + baseAmt);
+        const nextStatus = nextPaid >= totalDue ? 'PAID' : 'PARTIAL';
+        if (nextStatus === 'PAID') {
+          sqliteDb.prepare(`
+            UPDATE local_school_fees
+            SET status = ?, paid_amount = ?, paid_date = ?, payment_mode = ?, resource_reference = ?, collected_by = ?, collector_role = ?, notes = ?, is_synced = 0
+            WHERE id = ? AND tenant_id = ?
+          `).run(
+            'PAID',
+            nextPaid,
+            paidDate,
+            modeLabel,
+            proofRef,
+            verifierName || 'Online Gateway Verification',
+            verifierRole || 'owner',
+            `Settled via gateway txn ${txRow.txn_ref} (Total PKR ${totalPaid})`,
+            openChallan.id,
+            tid
+          );
+          linkedFeeId = openChallan.id;
+        }
+      }
+    }
+
+    if (!linkedFeeId) {
+      linkedFeeId = 'FEE-' + Date.now() + '-' + Math.floor(10 + Math.random() * 90);
+      const resolvedChallanNo = txRow.challan_no || `GW-${txRow.txn_ref}`;
+      sqliteDb.prepare(`
+        INSERT INTO local_school_fees (
+          id, tenant_id, branch_id, wing_id, challan_no, student_id, student_name, roll_no, grade, month,
+          tuition, lab_fee, discount, total, paid_amount, status, payment_mode, resource_reference,
+          collected_by, collector_role, notes, due_date, paid_date, is_synced, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, ?, ?, 'PAID', ?, ?, ?, ?, ?, ?, ?, 0, ?)
+      `).run(
+        linkedFeeId,
+        tid,
+        txBranchId,
+        txWingId,
+        resolvedChallanNo,
+        String(txRow.student_id || ''),
+        enc(tid, stuName),
+        String(txRow.roll_no || 'SCH-GEN'),
+        String(txRow.grade || 'Campus'),
+        String(txRow.month || 'Current Session Fee'),
+        baseAmt,
+        baseAmt,
+        baseAmt,
+        modeLabel,
+        proofRef,
+        String(verifierName || 'Payment Gateway Desk'),
+        String(verifierRole || 'owner'),
+        `Online gateway payment verified (${txRow.txn_ref})`,
+        paidDate,
+        paidDate,
+        new Date().toISOString()
+      );
+    }
+
+    let stRow = txRow.student_id
+      ? sqliteDb.prepare('SELECT id, due_bakaya, fee_amount FROM local_school_students WHERE id = ? AND tenant_id = ?').get(txRow.student_id, tid)
+      : null;
+    if (!stRow && txRow.roll_no) {
+      stRow = sqliteDb.prepare('SELECT id, due_bakaya, fee_amount FROM local_school_students WHERE roll_no = ? AND tenant_id = ?').get(txRow.roll_no, tid);
+    }
+    if (stRow) {
+      const currentDue = Number(stRow.due_bakaya ?? stRow.fee_amount ?? 0);
+      const remaining = Math.max(0, currentDue - baseAmt);
+      const nextStuStatus = remaining === 0 ? 'PAID' : 'PARTIAL';
+      sqliteDb.prepare('UPDATE local_school_students SET fee_status = ?, due_bakaya = ?, is_synced = 0 WHERE id = ? AND tenant_id = ?')
+        .run(nextStuStatus, remaining, stRow.id, tid);
+    }
+
+    return linkedFeeId;
+  };
+
+  router.get('/payment-gateways', (req, res) => {
+    const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
+    const nameMaps = getBranchWingNameMaps(tid);
+    const reqRole = resolveUserRole(req);
+    const isOwner = OWNER_ROLES.has(reqRole);
+    const includeDisabled = String(req.query?.includeDisabled || '') === '1' || isOwner;
+
+    ensureTenantPaymentGatewaysSeeded(tid);
+    const settings = loadTenantGatewaySettings(tid);
+
+    let gateways = [];
+    if (sqliteDb) {
+      let rows = sqliteDb.prepare('SELECT * FROM local_school_payment_gateways WHERE tenant_id = ? ORDER BY sort_order ASC, created_at ASC').all(tid);
+      gateways = rows
+        .filter((r) => {
+          if (!includeDisabled && r.is_enabled === 0) return false;
+          const bId = r.branch_id || 'ALL';
+          const wId = r.wing_id || 'ALL';
+          if (scope.branchFilter && bId !== 'ALL' && bId !== scope.branchFilter) return false;
+          if (scope.wingFilter && wId !== 'ALL' && wId !== scope.wingFilter) return false;
+          return true;
+        })
+        .map((r) => mapGatewayRow(r, tid, isOwner, nameMaps));
+    } else {
+      gateways = getDefaultSchoolPaymentGateways(tid).map((g) => ({
+        ...g,
+        tenantId: tid,
+        branchId: 'ALL',
+        branchName: 'All Campus Branches',
+        wingId: 'ALL',
+        wingName: 'All Academic Wings',
+        hasMerchantSecret: false,
+        hasIntegritySalt: false,
+        merchantSecretHint: '',
+        integritySaltHint: '',
+        webhookUrl: isOwner ? (g.webhookUrl || '') : ''
+      }));
+    }
+
+    res.json({
+      ok: true,
+      tenantId: tid,
+      canManage: isOwner,
+      gateways,
+      settings
+    });
+  });
+
+  router.post('/payment-gateways', requireOwnerRole, async (req, res) => {
+    const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
+    if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
+    const nameMaps = getBranchWingNameMaps(tid);
+    ensureTenantPaymentGatewaysSeeded(tid);
+
+    const b = req.body || {};
+    const displayName = String(b.displayName || '').trim();
+    const providerKey = String(b.providerKey || 'custom').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '_') || 'custom';
+    if (!displayName) {
+      return res.status(400).json({ ok: false, message: 'Gateway displayName is required.' });
+    }
+    const feeType = ['none', 'percent', 'fixed'].includes(String(b.feeType || 'none')) ? String(b.feeType || 'none') : 'none';
+    const feeValue = Math.max(0, Number(b.feeValue || 0));
+    if (!Number.isFinite(feeValue)) {
+      return res.status(400).json({ ok: false, message: 'Fee value must be a valid non-negative number.' });
+    }
+    const verificationMode = ['slip_review', 'auto_instant', 'counter_cash'].includes(String(b.verificationMode || 'slip_review'))
+      ? String(b.verificationMode || 'slip_review')
+      : 'slip_review';
+    const urlCheck = validateGatewayWebhookUrl(b.webhookUrl);
+    if (!urlCheck.ok) return res.status(400).json({ ok: false, message: urlCheck.message });
+
+    const id = 'PGW-' + Date.now() + '-' + Math.floor(100 + Math.random() * 900);
+    const branchId = String(b.branchId || 'ALL').trim() || 'ALL';
+    const wingId = String(b.wingId || 'ALL').trim() || 'ALL';
+    const isDefault = Boolean(b.isDefault);
+    const isEnabled = b.isEnabled !== false;
+    const allowedPortals = Array.isArray(b.allowedPortals) && b.allowedPortals.length > 0
+      ? b.allowedPortals.map((p) => String(p).trim().toLowerCase()).filter(Boolean)
+      : ['owner', 'principal', 'accountant', 'student', 'parent'];
+    const customFields = Array.isArray(b.customFields)
+      ? b.customFields
+        .filter((f) => f && String(f.label || '').trim())
+        .map((f) => ({ label: String(f.label).trim(), value: String(f.value || '').trim() }))
+      : [];
+
+    if (isDefault) {
+      sqliteDb.prepare('UPDATE local_school_payment_gateways SET is_default = 0, is_synced = 0 WHERE tenant_id = ?').run(tid);
+    }
+
+    const now = new Date().toISOString();
+    const secretEnc = b.merchantSecret ? enc(tid, String(b.merchantSecret).trim()) : '';
+    const saltEnc = b.integritySalt ? enc(tid, String(b.integritySalt).trim()) : '';
+
+    sqliteDb.prepare(`
+      INSERT INTO local_school_payment_gateways (
+        id, tenant_id, branch_id, wing_id, provider_key, display_name, category,
+        account_title, account_number, iban, raast_id, bank_name, branch_code, till_id, biller_code,
+        merchant_id, merchant_secret_enc, integrity_salt_enc, webhook_url,
+        fee_type, fee_value, verification_mode, instructions, allowed_portals_json, custom_fields_json,
+        is_enabled, is_default, sort_order, is_synced, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)
+    `).run(
+      id, tid, branchId, wingId, providerKey, displayName, String(b.category || 'custom'),
+      String(b.accountTitle || ''), String(b.accountNumber || ''), String(b.iban || ''), String(b.raastId || ''),
+      String(b.bankName || ''), String(b.branchCode || ''), String(b.tillId || ''), String(b.billerCode || ''),
+      String(b.merchantId || ''), secretEnc, saltEnc, urlCheck.value,
+      feeType, feeValue, verificationMode, String(b.instructions || ''),
+      JSON.stringify(allowedPortals), JSON.stringify(customFields),
+      isEnabled ? 1 : 0, isDefault ? 1 : 0, Number(b.sortOrder || 90), now, now
+    );
+
+    const row = sqliteDb.prepare('SELECT * FROM local_school_payment_gateways WHERE id = ? AND tenant_id = ?').get(id, tid);
+    const gateway = mapGatewayRow(row, tid, true, nameMaps);
+
+    recordAudit(tid, {
+      branchId: branchId === 'ALL' ? DEFAULT_BRANCH_ID : branchId,
+      wingId: wingId === 'ALL' ? DEFAULT_WING_ID : wingId,
+      operatorName: String(req.headers['x-user-name'] || 'School Owner'),
+      operatorRole: 'School Owner',
+      actionType: 'Fee Collection Receipt',
+      category: 'Financial',
+      entityId: id,
+      entityDescription: `Added Payment Gateway: ${displayName} (${providerKey})`,
+      details: `Owner configured payment gateway ${displayName} · Mode: ${verificationMode} · Scope: ${branchId}/${wingId}.`,
+      severity: 'Normal Audit'
+    });
+
+    if (db) {
+      try {
+        await setDoc(doc(db, 'school_payment_gateways', id), { ...gateway, tenant_id: tid, is_synced: 1, synced_at: now }, { merge: true });
+      } catch {}
+    }
+
+    res.status(201).json({ ok: true, gateway });
+  });
+
+  router.put('/payment-gateways/:id', requireOwnerRole, async (req, res) => {
+    const tid = resolveTenantId(req);
+    if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
+    const nameMaps = getBranchWingNameMaps(tid);
+    ensureTenantPaymentGatewaysSeeded(tid);
+
+    const id = req.params.id;
+    const existing = sqliteDb.prepare('SELECT * FROM local_school_payment_gateways WHERE id = ? AND tenant_id = ?').get(id, tid);
+    if (!existing) return res.status(404).json({ ok: false, message: 'Payment gateway not found for this tenant.' });
+
+    const b = req.body || {};
+    const displayName = b.displayName !== undefined ? String(b.displayName).trim() : existing.display_name;
+    if (!displayName) return res.status(400).json({ ok: false, message: 'Gateway displayName cannot be empty.' });
+
+    const urlCheck = b.webhookUrl !== undefined ? validateGatewayWebhookUrl(b.webhookUrl) : { ok: true, value: existing.webhook_url || '' };
+    if (!urlCheck.ok) return res.status(400).json({ ok: false, message: urlCheck.message });
+
+    const feeType = b.feeType !== undefined
+      ? (['none', 'percent', 'fixed'].includes(String(b.feeType)) ? String(b.feeType) : existing.fee_type)
+      : existing.fee_type;
+    const feeValue = b.feeValue !== undefined ? Math.max(0, Number(b.feeValue || 0)) : Number(existing.fee_value || 0);
+    if (!Number.isFinite(feeValue)) return res.status(400).json({ ok: false, message: 'Invalid fee value.' });
+
+    const verificationMode = b.verificationMode !== undefined
+      ? (['slip_review', 'auto_instant', 'counter_cash'].includes(String(b.verificationMode)) ? String(b.verificationMode) : existing.verification_mode)
+      : existing.verification_mode;
+
+    const isDefault = b.isDefault !== undefined ? Boolean(b.isDefault) : existing.is_default === 1;
+    if (isDefault) {
+      sqliteDb.prepare('UPDATE local_school_payment_gateways SET is_default = 0, is_synced = 0 WHERE tenant_id = ? AND id != ?').run(tid, id);
+    }
+
+    const incomingSecret = String(b.merchantSecret || '').trim();
+    const secretEnc = incomingSecret && !incomingSecret.startsWith('••••')
+      ? enc(tid, incomingSecret)
+      : (existing.merchant_secret_enc || '');
+
+    const incomingSalt = String(b.integritySalt || '').trim();
+    const saltEnc = incomingSalt && !incomingSalt.startsWith('••••')
+      ? enc(tid, incomingSalt)
+      : (existing.integrity_salt_enc || '');
+
+    const allowedPortals = Array.isArray(b.allowedPortals)
+      ? JSON.stringify(b.allowedPortals.map((p) => String(p).trim().toLowerCase()).filter(Boolean))
+      : existing.allowed_portals_json;
+
+    const customFields = Array.isArray(b.customFields)
+      ? JSON.stringify(b.customFields.filter((f) => f && String(f.label || '').trim()).map((f) => ({ label: String(f.label).trim(), value: String(f.value || '').trim() })))
+      : existing.custom_fields_json;
+
+    const now = new Date().toISOString();
+    sqliteDb.prepare(`
+      UPDATE local_school_payment_gateways
+      SET branch_id = ?, wing_id = ?, provider_key = ?, display_name = ?, category = ?,
+          account_title = ?, account_number = ?, iban = ?, raast_id = ?, bank_name = ?,
+          branch_code = ?, till_id = ?, biller_code = ?, merchant_id = ?,
+          merchant_secret_enc = ?, integrity_salt_enc = ?, webhook_url = ?,
+          fee_type = ?, fee_value = ?, verification_mode = ?, instructions = ?,
+          allowed_portals_json = ?, custom_fields_json = ?, is_enabled = ?, is_default = ?, sort_order = ?,
+          is_synced = 0, updated_at = ?
+      WHERE id = ? AND tenant_id = ?
+    `).run(
+      b.branchId !== undefined ? String(b.branchId || 'ALL') : existing.branch_id,
+      b.wingId !== undefined ? String(b.wingId || 'ALL') : existing.wing_id,
+      b.providerKey !== undefined ? String(b.providerKey).trim().toLowerCase() : existing.provider_key,
+      displayName,
+      b.category !== undefined ? String(b.category) : existing.category,
+      b.accountTitle !== undefined ? String(b.accountTitle) : (existing.account_title || ''),
+      b.accountNumber !== undefined ? String(b.accountNumber) : (existing.account_number || ''),
+      b.iban !== undefined ? String(b.iban) : (existing.iban || ''),
+      b.raastId !== undefined ? String(b.raastId) : (existing.raast_id || ''),
+      b.bankName !== undefined ? String(b.bankName) : (existing.bank_name || ''),
+      b.branchCode !== undefined ? String(b.branchCode) : (existing.branch_code || ''),
+      b.tillId !== undefined ? String(b.tillId) : (existing.till_id || ''),
+      b.billerCode !== undefined ? String(b.billerCode) : (existing.biller_code || ''),
+      b.merchantId !== undefined ? String(b.merchantId) : (existing.merchant_id || ''),
+      secretEnc,
+      saltEnc,
+      urlCheck.value,
+      feeType,
+      feeValue,
+      verificationMode,
+      b.instructions !== undefined ? String(b.instructions) : (existing.instructions || ''),
+      allowedPortals,
+      customFields,
+      b.isEnabled !== undefined ? (b.isEnabled ? 1 : 0) : existing.is_enabled,
+      isDefault ? 1 : 0,
+      b.sortOrder !== undefined ? Number(b.sortOrder) : existing.sort_order,
+      now,
+      id,
+      tid
+    );
+
+    const updatedRow = sqliteDb.prepare('SELECT * FROM local_school_payment_gateways WHERE id = ? AND tenant_id = ?').get(id, tid);
+    const gateway = mapGatewayRow(updatedRow, tid, true, nameMaps);
+
+    recordAudit(tid, {
+      operatorName: String(req.headers['x-user-name'] || 'School Owner'),
+      operatorRole: 'School Owner',
+      actionType: 'Fee Collection Receipt',
+      category: 'Financial',
+      entityId: id,
+      entityDescription: `Updated Payment Gateway: ${gateway.displayName}`,
+      details: `Owner updated gateway settings/credentials (${gateway.providerKey}) · Enabled: ${gateway.isEnabled} · Default: ${gateway.isDefault}.`,
+      severity: 'Authorized Override'
+    });
+
+    if (db) {
+      try {
+        await setDoc(doc(db, 'school_payment_gateways', id), { ...gateway, tenant_id: tid, is_synced: 1, synced_at: now }, { merge: true });
+      } catch {}
+    }
+
+    res.json({ ok: true, gateway });
+  });
+
+  router.put('/payment-gateways/:id/toggle', requireOwnerRole, async (req, res) => {
+    const tid = resolveTenantId(req);
+    if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
+    const nameMaps = getBranchWingNameMaps(tid);
+    ensureTenantPaymentGatewaysSeeded(tid);
+
+    const id = req.params.id;
+    const existing = sqliteDb.prepare('SELECT * FROM local_school_payment_gateways WHERE id = ? AND tenant_id = ?').get(id, tid);
+    if (!existing) return res.status(404).json({ ok: false, message: 'Payment gateway not found.' });
+
+    const nextEnabled = req.body?.isEnabled !== undefined ? (req.body.isEnabled ? 1 : 0) : (existing.is_enabled === 1 ? 0 : 1);
+    const now = new Date().toISOString();
+    sqliteDb.prepare('UPDATE local_school_payment_gateways SET is_enabled = ?, is_synced = 0, updated_at = ? WHERE id = ? AND tenant_id = ?')
+      .run(nextEnabled, now, id, tid);
+
+    const row = sqliteDb.prepare('SELECT * FROM local_school_payment_gateways WHERE id = ? AND tenant_id = ?').get(id, tid);
+    const gateway = mapGatewayRow(row, tid, true, nameMaps);
+    res.json({ ok: true, gateway });
+  });
+
+  router.delete('/payment-gateways/:id', requireOwnerRole, (req, res) => {
+    const tid = resolveTenantId(req);
+    if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
+    const id = req.params.id;
+    const existing = sqliteDb.prepare('SELECT * FROM local_school_payment_gateways WHERE id = ? AND tenant_id = ?').get(id, tid);
+    if (!existing) return res.status(404).json({ ok: false, message: 'Payment gateway not found.' });
+
+    sqliteDb.prepare('DELETE FROM local_school_payment_gateways WHERE id = ? AND tenant_id = ?').run(id, tid);
+    if (existing.is_default === 1) {
+      const next = sqliteDb.prepare('SELECT id FROM local_school_payment_gateways WHERE tenant_id = ? AND is_enabled = 1 ORDER BY sort_order ASC LIMIT 1').get(tid);
+      if (next) {
+        sqliteDb.prepare('UPDATE local_school_payment_gateways SET is_default = 1, is_synced = 0 WHERE id = ?').run(next.id);
+      }
+    }
+
+    recordAudit(tid, {
+      operatorName: String(req.headers['x-user-name'] || 'School Owner'),
+      operatorRole: 'School Owner',
+      actionType: 'Fee Voucher Deletion',
+      category: 'Financial',
+      entityId: id,
+      entityDescription: `Deleted Payment Gateway: ${existing.display_name}`,
+      severity: 'Compliance Flag'
+    });
+
+    res.json({ ok: true, id });
+  });
+
+  router.put('/payment-gateways-settings', requireOwnerRole, async (req, res) => {
+    const tid = resolveTenantId(req);
+    if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
+    const current = loadTenantGatewaySettings(tid);
+    const b = req.body || {};
+
+    const graceDays = b.lateFeeGraceDays !== undefined ? Number(b.lateFeeGraceDays) : current.lateFeeGraceDays;
+    const finePkr = b.lateFeeFinePkr !== undefined ? Number(b.lateFeeFinePkr) : current.lateFeeFinePkr;
+    if (!Number.isFinite(graceDays) || graceDays < 0 || !Number.isFinite(finePkr) || finePkr < 0) {
+      return res.status(400).json({ ok: false, message: 'Late fee grace days and fine amount must be non-negative.' });
+    }
+
+    const next = {
+      ...current,
+      currency: String(b.currency || current.currency || 'PKR').slice(0, 8),
+      allowOnlineStudentPayment: b.allowOnlineStudentPayment !== undefined ? Boolean(b.allowOnlineStudentPayment) : current.allowOnlineStudentPayment,
+      allowOnlineParentPayment: b.allowOnlineParentPayment !== undefined ? Boolean(b.allowOnlineParentPayment) : current.allowOnlineParentPayment,
+      allowPartialOnlinePayment: b.allowPartialOnlinePayment !== undefined ? Boolean(b.allowPartialOnlinePayment) : current.allowPartialOnlinePayment,
+      requireProofReference: b.requireProofReference !== undefined ? Boolean(b.requireProofReference) : current.requireProofReference,
+      autoIssueReceiptOnVerify: b.autoIssueReceiptOnVerify !== undefined ? Boolean(b.autoIssueReceiptOnVerify) : current.autoIssueReceiptOnVerify,
+      oneBillPrefix: String(b.oneBillPrefix !== undefined ? b.oneBillPrefix : current.oneBillPrefix || '10089').trim(),
+      lateFeeGraceDays: graceDays,
+      lateFeeFinePkr: finePkr,
+      receiptFooterNote: String(b.receiptFooterNote !== undefined ? b.receiptFooterNote : current.receiptFooterNote || '').trim(),
+      ownerNotifyOnPayment: b.ownerNotifyOnPayment !== undefined ? Boolean(b.ownerNotifyOnPayment) : current.ownerNotifyOnPayment,
+      customPolicyFields: Array.isArray(b.customPolicyFields)
+        ? b.customPolicyFields.filter((f) => f && String(f.label || '').trim()).map((f) => ({ label: String(f.label).trim(), value: String(f.value || '').trim() }))
+        : (current.customPolicyFields || [])
+    };
+
+    const now = new Date().toISOString();
+    sqliteDb.prepare(`
+      INSERT OR REPLACE INTO local_school_gateway_settings (tenant_id, settings_json, is_synced, updated_at)
+      VALUES (?, ?, 0, ?)
+    `).run(tid, JSON.stringify(next), now);
+
+    recordAudit(tid, {
+      operatorName: String(req.headers['x-user-name'] || 'School Owner'),
+      operatorRole: 'School Owner',
+      actionType: 'Fee Collection Receipt',
+      category: 'Financial',
+      entityId: `PGW-SETTINGS-${tid}`,
+      entityDescription: 'Updated School Payment Gateway Policy & Settings',
+      details: `StudentOnline=${next.allowOnlineStudentPayment}, ParentOnline=${next.allowOnlineParentPayment}, RequireProof=${next.requireProofReference}, 1BillPrefix=${next.oneBillPrefix}`,
+      severity: 'Authorized Override'
+    });
+
+    if (db) {
+      try {
+        await setDoc(doc(db, 'school_gateway_settings', tid), { tenant_id: tid, ...next, is_synced: 1, synced_at: now }, { merge: true });
+      } catch {}
+    }
+
+    res.json({ ok: true, settings: next });
+  });
+
+  router.get('/payment-transactions', (req, res) => {
+    const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
+    const nameMaps = getBranchWingNameMaps(tid);
+    const filterGatewayId = String(req.query?.gatewayId || '').trim();
+    const filterStatus = String(req.query?.status || '').trim().toUpperCase();
+    const filterStudentId = String(req.query?.studentId || '').trim();
+    const filterQ = String(req.query?.q || '').trim().toLowerCase();
+
+    let transactions = [];
+    if (sqliteDb) {
+      const scopeSql = buildScopeSql(scope);
+      const rows = sqliteDb.prepare(`SELECT * FROM local_school_payment_transactions WHERE tenant_id = ?${scopeSql.sql} ORDER BY created_at DESC`).all(tid, ...scopeSql.params);
+      transactions = rows.map((r) => mapPaymentTransactionRow(r, tid, nameMaps));
+    }
+
+    const filtered = transactions.filter((tx) => {
+      if (filterGatewayId && tx.gatewayId !== filterGatewayId) return false;
+      if (filterStatus && filterStatus !== 'ALL' && String(tx.status).toUpperCase() !== filterStatus) return false;
+      if (filterStudentId && tx.studentId !== filterStudentId) return false;
+      if (filterQ) {
+        const hay = `${tx.txnRef} ${tx.challanNo} ${tx.studentName} ${tx.rollNo} ${tx.grade} ${tx.gatewayName} ${tx.proofReference}`.toLowerCase();
+        if (!hay.includes(filterQ)) return false;
+      }
+      return true;
+    });
+
+    const byGateway = {};
+    let totalVerifiedAmount = 0;
+    let totalPendingAmount = 0;
+    let pendingCount = 0;
+    let verifiedCount = 0;
+    let rejectedCount = 0;
+
+    for (const tx of transactions) {
+      const st = String(tx.status || '').toUpperCase();
+      if (!byGateway[tx.gatewayId]) {
+        byGateway[tx.gatewayId] = {
+          gatewayId: tx.gatewayId,
+          gatewayName: tx.gatewayName,
+          providerKey: tx.providerKey,
+          verifiedAmount: 0,
+          pendingAmount: 0,
+          verifiedCount: 0,
+          pendingCount: 0,
+          totalCount: 0
+        };
+      }
+      const bucket = byGateway[tx.gatewayId];
+      bucket.totalCount += 1;
+      if (st === 'VERIFIED' || st === 'SETTLED') {
+        totalVerifiedAmount += Number(tx.totalAmount || 0);
+        verifiedCount += 1;
+        bucket.verifiedAmount += Number(tx.totalAmount || 0);
+        bucket.verifiedCount += 1;
+      } else if (st === 'PENDING_VERIFICATION') {
+        totalPendingAmount += Number(tx.totalAmount || 0);
+        pendingCount += 1;
+        bucket.pendingAmount += Number(tx.totalAmount || 0);
+        bucket.pendingCount += 1;
+      } else if (st === 'REJECTED') {
+        rejectedCount += 1;
+      }
+    }
+
+    res.json({
+      ok: true,
+      tenantId: tid,
+      transactions: filtered,
+      summary: {
+        totalCount: transactions.length,
+        verifiedCount,
+        pendingCount,
+        rejectedCount,
+        totalVerifiedAmount,
+        totalPendingAmount,
+        byGateway
+      }
+    });
+  });
+
+  router.post('/payment-transactions', async (req, res) => {
+    const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
+    if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
+    const nameMaps = getBranchWingNameMaps(tid);
+    ensureTenantPaymentGatewaysSeeded(tid);
+
+    const settings = loadTenantGatewaySettings(tid);
+    const reqRole = resolveUserRole(req) || 'owner';
+    const isOwner = OWNER_ROLES.has(reqRole);
+    const isSelfPortal = reqRole === 'student' || reqRole === 'parent';
+
+    if (reqRole === 'student' && !settings.allowOnlineStudentPayment) {
+      return res.status(403).json({ ok: false, error: 'STUDENT_ONLINE_PAY_DISABLED', message: 'Online fee payments are currently disabled for the Student Portal by the School Owner.' });
+    }
+    if (reqRole === 'parent' && !settings.allowOnlineParentPayment) {
+      return res.status(403).json({ ok: false, error: 'PARENT_ONLINE_PAY_DISABLED', message: 'Online fee payments are currently disabled for the Parent Portal by the School Owner.' });
+    }
+
+    const b = req.body || {};
+    const gatewayId = String(b.gatewayId || '').trim();
+    const gwRow = gatewayId
+      ? sqliteDb.prepare('SELECT * FROM local_school_payment_gateways WHERE id = ? AND tenant_id = ?').get(gatewayId, tid)
+      : sqliteDb.prepare('SELECT * FROM local_school_payment_gateways WHERE tenant_id = ? AND is_enabled = 1 ORDER BY is_default DESC, sort_order ASC LIMIT 1').get(tid);
+
+    if (!gwRow) return res.status(404).json({ ok: false, message: 'Selected payment gateway not found.' });
+    if (gwRow.is_enabled === 0) return res.status(400).json({ ok: false, message: `${gwRow.display_name} is currently disabled by the School Owner.` });
+
+    let allowedPortals = ['owner', 'principal', 'accountant', 'student', 'parent'];
+    try {
+      const parsed = JSON.parse(gwRow.allowed_portals_json || '[]');
+      if (Array.isArray(parsed) && parsed.length > 0) allowedPortals = parsed;
+    } catch {}
+    if (!isOwner && !allowedPortals.includes(reqRole)) {
+      return res.status(403).json({ ok: false, error: 'PORTAL_GATEWAY_RESTRICTED', message: `${gwRow.display_name} is not enabled for the ${reqRole} portal.` });
+    }
+
+    const studentName = String(b.studentName || '').trim();
+    const baseAmount = Number(b.baseAmount ?? b.amount ?? 0);
+    if (!studentName || !Number.isFinite(baseAmount) || baseAmount <= 0) {
+      return res.status(400).json({ ok: false, message: 'Valid studentName and positive baseAmount are required.' });
+    }
+
+    const proofReference = String(b.proofReference || b.resourceReference || '').trim();
+    if (isSelfPortal && gwRow.verification_mode === 'slip_review' && settings.requireProofReference && !proofReference) {
+      return res.status(400).json({ ok: false, message: 'Transaction / Slip Reference ID is required by School Owner policy for verification.' });
+    }
+
+    const screenshotCheck = validateProofScreenshot(b.proofScreenshot);
+    if (!screenshotCheck.ok) {
+      return res.status(400).json({ ok: false, message: screenshotCheck.message });
+    }
+
+    const challanNo = String(b.challanNo || `CH-2026-${b.rollNo || Date.now().toString().slice(-4)}`).trim();
+    const targetStudentId = String(b.studentId || '').trim();
+    const allowDuplicate = Boolean(b.allowDuplicate);
+
+    if (!allowDuplicate) {
+      if (challanNo) {
+        const existingPaidTxn = sqliteDb.prepare(
+          "SELECT id, txn_ref, submitted_by_role FROM local_school_payment_transactions WHERE tenant_id = ? AND challan_no = ? AND UPPER(status) IN ('VERIFIED', 'SETTLED') LIMIT 1"
+        ).get(tid, challanNo);
+        const existingPaidFee = sqliteDb.prepare(
+          "SELECT id, challan_no FROM local_school_fees WHERE tenant_id = ? AND challan_no = ? AND UPPER(status) = 'PAID' LIMIT 1"
+        ).get(tid, challanNo);
+        if (existingPaidTxn || existingPaidFee) {
+          return res.status(409).json({
+            ok: false,
+            error: 'ALREADY_PAID',
+            message: `Fee challan #${challanNo} is already paid (${existingPaidTxn ? `TXN ${existingPaidTxn.txn_ref}` : 'Settled Receipt'}). Duplicate payment is blocked.`
+          });
+        }
+        if (isSelfPortal) {
+          const pendingSameChallan = sqliteDb.prepare(
+            "SELECT id, txn_ref FROM local_school_payment_transactions WHERE tenant_id = ? AND challan_no = ? AND UPPER(status) = 'PENDING_VERIFICATION' AND ABS(base_amount - ?) < 0.01 LIMIT 1"
+          ).get(tid, challanNo, baseAmount);
+          if (pendingSameChallan) {
+            return res.status(409).json({
+              ok: false,
+              error: 'PENDING_SLIP_EXISTS',
+              message: `A payment slip (${pendingSameChallan.txn_ref}) for challan #${challanNo} is already submitted and awaiting verification.`
+            });
+          }
+        }
+      }
+
+      if (isSelfPortal && targetStudentId) {
+        const stuRow = sqliteDb.prepare('SELECT id, fee_status, due_bakaya FROM local_school_students WHERE id = ? AND tenant_id = ?').get(targetStudentId, tid);
+        const openChallan = sqliteDb.prepare(
+          "SELECT id FROM local_school_fees WHERE tenant_id = ? AND student_id = ? AND UPPER(status) IN ('PENDING', 'OVERDUE', 'PARTIAL') LIMIT 1"
+        ).get(tid, targetStudentId);
+        if (stuRow && String(stuRow.fee_status || '').toUpperCase() === 'PAID' && Number(stuRow.due_bakaya ?? 0) <= 0 && !openChallan) {
+          return res.status(409).json({
+            ok: false,
+            error: 'STUDENT_ALREADY_PAID',
+            message: `${studentName}'s fee is already marked Paid. No additional payment is required.`
+          });
+        }
+      }
+    }
+
+    let gatewayFee = 0;
+    const feeVal = Number(gwRow.fee_value || 0);
+    if (gwRow.fee_type === 'percent' && feeVal > 0) {
+      gatewayFee = Math.round((baseAmount * feeVal) / 100);
+    } else if (gwRow.fee_type === 'fixed' && feeVal > 0) {
+      gatewayFee = Math.round(feeVal);
+    }
+    const totalAmount = baseAmount + gatewayFee;
+
+    let resolvedStatus = 'PENDING_VERIFICATION';
+    if (isSelfPortal) {
+      resolvedStatus = gwRow.verification_mode === 'auto_instant' ? 'VERIFIED' : 'PENDING_VERIFICATION';
+    } else {
+      const requested = String(b.status || '').trim().toUpperCase();
+      if (requested === 'VERIFIED' || requested === 'SETTLED') {
+        resolvedStatus = requested;
+      } else if (requested === 'PENDING_VERIFICATION') {
+        resolvedStatus = 'PENDING_VERIFICATION';
+      } else {
+        resolvedStatus = gwRow.verification_mode === 'slip_review' && !b.markVerified ? 'PENDING_VERIFICATION' : 'VERIFIED';
+      }
+    }
+
+    const id = 'PGTX-' + Date.now() + '-' + Math.floor(100 + Math.random() * 900);
+    const txnRef = String(b.txnRef || `${gwRow.provider_key.toUpperCase().slice(0, 4)}-${Date.now().toString().slice(-6)}`).trim();
+    const branchId = String(b.branchId || scope.writeBranchId || DEFAULT_BRANCH_ID);
+    const wingId = String(b.wingId || scope.writeWingId || DEFAULT_WING_ID);
+    const submittedByName = String(b.submittedByName || req.headers['x-user-name'] || studentName).trim();
+    const now = new Date().toISOString();
+    const verifiedBy = (resolvedStatus === 'VERIFIED' || resolvedStatus === 'SETTLED') ? submittedByName : '';
+    const verifiedAt = (resolvedStatus === 'VERIFIED' || resolvedStatus === 'SETTLED') ? now : '';
+
+    sqliteDb.prepare(`
+      INSERT INTO local_school_payment_transactions (
+        id, tenant_id, branch_id, wing_id, txn_ref, challan_no, gateway_id, gateway_name, provider_key,
+        student_id, student_name, roll_no, grade, guardian_name, payer_phone, payer_account_title,
+        month, base_amount, gateway_fee, total_amount, currency, status, verification_mode,
+        proof_reference, proof_notes, proof_screenshot, submitted_by_name, submitted_by_role, verified_by, verified_at,
+        rejection_reason, linked_fee_id, custom_fields_json, is_synced, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '', '', ?, 0, ?, ?)
+    `).run(
+      id, tid, branchId, wingId, txnRef, challanNo, gwRow.id, gwRow.display_name, gwRow.provider_key,
+      targetStudentId, enc(tid, studentName), String(b.rollNo || ''), String(b.grade || 'Campus'),
+      enc(tid, String(b.guardianName || '')), enc(tid, String(b.payerPhone || '')), enc(tid, String(b.payerAccountTitle || '')),
+      String(b.month || 'Current Session Fee'), baseAmount, gatewayFee, totalAmount, String(settings.currency || 'PKR'),
+      resolvedStatus, gwRow.verification_mode, proofReference, String(b.proofNotes || ''), screenshotCheck.value,
+      submittedByName, reqRole, verifiedBy, verifiedAt,
+      JSON.stringify(b.customFields && typeof b.customFields === 'object' ? b.customFields : {}),
+      now, now
+    );
+
+    let linkedFeeId = '';
+    if (resolvedStatus === 'VERIFIED' || resolvedStatus === 'SETTLED') {
+      const inserted = sqliteDb.prepare('SELECT * FROM local_school_payment_transactions WHERE id = ? AND tenant_id = ?').get(id, tid);
+      linkedFeeId = settleFeeForGatewayTransaction(tid, inserted, verifiedBy || submittedByName, reqRole, scope);
+      if (linkedFeeId) {
+        sqliteDb.prepare('UPDATE local_school_payment_transactions SET linked_fee_id = ?, is_synced = 0 WHERE id = ? AND tenant_id = ?').run(linkedFeeId, id, tid);
+      }
+    }
+
+    const finalRow = sqliteDb.prepare('SELECT * FROM local_school_payment_transactions WHERE id = ? AND tenant_id = ?').get(id, tid);
+    const transaction = mapPaymentTransactionRow(finalRow, tid, nameMaps);
+
+    recordAudit(tid, {
+      branchId,
+      wingId,
+      operatorName: submittedByName,
+      operatorRole: reqRole === 'accountant' ? 'Accountant / Fee Clerk' : (reqRole === 'principal' ? 'Principal' : 'School Owner'),
+      actionType: 'Fee Collection Receipt',
+      category: 'Financial',
+      entityId: txnRef,
+      entityDescription: `${studentName} (${transaction.grade}) via ${gwRow.display_name}`,
+      details: `Gateway payment PKR ${totalAmount} (Base ${baseAmount} + Fee ${gatewayFee}) · Ref: ${proofReference || txnRef}${screenshotCheck.value ? ' · Slip Screenshot Attached' : ''} · Status: ${resolvedStatus}.`,
+      severity: 'Normal Audit'
+    });
+
+    if (db) {
+      try {
+        await setDoc(doc(db, 'school_payment_transactions', id), {
+          ...transaction,
+          proofScreenshot: (transaction.proofScreenshot && transaction.proofScreenshot.length <= 450000) ? transaction.proofScreenshot : '',
+          hasProofScreenshot: Boolean(transaction.proofScreenshot),
+          tenant_id: tid,
+          studentName: enc(tid, transaction.studentName),
+          payerPhone: enc(tid, transaction.payerPhone),
+          is_synced: 1,
+          synced_at: now
+        }, { merge: true });
+      } catch {}
+    }
+
+    res.status(201).json({ ok: true, transaction, linkedFeeId });
+  });
+
+  router.put('/payment-transactions/:id/verify', rejectRestrictedRole(['student', 'parent', 'teacher']), async (req, res) => {
+    const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
+    if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
+    const nameMaps = getBranchWingNameMaps(tid);
+
+    const id = req.params.id;
+    const row = sqliteDb.prepare('SELECT * FROM local_school_payment_transactions WHERE id = ? AND tenant_id = ?').get(id, tid);
+    if (!row) return res.status(404).json({ ok: false, message: 'Payment transaction not found.' });
+    const scopeErr = assertRecordScopeAllowed(scope, row);
+    if (scopeErr) return res.status(scopeErr.status).json({ ok: false, error: scopeErr.error, message: scopeErr.message });
+
+    const b = req.body || {};
+    const nextStatus = String(b.status || 'VERIFIED').trim().toUpperCase();
+    if (!['VERIFIED', 'SETTLED', 'REJECTED', 'PENDING_VERIFICATION'].includes(nextStatus)) {
+      return res.status(400).json({ ok: false, message: 'Invalid verification status.' });
+    }
+
+    const reqRole = resolveUserRole(req) || 'accountant';
+    const verifierName = String(b.verifiedBy || req.headers['x-user-name'] || (reqRole === 'owner' ? 'School Owner' : (reqRole === 'principal' ? 'Principal Office' : 'Accountant Desk'))).trim();
+    const rejectionReason = nextStatus === 'REJECTED' ? String(b.rejectionReason || b.notes || 'Transaction reference not matched in bank/wallet statement.').trim() : '';
+    const now = new Date().toISOString();
+
+    let linkedFeeId = row.linked_fee_id || '';
+    if ((nextStatus === 'VERIFIED' || nextStatus === 'SETTLED') && !linkedFeeId) {
+      const settings = loadTenantGatewaySettings(tid);
+      if (settings.autoIssueReceiptOnVerify !== false) {
+        linkedFeeId = settleFeeForGatewayTransaction(tid, row, verifierName, reqRole, scope);
+      }
+    }
+
+    sqliteDb.prepare(`
+      UPDATE local_school_payment_transactions
+      SET status = ?, verified_by = ?, verified_at = ?, rejection_reason = ?, linked_fee_id = ?, is_synced = 0, updated_at = ?
+      WHERE id = ? AND tenant_id = ?
+    `).run(nextStatus, verifierName, now, rejectionReason, linkedFeeId, now, id, tid);
+
+    const updated = sqliteDb.prepare('SELECT * FROM local_school_payment_transactions WHERE id = ? AND tenant_id = ?').get(id, tid);
+    const transaction = mapPaymentTransactionRow(updated, tid, nameMaps);
+
+    recordAudit(tid, {
+      branchId: updated.branch_id || scope.writeBranchId,
+      wingId: updated.wing_id || scope.writeWingId,
+      operatorName: verifierName,
+      operatorRole: reqRole === 'accountant' ? 'Accountant / Fee Clerk' : (reqRole === 'principal' ? 'Principal' : 'School Owner'),
+      actionType: 'Fee Collection Receipt',
+      category: 'Financial',
+      entityId: updated.txn_ref,
+      entityDescription: `Gateway Txn ${nextStatus}: ${transaction.studentName}`,
+      details: `${transaction.gatewayName} PKR ${transaction.totalAmount} marked ${nextStatus} by ${verifierName}.${rejectionReason ? ' Reason: ' + rejectionReason : ''}`,
+      severity: nextStatus === 'REJECTED' ? 'Compliance Flag' : 'Normal Audit'
+    });
+
+    if (db) {
+      try {
+        await setDoc(doc(db, 'school_payment_transactions', id), {
+          ...transaction,
+          proofScreenshot: (transaction.proofScreenshot && transaction.proofScreenshot.length <= 450000) ? transaction.proofScreenshot : '',
+          hasProofScreenshot: Boolean(transaction.proofScreenshot),
+          tenant_id: tid,
+          is_synced: 1,
+          synced_at: now
+        }, { merge: true });
+      } catch {}
+    }
+
+    res.json({ ok: true, transaction, linkedFeeId });
+  });
+
+  router.put('/payment-transactions/:id', requireOwnerRole, async (req, res) => {
+    const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
+    if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
+    const nameMaps = getBranchWingNameMaps(tid);
+
+    const id = req.params.id;
+    const row = sqliteDb.prepare('SELECT * FROM local_school_payment_transactions WHERE id = ? AND tenant_id = ?').get(id, tid);
+    if (!row) return res.status(404).json({ ok: false, message: 'Payment transaction not found.' });
+
+    const b = req.body || {};
+    const baseAmount = b.baseAmount !== undefined ? Number(b.baseAmount) : Number(row.base_amount);
+    const gatewayFee = b.gatewayFee !== undefined ? Number(b.gatewayFee) : Number(row.gateway_fee);
+    if (!Number.isFinite(baseAmount) || baseAmount <= 0 || !Number.isFinite(gatewayFee) || gatewayFee < 0) {
+      return res.status(400).json({ ok: false, message: 'Invalid transaction amount values.' });
+    }
+    let nextScreenshot = row.proof_screenshot || '';
+    if (b.proofScreenshot !== undefined) {
+      const scCheck = validateProofScreenshot(b.proofScreenshot);
+      if (!scCheck.ok) return res.status(400).json({ ok: false, message: scCheck.message });
+      nextScreenshot = scCheck.value;
+    }
+
+    const totalAmount = baseAmount + gatewayFee;
+    const nextStatus = b.status !== undefined ? String(b.status).trim().toUpperCase() : row.status;
+    const now = new Date().toISOString();
+
+    sqliteDb.prepare(`
+      UPDATE local_school_payment_transactions
+      SET student_name = ?, grade = ?, challan_no = ?, base_amount = ?, gateway_fee = ?, total_amount = ?,
+          proof_reference = ?, proof_notes = ?, proof_screenshot = ?, status = ?, is_synced = 0, updated_at = ?
+      WHERE id = ? AND tenant_id = ?
+    `).run(
+      b.studentName !== undefined ? enc(tid, String(b.studentName)) : row.student_name,
+      b.grade !== undefined ? String(b.grade) : row.grade,
+      b.challanNo !== undefined ? String(b.challanNo) : row.challan_no,
+      baseAmount,
+      gatewayFee,
+      totalAmount,
+      b.proofReference !== undefined ? String(b.proofReference) : row.proof_reference,
+      b.proofNotes !== undefined ? String(b.proofNotes) : row.proof_notes,
+      nextScreenshot,
+      nextStatus,
+      now,
+      id,
+      tid
+    );
+
+    let updated = sqliteDb.prepare('SELECT * FROM local_school_payment_transactions WHERE id = ? AND tenant_id = ?').get(id, tid);
+    if ((nextStatus === 'VERIFIED' || nextStatus === 'SETTLED') && !updated.linked_fee_id) {
+      const linkedFeeId = settleFeeForGatewayTransaction(tid, updated, String(req.headers['x-user-name'] || 'School Owner'), 'owner', scope);
+      if (linkedFeeId) {
+        sqliteDb.prepare('UPDATE local_school_payment_transactions SET linked_fee_id = ?, verified_by = COALESCE(NULLIF(verified_by, \'\'), ?), verified_at = COALESCE(NULLIF(verified_at, \'\'), ?), is_synced = 0 WHERE id = ? AND tenant_id = ?')
+          .run(linkedFeeId, String(req.headers['x-user-name'] || 'School Owner'), now, id, tid);
+        updated = sqliteDb.prepare('SELECT * FROM local_school_payment_transactions WHERE id = ? AND tenant_id = ?').get(id, tid);
+      }
+    }
+
+    const transaction = mapPaymentTransactionRow(updated, tid, nameMaps);
+    res.json({ ok: true, transaction });
+  });
+
+  router.delete('/payment-transactions/:id', requireOwnerRole, (req, res) => {
+    const tid = resolveTenantId(req);
+    if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
+    const id = req.params.id;
+    const row = sqliteDb.prepare('SELECT * FROM local_school_payment_transactions WHERE id = ? AND tenant_id = ?').get(id, tid);
+    if (!row) return res.status(404).json({ ok: false, message: 'Payment transaction not found.' });
+
+    sqliteDb.prepare('DELETE FROM local_school_payment_transactions WHERE id = ? AND tenant_id = ?').run(id, tid);
+    recordAudit(tid, {
+      branchId: row.branch_id || DEFAULT_BRANCH_ID,
+      wingId: row.wing_id || DEFAULT_WING_ID,
+      operatorName: String(req.headers['x-user-name'] || 'School Owner'),
+      operatorRole: 'School Owner',
+      actionType: 'Fee Voucher Deletion',
+      category: 'Financial',
+      entityId: row.txn_ref || id,
+      entityDescription: `Deleted Payment Transaction (${dec(tid, row.student_name)})`,
+      severity: 'Compliance Flag'
+    });
+    res.json({ ok: true, id });
   });
 
   return router;

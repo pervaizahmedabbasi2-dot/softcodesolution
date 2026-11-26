@@ -91,6 +91,97 @@ import { PasskeyManagerComponent } from '../../../auth_security/passkey-manager/
 export type SchoolDashboardTab = 'overview' | 'stage_wise' | 'feed' | 'events' | 'students' | 'teachers' | 'admissions' | 'attendance' | 'finance' | 'invoices' | 'expenses' | 'payment_gateway' | 'transport' | 'library' | 'exams' | 'timetable' | 'hostel' | 'labs' | 'alumni' | 'portals' | 'reports' | 'visitors' | 'assets' | 'settings' | 'audit' | 'lesson_plans' | 'appraisals' | 'inspections' | 'exam_moderation' | 'parent_complaints' | 'substitutions' | 'syllabus' | 'safeguarding' | 'directives';
 export type SchoolPortalRole = 'owner' | 'principal' | 'teacher' | 'student' | 'parent' | 'accountant';
 
+export interface SchoolPaymentGateway {
+  id: string;
+  tenantId?: string;
+  branchId: string;
+  branchName?: string;
+  wingId: string;
+  wingName?: string;
+  providerKey: string;
+  displayName: string;
+  category: 'mobile_wallet' | 'raast_ibft' | '1link_1bill' | 'bank_challan' | 'card_gateway' | 'cash_counter' | 'custom';
+  accountTitle: string;
+  accountNumber: string;
+  iban: string;
+  raastId: string;
+  bankName: string;
+  branchCode: string;
+  tillId: string;
+  billerCode: string;
+  merchantId: string;
+  merchantSecret?: string;
+  integritySalt?: string;
+  hasMerchantSecret?: boolean;
+  hasIntegritySalt?: boolean;
+  merchantSecretHint?: string;
+  integritySaltHint?: string;
+  webhookUrl: string;
+  feeType: 'none' | 'percent' | 'fixed';
+  feeValue: number;
+  verificationMode: 'slip_review' | 'auto_instant' | 'counter_cash';
+  instructions: string;
+  allowedPortals: string[];
+  customFields: Array<{ label: string; value: string }>;
+  isEnabled: boolean;
+  isDefault: boolean;
+  sortOrder: number;
+}
+
+export interface SchoolGatewaySettings {
+  currency: string;
+  allowOnlineStudentPayment: boolean;
+  allowOnlineParentPayment: boolean;
+  allowPartialOnlinePayment: boolean;
+  requireProofReference: boolean;
+  autoIssueReceiptOnVerify: boolean;
+  oneBillPrefix: string;
+  lateFeeGraceDays: number;
+  lateFeeFinePkr: number;
+  receiptFooterNote: string;
+  ownerNotifyOnPayment: boolean;
+  customPolicyFields: Array<{ label: string; value: string }>;
+}
+
+export interface SchoolPaymentTransaction {
+  id: string;
+  txnRef: string;
+  challanNo: string;
+  gatewayId: string;
+  gatewayName: string;
+  providerKey: string;
+  branchId?: string;
+  branchName?: string;
+  wingId?: string;
+  wingName?: string;
+  studentId: string;
+  studentName: string;
+  rollNo: string;
+  grade: string;
+  guardianName?: string;
+  payerPhone?: string;
+  payerAccountTitle?: string;
+  month: string;
+  baseAmount: number;
+  gatewayFee: number;
+  totalAmount: number;
+  currency: string;
+  status: 'PENDING_VERIFICATION' | 'VERIFIED' | 'SETTLED' | 'REJECTED';
+  verificationMode?: string;
+  proofReference: string;
+  proofNotes: string;
+  proofScreenshot?: string;
+  hasProofScreenshot?: boolean;
+  submittedByName: string;
+  submittedByRole: string;
+  verifiedBy?: string;
+  verifiedAt?: string;
+  rejectionReason?: string;
+  linkedFeeId?: string;
+  customFields?: Record<string, string>;
+  createdAt?: string;
+}
+
 export interface SchoolAuditTrailRecord {
   id: string;
   timestamp: string;
@@ -2324,6 +2415,141 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
     return this.parentChildMonthlyTuition + 3500;
   }
 
+  findTransactionsForStudent(stu: any): SchoolPaymentTransaction[] {
+    if (!stu) return [];
+    const stuId = String(stu.id || '').trim();
+    const stuRoll = String(stu.rollNo || '').trim().toLowerCase();
+    const stuName = String(stu.name || stu.fullName || '').trim().toLowerCase();
+    return (this.schoolPaymentTransactions || []).filter(tx =>
+      (stuId && tx.studentId === stuId) ||
+      (stuRoll && tx.rollNo && String(tx.rollNo).trim().toLowerCase() === stuRoll) ||
+      (stuName && tx.studentName && tx.studentName.trim().toLowerCase() === stuName)
+    );
+  }
+
+  getStudentFeeClearanceState(stu: any): {
+    isPaid: boolean;
+    isPartial: boolean;
+    hasPendingSlip: boolean;
+    pendingSlipTxn: SchoolPaymentTransaction | null;
+    verifiedTxn: SchoolPaymentTransaction | null;
+    verifiedReceipt: PrincipalFeeCollectionRecord | null;
+    monthlyChallanTotal: number;
+    remainingPayable: number;
+    paidByLabel: string;
+  } {
+    const monthlyTuition = Number(stu?.feeAmount ?? 25000);
+    const baseTuition = Number.isFinite(monthlyTuition) && monthlyTuition > 0 ? monthlyTuition : 25000;
+    const defaultChallanTotal = baseTuition + 3500;
+    if (!stu) {
+      return {
+        isPaid: false,
+        isPartial: false,
+        hasPendingSlip: false,
+        pendingSlipTxn: null,
+        verifiedTxn: null,
+        verifiedReceipt: null,
+        monthlyChallanTotal: defaultChallanTotal,
+        remainingPayable: defaultChallanTotal,
+        paidByLabel: ''
+      };
+    }
+
+    const stuId = String(stu.id || '').trim();
+    const stuRoll = String(stu.rollNo || '').trim().toLowerCase();
+    const stuName = String(stu.name || stu.fullName || '').trim().toLowerCase();
+    const txs = this.findTransactionsForStudent(stu);
+    const verifiedTxn = txs.find(tx => tx.status === 'VERIFIED' || tx.status === 'SETTLED') || null;
+    const pendingSlipTxn = txs.find(tx => tx.status === 'PENDING_VERIFICATION') || null;
+
+    const verifiedReceipt = (this.principalFeeCollections || []).find(c =>
+      (stuId && c.studentId === stuId) ||
+      (stuRoll && c.rollNo && String(c.rollNo).trim().toLowerCase() === stuRoll) ||
+      (stuName && c.studentName && c.studentName.trim().toLowerCase() === stuName)
+    ) || null;
+
+    const openChallan = (this.accountantGeneratedChallans || []).find(c => {
+      const st = String(c.status || '').toUpperCase();
+      if (!['PENDING', 'OVERDUE', 'PARTIAL'].includes(st)) return false;
+      return (stuId && c.studentId === stuId) ||
+        (stuRoll && c.rollNo && String(c.rollNo).trim().toLowerCase() === stuRoll) ||
+        (stuName && c.studentName && String(c.studentName).trim().toLowerCase() === stuName);
+    }) || null;
+
+    const paidChallan = (this.accountantGeneratedChallans || []).find(c => {
+      if (String(c.status || '').toUpperCase() !== 'PAID') return false;
+      return (stuId && c.studentId === stuId) ||
+        (stuRoll && c.rollNo && String(c.rollNo).trim().toLowerCase() === stuRoll) ||
+        (stuName && c.studentName && String(c.studentName).trim().toLowerCase() === stuName);
+    }) || null;
+
+    const monthlyChallanTotal = openChallan ? Number(openChallan.total || defaultChallanTotal) : defaultChallanTotal;
+    const dueBakaya = Number(stu.dueBakaya ?? 0);
+    const feeStatusLower = String(stu.feeStatus || '').trim().toLowerCase();
+
+    const isPaid = (!openChallan && feeStatusLower === 'paid' && dueBakaya <= 0) ||
+      (Boolean(verifiedTxn || verifiedReceipt || paidChallan) && dueBakaya <= 0 && !openChallan);
+    const isPartial = !isPaid && (feeStatusLower === 'partial' || (Boolean(verifiedTxn || verifiedReceipt) && dueBakaya > 0));
+
+    let remainingPayable = 0;
+    if (!isPaid) {
+      remainingPayable = dueBakaya > 0 ? dueBakaya : monthlyChallanTotal;
+    }
+
+    let paidByLabel = '';
+    if (verifiedTxn) {
+      const role = String(verifiedTxn.submittedByRole || '').toLowerCase();
+      if (role === 'parent') paidByLabel = `Paid by Parent / Guardian (${verifiedTxn.submittedByName || verifiedTxn.payerAccountTitle || 'Parent'})`;
+      else if (role === 'student') paidByLabel = `Paid Online by Student (${verifiedTxn.submittedByName || stu.name})`;
+      else if (role === 'accountant') paidByLabel = `Collected by Accountant Desk`;
+      else if (role === 'principal') paidByLabel = `Verified by Principal Office`;
+      else paidByLabel = `Verified Online (${verifiedTxn.gatewayName})`;
+    } else if (verifiedReceipt) {
+      paidByLabel = verifiedReceipt.collectorRole === 'accountant'
+        ? `Collected at Accountant Desk (${verifiedReceipt.receiptNo})`
+        : `Collected at Principal Desk (${verifiedReceipt.receiptNo})`;
+    } else if (paidChallan) {
+      paidByLabel = `Challan #${paidChallan.challanNo} Marked PAID`;
+    } else if (isPaid) {
+      paidByLabel = 'Cleared in School Fee Ledger';
+    }
+
+    return {
+      isPaid,
+      isPartial,
+      hasPendingSlip: Boolean(pendingSlipTxn) && !isPaid,
+      pendingSlipTxn,
+      verifiedTxn,
+      verifiedReceipt,
+      monthlyChallanTotal,
+      remainingPayable,
+      paidByLabel
+    };
+  }
+
+  get studentFeeClearance() {
+    return this.getStudentFeeClearanceState(this.currentStudentProfile);
+  }
+
+  get parentChildFeeClearance() {
+    return this.getStudentFeeClearanceState(this.selectedParentChild);
+  }
+
+  get checkoutTargetClearance() {
+    const stu = (this.activeStudents || []).find(s =>
+      (this.portalCheckoutForm.studentId && s.id === this.portalCheckoutForm.studentId) ||
+      (this.portalCheckoutForm.rollNo && s.rollNo === this.portalCheckoutForm.rollNo)
+    ) || {
+      id: this.portalCheckoutForm.studentId,
+      name: this.portalCheckoutForm.studentName,
+      rollNo: this.portalCheckoutForm.rollNo,
+      feeAmount: this.portalCheckoutForm.baseAmount,
+      feeStatus: 'Pending',
+      dueBakaya: this.portalCheckoutForm.baseAmount
+    };
+    return this.getStudentFeeClearanceState(stu);
+  }
+
   private mergeOwnerAttendancePolicy(raw: Partial<OwnerAttendancePolicy> | null | undefined): OwnerAttendancePolicy {
     const def = createDefaultOwnerAttendancePolicy();
     const src: any = raw && typeof raw === 'object' ? raw : {};
@@ -2605,31 +2831,30 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
 
   get selectedParentChild(): any {
     const foundInList = (this.parentChildren || []).find(c => c.id === this.activeParentChildId);
-    if (foundInList) return foundInList;
-    const foundInStudents = (this.activeStudents || []).find(s => s.id === this.activeParentChildId);
-    if (foundInStudents) {
-      return {
-        id: foundInStudents.id,
-        name: foundInStudents.name,
-        rollNo: foundInStudents.rollNo,
-        grade: foundInStudents.grade,
-        section: foundInStudents.section || 'General',
-        rfidCard: `RFID-${foundInStudents.rollNo || '88219'}`,
-        status: 'In Campus (Classroom)',
-        checkInTime: '07:48 AM',
-        attendanceRate: foundInStudents.attendance || '98.5%',
-        gpa: '3.90 / 4.0',
-        gradeLabel: 'Grade A+ (Distinction)',
-        feeStatus: foundInStudents.feeStatus || 'Paid',
-        feeAmount: foundInStudents.feeAmount || 28500,
-        receiptNo: `CH-2026-${foundInStudents.rollNo || '8801'}`,
-        validTill: 'Nov 10, 2026',
-        dueBakaya: 0,
-        busRoute: 'Bus Route #04',
-        busDriver: 'Ch. Aslam (+92 313 5544332)'
-      };
-    }
-    return (this.parentChildren && this.parentChildren[0]) ? this.parentChildren[0] : {
+    const foundInStudents = (this.activeStudents || []).find(s =>
+      s.id === this.activeParentChildId ||
+      (foundInList && (s.id === foundInList.id || (foundInList.rollNo && s.rollNo === foundInList.rollNo)))
+    );
+    const base = foundInList || (foundInStudents ? {
+      id: foundInStudents.id,
+      name: foundInStudents.name,
+      rollNo: foundInStudents.rollNo,
+      grade: foundInStudents.grade,
+      section: foundInStudents.section || 'General',
+      rfidCard: `RFID-${foundInStudents.rollNo || '88219'}`,
+      status: 'In Campus (Classroom)',
+      checkInTime: '07:48 AM',
+      attendanceRate: foundInStudents.attendance || '98.5%',
+      gpa: '3.90 / 4.0',
+      gradeLabel: 'Grade A+ (Distinction)',
+      feeStatus: foundInStudents.feeStatus || 'Paid',
+      feeAmount: foundInStudents.feeAmount || 28500,
+      receiptNo: `CH-2026-${foundInStudents.rollNo || '8801'}`,
+      validTill: 'Nov 10, 2026',
+      dueBakaya: Number(foundInStudents.dueBakaya ?? 0),
+      busRoute: 'Bus Route #04',
+      busDriver: 'Ch. Aslam (+92 313 5544332)'
+    } : ((this.parentChildren && this.parentChildren[0]) ? this.parentChildren[0] : {
       id: 'ST-1001',
       name: 'Zayan Ahmed Khan',
       rollNo: '1001',
@@ -2648,6 +2873,21 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
       dueBakaya: 0,
       busRoute: 'Bus Route #04',
       busDriver: 'Ch. Aslam (+92 313 5544332)'
+    }));
+
+    const liveStu = foundInStudents || (this.activeStudents || []).find(s =>
+      (base.id && s.id === base.id) || (base.rollNo && s.rollNo === base.rollNo)
+    );
+    if (!liveStu) return base;
+    return {
+      ...base,
+      name: liveStu.name || base.name,
+      rollNo: liveStu.rollNo || base.rollNo,
+      grade: liveStu.grade || base.grade,
+      feeStatus: liveStu.feeStatus || base.feeStatus,
+      feeAmount: Number(liveStu.feeAmount ?? base.feeAmount ?? 25000),
+      dueBakaya: Number(liveStu.dueBakaya ?? base.dueBakaya ?? 0),
+      lastPaymentDate: liveStu.lastPaymentDate || (base as any).lastPaymentDate || ''
     };
   }
 
@@ -3377,6 +3617,91 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
   // Search Queries per Module
   paymentGatewaySearchQuery: string = '';
   selectedPaymentGatewayFilter: string = 'All';
+  selectedPaymentStatusFilter: 'All' | 'PENDING_VERIFICATION' | 'VERIFIED' | 'SETTLED' | 'REJECTED' = 'All';
+  schoolPaymentGateways: SchoolPaymentGateway[] = [];
+  schoolGatewaySettings: SchoolGatewaySettings = {
+    currency: 'PKR',
+    allowOnlineStudentPayment: true,
+    allowOnlineParentPayment: true,
+    allowPartialOnlinePayment: false,
+    requireProofReference: true,
+    autoIssueReceiptOnVerify: true,
+    oneBillPrefix: '10089',
+    lateFeeGraceDays: 5,
+    lateFeeFinePkr: 500,
+    receiptFooterNote: 'Authorized by School Owner. Valid across JazzCash, Easypaisa, Raast, 1Bill & Bank Counters.',
+    ownerNotifyOnPayment: true,
+    customPolicyFields: []
+  };
+  schoolPaymentTransactions: SchoolPaymentTransaction[] = [];
+  paymentTransactionSummary: any = null;
+  isGatewayConfigModalOpen: boolean = false;
+  editingGateway: SchoolPaymentGateway | null = null;
+  gatewayConfigForm: any = {
+    providerKey: 'jazzcash',
+    displayName: '',
+    category: 'mobile_wallet',
+    accountTitle: '',
+    accountNumber: '',
+    iban: '',
+    raastId: '',
+    bankName: '',
+    branchCode: '',
+    tillId: '',
+    billerCode: '',
+    merchantId: '',
+    merchantSecret: '',
+    integritySalt: '',
+    webhookUrl: '',
+    feeType: 'none',
+    feeValue: 0,
+    verificationMode: 'slip_review',
+    instructions: '',
+    branchId: 'ALL',
+    wingId: 'ALL',
+    allowedPortals: ['owner', 'principal', 'accountant', 'student', 'parent'],
+    customFields: [],
+    isEnabled: true,
+    isDefault: false,
+    sortOrder: 50
+  };
+  isGatewaySettingsModalOpen: boolean = false;
+  gatewaySettingsForm: SchoolGatewaySettings = { ...this.schoolGatewaySettings };
+  isPortalCheckoutModalOpen: boolean = false;
+  portalCheckoutContext: 'student' | 'parent' | 'owner' = 'student';
+  portalCheckoutForm: any = {
+    gatewayId: '',
+    studentId: '',
+    studentName: '',
+    rollNo: '',
+    grade: '',
+    guardianName: '',
+    challanNo: '',
+    month: 'Current Session Fee',
+    baseAmount: 0,
+    payerPhone: '',
+    payerAccountTitle: '',
+    proofReference: '',
+    proofNotes: '',
+    proofScreenshot: '',
+    proofScreenshotName: ''
+  };
+  isGatewayTxnEditModalOpen: boolean = false;
+  editingGatewayTxn: SchoolPaymentTransaction | null = null;
+  gatewayTxnEditForm: any = {
+    studentName: '',
+    grade: '',
+    challanNo: '',
+    baseAmount: 0,
+    gatewayFee: 0,
+    proofReference: '',
+    proofNotes: '',
+    proofScreenshot: '',
+    status: 'VERIFIED'
+  };
+  isSlipScreenshotModalOpen: boolean = false;
+  previewSlipTransaction: SchoolPaymentTransaction | null = null;
+  checkoutScreenshotUploading: boolean = false;
   teachersSearchQuery: string = '';
   admissionsSearchQuery: string = '';
   selectedAdmissionFilter: 'all' | 'Approved' | 'Interview Scheduled' | 'Under Review' | 'Rejected' = 'all';
@@ -4866,13 +5191,21 @@ INSTRUCTIONS:
   activePaySlipStaff: StaffPayrollRecord | null = null;
 
   paymentForm = {
+    gatewayId: '',
     title: 'Online Tuition Fee Collection',
+    studentId: '',
     studentName: '',
+    rollNo: '',
     grade: 'Class 10-A',
-    category: 'JazzCash Direct',
+    category: 'Raast Instant IBFT',
     amount: 28500,
     status: 'Verified',
-    challanNo: ''
+    challanNo: '',
+    payerPhone: '',
+    proofReference: '',
+    proofScreenshot: '',
+    proofScreenshotName: '',
+    month: 'Current Session Fee'
   };
 
   // Dynamic Custom Form Field Drafts (synced with SchoolTableSchemaService)
@@ -5230,7 +5563,7 @@ INSTRUCTIONS:
     { id: 'finance', label: 'Fees & Finance Ledger', shortLabel: 'Finance', icon: CreditCard, badge: 'PKR' },
     { id: 'invoices', label: 'Invoices & Billing Hub', shortLabel: 'Invoices', icon: Receipt, badge: 'PRO' },
     { id: 'expenses', label: 'School Expenses Ledger', shortLabel: 'Expenses', icon: Receipt, badge: 'Bills' },
-    { id: 'payment_gateway', label: 'Online Fees & Gateway', shortLabel: 'Online Pay', icon: WalletCards, badge: 'Pay' },
+    { id: 'payment_gateway', label: 'Gateway Setting', shortLabel: 'Gateway Setting', icon: WalletCards, badge: 'PK' },
     { id: 'reports', label: 'Reports & Certificates', shortLabel: 'Reports', icon: FileText, badge: 'PDF/CSV' },
     { id: 'exams', label: 'Examinations & Grades', shortLabel: 'Exams', icon: Trophy, count: 'GPA 3.8' },
     { id: 'timetable', label: 'Timetable & Routine', shortLabel: 'Timetable', icon: Calendar, count: '8 Periods' },
@@ -8252,6 +8585,7 @@ INSTRUCTIONS:
       collectedBy: collectorLabel,
       collectorRole: activeDeskRole
     });
+    this.reconcileCrossPortalFeeState();
 
     // Owner notification
     this.notificationsList.unshift({
@@ -9797,6 +10131,30 @@ INSTRUCTIONS:
       if (savedFinances) this.finances = JSON.parse(savedFinances);
       else this.finances = this.getInitialFinances();
 
+      const savedGateways = this.getScopedItem('scs_school_payment_gateways_v1');
+      if (savedGateways) {
+        try {
+          const parsedGw = JSON.parse(savedGateways);
+          if (Array.isArray(parsedGw) && parsedGw.length > 0) this.schoolPaymentGateways = parsedGw;
+        } catch {}
+      }
+      const savedGwSettings = this.getScopedItem('scs_school_gateway_settings_v1');
+      if (savedGwSettings) {
+        try {
+          const parsedSet = JSON.parse(savedGwSettings);
+          if (parsedSet && typeof parsedSet === 'object') {
+            this.schoolGatewaySettings = { ...this.schoolGatewaySettings, ...parsedSet };
+          }
+        } catch {}
+      }
+      const savedPgTxns = this.getScopedItem('scs_school_payment_txns_v1');
+      if (savedPgTxns) {
+        try {
+          const parsedTx = JSON.parse(savedPgTxns);
+          if (Array.isArray(parsedTx)) this.schoolPaymentTransactions = parsedTx;
+        } catch {}
+      }
+
       if (savedExams) this.examsList = JSON.parse(savedExams);
       else this.examsList = this.getInitialExams();
 
@@ -10303,7 +10661,7 @@ INSTRUCTIONS:
   async loadStateFromBackend(): Promise<void> {
     try {
       await this.flushOfflineSyncQueue();
-      const [wsRes, stuRes, tchRes, admRes, feeRes, hwRes, hwSubRes, matRes, msgRes, lvRes, conRes, cmpRes, lpRes, subRes, audRes, recRes, pvRes, monRes, stfRes, priRes, polRes, fpRes, fgRes, attRes] = await Promise.all([
+      const [wsRes, stuRes, tchRes, admRes, feeRes, hwRes, hwSubRes, matRes, msgRes, lvRes, conRes, cmpRes, lpRes, subRes, audRes, recRes, pvRes, monRes, stfRes, priRes, polRes, fpRes, fgRes, attRes, _tsRes, pgGwRes, pgTxRes] = await Promise.all([
         this.backend.getSchoolWorkspace().catch(() => null),
         this.backend.getSchoolStudents().catch(() => null),
         this.backend.getSchoolTeachers().catch(() => null),
@@ -10328,7 +10686,9 @@ INSTRUCTIONS:
         this.backend.getSchoolFaceProfiles().catch(() => null),
         this.backend.getSchoolFingerprintProfiles().catch(() => null),
         this.backend.getSchoolAttendance().catch(() => null),
-        this.tableSchemaService.loadFromBackend().catch(() => null)
+        this.tableSchemaService.loadFromBackend().catch(() => null),
+        this.backend.getSchoolPaymentGateways(true).catch(() => null),
+        this.backend.getSchoolPaymentTransactions().catch(() => null)
       ]);
 
       if (wsRes?.ok && wsRes.workspace && typeof wsRes.workspace === 'object') {
@@ -10729,8 +11089,28 @@ INSTRUCTIONS:
         }
       }
 
+      if (pgGwRes?.ok) {
+        if (Array.isArray(pgGwRes.gateways)) {
+          this.schoolPaymentGateways = pgGwRes.gateways;
+        }
+        if (pgGwRes.settings && typeof pgGwRes.settings === 'object') {
+          this.schoolGatewaySettings = { ...this.schoolGatewaySettings, ...pgGwRes.settings };
+          this.gatewaySettingsForm = { ...this.schoolGatewaySettings };
+        }
+      }
+
+      if (pgTxRes?.ok) {
+        if (Array.isArray(pgTxRes.transactions)) {
+          this.schoolPaymentTransactions = pgTxRes.transactions;
+        }
+        if (pgTxRes.summary) {
+          this.paymentTransactionSummary = pgTxRes.summary;
+        }
+      }
+
       this.normalizeBranchWingAssignments();
       this.hydrateActivePortalIdentity();
+      this.reconcileCrossPortalFeeState();
       this.recomputeAttendanceSummary();
       this.recalculateDefaulters();
       this.cdr.detectChanges();
@@ -10958,6 +11338,9 @@ INSTRUCTIONS:
       this.setScopedItem('scs_school_fee_plans_v1', JSON.stringify(this.feeStructureCatalog));
       this.setScopedItem('scs_school_substitutions_v1', JSON.stringify(this.substituteArrangements));
       this.setScopedItem('scs_school_inspections_v1', JSON.stringify(this.dailyInspectionLogs));
+      this.setScopedItem('scs_school_payment_gateways_v1', JSON.stringify(this.schoolPaymentGateways));
+      this.setScopedItem('scs_school_gateway_settings_v1', JSON.stringify(this.schoolGatewaySettings));
+      this.setScopedItem('scs_school_payment_txns_v1', JSON.stringify(this.schoolPaymentTransactions));
       this.setScopedItem('scs_school_branch_scope_v1', this.selectedBranchScope);
       this.setScopedItem('scs_school_wing_scope_v1', this.selectedWingScope);
       void this.backend.saveSchoolWorkspace({
@@ -12917,6 +13300,8 @@ INSTRUCTIONS:
       parent: 'Parent & Guardian Portal'
     };
     this.showToast(`Switched view to ${roleLabels[role as SchoolPortalRole] || role} (${this.activePersonaBranchLabel})`, 'info');
+    this.reconcileCrossPortalFeeState();
+    void this.refreshPaymentGatewayData();
     this.cdr.detectChanges();
     this.resetScrollToTop();
   }
@@ -14724,6 +15109,144 @@ INSTRUCTIONS:
     });
   }
 
+  get scopedSchoolPaymentGateways(): SchoolPaymentGateway[] {
+    return (this.schoolPaymentGateways || []).filter(gw => {
+      if (this.effectiveBranchScope !== 'ALL' && gw.branchId && gw.branchId !== 'ALL' && gw.branchId !== this.effectiveBranchScope) {
+        return false;
+      }
+      if (this.effectiveWingScope !== 'ALL' && gw.wingId && gw.wingId !== 'ALL' && gw.wingId !== this.effectiveWingScope) {
+        return false;
+      }
+      return true;
+    });
+  }
+
+  get enabledSchoolPaymentGateways(): SchoolPaymentGateway[] {
+    return this.scopedSchoolPaymentGateways.filter(gw => gw.isEnabled !== false);
+  }
+
+  getEnabledGatewaysForPortal(portalRole: string): SchoolPaymentGateway[] {
+    return this.enabledSchoolPaymentGateways.filter(gw =>
+      !Array.isArray(gw.allowedPortals) || gw.allowedPortals.length === 0 || gw.allowedPortals.includes(portalRole)
+    );
+  }
+
+  get studentEnabledPaymentGateways(): SchoolPaymentGateway[] {
+    return this.getEnabledGatewaysForPortal('student');
+  }
+
+  get parentEnabledPaymentGateways(): SchoolPaymentGateway[] {
+    return this.getEnabledGatewaysForPortal('parent');
+  }
+
+  get accountantEnabledPaymentGateways(): SchoolPaymentGateway[] {
+    return this.getEnabledGatewaysForPortal('accountant');
+  }
+
+  get principalEnabledPaymentGateways(): SchoolPaymentGateway[] {
+    return this.getEnabledGatewaysForPortal('principal');
+  }
+
+  get primaryVoucherBankGateway(): SchoolPaymentGateway | null {
+    const enabled = this.enabledSchoolPaymentGateways;
+    return enabled.find(g => g.providerKey === 'meezan_bank')
+      || enabled.find(g => g.category === 'bank_challan')
+      || enabled.find(g => g.iban || g.accountNumber)
+      || null;
+  }
+
+  get primaryVoucherOneBillGateway(): SchoolPaymentGateway | null {
+    return this.enabledSchoolPaymentGateways.find(g => g.providerKey === 'onebill' || g.billerCode) || null;
+  }
+
+  get primaryVoucherRaastGateway(): SchoolPaymentGateway | null {
+    return this.enabledSchoolPaymentGateways.find(g => g.providerKey === 'raast' || g.raastId) || null;
+  }
+
+  get scopedSchoolPaymentTransactions(): SchoolPaymentTransaction[] {
+    return (this.schoolPaymentTransactions || []).filter(tx => {
+      if (this.effectiveBranchScope !== 'ALL' && tx.branchId && tx.branchId !== this.effectiveBranchScope) return false;
+      if (this.effectiveWingScope !== 'ALL' && tx.wingId && tx.wingId !== this.effectiveWingScope) return false;
+      return true;
+    });
+  }
+
+  get filteredSchoolPaymentTransactions(): SchoolPaymentTransaction[] {
+    const q = (this.paymentGatewaySearchQuery || '').trim().toLowerCase();
+    return this.scopedSchoolPaymentTransactions.filter(tx => {
+      const matchSearch = !q ||
+        (tx.txnRef || '').toLowerCase().includes(q) ||
+        (tx.challanNo || '').toLowerCase().includes(q) ||
+        (tx.studentName || '').toLowerCase().includes(q) ||
+        (tx.rollNo || '').toLowerCase().includes(q) ||
+        (tx.grade || '').toLowerCase().includes(q) ||
+        (tx.gatewayName || '').toLowerCase().includes(q) ||
+        (tx.proofReference || '').toLowerCase().includes(q);
+      const matchGw = this.selectedPaymentGatewayFilter === 'All' ||
+        tx.gatewayId === this.selectedPaymentGatewayFilter ||
+        tx.gatewayName === this.selectedPaymentGatewayFilter ||
+        tx.providerKey === this.selectedPaymentGatewayFilter;
+      const matchStatus = this.selectedPaymentStatusFilter === 'All' ||
+        String(tx.status || '').toUpperCase() === this.selectedPaymentStatusFilter;
+      return matchSearch && matchGw && matchStatus;
+    });
+  }
+
+  get pendingVerificationGatewayTransactions(): SchoolPaymentTransaction[] {
+    return this.scopedSchoolPaymentTransactions.filter(tx => tx.status === 'PENDING_VERIFICATION');
+  }
+
+  get verifiedGatewayTransactionsTotal(): number {
+    return this.scopedSchoolPaymentTransactions
+      .filter(tx => tx.status === 'VERIFIED' || tx.status === 'SETTLED')
+      .reduce((sum, tx) => sum + Number(tx.totalAmount || 0), 0);
+  }
+
+  get pendingGatewayTransactionsTotal(): number {
+    return this.pendingVerificationGatewayTransactions.reduce((sum, tx) => sum + Number(tx.totalAmount || 0), 0);
+  }
+
+  get studentPortalPaymentTransactions(): SchoolPaymentTransaction[] {
+    return this.findTransactionsForStudent(this.currentStudentProfile);
+  }
+
+  get parentChildPaymentTransactions(): SchoolPaymentTransaction[] {
+    return this.findTransactionsForStudent(this.selectedParentChild);
+  }
+
+  getGatewayTxStats(gw: SchoolPaymentGateway): { verifiedAmount: number; pendingAmount: number; verifiedCount: number; pendingCount: number; totalCount: number } {
+    const txs = this.scopedSchoolPaymentTransactions.filter(tx => tx.gatewayId === gw.id);
+    let verifiedAmount = 0;
+    let pendingAmount = 0;
+    let verifiedCount = 0;
+    let pendingCount = 0;
+    for (const tx of txs) {
+      if (tx.status === 'VERIFIED' || tx.status === 'SETTLED') {
+        verifiedAmount += Number(tx.totalAmount || 0);
+        verifiedCount++;
+      } else if (tx.status === 'PENDING_VERIFICATION') {
+        pendingAmount += Number(tx.totalAmount || 0);
+        pendingCount++;
+      }
+    }
+    return { verifiedAmount, pendingAmount, verifiedCount, pendingCount, totalCount: txs.length };
+  }
+
+  get selectedPortalCheckoutGateway(): SchoolPaymentGateway | null {
+    return (this.schoolPaymentGateways || []).find(g => g.id === this.portalCheckoutForm.gatewayId) || null;
+  }
+
+  get portalCheckoutFeePreview(): { baseAmount: number; gatewayFee: number; totalAmount: number } {
+    const baseAmount = Math.max(0, Number(this.portalCheckoutForm.baseAmount || 0));
+    const gw = this.selectedPortalCheckoutGateway;
+    let gatewayFee = 0;
+    if (gw && gw.feeValue > 0) {
+      if (gw.feeType === 'percent') gatewayFee = Math.round((baseAmount * Number(gw.feeValue)) / 100);
+      else if (gw.feeType === 'fixed') gatewayFee = Math.round(Number(gw.feeValue));
+    }
+    return { baseAmount, gatewayFee, totalAmount: baseAmount + gatewayFee };
+  }
+
   get filteredTeachers(): TeacherRecord[] {
     return this.scopedTeachers.filter(t => {
       const q = (this.teachersSearchQuery || '').toLowerCase();
@@ -15413,20 +15936,883 @@ INSTRUCTIONS:
     });
   }
 
-  // --- ONLINE PAYMENT GATEWAY CRUD ---
+  // --- ONLINE PAYMENT GATEWAY CRUD & OWNER-GOVERNED PAKISTAN CHANNELS ---
+  formatTxnDate(raw?: string): string {
+    if (!raw) return 'Just now';
+    const d = new Date(raw);
+    if (Number.isNaN(d.getTime())) return String(raw);
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' · ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+
+  reconcileCrossPortalFeeState(): void {
+    const verifiedTxns = (this.schoolPaymentTransactions || []).filter(
+      tx => tx.status === 'VERIFIED' || tx.status === 'SETTLED'
+    );
+    const paidReceiptByStudentKey = new Map<string, number>();
+
+    for (const tx of verifiedTxns) {
+      const finKey = tx.linkedFeeId || tx.txnRef;
+      const alreadyInFin = (this.finances || []).some(
+        f => f.id === finKey || f.challanNo === tx.challanNo || f.challanNo === tx.txnRef
+      );
+      if (!alreadyInFin && Number(tx.baseAmount || tx.totalAmount || 0) > 0) {
+        this.finances.unshift({
+          id: finKey || ('FIN-' + tx.id),
+          title: `Online Fee (${tx.gatewayName}) - ${tx.studentName}`,
+          studentName: tx.studentName,
+          grade: tx.grade || 'Campus',
+          category: 'Tuition',
+          type: 'Income',
+          amount: Number(tx.baseAmount || tx.totalAmount || 0),
+          date: this.formatTxnDate(tx.verifiedAt || tx.createdAt),
+          status: 'Verified',
+          challanNo: tx.challanNo || tx.txnRef,
+          paymentMethod: tx.gatewayName,
+          branchId: tx.branchId,
+          branchName: tx.branchName,
+          wingId: tx.wingId,
+          wingName: tx.wingName
+        });
+      }
+
+      const alreadyInCol = (this.principalFeeCollections || []).some(
+        c => c.receiptNo === tx.txnRef || (tx.linkedFeeId && c.id === tx.linkedFeeId) || (tx.challanNo && c.challanNo === tx.challanNo)
+      );
+      if (!alreadyInCol && Number(tx.baseAmount || tx.totalAmount || 0) > 0) {
+        const subRole = String(tx.submittedByRole || 'parent').toLowerCase();
+        const roleLabel: 'principal' | 'accountant' | 'owner' =
+          subRole === 'accountant' ? 'accountant' : (subRole === 'principal' ? 'principal' : 'owner');
+        this.principalFeeCollections.unshift({
+          id: tx.linkedFeeId || tx.id,
+          receiptNo: tx.txnRef,
+          challanNo: tx.challanNo || tx.txnRef,
+          studentId: tx.studentId,
+          studentName: tx.studentName,
+          rollNo: tx.rollNo || '',
+          grade: tx.grade || 'Campus',
+          guardianName: tx.guardianName || tx.payerAccountTitle || '',
+          guardianPhone: tx.payerPhone || '',
+          amount: Number(tx.baseAmount || tx.totalAmount || 0),
+          paymentResource: tx.gatewayName,
+          resourceReference: tx.proofReference || tx.txnRef,
+          collectedBy: tx.verifiedBy || tx.submittedByName || 'Online Gateway Desk',
+          collectorRole: roleLabel,
+          timestamp: this.formatTxnDate(tx.verifiedAt || tx.createdAt),
+          monthsPaid: tx.month || 'Current Session Fee',
+          auditStatus: `Verified via ${tx.gatewayName}`,
+          notes: tx.proofNotes || '',
+          branchId: tx.branchId,
+          branchName: tx.branchName,
+          wingId: tx.wingId,
+          wingName: tx.wingName
+        });
+      }
+
+      const stuKey = tx.studentId || tx.rollNo || tx.studentName?.toLowerCase();
+      if (stuKey) {
+        paidReceiptByStudentKey.set(stuKey, (paidReceiptByStudentKey.get(stuKey) || 0) + Number(tx.baseAmount || 0));
+      }
+
+      const matchStu = (this.activeStudents || []).find(s =>
+        (tx.studentId && s.id === tx.studentId) ||
+        (tx.rollNo && s.rollNo === tx.rollNo) ||
+        (tx.studentName && s.name?.toLowerCase() === tx.studentName.toLowerCase())
+      );
+      if (matchStu) {
+        const expected = Number(matchStu.dueBakaya ?? matchStu.feeAmount ?? 0);
+        const totalPaidForStu = paidReceiptByStudentKey.get(stuKey) || Number(tx.baseAmount || 0);
+        if (expected <= 0 || totalPaidForStu >= expected) {
+          matchStu.feeStatus = 'Paid';
+          matchStu.dueBakaya = 0;
+        }
+        matchStu.lastPaymentDate = this.formatTxnDate(tx.verifiedAt || tx.createdAt);
+      }
+    }
+
+    for (const col of (this.principalFeeCollections || [])) {
+      const matchStu = (this.activeStudents || []).find(s =>
+        (col.studentId && s.id === col.studentId) ||
+        (col.rollNo && s.rollNo === col.rollNo) ||
+        (col.studentName && s.name?.toLowerCase() === col.studentName.toLowerCase())
+      );
+      if (matchStu && !String(col.monthsPaid || '').toLowerCase().includes('partial')) {
+        matchStu.feeStatus = 'Paid';
+        matchStu.dueBakaya = 0;
+      }
+    }
+
+    for (const child of (this.parentChildren || [])) {
+      const live = (this.activeStudents || []).find(s =>
+        (child.id && s.id === child.id) ||
+        (child.rollNo && s.rollNo === child.rollNo) ||
+        (child.name && s.name?.toLowerCase() === child.name.toLowerCase())
+      );
+      if (live) {
+        child.feeStatus = live.feeStatus;
+        child.dueBakaya = Number(live.dueBakaya ?? 0);
+      }
+    }
+
+    this.recalculateDefaulters();
+  }
+
+  async refreshPaymentGatewayData(): Promise<void> {
+    const [gwRes, txRes, feeRes, stuRes] = await Promise.all([
+      this.backend.getSchoolPaymentGateways(true).catch(() => null),
+      this.backend.getSchoolPaymentTransactions().catch(() => null),
+      this.backend.getSchoolFees().catch(() => null),
+      this.backend.getSchoolStudents().catch(() => null)
+    ]);
+    if (gwRes?.ok) {
+      if (Array.isArray(gwRes.gateways)) this.schoolPaymentGateways = gwRes.gateways;
+      if (pgHasSettings(gwRes.settings)) {
+        this.schoolGatewaySettings = { ...this.schoolGatewaySettings, ...gwRes.settings };
+      }
+    }
+    if (txRes?.ok) {
+      if (Array.isArray(txRes.transactions)) this.schoolPaymentTransactions = txRes.transactions;
+      if (txRes.summary) this.paymentTransactionSummary = txRes.summary;
+    }
+    if (feeRes?.ok && Array.isArray(feeRes.fees)) {
+      const challanMap = new Map<string, any>();
+      for (const f of feeRes.fees) {
+        const totalAmt = Number(f.total ?? f.amount ?? 0);
+        challanMap.set(f.challanNo || f.id, {
+          id: f.id,
+          challanNo: f.challanNo || f.id,
+          studentId: f.studentId || '',
+          studentName: f.studentName || '',
+          rollNo: f.rollNo || '',
+          grade: f.grade || '',
+          month: f.month || 'Current Month',
+          tuition: Number(f.tuition ?? totalAmt),
+          labFee: Number(f.labFee ?? 0),
+          discount: Number(f.discount ?? 0),
+          total: totalAmt,
+          status: f.status || 'PENDING',
+          dueDate: f.dueDate || '',
+          paidDate: f.paidDate || '',
+          collectorRole: f.collectorRole || 'accountant'
+        });
+      }
+      if (challanMap.size > 0) {
+        this.accountantGeneratedChallans = Array.from(challanMap.values());
+      }
+    }
+    if (stuRes?.ok && Array.isArray(stuRes.students)) {
+      for (const s of stuRes.students) {
+        const match = this.activeStudents.find(st =>
+          st.id === s.id || (s.rollNo && st.rollNo === s.rollNo)
+        );
+        if (match) {
+          const upper = String(s.feeStatus || '').trim().toUpperCase();
+          match.feeStatus = upper === 'PAID' ? 'Paid' : (upper === 'OVERDUE' ? 'Overdue' : 'Pending');
+          match.dueBakaya = Number(s.dueBakaya ?? match.dueBakaya ?? 0);
+        }
+      }
+    }
+    this.reconcileCrossPortalFeeState();
+    function pgHasSettings(s: any): boolean {
+      return Boolean(s && typeof s === 'object');
+    }
+    this.saveStateToStorage();
+    void this.refreshOwnerFinancialMonitoring();
+    this.cdr.detectChanges();
+  }
+
+  onGatewayProviderPresetChange(providerKey: string): void {
+    const presets: Record<string, Partial<SchoolPaymentGateway>> = {
+      jazzcash: { displayName: 'JazzCash Merchant & Wallet', category: 'mobile_wallet', bankName: 'JazzCash Mobilink Microfinance', verificationMode: 'slip_review', instructions: 'Open JazzCash App -> Till Pay or Send Money -> Enter 11-digit TID below.' },
+      easypaisa: { displayName: 'Easypaisa Merchant & QR', category: 'mobile_wallet', bankName: 'Easypaisa Telenor Microfinance', verificationMode: 'slip_review', instructions: 'Open Easypaisa App -> Send Money / QR Pay -> Submit TRX ID below.' },
+      raast: { displayName: 'Raast Instant IBFT', category: 'raast_ibft', bankName: 'State Bank Raast', verificationMode: 'slip_review', instructions: 'Send zero-fee instant Raast transfer from any Pakistani banking app & enter TRX ID.' },
+      onebill: { displayName: '1Link / 1Bill Fee Voucher (KuickPay)', category: '1link_1bill', bankName: '1Link / KuickPay', verificationMode: 'auto_instant', billerCode: this.schoolGatewaySettings.oneBillPrefix || '10089', instructions: 'Bill Payment -> 1Bill Invoice -> Enter Biller Prefix + Challan Number.' },
+      meezan_bank: { displayName: 'Meezan Bank (Islamic Banking)', category: 'bank_challan', bankName: 'Meezan Bank Limited', branchCode: '0102', verificationMode: 'slip_review', instructions: 'Deposit 3-copy fee challan at Meezan Bank counter or transfer via Meezan App.' },
+      hbl_bank: { displayName: 'HBL (Habib Bank Limited)', category: 'bank_challan', bankName: 'Habib Bank Limited (HBL)', branchCode: '0042', verificationMode: 'slip_review', instructions: 'Deposit challan at HBL Branch or pay via HBL Mobile / Konnect.' },
+      sadapay_nayapay: { displayName: 'SadaPay / NayaPay Wallet', category: 'mobile_wallet', bankName: 'SadaPay / NayaPay PK', verificationMode: 'slip_review', instructions: 'Send instant transfer via SadaPay or NayaPay and enter Transaction Ref.' },
+      payfast: { displayName: 'PayFast / Visa & MasterCard PK', category: 'card_gateway', bankName: 'PayFast Pakistan', verificationMode: 'auto_instant', instructions: 'Pay via Pakistani or International Visa / MasterCard / UnionPay Debit or Credit Card.' },
+      cash_counter: { displayName: 'Cash at School Fee Counter', category: 'cash_counter', bankName: 'Campus Fee Desk', verificationMode: 'counter_cash', instructions: 'Pay cash directly at the School Accountant or Principal Desk and collect receipt.' },
+      custom: { displayName: '', category: 'custom', bankName: '', verificationMode: 'slip_review', instructions: '' }
+    };
+    const preset = presets[providerKey];
+    if (preset && !this.editingGateway) {
+      this.gatewayConfigForm = {
+        ...this.gatewayConfigForm,
+        providerKey,
+        displayName: preset.displayName || this.gatewayConfigForm.displayName,
+        category: preset.category || 'custom',
+        bankName: preset.bankName || '',
+        branchCode: preset.branchCode || this.gatewayConfigForm.branchCode,
+        billerCode: preset.billerCode || this.gatewayConfigForm.billerCode,
+        verificationMode: preset.verificationMode || 'slip_review',
+        instructions: preset.instructions || this.gatewayConfigForm.instructions
+      };
+    }
+  }
+
+  openGatewayConfigModal(gw?: SchoolPaymentGateway | null): void {
+    if (!this.isOwnerPortal) {
+      this.showToast('Access Restricted: Only School Business Owner can configure or edit payment gateways.', 'warning');
+      return;
+    }
+    this.editingGateway = gw || null;
+    if (gw) {
+      this.gatewayConfigForm = {
+        providerKey: gw.providerKey,
+        displayName: gw.displayName,
+        category: gw.category,
+        accountTitle: gw.accountTitle || this.schoolName,
+        accountNumber: gw.accountNumber || '',
+        iban: gw.iban || '',
+        raastId: gw.raastId || '',
+        bankName: gw.bankName || '',
+        branchCode: gw.branchCode || '',
+        tillId: gw.tillId || '',
+        billerCode: gw.billerCode || '',
+        merchantId: gw.merchantId || '',
+        merchantSecret: gw.merchantSecretHint || '',
+        integritySalt: gw.integritySaltHint || '',
+        webhookUrl: gw.webhookUrl || '',
+        feeType: gw.feeType || 'none',
+        feeValue: Number(gw.feeValue || 0),
+        verificationMode: gw.verificationMode || 'slip_review',
+        instructions: gw.instructions || '',
+        branchId: gw.branchId || 'ALL',
+        wingId: gw.wingId || 'ALL',
+        allowedPortals: Array.isArray(gw.allowedPortals) ? [...gw.allowedPortals] : ['owner', 'principal', 'accountant', 'student', 'parent'],
+        customFields: Array.isArray(gw.customFields) ? gw.customFields.map(f => ({ ...f })) : [],
+        isEnabled: gw.isEnabled !== false,
+        isDefault: Boolean(gw.isDefault),
+        sortOrder: Number(gw.sortOrder || 50)
+      };
+    } else {
+      this.gatewayConfigForm = {
+        providerKey: 'custom',
+        displayName: '',
+        category: 'bank_challan',
+        accountTitle: this.schoolName || 'SoftCode International School',
+        accountNumber: '',
+        iban: '',
+        raastId: '',
+        bankName: '',
+        branchCode: '',
+        tillId: '',
+        billerCode: '',
+        merchantId: '',
+        merchantSecret: '',
+        integritySalt: '',
+        webhookUrl: '',
+        feeType: 'none',
+        feeValue: 0,
+        verificationMode: 'slip_review',
+        instructions: 'Send fee payment and enter Transaction / Slip Reference ID below for school confirmation.',
+        branchId: this.effectiveBranchScope !== 'ALL' ? this.effectiveBranchScope : 'ALL',
+        wingId: this.effectiveWingScope !== 'ALL' ? this.effectiveWingScope : 'ALL',
+        allowedPortals: ['owner', 'principal', 'accountant', 'student', 'parent'],
+        customFields: [],
+        isEnabled: true,
+        isDefault: false,
+        sortOrder: (this.schoolPaymentGateways.length + 1) * 10
+      };
+    }
+    this.isGatewayConfigModalOpen = true;
+    this.cdr.detectChanges();
+  }
+
+  closeGatewayConfigModal(): void {
+    this.isGatewayConfigModalOpen = false;
+    this.editingGateway = null;
+    this.cdr.detectChanges();
+  }
+
+  toggleGatewayAllowedPortal(portalKey: string): void {
+    const list: string[] = Array.isArray(this.gatewayConfigForm.allowedPortals) ? [...this.gatewayConfigForm.allowedPortals] : [];
+    const idx = list.indexOf(portalKey);
+    if (idx >= 0) list.splice(idx, 1);
+    else list.push(portalKey);
+    this.gatewayConfigForm.allowedPortals = list;
+  }
+
+  addGatewayCustomFieldRow(): void {
+    if (!Array.isArray(this.gatewayConfigForm.customFields)) this.gatewayConfigForm.customFields = [];
+    this.gatewayConfigForm.customFields.push({ label: '', value: '' });
+  }
+
+  removeGatewayCustomFieldRow(idx: number): void {
+    if (Array.isArray(this.gatewayConfigForm.customFields)) {
+      this.gatewayConfigForm.customFields.splice(idx, 1);
+    }
+  }
+
+  async saveGatewayConfig(): Promise<void> {
+    if (!this.isOwnerPortal) {
+      this.showToast('Access Restricted: Only School Business Owner can edit payment gateway settings.', 'warning');
+      return;
+    }
+    const name = String(this.gatewayConfigForm.displayName || '').trim();
+    if (!name) {
+      this.showToast('Please enter a Gateway / Bank Display Name.', 'warning');
+      return;
+    }
+    const payload = {
+      ...this.gatewayConfigForm,
+      displayName: name,
+      feeValue: Math.max(0, Number(this.gatewayConfigForm.feeValue || 0)),
+      sortOrder: Number(this.gatewayConfigForm.sortOrder || 50)
+    };
+    const res = this.editingGateway
+      ? await this.backend.updateSchoolPaymentGateway(this.editingGateway.id, payload)
+      : await this.backend.createSchoolPaymentGateway(payload);
+    if (!res?.ok) {
+      this.showToast(res?.message || 'Unable to save payment gateway.', 'warning');
+      return;
+    }
+    this.closeGatewayConfigModal();
+    await this.refreshPaymentGatewayData();
+    this.showToast(`Payment Gateway "${name}" saved and synced across portals.`, 'success');
+  }
+
+  async toggleGatewayEnabled(gw: SchoolPaymentGateway): Promise<void> {
+    if (!this.isOwnerPortal) {
+      this.showToast('Access Restricted: Only School Business Owner can enable/disable gateways.', 'warning');
+      return;
+    }
+    const res = await this.backend.toggleSchoolPaymentGateway(gw.id, !gw.isEnabled);
+    if (!res?.ok) {
+      this.showToast(res?.message || 'Could not update gateway status.', 'warning');
+      return;
+    }
+    await this.refreshPaymentGatewayData();
+    this.showToast(`${gw.displayName} ${!gw.isEnabled ? 'enabled' : 'disabled'}.`, 'info');
+  }
+
+  async setGatewayAsDefault(gw: SchoolPaymentGateway): Promise<void> {
+    if (!this.isOwnerPortal) {
+      this.showToast('Access Restricted: Only School Business Owner can change default gateway.', 'warning');
+      return;
+    }
+    const res = await this.backend.updateSchoolPaymentGateway(gw.id, { isDefault: true, isEnabled: true });
+    if (!res?.ok) {
+      this.showToast(res?.message || 'Could not set default gateway.', 'warning');
+      return;
+    }
+    await this.refreshPaymentGatewayData();
+    this.showToast(`${gw.displayName} set as Primary Default Gateway.`, 'success');
+  }
+
+  async deletePaymentGateway(gw: SchoolPaymentGateway): Promise<void> {
+    if (!this.isOwnerPortal) {
+      this.showToast('Access Restricted: Only School Business Owner can delete payment gateways.', 'warning');
+      return;
+    }
+    const res = await this.backend.deleteSchoolPaymentGateway(gw.id);
+    if (!res?.ok) {
+      this.showToast(res?.message || 'Could not delete payment gateway.', 'warning');
+      return;
+    }
+    await this.refreshPaymentGatewayData();
+    this.showToast(`Removed Payment Gateway "${gw.displayName}".`, 'warning');
+  }
+
+  openGatewaySettingsModal(): void {
+    if (!this.isOwnerPortal) {
+      this.showToast('Access Restricted: Only School Business Owner can edit Payment Gateway Settings.', 'warning');
+      return;
+    }
+    this.gatewaySettingsForm = {
+      ...this.schoolGatewaySettings,
+      customPolicyFields: Array.isArray(this.schoolGatewaySettings.customPolicyFields)
+        ? this.schoolGatewaySettings.customPolicyFields.map(f => ({ ...f }))
+        : []
+    };
+    this.isGatewaySettingsModalOpen = true;
+    this.cdr.detectChanges();
+  }
+
+  closeGatewaySettingsModal(): void {
+    this.isGatewaySettingsModalOpen = false;
+    this.cdr.detectChanges();
+  }
+
+  addGatewayPolicyRuleRow(): void {
+    if (!Array.isArray(this.gatewaySettingsForm.customPolicyFields)) this.gatewaySettingsForm.customPolicyFields = [];
+    this.gatewaySettingsForm.customPolicyFields.push({ label: '', value: '' });
+  }
+
+  removeGatewayPolicyRuleRow(idx: number): void {
+    if (Array.isArray(this.gatewaySettingsForm.customPolicyFields)) {
+      this.gatewaySettingsForm.customPolicyFields.splice(idx, 1);
+    }
+  }
+
+  async saveGatewaySettings(): Promise<void> {
+    if (!this.isOwnerPortal) {
+      this.showToast('Access Restricted: Only School Business Owner can update Gateway Settings.', 'warning');
+      return;
+    }
+    const res = await this.backend.saveSchoolGatewaySettings(this.gatewaySettingsForm);
+    if (!res?.ok) {
+      this.showToast(res?.message || 'Could not save gateway settings.', 'warning');
+      return;
+    }
+    if (res.settings) this.schoolGatewaySettings = { ...this.schoolGatewaySettings, ...res.settings };
+    this.closeGatewaySettingsModal();
+    this.saveStateToStorage();
+    this.showToast('Owner Payment Gateway Policy & Settings saved!', 'success');
+    this.cdr.detectChanges();
+  }
+
+  openPortalOnlineCheckout(context: 'student' | 'parent' | 'owner', preselectedGatewayId?: string): void {
+    this.portalCheckoutContext = context;
+    const portalKey = context;
+    const allowed = this.getEnabledGatewaysForPortal(portalKey);
+    const chosenGw = (preselectedGatewayId ? allowed.find(g => g.id === preselectedGatewayId) : null)
+      || allowed.find(g => g.isDefault)
+      || allowed[0]
+      || this.enabledSchoolPaymentGateways[0]
+      || null;
+
+    if (context === 'student') {
+      const stu = this.currentStudentProfile;
+      const clearance = this.getStudentFeeClearanceState(stu);
+      if (clearance.isPaid) {
+        this.showToast(`Fee for ${stu?.name || 'Student'} is already Paid (${clearance.paidByLabel}).`, 'info');
+        return;
+      }
+      this.portalCheckoutForm = {
+        gatewayId: chosenGw?.id || '',
+        studentId: stu?.id || '',
+        studentName: stu?.name || 'Enrolled Student',
+        rollNo: stu?.rollNo || '1001',
+        grade: stu?.grade || 'Class 10-A',
+        guardianName: stu?.guardian || '',
+        challanNo: `CH-2026-${stu?.rollNo || '1001'}`,
+        month: 'Current Session Fee',
+        baseAmount: clearance.remainingPayable > 0 ? clearance.remainingPayable : this.studentChallanWithinDueTotal,
+        payerPhone: stu?.guardianPhone || '',
+        payerAccountTitle: stu?.guardian || stu?.name || '',
+        proofReference: '',
+        proofNotes: '',
+        proofScreenshot: '',
+        proofScreenshotName: ''
+      };
+    } else if (context === 'parent') {
+      const child = this.selectedParentChild;
+      const guardian = this.currentGuardianProfile;
+      const clearance = this.getStudentFeeClearanceState(child);
+      if (clearance.isPaid) {
+        this.showToast(`Fee for ${child?.name || 'Ward'} is already Paid (${clearance.paidByLabel}).`, 'info');
+        return;
+      }
+      this.portalCheckoutForm = {
+        gatewayId: chosenGw?.id || '',
+        studentId: child?.id || '',
+        studentName: child?.name || 'Student',
+        rollNo: child?.rollNo || '1001',
+        grade: child?.grade || 'Class 10-A',
+        guardianName: guardian?.name || child?.guardian || '',
+        challanNo: child?.receiptNo || `CH-2026-${child?.rollNo || '1001'}`,
+        month: 'Current Session Fee',
+        baseAmount: clearance.remainingPayable > 0 ? clearance.remainingPayable : this.parentChildChallanWithinDueTotal,
+        payerPhone: guardian?.phone || child?.guardianPhone || '',
+        payerAccountTitle: guardian?.name || '',
+        proofReference: '',
+        proofNotes: '',
+        proofScreenshot: '',
+        proofScreenshotName: ''
+      };
+    } else {
+      const firstStu = this.scopedActiveStudents.find(s => String(s.feeStatus || '').toLowerCase() !== 'paid') || this.scopedActiveStudents[0];
+      this.portalCheckoutForm = {
+        gatewayId: chosenGw?.id || '',
+        studentId: firstStu?.id || '',
+        studentName: firstStu?.name || '',
+        rollNo: firstStu?.rollNo || '',
+        grade: firstStu?.grade || 'Class 10-A',
+        guardianName: firstStu?.guardian || '',
+        challanNo: firstStu ? `CH-2026-${firstStu.rollNo}` : `GW-${Date.now().toString().slice(-5)}`,
+        month: 'Current Session Fee',
+        baseAmount: Number(firstStu?.dueBakaya || firstStu?.feeAmount || 25000),
+        payerPhone: firstStu?.guardianPhone || '',
+        payerAccountTitle: firstStu?.guardian || '',
+        proofReference: '',
+        proofNotes: '',
+        proofScreenshot: '',
+        proofScreenshotName: ''
+      };
+    }
+    this.formCustomValues['payment'] = {};
+    this.isPortalCheckoutModalOpen = true;
+    this.cdr.detectChanges();
+  }
+
+  closePortalOnlineCheckout(): void {
+    this.isPortalCheckoutModalOpen = false;
+    this.cdr.detectChanges();
+  }
+
+  onPortalCheckoutStudentChange(studentId: string): void {
+    const stu = (this.activeStudents || []).find(s => s.id === studentId);
+    if (!stu) return;
+    const clearance = this.getStudentFeeClearanceState(stu);
+    this.portalCheckoutForm.studentId = stu.id;
+    this.portalCheckoutForm.studentName = stu.name;
+    this.portalCheckoutForm.rollNo = stu.rollNo;
+    this.portalCheckoutForm.grade = stu.grade;
+    this.portalCheckoutForm.guardianName = stu.guardian;
+    this.portalCheckoutForm.challanNo = `CH-2026-${stu.rollNo}`;
+    this.portalCheckoutForm.baseAmount = clearance.remainingPayable > 0 ? clearance.remainingPayable : Number(stu.feeAmount || 25000);
+    this.portalCheckoutForm.payerPhone = stu.guardianPhone || '';
+    this.portalCheckoutForm.payerAccountTitle = stu.guardian || '';
+  }
+
+  async onCheckoutScreenshotSelected(event: Event, target: 'portal' | 'ownerPayment' | 'txnEdit'): Promise<void> {
+    const input = event.target as HTMLInputElement | null;
+    const file = input?.files?.[0];
+    if (!file) return;
+    if (!String(file.type || '').startsWith('image/')) {
+      this.showToast('Please select a valid image file (PNG, JPG, WEBP).', 'warning');
+      if (input) input.value = '';
+      return;
+    }
+    this.checkoutScreenshotUploading = true;
+    this.cdr.detectChanges();
+    try {
+      const compressedDataUrl = await this.compressSlipImageFile(file);
+      if (compressedDataUrl.length > 600000) {
+        this.showToast('Screenshot is still too large after compression. Please pick a smaller image.', 'warning');
+        return;
+      }
+      if (target === 'portal') {
+        this.portalCheckoutForm.proofScreenshot = compressedDataUrl;
+        this.portalCheckoutForm.proofScreenshotName = file.name;
+      } else if (target === 'ownerPayment') {
+        this.paymentForm.proofScreenshot = compressedDataUrl;
+        this.paymentForm.proofScreenshotName = file.name;
+      } else if (target === 'txnEdit') {
+        this.gatewayTxnEditForm.proofScreenshot = compressedDataUrl;
+      }
+      this.showToast(`Attached payment slip screenshot (${file.name}).`, 'success');
+    } catch {
+      this.showToast('Could not read the selected image file. Please try another screenshot.', 'warning');
+    } finally {
+      this.checkoutScreenshotUploading = false;
+      if (input) input.value = '';
+      this.cdr.detectChanges();
+    }
+  }
+
+  private compressSlipImageFile(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error('File read error'));
+      reader.onload = () => {
+        const rawUrl = String(reader.result || '');
+        if (typeof Image === 'undefined' || typeof document === 'undefined') {
+          resolve(rawUrl);
+          return;
+        }
+        const img = new Image();
+        img.onerror = () => resolve(rawUrl);
+        img.onload = () => {
+          const maxWidth = 1000;
+          const maxHeight = 1400;
+          let width = img.naturalWidth || img.width || 800;
+          let height = img.naturalHeight || img.height || 800;
+          const scale = Math.min(1, maxWidth / width, maxHeight / height);
+          width = Math.max(1, Math.round(width * scale));
+          height = Math.max(1, Math.round(height * scale));
+          try {
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+              resolve(rawUrl);
+              return;
+            }
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, width, height);
+            ctx.drawImage(img, 0, 0, width, height);
+            const jpegUrl = canvas.toDataURL('image/jpeg', 0.72);
+            resolve(jpegUrl.length < rawUrl.length ? jpegUrl : rawUrl);
+          } catch {
+            resolve(rawUrl);
+          }
+        };
+        img.src = rawUrl;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  removeCheckoutScreenshot(target: 'portal' | 'ownerPayment' | 'txnEdit'): void {
+    if (target === 'portal') {
+      this.portalCheckoutForm.proofScreenshot = '';
+      this.portalCheckoutForm.proofScreenshotName = '';
+    } else if (target === 'ownerPayment') {
+      this.paymentForm.proofScreenshot = '';
+      this.paymentForm.proofScreenshotName = '';
+    } else if (target === 'txnEdit') {
+      this.gatewayTxnEditForm.proofScreenshot = '';
+    }
+    this.cdr.detectChanges();
+  }
+
+  openSlipScreenshotModal(tx: SchoolPaymentTransaction): void {
+    this.previewSlipTransaction = tx;
+    this.isSlipScreenshotModalOpen = true;
+    this.cdr.detectChanges();
+  }
+
+  closeSlipScreenshotModal(): void {
+    this.isSlipScreenshotModalOpen = false;
+    this.previewSlipTransaction = null;
+    this.cdr.detectChanges();
+  }
+
+  async verifyFromSlipPreviewModal(nextStatus: 'VERIFIED' | 'REJECTED'): Promise<void> {
+    const tx = this.previewSlipTransaction;
+    if (!tx) return;
+    await this.verifyGatewayTransaction(tx, nextStatus);
+    this.closeSlipScreenshotModal();
+  }
+
+  async submitPortalOnlineCheckout(): Promise<void> {
+    const gw = this.selectedPortalCheckoutGateway;
+    if (!gw) {
+      this.showToast('Please select an enabled Pakistan payment gateway.', 'warning');
+      return;
+    }
+    if (this.portalCheckoutContext !== 'owner') {
+      const clearance = this.checkoutTargetClearance;
+      if (clearance.isPaid) {
+        this.showToast(`This fee is already paid (${clearance.paidByLabel}). Duplicate payment is not needed.`, 'info');
+        return;
+      }
+      if (clearance.hasPendingSlip && clearance.pendingSlipTxn && clearance.pendingSlipTxn.challanNo === this.portalCheckoutForm.challanNo) {
+        this.showToast(`Payment slip ${clearance.pendingSlipTxn.txnRef} is already submitted and awaiting verification.`, 'info');
+        return;
+      }
+    }
+    const baseAmount = Number(this.portalCheckoutForm.baseAmount || 0);
+    if (!this.portalCheckoutForm.studentName || !Number.isFinite(baseAmount) || baseAmount <= 0) {
+      this.showToast('Please enter student details and a valid PKR amount.', 'warning');
+      return;
+    }
+    if ((this.portalCheckoutContext === 'student' || this.portalCheckoutContext === 'parent') &&
+      gw.verificationMode === 'slip_review' &&
+      this.schoolGatewaySettings.requireProofReference &&
+      !String(this.portalCheckoutForm.proofReference || '').trim()) {
+      this.showToast(`Please enter Transaction / Slip Ref ID for ${gw.displayName}.`, 'warning');
+      return;
+    }
+    const payload = this.stampActiveBranchWing({
+      gatewayId: gw.id,
+      studentId: this.portalCheckoutForm.studentId,
+      studentName: this.portalCheckoutForm.studentName,
+      rollNo: this.portalCheckoutForm.rollNo,
+      grade: this.portalCheckoutForm.grade,
+      guardianName: this.portalCheckoutForm.guardianName,
+      challanNo: this.portalCheckoutForm.challanNo,
+      month: this.portalCheckoutForm.month,
+      baseAmount,
+      payerPhone: this.portalCheckoutForm.payerPhone,
+      payerAccountTitle: this.portalCheckoutForm.payerAccountTitle,
+      proofReference: this.portalCheckoutForm.proofReference,
+      proofNotes: this.portalCheckoutForm.proofNotes,
+      proofScreenshot: this.portalCheckoutForm.proofScreenshot || '',
+      submittedByName: this.portalCheckoutContext === 'parent'
+        ? (this.currentGuardianProfile?.name || this.portalCheckoutForm.guardianName || 'Parent')
+        : this.portalCheckoutForm.studentName,
+      customFields: this.formCustomValues['payment'] || {},
+      markVerified: this.portalCheckoutContext === 'owner',
+      allowDuplicate: this.portalCheckoutContext === 'owner'
+    }, this.portalCheckoutForm.grade);
+
+    const res = await this.backend.createSchoolPaymentTransaction(payload);
+    if (!res?.ok || !res.transaction) {
+      this.showToast(res?.message || 'Unable to submit online payment.', 'warning');
+      if (res?.error === 'ALREADY_PAID' || res?.error === 'STUDENT_ALREADY_PAID' || res?.error === 'PENDING_SLIP_EXISTS') {
+        this.closePortalOnlineCheckout();
+        await this.refreshPaymentGatewayData();
+      }
+      return;
+    }
+    const tx: SchoolPaymentTransaction = res.transaction;
+    this.tableSchemaService.submitFormCustomInputs(
+      'owner_payment_gateway',
+      [tx.id, tx.txnRef, tx.challanNo].filter(Boolean) as string[],
+      this.formCustomValues['payment'],
+      {
+        rowLabel: `${tx.txnRef} - ${tx.studentName}`,
+        submittedByName: tx.submittedByName,
+        submittedByRole: this.currentPortalRole
+      }
+    );
+    this.formCustomValues['payment'] = {};
+    this.closePortalOnlineCheckout();
+    await this.refreshPaymentGatewayData();
+    if (tx.status === 'VERIFIED' || tx.status === 'SETTLED') {
+      this.showToast(`Payment ${tx.txnRef} (PKR ${this.formatCurrency(tx.totalAmount)}) verified & fee status synced across all portals!`, 'success');
+    } else {
+      this.showToast(`Payment slip ${tx.txnRef} submitted via ${gw.displayName} for verification.`, 'success');
+    }
+  }
+
+  async verifyGatewayTransaction(tx: SchoolPaymentTransaction, nextStatus: 'VERIFIED' | 'REJECTED'): Promise<void> {
+    if (this.currentPortalRole === 'student' || this.currentPortalRole === 'parent' || this.currentPortalRole === 'teacher') {
+      this.showToast('Access Restricted: Only Owner, Accountant, or Principal can verify digital fee slips.', 'warning');
+      return;
+    }
+    const verifierName = this.isOwnerPortal
+      ? 'School Business Owner'
+      : (this.currentPortalRole === 'principal' ? 'Principal Office' : (this.activeAccountantProfile?.name || 'Accountant Desk'));
+    const res = await this.backend.verifySchoolPaymentTransaction(tx.id, {
+      status: nextStatus,
+      verifiedBy: verifierName,
+      rejectionReason: nextStatus === 'REJECTED' ? 'Transaction ref not found in bank/wallet statement.' : ''
+    });
+    if (!res?.ok) {
+      this.showToast(res?.message || 'Could not update transaction status.', 'warning');
+      return;
+    }
+    await this.refreshPaymentGatewayData();
+    this.showToast(
+      nextStatus === 'VERIFIED'
+        ? `Verified ${tx.txnRef} (${tx.gatewayName}) — Paid status synced for ${tx.studentName} across all portals!`
+        : `Marked ${tx.txnRef} as Rejected.`,
+      nextStatus === 'VERIFIED' ? 'success' : 'warning'
+    );
+  }
+
+  openEditGatewayTxnModal(tx: SchoolPaymentTransaction): void {
+    if (!this.isOwnerPortal) {
+      this.showToast('Access Restricted: Only School Business Owner can edit gateway transaction records.', 'warning');
+      return;
+    }
+    this.editingGatewayTxn = tx;
+    this.gatewayTxnEditForm = {
+      studentName: tx.studentName,
+      grade: tx.grade,
+      challanNo: tx.challanNo,
+      baseAmount: Number(tx.baseAmount || 0),
+      gatewayFee: Number(tx.gatewayFee || 0),
+      proofReference: tx.proofReference || '',
+      proofNotes: tx.proofNotes || '',
+      proofScreenshot: tx.proofScreenshot || '',
+      status: tx.status || 'VERIFIED'
+    };
+    this.isGatewayTxnEditModalOpen = true;
+    this.cdr.detectChanges();
+  }
+
+  closeEditGatewayTxnModal(): void {
+    this.isGatewayTxnEditModalOpen = false;
+    this.editingGatewayTxn = null;
+    this.cdr.detectChanges();
+  }
+
+  async saveGatewayTxnEdit(): Promise<void> {
+    if (!this.isOwnerPortal || !this.editingGatewayTxn) return;
+    const res = await this.backend.updateSchoolPaymentTransaction(this.editingGatewayTxn.id, this.gatewayTxnEditForm);
+    if (!res?.ok) {
+      this.showToast(res?.message || 'Could not update transaction.', 'warning');
+      return;
+    }
+    this.closeEditGatewayTxnModal();
+    await this.refreshPaymentGatewayData();
+    this.showToast('Gateway transaction record updated by School Owner.', 'success');
+  }
+
+  async deleteGatewayTransaction(tx: SchoolPaymentTransaction): Promise<void> {
+    if (!this.isOwnerPortal) {
+      this.showToast('Access Restricted: Only School Business Owner can delete gateway transactions.', 'warning');
+      return;
+    }
+    const res = await this.backend.deleteSchoolPaymentTransaction(tx.id);
+    if (!res?.ok) {
+      this.showToast(res?.message || 'Could not delete transaction.', 'warning');
+      return;
+    }
+    this.tableSchemaService.clearRowCustomData('owner_payment_gateway', [tx.id, tx.txnRef, tx.challanNo].filter(Boolean) as string[]);
+    await this.refreshPaymentGatewayData();
+    this.showToast(`Deleted payment transaction ${tx.txnRef}.`, 'warning');
+  }
+
+  printGatewayTransactionVoucher(tx: SchoolPaymentTransaction): void {
+    const stu = (this.activeStudents || []).find(s => s.id === tx.studentId || s.rollNo === tx.rollNo);
+    this.openFeeChallanVoucher(stu || ({
+      id: tx.studentId || tx.id,
+      name: tx.studentName,
+      guardian: tx.guardianName || tx.payerAccountTitle || 'Guardian',
+      grade: tx.grade || 'Campus',
+      rollNo: tx.rollNo || tx.txnRef,
+      feeAmount: tx.baseAmount,
+      feeStatus: tx.status === 'VERIFIED' || tx.status === 'SETTLED' ? 'Paid' : 'Pending',
+      section: 'A'
+    } as any));
+  }
+
+  copyGatewayDetail(label: string, val: string): void {
+    if (!val) return;
+    if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+      void navigator.clipboard.writeText(val);
+    }
+    this.showToast(`Copied ${label}: ${val}`, 'info');
+  }
+
   openAddPaymentModal() {
+    const defGw = this.enabledSchoolPaymentGateways.find(g => g.isDefault) || this.enabledSchoolPaymentGateways[0];
     this.paymentForm = {
+      gatewayId: defGw?.id || '',
       title: 'Online Tuition Fee Collection',
+      studentId: '',
       studentName: '',
+      rollNo: '',
       grade: 'Class 10-A',
-      category: 'JazzCash Direct',
+      category: defGw?.displayName || 'Raast Instant IBFT',
       amount: 28500,
       status: 'Verified',
-      challanNo: `PAY-ONLINE-${Math.floor(1000 + Math.random() * 9000)}`
+      challanNo: `PAY-ONLINE-${Math.floor(1000 + Math.random() * 9000)}`,
+      payerPhone: '',
+      proofReference: '',
+      proofScreenshot: '',
+      proofScreenshotName: '',
+      month: 'Current Session Fee'
     };
     this.formCustomValues['payment'] = {};
     this.isPaymentModalOpen = true;
     this.cdr.detectChanges();
+  }
+
+  onPaymentFormGatewayChange(gwId: string): void {
+    const gw = (this.schoolPaymentGateways || []).find(g => g.id === gwId);
+    if (gw) {
+      this.paymentForm.gatewayId = gw.id;
+      this.paymentForm.category = gw.displayName;
+    }
+  }
+
+  getGatewayAccentClass(gw: SchoolPaymentGateway): string {
+    switch (gw.providerKey) {
+      case 'raast': return 'border-l-emerald-600';
+      case 'jazzcash': return 'border-l-rose-600';
+      case 'easypaisa': return 'border-l-green-600';
+      case 'onebill': return 'border-l-indigo-600';
+      case 'meezan_bank': return 'border-l-teal-700';
+      case 'hbl_bank': return 'border-l-emerald-800';
+      case 'sadapay_nayapay': return 'border-l-orange-500';
+      case 'payfast': return 'border-l-violet-600';
+      case 'cash_counter': return 'border-l-amber-600';
+      default: return 'border-l-slate-700';
+    }
+  }
+
+  getTxnStatusBadgeClass(status: string): string {
+    const s = String(status || '').toUpperCase();
+    if (s === 'VERIFIED' || s === 'SETTLED') return 'bg-emerald-100 text-emerald-800 border border-emerald-200';
+    if (s === 'REJECTED') return 'bg-rose-100 text-rose-800 border border-rose-200';
+    return 'bg-amber-100 text-amber-800 border border-amber-200';
   }
 
   closePaymentModal() {
@@ -15434,19 +16820,68 @@ INSTRUCTIONS:
     this.cdr.detectChanges();
   }
 
-  savePayment() {
+  async savePayment(): Promise<void> {
     if (!this.paymentForm.studentName || !this.paymentForm.amount) {
       this.showToast('Please enter Student Name and Amount.', 'warning');
       return;
     }
+    const chosenGw = (this.schoolPaymentGateways || []).find(g => g.id === this.paymentForm.gatewayId || g.displayName === this.paymentForm.category)
+      || this.enabledSchoolPaymentGateways[0];
+    const baseAmount = Number(this.paymentForm.amount) || 28500;
+    const isVerified = this.paymentForm.status === 'Verified';
+    const matchedStudent = (this.activeStudents || []).find(s =>
+      (this.paymentForm.studentId && s.id === this.paymentForm.studentId) ||
+      s.name.toLowerCase() === this.paymentForm.studentName.trim().toLowerCase()
+    );
+
+    if (chosenGw) {
+      const txRes = await this.backend.createSchoolPaymentTransaction(this.stampActiveBranchWing({
+        gatewayId: chosenGw.id,
+        studentId: matchedStudent?.id || this.paymentForm.studentId || '',
+        studentName: this.paymentForm.studentName.trim(),
+        rollNo: matchedStudent?.rollNo || this.paymentForm.rollNo || '',
+        grade: this.paymentForm.grade || matchedStudent?.grade || 'Class 10-A',
+        challanNo: this.paymentForm.challanNo || `PAY-ONLINE-${Math.floor(1000 + Math.random() * 9000)}`,
+        month: this.paymentForm.month || 'Current Session Fee',
+        baseAmount,
+        payerPhone: this.paymentForm.payerPhone || matchedStudent?.guardianPhone || '',
+        proofReference: this.paymentForm.proofReference || this.paymentForm.challanNo || '',
+        proofNotes: this.paymentForm.title || 'Online Tuition Fee Collection',
+        proofScreenshot: this.paymentForm.proofScreenshot || '',
+        status: isVerified ? 'VERIFIED' : 'PENDING_VERIFICATION',
+        markVerified: isVerified,
+        allowDuplicate: true,
+        customFields: this.formCustomValues['payment'] || {}
+      }, this.paymentForm.grade));
+
+      if (txRes?.ok && txRes.transaction) {
+        const tx = txRes.transaction;
+        this.tableSchemaService.submitFormCustomInputs(
+          'owner_payment_gateway',
+          [tx.id, tx.txnRef, tx.challanNo].filter(Boolean) as string[],
+          this.formCustomValues['payment'],
+          {
+            rowLabel: tx.studentName || this.paymentForm.title,
+            submittedByName: 'School Business Owner',
+            submittedByRole: this.currentPortalRole
+          }
+        );
+        this.formCustomValues['payment'] = {};
+        this.closePaymentModal();
+        await this.refreshPaymentGatewayData();
+        this.showToast(`Recorded Payment ${tx.txnRef} via ${chosenGw.displayName} for ${tx.studentName}`, 'success');
+        return;
+      }
+    }
+
     const newRecord: FinanceRecord = {
       id: `FIN-${Math.floor(2000 + Math.random() * 8000)}`,
       title: this.paymentForm.title || 'Online Fee Payment',
       studentName: this.paymentForm.studentName,
       grade: this.paymentForm.grade || 'Class 10-A',
-      category: this.paymentForm.category || 'JazzCash Direct',
+      category: this.paymentForm.category || 'Raast Instant IBFT',
       type: 'Income',
-      amount: Number(this.paymentForm.amount) || 28500,
+      amount: baseAmount,
       date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
       status: (this.paymentForm.status as any) || 'Verified',
       challanNo: this.paymentForm.challanNo || `PAY-ONLINE-${Math.floor(1000 + Math.random() * 9000)}`
@@ -16799,6 +18234,7 @@ INSTRUCTIONS:
       grade: s.grade,
       challanNo: newRecord.challanNo
     });
+    this.reconcileCrossPortalFeeState();
     this.showToast(`Cleared fee payment of PKR ${newRecord.amount} for ${s.name}`, 'success');
   }
 
@@ -24097,8 +25533,9 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     this.formCustomValues['accountantCollect'] = {};
 
     this.saveStateToStorage();
+    this.reconcileCrossPortalFeeState();
     void this.refreshOwnerFinancialMonitoring();
-    this.showToast(`Receipt #${newRecord.receiptNo} recorded (PKR ${this.formatCurrency(amount)}) & synced to Owner dashboard.`, 'success');
+    this.showToast(`Receipt #${newRecord.receiptNo} recorded (PKR ${this.formatCurrency(amount)}) & synced across Owner, Student & Parent portals.`, 'success');
     this.viewCashieringReceipt(newRecord);
   }
 

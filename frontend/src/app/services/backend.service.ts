@@ -1532,6 +1532,140 @@ export class BackendService {
     } catch { return { ok: false, summary: null }; }
   }
 
+  // --- PAKISTAN-NATIVE SCHOOL PAYMENT GATEWAYS, SETTINGS & TRANSACTIONS ---
+  async getSchoolPaymentGateways(includeDisabled: boolean = false, branchId?: string, wingId?: string) {
+    try {
+      const q = this.buildSchoolScopeQuery(branchId, wingId, includeDisabled ? { includeDisabled: '1' } : {});
+      const res = await fetch(`/api/school/payment-gateways${q}`, {
+        headers: this.getSchoolHeaders(false),
+        credentials: 'include'
+      });
+      return await res.json().catch(() => ({ ok: false, gateways: [], settings: null }));
+    } catch { return { ok: false, gateways: [], settings: null }; }
+  }
+
+  async createSchoolPaymentGateway(payload: any) {
+    try {
+      const res = await fetch('/api/school/payment-gateways', {
+        method: 'POST',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async updateSchoolPaymentGateway(id: string, payload: any) {
+    try {
+      const res = await fetch(`/api/school/payment-gateways/${encodeURIComponent(id)}`, {
+        method: 'PUT',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async toggleSchoolPaymentGateway(id: string, isEnabled?: boolean) {
+    try {
+      const res = await fetch(`/api/school/payment-gateways/${encodeURIComponent(id)}/toggle`, {
+        method: 'PUT',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify(isEnabled === undefined ? {} : { isEnabled }),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async deleteSchoolPaymentGateway(id: string) {
+    try {
+      const res = await fetch(`/api/school/payment-gateways/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        headers: this.getSchoolHeaders(false),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async saveSchoolGatewaySettings(payload: any) {
+    try {
+      const res = await fetch('/api/school/payment-gateways-settings', {
+        method: 'PUT',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async getSchoolPaymentTransactions(params?: { gatewayId?: string; status?: string; studentId?: string; q?: string }, branchId?: string, wingId?: string) {
+    try {
+      const extra: Record<string, string> = {};
+      if (params?.gatewayId) extra['gatewayId'] = params.gatewayId;
+      if (params?.status) extra['status'] = params.status;
+      if (params?.studentId) extra['studentId'] = params.studentId;
+      if (params?.q) extra['q'] = params.q;
+      const q = this.buildSchoolScopeQuery(branchId, wingId, extra);
+      const res = await fetch(`/api/school/payment-transactions${q}`, {
+        headers: this.getSchoolHeaders(false),
+        credentials: 'include'
+      });
+      return await res.json().catch(() => ({ ok: false, transactions: [], summary: null }));
+    } catch { return { ok: false, transactions: [], summary: null }; }
+  }
+
+  async createSchoolPaymentTransaction(payload: any) {
+    try {
+      const res = await fetch('/api/school/payment-transactions', {
+        method: 'POST',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async verifySchoolPaymentTransaction(id: string, payload: { status: string; verifiedBy?: string; rejectionReason?: string }) {
+    try {
+      const res = await fetch(`/api/school/payment-transactions/${encodeURIComponent(id)}/verify`, {
+        method: 'PUT',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async updateSchoolPaymentTransaction(id: string, payload: any) {
+    try {
+      const res = await fetch(`/api/school/payment-transactions/${encodeURIComponent(id)}`, {
+        method: 'PUT',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
+  async deleteSchoolPaymentTransaction(id: string) {
+    try {
+      const res = await fetch(`/api/school/payment-transactions/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        headers: this.getSchoolHeaders(false),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch { return { ok: false }; }
+  }
+
   // --- DYNAMIC TABLE SCHEMAS, CUSTOM FORM FIELDS & CROSS-PORTAL DATA CRUD ---
   async getSchoolTableSchemas() {
     try {
