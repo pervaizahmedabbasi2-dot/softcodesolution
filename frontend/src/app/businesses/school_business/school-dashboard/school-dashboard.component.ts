@@ -102,7 +102,8 @@ import { SchoolPrintStudioComponent } from '../components/school-print-studio/sc
 import {
   DEFAULT_SCHOOL_PRINT_BRANDING,
   SchoolPrintBrandingConfig,
-  buildA4BankChallanHtml
+  buildA4BankChallanHtml,
+  normalizeSchoolPrintBranding
 } from '../utils/school-print-templates.util';
 
 export type SchoolDashboardTab = 'overview' | 'stage_wise' | 'feed' | 'events' | 'students' | 'teachers' | 'admissions' | 'attendance' | 'finance' | 'invoices' | 'expenses' | 'payment_gateway' | 'transport' | 'library' | 'exams' | 'timetable' | 'hostel' | 'labs' | 'alumni' | 'portals' | 'reports' | 'visitors' | 'assets' | 'print_studio' | 'settings' | 'audit' | 'lesson_plans' | 'appraisals' | 'inspections' | 'exam_moderation' | 'parent_complaints' | 'substitutions' | 'syllabus' | 'safeguarding' | 'directives';
@@ -10412,7 +10413,7 @@ INSTRUCTIONS:
       if (savedPrintBranding) {
         try {
           const parsedBranding = JSON.parse(savedPrintBranding);
-          this.printBranding = { ...DEFAULT_SCHOOL_PRINT_BRANDING, ...parsedBranding };
+          this.printBranding = normalizeSchoolPrintBranding(parsedBranding, this.schoolName);
           if (this.printBranding.defaultPaperWidth === '58mm' || this.printBranding.defaultPaperWidth === '80mm') {
             this.hardwarePrinterPaper = this.printBranding.defaultPaperWidth;
           }
@@ -10796,7 +10797,7 @@ INSTRUCTIONS:
         const w = wsRes.workspace;
         if (w.schoolName) this.schoolName = w.schoolName;
         if (w.settingsForm) this.settingsForm = { ...this.settingsForm, ...w.settingsForm };
-        if (w.printBranding) this.printBranding = { ...DEFAULT_SCHOOL_PRINT_BRANDING, ...w.printBranding };
+        if (w.printBranding) this.printBranding = normalizeSchoolPrintBranding(w.printBranding, this.schoolName);
         if (Array.isArray(w.announcements) && w.announcements.length > 0) this.announcements = w.announcements;
         if (Array.isArray(w.timetables) && w.timetables.length > 0) this.timetables = w.timetables;
         if (Array.isArray(w.parentMessages) && w.parentMessages.length > 0) this.parentMessages = w.parentMessages;
@@ -27522,7 +27523,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
   }
 
   savePrintBranding(config: SchoolPrintBrandingConfig): void {
-    this.printBranding = { ...DEFAULT_SCHOOL_PRINT_BRANDING, ...config };
+    this.printBranding = normalizeSchoolPrintBranding(config, this.schoolName);
     if (this.printBranding.schoolName) {
       this.schoolName = this.printBranding.schoolName;
       this.settingsForm.schoolName = this.printBranding.schoolName;
@@ -27538,13 +27539,13 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
   }
 
   resetPrintBranding(): void {
-    this.printBranding = {
+    this.printBranding = normalizeSchoolPrintBranding({
       ...DEFAULT_SCHOOL_PRINT_BRANDING,
       schoolName: this.schoolName || DEFAULT_SCHOOL_PRINT_BRANDING.schoolName
-    };
+    });
     this.hardwarePrinterPaper = this.printBranding.defaultPaperWidth;
     this.saveStateToStorage();
-    this.showToast('Reset print branding to default institutional format.', 'info');
+    this.showToast('Reset print design, logo & layout to default institutional format.', 'info');
     this.cdr.detectChanges();
   }
 
@@ -27596,7 +27597,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
   }
 
   private withPrintBranding(base: ThermalFeeReceiptData): ThermalFeeReceiptData {
-    const b = this.printBranding || DEFAULT_SCHOOL_PRINT_BRANDING;
+    const b = normalizeSchoolPrintBranding(this.printBranding, this.schoolName);
     return {
       ...base,
       schoolName: b.schoolName || base.schoolName,
@@ -27606,6 +27607,13 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       campusPhone: b.phone,
       campusWebsite: b.website,
       monogramInitials: b.showLogoCrest ? b.monogramInitials : '',
+      logoDataUrl: b.logoDataUrl,
+      logoPlacement: b.logoPlacement,
+      logoSizePx: b.logoSizePx,
+      headerAlign: b.headerAlign,
+      sectionOrder: b.sectionOrder,
+      hiddenSections: b.hiddenSections,
+      verificationOrder: b.verificationOrder,
       signatoryTitle: b.signatoryTitle,
       stampLabel: b.stampLabel,
       showQr: b.showQrVerification,
@@ -27756,7 +27764,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
         code: this.idCardBarcodeValue,
         meta: `Staff Gate ID: ${p.empCode}`
       };
-      const html = buildBarcodeStickerSheetHtml(brandName, [item]);
+      const html = buildBarcodeStickerSheetHtml(brandName, [item], this.printBranding?.logoDataUrl);
       const ok = await printHtmlInHiddenFrame(html);
       this.showToast(
         ok ? `Prepared EMP Code-128 Gate Sticker for ${p.name}.` : 'Unable to launch sticker print job.',
@@ -27786,7 +27794,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
         meta: `${p.department || 'Campus'} · ${p.branchName || ''}`
       };
     });
-    const html = buildBarcodeStickerSheetHtml(brandName, items);
+    const html = buildBarcodeStickerSheetHtml(brandName, items, this.printBranding?.logoDataUrl);
     const ok = await printHtmlInHiddenFrame(html);
     this.showToast(
       ok ? `Prepared ${items.length} Staff/Faculty EMP Code-128 Gate Stickers for printing.` : 'Unable to launch sticker print job.',
@@ -27807,7 +27815,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       code: `STU-${s.rollNo || s.id}`,
       meta: `Challan: CH-2026-${s.rollNo || '1001'}`
     }));
-    const html = buildBarcodeStickerSheetHtml(brandName, items);
+    const html = buildBarcodeStickerSheetHtml(brandName, items, this.printBranding?.logoDataUrl);
     const ok = await printHtmlInHiddenFrame(html);
     this.showToast(
       ok ? `Prepared ${items.length} Code-128 Student/Challan barcode sticker labels for printing.` : 'Unable to launch sticker print job.',

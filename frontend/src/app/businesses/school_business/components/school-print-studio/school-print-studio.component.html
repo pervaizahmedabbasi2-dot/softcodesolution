@@ -10,10 +10,10 @@
           <span class="font-mono text-slate-700">{{ effectiveBranding().defaultPaperWidth }} + A4</span>
         </div>
         <h2 class="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
-          {{ effectiveBranding().schoolName }} — Print Designs, Custom Format &amp; Machine Guide
+          {{ effectiveBranding().schoolName }} — Print Designs, Logo Studio &amp; Machine Guide
         </h2>
         <p class="text-xs text-slate-600 max-w-3xl leading-relaxed">
-          Preview choti billing raseed (<strong class="text-slate-800">80mm / 58mm</strong>) aur sab <strong class="text-slate-800">A4 school documents</strong>, customize campus name, logo crest, registration number &amp; footer, aur thermal printer / A4 printer / barcode scanner connect karne ka tareeqa dekhen.
+          Apna <strong class="text-slate-800">school ya company logo</strong> upload karen, header/barcode/QR/details ko <strong class="text-slate-800">drag &amp; drop ya upar-neeche</strong> arrange karen, choti <strong class="text-slate-800">80mm/58mm raseed</strong> aur sab <strong class="text-slate-800">A4 prints</strong> live preview &amp; reset karen.
         </p>
       </div>
 
@@ -45,8 +45,8 @@
         [class]="activeStudioTab() === 'formats'
           ? 'bg-slate-900 text-white border-slate-900'
           : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'">
-          <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">receipt_long</mat-icon>
-          <span>1. Print Designs &amp; Live Preview</span>
+        <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">receipt_long</mat-icon>
+        <span>1. Print Designs &amp; Live Preview</span>
       </button>
 
       <button
@@ -56,8 +56,8 @@
         [class]="activeStudioTab() === 'branding'
           ? 'bg-slate-900 text-white border-slate-900'
           : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'">
-          <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">tune</mat-icon>
-          <span>2. Custom Name, Logo &amp; Format</span>
+        <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">tune</mat-icon>
+        <span>2. Custom Logo, Drag Layout &amp; Format</span>
       </button>
 
       <button
@@ -67,8 +67,8 @@
         [class]="activeStudioTab() === 'hardware'
           ? 'bg-slate-900 text-white border-slate-900'
           : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'">
-          <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">usb</mat-icon>
-          <span>3. Machine &amp; Hardware Setup Guide</span>
+        <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">usb</mat-icon>
+        <span>3. Machine &amp; Hardware Setup Guide</span>
       </button>
     </div>
   </div>
@@ -117,271 +117,601 @@
 
       <!-- Right Column: Live Paper Sheet Preview Canvas (8 cols) -->
       <div class="xl:col-span-8 space-y-4">
-        <!-- Context Bar explaining Purpose, Machine & Trigger Location -->
-        <div class="bg-white rounded-2xl border border-slate-200 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div class="space-y-1 min-w-0">
-            <div class="flex items-center gap-2 flex-wrap">
-              <h3 class="font-black text-slate-900 text-sm">{{ selectedFormatMeta().title }}</h3>
-              <span class="text-slate-300">·</span>
-              <span class="text-xs font-mono font-bold text-emerald-700">{{ selectedFormatMeta().paperBadge }}</span>
+        <!-- Context Bar explaining Purpose, Machine, Logo & Drag Layout Toggle -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 space-y-3">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="space-y-1 min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <h3 class="font-black text-slate-900 text-sm">{{ selectedFormatMeta().title }}</h3>
+                <span class="text-slate-300">·</span>
+                <span class="text-xs font-mono font-bold text-emerald-700">{{ selectedFormatMeta().paperBadge }}</span>
+              </div>
+              <p class="text-xs text-slate-600">
+                <strong class="text-slate-800">Machine:</strong> {{ selectedFormatMeta().machineType }}
+                <span class="mx-1.5 text-slate-300">|</span>
+                <strong class="text-slate-800">Where it prints:</strong> {{ selectedFormatMeta().printedFrom }}
+              </p>
             </div>
-            <p class="text-xs text-slate-600">
-              <strong class="text-slate-800">Machine:</strong> {{ selectedFormatMeta().machineType }}
-              <span class="mx-1.5 text-slate-300">|</span>
-              <strong class="text-slate-800">Where it prints:</strong> {{ selectedFormatMeta().printedFrom }}
-            </p>
-          </div>
 
-          <div class="flex items-center gap-2 shrink-0 flex-wrap">
-            @if (selectedFormat() === 'thermal_receipt') {
-              <div class="inline-flex rounded-xl border border-slate-200 p-0.5 bg-slate-50">
-                <button
-                  type="button"
-                  (click)="setThermalPreviewWidth('80mm')"
-                  class="px-2.5 py-1 rounded-lg text-[11px] font-black cursor-pointer"
-                  [class]="previewThermalWidth() === '80mm' ? 'bg-slate-900 text-white' : 'text-slate-700'">
-                  80mm Standard
-                </button>
-                <button
-                  type="button"
-                  (click)="setThermalPreviewWidth('58mm')"
-                  class="px-2.5 py-1 rounded-lg text-[11px] font-black cursor-pointer"
-                  [class]="previewThermalWidth() === '58mm' ? 'bg-slate-900 text-white' : 'text-slate-700'">
-                  58mm Compact
-                </button>
-              </div>
-            }
-            <button
-              type="button"
-              (click)="setStudioTab('branding')"
-              class="px-3 py-1.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs cursor-pointer inline-flex items-center gap-1">
-              <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">edit</mat-icon>
-              <span>Customize Text</span>
-            </button>
-            <button
-              type="button"
-              (click)="printSelectedDocument()"
-              class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs cursor-pointer inline-flex items-center gap-1.5">
-              <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">print</mat-icon>
-              <span>Print / Save PDF</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- LIVE SCALED PAPER DESK (Dark architectural surface framing crisp white paper) -->
-        <div class="rounded-2xl bg-slate-100 border border-slate-200 p-5 sm:p-8 flex justify-center overflow-x-auto">
-
-          <!-- 1. CHOTI BILLING RASEED (80mm / 58mm THERMAL PAPER) -->
-          @if (selectedFormat() === 'thermal_receipt') {
-            <div
-              class="bg-white text-slate-950 font-mono border border-slate-300 shadow-md p-4 space-y-2.5 transition-all"
-              [class]="previewThermalWidth() === '58mm' ? 'w-[248px] text-[10px]' : 'w-[320px] text-[11px]'">
-              <div class="text-center space-y-1">
-                @if (effectiveBranding().showLogoCrest) {
-                  <div class="inline-block border-2 border-slate-900 px-2 py-0.5 font-black text-[11px] tracking-widest">
-                    {{ effectiveBranding().monogramInitials }}
-                  </div>
-                }
-                <div class="font-black text-xs uppercase tracking-wide leading-tight">
-                  {{ effectiveBranding().schoolName }}
-                </div>
-                @if (effectiveBranding().campusTagline) {
-                  <div class="text-[9px] uppercase font-bold text-slate-600 leading-tight">
-                    {{ effectiveBranding().campusTagline }}
-                  </div>
-                }
-                <div class="text-[9px] text-slate-600">{{ branchLabel() }}</div>
-                <div class="text-[9px] text-slate-600">Reg: {{ effectiveBranding().registrationNo }}</div>
-                <div class="text-[9px] text-slate-600">{{ effectiveBranding().address }}</div>
-                <div class="text-[9px] text-slate-600">Helpline: {{ effectiveBranding().phone }}</div>
-                <div class="border-t-2 border-slate-900 pt-1.5 mt-1.5 font-black text-[10px] uppercase">
-                  Official Counter Fee Receipt
-                </div>
-                <div class="flex items-center justify-center gap-1.5 pt-0.5">
-                  <span class="border border-slate-900 px-1.5 py-0.5 text-[9px] font-black uppercase">{{ resolvedTransaction().status }}</span>
-                  @if (effectiveBranding().stampLabel !== 'NONE') {
-                    <span class="border-2 border-slate-900 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider">
-                      {{ effectiveBranding().stampLabel }}
-                    </span>
-                  }
-                </div>
-              </div>
-
-              <div class="border-t border-dashed border-slate-400 my-2"></div>
-
-              <div class="space-y-1 tabular-nums">
-                <div class="flex justify-between gap-2"><span>Receipt #:</span><span class="font-bold">{{ resolvedTransaction().txnRef }}</span></div>
-                <div class="flex justify-between gap-2"><span>Challan #:</span><span class="font-bold">{{ resolvedTransaction().challanNo }}</span></div>
-                <div class="flex justify-between gap-2"><span>Date:</span><span class="font-bold">{{ resolvedTransaction().paidAtLabel }}</span></div>
-              </div>
-
-              <div class="border-t border-dashed border-slate-400 my-2"></div>
-
-              <div class="space-y-1">
-                <div class="flex justify-between gap-2"><span>Student:</span><span class="font-bold text-right">{{ resolvedStudent().name }}</span></div>
-                <div class="flex justify-between gap-2"><span>Roll #:</span><span class="font-bold">#{{ resolvedStudent().rollNo }}</span></div>
-                <div class="flex justify-between gap-2"><span>Class:</span><span class="font-bold">{{ resolvedStudent().grade }}</span></div>
-                <div class="flex justify-between gap-2"><span>Guardian:</span><span class="font-bold text-right">{{ resolvedStudent().guardian }}</span></div>
-              </div>
-
-              <div class="border-t border-dashed border-slate-400 my-2"></div>
-
-              <div class="space-y-1 tabular-nums">
-                <div class="flex justify-between gap-2"><span>Channel:</span><span class="font-bold text-right">{{ resolvedTransaction().gatewayName }}</span></div>
-                <div class="flex justify-between gap-2"><span>Tuition &amp; Fee:</span><span class="font-bold">PKR {{ formatCurrency(resolvedTransaction().baseAmount) }}</span></div>
-                <div class="flex justify-between gap-2"><span>Charges:</span><span class="font-bold">PKR {{ formatCurrency(resolvedTransaction().gatewayFee) }}</span></div>
-              </div>
-
-              <div class="border-2 border-slate-900 px-2 py-1.5 flex justify-between items-center font-black text-xs tabular-nums">
-                <span>TOTAL PAID</span>
-                <span>PKR {{ formatCurrency(resolvedTransaction().totalAmount) }}</span>
-              </div>
-
-              @if (effectiveBranding().showBarcodeVerification) {
-                <div class="pt-1 flex justify-center">
-                  <app-school-barcode
-                    [value]="resolvedTransaction().challanNo"
-                    [label]="resolvedTransaction().challanNo"
-                    [height]="previewThermalWidth() === '58mm' ? 28 : 34"
-                    [barWidth]="previewThermalWidth() === '58mm' ? 1.05 : 1.25" />
+            <div class="flex items-center gap-2 shrink-0 flex-wrap">
+              @if (selectedFormat() === 'thermal_receipt') {
+                <div class="inline-flex rounded-xl border border-slate-200 p-0.5 bg-slate-50">
+                  <button
+                    type="button"
+                    (click)="setThermalPreviewWidth('80mm')"
+                    class="px-2.5 py-1.5 rounded-lg text-[11px] font-black cursor-pointer"
+                    [class]="previewThermalWidth() === '80mm' ? 'bg-slate-900 text-white' : 'text-slate-700'">
+                    80mm
+                  </button>
+                  <button
+                    type="button"
+                    (click)="setThermalPreviewWidth('58mm')"
+                    class="px-2.5 py-1.5 rounded-lg text-[11px] font-black cursor-pointer"
+                    [class]="previewThermalWidth() === '58mm' ? 'bg-slate-900 text-white' : 'text-slate-700'">
+                    58mm
+                  </button>
                 </div>
               }
+              <button
+                type="button"
+                (click)="toggleQuickLayoutBar()"
+                class="px-3 py-2 rounded-xl border font-bold text-xs cursor-pointer inline-flex items-center gap-1.5 transition-colors"
+                [class]="showQuickLayoutBar()
+                  ? 'bg-indigo-600 text-white border-indigo-600'
+                  : 'bg-white text-slate-800 border-slate-200 hover:bg-slate-50'">
+                <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">dashboard_customize</mat-icon>
+                <span>Logo &amp; Drag Layout</span>
+              </button>
+              <button
+                type="button"
+                (click)="onResetBranding()"
+                class="px-3 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs cursor-pointer inline-flex items-center gap-1">
+                <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">restart_alt</mat-icon>
+                <span>Reset</span>
+              </button>
+              <button
+                type="button"
+                (click)="printSelectedDocument()"
+                class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs cursor-pointer inline-flex items-center gap-1.5">
+                <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">print</mat-icon>
+                <span>Print / Save PDF</span>
+              </button>
+            </div>
+          </div>
 
-              @if (effectiveBranding().showQrVerification) {
-                <div class="pt-1 flex flex-col items-center">
-                  <app-school-qr-code
-                    [value]="'REC:' + resolvedTransaction().txnRef + '|CHALLAN:' + resolvedTransaction().challanNo + '|AMT:' + resolvedTransaction().totalAmount"
-                    [size]="previewThermalWidth() === '58mm' ? 54 : 66"
-                    [label]="'SCAN TO VERIFY'" />
+          <!-- INLINE QUICK LOGO UPLOAD & DRAG-DROP REORDER BAR -->
+          @if (showQuickLayoutBar()) {
+            <div class="pt-3 border-t border-slate-200 space-y-4">
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <!-- Quick Logo Upload & Placement -->
+                <div class="space-y-3 bg-slate-50 border border-slate-200 rounded-xl p-3.5">
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="text-xs font-black text-slate-900">1. Upload &amp; Place Logo</span>
+                    @if (safeLogoUrl()) {
+                      <button
+                        type="button"
+                        (click)="removeUploadedLogo()"
+                        class="text-[11px] font-bold text-rose-600 hover:text-rose-700 cursor-pointer inline-flex items-center gap-1">
+                        <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">delete</mat-icon>
+                        <span>Remove Logo</span>
+                      </button>
+                    }
+                  </div>
+
+                  <div
+                    (dragover)="onLogoDragOver($event)"
+                    (dragleave)="onLogoDragLeave($event)"
+                    (drop)="onLogoDrop($event)"
+                    class="border-2 border-dashed rounded-xl p-3 text-center transition-colors"
+                    [class]="logoUploadDragOver() ? 'border-indigo-500 bg-indigo-50' : 'border-slate-300 bg-white'">
+                    <div class="flex items-center justify-between gap-3 flex-wrap">
+                      <div class="flex items-center gap-2.5 min-w-0">
+                        @if (safeLogoUrl()) {
+                          <img
+                            [src]="safeLogoUrl()"
+                            alt="Uploaded school logo"
+                            referrerpolicy="no-referrer"
+                            class="w-10 h-10 object-contain rounded-lg border border-slate-200 bg-white p-0.5 shrink-0" />
+                        } @else {
+                          <div class="w-10 h-10 rounded-lg bg-slate-900 text-white font-black text-xs flex items-center justify-center shrink-0">
+                            {{ effectiveBranding().monogramInitials }}
+                          </div>
+                        }
+                        <div class="text-left min-w-0">
+                          <div class="text-xs font-bold text-slate-800 truncate">
+                            {{ safeLogoUrl() ? 'Custom Logo Active' : 'Drop Logo Image Here' }}
+                          </div>
+                          <div class="text-[10px] text-slate-500">PNG / JPG / WebP / SVG</div>
+                        </div>
+                      </div>
+                      <label class="px-3 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs cursor-pointer inline-flex items-center gap-1.5 shrink-0">
+                        <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">upload_file</mat-icon>
+                        <span>{{ isProcessingLogo() ? 'Loading...' : 'Choose Logo' }}</span>
+                        <input type="file" accept="image/*" (change)="onLogoFileSelected($event)" class="hidden" />
+                      </label>
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-2.5 text-[11px]">
+                    <div>
+                      <span class="block font-bold text-slate-600 mb-1">Logo Position</span>
+                      <div class="grid grid-cols-3 gap-1">
+                        <button type="button" (click)="setLogoPlacement('left')" class="py-1.5 rounded-lg border font-bold cursor-pointer"
+                          [class]="effectiveBranding().logoPlacement === 'left' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-200'">
+                          Left
+                        </button>
+                        <button type="button" (click)="setLogoPlacement('top')" class="py-1.5 rounded-lg border font-bold cursor-pointer"
+                          [class]="effectiveBranding().logoPlacement === 'top' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-200'">
+                          Top
+                        </button>
+                        <button type="button" (click)="setLogoPlacement('right')" class="py-1.5 rounded-lg border font-bold cursor-pointer"
+                          [class]="effectiveBranding().logoPlacement === 'right' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-200'">
+                          Right
+                        </button>
+                      </div>
+                    </div>
+                    <div>
+                      <span class="block font-bold text-slate-600 mb-1">Header Text Align</span>
+                      <div class="grid grid-cols-3 gap-1">
+                        <button type="button" (click)="setHeaderAlign('left')" class="py-1.5 rounded-lg border font-bold cursor-pointer"
+                          [class]="effectiveBranding().headerAlign === 'left' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-200'">
+                          Left
+                        </button>
+                        <button type="button" (click)="setHeaderAlign('center')" class="py-1.5 rounded-lg border font-bold cursor-pointer"
+                          [class]="effectiveBranding().headerAlign === 'center' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-200'">
+                          Center
+                        </button>
+                        <button type="button" (click)="setHeaderAlign('right')" class="py-1.5 rounded-lg border font-bold cursor-pointer"
+                          [class]="effectiveBranding().headerAlign === 'right' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-200'">
+                          Right
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div [formGroup]="brandingForm" class="flex items-center gap-3 text-[11px]">
+                    <span class="font-bold text-slate-600 shrink-0">Logo Size: {{ effectiveBranding().logoSizePx }}px</span>
+                    <input type="range" min="28" max="80" step="2" formControlName="logoSizePx" class="flex-1 accent-slate-900 cursor-pointer" />
+                  </div>
                 </div>
-              }
 
-              <div class="border-t border-slate-800 pt-1 mt-3 text-center text-[9px] font-bold uppercase">
-                {{ effectiveBranding().signatoryTitle }}
-              </div>
-              <div class="text-center text-[8.5px] text-slate-600 leading-snug pt-1">
-                {{ effectiveBranding().footerNote }}
+                <!-- Quick Drag-and-Drop & Up/Down Reorder -->
+                <div class="space-y-2.5 bg-slate-50 border border-slate-200 rounded-xl p-3.5">
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="text-xs font-black text-slate-900">2. Drag &amp; Drop Ya ↑ ↓ Se Sections Upar Neeche Karen</span>
+                    <button
+                      type="button"
+                      (click)="onSaveBranding()"
+                      class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[11px] cursor-pointer inline-flex items-center gap-1">
+                      <mat-icon class="!text-[13px] !w-[13px] !h-[13px]">save</mat-icon>
+                      <span>Save Layout</span>
+                    </button>
+                  </div>
+
+                  <div class="space-y-1.5">
+                    @for (secKey of sectionOrder(); track secKey; let idx = $index) {
+                      <div
+                        draggable="true"
+                        (dragstart)="onSectionDragStart($event, secKey)"
+                        (dragover)="onSectionDragOver($event, secKey)"
+                        (drop)="onSectionDrop($event, secKey)"
+                        (dragend)="onSectionDragEnd()"
+                        class="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg border bg-white text-xs transition-all select-none cursor-grab active:cursor-grabbing"
+                        [class]="dragOverSectionKey() === secKey
+                          ? 'border-indigo-500 bg-indigo-50'
+                          : (isSectionHidden(secKey) ? 'border-slate-200 opacity-55' : 'border-slate-200')">
+                        <div class="flex items-center gap-2 min-w-0">
+                          <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-slate-400 shrink-0">drag_indicator</mat-icon>
+                          <span class="font-bold text-slate-800 truncate">{{ getSectionMeta(secKey).label }}</span>
+                        </div>
+                        <div class="flex items-center gap-1 shrink-0">
+                          <button
+                            type="button"
+                            (click)="moveSection(secKey, -1)"
+                            [disabled]="!canMoveSection(idx, -1)"
+                            title="Move Up"
+                            class="w-7 h-7 rounded-md border border-slate-200 hover:bg-slate-100 disabled:opacity-30 flex items-center justify-center cursor-pointer">
+                            <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">arrow_upward</mat-icon>
+                          </button>
+                          <button
+                            type="button"
+                            (click)="moveSection(secKey, 1)"
+                            [disabled]="!canMoveSection(idx, 1)"
+                            title="Move Down"
+                            class="w-7 h-7 rounded-md border border-slate-200 hover:bg-slate-100 disabled:opacity-30 flex items-center justify-center cursor-pointer">
+                            <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">arrow_downward</mat-icon>
+                          </button>
+                          @if (!getSectionMeta(secKey).locked) {
+                            <button
+                              type="button"
+                              (click)="toggleSectionVisibility(secKey)"
+                              [title]="isSectionHidden(secKey) ? 'Show section' : 'Hide section'"
+                              class="w-7 h-7 rounded-md border border-slate-200 hover:bg-slate-100 flex items-center justify-center cursor-pointer">
+                              <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">{{ isSectionHidden(secKey) ? 'visibility_off' : 'visibility' }}</mat-icon>
+                            </button>
+                          }
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
               </div>
             </div>
           }
+        </div>
 
-          <!-- 2. A4 3-COPY BANK FEE CHALLAN -->
+        <!-- LIVE SCALED PAPER DESK -->
+        <div class="rounded-2xl bg-slate-100 border border-slate-200 p-5 sm:p-8 flex justify-center overflow-x-auto">
+
+          <!-- 1. CHOTI BILLING RASEED (80mm / 58mm THERMAL PAPER — DYNAMIC ORDER & LOGO) -->
+          @if (selectedFormat() === 'thermal_receipt') {
+            <div
+              class="bg-white text-slate-950 font-mono border border-slate-300 shadow-md p-4 space-y-2 transition-all"
+              [class]="previewThermalWidth() === '58mm' ? 'w-[248px] text-[10px]' : 'w-[320px] text-[11px]'">
+              @for (secKey of effectiveBranding().sectionOrder; track secKey) {
+                @if (!isSectionHidden(secKey)) {
+                  @switch (secKey) {
+                    @case ('header') {
+                      <div
+                        [attr.draggable]="showQuickLayoutBar()"
+                        (dragstart)="onSectionDragStart($event, 'header')"
+                        (dragover)="onSectionDragOver($event, 'header')"
+                        (drop)="onSectionDrop($event, 'header')"
+                        (dragend)="onSectionDragEnd()"
+                        class="space-y-1.5 rounded transition-colors"
+                        [class]="showQuickLayoutBar() ? 'hover:bg-indigo-50/60 p-1 -m-1 cursor-grab' : ''">
+                        <div
+                          class="flex gap-2"
+                          [class]="effectiveBranding().logoPlacement === 'top'
+                            ? 'flex-col items-center'
+                            : (effectiveBranding().logoPlacement === 'right' ? 'flex-row-reverse items-center' : 'flex-row items-center')">
+                          @if (safeLogoUrl()) {
+                            <img
+                              [src]="safeLogoUrl()"
+                              alt="School logo"
+                              referrerpolicy="no-referrer"
+                              [style.width.px]="effectiveBranding().logoSizePx"
+                              [style.height.px]="effectiveBranding().logoSizePx"
+                              class="object-contain shrink-0" />
+                          } @else if (effectiveBranding().showLogoCrest) {
+                            <div class="inline-block border-2 border-slate-900 px-2 py-0.5 font-black text-[11px] tracking-widest shrink-0">
+                              {{ effectiveBranding().monogramInitials }}
+                            </div>
+                          }
+                          <div
+                            class="flex-1 min-w-0"
+                            [class]="effectiveBranding().headerAlign === 'left'
+                              ? 'text-left'
+                              : (effectiveBranding().headerAlign === 'right' ? 'text-right' : 'text-center')">
+                            <div class="font-black text-xs uppercase tracking-wide leading-tight">
+                              {{ effectiveBranding().schoolName }}
+                            </div>
+                            @if (effectiveBranding().campusTagline) {
+                              <div class="text-[9px] uppercase font-bold text-slate-600 leading-tight">
+                                {{ effectiveBranding().campusTagline }}
+                              </div>
+                            }
+                            <div class="text-[9px] text-slate-600">{{ branchLabel() }}</div>
+                            <div class="text-[9px] text-slate-600">Reg: {{ effectiveBranding().registrationNo }}</div>
+                            <div class="text-[9px] text-slate-600">{{ effectiveBranding().address }}</div>
+                            <div class="text-[9px] text-slate-600">Helpline: {{ effectiveBranding().phone }}</div>
+                          </div>
+                        </div>
+
+                        <div class="border-t-2 border-slate-900 pt-1.5 text-center font-black text-[10px] uppercase">
+                          Official Counter Fee Receipt
+                        </div>
+                        <div class="flex items-center justify-center gap-1.5 pt-0.5">
+                          <span class="border border-slate-900 px-1.5 py-0.5 text-[9px] font-black uppercase">{{ resolvedTransaction().status }}</span>
+                          @if (effectiveBranding().stampLabel !== 'NONE') {
+                            <span class="border-2 border-slate-900 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider">
+                              {{ effectiveBranding().stampLabel }}
+                            </span>
+                          }
+                        </div>
+                      </div>
+                    }
+
+                    @case ('meta') {
+                      <div
+                        [attr.draggable]="showQuickLayoutBar()"
+                        (dragstart)="onSectionDragStart($event, 'meta')"
+                        (dragover)="onSectionDragOver($event, 'meta')"
+                        (drop)="onSectionDrop($event, 'meta')"
+                        (dragend)="onSectionDragEnd()"
+                        class="border-t border-dashed border-slate-400 pt-2 space-y-1 tabular-nums rounded"
+                        [class]="showQuickLayoutBar() ? 'hover:bg-indigo-50/60 px-1 cursor-grab' : ''">
+                        <div class="flex justify-between gap-2"><span>Receipt #:</span><span class="font-bold">{{ resolvedTransaction().txnRef }}</span></div>
+                        <div class="flex justify-between gap-2"><span>Challan #:</span><span class="font-bold">{{ resolvedTransaction().challanNo }}</span></div>
+                        <div class="flex justify-between gap-2"><span>Date:</span><span class="font-bold">{{ resolvedTransaction().paidAtLabel }}</span></div>
+                      </div>
+                    }
+
+                    @case ('person') {
+                      <div
+                        [attr.draggable]="showQuickLayoutBar()"
+                        (dragstart)="onSectionDragStart($event, 'person')"
+                        (dragover)="onSectionDragOver($event, 'person')"
+                        (drop)="onSectionDrop($event, 'person')"
+                        (dragend)="onSectionDragEnd()"
+                        class="border-t border-dashed border-slate-400 pt-2 space-y-1 rounded"
+                        [class]="showQuickLayoutBar() ? 'hover:bg-indigo-50/60 px-1 cursor-grab' : ''">
+                        <div class="flex justify-between gap-2"><span>Student:</span><span class="font-bold text-right">{{ resolvedStudent().name }}</span></div>
+                        <div class="flex justify-between gap-2"><span>Roll #:</span><span class="font-bold">#{{ resolvedStudent().rollNo }}</span></div>
+                        <div class="flex justify-between gap-2"><span>Class:</span><span class="font-bold">{{ resolvedStudent().grade }}</span></div>
+                        <div class="flex justify-between gap-2"><span>Guardian:</span><span class="font-bold text-right">{{ resolvedStudent().guardian }}</span></div>
+                      </div>
+                    }
+
+                    @case ('amounts') {
+                      <div
+                        [attr.draggable]="showQuickLayoutBar()"
+                        (dragstart)="onSectionDragStart($event, 'amounts')"
+                        (dragover)="onSectionDragOver($event, 'amounts')"
+                        (drop)="onSectionDrop($event, 'amounts')"
+                        (dragend)="onSectionDragEnd()"
+                        class="border-t border-dashed border-slate-400 pt-2 space-y-1.5 tabular-nums rounded"
+                        [class]="showQuickLayoutBar() ? 'hover:bg-indigo-50/60 px-1 cursor-grab' : ''">
+                        <div class="flex justify-between gap-2"><span>Channel:</span><span class="font-bold text-right">{{ resolvedTransaction().gatewayName }}</span></div>
+                        <div class="flex justify-between gap-2"><span>Tuition &amp; Fee:</span><span class="font-bold">PKR {{ formatCurrency(resolvedTransaction().baseAmount) }}</span></div>
+                        <div class="flex justify-between gap-2"><span>Charges:</span><span class="font-bold">PKR {{ formatCurrency(resolvedTransaction().gatewayFee) }}</span></div>
+                        <div class="border-2 border-slate-900 px-2 py-1.5 flex justify-between items-center font-black text-xs tabular-nums">
+                          <span>TOTAL PAID</span>
+                          <span>PKR {{ formatCurrency(resolvedTransaction().totalAmount) }}</span>
+                        </div>
+                      </div>
+                    }
+
+                    @case ('verification') {
+                      <div
+                        [attr.draggable]="showQuickLayoutBar()"
+                        (dragstart)="onSectionDragStart($event, 'verification')"
+                        (dragover)="onSectionDragOver($event, 'verification')"
+                        (drop)="onSectionDrop($event, 'verification')"
+                        (dragend)="onSectionDragEnd()"
+                        class="pt-1 rounded"
+                        [class]="showQuickLayoutBar() ? 'hover:bg-indigo-50/60 p-1 cursor-grab' : ''">
+                        @if (effectiveBranding().verificationOrder === 'side_by_side' && effectiveBranding().showBarcodeVerification && effectiveBranding().showQrVerification) {
+                          <div class="flex items-center justify-between gap-2">
+                            <div class="min-w-0 flex-1 flex justify-center">
+                              <app-school-barcode
+                                [value]="resolvedTransaction().challanNo"
+                                [label]="resolvedTransaction().challanNo"
+                                [height]="26"
+                                [barWidth]="0.95" />
+                            </div>
+                            <app-school-qr-code
+                              [value]="'REC:' + resolvedTransaction().txnRef + '|CHALLAN:' + resolvedTransaction().challanNo"
+                              [size]="50" />
+                          </div>
+                        } @else if (effectiveBranding().verificationOrder === 'qr_first') {
+                          <div class="space-y-1.5">
+                            @if (effectiveBranding().showQrVerification) {
+                              <div class="flex flex-col items-center">
+                                <app-school-qr-code
+                                  [value]="'REC:' + resolvedTransaction().txnRef + '|CHALLAN:' + resolvedTransaction().challanNo + '|AMT:' + resolvedTransaction().totalAmount"
+                                  [size]="previewThermalWidth() === '58mm' ? 54 : 66"
+                                  [label]="'SCAN TO VERIFY'" />
+                              </div>
+                            }
+                            @if (effectiveBranding().showBarcodeVerification) {
+                              <div class="flex justify-center">
+                                <app-school-barcode
+                                  [value]="resolvedTransaction().challanNo"
+                                  [label]="resolvedTransaction().challanNo"
+                                  [height]="previewThermalWidth() === '58mm' ? 28 : 34"
+                                  [barWidth]="previewThermalWidth() === '58mm' ? 1.05 : 1.25" />
+                              </div>
+                            }
+                          </div>
+                        } @else {
+                          <div class="space-y-1.5">
+                            @if (effectiveBranding().showBarcodeVerification) {
+                              <div class="flex justify-center">
+                                <app-school-barcode
+                                  [value]="resolvedTransaction().challanNo"
+                                  [label]="resolvedTransaction().challanNo"
+                                  [height]="previewThermalWidth() === '58mm' ? 28 : 34"
+                                  [barWidth]="previewThermalWidth() === '58mm' ? 1.05 : 1.25" />
+                              </div>
+                            }
+                            @if (effectiveBranding().showQrVerification) {
+                              <div class="flex flex-col items-center">
+                                <app-school-qr-code
+                                  [value]="'REC:' + resolvedTransaction().txnRef + '|CHALLAN:' + resolvedTransaction().challanNo + '|AMT:' + resolvedTransaction().totalAmount"
+                                  [size]="previewThermalWidth() === '58mm' ? 54 : 66"
+                                  [label]="'SCAN TO VERIFY'" />
+                              </div>
+                            }
+                          </div>
+                        }
+                      </div>
+                    }
+
+                    @case ('footer') {
+                      <div
+                        [attr.draggable]="showQuickLayoutBar()"
+                        (dragstart)="onSectionDragStart($event, 'footer')"
+                        (dragover)="onSectionDragOver($event, 'footer')"
+                        (drop)="onSectionDrop($event, 'footer')"
+                        (dragend)="onSectionDragEnd()"
+                        class="pt-2 rounded"
+                        [class]="showQuickLayoutBar() ? 'hover:bg-indigo-50/60 px-1 cursor-grab' : ''">
+                        <div class="border-t border-slate-800 pt-1 text-center text-[9px] font-bold uppercase">
+                          {{ effectiveBranding().signatoryTitle }}
+                        </div>
+                        <div class="text-center text-[8.5px] text-slate-600 leading-snug pt-1">
+                          {{ effectiveBranding().footerNote }}
+                        </div>
+                      </div>
+                    }
+                  }
+                }
+              }
+            </div>
+          }
+
+          <!-- 2. A4 3-COPY BANK FEE CHALLAN (DYNAMIC SECTION ORDER + UPLOADED LOGO) -->
           @if (selectedFormat() === 'bank_challan') {
             <div class="w-full max-w-[960px] bg-white border border-slate-300 shadow-md p-4">
               <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-[10px]">
                 @for (copyLabel of ['Student Copy', 'School Copy', 'Bank Branch Copy']; track copyLabel) {
-                  <div class="border border-slate-300 border-dashed p-3 flex flex-col justify-between space-y-3 bg-white">
-                    <div class="space-y-2.5">
-                      <div class="pb-2 border-b-2" [style.borderColor]="effectiveBranding().headerAccentColor">
-                        <div class="flex items-center gap-2">
-                          @if (effectiveBranding().showLogoCrest) {
-                            <div
-                              class="w-7 h-7 rounded-md text-white font-black text-[10px] flex items-center justify-center shrink-0"
-                              [style.backgroundColor]="effectiveBranding().headerAccentColor">
-                              {{ effectiveBranding().monogramInitials }}
+                  <div class="border border-slate-300 border-dashed p-3 flex flex-col justify-between gap-2.5 bg-white">
+                    @for (secKey of effectiveBranding().sectionOrder; track secKey) {
+                      @if (!isSectionHidden(secKey)) {
+                        @switch (secKey) {
+                          @case ('header') {
+                            <div class="pb-2 border-b-2" [style.borderColor]="effectiveBranding().headerAccentColor">
+                              <div
+                                class="flex gap-2"
+                                [class]="effectiveBranding().logoPlacement === 'top'
+                                  ? 'flex-col items-center text-center'
+                                  : (effectiveBranding().logoPlacement === 'right' ? 'flex-row-reverse items-center' : 'flex-row items-center')">
+                                @if (safeLogoUrl()) {
+                                  <img
+                                    [src]="safeLogoUrl()"
+                                    alt="School logo"
+                                    referrerpolicy="no-referrer"
+                                    [style.width.px]="effectiveBranding().logoSizePx * 0.72"
+                                    [style.height.px]="effectiveBranding().logoSizePx * 0.72"
+                                    class="object-contain rounded shrink-0" />
+                                } @else if (effectiveBranding().showLogoCrest) {
+                                  <div
+                                    class="w-7 h-7 rounded-md text-white font-black text-[10px] flex items-center justify-center shrink-0"
+                                    [style.backgroundColor]="effectiveBranding().headerAccentColor">
+                                    {{ effectiveBranding().monogramInitials }}
+                                  </div>
+                                }
+                                <div class="min-w-0 flex-1"
+                                  [class]="effectiveBranding().logoPlacement === 'top'
+                                    ? (effectiveBranding().headerAlign === 'left' ? 'text-left' : (effectiveBranding().headerAlign === 'right' ? 'text-right' : 'text-center'))
+                                    : (effectiveBranding().logoPlacement === 'right' ? 'text-right' : 'text-left')">
+                                  <div class="font-black text-[11px] uppercase leading-tight text-slate-900 truncate">
+                                    {{ effectiveBranding().schoolName }}
+                                  </div>
+                                  <div class="text-[8.5px] text-slate-500 truncate">{{ effectiveBranding().registrationNo }}</div>
+                                </div>
+                              </div>
+                              <div class="flex items-center justify-between mt-2">
+                                <span
+                                  class="px-2 py-0.5 rounded text-white text-[9px] font-black uppercase"
+                                  [style.backgroundColor]="effectiveBranding().headerAccentColor">
+                                  {{ copyLabel }}
+                                </span>
+                                <span class="font-mono font-bold text-[9px] text-slate-600">NOV 2026</span>
+                              </div>
                             </div>
                           }
-                          <div class="min-w-0">
-                            <div class="font-black text-[11px] uppercase leading-tight text-slate-900 truncate">
-                              {{ effectiveBranding().schoolName }}
+
+                          @case ('meta') {
+                            <div class="bg-slate-50 border border-slate-200 rounded p-2 text-[9px] space-y-0.5">
+                              <div class="font-black text-slate-900 uppercase">{{ bankGatewayName() }} · Code {{ bankBranchCode() }}</div>
+                              <div><strong>A/C Title:</strong> {{ effectiveBranding().schoolName }}</div>
+                              <div class="font-mono"><strong>A/C #:</strong> {{ bankAccountNumber() }}</div>
+                              <div class="font-mono text-slate-600 truncate"><strong>IBAN:</strong> {{ bankIban() }}</div>
+                              <div class="font-mono text-indigo-700 font-bold"><strong>1Bill:</strong> {{ oneBillPrefix() }}-{{ resolvedStudent().rollNo }}</div>
                             </div>
-                            <div class="text-[8.5px] text-slate-500 truncate">{{ effectiveBranding().registrationNo }}</div>
-                          </div>
-                        </div>
-                        <div class="flex items-center justify-between mt-2">
-                          <span
-                            class="px-2 py-0.5 rounded text-white text-[9px] font-black uppercase"
-                            [style.backgroundColor]="effectiveBranding().headerAccentColor">
-                            {{ copyLabel }}
-                          </span>
-                          <span class="font-mono font-bold text-[9px] text-slate-600">NOV 2026</span>
-                        </div>
-                      </div>
+                          }
 
-                      <div class="bg-slate-50 border border-slate-200 rounded p-2 text-[9px] space-y-0.5">
-                        <div class="font-black text-slate-900 uppercase">{{ bankGatewayName() }} · Code {{ bankBranchCode() }}</div>
-                        <div><strong>A/C Title:</strong> {{ effectiveBranding().schoolName }}</div>
-                        <div class="font-mono"><strong>A/C #:</strong> {{ bankAccountNumber() }}</div>
-                        <div class="font-mono text-slate-600 truncate"><strong>IBAN:</strong> {{ bankIban() }}</div>
-                        <div class="font-mono text-indigo-700 font-bold"><strong>1Bill:</strong> {{ oneBillPrefix() }}-{{ resolvedStudent().rollNo }}</div>
-                      </div>
+                          @case ('person') {
+                            <div class="space-y-1 text-[9.5px] tabular-nums">
+                              <div class="flex justify-between border-b border-dotted border-slate-200 pb-0.5">
+                                <span class="text-slate-500">Challan #</span>
+                                <span class="font-mono font-black">{{ resolvedStudent().challanNo }}</span>
+                              </div>
+                              <div class="flex justify-between border-b border-dotted border-slate-200 pb-0.5">
+                                <span class="text-slate-500">Student</span>
+                                <span class="font-bold">{{ resolvedStudent().name }}</span>
+                              </div>
+                              <div class="flex justify-between border-b border-dotted border-slate-200 pb-0.5">
+                                <span class="text-slate-500">Class / Roll</span>
+                                <span class="font-bold">{{ resolvedStudent().grade }} · #{{ resolvedStudent().rollNo }}</span>
+                              </div>
+                              <div class="flex justify-between border-b border-dotted border-slate-200 pb-0.5">
+                                <span class="text-slate-500">Due Date</span>
+                                <span class="font-bold text-rose-700">10 Nov 2026</span>
+                              </div>
+                            </div>
+                          }
 
-                      <div class="space-y-1 text-[9.5px] tabular-nums">
-                        <div class="flex justify-between border-b border-dotted border-slate-200 pb-0.5">
-                          <span class="text-slate-500">Challan #</span>
-                          <span class="font-mono font-black">{{ resolvedStudent().challanNo }}</span>
-                        </div>
-                        <div class="flex justify-between border-b border-dotted border-slate-200 pb-0.5">
-                          <span class="text-slate-500">Student</span>
-                          <span class="font-bold">{{ resolvedStudent().name }}</span>
-                        </div>
-                        <div class="flex justify-between border-b border-dotted border-slate-200 pb-0.5">
-                          <span class="text-slate-500">Class / Roll</span>
-                          <span class="font-bold">{{ resolvedStudent().grade }} · #{{ resolvedStudent().rollNo }}</span>
-                        </div>
-                        <div class="flex justify-between border-b border-dotted border-slate-200 pb-0.5">
-                          <span class="text-slate-500">Due Date</span>
-                          <span class="font-bold text-rose-700">10 Nov 2026</span>
-                        </div>
-                      </div>
+                          @case ('amounts') {
+                            <div class="space-y-2">
+                              <div class="space-y-1 text-[9.5px] tabular-nums">
+                                <div class="flex justify-between text-[8.5px] font-black uppercase text-slate-400 border-b border-slate-200 pb-0.5">
+                                  <span>Particulars</span>
+                                  <span>PKR</span>
+                                </div>
+                                <div class="flex justify-between"><span>Monthly Tuition Fee</span><span class="font-mono font-bold">{{ formatCurrency(resolvedStudent().feeAmount - 3500) }}</span></div>
+                                <div class="flex justify-between"><span>Science &amp; IT Lab</span><span class="font-mono font-bold">1,500</span></div>
+                                <div class="flex justify-between"><span>Exam &amp; Stationery</span><span class="font-mono font-bold">1,200</span></div>
+                                <div class="flex justify-between"><span>Sports &amp; Activity</span><span class="font-mono font-bold">800</span></div>
+                              </div>
+                              <div class="border-2 rounded p-2 bg-slate-50 space-y-1 tabular-nums" [style.borderColor]="effectiveBranding().headerAccentColor">
+                                <div class="flex justify-between font-black text-[10px]">
+                                  <span>Within Due Date</span>
+                                  <span class="font-mono">PKR {{ formatCurrency(resolvedStudent().feeAmount) }}</span>
+                                </div>
+                                <div class="flex justify-between font-bold text-[9px] text-rose-700">
+                                  <span>After Due Date (+{{ formatCurrency(lateFeeFinePkr()) }})</span>
+                                  <span class="font-mono">PKR {{ formatCurrency(resolvedStudent().feeAmount + lateFeeFinePkr()) }}</span>
+                                </div>
+                              </div>
+                            </div>
+                          }
 
-                      <div class="space-y-1 text-[9.5px] tabular-nums">
-                        <div class="flex justify-between text-[8.5px] font-black uppercase text-slate-400 border-b border-slate-200 pb-0.5">
-                          <span>Particulars</span>
-                          <span>PKR</span>
-                        </div>
-                        <div class="flex justify-between"><span>Monthly Tuition Fee</span><span class="font-mono font-bold">{{ formatCurrency(resolvedStudent().feeAmount - 3500) }}</span></div>
-                        <div class="flex justify-between"><span>Science &amp; IT Lab</span><span class="font-mono font-bold">1,500</span></div>
-                        <div class="flex justify-between"><span>Exam &amp; Stationery</span><span class="font-mono font-bold">1,200</span></div>
-                        <div class="flex justify-between"><span>Sports &amp; Activity</span><span class="font-mono font-bold">800</span></div>
-                      </div>
+                          @case ('verification') {
+                            <div class="flex items-center justify-between gap-2"
+                              [class]="effectiveBranding().verificationOrder === 'qr_first' ? 'flex-row-reverse' : 'flex-row'">
+                              @if (effectiveBranding().showBarcodeVerification) {
+                                <div class="min-w-0 flex-1">
+                                  <app-school-barcode [value]="resolvedStudent().challanNo" [label]="resolvedStudent().challanNo" [height]="26" [barWidth]="1.0" />
+                                </div>
+                              }
+                              @if (effectiveBranding().showQrVerification) {
+                                <app-school-qr-code [value]="'CHALLAN:' + resolvedStudent().challanNo" [size]="44" />
+                              }
+                            </div>
+                          }
 
-                      <div class="border-2 rounded p-2 bg-slate-50 space-y-1 tabular-nums" [style.borderColor]="effectiveBranding().headerAccentColor">
-                        <div class="flex justify-between font-black text-[10px]">
-                          <span>Within Due Date</span>
-                          <span class="font-mono">PKR {{ formatCurrency(resolvedStudent().feeAmount) }}</span>
-                        </div>
-                        <div class="flex justify-between font-bold text-[9px] text-rose-700">
-                          <span>After Due Date (+{{ formatCurrency(lateFeeFinePkr()) }})</span>
-                          <span class="font-mono">PKR {{ formatCurrency(resolvedStudent().feeAmount + lateFeeFinePkr()) }}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="space-y-2 pt-2">
-                      <div class="grid grid-cols-2 gap-3 text-center text-[8px] text-slate-500">
-                        <div><div class="h-4 border-b border-slate-400 mb-0.5"></div>Depositor Sign</div>
-                        <div><div class="h-4 border-b border-slate-400 mb-0.5"></div>Bank Stamp</div>
-                      </div>
-                      <div class="flex items-center justify-between gap-2">
-                        @if (effectiveBranding().showBarcodeVerification) {
-                          <div class="min-w-0 flex-1">
-                            <app-school-barcode [value]="resolvedStudent().challanNo" [label]="resolvedStudent().challanNo" [height]="26" [barWidth]="1.0" />
-                          </div>
+                          @case ('footer') {
+                            <div class="space-y-1 pt-1">
+                              <div class="grid grid-cols-2 gap-3 text-center text-[8px] text-slate-500">
+                                <div><div class="h-4 border-b border-slate-400 mb-0.5"></div>Depositor Sign</div>
+                                <div><div class="h-4 border-b border-slate-400 mb-0.5"></div>Bank Stamp</div>
+                              </div>
+                              <div class="text-center text-[8px] text-slate-500 truncate">{{ effectiveBranding().footerNote }}</div>
+                            </div>
+                          }
                         }
-                        @if (effectiveBranding().showQrVerification) {
-                          <app-school-qr-code [value]="'CHALLAN:' + resolvedStudent().challanNo" [size]="44" />
-                        }
-                      </div>
-                    </div>
+                      }
+                    }
                   </div>
                 }
               </div>
             </div>
           }
 
-          <!-- 3. STUDENT & STAFF GATE ID CARD (FRONT + BACK) -->
+          <!-- 3. STUDENT & STAFF GATE ID CARD (FRONT + BACK WITH LOGO) -->
           @if (selectedFormat() === 'id_card') {
             <div class="w-full max-w-[760px] bg-white border border-slate-300 shadow-md p-6 flex flex-wrap justify-center gap-6">
               <!-- Front Card -->
               <div class="w-[330px] h-[208px] rounded-xl border border-slate-300 overflow-hidden flex flex-col justify-between bg-white shadow-xs">
-                <div class="px-3.5 py-2 text-white flex items-center gap-2.5" [style.backgroundColor]="effectiveBranding().headerAccentColor">
-                  @if (effectiveBranding().showLogoCrest) {
+                <div
+                  class="px-3.5 py-2 text-white flex items-center gap-2.5"
+                  [class]="effectiveBranding().logoPlacement === 'right' ? 'flex-row-reverse' : 'flex-row'"
+                  [style.backgroundColor]="effectiveBranding().headerAccentColor">
+                  @if (safeLogoUrl()) {
+                    <img
+                      [src]="safeLogoUrl()"
+                      alt="School logo"
+                      referrerpolicy="no-referrer"
+                      class="w-7 h-7 rounded bg-white p-0.5 object-contain shrink-0" />
+                  } @else if (effectiveBranding().showLogoCrest) {
                     <div class="w-7 h-7 rounded-md bg-white/20 font-black text-[10px] flex items-center justify-center shrink-0">
                       {{ effectiveBranding().monogramInitials }}
                     </div>
                   }
-                  <div class="min-w-0">
+                  <div class="min-w-0 flex-1" [class]="effectiveBranding().logoPlacement === 'right' ? 'text-right' : 'text-left'">
                     <div class="font-black text-[11px] uppercase truncate">{{ effectiveBranding().schoolName }}</div>
                     <div class="text-[9px] opacity-85 truncate">{{ branchLabel() }} · Official Gate Card</div>
                   </div>
@@ -445,7 +775,12 @@
               <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 @for (item of sampleStickers(); track item.code) {
                   <div class="border border-dashed border-slate-400 rounded-lg p-3 text-center space-y-1 bg-white">
-                    <div class="text-[8.5px] font-black uppercase text-slate-500 truncate">{{ effectiveBranding().schoolName }}</div>
+                    <div class="flex items-center justify-center gap-1">
+                      @if (safeLogoUrl()) {
+                        <img [src]="safeLogoUrl()" alt="" referrerpolicy="no-referrer" class="w-3.5 h-3.5 object-contain shrink-0" />
+                      }
+                      <span class="text-[8.5px] font-black uppercase text-slate-500 truncate">{{ effectiveBranding().schoolName }}</span>
+                    </div>
                     <div class="font-black text-xs text-slate-900 truncate">{{ item.title }}</div>
                     <div class="text-[10px] font-bold text-slate-600 truncate">{{ item.subtitle }}</div>
                     <div class="pt-1 flex justify-center">
@@ -455,7 +790,7 @@
                   </div>
                 }
               </div>
-              <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 flex-wrap">
                 <button type="button" (click)="printStickers.emit()" class="px-3 py-1.5 rounded-lg bg-slate-900 text-white font-bold text-[11px] cursor-pointer">
                   Print All Student Stickers
                 </button>
@@ -466,146 +801,245 @@
             </div>
           }
 
-          <!-- 5. A4 RESULT DMC / ACADEMIC TRANSCRIPT -->
+          <!-- 5. A4 RESULT DMC / ACADEMIC TRANSCRIPT (DYNAMIC ORDER & LOGO) -->
           @if (selectedFormat() === 'result_dmc') {
             <div class="w-full max-w-[740px] bg-white border-2 shadow-md p-6 space-y-4 text-xs" [style.borderColor]="effectiveBranding().headerAccentColor">
-              <div class="flex items-start justify-between gap-4 border-b-2 pb-3" [style.borderColor]="effectiveBranding().headerAccentColor">
-                <div class="flex items-center gap-3">
-                  @if (effectiveBranding().showLogoCrest) {
-                    <div class="w-11 h-11 rounded-lg text-white font-black text-sm flex items-center justify-center shrink-0" [style.backgroundColor]="effectiveBranding().headerAccentColor">
-                      {{ effectiveBranding().monogramInitials }}
-                    </div>
-                  }
-                  <div>
-                    <div class="font-black text-base uppercase tracking-tight text-slate-900">{{ effectiveBranding().schoolName }}</div>
-                    <div class="text-[10px] text-slate-600">{{ effectiveBranding().campusTagline }}</div>
-                    <div class="text-[10px] text-slate-500">{{ effectiveBranding().registrationNo }} · {{ effectiveBranding().address }}</div>
-                  </div>
-                </div>
-                <div class="text-right font-mono text-[10px] shrink-0">
-                  <div class="font-black">DMC #{{ resolvedStudent().rollNo }}-2026</div>
-                  <div>Session 2026-27</div>
-                </div>
-              </div>
-
-              <div class="text-center font-black uppercase tracking-wider text-xs py-1.5 bg-slate-50 border border-slate-200">
-                Detailed Marks Certificate — Mid-Term Examination 2026
-              </div>
-
-              <div class="grid grid-cols-2 gap-x-8 gap-y-1.5 border border-slate-200 p-3 text-[11px]">
-                <div class="flex justify-between"><span class="text-slate-500">Student Name:</span><strong>{{ resolvedStudent().name }}</strong></div>
-                <div class="flex justify-between"><span class="text-slate-500">Roll No:</span><strong class="font-mono">#{{ resolvedStudent().rollNo }}</strong></div>
-                <div class="flex justify-between"><span class="text-slate-500">Guardian:</span><span>{{ resolvedStudent().guardian }}</span></div>
-                <div class="flex justify-between"><span class="text-slate-500">Class:</span><strong>{{ resolvedStudent().grade }}</strong></div>
-              </div>
-
-              <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse text-[11px] tabular-nums">
-                  <thead>
-                    <tr class="text-white text-[10px] uppercase" [style.backgroundColor]="effectiveBranding().headerAccentColor">
-                      <th class="px-3 py-2">#</th>
-                      <th class="px-3 py-2">Subject</th>
-                      <th class="px-3 py-2 text-right">Max</th>
-                      <th class="px-3 py-2 text-right">Obtained</th>
-                      <th class="px-3 py-2 text-center">Grade</th>
-                      <th class="px-3 py-2">Remarks</th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-slate-200">
-                    @for (sub of sampleDmcSubjects; track sub.subject; let idx = $index) {
-                      <tr>
-                        <td class="px-3 py-1.5 font-mono">{{ idx + 1 }}</td>
-                        <td class="px-3 py-1.5 font-bold">{{ sub.subject }}</td>
-                        <td class="px-3 py-1.5 text-right font-mono">{{ sub.maxMarks }}</td>
-                        <td class="px-3 py-1.5 text-right font-mono font-black">{{ sub.obtainedMarks }}</td>
-                        <td class="px-3 py-1.5 text-center font-black">{{ sub.grade }}</td>
-                        <td class="px-3 py-1.5 text-slate-600">{{ sub.remarks }}</td>
-                      </tr>
+              @for (secKey of effectiveBranding().sectionOrder; track secKey) {
+                @if (!isSectionHidden(secKey)) {
+                  @switch (secKey) {
+                    @case ('header') {
+                      <div class="space-y-3 border-b-2 pb-3" [style.borderColor]="effectiveBranding().headerAccentColor">
+                        <div
+                          class="flex gap-3"
+                          [class]="effectiveBranding().logoPlacement === 'top'
+                            ? 'flex-col items-center'
+                            : (effectiveBranding().logoPlacement === 'right' ? 'flex-row-reverse items-center' : 'flex-row items-center')">
+                          @if (safeLogoUrl()) {
+                            <img
+                              [src]="safeLogoUrl()"
+                              alt="School logo"
+                              referrerpolicy="no-referrer"
+                              [style.width.px]="effectiveBranding().logoSizePx"
+                              [style.height.px]="effectiveBranding().logoSizePx"
+                              class="object-contain rounded shrink-0" />
+                          } @else if (effectiveBranding().showLogoCrest) {
+                            <div class="w-11 h-11 rounded-lg text-white font-black text-sm flex items-center justify-center shrink-0" [style.backgroundColor]="effectiveBranding().headerAccentColor">
+                              {{ effectiveBranding().monogramInitials }}
+                            </div>
+                          }
+                          <div class="flex-1 min-w-0"
+                            [class]="effectiveBranding().logoPlacement === 'top'
+                              ? (effectiveBranding().headerAlign === 'left' ? 'text-left' : (effectiveBranding().headerAlign === 'right' ? 'text-right' : 'text-center'))
+                              : (effectiveBranding().logoPlacement === 'right' ? 'text-right' : 'text-left')">
+                            <div class="font-black text-base uppercase tracking-tight text-slate-900">{{ effectiveBranding().schoolName }}</div>
+                            <div class="text-[10px] text-slate-600">{{ effectiveBranding().campusTagline }}</div>
+                            <div class="text-[10px] text-slate-500">{{ effectiveBranding().registrationNo }} · {{ effectiveBranding().address }}</div>
+                          </div>
+                        </div>
+                        <div class="text-center font-black uppercase tracking-wider text-xs py-1.5 bg-slate-50 border border-slate-200">
+                          Detailed Marks Certificate — Mid-Term Examination 2026
+                        </div>
+                      </div>
                     }
-                  </tbody>
-                </table>
-              </div>
 
-              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 border border-slate-200 p-3 text-center tabular-nums">
-                <div><div class="text-[9px] uppercase text-slate-500 font-bold">Total Marks</div><div class="font-mono font-black text-sm">{{ dmcTotals().obt }} / {{ dmcTotals().max }}</div></div>
-                <div><div class="text-[9px] uppercase text-slate-500 font-bold">Percentage</div><div class="font-mono font-black text-sm">{{ dmcTotals().pct }}%</div></div>
-                <div><div class="text-[9px] uppercase text-slate-500 font-bold">Class Rank</div><div class="font-black text-sm">2nd / 42</div></div>
-                <div><div class="text-[9px] uppercase text-slate-500 font-bold">Status</div><div class="font-black text-sm text-emerald-700">PASS</div></div>
-              </div>
+                    @case ('meta') {
+                      <div class="flex items-center justify-between border border-slate-200 bg-slate-50 px-3 py-1.5 font-mono text-[10px] flex-wrap gap-2">
+                        <span class="font-black">DMC #{{ resolvedStudent().rollNo }}-2026</span>
+                        <span>Session 2026-27</span>
+                        <span>{{ effectiveBranding().phone }}</span>
+                      </div>
+                    }
 
-              <div class="flex items-end justify-between pt-4 border-t border-slate-200 text-[10px]">
-                <div class="w-36 text-center"><div class="h-6 border-b border-slate-700 mb-1"></div>Class Teacher</div>
-                @if (effectiveBranding().showQrVerification) {
-                  <app-school-qr-code [value]="'DMC:' + resolvedStudent().rollNo + '|PCT:' + dmcTotals().pct" [size]="54" />
+                    @case ('person') {
+                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1.5 border border-slate-200 p-3 text-[11px]">
+                        <div class="flex justify-between"><span class="text-slate-500">Student Name:</span><strong>{{ resolvedStudent().name }}</strong></div>
+                        <div class="flex justify-between"><span class="text-slate-500">Roll No:</span><strong class="font-mono">#{{ resolvedStudent().rollNo }}</strong></div>
+                        <div class="flex justify-between"><span class="text-slate-500">Guardian:</span><span>{{ resolvedStudent().guardian }}</span></div>
+                        <div class="flex justify-between"><span class="text-slate-500">Class:</span><strong>{{ resolvedStudent().grade }}</strong></div>
+                      </div>
+                    }
+
+                    @case ('amounts') {
+                      <div class="space-y-3">
+                        <div class="overflow-x-auto">
+                          <table class="w-full text-left border-collapse text-[11px] tabular-nums">
+                            <thead>
+                              <tr class="text-white text-[10px] uppercase" [style.backgroundColor]="effectiveBranding().headerAccentColor">
+                                <th class="px-3 py-2">#</th>
+                                <th class="px-3 py-2">Subject</th>
+                                <th class="px-3 py-2 text-right">Max</th>
+                                <th class="px-3 py-2 text-right">Obtained</th>
+                                <th class="px-3 py-2 text-center">Grade</th>
+                                <th class="px-3 py-2">Remarks</th>
+                              </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200">
+                              @for (sub of sampleDmcSubjects; track sub.subject; let idx = $index) {
+                                <tr>
+                                  <td class="px-3 py-1.5 font-mono">{{ idx + 1 }}</td>
+                                  <td class="px-3 py-1.5 font-bold">{{ sub.subject }}</td>
+                                  <td class="px-3 py-1.5 text-right font-mono">{{ sub.maxMarks }}</td>
+                                  <td class="px-3 py-1.5 text-right font-mono font-black">{{ sub.obtainedMarks }}</td>
+                                  <td class="px-3 py-1.5 text-center font-black">{{ sub.grade }}</td>
+                                  <td class="px-3 py-1.5 text-slate-600">{{ sub.remarks }}</td>
+                                </tr>
+                              }
+                            </tbody>
+                          </table>
+                        </div>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 border border-slate-200 p-3 text-center tabular-nums">
+                          <div><div class="text-[9px] uppercase text-slate-500 font-bold">Total Marks</div><div class="font-mono font-black text-sm">{{ dmcTotals().obt }} / {{ dmcTotals().max }}</div></div>
+                          <div><div class="text-[9px] uppercase text-slate-500 font-bold">Percentage</div><div class="font-mono font-black text-sm">{{ dmcTotals().pct }}%</div></div>
+                          <div><div class="text-[9px] uppercase text-slate-500 font-bold">Class Rank</div><div class="font-black text-sm">2nd / 42</div></div>
+                          <div><div class="text-[9px] uppercase text-slate-500 font-bold">Status</div><div class="font-black text-sm text-emerald-700">PASS</div></div>
+                        </div>
+                      </div>
+                    }
+
+                    @case ('verification') {
+                      <div class="flex items-center justify-center gap-6 py-1"
+                        [class]="effectiveBranding().verificationOrder === 'qr_first' ? 'flex-row-reverse' : 'flex-row'">
+                        @if (effectiveBranding().showBarcodeVerification) {
+                          <app-school-barcode [value]="'DMC-' + resolvedStudent().rollNo" [label]="'DMC-' + resolvedStudent().rollNo" [height]="26" [barWidth]="1.05" />
+                        }
+                        @if (effectiveBranding().showQrVerification) {
+                          <app-school-qr-code [value]="'DMC:' + resolvedStudent().rollNo + '|PCT:' + dmcTotals().pct" [size]="54" />
+                        }
+                      </div>
+                    }
+
+                    @case ('footer') {
+                      <div class="space-y-2 pt-3 border-t border-slate-200 text-[10px]">
+                        <div class="flex items-end justify-between">
+                          <div class="w-36 text-center"><div class="h-6 border-b border-slate-700 mb-1"></div>Class Teacher</div>
+                          <div class="w-44 text-center"><div class="h-6 border-b border-slate-700 mb-1"></div><strong>{{ effectiveBranding().signatoryTitle }}</strong></div>
+                        </div>
+                        <div class="text-center text-[9px] text-slate-500">{{ effectiveBranding().footerNote }}</div>
+                      </div>
+                    }
+                  }
                 }
-                <div class="w-44 text-center"><div class="h-6 border-b border-slate-700 mb-1"></div><strong>{{ effectiveBranding().signatoryTitle }}</strong></div>
-              </div>
+              }
             </div>
           }
 
-          <!-- 6. A4 MONTHLY SALARY SLIP -->
+          <!-- 6. A4 MONTHLY SALARY SLIP (DYNAMIC ORDER & LOGO) -->
           @if (selectedFormat() === 'salary_slip') {
             <div class="w-full max-w-[740px] bg-white border border-slate-300 shadow-md p-6 space-y-4 text-xs">
-              <div class="flex items-center justify-between border-b-2 pb-2.5" [style.borderColor]="effectiveBranding().headerAccentColor">
-                <div>
-                  <div class="font-black text-base uppercase text-slate-900">{{ effectiveBranding().schoolName }}</div>
-                  <div class="text-[10px] text-slate-500">{{ effectiveBranding().address }} · {{ effectiveBranding().phone }}</div>
-                </div>
-                <div class="font-mono font-bold text-xs">PAY-{{ resolvedStaff().empCode }}</div>
-              </div>
+              @for (secKey of effectiveBranding().sectionOrder; track secKey) {
+                @if (!isSectionHidden(secKey)) {
+                  @switch (secKey) {
+                    @case ('header') {
+                      <div class="space-y-2.5">
+                        <div
+                          class="flex gap-3 border-b-2 pb-2.5"
+                          [class]="effectiveBranding().logoPlacement === 'top'
+                            ? 'flex-col items-center'
+                            : (effectiveBranding().logoPlacement === 'right' ? 'flex-row-reverse items-center' : 'flex-row items-center')"
+                          [style.borderColor]="effectiveBranding().headerAccentColor">
+                          @if (safeLogoUrl()) {
+                            <img
+                              [src]="safeLogoUrl()"
+                              alt="School logo"
+                              referrerpolicy="no-referrer"
+                              [style.width.px]="effectiveBranding().logoSizePx"
+                              [style.height.px]="effectiveBranding().logoSizePx"
+                              class="object-contain rounded shrink-0" />
+                          } @else if (effectiveBranding().showLogoCrest) {
+                            <div class="w-10 h-10 rounded-lg text-white font-black text-xs flex items-center justify-center shrink-0" [style.backgroundColor]="effectiveBranding().headerAccentColor">
+                              {{ effectiveBranding().monogramInitials }}
+                            </div>
+                          }
+                          <div class="flex-1 min-w-0"
+                            [class]="effectiveBranding().logoPlacement === 'top'
+                              ? (effectiveBranding().headerAlign === 'left' ? 'text-left' : (effectiveBranding().headerAlign === 'right' ? 'text-right' : 'text-center'))
+                              : (effectiveBranding().logoPlacement === 'right' ? 'text-right' : 'text-left')">
+                            <div class="font-black text-base uppercase text-slate-900">{{ effectiveBranding().schoolName }}</div>
+                            <div class="text-[10px] text-slate-500">{{ effectiveBranding().address }} · {{ effectiveBranding().phone }}</div>
+                          </div>
+                        </div>
+                        <div class="px-3 py-1.5 text-white font-black flex justify-between items-center text-[11px]" [style.backgroundColor]="effectiveBranding().headerAccentColor">
+                          <span>OFFICIAL MONTHLY SALARY DISBURSEMENT SLIP</span>
+                          <span>OCTOBER 2026</span>
+                        </div>
+                      </div>
+                    }
 
-              <div class="px-3 py-1.5 text-white font-black flex justify-between items-center text-[11px]" [style.backgroundColor]="effectiveBranding().headerAccentColor">
-                <span>OFFICIAL MONTHLY SALARY DISBURSEMENT SLIP</span>
-                <span>OCTOBER 2026</span>
-              </div>
+                    @case ('meta') {
+                      <div class="flex items-center justify-between bg-slate-50 border border-slate-200 px-3 py-1.5 text-[10px] flex-wrap gap-2">
+                        <span class="font-mono font-bold">Slip: PAY-{{ resolvedStaff().empCode }}</span>
+                        <span>Pay Period: <strong>October 2026</strong></span>
+                        <span>Mode: <strong>Direct Bank IBFT</strong></span>
+                      </div>
+                    }
 
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1 text-[11px]">
-                <div class="flex justify-between border-b border-dotted border-slate-200 py-1"><span class="text-slate-500">Employee Name</span><strong>{{ resolvedStaff().name }}</strong></div>
-                <div class="flex justify-between border-b border-dotted border-slate-200 py-1"><span class="text-slate-500">EMP Code</span><strong class="font-mono">{{ resolvedStaff().empCode }}</strong></div>
-                <div class="flex justify-between border-b border-dotted border-slate-200 py-1"><span class="text-slate-500">Designation</span><span>{{ resolvedStaff().designation }}</span></div>
-                <div class="flex justify-between border-b border-dotted border-slate-200 py-1"><span class="text-slate-500">Department</span><span>{{ resolvedStaff().department }}</span></div>
-              </div>
+                    @case ('person') {
+                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1 text-[11px]">
+                        <div class="flex justify-between border-b border-dotted border-slate-200 py-1"><span class="text-slate-500">Employee Name</span><strong>{{ resolvedStaff().name }}</strong></div>
+                        <div class="flex justify-between border-b border-dotted border-slate-200 py-1"><span class="text-slate-500">EMP Code</span><strong class="font-mono">{{ resolvedStaff().empCode }}</strong></div>
+                        <div class="flex justify-between border-b border-dotted border-slate-200 py-1"><span class="text-slate-500">Designation</span><span>{{ resolvedStaff().designation }}</span></div>
+                        <div class="flex justify-between border-b border-dotted border-slate-200 py-1"><span class="text-slate-500">Department</span><span>{{ resolvedStaff().department }}</span></div>
+                      </div>
+                    }
 
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 tabular-nums">
-                <table class="w-full border-collapse text-[11px]">
-                  <thead><tr class="bg-slate-50 border-b border-slate-200 text-[10px] uppercase text-slate-600"><th class="p-2 text-left">Earnings</th><th class="p-2 text-right">PKR</th></tr></thead>
-                  <tbody class="divide-y divide-slate-100">
-                    <tr><td class="p-2">Basic Monthly Pay</td><td class="p-2 text-right font-mono">{{ formatCurrency(salaryBreakdown().basic) }}</td></tr>
-                    <tr><td class="p-2">House Rent Allowance</td><td class="p-2 text-right font-mono">{{ formatCurrency(salaryBreakdown().house) }}</td></tr>
-                    <tr><td class="p-2">Medical &amp; Conveyance</td><td class="p-2 text-right font-mono">{{ formatCurrency(salaryBreakdown().medical) }}</td></tr>
-                    <tr class="font-black"><td class="p-2">Gross Earnings</td><td class="p-2 text-right font-mono">{{ formatCurrency(salaryBreakdown().gross) }}</td></tr>
-                  </tbody>
-                </table>
-                <table class="w-full border-collapse text-[11px]">
-                  <thead><tr class="bg-slate-50 border-b border-slate-200 text-[10px] uppercase text-slate-600"><th class="p-2 text-left">Deductions</th><th class="p-2 text-right">PKR</th></tr></thead>
-                  <tbody class="divide-y divide-slate-100">
-                    <tr><td class="p-2">Income Tax / WHT</td><td class="p-2 text-right font-mono">{{ formatCurrency(salaryBreakdown().tax) }}</td></tr>
-                    <tr><td class="p-2">Salary Advance</td><td class="p-2 text-right font-mono">{{ formatCurrency(salaryBreakdown().advance) }}</td></tr>
-                    <tr><td class="p-2">&nbsp;</td><td class="p-2">&nbsp;</td></tr>
-                    <tr class="font-black"><td class="p-2">Total Deductions</td><td class="p-2 text-right font-mono">{{ formatCurrency(salaryBreakdown().tax) }}</td></tr>
-                  </tbody>
-                </table>
-              </div>
+                    @case ('amounts') {
+                      <div class="space-y-3">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 tabular-nums">
+                          <table class="w-full border-collapse text-[11px]">
+                            <thead><tr class="bg-slate-50 border-b border-slate-200 text-[10px] uppercase text-slate-600"><th class="p-2 text-left">Earnings</th><th class="p-2 text-right">PKR</th></tr></thead>
+                            <tbody class="divide-y divide-slate-100">
+                              <tr><td class="p-2">Basic Monthly Pay</td><td class="p-2 text-right font-mono">{{ formatCurrency(salaryBreakdown().basic) }}</td></tr>
+                              <tr><td class="p-2">House Rent Allowance</td><td class="p-2 text-right font-mono">{{ formatCurrency(salaryBreakdown().house) }}</td></tr>
+                              <tr><td class="p-2">Medical &amp; Conveyance</td><td class="p-2 text-right font-mono">{{ formatCurrency(salaryBreakdown().medical) }}</td></tr>
+                              <tr class="font-black"><td class="p-2">Gross Earnings</td><td class="p-2 text-right font-mono">{{ formatCurrency(salaryBreakdown().gross) }}</td></tr>
+                            </tbody>
+                          </table>
+                          <table class="w-full border-collapse text-[11px]">
+                            <thead><tr class="bg-slate-50 border-b border-slate-200 text-[10px] uppercase text-slate-600"><th class="p-2 text-left">Deductions</th><th class="p-2 text-right">PKR</th></tr></thead>
+                            <tbody class="divide-y divide-slate-100">
+                              <tr><td class="p-2">Income Tax / WHT</td><td class="p-2 text-right font-mono">{{ formatCurrency(salaryBreakdown().tax) }}</td></tr>
+                              <tr><td class="p-2">Salary Advance</td><td class="p-2 text-right font-mono">{{ formatCurrency(salaryBreakdown().advance) }}</td></tr>
+                              <tr><td class="p-2">&nbsp;</td><td class="p-2">&nbsp;</td></tr>
+                              <tr class="font-black"><td class="p-2">Total Deductions</td><td class="p-2 text-right font-mono">{{ formatCurrency(salaryBreakdown().tax) }}</td></tr>
+                            </tbody>
+                          </table>
+                        </div>
+                        <div class="border-2 p-3 flex items-center justify-between bg-slate-50 tabular-nums" [style.borderColor]="effectiveBranding().headerAccentColor">
+                          <div>
+                            <div class="font-black text-slate-900">NET PAYABLE DISBURSED</div>
+                            <div class="text-[10px] text-slate-500">Account: {{ resolvedStaff().bankAccount }}</div>
+                          </div>
+                          <div class="font-mono font-black text-lg" [style.color]="effectiveBranding().headerAccentColor">
+                            PKR {{ formatCurrency(salaryBreakdown().net) }}
+                          </div>
+                        </div>
+                      </div>
+                    }
 
-              <div class="border-2 p-3 flex items-center justify-between bg-slate-50 tabular-nums" [style.borderColor]="effectiveBranding().headerAccentColor">
-                <div>
-                  <div class="font-black text-slate-900">NET PAYABLE DISBURSED</div>
-                  <div class="text-[10px] text-slate-500">Account: {{ resolvedStaff().bankAccount }}</div>
-                </div>
-                <div class="font-mono font-black text-lg" [style.color]="effectiveBranding().headerAccentColor">
-                  PKR {{ formatCurrency(salaryBreakdown().net) }}
-                </div>
-              </div>
+                    @case ('verification') {
+                      <div class="flex items-center justify-between gap-4 py-1"
+                        [class]="effectiveBranding().verificationOrder === 'qr_first' ? 'flex-row-reverse' : 'flex-row'">
+                        @if (effectiveBranding().showBarcodeVerification) {
+                          <app-school-barcode [value]="resolvedStaff().empCode" [label]="resolvedStaff().empCode" [height]="26" [barWidth]="1.05" />
+                        }
+                        @if (effectiveBranding().showQrVerification) {
+                          <app-school-qr-code [value]="'PAY:' + resolvedStaff().empCode + '|NET:' + salaryBreakdown().net" [size]="52" />
+                        }
+                      </div>
+                    }
 
-              <div class="flex items-end justify-between pt-3">
-                @if (effectiveBranding().showQrVerification) {
-                  <app-school-qr-code [value]="'PAY:' + resolvedStaff().empCode + '|NET:' + salaryBreakdown().net" [size]="52" />
+                    @case ('footer') {
+                      <div class="flex items-end justify-between pt-2 border-t border-slate-100 gap-4">
+                        <div class="text-[9px] text-slate-500 max-w-xs">{{ effectiveBranding().footerNote }}</div>
+                        <div class="w-48 text-center text-[10px] shrink-0">
+                          <div class="h-6 border-b border-slate-700 mb-1"></div>
+                          <strong>{{ effectiveBranding().signatoryTitle }}</strong>
+                        </div>
+                      </div>
+                    }
+                  }
                 }
-                <div class="w-48 text-center text-[10px]">
-                  <div class="h-6 border-b border-slate-700 mb-1"></div>
-                  <strong>{{ effectiveBranding().signatoryTitle }}</strong>
-                </div>
-              </div>
+              }
             </div>
           }
         </div>
@@ -614,36 +1048,219 @@
   }
 
   <!-- ========================================================================= -->
-  <!-- TAB 2: CUSTOM SCHOOL BRANDING & FORMAT PLATFORM                           -->
+  <!-- TAB 2: CUSTOM SCHOOL BRANDING, LOGO UPLOAD & DRAG-DROP LAYOUT BUILDER     -->
   <!-- ========================================================================= -->
   @if (activeStudioTab() === 'branding') {
     <div class="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
-      <!-- Left: Reactive Form Editor -->
+      <!-- Left: Reactive Form + Logo Upload + Drag Layout Organizer -->
       <form
         [formGroup]="brandingForm"
         (ngSubmit)="onSaveBranding()"
-        class="xl:col-span-7 bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 space-y-5">
-        <div class="flex items-center justify-between gap-3 border-b border-slate-100 pb-3">
+        class="xl:col-span-7 bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 space-y-6">
+        <div class="flex items-center justify-between gap-3 border-b border-slate-100 pb-3 flex-wrap">
           <div>
-            <h3 class="font-black text-slate-900 text-base">Customize School Print Identity</h3>
-            <p class="text-xs text-slate-500">Yahan jo details likhen ge wo live preview aur har real thermal &amp; A4 print par apply hongi.</p>
+            <h3 class="font-black text-slate-900 text-base">Customize School Logo, Layout &amp; Format</h3>
+            <p class="text-xs text-slate-500">Logo upload karen, blocks ko drag-and-drop ya upar/neeche karen, aur reset ya save karen.</p>
           </div>
           <button
             type="button"
             (click)="onResetBranding()"
-            class="px-3 py-1.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs cursor-pointer inline-flex items-center gap-1">
-            <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">restart_alt</mat-icon>
-            <span>Reset</span>
+            class="px-3 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs cursor-pointer inline-flex items-center gap-1.5">
+            <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">restart_alt</mat-icon>
+            <span>Reset Design to Default</span>
           </button>
         </div>
 
+        <!-- SECTION A: SCHOOL / COMPANY LOGO UPLOAD + PLACEMENT -->
+        <div class="space-y-4 bg-slate-50 border border-slate-200 rounded-2xl p-4">
+          <div class="flex items-center justify-between gap-2 flex-wrap">
+            <div>
+              <h4 class="font-black text-slate-900 text-sm">1. Custom School / Company Logo</h4>
+              <p class="text-[11px] text-slate-500">PNG, JPG, WebP ya SVG image drag-drop karen ya file select karen.</p>
+            </div>
+            @if (safeLogoUrl()) {
+              <button
+                type="button"
+                (click)="removeUploadedLogo()"
+                class="px-3 py-1.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 font-bold text-xs cursor-pointer inline-flex items-center gap-1">
+                <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">delete</mat-icon>
+                <span>Remove Logo</span>
+              </button>
+            }
+          </div>
+
+          <div
+            (dragover)="onLogoDragOver($event)"
+            (dragleave)="onLogoDragLeave($event)"
+            (drop)="onLogoDrop($event)"
+            class="border-2 border-dashed rounded-xl p-4 transition-colors"
+            [class]="logoUploadDragOver() ? 'border-indigo-500 bg-indigo-50' : 'border-slate-300 bg-white'">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div class="flex items-center gap-3 min-w-0">
+                @if (safeLogoUrl()) {
+                  <img
+                    [src]="safeLogoUrl()"
+                    alt="Uploaded school logo"
+                    referrerpolicy="no-referrer"
+                    class="w-14 h-14 object-contain rounded-xl border border-slate-200 bg-white p-1 shrink-0" />
+                } @else {
+                  <div
+                    class="w-14 h-14 rounded-xl text-white font-black text-base flex items-center justify-center shrink-0"
+                    [style.backgroundColor]="effectiveBranding().headerAccentColor">
+                    {{ effectiveBranding().monogramInitials }}
+                  </div>
+                }
+                <div class="min-w-0">
+                  <div class="text-xs font-black text-slate-900">
+                    {{ safeLogoUrl() ? 'Custom Logo Uploaded & Active' : 'Upload School / Company Logo Image' }}
+                  </div>
+                  <div class="text-[11px] text-slate-500">
+                    Har thermal raseed, bank challan, ID card, sticker sheet aur DMC par khud lag jayega.
+                  </div>
+                </div>
+              </div>
+
+              <label class="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs cursor-pointer inline-flex items-center justify-center gap-1.5 shrink-0">
+                <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">upload_file</mat-icon>
+                <span>{{ isProcessingLogo() ? 'Uploading...' : (safeLogoUrl() ? 'Change Logo' : 'Upload Logo') }}</span>
+                <input type="file" accept="image/*" (change)="onLogoFileSelected($event)" class="hidden" />
+              </label>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+            <div>
+              <span class="block font-bold text-slate-700 mb-1.5">Logo Position (Kahan Rakhen)</span>
+              <div class="grid grid-cols-3 gap-1">
+                <button type="button" (click)="setLogoPlacement('left')" class="py-2 rounded-lg border font-bold cursor-pointer"
+                  [class]="effectiveBranding().logoPlacement === 'left' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-200'">
+                  Left
+                </button>
+                <button type="button" (click)="setLogoPlacement('top')" class="py-2 rounded-lg border font-bold cursor-pointer"
+                  [class]="effectiveBranding().logoPlacement === 'top' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-200'">
+                  Top
+                </button>
+                <button type="button" (click)="setLogoPlacement('right')" class="py-2 rounded-lg border font-bold cursor-pointer"
+                  [class]="effectiveBranding().logoPlacement === 'right' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-200'">
+                  Right
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <span class="block font-bold text-slate-700 mb-1.5">Header Text Alignment</span>
+              <div class="grid grid-cols-3 gap-1">
+                <button type="button" (click)="setHeaderAlign('left')" class="py-2 rounded-lg border font-bold cursor-pointer"
+                  [class]="effectiveBranding().headerAlign === 'left' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-200'">
+                  Left
+                </button>
+                <button type="button" (click)="setHeaderAlign('center')" class="py-2 rounded-lg border font-bold cursor-pointer"
+                  [class]="effectiveBranding().headerAlign === 'center' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-200'">
+                  Center
+                </button>
+                <button type="button" (click)="setHeaderAlign('right')" class="py-2 rounded-lg border font-bold cursor-pointer"
+                  [class]="effectiveBranding().headerAlign === 'right' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-200'">
+                  Right
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label class="block font-bold text-slate-700 mb-1.5">Logo Size: {{ effectiveBranding().logoSizePx }}px</label>
+              <input type="range" min="28" max="84" step="2" formControlName="logoSizePx" class="w-full mt-2 accent-slate-900 cursor-pointer" />
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION B: DRAG & DROP PRINT SECTION ORDER -->
+        <div class="space-y-3 bg-slate-50 border border-slate-200 rounded-2xl p-4">
+          <div class="flex items-center justify-between gap-2 flex-wrap">
+            <div>
+              <h4 class="font-black text-slate-900 text-sm">2. Drag &amp; Drop Document Layout (Cheezein Aage Peeche / Upar Neeche Karen)</h4>
+              <p class="text-[11px] text-slate-500">Kisi bhi block ko pakad kar drag karen ya mobile par ↑ ↓ buttons se order change karen.</p>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            @for (secKey of sectionOrder(); track secKey; let idx = $index) {
+              <div
+                draggable="true"
+                (dragstart)="onSectionDragStart($event, secKey)"
+                (dragover)="onSectionDragOver($event, secKey)"
+                (drop)="onSectionDrop($event, secKey)"
+                (dragend)="onSectionDragEnd()"
+                class="flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-xl border bg-white transition-all select-none cursor-grab active:cursor-grabbing"
+                [class]="dragOverSectionKey() === secKey
+                  ? 'border-indigo-500 bg-indigo-50 shadow-sm'
+                  : (isSectionHidden(secKey) ? 'border-slate-200 opacity-60' : 'border-slate-200 hover:border-slate-300')">
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <mat-icon class="!text-[18px] !w-[18px] !h-[18px] text-slate-400 shrink-0">drag_indicator</mat-icon>
+                  <span class="font-mono text-[11px] font-black text-slate-400 w-5 shrink-0">0{{ idx + 1 }}</span>
+                  <div class="min-w-0">
+                    <div class="font-black text-xs text-slate-900 truncate">{{ getSectionMeta(secKey).label }}</div>
+                    <div class="text-[10.5px] text-slate-500 truncate">{{ getSectionMeta(secKey).urduHint }}</div>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-1.5 shrink-0">
+                  <button
+                    type="button"
+                    (click)="moveSection(secKey, -1)"
+                    [disabled]="!canMoveSection(idx, -1)"
+                    title="Move Up"
+                    class="w-9 h-9 rounded-lg border border-slate-200 hover:bg-slate-100 disabled:opacity-30 flex items-center justify-center cursor-pointer">
+                    <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">arrow_upward</mat-icon>
+                  </button>
+                  <button
+                    type="button"
+                    (click)="moveSection(secKey, 1)"
+                    [disabled]="!canMoveSection(idx, 1)"
+                    title="Move Down"
+                    class="w-9 h-9 rounded-lg border border-slate-200 hover:bg-slate-100 disabled:opacity-30 flex items-center justify-center cursor-pointer">
+                    <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">arrow_downward</mat-icon>
+                  </button>
+                  @if (!getSectionMeta(secKey).locked) {
+                    <button
+                      type="button"
+                      (click)="toggleSectionVisibility(secKey)"
+                      [title]="isSectionHidden(secKey) ? 'Show section' : 'Hide section'"
+                      class="w-9 h-9 rounded-lg border border-slate-200 hover:bg-slate-100 flex items-center justify-center cursor-pointer"
+                      [class]="isSectionHidden(secKey) ? 'text-rose-600' : 'text-slate-700'">
+                      <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">{{ isSectionHidden(secKey) ? 'visibility_off' : 'visibility' }}</mat-icon>
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+
+          <div class="pt-2 border-t border-slate-200 space-y-1.5 text-xs">
+            <span class="block font-bold text-slate-700">Barcode vs 2D QR Placement (Aage Peeche Karen)</span>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <button type="button" (click)="setVerificationOrder('barcode_first')" class="py-2 px-3 rounded-xl border font-bold cursor-pointer"
+                [class]="effectiveBranding().verificationOrder === 'barcode_first' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-200'">
+                Barcode First, then QR
+              </button>
+              <button type="button" (click)="setVerificationOrder('qr_first')" class="py-2 px-3 rounded-xl border font-bold cursor-pointer"
+                [class]="effectiveBranding().verificationOrder === 'qr_first' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-200'">
+                2D QR First, then Barcode
+              </button>
+              <button type="button" (click)="setVerificationOrder('side_by_side')" class="py-2 px-3 rounded-xl border font-bold cursor-pointer"
+                [class]="effectiveBranding().verificationOrder === 'side_by_side' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-200'">
+                Side by Side (2 Columns)
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION C: SCHOOL IDENTITY TEXT FIELDS -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
           <div>
-            <label class="block font-bold text-slate-700 mb-1">School / Academy Name</label>
+            <label class="block font-bold text-slate-700 mb-1">School / Academy / Company Name</label>
             <input type="text" formControlName="schoolName" class="w-full px-3 py-2 rounded-xl border border-slate-200 font-bold text-slate-900 focus:outline-slate-900">
           </div>
           <div>
-            <label class="block font-bold text-slate-700 mb-1">Monogram Crest Initials (2–4 Letters)</label>
+            <label class="block font-bold text-slate-700 mb-1">Fallback Monogram Initials (2–4 Letters)</label>
             <input type="text" formControlName="monogramInitials" maxlength="4" class="w-full px-3 py-2 rounded-xl border border-slate-200 font-mono font-black uppercase text-slate-900 focus:outline-slate-900">
           </div>
           <div class="sm:col-span-2">
@@ -713,7 +1330,7 @@
         <div class="flex items-center gap-5 flex-wrap pt-2 text-xs font-bold text-slate-700">
           <label class="inline-flex items-center gap-2 cursor-pointer">
             <input type="checkbox" formControlName="showLogoCrest" class="accent-slate-900">
-            <span>Show Crest Monogram</span>
+            <span>Show Crest Monogram (if no logo uploaded)</span>
           </label>
           <label class="inline-flex items-center gap-2 cursor-pointer">
             <input type="checkbox" formControlName="showBarcodeVerification" class="accent-slate-900">
@@ -725,7 +1342,7 @@
           </label>
         </div>
 
-        <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-2">
+        <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-2 flex-wrap">
           <button
             type="button"
             (click)="setStudioTab('formats')"
@@ -750,22 +1367,32 @@
 
         <!-- A4 Letterhead Strip -->
         <div class="bg-white border border-slate-300 p-4 space-y-2 shadow-xs">
-          <div class="flex items-center justify-between border-b-2 pb-2" [style.borderColor]="effectiveBranding().headerAccentColor">
-            <div class="flex items-center gap-2.5">
-              @if (effectiveBranding().showLogoCrest) {
-                <div class="w-9 h-9 rounded-lg text-white font-black text-xs flex items-center justify-center shrink-0" [style.backgroundColor]="effectiveBranding().headerAccentColor">
-                  {{ effectiveBranding().monogramInitials }}
-                </div>
-              }
-              <div>
-                <div class="font-black text-xs uppercase text-slate-900">{{ effectiveBranding().schoolName }}</div>
-                <div class="text-[10px] text-slate-500">{{ effectiveBranding().campusTagline }}</div>
-                <div class="text-[9px] text-slate-400">{{ effectiveBranding().registrationNo }}</div>
+          <div
+            class="flex gap-2.5 border-b-2 pb-2"
+            [class]="effectiveBranding().logoPlacement === 'top'
+              ? 'flex-col items-center'
+              : (effectiveBranding().logoPlacement === 'right' ? 'flex-row-reverse items-center' : 'flex-row items-center')"
+            [style.borderColor]="effectiveBranding().headerAccentColor">
+            @if (safeLogoUrl()) {
+              <img
+                [src]="safeLogoUrl()"
+                alt="School logo"
+                referrerpolicy="no-referrer"
+                [style.width.px]="effectiveBranding().logoSizePx"
+                [style.height.px]="effectiveBranding().logoSizePx"
+                class="object-contain rounded shrink-0" />
+            } @else if (effectiveBranding().showLogoCrest) {
+              <div class="w-9 h-9 rounded-lg text-white font-black text-xs flex items-center justify-center shrink-0" [style.backgroundColor]="effectiveBranding().headerAccentColor">
+                {{ effectiveBranding().monogramInitials }}
               </div>
-            </div>
-            <div class="text-right font-mono text-[9px] text-slate-600">
-              <div>{{ effectiveBranding().phone }}</div>
-              <div>{{ effectiveBranding().website }}</div>
+            }
+            <div class="flex-1 min-w-0"
+              [class]="effectiveBranding().headerAlign === 'left'
+                ? 'text-left'
+                : (effectiveBranding().headerAlign === 'right' ? 'text-right' : 'text-center')">
+              <div class="font-black text-xs uppercase text-slate-900">{{ effectiveBranding().schoolName }}</div>
+              <div class="text-[10px] text-slate-500">{{ effectiveBranding().campusTagline }}</div>
+              <div class="text-[9px] text-slate-400">{{ effectiveBranding().registrationNo }}</div>
             </div>
           </div>
           <div class="text-[10px] text-slate-600">{{ effectiveBranding().address }}</div>
@@ -775,24 +1402,76 @@
           </div>
         </div>
 
-        <!-- Mini Thermal Receipt Preview -->
+        <!-- Mini Thermal Receipt Preview Reflecting Dynamic Order -->
         <div class="flex justify-center">
-          <div class="bg-white border border-slate-300 p-3.5 font-mono text-[10px] w-[260px] shadow-xs space-y-1.5">
-            <div class="text-center">
-              @if (effectiveBranding().showLogoCrest) {
-                <div class="inline-block border border-slate-900 px-1.5 py-0.5 font-black text-[9px] mb-1">{{ effectiveBranding().monogramInitials }}</div>
+          <div class="bg-white border border-slate-300 p-3.5 font-mono text-[10px] w-[268px] shadow-xs space-y-1.5">
+            @for (secKey of effectiveBranding().sectionOrder; track secKey) {
+              @if (!isSectionHidden(secKey)) {
+                @switch (secKey) {
+                  @case ('header') {
+                    <div class="space-y-1 border-b border-slate-900 pb-1.5">
+                      <div
+                        class="flex gap-1.5"
+                        [class]="effectiveBranding().logoPlacement === 'top'
+                          ? 'flex-col items-center'
+                          : (effectiveBranding().logoPlacement === 'right' ? 'flex-row-reverse items-center' : 'flex-row items-center')">
+                        @if (safeLogoUrl()) {
+                          <img
+                            [src]="safeLogoUrl()"
+                            alt="Logo"
+                            referrerpolicy="no-referrer"
+                            [style.width.px]="effectiveBranding().logoSizePx * 0.72"
+                            [style.height.px]="effectiveBranding().logoSizePx * 0.72"
+                            class="object-contain shrink-0" />
+                        } @else if (effectiveBranding().showLogoCrest) {
+                          <div class="inline-block border border-slate-900 px-1.5 py-0.5 font-black text-[9px] shrink-0">{{ effectiveBranding().monogramInitials }}</div>
+                        }
+                        <div class="flex-1 min-w-0"
+                          [class]="effectiveBranding().headerAlign === 'left'
+                            ? 'text-left'
+                            : (effectiveBranding().headerAlign === 'right' ? 'text-right' : 'text-center')">
+                          <div class="font-black text-[11px] uppercase leading-tight">{{ effectiveBranding().schoolName }}</div>
+                          <div class="text-[8.5px] text-slate-500">{{ effectiveBranding().phone }}</div>
+                        </div>
+                      </div>
+                      <div class="text-center font-bold text-[9px]">OFFICIAL COUNTER RECEIPT</div>
+                    </div>
+                  }
+                  @case ('meta') {
+                    <div class="flex justify-between text-[9px] border-b border-dotted border-slate-300 pb-1">
+                      <span>Challan:</span>
+                      <span class="font-bold">{{ resolvedTransaction().challanNo }}</span>
+                    </div>
+                  }
+                  @case ('person') {
+                    <div class="flex justify-between text-[9.5px] border-b border-dotted border-slate-300 pb-1">
+                      <span>Student:</span>
+                      <strong>{{ resolvedStudent().name }}</strong>
+                    </div>
+                  }
+                  @case ('amounts') {
+                    <div class="flex justify-between font-black border border-slate-900 px-1.5 py-1">
+                      <span>TOTAL PAID</span>
+                      <span>PKR {{ formatCurrency(resolvedStudent().feeAmount) }}</span>
+                    </div>
+                  }
+                  @case ('verification') {
+                    <div class="text-center text-[8.5px] text-slate-500 py-0.5 font-bold">
+                      @if (effectiveBranding().verificationOrder === 'qr_first') {
+                        [ 2D QR ] -> [ Code-128 Barcode ]
+                      } @else if (effectiveBranding().verificationOrder === 'side_by_side') {
+                        [ Barcode | 2D QR ]
+                      } @else {
+                        [ Code-128 Barcode ] -> [ 2D QR ]
+                      }
+                    </div>
+                  }
+                  @case ('footer') {
+                    <div class="text-center text-[8px] text-slate-500 pt-1 border-t border-slate-200">{{ effectiveBranding().footerNote }}</div>
+                  }
+                }
               }
-              <div class="font-black text-[11px] uppercase">{{ effectiveBranding().schoolName }}</div>
-              <div class="text-[8.5px] text-slate-500">{{ effectiveBranding().phone }}</div>
-              <div class="border-t border-slate-900 my-1"></div>
-              <div class="font-bold text-[9px]">OFFICIAL COUNTER RECEIPT</div>
-            </div>
-            <div class="flex justify-between"><span>Student:</span><strong>{{ resolvedStudent().name }}</strong></div>
-            <div class="flex justify-between font-black border border-slate-900 px-1.5 py-1">
-              <span>TOTAL</span>
-              <span>PKR {{ formatCurrency(resolvedStudent().feeAmount) }}</span>
-            </div>
-            <div class="text-center text-[8px] text-slate-500 pt-1">{{ effectiveBranding().footerNote }}</div>
+            }
           </div>
         </div>
       </div>

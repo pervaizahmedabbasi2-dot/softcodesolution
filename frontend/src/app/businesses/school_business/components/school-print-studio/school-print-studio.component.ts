@@ -4,7 +4,6 @@ import {
   OnDestroy,
   computed,
   effect,
-  inject,
   input,
   output,
   signal
@@ -23,7 +22,14 @@ import {
   printHtmlInHiddenFrame
 } from '../../utils/thermal-print.util';
 import {
+  DEFAULT_PRINT_SECTION_ORDER,
   DEFAULT_SCHOOL_PRINT_BRANDING,
+  PRINT_SECTION_META,
+  PrintHeaderAlign,
+  PrintLogoPlacement,
+  PrintSectionKey,
+  PrintSectionMeta,
+  PrintVerificationOrder,
   SCHOOL_DOCUMENT_CATALOG,
   SchoolDocumentFormatMeta,
   SchoolPrintBrandingConfig,
@@ -31,7 +37,9 @@ import {
   buildA4BankChallanHtml,
   buildResultDmcHtml,
   buildSalarySlipHtml,
-  buildStudentIdCardPrintHtml
+  buildStudentIdCardPrintHtml,
+  normalizeSchoolPrintBranding,
+  sanitizeBrandingLogoUrl
 } from '../../utils/school-print-templates.util';
 
 export type PrintStudioTab = 'formats' | 'branding' | 'hardware';
@@ -82,6 +90,15 @@ export class SchoolPrintStudioComponent implements OnDestroy {
   readonly selectedFormat = signal<SchoolPrintDocumentType>('thermal_receipt');
   readonly previewThermalWidth = signal<ThermalPaperWidth>('80mm');
   readonly isPrinting = signal<boolean>(false);
+  readonly showQuickLayoutBar = signal<boolean>(false);
+  readonly logoUploadDragOver = signal<boolean>(false);
+  readonly isProcessingLogo = signal<boolean>(false);
+  readonly draggedSectionKey = signal<PrintSectionKey | null>(null);
+  readonly dragOverSectionKey = signal<PrintSectionKey | null>(null);
+
+  readonly sectionOrder = signal<PrintSectionKey[]>([...DEFAULT_PRINT_SECTION_ORDER]);
+  readonly hiddenSections = signal<PrintSectionKey[]>([]);
+  readonly sectionMetaMap = PRINT_SECTION_META;
 
   readonly documentCatalog: SchoolDocumentFormatMeta[] = SCHOOL_DOCUMENT_CATALOG;
 
@@ -108,7 +125,12 @@ export class SchoolPrintStudioComponent implements OnDestroy {
     footerNote: new FormControl<string>(DEFAULT_SCHOOL_PRINT_BRANDING.footerNote, { nonNullable: true }),
     showLogoCrest: new FormControl<boolean>(DEFAULT_SCHOOL_PRINT_BRANDING.showLogoCrest, { nonNullable: true }),
     showQrVerification: new FormControl<boolean>(DEFAULT_SCHOOL_PRINT_BRANDING.showQrVerification, { nonNullable: true }),
-    showBarcodeVerification: new FormControl<boolean>(DEFAULT_SCHOOL_PRINT_BRANDING.showBarcodeVerification, { nonNullable: true })
+    showBarcodeVerification: new FormControl<boolean>(DEFAULT_SCHOOL_PRINT_BRANDING.showBarcodeVerification, { nonNullable: true }),
+    logoDataUrl: new FormControl<string>(DEFAULT_SCHOOL_PRINT_BRANDING.logoDataUrl, { nonNullable: true }),
+    logoPlacement: new FormControl<PrintLogoPlacement>(DEFAULT_SCHOOL_PRINT_BRANDING.logoPlacement, { nonNullable: true }),
+    logoSizePx: new FormControl<number>(DEFAULT_SCHOOL_PRINT_BRANDING.logoSizePx, { nonNullable: true }),
+    headerAlign: new FormControl<PrintHeaderAlign>(DEFAULT_SCHOOL_PRINT_BRANDING.headerAlign, { nonNullable: true }),
+    verificationOrder: new FormControl<PrintVerificationOrder>(DEFAULT_SCHOOL_PRINT_BRANDING.verificationOrder, { nonNullable: true })
   });
 
   readonly liveFormDraft = signal<SchoolPrintBrandingConfig>({ ...DEFAULT_SCHOOL_PRINT_BRANDING });
@@ -116,19 +138,41 @@ export class SchoolPrintStudioComponent implements OnDestroy {
 
   constructor() {
     this.formSub = this.brandingForm.valueChanges.subscribe(() => {
-      this.liveFormDraft.set(this.brandingForm.getRawValue());
+      this.syncDraftFromState();
     });
 
     effect(() => {
       const incoming = this.branding();
-      const merged: SchoolPrintBrandingConfig = {
-        ...DEFAULT_SCHOOL_PRINT_BRANDING,
-        ...incoming,
-        schoolName: incoming.schoolName || this.schoolName() || DEFAULT_SCHOOL_PRINT_BRANDING.schoolName
-      };
-      this.brandingForm.patchValue(merged, { emitEvent: false });
-      this.liveFormDraft.set(merged);
-      this.previewThermalWidth.set(merged.defaultPaperWidth === '58mm' ? '58mm' : '80mm');
+      const normalized = normalizeSchoolPrintBranding(incoming, this.schoolName());
+      this.sectionOrder.set([...normalized.sectionOrder]);
+      this.hiddenSections.set([...normalized.hiddenSections]);
+      this.brandingForm.patchValue(
+        {
+          schoolName: normalized.schoolName,
+          campusTagline: normalized.campusTagline,
+          registrationNo: normalized.registrationNo,
+          address: normalized.address,
+          phone: normalized.phone,
+          website: normalized.website,
+          signatoryTitle: normalized.signatoryTitle,
+          monogramInitials: normalized.monogramInitials,
+          headerAccentColor: normalized.headerAccentColor,
+          defaultPaperWidth: normalized.defaultPaperWidth,
+          stampLabel: normalized.stampLabel,
+          footerNote: normalized.footerNote,
+          showLogoCrest: normalized.showLogoCrest,
+          showQrVerification: normalized.showQrVerification,
+          showBarcodeVerification: normalized.showBarcodeVerification,
+          logoDataUrl: normalized.logoDataUrl,
+          logoPlacement: normalized.logoPlacement,
+          logoSizePx: normalized.logoSizePx,
+          headerAlign: normalized.headerAlign,
+          verificationOrder: normalized.verificationOrder
+        },
+        { emitEvent: false }
+      );
+      this.liveFormDraft.set(normalized);
+      this.previewThermalWidth.set(normalized.defaultPaperWidth === '58mm' ? '58mm' : '80mm');
     });
   }
 
@@ -137,6 +181,7 @@ export class SchoolPrintStudioComponent implements OnDestroy {
   }
 
   readonly effectiveBranding = computed<SchoolPrintBrandingConfig>(() => this.liveFormDraft());
+  readonly safeLogoUrl = computed<string>(() => sanitizeBrandingLogoUrl(this.effectiveBranding().logoDataUrl));
 
   readonly selectedFormatMeta = computed<SchoolDocumentFormatMeta>(() => {
     const id = this.selectedFormat();
@@ -254,6 +299,37 @@ export class SchoolPrintStudioComponent implements OnDestroy {
     };
   });
 
+  private syncDraftFromState(): void {
+    const val = this.brandingForm.getRawValue();
+    this.liveFormDraft.set(
+      normalizeSchoolPrintBranding(
+        {
+          ...val,
+          sectionOrder: this.sectionOrder(),
+          hiddenSections: this.hiddenSections()
+        },
+        this.schoolName()
+      )
+    );
+  }
+
+  getSectionMeta(key: PrintSectionKey): PrintSectionMeta {
+    return this.sectionMetaMap[key];
+  }
+
+  isSectionHidden(key: PrintSectionKey): boolean {
+    return this.effectiveBranding().hiddenSections.includes(key);
+  }
+
+  canMoveSection(index: number, delta: -1 | 1): boolean {
+    const next = index + delta;
+    return next >= 0 && next < this.sectionOrder().length;
+  }
+
+  toggleQuickLayoutBar(): void {
+    this.showQuickLayoutBar.update((v) => !v);
+  }
+
   setStudioTab(tab: PrintStudioTab): void {
     this.activeStudioTab.set(tab);
   }
@@ -275,23 +351,259 @@ export class SchoolPrintStudioComponent implements OnDestroy {
     this.brandingForm.patchValue({ headerAccentColor: hex });
   }
 
+  setLogoPlacement(placement: PrintLogoPlacement): void {
+    this.brandingForm.patchValue({ logoPlacement: placement });
+  }
+
+  setHeaderAlign(align: PrintHeaderAlign): void {
+    this.brandingForm.patchValue({ headerAlign: align });
+  }
+
+  setVerificationOrder(order: PrintVerificationOrder): void {
+    this.brandingForm.patchValue({ verificationOrder: order });
+  }
+
+  removeUploadedLogo(): void {
+    this.brandingForm.patchValue({ logoDataUrl: '' });
+    this.toast.emit({
+      message: 'Custom logo removed. Reverted to monogram crest.',
+      type: 'info'
+    });
+  }
+
+  onLogoDragOver(event: DragEvent): void {
+    event.preventDefault();
+    this.logoUploadDragOver.set(true);
+  }
+
+  onLogoDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    this.logoUploadDragOver.set(false);
+  }
+
+  onLogoDrop(event: DragEvent): void {
+    event.preventDefault();
+    this.logoUploadDragOver.set(false);
+    const file = event.dataTransfer?.files?.[0];
+    if (file) {
+      void this.processLogoFile(file);
+    }
+  }
+
+  onLogoFileSelected(event: Event): void {
+    const inputEl = event.target as HTMLInputElement | null;
+    const file = inputEl?.files?.[0];
+    if (file) {
+      void this.processLogoFile(file);
+    }
+    if (inputEl) {
+      inputEl.value = '';
+    }
+  }
+
+  private async processLogoFile(file: File): Promise<void> {
+    if (!file.type.startsWith('image/')) {
+      this.toast.emit({
+        message: 'Sirf image file upload karen (PNG, JPG, WebP, ya SVG).',
+        type: 'warning'
+      });
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      this.toast.emit({
+        message: 'Logo file size 8MB se kam hona chahiye.',
+        type: 'warning'
+      });
+      return;
+    }
+
+    this.isProcessingLogo.set(true);
+    try {
+      const dataUrl = await this.readAndScaleLogoToPng(file);
+      const safe = sanitizeBrandingLogoUrl(dataUrl);
+      if (!safe) {
+        this.toast.emit({
+          message: 'Logo process nahi ho saka. Koi dusri PNG/JPG image try karen.',
+          type: 'warning'
+        });
+        return;
+      }
+      this.brandingForm.patchValue({ logoDataUrl: safe, showLogoCrest: true });
+      this.syncDraftFromState();
+      this.toast.emit({
+        message: 'Apna school/company logo add ho gaya hai — live preview aur print formats update ho gaye!',
+        type: 'success'
+      });
+    } catch {
+      this.toast.emit({
+        message: 'Image read karne mein error aya. Valid PNG/JPG file select karen.',
+        type: 'warning'
+      });
+    } finally {
+      this.isProcessingLogo.set(false);
+    }
+  }
+
+  private readAndScaleLogoToPng(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error('File read failed'));
+      reader.onload = () => {
+        const rawResult = String(reader.result || '');
+        if (typeof document === 'undefined' || typeof Image === 'undefined') {
+          resolve(rawResult);
+          return;
+        }
+        const img = new Image();
+        img.onerror = () => reject(new Error('Image decode failed'));
+        img.onload = () => {
+          const maxDim = 260;
+          const w = img.naturalWidth || 120;
+          const h = img.naturalHeight || 120;
+          const scale = Math.min(1, maxDim / Math.max(w, h));
+          const targetW = Math.max(24, Math.round(w * scale));
+          const targetH = Math.max(24, Math.round(h * scale));
+          const canvas = document.createElement('canvas');
+          canvas.width = targetW;
+          canvas.height = targetH;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            resolve(rawResult);
+            return;
+          }
+          ctx.clearRect(0, 0, targetW, targetH);
+          ctx.drawImage(img, 0, 0, targetW, targetH);
+          resolve(canvas.toDataURL('image/png'));
+        };
+        img.src = rawResult;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  onSectionDragStart(event: DragEvent, key: PrintSectionKey): void {
+    this.draggedSectionKey.set(key);
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', key);
+    }
+  }
+
+  onSectionDragOver(event: DragEvent, key: PrintSectionKey): void {
+    event.preventDefault();
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'move';
+    }
+    if (this.dragOverSectionKey() !== key) {
+      this.dragOverSectionKey.set(key);
+    }
+  }
+
+  onSectionDrop(event: DragEvent, targetKey: PrintSectionKey): void {
+    event.preventDefault();
+    const fromKey =
+      this.draggedSectionKey() ||
+      (event.dataTransfer?.getData('text/plain') as PrintSectionKey | undefined);
+    this.draggedSectionKey.set(null);
+    this.dragOverSectionKey.set(null);
+    if (!fromKey || fromKey === targetKey) return;
+
+    const current = [...this.sectionOrder()];
+    const fromIdx = current.indexOf(fromKey);
+    const toIdx = current.indexOf(targetKey);
+    if (fromIdx === -1 || toIdx === -1) return;
+
+    const [moved] = current.splice(fromIdx, 1);
+    current.splice(toIdx, 0, moved);
+    this.sectionOrder.set(current);
+    this.syncDraftFromState();
+  }
+
+  onSectionDragEnd(): void {
+    this.draggedSectionKey.set(null);
+    this.dragOverSectionKey.set(null);
+  }
+
+  moveSection(key: PrintSectionKey, delta: -1 | 1): void {
+    const current = [...this.sectionOrder()];
+    const idx = current.indexOf(key);
+    const targetIdx = idx + delta;
+    if (idx === -1 || targetIdx < 0 || targetIdx >= current.length) return;
+    const swap = current[targetIdx];
+    current[targetIdx] = current[idx];
+    current[idx] = swap;
+    this.sectionOrder.set(current);
+    this.syncDraftFromState();
+  }
+
+  toggleSectionVisibility(key: PrintSectionKey): void {
+    if (this.sectionMetaMap[key]?.locked) return;
+    const current = [...this.hiddenSections()];
+    const idx = current.indexOf(key);
+    if (idx >= 0) {
+      current.splice(idx, 1);
+    } else {
+      current.push(key);
+    }
+    this.hiddenSections.set(current);
+    this.syncDraftFromState();
+  }
+
   onSaveBranding(): void {
     const val = this.brandingForm.getRawValue();
-    const cleaned: SchoolPrintBrandingConfig = {
-      ...val,
-      schoolName: val.schoolName.trim() || DEFAULT_SCHOOL_PRINT_BRANDING.schoolName,
-      monogramInitials: (val.monogramInitials || 'SC').trim().toUpperCase().slice(0, 4)
-    };
+    const cleaned = normalizeSchoolPrintBranding(
+      {
+        ...val,
+        schoolName: val.schoolName.trim() || DEFAULT_SCHOOL_PRINT_BRANDING.schoolName,
+        monogramInitials: (val.monogramInitials || 'SC').trim().toUpperCase().slice(0, 4),
+        sectionOrder: this.sectionOrder(),
+        hiddenSections: this.hiddenSections()
+      },
+      this.schoolName()
+    );
     this.saveBranding.emit(cleaned);
     this.toast.emit({
-      message: 'Custom school print format & branding saved and applied to all thermal & A4 prints.',
+      message: 'Custom logo, layout order aur branding save ho gayi — ab har real thermal & A4 print mein yehi niklega.',
       type: 'success'
     });
   }
 
   onResetBranding(): void {
-    this.brandingForm.reset(DEFAULT_SCHOOL_PRINT_BRANDING);
-    this.liveFormDraft.set({ ...DEFAULT_SCHOOL_PRINT_BRANDING });
+    const resetVal: SchoolPrintBrandingConfig = {
+      ...DEFAULT_SCHOOL_PRINT_BRANDING,
+      schoolName: this.schoolName() || DEFAULT_SCHOOL_PRINT_BRANDING.schoolName,
+      sectionOrder: [...DEFAULT_PRINT_SECTION_ORDER],
+      hiddenSections: []
+    };
+    this.sectionOrder.set([...DEFAULT_PRINT_SECTION_ORDER]);
+    this.hiddenSections.set([]);
+    this.brandingForm.reset(
+      {
+        schoolName: resetVal.schoolName,
+        campusTagline: resetVal.campusTagline,
+        registrationNo: resetVal.registrationNo,
+        address: resetVal.address,
+        phone: resetVal.phone,
+        website: resetVal.website,
+        signatoryTitle: resetVal.signatoryTitle,
+        monogramInitials: resetVal.monogramInitials,
+        headerAccentColor: resetVal.headerAccentColor,
+        defaultPaperWidth: resetVal.defaultPaperWidth,
+        stampLabel: resetVal.stampLabel,
+        footerNote: resetVal.footerNote,
+        showLogoCrest: resetVal.showLogoCrest,
+        showQrVerification: resetVal.showQrVerification,
+        showBarcodeVerification: resetVal.showBarcodeVerification,
+        logoDataUrl: '',
+        logoPlacement: resetVal.logoPlacement,
+        logoSizePx: resetVal.logoSizePx,
+        headerAlign: resetVal.headerAlign,
+        verificationOrder: resetVal.verificationOrder
+      },
+      { emitEvent: false }
+    );
+    this.liveFormDraft.set(resetVal);
+    this.previewThermalWidth.set(resetVal.defaultPaperWidth);
     this.resetBranding.emit();
   }
 
@@ -318,6 +630,13 @@ export class SchoolPrintStudioComponent implements OnDestroy {
           campusPhone: b.phone,
           campusWebsite: b.website,
           monogramInitials: b.showLogoCrest ? b.monogramInitials : '',
+          logoDataUrl: b.logoDataUrl,
+          logoPlacement: b.logoPlacement,
+          logoSizePx: b.logoSizePx,
+          headerAlign: b.headerAlign,
+          sectionOrder: b.sectionOrder,
+          hiddenSections: b.hiddenSections,
+          verificationOrder: b.verificationOrder,
           signatoryTitle: b.signatoryTitle,
           stampLabel: b.stampLabel,
           showQr: b.showQrVerification,
@@ -382,7 +701,7 @@ export class SchoolPrintStudioComponent implements OnDestroy {
         );
         label = 'Student Gate ID Card (Front + Back)';
       } else if (format === 'barcode_stickers') {
-        html = buildBarcodeStickerSheetHtml(b.schoolName, this.sampleStickers());
+        html = buildBarcodeStickerSheetHtml(b.schoolName, this.sampleStickers(), b.logoDataUrl);
         label = 'A4 Barcode Sticker Sheet';
       } else if (format === 'result_dmc') {
         html = buildResultDmcHtml(

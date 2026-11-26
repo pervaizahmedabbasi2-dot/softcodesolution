@@ -12,6 +12,13 @@ export interface ThermalFeeReceiptData {
   campusPhone?: string;
   campusWebsite?: string;
   monogramInitials?: string;
+  logoDataUrl?: string;
+  logoPlacement?: 'left' | 'top' | 'right';
+  logoSizePx?: number;
+  headerAlign?: 'left' | 'center' | 'right';
+  sectionOrder?: Array<'header' | 'meta' | 'person' | 'amounts' | 'verification' | 'footer'>;
+  hiddenSections?: Array<'header' | 'meta' | 'person' | 'amounts' | 'verification' | 'footer'>;
+  verificationOrder?: 'barcode_first' | 'qr_first' | 'side_by_side';
   signatoryTitle?: string;
   stampLabel?: string;
   showQr?: boolean;
@@ -176,6 +183,14 @@ export function buildCashDrawerKickBytes(pin: 0 | 1 = 0): Uint8Array {
   return new Uint8Array([0x1b, 0x70, pin, 0x19, 0xfa]);
 }
 
+function sanitizePrintImageDataUrl(raw?: string): string {
+  const val = String(raw || '').trim();
+  if (/^data:image\/(?:png|jpeg|jpg|webp|gif);base64,[A-Za-z0-9+/=]+$/i.test(val)) {
+    return val;
+  }
+  return '';
+}
+
 export function buildThermalFeeReceiptHtml(data: ThermalFeeReceiptData, paperWidth: ThermalPaperWidth = '80mm'): string {
   const barcodeCode = data.challanNo || data.txnRef || `CH-2026-${data.rollNo}`;
   const svgBarcode = buildCode128SvgMarkup(barcodeCode, paperWidth === '58mm' ? 30 : 36, '#000000');
@@ -187,6 +202,97 @@ export function buildThermalFeeReceiptHtml(data: ThermalFeeReceiptData, paperWid
   const showQr = data.showQr !== false;
   const monogram = (data.monogramInitials || '').trim().slice(0, 4);
   const stamp = (data.stampLabel || '').trim();
+  const safeLogo = sanitizePrintImageDataUrl(data.logoDataUrl);
+  const logoPlacement = data.logoPlacement || 'top';
+  const logoSize = Math.min(84, Math.max(24, Number(data.logoSizePx || 44)));
+  const align = data.headerAlign || 'center';
+  const verifOrder = data.verificationOrder || 'barcode_first';
+  const hidden = new Set(data.hiddenSections || []);
+  const defaultOrder: Array<'header' | 'meta' | 'person' | 'amounts' | 'verification' | 'footer'> = [
+    'header', 'meta', 'person', 'amounts', 'verification', 'footer'
+  ];
+  const order = (data.sectionOrder && data.sectionOrder.length > 0) ? data.sectionOrder : defaultOrder;
+
+  const badgeHtml = safeLogo
+    ? `<img src="${safeLogo}" alt="Logo" style="width:${logoSize}px;height:${logoSize}px;object-fit:contain;display:inline-block;" />`
+    : (monogram ? `<div class="crest">${escapeHtml(monogram)}</div>` : '');
+
+  const headerTextHtml = `
+    <div style="flex:1;min-width:0;text-align:${logoPlacement === 'top' ? align : (logoPlacement === 'left' ? 'left' : 'right')};">
+      <div class="title">${escapeHtml(data.schoolName || 'SoftCode Enterprise')}</div>
+      ${data.campusTagline ? `<div class="tagline">${escapeHtml(data.campusTagline)}</div>` : ''}
+      ${data.branchName ? `<div class="sub">${escapeHtml(data.branchName)}</div>` : ''}
+      ${data.registrationNo ? `<div class="sub">Reg / BISE: ${escapeHtml(data.registrationNo)}</div>` : ''}
+      ${data.campusAddress ? `<div class="sub">${escapeHtml(data.campusAddress)}</div>` : ''}
+      ${data.campusPhone ? `<div class="sub">Helpline: ${escapeHtml(data.campusPhone)}</div>` : ''}
+    </div>`;
+
+  const headerLayoutHtml = logoPlacement === 'left'
+    ? `<div style="display:flex;align-items:center;gap:8px;">${badgeHtml}${headerTextHtml}</div>`
+    : (logoPlacement === 'right'
+      ? `<div style="display:flex;align-items:center;gap:8px;">${headerTextHtml}${badgeHtml}</div>`
+      : `<div style="text-align:${align};">${badgeHtml}${headerTextHtml}</div>`);
+
+  const sectionHtmlMap: Record<string, string> = {
+    header: `
+      <div>
+        ${headerLayoutHtml}
+        <div class="hr-solid"></div>
+        <div class="center">
+          <div class="sub bold">${escapeHtml(data.receiptTitle || 'OFFICIAL THERMAL FEE RECEIPT')}</div>
+          <div class="badge-row">
+            <span class="badge">${escapeHtml(data.status)}</span>
+            ${stamp && stamp.toUpperCase() !== 'NONE' ? `<span class="stamp">${escapeHtml(stamp)}</span>` : ''}
+          </div>
+        </div>
+      </div>`,
+    meta: `
+      <div class="hr"></div>
+      <div class="row"><span>Receipt / Ref:</span><span>${escapeHtml(data.txnRef)}</span></div>
+      <div class="row"><span>Challan / Ref #:</span><span>${escapeHtml(data.challanNo)}</span></div>
+      <div class="row"><span>Date / Time:</span><span>${escapeHtml(data.paidAtLabel)}</span></div>`,
+    person: `
+      <div class="hr"></div>
+      <div class="row"><span>Payer:</span><span>${escapeHtml(data.studentName)}</span></div>
+      <div class="row"><span>ID / Ref:</span><span>#${escapeHtml(data.rollNo)}</span></div>
+      <div class="row"><span>Category:</span><span>${escapeHtml(data.grade)}</span></div>
+      ${data.guardianName ? `<div class="row"><span>Guardian / Contact:</span><span>${escapeHtml(data.guardianName)}</span></div>` : ''}`,
+    amounts: `
+      <div class="hr"></div>
+      <div class="row"><span>Channel:</span><span>${escapeHtml(data.gatewayName)}</span></div>
+      ${data.proofReference ? `<div class="row"><span>TID / Slip Ref:</span><span>${escapeHtml(data.proofReference)}</span></div>` : ''}
+      <div class="row"><span>Base Amount:</span><span>PKR ${formatMoney(data.baseAmount, 'PKR')}</span></div>
+      <div class="row"><span>Gateway Charges:</span><span>PKR ${formatMoney(data.gatewayFee, 'PKR')}</span></div>
+      <div class="total-box">
+        <div class="total-row">
+          <span>TOTAL PAID</span>
+          <span>PKR ${formatMoney(data.totalAmount, 'PKR')}</span>
+        </div>
+      </div>
+      ${data.verifiedBy ? `<div class="row"><span>Verified By:</span><span>${escapeHtml(data.verifiedBy)}</span></div>` : ''}`,
+    verification: (() => {
+      const bBlock = showBarcode ? `<div class="barcode-wrap">${svgBarcode}<div class="barcode-label">${escapeHtml(barcodeCode)}</div></div>` : '';
+      const qBlock = showQr ? `<div class="qr-wrap">${svgQr}<div class="qr-cap">SCAN 2D QR TO VERIFY</div></div>` : '';
+      if (verifOrder === 'side_by_side' && showBarcode && showQr) {
+        return `<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:6px;">
+          <div style="flex:1;min-width:0;text-align:center;">${svgBarcode}<div class="barcode-label">${escapeHtml(barcodeCode)}</div></div>
+          <div style="shrink:0;text-align:center;">${svgQr}</div>
+        </div>`;
+      }
+      return verifOrder === 'qr_first' ? `${qBlock}${bBlock}` : `${bBlock}${qBlock}`;
+    })(),
+    footer: `
+      ${data.signatoryTitle ? `<div class="sign-line">${escapeHtml(data.signatoryTitle)}</div>` : ''}
+      <div class="footer">
+        ${escapeHtml(data.footerNote || 'Scan barcode or QR at Counter to verify authenticity.')}<br/>
+        ${data.campusWebsite ? `${escapeHtml(data.campusWebsite)} · ` : ''}${paperWidth} Institutional Slip
+      </div>`
+  };
+
+  const renderedBody = order
+    .filter((k) => !hidden.has(k))
+    .map((k) => sectionHtmlMap[k] || '')
+    .join('\n');
 
   return `<!doctype html>
 <html>
@@ -221,55 +327,7 @@ export function buildThermalFeeReceiptHtml(data: ThermalFeeReceiptData, paperWid
   </style>
 </head>
 <body>
-  <div class="center">
-    ${monogram ? `<div class="crest">${escapeHtml(monogram)}</div>` : ''}
-    <div class="title">${escapeHtml(data.schoolName || 'SoftCode Enterprise')}</div>
-    ${data.campusTagline ? `<div class="tagline">${escapeHtml(data.campusTagline)}</div>` : ''}
-    ${data.branchName ? `<div class="sub">${escapeHtml(data.branchName)}</div>` : ''}
-    ${data.registrationNo ? `<div class="sub">Reg / BISE: ${escapeHtml(data.registrationNo)}</div>` : ''}
-    ${data.campusAddress ? `<div class="sub">${escapeHtml(data.campusAddress)}</div>` : ''}
-    ${data.campusPhone ? `<div class="sub">Helpline: ${escapeHtml(data.campusPhone)}</div>` : ''}
-    <div class="hr-solid"></div>
-    <div class="sub bold">${escapeHtml(data.receiptTitle || 'OFFICIAL THERMAL FEE RECEIPT')}</div>
-    <div class="badge-row">
-      <span class="badge">${escapeHtml(data.status)}</span>
-      ${stamp && stamp.toUpperCase() !== 'NONE' ? `<span class="stamp">${escapeHtml(stamp)}</span>` : ''}
-    </div>
-  </div>
-  <div class="hr"></div>
-  <div class="row"><span>Receipt / Ref:</span><span>${escapeHtml(data.txnRef)}</span></div>
-  <div class="row"><span>Challan / Ref #:</span><span>${escapeHtml(data.challanNo)}</span></div>
-  <div class="row"><span>Date / Time:</span><span>${escapeHtml(data.paidAtLabel)}</span></div>
-  <div class="hr"></div>
-  <div class="row"><span>Payer:</span><span>${escapeHtml(data.studentName)}</span></div>
-  <div class="row"><span>ID / Ref:</span><span>#${escapeHtml(data.rollNo)}</span></div>
-  <div class="row"><span>Category:</span><span>${escapeHtml(data.grade)}</span></div>
-  ${data.guardianName ? `<div class="row"><span>Guardian / Contact:</span><span>${escapeHtml(data.guardianName)}</span></div>` : ''}
-  <div class="hr"></div>
-  <div class="row"><span>Channel:</span><span>${escapeHtml(data.gatewayName)}</span></div>
-  ${data.proofReference ? `<div class="row"><span>TID / Slip Ref:</span><span>${escapeHtml(data.proofReference)}</span></div>` : ''}
-  <div class="row"><span>Base Amount:</span><span>PKR ${formatMoney(data.baseAmount, 'PKR')}</span></div>
-  <div class="row"><span>Gateway Charges:</span><span>PKR ${formatMoney(data.gatewayFee, 'PKR')}</span></div>
-  <div class="total-box">
-    <div class="total-row">
-      <span>TOTAL PAID</span>
-      <span>PKR ${formatMoney(data.totalAmount, 'PKR')}</span>
-    </div>
-  </div>
-  ${data.verifiedBy ? `<div class="row"><span>Verified By:</span><span>${escapeHtml(data.verifiedBy)}</span></div>` : ''}
-  ${showBarcode ? `<div class="barcode-wrap">
-    ${svgBarcode}
-    <div class="barcode-label">${escapeHtml(barcodeCode)}</div>
-  </div>` : ''}
-  ${showQr ? `<div class="qr-wrap">
-    ${svgQr}
-    <div class="qr-cap">SCAN 2D QR TO VERIFY RECEIPT</div>
-  </div>` : ''}
-  ${data.signatoryTitle ? `<div class="sign-line">${escapeHtml(data.signatoryTitle)}</div>` : ''}
-  <div class="footer">
-    ${escapeHtml(data.footerNote || 'Scan barcode or QR at Counter to verify authenticity.')}<br/>
-    ${data.campusWebsite ? `${escapeHtml(data.campusWebsite)} · ` : ''}${paperWidth} Institutional Slip
-  </div>
+  ${renderedBody}
 </body>
 </html>`;
 }
@@ -525,12 +583,16 @@ export function buildWaybill4x6Html(waybill: ShippingWaybillData): string {
 </html>`;
 }
 
-export function buildBarcodeStickerSheetHtml(brandName: string, items: BarcodeStickerItem[]): string {
+export function buildBarcodeStickerSheetHtml(brandName: string, items: BarcodeStickerItem[], logoDataUrl?: string): string {
+  const safeLogo = sanitizePrintImageDataUrl(logoDataUrl);
   const cards = items
     .map((item) => {
       const svg = buildCode128SvgMarkup(item.code, 40, '#000000');
       return `<div class="sticker">
-        <div class="s-school">${escapeHtml(brandName)}</div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:4px;">
+          ${safeLogo ? `<img src="${safeLogo}" alt="" style="width:14px;height:14px;object-fit:contain;" />` : ''}
+          <div class="s-school">${escapeHtml(brandName)}</div>
+        </div>
         <div class="s-title">${escapeHtml(item.title)}</div>
         <div class="s-sub">${escapeHtml(item.subtitle)}</div>
         <div class="s-bar">${svg}</div>
