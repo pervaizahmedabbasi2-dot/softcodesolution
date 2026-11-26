@@ -203,6 +203,57 @@
         </nav>
       </div>
 
+      <!-- Contextual Phase 2 Hardware & Gateway Bars -->
+      <div *ngIf="activeBusiness.id === 'super_mart'"
+        class="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+        <div class="flex items-center gap-2.5 flex-1">
+          <lucide-icon [name]="icons.ScanBarcode" class="w-5 h-5 text-emerald-700 shrink-0"></lucide-icon>
+          <input [(ngModel)]="supermarketScanInput"
+            (keydown.enter)="scanSupermarketBarcode()"
+            placeholder="Scan Supermarket EAN-13, Weight-Scale PLU (e.g. 210345) or SM-201..."
+            class="w-full px-3 py-2 rounded-xl bg-white border border-emerald-200 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+          <button (click)="scanSupermarketBarcode()"
+            class="px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold whitespace-nowrap cursor-pointer">
+            Scan / Scale
+          </button>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="px-3 py-1.5 rounded-xl bg-white border border-emerald-200 text-xs font-mono font-extrabold text-slate-900">
+            Lane Total: ${{ supermarketCartTotal | number:'1.2-2' }}
+          </span>
+          <button (click)="printSupermarketThermalReceipt()"
+            class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold cursor-pointer">
+            <lucide-icon [name]="icons.Printer" class="w-3.5 h-3.5"></lucide-icon>
+            <span>{{ hardware.paperWidth() }} Receipt</span>
+          </button>
+          <button (click)="triggerSuiteCashDrawer()"
+            class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 text-xs font-bold cursor-pointer">
+            <lucide-icon [name]="icons.DollarSign" class="w-3.5 h-3.5"></lucide-icon>
+            <span>Open Drawer</span>
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="activeBusiness.id === 'bakery_confectionery'"
+        class="p-4 rounded-2xl bg-amber-50/70 border border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <p class="text-xs font-extrabold text-amber-900">Bakery & Patisserie Thermal Desk</p>
+          <p class="text-[11px] text-amber-700">Send instant 80mm KOT orders to Deck Oven or print Customer Pastry Receipts.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <button (click)="printBakeryKot(displayedRecords[0])"
+            class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold cursor-pointer">
+            <lucide-icon [name]="icons.Printer" class="w-3.5 h-3.5"></lucide-icon>
+            <span>Print {{ hardware.paperWidth() }} Bakery KOT</span>
+          </button>
+          <button (click)="printBakeryCustomerBill(displayedRecords[0])"
+            class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold cursor-pointer">
+            <lucide-icon [name]="icons.Printer" class="w-3.5 h-3.5"></lucide-icon>
+            <span>Print Customer Bill</span>
+          </button>
+        </div>
+      </div>
+
       <!-- Operational Records Table (High-Fidelity macOS Data View) -->
       <div class="overflow-hidden rounded-2xl scs-surface-3d">
         <div class="p-4 bg-white border-b border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
@@ -255,11 +306,17 @@
               </div>
             </div>
 
-            <div class="flex items-center justify-between text-xs text-slate-400 pt-1 border-t border-slate-100">
+            <div class="flex items-center justify-between gap-2 text-xs text-slate-400 pt-1 border-t border-slate-100">
               <span class="text-[10px] font-mono">{{ rec.date }}</span>
-              <button (click)="openPrintModal(rec)" class="px-3 py-1 rounded-lg text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition-colors">
-                Print Ledger &rarr;
-              </button>
+              <div class="flex items-center gap-1.5">
+                <button *ngIf="isLogisticsSuite" (click)="printWaybill4x6ForRecord(rec)"
+                  class="px-2.5 py-1 rounded-lg text-[11px] font-bold text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200 transition-colors">
+                  4x6 Waybill
+                </button>
+                <button (click)="openPrintModal(rec)" class="px-3 py-1 rounded-lg text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition-colors">
+                  Print Ledger &rarr;
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -326,6 +383,15 @@
                   </span>
                 </td>
                 <td class="px-4 py-3.5 text-right whitespace-nowrap space-x-2">
+                  <button *ngIf="isLogisticsSuite" (click)="printWaybill4x6ForRecord(rec)"
+                          class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-lg text-[10px] font-black transition-all cursor-pointer"
+                          title="Print 4x6 Thermal Shipping Waybill">
+                    4x6 Waybill
+                  </button>
+                  <button *ngIf="activeBusiness.id === 'bakery_confectionery'" (click)="printBakeryKot(rec)"
+                          class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-lg text-[10px] font-black transition-all cursor-pointer">
+                    80mm KOT
+                  </button>
                   <button (click)="openPrintModal(rec)"
                           class="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all cursor-pointer"
                           title="Print Official Dossier / Receipt">
@@ -357,6 +423,16 @@
           </table>
         </div>
       </div>
+    </div>
+
+    <!-- Pakistan Payment Gateways & Slip Verification for Coaching Academy -->
+    <div *ngIf="activeBusiness.id === 'coaching_center'" class="pt-4 border-t border-slate-200">
+      <app-pk-payment-gateway-hub
+        businessKey="coaching_academy"
+        businessLabel="Coaching & Training Center"
+        defaultEntityLabel="Candidate / Student"
+        [defaultAmount]="6000">
+      </app-pk-payment-gateway-hub>
     </div>
   </div>
 
@@ -492,16 +568,33 @@
           </div>
         </div>
 
-        <div class="pt-4 border-t border-dashed border-slate-300 text-[10px] text-slate-400 flex items-center justify-between">
+        <div class="pt-4 border-t border-dashed border-slate-300 flex items-center justify-between gap-3">
+          <app-shared-barcode
+            [value]="selectedRecordForPrint.code || 'REC-2026'"
+            [height]="32"
+            [showText]="true">
+          </app-shared-barcode>
+          <app-shared-qr-code
+            [value]="activeBusiness.id + '|' + (selectedRecordForPrint.code || 'REC') + '|' + (selectedRecordForPrint.amount || 0)"
+            [size]="58">
+          </app-shared-qr-code>
+        </div>
+
+        <div class="pt-2 text-[10px] text-slate-400 flex items-center justify-between">
           <span>Digital Seal: SOFTCODE-VERIFIED-AUTH-{{ selectedRecordForPrint.code }}</span>
           <span>Security Level: Tier 4</span>
         </div>
       </div>
 
-      <div class="flex items-center justify-end gap-3 pt-2">
+      <div class="flex flex-wrap items-center justify-end gap-3 pt-2">
         <button (click)="showPrintModal = false"
                 class="px-5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer">
           Close Preview
+        </button>
+        <button *ngIf="isLogisticsSuite" (click)="printWaybill4x6ForRecord(selectedRecordForPrint)"
+                class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition-colors shadow-sm cursor-pointer">
+          <lucide-icon [name]="icons.Printer" class="w-4 h-4"></lucide-icon>
+          <span>Print 4x6 Thermal Waybill</span>
         </button>
         <button (click)="printRecord()"
                 class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-colors shadow-sm cursor-pointer">

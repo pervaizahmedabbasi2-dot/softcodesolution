@@ -3168,6 +3168,11 @@
                           </td>
                           <td class="px-4 py-3 text-right">
                             <div class="flex items-center justify-end gap-1.5" (click)="$event.stopPropagation()">
+                              <button type="button" (click)="openPersonnelIdCardModal(p, 'all_staff')" title="Print EMP Barcode & QR ID Card"
+                                class="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-black text-[10px] cursor-pointer inline-flex items-center gap-1">
+                                <lucide-icon [name]="'qr-code'" class="w-3 h-3"></lucide-icon>
+                                <span>ID Card</span>
+                              </button>
                               <button type="button" (click)="openStaffDossierModal(p, 'all_staff')" title="View Complete Executive Staff Dossier"
                                 class="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-black text-[10px] cursor-pointer inline-flex items-center gap-1">
                                 <lucide-icon [name]="'file-text'" class="w-3 h-3"></lucide-icon>
@@ -3308,6 +3313,11 @@
                           </td>
                           <td class="px-4 py-3 text-right">
                             <div class="flex items-center justify-end gap-1.5" (click)="$event.stopPropagation()">
+                              <button type="button" (click)="openPersonnelIdCardModal(pr, 'principal')" title="Print Principal EMP Barcode & QR ID Card"
+                                class="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-black text-[10px] cursor-pointer inline-flex items-center gap-1">
+                                <lucide-icon [name]="'qr-code'" class="w-3 h-3"></lucide-icon>
+                                <span>ID Card</span>
+                              </button>
                               <button type="button" (click)="openStaffDossierModal(pr, 'principal')" title="View Complete Principal Dossier"
                                 class="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-black text-[10px] cursor-pointer inline-flex items-center gap-1">
                                 <lucide-icon [name]="'file-text'" class="w-3 h-3"></lucide-icon>
@@ -3434,6 +3444,11 @@
                           </td>
                           <td class="px-4 py-3 text-right">
                             <div class="flex items-center justify-end gap-1.5" (click)="$event.stopPropagation()">
+                              <button type="button" (click)="openPersonnelIdCardModal(acc, 'accountant')" title="Print Accountant EMP Barcode & QR ID Card"
+                                class="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-black text-[10px] cursor-pointer inline-flex items-center gap-1">
+                                <lucide-icon [name]="'qr-code'" class="w-3 h-3"></lucide-icon>
+                                <span>ID Card</span>
+                              </button>
                               <button type="button" (click)="openStaffDossierModal(acc, 'accountant')" title="View Complete Accountant Dossier"
                                 class="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-black text-[10px] cursor-pointer inline-flex items-center gap-1">
                                 <lucide-icon [name]="'file-text'" class="w-3 h-3"></lucide-icon>
@@ -3535,6 +3550,11 @@
                           </td>
                           <td class="px-4 py-3 text-right">
                             <div class="flex items-center justify-end gap-1.5" (click)="$event.stopPropagation()">
+                              <button type="button" (click)="openPersonnelIdCardModal(sf, 'support_staff')" title="Print Staff EMP Barcode & QR ID Card"
+                                class="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-black text-[10px] cursor-pointer inline-flex items-center gap-1">
+                                <lucide-icon [name]="'qr-code'" class="w-3 h-3"></lucide-icon>
+                                <span>ID Card</span>
+                              </button>
                               <button type="button" (click)="openStaffDossierModal(sf, 'support_staff')" title="View Complete Staff Dossier"
                                 class="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-black text-[10px] cursor-pointer inline-flex items-center gap-1">
                                 <lucide-icon [name]="'file-text'" class="w-3 h-3"></lucide-icon>
@@ -3623,7 +3643,11 @@
                         <span class="text-slate-500 font-medium">{{ t.classes }} Assigned Periods</span>
                         <span class="font-mono font-bold text-slate-800">PKR {{ formatCurrency(t.monthlySalary) }}</span>
                       </div>
-                      <div class="flex items-center justify-end gap-1.5 pt-1">
+                      <div class="flex items-center justify-end gap-1.5 pt-1 flex-wrap">
+                        <button type="button" (click)="openPersonnelIdCardModal(t, 'teacher')" class="px-2.5 py-1 rounded-lg bg-teal-50 text-teal-700 font-black text-[10px] hover:bg-teal-100 cursor-pointer inline-flex items-center gap-1">
+                          <lucide-icon [name]="'qr-code'" class="w-3 h-3"></lucide-icon>
+                          <span>ID Card</span>
+                        </button>
                         <button type="button" (click)="openStaffDossierModal(t, 'teacher')" class="px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 font-black text-[10px] hover:bg-indigo-100 cursor-pointer inline-flex items-center gap-1">
                           <lucide-icon [name]="'file-text'" class="w-3 h-3"></lucide-icon>
                           <span>Dossier</span>
@@ -3741,6 +3765,11 @@
                           </td>
                           <td class="px-4 py-3 text-right">
                             <div class="flex items-center justify-end gap-1.5" (click)="$event.stopPropagation()">
+                              <button type="button" (click)="openPersonnelIdCardModal(t, 'teacher')" title="Print Faculty EMP Barcode & QR ID Card"
+                                class="px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-700 font-black text-[10px] cursor-pointer inline-flex items-center gap-1">
+                                <lucide-icon [name]="'qr-code'" class="w-3 h-3"></lucide-icon>
+                                <span>ID Card</span>
+                              </button>
                               <button type="button" (click)="openStaffDossierModal(t, 'teacher')" title="View Complete Faculty Dossier"
                                 class="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-black text-[10px] cursor-pointer inline-flex items-center gap-1">
                                 <lucide-icon [name]="'file-text'" class="w-3 h-3"></lucide-icon>
@@ -4913,6 +4942,7 @@
           (principalCreated)="onHubPrincipalCreated($event)"
           (principalDeleted)="onHubPrincipalDeleted($event)"
           (absentAlertRequested)="onHubAbsentAlertRequested($event)"
+          (idCardRequested)="onHubIdCardRequested($event)"
           (toast)="onAttendanceHubToast($event)"
           (switchToOwnerPortal)="switchPortal('owner')"
           (syncRequested)="flushOfflineSyncQueue()"
@@ -15493,6 +15523,7 @@
           (principalCreated)="onHubPrincipalCreated($event)"
           (principalDeleted)="onHubPrincipalDeleted($event)"
           (absentAlertRequested)="onHubAbsentAlertRequested($event)"
+          (idCardRequested)="onHubIdCardRequested($event)"
           (toast)="onAttendanceHubToast($event)"
           (switchToOwnerPortal)="switchPortal('owner')"
           (syncRequested)="flushOfflineSyncQueue()"
@@ -16778,6 +16809,7 @@
             (fingerprintRemoved)="onFingerprintProfileRemoved($event)"
             (attendanceRecorded)="onHubAttendanceRecorded($event)"
             (absentAlertRequested)="onHubAbsentAlertRequested($event)"
+            (idCardRequested)="onHubIdCardRequested($event)"
             (toast)="onAttendanceHubToast($event)"
             (switchToOwnerPortal)="switchPortal('owner')"
             (syncRequested)="flushOfflineSyncQueue()"
@@ -21663,6 +21695,15 @@
                     [allowSchemaEdit]="isOwnerPortal"
                     [defaultTitle]="'Fee Receipt Custom Fields'"
                     (valuesChange)="updateFormCustomValues('accountantCollect', $event)" />
+                  <div class="rounded-xl p-3 bg-emerald-50/70 border border-emerald-200/80">
+                    <label class="flex items-center justify-between gap-3 cursor-pointer">
+                      <span class="flex items-center gap-2 text-xs font-bold text-slate-800">
+                        <lucide-icon [name]="'printer'" class="w-4 h-4 text-emerald-600 shrink-0"></lucide-icon>
+                        <span>Auto-print 80mm thermal receipt immediately after collecting fee</span>
+                      </span>
+                      <input type="checkbox" [(ngModel)]="accountantAutoPrintThermal" (ngModelChange)="saveStateToStorage()" class="w-4 h-4 accent-emerald-600 rounded cursor-pointer shrink-0">
+                    </label>
+                  </div>
                   <button (click)="submitAccountantFeeReceipt()" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white font-black text-xs cursor-pointer flex items-center justify-center gap-2 shadow-md">
                     <lucide-icon [name]="'check-circle-2'" class="w-4 h-4"></lucide-icon>
                     <span>Confirm Receipt &amp; Print Official Voucher</span>
@@ -23751,9 +23792,14 @@
                   </div>
                 </div>
 
-                <!-- Scannable Code-128 Barcode -->
-                <div class="text-center pt-1">
-                  <app-school-barcode [value]="voucherBarcodeValue" [label]="voucherBarcodeValue" [height]="32" [barWidth]="1.2" />
+                <!-- Scannable Code-128 Barcode & Raast/Bank 2D QR Code -->
+                <div class="flex items-center justify-between gap-2 pt-1">
+                  <div class="min-w-0 flex-1 text-left">
+                    <app-school-barcode [value]="voucherBarcodeValue" [label]="voucherBarcodeValue" [height]="32" [barWidth]="1.1" />
+                  </div>
+                  <div class="shrink-0 bg-white p-1 rounded-lg border border-slate-200">
+                    <app-school-qr-code [value]="voucherQrPayload" [size]="50" [label]="'VERIFY QR'" />
+                  </div>
                 </div>
               </div>
 
@@ -24896,16 +24942,21 @@
                 </div>
               </div>
 
-              <div class="grid grid-cols-2 gap-2">
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 <button type="button" (click)="printHardwareTestPage()"
                   class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[11px] cursor-pointer flex items-center justify-center gap-1.5">
                   <lucide-icon [name]="'printer'" class="w-3.5 h-3.5"></lucide-icon>
-                  <span>Print Thermal Test</span>
+                  <span>Thermal Test</span>
                 </button>
                 <button type="button" (click)="printBarcodeStickerSheet()"
                   class="px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-[11px] cursor-pointer flex items-center justify-center gap-1.5">
                   <lucide-icon [name]="'qr-code'" class="w-3.5 h-3.5"></lucide-icon>
-                  <span>Print Sticker Sheet</span>
+                  <span>Student Stickers</span>
+                </button>
+                <button type="button" (click)="printPersonnelBarcodeStickerSheet()"
+                  class="px-3 py-2 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-black text-[11px] cursor-pointer flex items-center justify-center gap-1.5">
+                  <lucide-icon [name]="'badge-check'" class="w-3.5 h-3.5"></lucide-icon>
+                  <span>Staff EMP Stickers</span>
                 </button>
               </div>
 
@@ -26574,17 +26625,17 @@
   }
 
   <!-- ========================================================================= -->
-  <!-- MODAL 2: PRINTABLE STUDENT ID CARD                                        -->
+  <!-- MODAL 2: PRINTABLE STUDENT / PERSONNEL ID CARD                            -->
   <!-- ========================================================================= -->
-  @if (isIdCardModalOpen && selectedCardStudent) {
+  @if (isIdCardModalOpen && (selectedCardStudent || selectedCardPersonnel)) {
     <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md animate-fade-in">
       <div class="apple-card rounded-3xl max-w-sm w-full p-6 space-y-4 bg-white border border-slate-200/80 shadow-2xl">
         <div class="flex items-center justify-between pb-3 border-b border-slate-200">
           <h3 class="font-black text-slate-900 text-base flex items-center gap-2">
             <lucide-icon [name]="'qr-code'" class="w-5 h-5 text-indigo-600"></lucide-icon>
-            <span>Official Student ID Card</span>
+            <span>{{ selectedCardPersonnel ? 'Official Staff / Faculty ID Card' : 'Official Student ID Card' }}</span>
           </h3>
-          <button (click)="closeIdCardModal()" class="p-1 rounded-lg text-slate-400 hover:text-slate-600">
+          <button (click)="closeIdCardModal()" class="p-1 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer">
             <lucide-icon [name]="'x'" class="w-5 h-5"></lucide-icon>
           </button>
         </div>
@@ -26592,52 +26643,93 @@
         <!-- ID Card Graphic Preview (Executive White Theme with 3D Depth) -->
         <div class="p-6 rounded-3xl bg-white text-slate-900 space-y-4 scs-tile-3d border border-slate-200/90 text-center relative overflow-hidden group">
           <div class="absolute -right-12 -top-12 w-36 h-36 rounded-full bg-indigo-500/10 blur-2xl pointer-events-none"></div>
-          
+
           <!-- Header -->
           <div class="border-b border-slate-200/80 pb-2.5 relative z-10">
             <h4 class="text-xs font-black tracking-wider uppercase text-slate-900">{{ schoolName }}</h4>
-            <span class="text-[9px] font-bold text-indigo-600 tracking-wider block mt-0.5">3D SMART STUDENT PASS · SESSION 2026-27</span>
+            <span class="text-[9px] font-bold text-indigo-600 tracking-wider block mt-0.5">
+              {{ selectedCardPersonnel ? '3D SMART PERSONNEL GATE PASS · SESSION 2026-27' : '3D SMART STUDENT PASS · SESSION 2026-27' }}
+            </span>
           </div>
 
-          <!-- Photo & Primary Name -->
-          <div class="flex flex-col items-center gap-2.5 relative z-10">
-            <div class="w-22 h-26 rounded-2xl border-2 border-indigo-600 overflow-hidden shadow-md bg-white shrink-0">
-              <img [src]="safeAvatar(selectedCardStudent.image, selectedCardStudent.name)" [alt]="selectedCardStudent.name" referrerpolicy="no-referrer" class="w-full h-full object-cover">
+          @if (selectedCardPersonnel) {
+            <!-- Personnel Photo & Identity -->
+            <div class="flex flex-col items-center gap-2.5 relative z-10">
+              <div class="w-22 h-26 rounded-2xl border-2 border-emerald-600 overflow-hidden shadow-md bg-white shrink-0">
+                <img [src]="safeAvatar(selectedCardPersonnel.image, selectedCardPersonnel.name)" [alt]="selectedCardPersonnel.name" referrerpolicy="no-referrer" class="w-full h-full object-cover">
+              </div>
+              <div>
+                <span class="text-[9px] font-mono font-black text-emerald-700 tracking-widest uppercase block">
+                  {{ selectedCardPersonnel.category === 'principal' ? 'PRINCIPAL EXECUTIVE PASS' : (selectedCardPersonnel.category === 'teacher' ? 'FACULTY GATE PASS' : (selectedCardPersonnel.category === 'accountant' ? 'ACCOUNTANT COUNTER PASS' : 'CAMPUS STAFF PASS')) }}
+                </span>
+                <h3 class="text-lg font-black text-slate-900 tracking-tight">{{ selectedCardPersonnel.name }}</h3>
+                <p class="text-xs font-extrabold text-emerald-700 mt-0.5">{{ selectedCardPersonnel.roleTitle }} · {{ selectedCardPersonnel.department }}</p>
+              </div>
             </div>
-            <div>
-              <span class="text-[9px] font-mono font-black text-indigo-600 tracking-widest uppercase block">STUDENT PASS</span>
-              <h3 class="text-lg font-black text-slate-900 tracking-tight">{{ selectedCardStudent.name }}</h3>
-              <p class="text-xs font-extrabold text-indigo-700 mt-0.5">{{ selectedCardStudent.grade }} (Sec {{ selectedCardStudent.section }})</p>
-            </div>
-          </div>
 
-          <!-- Key Grid Info -->
-          <div class="grid grid-cols-2 gap-2 text-[11px] text-left bg-white p-3 rounded-2xl border border-slate-200 relative z-10">
-            <div>
-              <span class="text-slate-500 font-mono text-[9px] uppercase font-bold block">Roll Number</span>
-              <strong class="text-indigo-700 font-mono font-black text-xs">#{{ selectedCardStudent.rollNo }}</strong>
+            <!-- Key Grid Info -->
+            <div class="grid grid-cols-2 gap-2 text-[11px] text-left bg-white p-3 rounded-2xl border border-slate-200 relative z-10">
+              <div>
+                <span class="text-slate-500 font-mono text-[9px] uppercase font-bold block">Employee Code</span>
+                <strong class="text-emerald-700 font-mono font-black text-xs">{{ selectedCardPersonnel.empCode }}</strong>
+              </div>
+              <div>
+                <span class="text-slate-500 font-mono text-[9px] uppercase font-bold block">Contact / Shift</span>
+                <strong class="text-slate-900 font-mono font-bold text-[10px]">{{ selectedCardPersonnel.phone }}</strong>
+              </div>
             </div>
-            <div>
-              <span class="text-slate-500 font-mono text-[9px] uppercase font-bold block">Emergency Contact</span>
-              <strong class="text-slate-900 font-mono font-bold text-[10px]">{{ selectedCardStudent.guardianPhone }}</strong>
-            </div>
-          </div>
 
-          <!-- Scannable Code-128 Barcode & QR Footer -->
-          <div class="flex items-center justify-between gap-2 pt-1 relative z-10">
-            <div class="text-left min-w-0 flex-1">
-              <span class="text-[9px] text-slate-500 font-bold block mb-0.5">RFID / GATE ID: {{ selectedCardStudent.id }}</span>
-              <app-school-barcode [value]="idCardBarcodeValue" [label]="idCardBarcodeValue" [height]="28" [barWidth]="1.1" />
+            <!-- Scannable EMP Code-128 Barcode & Real 2D QR Footer -->
+            <div class="flex items-center justify-between gap-2 pt-1 relative z-10">
+              <div class="text-left min-w-0 flex-1">
+                <span class="text-[9px] text-slate-500 font-bold block mb-0.5">GATE ID: {{ selectedCardPersonnel.id }}</span>
+                <app-school-barcode [value]="idCardBarcodeValue" [label]="idCardBarcodeValue" [height]="28" [barWidth]="1.05" />
+              </div>
+              <div class="bg-white p-1.5 rounded-xl shadow-xs border border-slate-200 shrink-0">
+                <app-school-qr-code [value]="idCardQrPayload" [size]="56" />
+              </div>
             </div>
-            <div class="bg-white p-1.5 rounded-xl shadow-xs border border-slate-200 shrink-0">
-              <lucide-icon [name]="'qr-code'" class="w-8 h-8 text-slate-900"></lucide-icon>
+          } @else if (selectedCardStudent) {
+            <!-- Student Photo & Primary Name -->
+            <div class="flex flex-col items-center gap-2.5 relative z-10">
+              <div class="w-22 h-26 rounded-2xl border-2 border-indigo-600 overflow-hidden shadow-md bg-white shrink-0">
+                <img [src]="safeAvatar(selectedCardStudent.image, selectedCardStudent.name)" [alt]="selectedCardStudent.name" referrerpolicy="no-referrer" class="w-full h-full object-cover">
+              </div>
+              <div>
+                <span class="text-[9px] font-mono font-black text-indigo-600 tracking-widest uppercase block">STUDENT PASS</span>
+                <h3 class="text-lg font-black text-slate-900 tracking-tight">{{ selectedCardStudent.name }}</h3>
+                <p class="text-xs font-extrabold text-indigo-700 mt-0.5">{{ selectedCardStudent.grade }} (Sec {{ selectedCardStudent.section }})</p>
+              </div>
             </div>
-          </div>
+
+            <!-- Key Grid Info -->
+            <div class="grid grid-cols-2 gap-2 text-[11px] text-left bg-white p-3 rounded-2xl border border-slate-200 relative z-10">
+              <div>
+                <span class="text-slate-500 font-mono text-[9px] uppercase font-bold block">Roll Number</span>
+                <strong class="text-indigo-700 font-mono font-black text-xs">#{{ selectedCardStudent.rollNo }}</strong>
+              </div>
+              <div>
+                <span class="text-slate-500 font-mono text-[9px] uppercase font-bold block">Emergency Contact</span>
+                <strong class="text-slate-900 font-mono font-bold text-[10px]">{{ selectedCardStudent.guardianPhone }}</strong>
+              </div>
+            </div>
+
+            <!-- Scannable Code-128 Barcode & Real 2D QR Footer -->
+            <div class="flex items-center justify-between gap-2 pt-1 relative z-10">
+              <div class="text-left min-w-0 flex-1">
+                <span class="text-[9px] text-slate-500 font-bold block mb-0.5">RFID / GATE ID: {{ selectedCardStudent.id }}</span>
+                <app-school-barcode [value]="idCardBarcodeValue" [label]="idCardBarcodeValue" [height]="28" [barWidth]="1.1" />
+              </div>
+              <div class="bg-white p-1.5 rounded-xl shadow-xs border border-slate-200 shrink-0">
+                <app-school-qr-code [value]="idCardQrPayload" [size]="56" />
+              </div>
+            </div>
+          }
         </div>
 
         <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-200 flex-wrap">
           <button (click)="closeIdCardModal()" class="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold text-xs cursor-pointer">Close</button>
-          <button type="button" (click)="printBarcodeStickerSheet([selectedCardStudent])" class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs cursor-pointer flex items-center gap-1.5">
+          <button type="button" (click)="printCurrentIdCardSticker()" class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs cursor-pointer flex items-center gap-1.5">
             <lucide-icon [name]="'qr-code'" class="w-3.5 h-3.5 text-emerald-400"></lucide-icon>
             <span>Sticker Label</span>
           </button>
@@ -31575,9 +31667,13 @@
         </div>
 
         <!-- Footer Buttons -->
-        <div class="flex items-center justify-end gap-2 pt-2">
+        <div class="flex items-center justify-end gap-2 pt-2 flex-wrap">
           <button type="button" (click)="closeReceiptModal()" class="px-4 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs cursor-pointer">
             Close
+          </button>
+          <button type="button" (click)="printThermalReceiptForCashiering(activeCashieringReceipt)" class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs cursor-pointer shadow-sm flex items-center gap-1.5">
+            <lucide-icon [name]="'receipt'" class="w-4 h-4 text-emerald-400"></lucide-icon>
+            <span>Thermal 80mm</span>
           </button>
           <button type="button" (click)="printCashieringReceipt(activeCashieringReceipt)" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs cursor-pointer shadow-md flex items-center gap-1.5">
             <lucide-icon [name]="'printer'" class="w-4 h-4"></lucide-icon>

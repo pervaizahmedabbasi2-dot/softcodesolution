@@ -24,11 +24,12 @@ import {
   X
 } from 'lucide-angular';
 import { BackendService } from '../../../services/backend.service';
+import { PkPaymentGatewayHubComponent } from '../../../shared/hardware/pk-payment-gateway-hub.component';
 
 @Component({
   selector: 'app-dashboard-property-hub',
   standalone: true,
-  imports: [CommonModule, FormsModule, LucideAngularModule],
+  imports: [CommonModule, FormsModule, LucideAngularModule, PkPaymentGatewayHubComponent],
   templateUrl: './property-hub.component.html'
 })
 export class DashboardPropertyHubComponent implements OnInit {
@@ -56,7 +57,7 @@ export class DashboardPropertyHubComponent implements OnInit {
     X
   };
 
-  activeTab: 'properties' | 'leases' | 'maintenance' | 'ledger' = 'properties';
+  activeTab: 'properties' | 'leases' | 'maintenance' | 'ledger' | 'pk_gateways' = 'properties';
   isLoading = false;
   searchQuery = '';
 

@@ -8,6 +8,7 @@ import { createTeamsRouter } from './teams.routes.js';
 import { createServicesRouter } from './services.routes.js';
 import { createSupportRouter } from './support.routes.js';
 import { createI18nRouter } from './i18n.routes.js';
+import { createBusinessGatewaysRouter } from './business_gateways.routes.js';
 
 import { getCryptoVault } from '../auth_security/crypto_vault.js';
 
@@ -34,6 +35,9 @@ export function mountSoftCodePlatform(app, { sqliteDb, db, sqliteDbPath, getColl
 
   // 6. Billing, Invoices, Wallet, Coupons, Tax, Payment Gateways & Public Checkout
   app.use('/api', createBillingRouter(sqliteDb, db, getCollectionDocs));
+
+  // 6B. Multi-Business Pakistan Payment Gateways (Raast, JazzCash, Easypaisa, 1Bill, Meezan/HBL)
+  app.use('/api/pk-gateways', createBusinessGatewaysRouter(sqliteDb, db));
 
   // 7. Multi-Channel Notification & WhatsApp Dispatch Engine
   app.use('/api', createNotificationsRouter(sqliteDb, db));

@@ -113,6 +113,14 @@
         <lucide-icon [name]="icons.CreditCard" class="w-4 h-4"></lucide-icon>
         <span>Fee Collection Ledger ({{ invoices.length }})</span>
       </button>
+
+      <button (click)="activeTab = 'pk_gateways'"
+        class="py-3 px-1 border-b-2 font-medium text-xs transition-colors flex items-center gap-2"
+        [class.border-emerald-600]="activeTab === 'pk_gateways'" [class.text-emerald-700]="activeTab === 'pk_gateways'"
+        [class.border-transparent]="activeTab !== 'pk_gateways'" [class.text-slate-500]="activeTab !== 'pk_gateways'">
+        <lucide-icon [name]="icons.ShieldCheck" class="w-4 h-4"></lucide-icon>
+        <span>PK Gateways & Slips</span>
+      </button>
     </nav>
   </div>
 
@@ -295,6 +303,16 @@
     </table>
   </div>
 
+  <!-- TAB 6: PAKISTAN GATEWAYS & SLIP VERIFICATION -->
+  <div *ngIf="activeTab === 'pk_gateways'" class="animate-fade-in">
+    <app-pk-payment-gateway-hub
+      businessKey="gym_fitness"
+      businessLabel="Gym & Fitness Center"
+      defaultEntityLabel="Member"
+      [defaultAmount]="5000">
+    </app-pk-payment-gateway-hub>
+  </div>
+
   <!-- MODAL: REGISTER MEMBER -->
   <div *ngIf="showNewMemberModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-fade-in">
     <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 space-y-5">
@@ -425,7 +443,7 @@
           <button (click)="showReceiptModal = false" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800">Close</button>
           <button (click)="printReceipt()" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 shadow-sm">
             <lucide-icon [name]="icons.Printer" class="w-4 h-4"></lucide-icon>
-            <span>Print Fee Voucher</span>
+            <span>Print {{ hardware.paperWidth() }} Thermal</span>
           </button>
         </div>
       </div>

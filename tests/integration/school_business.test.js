@@ -2903,6 +2903,85 @@ test('School Business Hardware: Barcode Lookup (Challan / Student ID / Txn Ref) 
   const attJson = await attRes.json();
   assert.equal(attJson.record.verificationMode, 'barcode_scanner');
   assert.ok(attJson.record.gateName.includes('Barcode Gate Scanner'));
+
+  // Seed teacher, staff & principal -> verify EMP- barcode lookup & barcode_scanner gate attendance
+  const tchRes = await fetch(`${baseUrl}/api/school/teachers`, {
+    method: 'POST',
+    headers: ownerHeaders,
+    body: JSON.stringify({
+      empCode: 'TCH-2026-301',
+      name: 'Prof. Usman Tariq',
+      designation: 'Senior Physics Lecturer',
+      department: 'Science',
+      subject: 'Physics',
+      phone: '0300-7788990'
+    })
+  });
+  assert.equal(tchRes.status, 201);
+  const createdTch = (await tchRes.json()).teacher;
+
+  const stfRes = await fetch(`${baseUrl}/api/school/staff`, {
+    method: 'POST',
+    headers: ownerHeaders,
+    body: JSON.stringify({
+      empCode: 'STF-2026-401',
+      name: 'Kashif Gatekeeper',
+      roleTitle: 'Security Supervisor',
+      department: 'Security',
+      phone: '0301-1122998'
+    })
+  });
+  assert.equal(stfRes.status, 201);
+  const createdStf = (await stfRes.json()).staff;
+
+  const priRes = await fetch(`${baseUrl}/api/school/principals`, {
+    method: 'POST',
+    headers: ownerHeaders,
+    body: JSON.stringify({
+      empCode: 'DIR-2026-101',
+      name: 'Dr. Naveed Qureshi',
+      roleTitle: 'Campus Principal',
+      department: 'Executive Directorate',
+      phone: '0321-5566778'
+    })
+  });
+  assert.equal(priRes.status, 201);
+  const createdPri = (await priRes.json()).principal;
+
+  for (const probe of [
+    { code: `EMP-${createdTch.empCode}`, cat: 'teacher', name: 'Prof. Usman Tariq', empCode: 'TCH-2026-301' },
+    { code: `EMP-${createdStf.empCode}`, cat: 'staff', name: 'Kashif Gatekeeper', empCode: 'STF-2026-401' },
+    { code: `EMP-${createdPri.empCode}`, cat: 'principal', name: 'Dr. Naveed Qureshi', empCode: 'DIR-2026-101' }
+  ]) {
+    const empLookupRes = await fetch(`${baseUrl}/api/school/barcode-lookup?code=${encodeURIComponent(probe.code)}`, { headers: ownerHeaders });
+    assert.equal(empLookupRes.status, 200);
+    const empLookup = await empLookupRes.json();
+    assert.equal(empLookup.ok, true);
+    assert.equal(empLookup.matchType, 'employee');
+    assert.equal(empLookup.employee.memberCategory, probe.cat);
+    assert.equal(empLookup.employee.empCode, probe.empCode);
+    assert.equal(empLookup.employee.name, probe.name);
+  }
+
+  // Record Gate attendance for Teacher & Staff using barcode_scanner even under strict camera policy
+  const empAttRes = await fetch(`${baseUrl}/api/school/attendance`, {
+    method: 'POST',
+    headers: ownerHeaders,
+    body: JSON.stringify({
+      studentId: createdStf.id,
+      rollNo: createdStf.empCode,
+      studentName: createdStf.name,
+      grade: createdStf.department,
+      memberCategory: 'staff',
+      verificationMode: 'barcode_scanner',
+      punchType: 'IN',
+      status: 'PRESENT'
+    })
+  });
+  assert.equal(empAttRes.status, 200);
+  const empAttJson = await empAttRes.json();
+  assert.equal(empAttJson.record.memberCategory, 'staff');
+  assert.equal(empAttJson.record.verificationMode, 'barcode_scanner');
 });
 
 

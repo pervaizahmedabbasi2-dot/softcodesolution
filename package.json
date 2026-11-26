@@ -7,8 +7,8 @@
     "node": ">=20.19.0"
   },
   "scripts": {
-    "build": "cd frontend && NODE_OPTIONS=\"--max-old-space-size=2048\" NG_BUILD_MAX_WORKERS=1 npx ng build && cd .. && rm -rf dist && mkdir -p dist/softcode-ui/browser && cp -rf frontend/dist/softcode-ui/browser/* dist/ && cp -rf frontend/dist/softcode-ui/browser/* dist/softcode-ui/browser/",
-    "build:full": "cd frontend && NODE_OPTIONS=\"--max-old-space-size=2048\" NG_BUILD_MAX_WORKERS=1 npx ng build && cd .. && rm -rf dist && mkdir -p dist/softcode-ui/browser && cp -rf frontend/dist/softcode-ui/browser/* dist/ && cp -rf frontend/dist/softcode-ui/browser/* dist/softcode-ui/browser/",
+    "build": "cd frontend && NODE_OPTIONS=\"--max-old-space-size=4096\" npx ng build && cd .. && rm -rf dist && mkdir -p dist/softcode-ui/browser && cp -rf frontend/dist/softcode-ui/browser/* dist/ && cp -rf frontend/dist/softcode-ui/browser/* dist/softcode-ui/browser/",
+    "build:full": "cd frontend && NODE_OPTIONS=\"--max-old-space-size=4096\" npx ng build && cd .. && rm -rf dist && mkdir -p dist/softcode-ui/browser && cp -rf frontend/dist/softcode-ui/browser/* dist/ && cp -rf frontend/dist/softcode-ui/browser/* dist/softcode-ui/browser/",
     "lint": "node --check server.js && node --check backend/ops/observability.js && node --check backend/auth_security/crypto_vault.js && node --check scripts/load-test.mjs && node --check scripts/verify-backup-restore.mjs",
     "test:unit": "node --test tests/unit/*.test.js",
     "test:integration": "node --test tests/integration/*.test.js",

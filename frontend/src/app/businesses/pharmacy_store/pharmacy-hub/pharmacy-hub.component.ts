@@ -15,18 +15,25 @@ import {
   DollarSign,
   ShieldCheck,
   Truck,
-  Boxes
+  Boxes,
+  ScanBarcode
 } from 'lucide-angular';
 import { BackendService } from '../../../services/backend.service';
+import { HardwareDeviceService } from '../../../shared/hardware/hardware-device.service';
+import { SharedBarcodeComponent, SharedQrCodeComponent } from '../../../shared/hardware/barcode.component';
 
 @Component({
   selector: 'app-dashboard-pharmacy-hub',
   standalone: true,
-  imports: [CommonModule, FormsModule, LucideAngularModule],
+  imports: [CommonModule, FormsModule, LucideAngularModule, SharedBarcodeComponent, SharedQrCodeComponent],
+  host: {
+    '(window:keydown)': 'onScannerKeydown($event)'
+  },
   templateUrl: './pharmacy-hub.component.html'
 })
 export class DashboardPharmacyHubComponent implements OnInit {
   private backend = inject(BackendService);
+  readonly hardware = inject(HardwareDeviceService);
 
   readonly icons = {
     Pill,
@@ -41,13 +48,20 @@ export class DashboardPharmacyHubComponent implements OnInit {
     DollarSign,
     ShieldCheck,
     Truck,
-    Boxes
+    Boxes,
+    ScanBarcode
   };
 
   activeTab: 'inventory' | 'sales' | 'expiry' | 'suppliers' | 'compliance' = 'inventory';
   isLoading = false;
   searchQuery = '';
+  barcodeQuery = '';
   actionMessage = '';
+  fefoAlert = '';
+  fefoError = '';
+
+  private hidBuffer = '';
+  private hidLastKeyAt = 0;
 
   medicines: any[] = [];
   sales: any[] = [];
@@ -64,6 +78,7 @@ export class DashboardPharmacyHubComponent implements OnInit {
     generic: '',
     category: 'Antibiotic & Anti-infective',
     batchNo: '',
+    barcode: '',
     expiryDate: '2027-06-30',
     stock: 60,
     minStock: 20,
@@ -106,6 +121,98 @@ export class DashboardPharmacyHubComponent implements OnInit {
     }
   }
 
+  onScannerKeydown(event: KeyboardEvent): void {
+    if (this.showNewMedModal || this.showReceiptModal) return;
+    const target = event.target as HTMLElement | null;
+    const isScannerBox = target?.getAttribute('data-pharma-scanner') === 'true';
+    const tag = target?.tagName?.toLowerCase() || '';
+    if (!isScannerBox && (tag === 'input' || tag === 'textarea' || tag === 'select')) {
+      return;
+    }
+    const now = Date.now();
+    if (event.key === 'Enter' || event.key === 'Tab') {
+      if (isScannerBox && this.barcodeQuery.trim().length >= 3) {
+        event.preventDefault();
+        void this.scanMedicineBarcode(this.barcodeQuery.trim());
+        return;
+      }
+      if (this.hidBuffer.length >= 4 && now - this.hidLastKeyAt < 120) {
+        event.preventDefault();
+        const code = this.hidBuffer.trim();
+        this.hidBuffer = '';
+        void this.scanMedicineBarcode(code);
+      } else {
+        this.hidBuffer = '';
+      }
+      return;
+    }
+    if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
+      if (now - this.hidLastKeyAt > 80) this.hidBuffer = '';
+      this.hidBuffer += event.key;
+      this.hidLastKeyAt = now;
+    }
+  }
+
+  async scanMedicineBarcode(rawCode: string): Promise<void> {
+    const code = String(rawCode || '').trim();
+    if (!code) return;
+    this.fefoAlert = '';
+    this.fefoError = '';
+
+    let recommended: any = null;
+    try {
+      const res = await this.backend.lookupPharmacyFefo(code);
+      if (res?.ok && res?.recommendedBatch) {
+        recommended = res.recommendedBatch;
+      } else if (res && res.batches?.length > 0 && !res.recommendedBatch) {
+        this.hardware.playBeep(320, 140);
+        this.fefoError = `All matching batches for barcode "${code}" are EXPIRED or out of stock. Dispensing blocked!`;
+        return;
+      }
+    } catch {
+      // Offline FEFO fallback below
+    }
+
+    if (!recommended) {
+      const q = code.toLowerCase();
+      const today = new Date().toISOString().slice(0, 10);
+      const matches = this.medicines
+        .filter((m) =>
+          String(m.barcode || '').toLowerCase() === q ||
+          String(m.batchNo || '').toLowerCase() === q ||
+          String(m.name || '').toLowerCase().includes(q)
+        )
+        .sort((a, b) => String(a.expiryDate || '9999-12-31').localeCompare(String(b.expiryDate || '9999-12-31')));
+
+      if (matches.length === 0) {
+        this.hardware.playBeep(320, 140);
+        this.fefoError = `No formulation matched barcode/batch "${code}".`;
+        return;
+      }
+
+      const validNonExpired = matches.find((m) => Number(m.stock || 0) > 0 && (!m.expiryDate || m.expiryDate >= today));
+      if (!validNonExpired) {
+        this.hardware.playBeep(320, 140);
+        this.fefoError = `Expired or zero-stock batch (${matches[0].batchNo}, exp ${matches[0].expiryDate}) — blocked by FEFO guard.`;
+        return;
+      }
+      recommended = validNonExpired;
+    }
+
+    // Ensure recommended batch exists in local list for selector binding
+    if (!this.medicines.some((m) => m.id === recommended.id)) {
+      this.medicines.unshift(recommended);
+    }
+
+    this.newDispense.selectedMedicineId = recommended.id;
+    this.newDispense.unitPrice = Number(recommended.unitPrice || 0);
+    this.showDispenseModal = true;
+    this.hardware.playBeep(1140, 70);
+    this.fefoAlert = `FEFO Auto-Selected: ${recommended.name} · Batch ${recommended.batchNo} · Exp ${recommended.expiryDate} (${recommended.stock} packs left)`;
+    this.actionMessage = this.fefoAlert;
+    this.barcodeQuery = '';
+  }
+
   get stats() {
     const totalFormulations = this.medicines.length;
     const totalStock = this.medicines.reduce((sum, m) => sum + (m.stock || 0), 0);
@@ -122,6 +229,7 @@ export class DashboardPharmacyHubComponent implements OnInit {
       m.name?.toLowerCase().includes(q) ||
       m.generic?.toLowerCase().includes(q) ||
       m.batchNo?.toLowerCase().includes(q) ||
+      m.barcode?.toLowerCase().includes(q) ||
       m.category?.toLowerCase().includes(q)
     );
   }
@@ -138,8 +246,38 @@ export class DashboardPharmacyHubComponent implements OnInit {
     this.showReceiptModal = true;
   }
 
-  printReceipt(): void {
-    window.print();
+  async printThermalRxReceipt(sale: any): Promise<void> {
+    if (!sale) return;
+    await this.hardware.printPosReceipt({
+      businessName: 'SOFTCODE PHARMACY & CARE',
+      branchName: 'DRAP Licensed Counter · Reg #001928',
+      receiptTitle: 'PRESCRIPTION DISPENSING RECEIPT',
+      receiptNo: sale.invoiceNo || sale.id || 'RX-0001',
+      customerName: `${sale.patientName || 'Patient'} (${sale.doctorName || 'OTC'})`,
+      cashierName: 'Duty Pharmacist',
+      paymentMethod: 'Counter Cash / Rx',
+      currency: 'USD',
+      items: [
+        {
+          name: `${sale.medicineName || 'Medicine'}${sale.batchNo ? ' [' + sale.batchNo + ']' : ''}`,
+          qty: Number(sale.quantity || 1),
+          unitPrice: Number(sale.unitPrice || sale.totalAmount || 0),
+          meta: sale.expiryDate ? `Exp: ${sale.expiryDate}` : undefined
+        }
+      ],
+      subtotal: Number(sale.totalAmount || 0),
+      discount: 0,
+      tax: 0,
+      total: Number(sale.totalAmount || 0),
+      timestampLabel: sale.timestamp || new Date().toLocaleString(),
+      barcodeValue: sale.invoiceNo || 'RX-0001',
+      qrPayload: `RX|${sale.invoiceNo || 'RX-0001'}|${sale.patientName || ''}|${sale.medicineName || ''}|${sale.totalAmount || 0}`,
+      footerNote: 'Verify batch expiry before use. Keep medicines out of reach of children.'
+    });
+  }
+
+  async printReceipt(): Promise<void> {
+    await this.printThermalRxReceipt(this.selectedSaleForReceipt);
   }
 
   async submitNewMedicine(): Promise<void> {
@@ -150,6 +288,7 @@ export class DashboardPharmacyHubComponent implements OnInit {
       generic: this.newMed.generic || 'Generic Formulation',
       category: this.newMed.category,
       batchNo: this.newMed.batchNo || 'BTH-' + Math.floor(1000 + Math.random() * 9000),
+      barcode: this.newMed.barcode || ('896400' + Math.floor(100000 + Math.random() * 899999)),
       expiryDate: this.newMed.expiryDate,
       daysRemaining: 400,
       stock: Number(this.newMed.stock) || 30,
@@ -165,6 +304,7 @@ export class DashboardPharmacyHubComponent implements OnInit {
       generic: '',
       category: 'Antibiotic & Anti-infective',
       batchNo: '',
+      barcode: '',
       expiryDate: '2027-06-30',
       stock: 60,
       minStock: 20,
@@ -175,6 +315,11 @@ export class DashboardPharmacyHubComponent implements OnInit {
   async submitDispense(): Promise<void> {
     if (!this.newDispense.patient) return;
     const med = this.medicines.find(m => m.id === this.newDispense.selectedMedicineId) || this.medicines[0];
+    const today = new Date().toISOString().slice(0, 10);
+    if (med?.expiryDate && med.expiryDate < today) {
+      this.fefoError = `Cannot dispense expired batch ${med.batchNo} (expired ${med.expiryDate}).`;
+      return;
+    }
     const qty = Number(this.newDispense.quantity) || 1;
     if (med && med.stock >= qty) {
       med.stock -= qty;
@@ -185,6 +330,8 @@ export class DashboardPharmacyHubComponent implements OnInit {
       patientName: this.newDispense.patient,
       doctorName: this.newDispense.doctor || 'Dr. Self / Over The Counter',
       medicineName: med?.name || 'Formulation',
+      batchNo: med?.batchNo || '',
+      expiryDate: med?.expiryDate || '',
       quantity: qty,
       unitPrice: this.newDispense.unitPrice,
       totalAmount: (this.newDispense.unitPrice * qty),
@@ -193,6 +340,9 @@ export class DashboardPharmacyHubComponent implements OnInit {
     };
     this.sales.unshift(sale);
     this.showDispenseModal = false;
+    this.selectedSaleForReceipt = sale;
+    this.showReceiptModal = true;
+    await this.printThermalRxReceipt(sale);
     this.actionMessage = `Prescription dispensed for ${sale.patientName} (${sale.invoiceNo})`;
     setTimeout(() => this.actionMessage = '', 3500);
     this.newDispense = {
@@ -206,16 +356,17 @@ export class DashboardPharmacyHubComponent implements OnInit {
   }
 
   readonly defaultMedicines = [
-    { id: 'm-1', name: 'Augmentin 625mg Tablet', generic: 'Amoxicillin + Clavulanic Acid', category: 'Antibiotics', batchNo: 'B-7729', expiryDate: '2027-08-15', daysRemaining: 504, stock: 120, minStock: 30, unitPrice: 8.50 },
-    { id: 'm-2', name: 'Panadol CF Caplet 500mg', generic: 'Paracetamol + Pseudoephedrine', category: 'Analgesics & Cold', batchNo: 'B-6102', expiryDate: '2026-11-30', daysRemaining: 246, stock: 350, minStock: 80, unitPrice: 2.20 },
-    { id: 'm-3', name: 'Nexum 40mg Capsule', generic: 'Esomeprazole Magnesium', category: 'Gastrointestinal', batchNo: 'B-8819', expiryDate: '2026-06-15', daysRemaining: 78, stock: 14, minStock: 25, unitPrice: 6.80 },
-    { id: 'm-4', name: 'Lipitor 20mg Tablet', generic: 'Atorvastatin Calcium', category: 'Cardiovascular', batchNo: 'B-9021', expiryDate: '2027-12-31', daysRemaining: 642, stock: 85, minStock: 20, unitPrice: 12.00 }
+    { id: 'med-1b', name: 'Augmentin 625mg Tablet', generic: 'Amoxicillin + Clavulanic Acid', category: 'Antibiotics', batchNo: 'B-7710-FEFO', barcode: '896400112201', expiryDate: '2026-08-10', daysRemaining: 76, stock: 34, minStock: 20, unitPrice: 8.50 },
+    { id: 'med-1', name: 'Augmentin 625mg Tablet', generic: 'Amoxicillin + Clavulanic Acid', category: 'Antibiotics', batchNo: 'B-7729', barcode: '896400112201', expiryDate: '2027-08-15', daysRemaining: 504, stock: 120, minStock: 30, unitPrice: 8.50 },
+    { id: 'med-2', name: 'Panadol CF Caplet 500mg', generic: 'Paracetamol + Pseudoephedrine', category: 'Analgesics & Cold', batchNo: 'B-6102', barcode: '896400112202', expiryDate: '2026-11-30', daysRemaining: 246, stock: 350, minStock: 80, unitPrice: 2.20 },
+    { id: 'med-3', name: 'Nexum 40mg Capsule', generic: 'Esomeprazole Magnesium', category: 'Gastrointestinal', batchNo: 'B-8819', barcode: '896400112203', expiryDate: '2026-06-15', daysRemaining: 78, stock: 14, minStock: 25, unitPrice: 6.80 },
+    { id: 'med-4', name: 'Lipitor 20mg Tablet', generic: 'Atorvastatin Calcium', category: 'Cardiovascular', batchNo: 'B-9021', barcode: '896400112204', expiryDate: '2027-12-31', daysRemaining: 642, stock: 85, minStock: 20, unitPrice: 12.00 }
   ];
 
   readonly defaultSales = [
-    { id: 's-1', invoiceNo: 'RX-99201', patientName: 'Naveed Akhtar', doctorName: 'Dr. Tariq Mehmood', medicineName: 'Augmentin 625mg', quantity: 2, unitPrice: 8.50, totalAmount: 17.00, timestamp: 'Today 10:15 AM', status: 'DISPENSED' },
-    { id: 's-2', invoiceNo: 'RX-99202', patientName: 'Saima Khanum', doctorName: 'Dr. Ayesha Alvi', medicineName: 'Panadol CF Caplet', quantity: 4, unitPrice: 2.20, totalAmount: 8.80, timestamp: 'Today 11:40 AM', status: 'DISPENSED' },
-    { id: 's-3', invoiceNo: 'RX-99203', patientName: 'Hamid Raza', doctorName: 'Dr. Faisal Shah', medicineName: 'Nexum 40mg', quantity: 3, unitPrice: 6.80, totalAmount: 20.40, timestamp: 'Today 01:20 PM', status: 'DISPENSED' }
+    { id: 's-1', invoiceNo: 'RX-99201', patientName: 'Naveed Akhtar', doctorName: 'Dr. Tariq Mehmood', medicineName: 'Augmentin 625mg', batchNo: 'B-7710-FEFO', expiryDate: '2026-08-10', quantity: 2, unitPrice: 8.50, totalAmount: 17.00, timestamp: 'Today 10:15 AM', status: 'DISPENSED' },
+    { id: 's-2', invoiceNo: 'RX-99202', patientName: 'Saima Khanum', doctorName: 'Dr. Ayesha Alvi', medicineName: 'Panadol CF Caplet', batchNo: 'B-6102', expiryDate: '2026-11-30', quantity: 4, unitPrice: 2.20, totalAmount: 8.80, timestamp: 'Today 11:40 AM', status: 'DISPENSED' },
+    { id: 's-3', invoiceNo: 'RX-99203', patientName: 'Hamid Raza', doctorName: 'Dr. Faisal Shah', medicineName: 'Nexum 40mg', batchNo: 'B-8819', expiryDate: '2026-06-15', quantity: 3, unitPrice: 6.80, totalAmount: 20.40, timestamp: 'Today 01:20 PM', status: 'DISPENSED' }
   ];
 
   readonly defaultSuppliers = [

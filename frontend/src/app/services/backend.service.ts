@@ -2708,4 +2708,165 @@ export class BackendService {
       return { ok: false };
     }
   }
+
+  // --- PHASE 2 HARDWARE LOOKUPS (RETAIL POS, PHARMACY FEFO, LOGISTICS WAYBILL) ---
+  async lookupRetailBarcode(code: string) {
+    try {
+      const res = await fetch(`/api/retail/barcode-lookup?code=${encodeURIComponent(code.trim())}`, {
+        credentials: 'include'
+      });
+      return await res.json().catch(() => ({ ok: false }));
+    } catch {
+      return { ok: false };
+    }
+  }
+
+  async lookupPharmacyFefo(code: string) {
+    try {
+      const res = await fetch(`/api/pharmacy/barcode-lookup?code=${encodeURIComponent(code.trim())}`, {
+        credentials: 'include'
+      });
+      return await res.json().catch(() => ({ ok: false }));
+    } catch {
+      return { ok: false };
+    }
+  }
+
+  async getLogisticsWaybill(trackingNo: string) {
+    try {
+      const res = await fetch(`/api/logistics/waybill/${encodeURIComponent(trackingNo.trim())}`, {
+        credentials: 'include'
+      });
+      return await res.json().catch(() => ({ ok: false }));
+    } catch {
+      return { ok: false };
+    }
+  }
+
+  // --- PHASE 2 PAKISTAN PAYMENT GATEWAYS (COACHING, GYM, CLINIC, REAL ESTATE) ---
+  private getTenantRoleHeaders(includeJson = true): Record<string, string> {
+    const headers: Record<string, string> = {};
+    if (includeJson) headers['Content-Type'] = 'application/json';
+    try {
+      if (typeof localStorage !== 'undefined') {
+        const tid = localStorage.getItem('tenantId') || localStorage.getItem('scs_tenant_id') || '';
+        const role = localStorage.getItem('role') || localStorage.getItem('scs_role') || 'owner';
+        if (tid) headers['x-tenant-id'] = tid;
+        if (role) headers['x-user-role'] = role;
+      }
+    } catch {}
+    return headers;
+  }
+
+  async getPkGateways(businessKey: string, includeDisabled = true) {
+    try {
+      const res = await fetch(
+        `/api/pk-gateways/${encodeURIComponent(businessKey)}/gateways?includeDisabled=${includeDisabled ? '1' : '0'}&_t=${Date.now()}`,
+        { headers: this.getTenantRoleHeaders(false), credentials: 'include', cache: 'no-store' }
+      );
+      return await res.json().catch(() => ({ ok: false, gateways: [], settings: {} }));
+    } catch {
+      return { ok: false, gateways: [], settings: {} };
+    }
+  }
+
+  async createPkGateway(businessKey: string, payload: any) {
+    try {
+      const res = await fetch(`/api/pk-gateways/${encodeURIComponent(businessKey)}/gateways`, {
+        method: 'POST',
+        headers: this.getTenantRoleHeaders(),
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      return await res.json().catch(() => ({ ok: false }));
+    } catch {
+      return { ok: false };
+    }
+  }
+
+  async updatePkGateway(businessKey: string, id: string, payload: any) {
+    try {
+      const res = await fetch(`/api/pk-gateways/${encodeURIComponent(businessKey)}/gateways/${encodeURIComponent(id)}`, {
+        method: 'PUT',
+        headers: this.getTenantRoleHeaders(),
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      return await res.json().catch(() => ({ ok: false }));
+    } catch {
+      return { ok: false };
+    }
+  }
+
+  async deletePkGateway(businessKey: string, id: string) {
+    try {
+      const res = await fetch(`/api/pk-gateways/${encodeURIComponent(businessKey)}/gateways/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        headers: this.getTenantRoleHeaders(false),
+        credentials: 'include'
+      });
+      return await res.json().catch(() => ({ ok: false }));
+    } catch {
+      return { ok: false };
+    }
+  }
+
+  async savePkGatewaySettings(businessKey: string, settings: any) {
+    try {
+      const res = await fetch(`/api/pk-gateways/${encodeURIComponent(businessKey)}/settings`, {
+        method: 'PUT',
+        headers: this.getTenantRoleHeaders(),
+        body: JSON.stringify(settings),
+        credentials: 'include'
+      });
+      return await res.json().catch(() => ({ ok: false }));
+    } catch {
+      return { ok: false };
+    }
+  }
+
+  async getPkGatewayTransactions(businessKey: string, limit = 80) {
+    try {
+      const res = await fetch(
+        `/api/pk-gateways/${encodeURIComponent(businessKey)}/transactions?limit=${limit}&_t=${Date.now()}`,
+        { headers: this.getTenantRoleHeaders(false), credentials: 'include', cache: 'no-store' }
+      );
+      return await res.json().catch(() => ({ ok: false, transactions: [] }));
+    } catch {
+      return { ok: false, transactions: [] };
+    }
+  }
+
+  async submitPkGatewayTransaction(businessKey: string, payload: any) {
+    try {
+      const res = await fetch(`/api/pk-gateways/${encodeURIComponent(businessKey)}/transactions`, {
+        method: 'POST',
+        headers: this.getTenantRoleHeaders(),
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      const data = await res.json().catch(() => ({ ok: false }));
+      return { ...data, httpStatus: res.status };
+    } catch {
+      return { ok: false, message: 'Network error submitting payment slip.' };
+    }
+  }
+
+  async verifyPkGatewayTransaction(businessKey: string, id: string, status: 'VERIFIED' | 'REJECTED', verifiedBy = 'Owner / Cashier') {
+    try {
+      const res = await fetch(
+        `/api/pk-gateways/${encodeURIComponent(businessKey)}/transactions/${encodeURIComponent(id)}/verify`,
+        {
+          method: 'PUT',
+          headers: this.getTenantRoleHeaders(),
+          body: JSON.stringify({ status, verifiedBy }),
+          credentials: 'include'
+        }
+      );
+      return await res.json().catch(() => ({ ok: false }));
+    } catch {
+      return { ok: false };
+    }
+  }
 }
+

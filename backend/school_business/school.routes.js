@@ -7757,7 +7757,7 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     res.json({ ok: true, id });
   });
 
-  // --- HARDWARE BARCODE SCANNER UNIFIED LOOKUP (Challan #, Txn Ref, Student ID / Roll #, RFID) ---
+  // --- HARDWARE BARCODE SCANNER UNIFIED LOOKUP (Challan #, Txn Ref, Student ID / Roll #, EMP- Staff/Teacher/Principal ID) ---
   router.get('/barcode-lookup', (req, res) => {
     const tid = resolveTenantId(req);
     const scope = resolveBranchWingScope(req);
@@ -7772,10 +7772,13 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
     const norm = rawCode.toLowerCase();
     const strippedRollMatch = rawCode.match(/^(?:ch|chln|stu|st|adm|roll)[-_]?(?:\d{4}[-_])?(.+)$/i);
     const candidateRoll = strippedRollMatch ? strippedRollMatch[1].trim().toLowerCase() : '';
+    const isExplicitEmpPrefix = /^emp[-_]/i.test(rawCode);
+    const strippedEmp = rawCode.replace(/^emp[-_]/i, '').trim().toLowerCase();
     const nameMaps = getBranchWingNameMaps(tid);
     const scopeSql = buildScopeSql(scope);
 
     let studentRow = null;
+    let employee = null;
     let feeRows = [];
     let txnRows = [];
 
@@ -7803,24 +7806,26 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
           (roll && (roll === norm || (candidateRoll && roll === candidateRoll)));
       });
 
-      const stuCandidates = sqliteDb.prepare(
-        `SELECT * FROM local_school_students WHERE tenant_id = ?${scopeSql.sql}`
-      ).all(tid, ...scopeSql.params);
-      studentRow = stuCandidates.find((s) => {
-        const sid = String(s.id || '').trim().toLowerCase();
-        const roll = String(s.roll_no || '').trim().toLowerCase();
-        const rfid = String(s.rfid_card || '').trim().toLowerCase();
-        return sid === norm || roll === norm || (rfid && rfid === norm) ||
-          (candidateRoll && (roll === candidateRoll || sid === candidateRoll));
-      }) || null;
+      if (!isExplicitEmpPrefix) {
+        const stuCandidates = sqliteDb.prepare(
+          `SELECT * FROM local_school_students WHERE tenant_id = ?${scopeSql.sql}`
+        ).all(tid, ...scopeSql.params);
+        studentRow = stuCandidates.find((s) => {
+          const sid = String(s.id || '').trim().toLowerCase();
+          const roll = String(s.roll_no || '').trim().toLowerCase();
+          const rfid = String(s.rfid_card || '').trim().toLowerCase();
+          return sid === norm || roll === norm || (rfid && rfid === norm) ||
+            (candidateRoll && (roll === candidateRoll || sid === candidateRoll));
+        }) || null;
 
-      if (!studentRow && (feeRows[0] || txnRows[0])) {
-        const targetSid = String((feeRows[0] || txnRows[0]).student_id || '').trim().toLowerCase();
-        const targetRoll = String((feeRows[0] || txnRows[0]).roll_no || '').trim().toLowerCase();
-        studentRow = stuCandidates.find((s) =>
-          (targetSid && String(s.id || '').trim().toLowerCase() === targetSid) ||
-          (targetRoll && String(s.roll_no || '').trim().toLowerCase() === targetRoll)
-        ) || null;
+        if (!studentRow && (feeRows[0] || txnRows[0])) {
+          const targetSid = String((feeRows[0] || txnRows[0]).student_id || '').trim().toLowerCase();
+          const targetRoll = String((feeRows[0] || txnRows[0]).roll_no || '').trim().toLowerCase();
+          studentRow = stuCandidates.find((s) =>
+            (targetSid && String(s.id || '').trim().toLowerCase() === targetSid) ||
+            (targetRoll && String(s.roll_no || '').trim().toLowerCase() === targetRoll)
+          ) || null;
+        }
       }
 
       if (studentRow && feeRows.length === 0) {
@@ -7839,6 +7844,62 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
           (sRoll && String(r.roll_no || '').trim().toLowerCase() === sRoll)
         );
       }
+
+      // Personnel / Staff / Teacher / Principal lookup (supports EMP-<code>, <emp_code>, or <id>)
+      if (!studentRow && feeRows.length === 0 && txnRows.length === 0) {
+        const matchesEmp = (row) => {
+          const eid = String(row.id || '').trim().toLowerCase();
+          const empCode = String(row.emp_code || '').trim().toLowerCase();
+          return (
+            (empCode && (empCode === norm || `emp-${empCode}` === norm || (strippedEmp && empCode === strippedEmp))) ||
+            (eid && (eid === norm || `emp-${eid}` === norm || (strippedEmp && eid === strippedEmp)))
+          );
+        };
+
+        const priRows = sqliteDb.prepare(
+          `SELECT * FROM local_school_principals WHERE tenant_id = ?${scopeSql.sql}`
+        ).all(tid, ...scopeSql.params);
+        const priHit = priRows.find(matchesEmp);
+        if (priHit) {
+          const mapped = mapPrincipalRow(priHit, tid, nameMaps);
+          employee = {
+            ...mapped,
+            memberCategory: 'principal',
+            gradeOrDept: mapped.department || mapped.roleTitle || 'Executive Directorate'
+          };
+        }
+
+        if (!employee) {
+          const tchRows = sqliteDb.prepare(
+            `SELECT * FROM local_school_teachers WHERE tenant_id = ?${scopeSql.sql}`
+          ).all(tid, ...scopeSql.params);
+          const tchHit = tchRows.find(matchesEmp);
+          if (tchHit) {
+            const mapped = mapTeacherRow(tchHit, tid, nameMaps);
+            employee = {
+              ...mapped,
+              memberCategory: 'teacher',
+              roleTitle: mapped.designation || 'Faculty Teacher',
+              gradeOrDept: mapped.department || mapped.subject || 'Academics'
+            };
+          }
+        }
+
+        if (!employee) {
+          const stfRows = sqliteDb.prepare(
+            `SELECT * FROM local_school_staff WHERE tenant_id = ?${scopeSql.sql}`
+          ).all(tid, ...scopeSql.params);
+          const stfHit = stfRows.find(matchesEmp);
+          if (stfHit) {
+            const mapped = mapStaffRow(stfHit, tid, nameMaps);
+            employee = {
+              ...mapped,
+              memberCategory: 'staff',
+              gradeOrDept: mapped.department || mapped.roleTitle || 'Administration'
+            };
+          }
+        }
+      }
     } catch {}
 
     const mappedFees = feeRows.map((r) => mapFeeRow(r, tid, nameMaps));
@@ -7855,14 +7916,17 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       matchType = 'challan';
     } else if (student) {
       matchType = 'student';
+    } else if (employee) {
+      matchType = 'employee';
     }
 
     res.json({
       ok: true,
       code: rawCode,
-      normalizedCode: candidateRoll || norm,
+      normalizedCode: employee ? (employee.empCode || strippedEmp || norm) : (candidateRoll || norm),
       matchType,
       student,
+      employee,
       openChallan,
       paidChallan,
       latestTransaction

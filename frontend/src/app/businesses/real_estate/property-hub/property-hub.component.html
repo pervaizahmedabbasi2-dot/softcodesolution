@@ -122,6 +122,16 @@
       <lucide-icon [name]="icons.Receipt" class="w-4 h-4"></lucide-icon>
       <span>Rent Collection Ledger</span>
     </button>
+
+    <button (click)="activeTab = 'pk_gateways'"
+      class="px-4 py-2 text-xs font-semibold rounded-lg transition-all flex items-center gap-2"
+      [class.bg-white]="activeTab === 'pk_gateways'"
+      [class.text-emerald-700]="activeTab === 'pk_gateways'"
+      [class.shadow-sm]="activeTab === 'pk_gateways'"
+      [class.text-slate-600]="activeTab !== 'pk_gateways'">
+      <lucide-icon [name]="icons.DollarSign" class="w-4 h-4"></lucide-icon>
+      <span>PK Gateways & Rent Slips</span>
+    </button>
   </div>
 
   <!-- TAB 1: PROPERTIES DIRECTORY -->
@@ -327,6 +337,16 @@
         </tbody>
       </table>
     </div>
+  </div>
+
+  <!-- TAB 5: PAKISTAN GATEWAYS & RENT SLIP VERIFICATION -->
+  <div *ngIf="activeTab === 'pk_gateways'" class="animate-fade-in">
+    <app-pk-payment-gateway-hub
+      businessKey="real_estate"
+      businessLabel="Property & Real Estate"
+      defaultEntityLabel="Tenant / Buyer"
+      [defaultAmount]="45000">
+    </app-pk-payment-gateway-hub>
   </div>
 
   <!-- MODAL: ADD PROPERTY -->

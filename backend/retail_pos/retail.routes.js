@@ -30,6 +30,19 @@ export function createRetailRouter(sqliteDb, db, customProducts) {
     res.json({ ok: true, products: RETAIL_PRODUCTS });
   });
 
+  router.get('/barcode-lookup', (req, res) => {
+    const code = String(req.query?.code || '').trim();
+    if (!code) return res.status(400).json({ ok: false, message: 'Barcode or SKU code is required.' });
+    const upper = code.toUpperCase();
+    const product = RETAIL_PRODUCTS.find(
+      (p) => String(p.barcode || '').trim().toUpperCase() === upper || String(p.sku || '').trim().toUpperCase() === upper
+    );
+    if (!product) {
+      return res.status(404).json({ ok: false, error: 'PRODUCT_NOT_FOUND', message: `No SKU found for barcode "${code}".` });
+    }
+    res.json({ ok: true, product });
+  });
+
   router.post('/products', (req, res) => {
     const p = req.body || {};
     const newProduct = {

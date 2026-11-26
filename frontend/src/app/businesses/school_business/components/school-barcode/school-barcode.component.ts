@@ -1,79 +1,14 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { QrEccLevel, buildQrPathData, encodeQrMatrix } from '../../../../shared/hardware/qr-code.util';
+import {
+  Code128Bar,
+  Code128Layout,
+  encodeCode128B,
+  buildCode128SvgMarkup
+} from '../../../../shared/hardware/barcode.component';
 
-export interface Code128Bar {
-  x: number;
-  width: number;
-}
-
-export interface Code128Layout {
-  totalWidth: number;
-  bars: Code128Bar[];
-  encodedText: string;
-}
-
-// ISO/IEC 15417 Code-128 bar-space module widths (indices 0..106)
-// Every pattern 0..105 has 6 elements [bar, space, bar, space, bar, space] summing to 11.
-// Index 106 (STOP) has 7 elements summing to 13.
-const CODE128_PATTERNS: readonly string[] = [
-  '212222', '222122', '222221', '121223', '121322', '131222', '122213', '122312', '132212', '221213',
-  '221312', '231212', '112232', '122132', '122231', '113222', '123122', '123221', '223211', '221132',
-  '221231', '213212', '223112', '312131', '311222', '321122', '321221', '312212', '322112', '322211',
-  '212123', '212321', '232121', '111323', '131123', '131321', '112313', '132113', '132311', '211313',
-  '231113', '231311', '112133', '112331', '132131', '113123', '113321', '133121', '313121', '211331',
-  '231131', '213113', '213311', '213131', '311123', '311321', '331121', '312113', '312311', '332111',
-  '314111', '221411', '431111', '111224', '111422', '121124', '121421', '141122', '141221', '112214',
-  '112412', '122114', '122411', '142112', '142211', '241211', '221114', '413111', '241112', '134111',
-  '111242', '121142', '121241', '114212', '124112', '124211', '411212', '421112', '421211', '212141',
-  '214121', '412121', '111143', '111341', '131141', '114113', '114311', '411113', '411311', '113141',
-  '114131', '311141', '411131', '211412', '211214', '211232', '2331112'
-];
-
-export function encodeCode128B(rawText: string, moduleWidth = 1.35, quietZoneModules = 8): Code128Layout {
-  const sanitized = String(rawText || 'SCH-2026')
-    .replace(/[^\x20-\x7E]/g, '')
-    .trim()
-    .slice(0, 36) || 'SCH-2026';
-
-  const codes: number[] = [104]; // Start Code B
-  let checksum = 104;
-  for (let i = 0; i < sanitized.length; i++) {
-    const val = sanitized.charCodeAt(i) - 32;
-    if (val >= 0 && val <= 95) {
-      codes.push(val);
-      checksum += val * (i + 1);
-    }
-  }
-  codes.push(checksum % 103);
-  codes.push(106); // STOP
-
-  const bars: Code128Bar[] = [];
-  let cursor = quietZoneModules * moduleWidth;
-  for (const sym of codes) {
-    const pattern = CODE128_PATTERNS[sym] || CODE128_PATTERNS[0];
-    for (let i = 0; i < pattern.length; i++) {
-      const w = Number(pattern[i]) * moduleWidth;
-      if (i % 2 === 0) {
-        bars.push({ x: Number(cursor.toFixed(2)), width: Number(w.toFixed(2)) });
-      }
-      cursor += w;
-    }
-  }
-  cursor += quietZoneModules * moduleWidth;
-
-  return {
-    totalWidth: Math.max(80, Math.ceil(cursor)),
-    bars,
-    encodedText: sanitized
-  };
-}
-
-export function buildCode128SvgMarkup(rawText: string, height = 38, barColor = '#0f172a'): string {
-  const layout = encodeCode128B(rawText, 1.4, 8);
-  const rects = layout.bars
-    .map((b) => `<rect x="${b.x}" y="0" width="${b.width}" height="${height}" fill="${barColor}" />`)
-    .join('');
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${layout.totalWidth} ${height}" width="100%" height="${height}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Barcode ${layout.encodedText}"><rect x="0" y="0" width="${layout.totalWidth}" height="${height}" fill="#ffffff" />${rects}</svg>`;
-}
+export type { Code128Bar, Code128Layout };
+export { encodeCode128B, buildCode128SvgMarkup };
 
 @Component({
   selector: 'app-school-barcode',
@@ -111,4 +46,43 @@ export class SchoolBarcodeComponent {
 
   readonly layout = computed(() => encodeCode128B(this.value(), this.barWidth()));
   readonly displayLabel = computed(() => this.label() || this.layout().encodedText);
+}
+
+@Component({
+  selector: 'app-school-qr-code',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div class="inline-flex flex-col items-center justify-center select-none">
+      <div class="bg-white rounded-lg p-1 border border-slate-200/90 shadow-2xs overflow-hidden inline-flex items-center justify-center">
+        <svg
+          [attr.viewBox]="'0 0 ' + viewSize() + ' ' + viewSize()"
+          [attr.width]="size()"
+          [attr.height]="size()"
+          shape-rendering="crispEdges"
+          class="block"
+          role="img"
+          [attr.aria-label]="'QR ' + qr().encodedText">
+          <rect x="0" y="0" [attr.width]="viewSize()" [attr.height]="viewSize()" fill="#ffffff" />
+          <path [attr.d]="pathData()" [attr.fill]="color()" />
+        </svg>
+      </div>
+      @if (label()) {
+        <span class="mt-0.5 text-[8px] font-mono font-black tracking-wider uppercase text-slate-700 leading-none">
+          {{ label() }}
+        </span>
+      }
+    </div>
+  `
+})
+export class SchoolQrCodeComponent {
+  readonly value = input<string>('SCH-2026');
+  readonly label = input<string>('');
+  readonly size = input<number>(64);
+  readonly color = input<string>('#0f172a');
+  readonly ecc = input<QrEccLevel>('M');
+  readonly quietZone = input<number>(2);
+
+  readonly qr = computed(() => encodeQrMatrix(this.value(), this.ecc()));
+  readonly viewSize = computed(() => this.qr().size + this.quietZone() * 2);
+  readonly pathData = computed(() => buildQrPathData(this.qr().matrix, this.quietZone()));
 }

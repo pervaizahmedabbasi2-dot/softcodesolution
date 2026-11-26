@@ -14,9 +14,11 @@ import {
   Search,
   Check,
   AlertTriangle,
-  X
+  X,
+  Printer
 } from 'lucide-angular';
 import { BackendService } from '../../../services/backend.service';
+import { HardwareDeviceService } from '../../../shared/hardware/hardware-device.service';
 
 @Component({
   selector: 'app-dashboard-restaurant-hub',
@@ -26,6 +28,7 @@ import { BackendService } from '../../../services/backend.service';
 })
 export class DashboardRestaurantHubComponent implements OnInit {
   private backend = inject(BackendService);
+  readonly hardware = inject(HardwareDeviceService);
 
   readonly icons = {
     LayoutGrid,
@@ -39,7 +42,8 @@ export class DashboardRestaurantHubComponent implements OnInit {
     Search,
     Check,
     AlertTriangle,
-    X
+    X,
+    Printer
   };
 
   activeTab: 'tables' | 'kds' | 'menu' = 'tables';
@@ -107,6 +111,9 @@ export class DashboardRestaurantHubComponent implements OnInit {
         this.selectedTable.status = status;
         this.selectedTable.guests = guests;
         this.selectedTable.orderTotal = orderTotal;
+        if (status === 'BILL_PRINTED') {
+          await this.printTableCustomerBill(this.selectedTable);
+        }
         this.showTableModal = false;
         this.actionMessage = `Table ${this.selectedTable.name} status updated to ${status}`;
         setTimeout(() => this.actionMessage = '', 3500);
@@ -122,5 +129,77 @@ export class DashboardRestaurantHubComponent implements OnInit {
     await this.backend.updateKdsStatus(ticket.id, nextStatus);
     this.actionMessage = `Kitchen Ticket ${ticket.ticketNo} marked as ${nextStatus}`;
     setTimeout(() => this.actionMessage = '', 3500);
+  }
+
+  async printKotTicket(ticket: any): Promise<void> {
+    if (!ticket) return;
+    await this.hardware.printKotTicket({
+      businessName: 'SOFTCODE RESTAURANT & CAFE',
+      ticketNo: ticket.ticketNo || 'KOT-101',
+      tableOrOrder: ticket.table || 'Dining Table',
+      station: 'Main Hot Kitchen',
+      waiterOrCashier: ticket.waiter || 'Floor Server',
+      orderType: 'DINE-IN',
+      priority: ticket.status === 'NEW' ? 'RUSH' : 'NORMAL',
+      timestampLabel: ticket.timeAgo ? `${ticket.timeAgo} · ${new Date().toLocaleTimeString()}` : new Date().toLocaleTimeString(),
+      items: (ticket.items || []).map((i: any) => ({
+        name: i.name,
+        qty: Number(i.qty || 1),
+        notes: i.notes
+      })),
+      footerNote: 'Verify allergen / spice notes before plating.'
+    });
+    this.actionMessage = `Sent ${this.hardware.paperWidth()} KOT ${ticket.ticketNo} to kitchen printer.`;
+    setTimeout(() => (this.actionMessage = ''), 3000);
+  }
+
+  async printTableKot(table: any): Promise<void> {
+    if (!table) return;
+    const matchingTicket = this.kdsTickets.find((k) =>
+      String(k.table || '').toLowerCase().includes(String(table.name || '').toLowerCase())
+    );
+    await this.hardware.printKotTicket({
+      businessName: 'SOFTCODE RESTAURANT & CAFE',
+      ticketNo: matchingTicket?.ticketNo || `KOT-${table.name}`,
+      tableOrOrder: `${table.name} (${table.zone})`,
+      station: 'Kitchen & Grill',
+      waiterOrCashier: table.waiter || 'Assigned Server',
+      orderType: `DINE-IN · ${table.guests || this.guestCount} Guests`,
+      timestampLabel: new Date().toLocaleTimeString(),
+      items: matchingTicket?.items || [
+        { name: 'Active Table Running Order', qty: 1, notes: `Guests: ${table.guests || this.guestCount}` }
+      ],
+      footerNote: 'KITCHEN ORDER TICKET — INTERNAL USE ONLY'
+    });
+    this.actionMessage = `KOT printed for ${table.name}`;
+    setTimeout(() => (this.actionMessage = ''), 3000);
+  }
+
+  async printTableCustomerBill(table: any): Promise<void> {
+    if (!table) return;
+    const total = Number(table.orderTotal || 35);
+    await this.hardware.printPosReceipt({
+      businessName: 'SOFTCODE RESTAURANT & CAFE',
+      branchName: table.zone || 'Main Dining',
+      receiptTitle: 'GUEST CHECK / CUSTOMER BILL',
+      receiptNo: `CHK-${String(table.name || 'TBL').replace(/\s+/g, '')}`,
+      customerName: `${table.name} (${table.guests || this.guestCount} Guests)`,
+      cashierName: table.waiter || 'Table Server',
+      paymentMethod: 'Table Check / Pay at Counter',
+      currency: 'USD',
+      items: [
+        { name: `${table.name} Dining Course`, qty: 1, unitPrice: total }
+      ],
+      subtotal: total,
+      discount: 0,
+      tax: 0,
+      total,
+      timestampLabel: new Date().toLocaleString(),
+      barcodeValue: `CHK-${table.id || table.name}`,
+      qrPayload: `RESTAURANT|${table.name}|${total.toFixed(2)}`,
+      footerNote: 'Thank you for dining with us! Gratuity not included.'
+    });
+    this.actionMessage = `Printed ${this.hardware.paperWidth()} Customer Bill for ${table.name}`;
+    setTimeout(() => (this.actionMessage = ''), 3000);
   }
 }

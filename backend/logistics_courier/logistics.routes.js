@@ -43,5 +43,28 @@ export function createLogisticsRouter(sqliteDb, db) {
     res.status(404).json({ ok: false });
   });
 
+  router.get('/waybill/:trackingNo', (req, res) => {
+    const code = String(req.params.trackingNo || '').trim().toUpperCase();
+    const s = CARGO_SHIPMENTS.find(
+      (shp) => String(shp.trackingNo || '').toUpperCase() === code || String(shp.id || '').toUpperCase() === code
+    );
+    if (!s) return res.status(404).json({ ok: false, message: `Waybill ${code} not found.` });
+    res.json({
+      ok: true,
+      waybill: {
+        trackingNo: s.trackingNo,
+        senderName: s.sender,
+        origin: s.origin,
+        consigneeName: s.consignee,
+        destination: s.destination,
+        weightKg: Number(s.weightKg || 1),
+        codAmount: Number(s.codAmount || 0),
+        riderOrCarrier: s.rider,
+        bookedDate: s.bookedDate,
+        status: s.status
+      }
+    });
+  });
+
   return router;
 }

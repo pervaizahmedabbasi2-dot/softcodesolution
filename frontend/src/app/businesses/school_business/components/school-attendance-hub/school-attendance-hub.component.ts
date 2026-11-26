@@ -56,7 +56,8 @@ export type ScannerCategoryFilter = 'all' | AttendanceMemberCategory;
   templateUrl: './school-attendance-hub.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
-    '(document:keydown.escape)': 'onEscapeKey()'
+    '(document:keydown.escape)': 'onEscapeKey()',
+    '(document:keydown)': 'onGateKioskKeydown($event)'
   }
 })
 export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
@@ -68,6 +69,7 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   @ViewChild('phoneVerifyInputEl') phoneVerifyInputEl?: ElementRef<HTMLInputElement>;
   @ViewChild('phoneEnrollInputEl') phoneEnrollInputEl?: ElementRef<HTMLInputElement>;
   @ViewChild('quickSelfieFileEl') quickSelfieFileEl?: ElementRef<HTMLInputElement>;
+  @ViewChild('gateBarcodeInputEl') gateBarcodeInputEl?: ElementRef<HTMLInputElement>;
 
   // Inputs
   portalContext = input<AttendancePortalContext>('owner');
@@ -142,6 +144,7 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   toast = output<{ message: string; type: 'success' | 'info' | 'warning' }>();
   switchToOwnerPortal = output<void>();
   syncRequested = output<void>();
+  idCardRequested = output<AttendanceMemberView>();
 
   // Local reactive state
   activeSubTab = signal<AttendanceSubTab>('terminal');
@@ -274,9 +277,12 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   quickEnrollFingerError = signal<string>('');
   isCapturingQuickFinger = signal<boolean>(false);
 
-  // Full Face & Biometric Fingerprint Enrollment tab state
+  // Full Face & Biometric Fingerprint & Gate Barcode Kiosk state
   scannerChannel = signal<AttendanceVerificationChannel>('face');
-  enrollChannel = signal<AttendanceVerificationChannel>('face');
+  enrollChannel = signal<'face' | 'fingerprint'>('face');
+  barcodeScanInput = signal<string>('');
+  gateKioskClock = signal<string>(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+  gateKioskDate = signal<string>(new Date().toLocaleDateString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' }));
   fingerScanStatus = signal<string>('');
   fingerSensorError = signal<string>('');
   isProcessingFingerScan = signal<boolean>(false);
@@ -329,6 +335,10 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   private activeCameraSlot: 'verify' | 'enroll' | null = null;
   private autoScanTimerId: ReturnType<typeof setInterval> | null = null;
   private overlayTimerId: ReturnType<typeof setTimeout> | null = null;
+  private gateClockTimerId: ReturnType<typeof setInterval> | null = null;
+  private hidBuffer = '';
+  private hidLastKeyAt = 0;
+  private hidResetTimerId: ReturnType<typeof setTimeout> | null = null;
   private audioCtx: AudioContext | null = null;
   private readonly localSessionPunches = new Map<
     string,
@@ -466,6 +476,8 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
         if (params.get('channel') === 'fingerprint' && this.canUseFingerprint()) {
           this.scannerChannel.set('fingerprint');
           this.enrollChannel.set('fingerprint');
+        } else if (params.get('channel') === 'barcode') {
+          this.scannerChannel.set('barcode');
         }
         if (params.get('subtab') === 'enrollment' && this.canEnrollCurrentPortal()) {
           this.activeSubTab.set('enrollment');
@@ -475,6 +487,11 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     if (typeof document !== 'undefined') {
       document.addEventListener('visibilitychange', this.boundVisibilityHandler);
     }
+    this.gateClockTimerId = setInterval(() => {
+      const now = new Date();
+      this.gateKioskClock.set(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+      this.gateKioskDate.set(now.toLocaleDateString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' }));
+    }, 1000);
     if (
       !this.isPortalLocked() &&
       this.canVerifyCameraCurrentPortal() &&
@@ -494,6 +511,9 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
           void this.startCamera('verify', true);
         }
       }, 60);
+    }
+    if (this.scannerChannel() === 'barcode') {
+      setTimeout(() => this.focusGateBarcodeInput(), 80);
     }
     void this.refreshFingerprintCapabilities();
   }
@@ -516,6 +536,14 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     }
     if (typeof document !== 'undefined') {
       document.removeEventListener('visibilitychange', this.boundVisibilityHandler);
+    }
+    if (this.gateClockTimerId !== null) {
+      clearInterval(this.gateClockTimerId);
+      this.gateClockTimerId = null;
+    }
+    if (this.hidResetTimerId !== null) {
+      clearTimeout(this.hidResetTimerId);
+      this.hidResetTimerId = null;
     }
     this.stopCamera(false);
   }
@@ -1439,12 +1467,15 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     if (channel === 'fingerprint') {
       this.stopCamera(false);
       void this.refreshFingerprintCapabilities();
+    } else if (channel === 'barcode') {
+      this.stopCamera(false);
+      setTimeout(() => this.focusGateBarcodeInput(), 80);
     } else if (this.activeSubTab() === 'terminal' && this.keepCameraOn() && this.canVerifyCameraCurrentPortal()) {
       setTimeout(() => void this.startCamera('verify', true), 60);
     }
   }
 
-  setEnrollChannel(channel: AttendanceVerificationChannel): void {
+  setEnrollChannel(channel: 'face' | 'fingerprint'): void {
     if (channel === 'fingerprint' && !this.canUseFingerprint()) {
       this.emitToast('Fingerprint biometric enrollment is currently disabled by School Owner.', 'warning');
       return;
@@ -1491,10 +1522,161 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     if (next) {
       if (this.activeSubTab() !== 'terminal') {
         this.setSubTab('terminal');
-      } else if (!this.cameraActive()) {
+      } else if (this.scannerChannel() === 'barcode') {
+        setTimeout(() => this.focusGateBarcodeInput(), 80);
+      } else if (this.scannerChannel() === 'face' && !this.cameraActive()) {
         void this.startCamera('verify', true);
       }
     }
+  }
+
+  activateGateKioskBarcodeFullscreen(): void {
+    if (!this.canVerifyCameraCurrentPortal()) {
+      this.emitToast('Attendance kiosk access is restricted for this portal.', 'warning');
+      return;
+    }
+    this.stopCamera(false);
+    this.activeSubTab.set('terminal');
+    this.scannerChannel.set('barcode');
+    this.lastVerificationResult.set(null);
+    this.scanOverlay.set(null);
+    this.kioskFullscreen.set(true);
+    setTimeout(() => this.focusGateBarcodeInput(), 80);
+  }
+
+  focusGateBarcodeInput(): void {
+    try {
+      this.gateBarcodeInputEl?.nativeElement?.focus();
+    } catch {}
+  }
+
+  onGateKioskKeydown(event: KeyboardEvent): void {
+    if (this.isPortalLocked() || this.activeSubTab() !== 'terminal' || this.scannerChannel() !== 'barcode') {
+      return;
+    }
+    if (!event || event.ctrlKey || event.altKey || event.metaKey) return;
+    const target = event.target as HTMLElement | null;
+    if (target?.getAttribute('data-kiosk-barcode-input') === 'true') return;
+    const tag = (target?.tagName || '').toUpperCase();
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || Boolean(target?.isContentEditable)) return;
+
+    const now = Date.now();
+    if (now - this.hidLastKeyAt > 75) {
+      this.hidBuffer = '';
+    }
+    this.hidLastKeyAt = now;
+
+    if (event.key === 'Enter' || event.key === 'Tab') {
+      const code = this.hidBuffer.trim();
+      this.hidBuffer = '';
+      if (this.hidResetTimerId !== null) {
+        clearTimeout(this.hidResetTimerId);
+        this.hidResetTimerId = null;
+      }
+      if (code.length >= 3) {
+        event.preventDefault();
+        this.submitBarcodeGateScan(code);
+      }
+      return;
+    }
+
+    if (event.key.length === 1) {
+      this.hidBuffer += event.key;
+      if (this.hidResetTimerId !== null) clearTimeout(this.hidResetTimerId);
+      this.hidResetTimerId = setTimeout(() => {
+        this.hidBuffer = '';
+        this.hidResetTimerId = null;
+      }, 160);
+    }
+  }
+
+  submitBarcodeGateScan(overrideCode?: string): void {
+    const raw = String(overrideCode ?? this.barcodeScanInput()).trim();
+    this.barcodeScanInput.set('');
+    if (!raw) {
+      this.playAlertTone('unclear');
+      this.emitToast('Scan a Student / Staff Barcode ID Card or RFID badge.', 'warning');
+      this.focusGateBarcodeInput();
+      return;
+    }
+
+    const norm = raw.toLowerCase();
+    const isExplicitEmp = /^emp[-_]/i.test(raw);
+    const strippedEmp = raw.replace(/^emp[-_]/i, '').trim().toLowerCase();
+    const strippedStu = raw.replace(/^(?:ch|chln|stu|st|adm|roll|rfid)[-_]?(?:\d{4}[-_])?/i, '').trim().toLowerCase();
+
+    const pool = this.allCampusMembers();
+    const activeCat = this.activeCategory();
+    const allowed = this.allowedCategories();
+
+    const matchMember = (m: AttendanceMemberView): boolean => {
+      const idLow = m.id.toLowerCase();
+      const codeLow = m.code.toLowerCase();
+      const isEmp = m.category !== 'student';
+      if (isExplicitEmp && !isEmp) return false;
+      if (codeLow === norm || idLow === norm) return true;
+      if (isEmp && (strippedEmp === codeLow || strippedEmp === idLow || `emp-${codeLow}` === norm || `emp-${idLow}` === norm)) {
+        return true;
+      }
+      if (!isEmp && strippedStu && (codeLow === strippedStu || idLow === strippedStu)) {
+        return true;
+      }
+      return false;
+    };
+
+    const scopedPool = activeCat === 'all' ? pool : pool.filter((m) => m.category === activeCat);
+    const member = scopedPool.find(matchMember) || pool.find(matchMember) || null;
+
+    if (!member) {
+      this.playAlertTone('mismatch');
+      this.triggerScanOverlay(
+        {
+          kind: 'mismatch',
+          title: `Unrecognized Card: ${raw}`,
+          subtitle: 'No Student (STU-...) or Staff/Teacher/Principal (EMP-...) profile matched this ID.',
+          badgeText: 'GATE ACCESS · UNRECOGNIZED ID',
+          memberCode: raw
+        },
+        2400
+      );
+      this.emitToast(`Unrecognized barcode or RFID pass "${raw}".`, 'warning');
+      setTimeout(() => this.focusGateBarcodeInput(), 30);
+      return;
+    }
+
+    if (!this.isOwner() && !allowed.includes(member.category)) {
+      this.playAlertTone('mismatch');
+      this.triggerScanOverlay(
+        {
+          kind: 'mismatch',
+          title: member.name,
+          subtitle: `This portal is not permitted to log ${this.singleCategoryLabel(member.category)} gate attendance.`,
+          badgeText: 'PORTAL PERMISSION RESTRICTED',
+          memberCode: member.code
+        },
+        2200
+      );
+      this.emitToast(`Owner policy restricts ${this.singleCategoryLabel(member.category)} scans in this portal.`, 'warning');
+      setTimeout(() => this.focusGateBarcodeInput(), 30);
+      return;
+    }
+
+    this.processMatchedMemberPunch({
+      memberKey: `${member.category}:${member.id}`,
+      memberId: member.id,
+      memberCategory: member.category,
+      memberName: member.name,
+      memberCode: member.code,
+      gradeOrDept: member.subLabel || member.sectionOrDept,
+      enrolledPhoto: member.faceProfile?.facePhotoData || member.image || '',
+      snapUrl: '',
+      confidence: 100,
+      thresholdUsed: 100,
+      modeTag: 'barcode_scanner',
+      verifiedByLabel: 'Barcode / RFID Gate Kiosk',
+      isAutoScan: false
+    });
+    setTimeout(() => this.focusGateBarcodeInput(), 30);
   }
 
   onEscapeKey(): void {

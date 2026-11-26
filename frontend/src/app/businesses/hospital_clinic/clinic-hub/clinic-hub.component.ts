@@ -17,15 +17,18 @@ import {
   X
 } from 'lucide-angular';
 import { BackendService } from '../../../services/backend.service';
+import { HardwareDeviceService } from '../../../shared/hardware/hardware-device.service';
+import { PkPaymentGatewayHubComponent } from '../../../shared/hardware/pk-payment-gateway-hub.component';
 
 @Component({
   selector: 'app-dashboard-clinic-hub',
   standalone: true,
-  imports: [CommonModule, FormsModule, LucideAngularModule],
+  imports: [CommonModule, FormsModule, LucideAngularModule, PkPaymentGatewayHubComponent],
   templateUrl: './clinic-hub.component.html'
 })
 export class DashboardClinicHubComponent implements OnInit {
   private backend = inject(BackendService);
+  readonly hardware = inject(HardwareDeviceService);
 
   readonly icons = {
     HeartPulse,
@@ -42,7 +45,7 @@ export class DashboardClinicHubComponent implements OnInit {
     X
   };
 
-  activeTab: 'queue' | 'patients' | 'prescriptions' = 'queue';
+  activeTab: 'queue' | 'patients' | 'prescriptions' | 'pk_gateways' = 'queue';
   isLoading = false;
   searchQuery = '';
   actionMessage = '';
@@ -195,7 +198,34 @@ export class DashboardClinicHubComponent implements OnInit {
     this.showRxViewModal = true;
   }
 
-  printSlip(): void {
-    window.print();
+  async printSlip(): Promise<void> {
+    if (!this.selectedRx) {
+      window.print();
+      return;
+    }
+    const items = (this.selectedRx.medicines || []).map((m: any) => ({
+      name: `${m.name} (${m.dosage})`,
+      qty: Number(m.days || 1),
+      unitPrice: 0
+    }));
+    await this.hardware.printPosReceipt({
+      businessName: 'SOFTCODE MEDICAL CLINIC',
+      branchName: 'OPD Consultation & EHR',
+      receiptTitle: 'DIGITAL PRESCRIPTION SLIP (RX)',
+      receiptNo: this.selectedRx.rxNo || 'RX-CLINIC',
+      customerName: this.selectedRx.patientName || 'Patient',
+      cashierName: this.selectedRx.doctor || 'Duty Physician',
+      paymentMethod: `Dx: ${this.selectedRx.diagnosis || 'General'}`,
+      currency: 'PKR',
+      items: items.length > 0 ? items : [{ name: this.selectedRx.diagnosis || 'OPD Consultation', qty: 1, unitPrice: 0 }],
+      subtotal: 0,
+      discount: 0,
+      tax: 0,
+      total: 0,
+      timestampLabel: this.selectedRx.date || new Date().toLocaleDateString(),
+      barcodeValue: this.selectedRx.rxNo || 'RX-CLINIC',
+      qrPayload: `CLINIC-RX|${this.selectedRx.rxNo || 'RX'}|${this.selectedRx.patientName || ''}`,
+      footerNote: 'Present this slip at Pharmacy Counter for FEFO batch dispensing.'
+    });
   }
 }

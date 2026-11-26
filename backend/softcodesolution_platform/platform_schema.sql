@@ -343,3 +343,78 @@ CREATE TABLE IF NOT EXISTS platform_smtp_settings (
   support_email TEXT,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
+-- 16. Multi-Business Pakistan Payment Gateways (Coaching, Gym, Clinic, Real Estate, etc.)
+CREATE TABLE IF NOT EXISTS local_business_payment_gateways (
+  id TEXT PRIMARY KEY,
+  tenant_id TEXT NOT NULL DEFAULT 'tenant-root-platform',
+  business_key TEXT NOT NULL,
+  provider_key TEXT NOT NULL,
+  display_name TEXT NOT NULL,
+  category TEXT NOT NULL,
+  account_title TEXT,
+  account_number TEXT,
+  iban TEXT,
+  raast_id TEXT,
+  bank_name TEXT,
+  branch_code TEXT,
+  till_id TEXT,
+  biller_code TEXT,
+  merchant_id TEXT,
+  merchant_secret_enc TEXT,
+  integrity_salt_enc TEXT,
+  fee_type TEXT DEFAULT 'none',
+  fee_value REAL DEFAULT 0,
+  verification_mode TEXT DEFAULT 'slip_review',
+  instructions TEXT,
+  is_enabled INTEGER DEFAULT 1,
+  is_default INTEGER DEFAULT 0,
+  sort_order INTEGER DEFAULT 10,
+  is_synced INTEGER DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(tenant_id, business_key, provider_key)
+);
+
+CREATE INDEX IF NOT EXISTS idx_biz_gw_tenant_biz ON local_business_payment_gateways(tenant_id, business_key);
+
+CREATE TABLE IF NOT EXISTS local_business_gateway_settings (
+  id TEXT PRIMARY KEY,
+  tenant_id TEXT NOT NULL DEFAULT 'tenant-root-platform',
+  business_key TEXT NOT NULL,
+  settings_json TEXT NOT NULL,
+  is_synced INTEGER DEFAULT 0,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(tenant_id, business_key)
+);
+
+CREATE TABLE IF NOT EXISTS local_business_payment_transactions (
+  id TEXT PRIMARY KEY,
+  tenant_id TEXT NOT NULL DEFAULT 'tenant-root-platform',
+  business_key TEXT NOT NULL,
+  txn_ref TEXT NOT NULL,
+  invoice_no TEXT NOT NULL,
+  gateway_id TEXT NOT NULL,
+  gateway_name TEXT NOT NULL,
+  provider_key TEXT NOT NULL,
+  payer_name TEXT NOT NULL,
+  payer_ref TEXT,
+  payer_phone TEXT,
+  base_amount REAL NOT NULL,
+  gateway_fee REAL DEFAULT 0,
+  total_amount REAL NOT NULL,
+  currency TEXT DEFAULT 'PKR',
+  status TEXT DEFAULT 'PENDING_VERIFICATION',
+  proof_reference TEXT,
+  proof_notes TEXT,
+  proof_screenshot TEXT,
+  verified_by TEXT,
+  verified_at TEXT,
+  is_synced INTEGER DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(tenant_id, business_key, txn_ref)
+);
+
+CREATE INDEX IF NOT EXISTS idx_biz_txn_tenant_biz ON local_business_payment_transactions(tenant_id, business_key, created_at);
+CREATE INDEX IF NOT EXISTS idx_biz_txn_invoice ON local_business_payment_transactions(tenant_id, business_key, invoice_no);
+

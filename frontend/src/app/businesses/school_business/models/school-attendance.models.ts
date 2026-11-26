@@ -2,7 +2,7 @@ export type AttendanceMemberCategory = 'student' | 'teacher' | 'staff' | 'princi
 
 export type AttendanceVerificationMode = 'strict' | 'standard' | 'lite';
 
-export type AttendanceVerificationChannel = 'face' | 'fingerprint';
+export type AttendanceVerificationChannel = 'face' | 'fingerprint' | 'barcode';
 
 export type FingerprintScannerType = 'device_webauthn' | 'optical_image';
 

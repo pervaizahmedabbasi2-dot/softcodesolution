@@ -19,15 +19,18 @@ import {
   DollarSign
 } from 'lucide-angular';
 import { BackendService } from '../../../services/backend.service';
+import { HardwareDeviceService } from '../../../shared/hardware/hardware-device.service';
+import { PkPaymentGatewayHubComponent } from '../../../shared/hardware/pk-payment-gateway-hub.component';
 
 @Component({
   selector: 'app-dashboard-gym-hub',
   standalone: true,
-  imports: [CommonModule, FormsModule, LucideAngularModule],
+  imports: [CommonModule, FormsModule, LucideAngularModule, PkPaymentGatewayHubComponent],
   templateUrl: './gym-hub.component.html'
 })
 export class DashboardGymHubComponent implements OnInit {
   private backend = inject(BackendService);
+  readonly hardware = inject(HardwareDeviceService);
 
   readonly icons = {
     Dumbbell,
@@ -46,7 +49,7 @@ export class DashboardGymHubComponent implements OnInit {
     DollarSign
   };
 
-  activeTab: 'members' | 'attendance' | 'trainers' | 'plans' | 'billing' = 'members';
+  activeTab: 'members' | 'attendance' | 'trainers' | 'plans' | 'billing' | 'pk_gateways' = 'members';
   isLoading = false;
   searchQuery = '';
   actionMessage = '';
@@ -139,8 +142,33 @@ export class DashboardGymHubComponent implements OnInit {
     this.showReceiptModal = true;
   }
 
-  printReceipt(): void {
-    window.print();
+  async printReceipt(): Promise<void> {
+    if (!this.selectedMemberReceipt) {
+      window.print();
+      return;
+    }
+    const fee = Number(this.selectedMemberReceipt.fee || 45);
+    await this.hardware.printPosReceipt({
+      businessName: 'SOFTCODE FITNESS & GYM',
+      branchName: 'Member Fee Counter',
+      receiptTitle: 'MEMBERSHIP FEE RECEIPT',
+      receiptNo: this.selectedMemberReceipt.regNo || 'GYM-FEE',
+      customerName: `${this.selectedMemberReceipt.name || 'Member'} (${this.selectedMemberReceipt.regNo || ''})`,
+      cashierName: 'Front Desk Reception',
+      paymentMethod: 'Desk / Digital Slip',
+      currency: 'USD',
+      items: [
+        { name: this.selectedMemberReceipt.plan || 'Monthly Gym Membership', qty: 1, unitPrice: fee }
+      ],
+      subtotal: fee,
+      discount: 0,
+      tax: 0,
+      total: fee,
+      timestampLabel: new Date().toLocaleString(),
+      barcodeValue: this.selectedMemberReceipt.regNo || 'GYM-2041',
+      qrPayload: `GYM|${this.selectedMemberReceipt.regNo || 'GYM'}|${this.selectedMemberReceipt.name || ''}|${fee}`,
+      footerNote: 'RFID Turnstile access active. Bring towel & indoor trainers.'
+    });
   }
 
   async submitNewMember(): Promise<void> {

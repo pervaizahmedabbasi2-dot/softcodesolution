@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -30,8 +30,13 @@ import {
   TrendingUp,
   Activity,
   RefreshCw,
-  Eye
+  Eye,
+  ScanBarcode
 } from 'lucide-angular';
+import { BackendService } from '../../services/backend.service';
+import { HardwareDeviceService } from '../../shared/hardware/hardware-device.service';
+import { SharedBarcodeComponent, SharedQrCodeComponent } from '../../shared/hardware/barcode.component';
+import { PkPaymentGatewayHubComponent } from '../../shared/hardware/pk-payment-gateway-hub.component';
 
 export interface EnterpriseBusiness {
   id: string;
@@ -57,10 +62,19 @@ export interface EnterpriseBusiness {
 @Component({
   selector: 'app-dashboard-business-suites',
   standalone: true,
-  imports: [CommonModule, FormsModule, LucideAngularModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    LucideAngularModule,
+    SharedBarcodeComponent,
+    SharedQrCodeComponent,
+    PkPaymentGatewayHubComponent
+  ],
   templateUrl: './business-suites.component.html'
 })
 export class DashboardBusinessSuitesComponent implements OnInit {
+  private backend = inject(BackendService);
+  readonly hardware = inject(HardwareDeviceService);
   private _initialBusinessId?: string;
 
   @Input()
@@ -106,7 +120,8 @@ export class DashboardBusinessSuitesComponent implements OnInit {
     TrendingUp,
     Activity,
     RefreshCw,
-    Eye
+    Eye,
+    ScanBarcode
   };
 
   getRoleLabel(role?: string): string {
@@ -136,6 +151,9 @@ export class DashboardBusinessSuitesComponent implements OnInit {
   showAddRecordModal = false;
   showPrintModal = false;
   selectedRecordForPrint: any = null;
+  supermarketScanInput = '';
+  supermarketCartTotal = 162.7;
+  supermarketLastItem = 'Fresh Bananas & Produce (3.45 Kg)';
 
   newRecord = {
     title: '',
@@ -1432,6 +1450,38 @@ export class DashboardBusinessSuitesComponent implements OnInit {
         { id: 'rec-4', code: 'SLR-104', title: 'Tier-1 Longi 585W N-Type Solar Panels (120 Units)', client: 'EPC Central Warehouse', amount: 16500, date: 'Yesterday', status: 'DELIVERED', meta: 'Flash Test Certified', tab: 'BOM Hardware' },
         { id: 'rec-5', code: 'SLR-105', title: 'Milestone 2 Project Invoicing: 40% On Panel Mounting', client: 'Askari Commercial Tower', amount: 18000, date: 'Yesterday', status: 'PAID', meta: 'Invoice # SLR-9941', tab: 'Project Invoicing' }
       ]
+    },
+    {
+      id: 'bakery_confectionery',
+      name: 'Bakery & Confectionery',
+      category: 'bakery',
+      sector: 'COMMERCE',
+      pricingWeight: 1.00,
+      tagline: 'Oven Batch Baking, Custom Celebration Cakes, Counter POS & 80mm KOT',
+      description: 'Artisanal bakery and sweet shop ERP managing oven production batches, ingredient flour/dairy yields, custom cake bookings, and instant counter thermal KOT/bill slips.',
+      modules: [
+        'Daily Oven Batch Schedules',
+        'Counter POS & Fast Checkout',
+        'Custom Cake Order Deposits',
+        'Flour, Dairy & Cocoa Recipe Costing',
+        'Shelf Life & Day-Old Markdown Rules',
+        '80mm Kitchen / Pastry KOT Printing'
+      ],
+      kpis: [
+        { label: 'Fresh Oven Batches', value: '24 Batches', subtext: 'Sourdough, cakes, mithai', tone: 'emerald' },
+        { label: 'Custom Cake Orders', value: '18 Bookings', subtext: '50% advance deposits', tone: 'blue' },
+        { label: 'Shelf Freshness SLA', value: '99.1%', subtext: '24-hour freshness audit', tone: 'emerald' },
+        { label: 'Counter Average Bill', value: '$14.80', subtext: 'Morning & evening rush', tone: 'default' },
+        { label: 'Daily Bakery Sales', value: '$4,920', subtext: 'Counter + custom orders', tone: 'default' }
+      ],
+      activeTab: 'Counter POS & KOT',
+      tabs: ['Counter POS & KOT', 'Oven Batches', 'Custom Cakes', 'Ingredients'],
+      records: [
+        { id: 'bak-1', code: 'BAK-301', title: 'Counter KOT: 2x Belgian Chocolate Fudge Cake + 6x Croissants', client: 'Counter Walk-In #14', amount: 46, date: 'Just Now', status: 'IN_PROGRESS', meta: 'Pastry Kitchen KOT', tab: 'Counter POS & KOT' },
+        { id: 'bak-2', code: 'BAK-302', title: 'Custom 3-Tier Wedding Ribbon Cake (8 Lbs Vanilla Berry)', client: 'Mrs. Hina Kamran (Event Hall 2)', amount: 210, date: 'Today 04:00 PM', status: 'ACTIVE', meta: '50% Advance Paid', tab: 'Custom Cakes' },
+        { id: 'bak-3', code: 'BAK-303', title: 'Morning Sourdough & Croissant Deck Oven Batch #4', client: 'Main Baking Line', amount: 640, date: 'Today 06:30 AM', status: 'COMPLETED', meta: '120 Loaves Baked', tab: 'Oven Batches' },
+        { id: 'bak-4', code: 'BAK-304', title: 'French Cultured Butter & 70% Dark Couverture Dispatch', client: 'Dairy & Cocoa Store', amount: 390, date: 'Yesterday', status: 'ACTIVE', meta: 'Cold Room #1', tab: 'Ingredients' }
+      ]
     }
   ];
 
@@ -1522,6 +1572,10 @@ export class DashboardBusinessSuitesComponent implements OnInit {
     setTimeout(() => this.actionMessage = '', 3500);
   }
 
+  get isLogisticsSuite(): boolean {
+    return this.activeBusiness?.id === 'logistics_transport' || this.activeBusiness?.id === 'cargo_freight';
+  }
+
   openPrintModal(rec: any): void {
     this.selectedRecordForPrint = rec;
     this.showPrintModal = true;
@@ -1529,6 +1583,178 @@ export class DashboardBusinessSuitesComponent implements OnInit {
 
   printRecord(): void {
     window.print();
+  }
+
+  async scanSupermarketBarcode(rawCode?: string): Promise<void> {
+    const code = String(rawCode ?? this.supermarketScanInput ?? '').trim() || 'SM-201';
+    this.supermarketScanInput = '';
+    const lower = code.toLowerCase();
+
+    const matchedLocal = (this.activeBusiness?.records || []).find((r: any) =>
+      String(r.code || '').toLowerCase() === lower || String(r.title || '').toLowerCase().includes(lower)
+    );
+
+    if (matchedLocal) {
+      this.supermarketCartTotal = Number((this.supermarketCartTotal + Number(matchedLocal.amount || 12)).toFixed(2));
+      this.supermarketLastItem = matchedLocal.title;
+      this.hardware.playBeep(1120, 65);
+      this.actionMessage = `Scanned ${matchedLocal.code}: added to active lane cart ($${this.supermarketCartTotal}).`;
+      setTimeout(() => (this.actionMessage = ''), 3000);
+      return;
+    }
+
+    try {
+      const res = await this.backend.lookupRetailBarcode(code);
+      if (res?.ok && res?.product) {
+        const price = Number(res.product.sellingPrice || 10);
+        this.supermarketCartTotal = Number((this.supermarketCartTotal + price).toFixed(2));
+        this.supermarketLastItem = `${res.product.name} ($${price})`;
+        this.activeBusiness.records.unshift({
+          id: 'sm-' + Date.now(),
+          code: res.product.sku || code,
+          title: `Scanned Item: ${res.product.name}`,
+          client: 'Lane 1 Express Checkout',
+          amount: price,
+          date: 'Just Now',
+          status: 'CHECKED_OUT',
+          meta: 'HID Scanner Add',
+          tab: this.activeBusiness.activeTab
+        });
+        this.hardware.playBeep(1120, 65);
+        this.actionMessage = `Barcode ${code} resolved (${res.product.name}) — Lane total $${this.supermarketCartTotal}.`;
+        setTimeout(() => (this.actionMessage = ''), 3000);
+        return;
+      }
+    } catch {}
+
+    // Digital Scale PLU / Weight-embedded EAN support (starts with 20-29)
+    if (/^2\d{4,}$/.test(code)) {
+      const unitWeightKg = Number((Math.max(0.5, (Number(code.slice(-3)) || 125) / 100)).toFixed(2));
+      const amount = Number((unitWeightKg * 4.5).toFixed(2));
+      this.supermarketCartTotal = Number((this.supermarketCartTotal + amount).toFixed(2));
+      this.supermarketLastItem = `Digital Scale Weighed Produce (${unitWeightKg} Kg)`;
+      this.hardware.playBeep(1240, 75);
+      this.actionMessage = `Scale Tag ${code}: ${unitWeightKg} Kg added ($${amount}).`;
+      setTimeout(() => (this.actionMessage = ''), 3500);
+      return;
+    }
+
+    this.hardware.playBeep(320, 140);
+    this.actionMessage = `Barcode ${code} not found in Supermarket SKU or scale PLU directory.`;
+    setTimeout(() => (this.actionMessage = ''), 3500);
+  }
+
+  async printSupermarketThermalReceipt(): Promise<void> {
+    const total = Number(this.supermarketCartTotal || 148.5);
+    await this.hardware.printPosReceipt(
+      {
+        businessName: 'SOFTCODE SUPER MART & GROCERY',
+        branchName: 'Express Checkout Lane #3',
+        receiptTitle: 'GROCERY THERMAL RECEIPT',
+        receiptNo: 'SM-' + Math.floor(10000 + Math.random() * 89999),
+        customerName: 'Supermarket Lane Shopper',
+        cashierName: 'Zain (Cashier)',
+        paymentMethod: 'Cash / Loyalty Card',
+        currency: 'USD',
+        items: [
+          { name: this.supermarketLastItem || 'Assorted FMCG & Produce Basket', qty: 1, unitPrice: total }
+        ],
+        subtotal: total,
+        discount: 0,
+        tax: 0,
+        total,
+        timestampLabel: new Date().toLocaleString(),
+        barcodeValue: 'SM-LANE3-2026',
+        qrPayload: `SUPERMART|LANE3|${total.toFixed(2)}`,
+        footerNote: 'Freshness Guaranteed! Return perishable items within 24 hours.'
+      },
+      true
+    );
+    this.actionMessage = `Printed ${this.hardware.paperWidth()} Supermarket Receipt & queued ESC p Cash Drawer.`;
+    setTimeout(() => (this.actionMessage = ''), 3500);
+  }
+
+  async triggerSuiteCashDrawer(): Promise<void> {
+    const res = await this.hardware.kickCashDrawer();
+    this.actionMessage = res.message;
+    setTimeout(() => (this.actionMessage = ''), 3500);
+  }
+
+  async printBakeryKot(rec?: any): Promise<void> {
+    await this.hardware.printKotTicket({
+      businessName: 'SOFTCODE BAKERY & PATISSERIE',
+      ticketNo: rec?.code || 'KOT-BAK-301',
+      tableOrOrder: rec?.client || 'Counter Pastry Pickup',
+      station: 'Deck Oven & Cake Decorating',
+      waiterOrCashier: 'Pastry Counter #1',
+      orderType: 'BAKERY COUNTER',
+      priority: 'RUSH',
+      timestampLabel: new Date().toLocaleTimeString(),
+      items: [
+        { name: rec?.title || '2x Belgian Fudge Cake + 6x Butter Croissants', qty: 1, notes: rec?.meta || 'Gift Box + Ribbon' }
+      ],
+      footerNote: 'Check custom cake inscription spelling before boxing.'
+    });
+    this.actionMessage = `Printed ${this.hardware.paperWidth()} Bakery KOT slip.`;
+    setTimeout(() => (this.actionMessage = ''), 3000);
+  }
+
+  async printBakeryCustomerBill(rec?: any): Promise<void> {
+    const amount = Number(rec?.amount || 46);
+    await this.hardware.printPosReceipt({
+      businessName: 'SOFTCODE BAKERY & CONFECTIONERY',
+      branchName: 'Patisserie Front Counter',
+      receiptTitle: 'CUSTOMER BAKERY BILL',
+      receiptNo: rec?.code || 'BAK-301',
+      customerName: rec?.client || 'Walk-In Customer',
+      cashierName: 'Front Counter',
+      paymentMethod: 'Cash / Card',
+      currency: 'USD',
+      items: [{ name: rec?.title || 'Assorted Bakery & Pastries', qty: 1, unitPrice: amount }],
+      subtotal: amount,
+      discount: 0,
+      tax: 0,
+      total: amount,
+      timestampLabel: new Date().toLocaleString(),
+      barcodeValue: rec?.code || 'BAK-301',
+      qrPayload: `BAKERY|${rec?.code || 'BAK-301'}|${amount.toFixed(2)}`,
+      footerNote: 'Store fresh cream items at 4°C. Baked fresh daily!'
+    });
+    this.actionMessage = `Printed ${this.hardware.paperWidth()} Bakery Customer Bill.`;
+    setTimeout(() => (this.actionMessage = ''), 3000);
+  }
+
+  async printWaybill4x6ForRecord(rec: any): Promise<void> {
+    if (!rec) return;
+    let payload: any = null;
+    try {
+      const res = await this.backend.getLogisticsWaybill(rec.code);
+      if (res?.ok && res?.waybill) {
+        payload = res.waybill;
+      }
+    } catch {}
+
+    await this.hardware.printWaybill4x6(
+      payload || {
+        companyName: 'SOFTCODE EXPRESS CARGO & LOGISTICS',
+        trackingNo: rec.code || 'LOG-701',
+        serviceType: rec.meta || 'INTER-CITY FREIGHT',
+        senderName: 'SoftCode Dispatch Hub',
+        origin: 'Karachi Hub',
+        consigneeName: rec.client || 'Verified Receiver',
+        destination: 'Lahore / Islamabad Hub',
+        weightKg: 14.5,
+        pieces: 2,
+        codAmount: Number(rec.amount || 0),
+        currency: 'PKR',
+        riderOrCarrier: rec.meta || 'Fleet Line-Haul',
+        bookedDate: rec.date || new Date().toLocaleDateString(),
+        status: rec.status || 'IN_TRANSIT',
+        notes: rec.title || 'Standard freight consignment waybill'
+      }
+    );
+    this.actionMessage = `Generated 4x6 (100x150mm) Thermal Waybill for ${rec.code}.`;
+    setTimeout(() => (this.actionMessage = ''), 3500);
   }
 
   getTabRecordCount(tab: string): number {

@@ -15,9 +15,50 @@
     </div>
 
     <!-- Quick Buttons -->
-    <div class="flex items-center gap-3">
+    <div class="flex flex-wrap items-center gap-2.5">
+      <button (click)="connectSerialPrinter()"
+        class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-semibold transition-colors"
+        [class.bg-emerald-50]="hardware.serialPortConnected()"
+        [class.border-emerald-300]="hardware.serialPortConnected()"
+        [class.text-emerald-700]="hardware.serialPortConnected()"
+        [class.bg-white]="!hardware.serialPortConnected()"
+        [class.border-slate-200]="!hardware.serialPortConnected()"
+        [class.text-slate-700]="!hardware.serialPortConnected()">
+        <lucide-icon [name]="icons.Usb" class="w-3.5 h-3.5"></lucide-icon>
+        <span>{{ hardware.serialPortConnected() ? 'ESC/POS Connected' : 'Connect USB Serial' }}</span>
+      </button>
+
+      <div class="inline-flex rounded-lg border border-slate-200 bg-white p-0.5 text-[11px] font-bold">
+        <button (click)="hardware.setPaperWidth('80mm')" class="px-2 py-1 rounded-md transition-colors"
+          [class.bg-slate-900]="hardware.paperWidth() === '80mm'"
+          [class.text-white]="hardware.paperWidth() === '80mm'"
+          [class.text-slate-600]="hardware.paperWidth() !== '80mm'">80mm</button>
+        <button (click)="hardware.setPaperWidth('58mm')" class="px-2 py-1 rounded-md transition-colors"
+          [class.bg-slate-900]="hardware.paperWidth() === '58mm'"
+          [class.text-white]="hardware.paperWidth() === '58mm'"
+          [class.text-slate-600]="hardware.paperWidth() !== '58mm'">58mm</button>
+      </div>
+
+      <button (click)="hardware.toggleAutoPrint()"
+        class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-semibold transition-colors"
+        [class.bg-indigo-50]="hardware.autoPrintEnabled()"
+        [class.border-indigo-200]="hardware.autoPrintEnabled()"
+        [class.text-indigo-700]="hardware.autoPrintEnabled()"
+        [class.bg-white]="!hardware.autoPrintEnabled()"
+        [class.border-slate-200]="!hardware.autoPrintEnabled()"
+        [class.text-slate-600]="!hardware.autoPrintEnabled()">
+        <lucide-icon [name]="icons.Printer" class="w-3.5 h-3.5"></lucide-icon>
+        <span>Auto-Print: {{ hardware.autoPrintEnabled() ? 'ON' : 'OFF' }}</span>
+      </button>
+
+      <button (click)="triggerCashDrawer()"
+        class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition-colors shadow-xs">
+        <lucide-icon [name]="icons.DollarSign" class="w-3.5 h-3.5"></lucide-icon>
+        <span>Open Drawer (ESC p)</span>
+      </button>
+
       <button *ngIf="activeTab === 'inventory'" (click)="showAddProductModal = true"
-        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700 transition-all shadow-sm">
+        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700 transition-all shadow-sm">
         <lucide-icon [name]="icons.Plus" class="w-4 h-4"></lucide-icon>
         <span>Add New SKU</span>
       </button>
@@ -37,6 +78,14 @@
       <span>{{ actionMessage }}</span>
     </div>
     <button (click)="actionMessage = ''" class="text-emerald-600 hover:text-emerald-900 text-xs">Dismiss</button>
+  </div>
+
+  <div *ngIf="scanWarning" class="p-4 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-xs font-medium flex items-center justify-between animate-fade-in">
+    <div class="flex items-center gap-2">
+      <lucide-icon [name]="icons.AlertTriangle" class="w-4 h-4 text-amber-600"></lucide-icon>
+      <span>{{ scanWarning }}</span>
+    </div>
+    <button (click)="scanWarning = ''" class="text-amber-700 hover:text-amber-900 text-xs font-semibold">Dismiss</button>
   </div>
 
   <!-- Tab Switcher -->
@@ -78,11 +127,32 @@
     
     <!-- LEFT: PRODUCT CATALOG PICKER (8 Cols) -->
     <div class="lg:col-span-8 space-y-5">
-      <!-- Search & Category Filters -->
-      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-4">
+      <!-- USB HID Barcode Scanner + Search Filters -->
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
+        <div class="flex flex-col sm:flex-row sm:items-center gap-2.5 pb-3 border-b border-slate-100">
+          <div class="flex items-center gap-2 flex-1 px-3 py-2 rounded-lg bg-slate-50 border border-slate-200">
+            <lucide-icon [name]="icons.ScanBarcode" class="w-4 h-4 text-indigo-600 shrink-0"></lucide-icon>
+            <input type="text" [(ngModel)]="scannerInput" data-scanner-input="true"
+              (keydown.enter)="handleBarcodeScan(scannerInput)"
+              placeholder="Scan USB/Bluetooth barcode or type SKU + Enter to auto-add to cart..."
+              class="w-full bg-transparent text-xs font-mono text-slate-900 placeholder-slate-400 focus:outline-none" />
+            <button (click)="handleBarcodeScan(scannerInput)"
+              class="px-2.5 py-1 rounded bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold shrink-0">
+              Scan SKU
+            </button>
+          </div>
+          <div class="flex items-center gap-1.5" *ngIf="products.length > 0">
+            <button *ngFor="let sample of products.slice(0, 2)"
+              (click)="handleBarcodeScan(sample.barcode || sample.sku)"
+              class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-mono font-semibold whitespace-nowrap">
+              Test: {{ sample.sku || sample.barcode }}
+            </button>
+          </div>
+        </div>
+
         <div class="flex items-center gap-3">
           <lucide-icon [name]="icons.Search" class="w-4 h-4 text-slate-400"></lucide-icon>
-          <input type="text" [(ngModel)]="searchProduct" placeholder="Scan barcode or search product name..."
+          <input type="text" [(ngModel)]="searchProduct" placeholder="Filter catalog by name, barcode, or SKU..."
             class="w-full bg-transparent text-xs text-slate-800 placeholder-slate-400 focus:outline-none" />
           <span class="text-xs text-slate-400 whitespace-nowrap">{{ filteredProducts.length }} items</span>
         </div>
@@ -404,15 +474,31 @@
           </div>
         </div>
 
-        <div class="text-center pt-3 text-[10px] text-slate-400 border-t border-dashed border-slate-300">
+        <div class="pt-3 border-t border-dashed border-slate-300 flex items-center justify-between gap-3">
+          <app-shared-barcode
+            [value]="lastCompletedOrder.receiptNo || 'POS-0001'"
+            [height]="28"
+            [showText]="true">
+          </app-shared-barcode>
+          <app-shared-qr-code
+            [value]="'POS|' + (lastCompletedOrder.receiptNo || 'POS-0001') + '|' + lastCompletedOrder.total"
+            [size]="54">
+          </app-shared-qr-code>
+        </div>
+
+        <div class="text-center pt-2 text-[10px] text-slate-400 border-t border-dashed border-slate-300">
           *** THANK YOU FOR YOUR PURCHASE ***
         </div>
       </div>
 
-      <div class="flex gap-2">
+      <div class="flex flex-wrap gap-2">
         <button (click)="printReceipt()" class="flex-1 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-1.5">
           <lucide-icon [name]="icons.Printer" class="w-4 h-4"></lucide-icon>
-          <span>Print Receipt</span>
+          <span>Print {{ hardware.paperWidth() }} Thermal</span>
+        </button>
+        <button (click)="triggerCashDrawer()" class="px-3 py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-bold flex items-center gap-1.5">
+          <lucide-icon [name]="icons.DollarSign" class="w-3.5 h-3.5"></lucide-icon>
+          <span>Drawer</span>
         </button>
         <button (click)="showReceiptModal = false" class="px-4 py-2.5 border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-50">
           Close

@@ -70,6 +70,7 @@ import { BackendService } from '../../../services/backend.service';
 import { SchoolAttendanceHubComponent } from '../components/school-attendance-hub/school-attendance-hub.component';
 import {
   AttendanceMemberCategory,
+  AttendanceMemberView,
   FaceProfileRecord,
   FingerprintProfileRecord,
   FaceVerificationLogRecord,
@@ -84,7 +85,7 @@ import {
 import { SchoolTableDirective } from '../directives/school-table.directive';
 import { SchoolTableColumnModalComponent } from '../components/school-table-column-modal/school-table-column-modal.component';
 import { SchoolCustomFormFieldsComponent } from '../components/school-custom-form-fields/school-custom-form-fields.component';
-import { SchoolBarcodeComponent } from '../components/school-barcode/school-barcode.component';
+import { SchoolBarcodeComponent, SchoolQrCodeComponent } from '../components/school-barcode/school-barcode.component';
 import {
   BarcodeStickerItem,
   ThermalFeeReceiptData,
@@ -100,6 +101,21 @@ import { PasskeyManagerComponent } from '../../../auth_security/passkey-manager/
 
 export type SchoolDashboardTab = 'overview' | 'stage_wise' | 'feed' | 'events' | 'students' | 'teachers' | 'admissions' | 'attendance' | 'finance' | 'invoices' | 'expenses' | 'payment_gateway' | 'transport' | 'library' | 'exams' | 'timetable' | 'hostel' | 'labs' | 'alumni' | 'portals' | 'reports' | 'visitors' | 'assets' | 'settings' | 'audit' | 'lesson_plans' | 'appraisals' | 'inspections' | 'exam_moderation' | 'parent_complaints' | 'substitutions' | 'syllabus' | 'safeguarding' | 'directives';
 export type SchoolPortalRole = 'owner' | 'principal' | 'teacher' | 'student' | 'parent' | 'accountant';
+
+export interface PersonnelIdCardData {
+  id: string;
+  empCode: string;
+  name: string;
+  roleTitle: string;
+  department: string;
+  category: 'principal' | 'teacher' | 'staff' | 'accountant';
+  phone: string;
+  cnic?: string;
+  shift?: string;
+  image?: string;
+  branchName?: string;
+  wingName?: string;
+}
 
 export interface SchoolPaymentGateway {
   id: string;
@@ -1081,7 +1097,7 @@ export interface PrincipalFeeCollectionRecord {
 @Component({
   selector: 'app-school-dashboard',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule, FormsModule, MatIconModule, DataTableComponent, AuditReconciliationTrendsComponent, AnalyticsDashboardComponent, SchoolAttendanceHubComponent, SchoolTableDirective, SchoolTableColumnModalComponent, SchoolCustomFormFieldsComponent, SchoolBarcodeComponent, PasskeyManagerComponent],
+  imports: [CommonModule, LucideAngularModule, FormsModule, MatIconModule, DataTableComponent, AuditReconciliationTrendsComponent, AnalyticsDashboardComponent, SchoolAttendanceHubComponent, SchoolTableDirective, SchoolTableColumnModalComponent, SchoolCustomFormFieldsComponent, SchoolBarcodeComponent, SchoolQrCodeComponent, PasskeyManagerComponent],
   templateUrl: './school-dashboard.component.html',
   host: {
     '(window:keydown)': 'onHardwareScannerKeydown($event)'
@@ -3723,6 +3739,7 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
   hardwareAttendancePunch: 'IN' | 'OUT' = 'IN';
   hardwareAutoBeep: boolean = true;
   hardwareGlobalScannerEnabled: boolean = true;
+  accountantAutoPrintThermal: boolean = false;
   hardwareManualScanInput: string = '';
   hardwareScanBusy: boolean = false;
   serialThermalConnected: boolean = false;
@@ -10673,6 +10690,8 @@ INSTRUCTIONS:
       if (savedBranchScope) this.selectedBranchScope = savedBranchScope;
       const savedWingScope = this.getScopedItem('scs_school_wing_scope_v1');
       if (savedWingScope) this.selectedWingScope = savedWingScope;
+      const savedAutoPrint = this.getScopedItem('scs_school_acc_autoprint_v1');
+      if (savedAutoPrint !== null) this.accountantAutoPrintThermal = savedAutoPrint === '1' || savedAutoPrint === 'true';
 
       this.syncBiometricFlagsFromFaceProfiles();
       this.syncBiometricFlagsFromFingerprintProfiles();
@@ -11396,6 +11415,7 @@ INSTRUCTIONS:
       this.setScopedItem('scs_school_payment_txns_v1', JSON.stringify(this.schoolPaymentTransactions));
       this.setScopedItem('scs_school_branch_scope_v1', this.selectedBranchScope);
       this.setScopedItem('scs_school_wing_scope_v1', this.selectedWingScope);
+      this.setScopedItem('scs_school_acc_autoprint_v1', this.accountantAutoPrintThermal ? '1' : '0');
       void this.backend.saveSchoolWorkspace({
         schoolName: this.schoolName,
         settingsForm: this.settingsForm,
@@ -20638,13 +20658,15 @@ INSTRUCTIONS:
     snapshotData?: string;
   }): Promise<void> {
     const punch: 'IN' | 'OUT' = ev.punchType === 'OUT' ? 'OUT' : 'IN';
-    const isFingerprintScan =
-      String(ev.verificationMode || '').startsWith('fingerprint') ||
-      String(ev.verificationMode || '').startsWith('biometric');
-    const terminalGateName = `${isFingerprintScan ? 'Biometric Fingerprint Terminal' : 'Camera Face Terminal'} · ${punch}`;
-    const studentGateLabel = isFingerprintScan
-      ? `Biometric Fingerprint (${Math.round(ev.confidenceScore)}%)`
-      : `Face Camera Terminal (${Math.round(ev.confidenceScore)}%)`;
+    const modeLower = String(ev.verificationMode || '').toLowerCase();
+    const isBarcodeScan = modeLower.startsWith('barcode') || modeLower.startsWith('rfid');
+    const isFingerprintScan = modeLower.startsWith('fingerprint') || modeLower.startsWith('biometric');
+    const terminalGateName = `${isBarcodeScan ? 'Barcode / RFID Gate Kiosk' : (isFingerprintScan ? 'Biometric Fingerprint Terminal' : 'Camera Face Terminal')} · ${punch}`;
+    const studentGateLabel = isBarcodeScan
+      ? `Barcode / RFID Gate Kiosk (${punch})`
+      : (isFingerprintScan
+        ? `Biometric Fingerprint (${Math.round(ev.confidenceScore)}%)`
+        : `Face Camera Terminal (${Math.round(ev.confidenceScore)}%)`);
     if (ev.memberCategory === 'student') {
       this.activeStudents = this.activeStudents.map((s) =>
         s.id === ev.memberId || s.rollNo === ev.memberCode
@@ -22241,20 +22263,117 @@ INSTRUCTIONS:
     }
   }
 
-  // --- STUDENT ID CARD & ADMIT CARD MODALS ---
+  // --- STUDENT & PERSONNEL ID CARD & ADMIT CARD MODALS ---
   isIdCardModalOpen: boolean = false;
   isAdmitCardModalOpen: boolean = false;
   selectedCardStudent: StudentRecord | null = null;
+  selectedCardPersonnel: PersonnelIdCardData | null = null;
 
   openIdCardModal(student?: StudentRecord) {
+    this.selectedCardPersonnel = null;
     this.selectedCardStudent = student || this.activeStudentPersona;
     this.isIdCardModalOpen = true;
     this.cdr.detectChanges();
   }
 
+  openPersonnelIdCardModal(
+    record: any,
+    kind: 'principal' | 'accountant' | 'teacher' | 'support_staff' | 'all_staff' = 'support_staff'
+  ): void {
+    const resolvedKind: 'principal' | 'accountant' | 'teacher' | 'support_staff' =
+      kind === 'all_staff' ? (record?.sourceKind || 'support_staff') : kind;
+    const raw = kind === 'all_staff' ? (record?.rawRef || record) : record;
+    if (!raw) return;
+
+    const mappedCategory: PersonnelIdCardData['category'] =
+      resolvedKind === 'principal'
+        ? 'principal'
+        : (resolvedKind === 'accountant'
+          ? 'accountant'
+          : (resolvedKind === 'teacher' ? 'teacher' : 'staff'));
+
+    const fallbackCode =
+      raw.empCode ||
+      record?.empCode ||
+      raw.id ||
+      (mappedCategory === 'principal' ? 'PRI-101' : mappedCategory === 'teacher' ? 'TCH-301' : mappedCategory === 'accountant' ? 'ACC-201' : 'STF-401');
+
+    this.selectedCardStudent = null;
+    this.selectedCardPersonnel = {
+      id: String(raw.id || record?.uid || fallbackCode),
+      empCode: String(fallbackCode),
+      name: String(raw.name || record?.name || 'Campus Personnel'),
+      roleTitle:
+        resolvedKind === 'teacher'
+          ? String(raw.role || raw.designation || 'Faculty Lecturer')
+          : String(raw.roleTitle || record?.designation || (mappedCategory === 'principal' ? 'Campus Principal' : mappedCategory === 'accountant' ? 'Accounts & Fee Clerk' : 'Campus Support Staff')),
+      department:
+        resolvedKind === 'teacher'
+          ? String(raw.subject || raw.department || 'Academic Faculty')
+          : String(raw.department || record?.department || 'Campus Administration'),
+      category: mappedCategory,
+      phone: String(raw.phone || record?.phone || '+92 300 0000000'),
+      cnic: raw.cnic || record?.cnic || undefined,
+      shift: raw.shift || record?.shift || (resolvedKind === 'teacher' ? `${raw.weeklyPeriods || raw.classes || 24} Periods/wk` : 'Morning Shift'),
+      image: raw.image || record?.image || undefined,
+      branchName: raw.branchName || record?.branchName || this.resolveBranchName(raw.branchId),
+      wingName: raw.wingName || record?.wingName || this.resolveWingName(raw.wingId)
+    };
+    this.isIdCardModalOpen = true;
+    this.cdr.detectChanges();
+  }
+
+  onHubIdCardRequested(member: AttendanceMemberView): void {
+    if (!member) return;
+    if (member.category === 'student') {
+      const stu = (this.activeStudents || []).find((s) => s.id === member.id || s.rollNo === member.code);
+      if (stu) {
+        this.openIdCardModal(stu);
+        return;
+      }
+      this.openIdCardModal({
+        ...this.activeStudentPersona,
+        id: member.id,
+        name: member.name,
+        rollNo: member.code,
+        grade: member.sectionOrDept,
+        guardianPhone: member.phone || member.emergencyContact || '—',
+        image: member.image
+      });
+      return;
+    }
+
+    const kind: 'principal' | 'accountant' | 'teacher' | 'support_staff' =
+      member.category === 'principal'
+        ? 'principal'
+        : (member.category === 'teacher'
+          ? 'teacher'
+          : (/account|finance|bursar|cashier/i.test(`${member.subLabel} ${member.sectionOrDept}`) ? 'accountant' : 'support_staff'));
+
+    const sourceList =
+      member.category === 'principal'
+        ? (this.schoolPrincipals || [])
+        : (member.category === 'teacher' ? (this.teachers || []) : (this.schoolStaff || []));
+    const matched = sourceList.find((x: any) => x.id === member.id || String(x.empCode || '').toLowerCase() === String(member.code || '').toLowerCase());
+
+    this.openPersonnelIdCardModal(matched || {
+      id: member.id,
+      empCode: member.code,
+      name: member.name,
+      roleTitle: member.subLabel,
+      role: member.subLabel,
+      department: member.sectionOrDept,
+      subject: member.sectionOrDept,
+      phone: member.phone,
+      cnic: member.cnicBForm,
+      image: member.image
+    }, kind);
+  }
+
   closeIdCardModal() {
     this.isIdCardModalOpen = false;
     this.selectedCardStudent = null;
+    this.selectedCardPersonnel = null;
     this.cdr.detectChanges();
   }
 
@@ -25590,6 +25709,9 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     void this.refreshOwnerFinancialMonitoring();
     this.showToast(`Receipt #${newRecord.receiptNo} recorded (PKR ${this.formatCurrency(amount)}) & synced across Owner, Student & Parent portals.`, 'success');
     this.viewCashieringReceipt(newRecord);
+    if (this.accountantAutoPrintThermal) {
+      void this.printThermalReceiptForCashiering(newRecord);
+    }
   }
 
   populateAccountantClosingFromReceipts(): void {
@@ -26851,8 +26973,36 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     return `CH-2026-${this.voucherStudent?.rollNo || '1030'}`;
   }
 
+  get voucherQrPayload(): string {
+    const stu = this.voucherStudent;
+    const gw = this.primaryVoucherBankGateway;
+    const amt = this.voucherWithinDueTotal || stu?.feeAmount || 0;
+    return [
+      `CHALLAN:${this.voucherBarcodeValue}`,
+      `NAME:${stu?.name || 'Student'}`,
+      `ROLL:${stu?.rollNo || '1030'}`,
+      `AMT:PKR ${amt}`,
+      gw?.bankName ? `BANK:${gw.bankName}` : '',
+      gw?.iban ? `IBAN:${gw.iban}` : '',
+      gw?.raastId ? `RAAST:${gw.raastId}` : ''
+    ].filter(Boolean).join('|');
+  }
+
   get idCardBarcodeValue(): string {
+    if (this.selectedCardPersonnel) {
+      const rawCode = String(this.selectedCardPersonnel.empCode || this.selectedCardPersonnel.id || 'EMP01').trim();
+      return rawCode.toUpperCase().startsWith('EMP-') ? rawCode : `EMP-${rawCode}`;
+    }
     return `STU-${this.selectedCardStudent?.rollNo || this.selectedCardStudent?.id || '1001'}`;
+  }
+
+  get idCardQrPayload(): string {
+    if (this.selectedCardPersonnel) {
+      const p = this.selectedCardPersonnel;
+      return `ID:${this.idCardBarcodeValue}|NAME:${p.name}|ROLE:${p.roleTitle}|DEPT:${p.department}|SCHOOL:${this.schoolName || 'SoftCode'}`;
+    }
+    const s = this.selectedCardStudent;
+    return `ID:${this.idCardBarcodeValue}|NAME:${s?.name || 'Student'}|CLASS:${s?.grade || ''}|ROLL:${s?.rollNo || ''}|SCHOOL:${this.schoolName || 'SoftCode'}`;
   }
 
   get admitCardBarcodeValue(): string {
@@ -27037,6 +27187,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       let student: any = apiRes?.student
         ? (this.activeStudents || []).find((s) => s.id === apiRes.student.id || s.rollNo === apiRes.student.rollNo) || apiRes.student
         : null;
+      let employee: any = apiRes?.employee || null;
       let openChallan = apiRes?.openChallan || null;
       let paidChallan = apiRes?.paidChallan || null;
       let latestTxn: SchoolPaymentTransaction | null = apiRes?.latestTransaction || null;
@@ -27048,6 +27199,57 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
           String(s.rollNo || '').toLowerCase() === norm ||
           (stripped && (String(s.rollNo || '').toLowerCase() === stripped || String(s.id || '').toLowerCase() === stripped))
         ) || null;
+      }
+      if (!employee && !student) {
+        const strippedEmp = code.replace(/^EMP[-_]?/i, '').trim().toLowerCase();
+        const matchEmp = (rec: any) => {
+          const ec = String(rec?.empCode || '').trim().toLowerCase();
+          const rid = String(rec?.id || '').trim().toLowerCase();
+          return (
+            ec === norm ||
+            rid === norm ||
+            (ec && `emp-${ec}` === norm) ||
+            (strippedEmp && (ec === strippedEmp || rid === strippedEmp))
+          );
+        };
+        const priMatch = (this.schoolPrincipals || []).find(matchEmp);
+        if (priMatch) {
+          employee = {
+            id: priMatch.id,
+            empCode: priMatch.empCode || priMatch.id,
+            name: priMatch.name,
+            memberCategory: 'principal',
+            gradeOrDept: priMatch.department || priMatch.roleTitle || 'Principal Directorate',
+            branchId: priMatch.branchId,
+            wingId: priMatch.wingId
+          };
+        } else {
+          const tchMatch = (this.teachers || []).find(matchEmp);
+          if (tchMatch) {
+            employee = {
+              id: tchMatch.id,
+              empCode: tchMatch.empCode || tchMatch.id,
+              name: tchMatch.name,
+              memberCategory: 'teacher',
+              gradeOrDept: tchMatch.subject || tchMatch.department || 'Academic Faculty',
+              branchId: tchMatch.branchId,
+              wingId: tchMatch.wingId
+            };
+          } else {
+            const stfMatch = (this.schoolStaff || []).find(matchEmp);
+            if (stfMatch) {
+              employee = {
+                id: stfMatch.id,
+                empCode: stfMatch.empCode || stfMatch.id,
+                name: stfMatch.name,
+                memberCategory: 'staff',
+                gradeOrDept: stfMatch.department || stfMatch.roleTitle || 'Campus Staff',
+                branchId: stfMatch.branchId,
+                wingId: stfMatch.wingId
+              };
+            }
+          }
+        }
       }
       if (!latestTxn) {
         latestTxn = (this.schoolPaymentTransactions || []).find((t) =>
@@ -27067,11 +27269,64 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
         }
       }
 
-      if (!student && !openChallan && !paidChallan && !latestTxn) {
+      if (!student && !employee && !openChallan && !paidChallan && !latestTxn) {
         this.playScanBeep('warn');
-        const msg = `No Student ID, Fee Challan, Transaction Ref, or Library ISBN matched "${code}".`;
+        const msg = `No Student ID, Staff EMP Card, Fee Challan, Transaction Ref, or Library ISBN matched "${code}".`;
         this.recordHardwareScanEvent(code, 'warning', 'Barcode Not Found', msg);
         this.showToast(`${sourceLabel}: ${msg}`, 'warning');
+        return;
+      }
+
+      if (employee && !student && this.hardwareScannerMode !== 'fee') {
+        const empDisplayName = employee.name || employee.empCode || code;
+        const punch = this.hardwareAttendancePunch;
+        const empCategory: AttendanceMemberCategory =
+          employee.memberCategory === 'principal' || employee.memberCategory === 'teacher'
+            ? employee.memberCategory
+            : 'staff';
+        const attRes = await this.backend.saveSchoolAttendance({
+          studentId: employee.id,
+          rollNo: employee.empCode || code,
+          studentName: empDisplayName,
+          grade: employee.gradeOrDept || employee.department || 'Campus Operations',
+          memberCategory: empCategory,
+          status: 'PRESENT',
+          punchType: punch,
+          verificationMode: 'barcode_scanner',
+          confidenceScore: 100,
+          gateName: `Barcode Gate Scanner · ${punch}`,
+          verifiedBy: `Staff EMP Barcode Card (${punch})`,
+          markedByRole: this.currentPortalRole,
+          branchId: employee.branchId || undefined,
+          wingId: employee.wingId || undefined
+        });
+        if (!attRes?.ok) {
+          this.playScanBeep('warn');
+          const msg = attRes?.message || 'Permission denied or error logging staff barcode attendance.';
+          this.recordHardwareScanEvent(code, 'warning', 'Staff Scan Rejected', msg);
+          this.showToast(msg, 'warning');
+          return;
+        }
+        this.playScanBeep('ok');
+        if (empCategory === 'principal') {
+          this.schoolPrincipals = (this.schoolPrincipals || []).map((p) =>
+            p.id === employee.id ? { ...p, attendanceStatus: 'Present' } : p
+          );
+        } else if (empCategory === 'teacher') {
+          this.teachers = (this.teachers || []).map((t) =>
+            t.id === employee.id ? { ...t, attendanceStatus: 'Present' } : t
+          );
+        } else {
+          this.schoolStaff = (this.schoolStaff || []).map((sf) =>
+            sf.id === employee.id ? { ...sf, attendanceStatus: 'Present' } : sf
+          );
+        }
+        this.recomputeAttendanceSummary();
+        this.saveStateToStorage();
+        const roleLabel = empCategory === 'principal' ? 'Principal' : (empCategory === 'teacher' ? 'Faculty' : 'Staff');
+        const msg = `${roleLabel} ${empDisplayName} (${employee.empCode || code}) marked PRESENT · Gate ${punch}.`;
+        this.recordHardwareScanEvent(code, 'success', `${roleLabel} ${punch} Recorded`, msg);
+        this.showToast(`${sourceLabel}: ${msg}`, 'success');
         return;
       }
 
@@ -27253,12 +27508,14 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
   }
 
   async printThermalReceiptForTransaction(tx: SchoolPaymentTransaction, paperOverride?: ThermalPaperWidth): Promise<void> {
+    const challan = tx.challanNo || `CH-2026-${tx.rollNo || tx.txnRef}`;
     const data: ThermalFeeReceiptData = {
       schoolName: this.schoolName || 'SoftCode International School',
       branchName: tx.branchName || this.activeScopeSummaryLabel,
       receiptTitle: tx.status === 'VERIFIED' || tx.status === 'SETTLED' ? 'VERIFIED FEE RECEIPT' : 'FEE DEPOSIT SLIP',
       txnRef: tx.txnRef,
-      challanNo: tx.challanNo || `CH-2026-${tx.rollNo || tx.txnRef}`,
+      challanNo: challan,
+      qrPayload: `REC:${tx.txnRef}|CHALLAN:${challan}|NAME:${tx.studentName}|ROLL:${tx.rollNo || ''}|AMT:PKR ${tx.totalAmount || tx.baseAmount || 0}|STATUS:${tx.status}`,
       studentName: tx.studentName,
       rollNo: tx.rollNo || '—',
       grade: tx.grade || 'Campus',
@@ -27276,17 +27533,48 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     await this.dispatchThermalReceiptPrint(data, paperOverride);
   }
 
+  async printThermalReceiptForCashiering(rec: PrincipalFeeCollectionRecord | null, paperOverride?: ThermalPaperWidth): Promise<void> {
+    if (!rec) return;
+    const recNo = rec.receiptNo || rec.challanNo || rec.id;
+    const amt = Number(rec.amount || rec.amountPaid || 0);
+    const data: ThermalFeeReceiptData = {
+      schoolName: this.schoolName || 'SoftCode International School',
+      branchName: rec.branchName || this.activeScopeSummaryLabel,
+      receiptTitle: rec.collectorRole === 'accountant' ? 'ACCOUNTANT COUNTER FEE RECEIPT' : 'OFFICE FEE RECEIPT',
+      txnRef: recNo,
+      challanNo: rec.challanNo || recNo,
+      qrPayload: `REC:${recNo}|CHALLAN:${rec.challanNo || recNo}|NAME:${rec.studentName}|ROLL:${rec.rollNo || ''}|AMT:PKR ${amt}|MODE:${rec.paymentResource || 'Counter'}`,
+      studentName: rec.studentName,
+      rollNo: rec.rollNo || '—',
+      grade: rec.grade || 'Campus',
+      guardianName: rec.guardianName || rec.guardian || '',
+      gatewayName: rec.paymentResource || 'Cash at Accountant Fee Counter',
+      baseAmount: amt,
+      gatewayFee: 0,
+      totalAmount: amt,
+      status: rec.auditStatus || 'PAID',
+      paidAtLabel: rec.timestamp || new Date().toLocaleString(),
+      verifiedBy: rec.collectedBy || 'Accountant Desk',
+      proofReference: rec.resourceReference || recNo,
+      footerNote: this.schoolGatewaySettings?.receiptFooterNote || 'Verified official counter receipt.'
+    };
+    await this.dispatchThermalReceiptPrint(data, paperOverride);
+  }
+
   async printThermalReceiptForStudentChallan(stu?: StudentRecord | null, paperOverride?: ThermalPaperWidth): Promise<void> {
     const target = stu || this.voucherStudent;
     if (!target) return;
     const clearance = this.getStudentFeeClearanceState(target);
     const tx = clearance.verifiedTxn || clearance.pendingSlipTxn;
+    const challan = `CH-2026-${target.rollNo || '1030'}`;
+    const totalAmt = tx ? Number(tx.totalAmount) : this.voucherWithinDueTotal;
     const data: ThermalFeeReceiptData = {
       schoolName: this.schoolName || 'SoftCode International School',
       branchName: (target as any).branchName || this.activeScopeSummaryLabel,
       receiptTitle: clearance.isPaid ? 'VERIFIED FEE RECEIPT' : 'BANK / COUNTER FEE CHALLAN',
-      txnRef: tx?.txnRef || `CH-2026-${target.rollNo || '1030'}`,
-      challanNo: `CH-2026-${target.rollNo || '1030'}`,
+      txnRef: tx?.txnRef || challan,
+      challanNo: challan,
+      qrPayload: `CHALLAN:${challan}|NAME:${target.name}|ROLL:${target.rollNo || '1030'}|AMT:PKR ${totalAmt}|STATUS:${clearance.isPaid ? 'PAID' : 'UNPAID'}`,
       studentName: target.name,
       rollNo: target.rollNo || '1030',
       grade: target.grade || 'Class 1',
@@ -27294,7 +27582,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       gatewayName: tx?.gatewayName || this.primaryVoucherBankGateway?.bankName || 'School Fee Counter',
       baseAmount: tx ? Number(tx.baseAmount) : this.voucherWithinDueTotal,
       gatewayFee: tx ? Number(tx.gatewayFee) : 0,
-      totalAmount: tx ? Number(tx.totalAmount) : this.voucherWithinDueTotal,
+      totalAmount: totalAmt,
       status: clearance.isPaid ? 'PAID' : (clearance.hasPendingSlip ? 'PENDING_VERIFICATION' : 'UNPAID CHALLAN'),
       paidAtLabel: new Date().toLocaleString(),
       verifiedBy: tx?.verifiedBy || '',
@@ -27311,6 +27599,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       receiptTitle: 'HARDWARE PRINTER & SCANNER TEST',
       txnRef: 'TEST-2026-1001',
       challanNo: `CH-2026-${this.scopedActiveStudents?.[0]?.rollNo || '1001'}`,
+      qrPayload: `TEST-2026-1001|SCHOOL:${this.schoolName || 'SoftCode'}`,
       studentName: this.scopedActiveStudents?.[0]?.name || 'Test Student',
       rollNo: this.scopedActiveStudents?.[0]?.rollNo || '1001',
       grade: this.scopedActiveStudents?.[0]?.grade || 'Class 10-A',
@@ -27323,6 +27612,52 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       footerNote: 'Scan the Code-128 barcode above with your USB/Bluetooth scanner to test auto-lookup.'
     };
     await this.dispatchThermalReceiptPrint(sampleData);
+  }
+
+  async printCurrentIdCardSticker(): Promise<void> {
+    if (this.selectedCardPersonnel) {
+      const p = this.selectedCardPersonnel;
+      const item: BarcodeStickerItem = {
+        title: p.name,
+        subtitle: `${p.roleTitle} · ${p.department}`,
+        code: this.idCardBarcodeValue,
+        meta: `Staff Gate ID: ${p.empCode}`
+      };
+      const html = buildBarcodeStickerSheetHtml(this.schoolName || 'SoftCode School', [item]);
+      const ok = await printHtmlInHiddenFrame(html);
+      this.showToast(
+        ok ? `Prepared EMP Code-128 Gate Sticker for ${p.name}.` : 'Unable to launch sticker print job.',
+        ok ? 'success' : 'warning'
+      );
+      return;
+    }
+    if (this.selectedCardStudent) {
+      await this.printBarcodeStickerSheet([this.selectedCardStudent]);
+    }
+  }
+
+  async printPersonnelBarcodeStickerSheet(): Promise<void> {
+    const records = (this.allCampusPersonnelRecords || []).slice(0, 18);
+    if (records.length === 0) {
+      this.showToast('No Principal, Teacher, Accountant, or Staff records available for sticker printing.', 'warning');
+      return;
+    }
+    const items: BarcodeStickerItem[] = records.map((p) => {
+      const rawCode = String(p.empCode || p.uid || 'EMP01').trim();
+      const barcode = rawCode.toUpperCase().startsWith('EMP-') ? rawCode : `EMP-${rawCode}`;
+      return {
+        title: p.name,
+        subtitle: `${p.categoryRole} · ${p.designation}`,
+        code: barcode,
+        meta: `${p.department || 'Campus'} · ${p.branchName || ''}`
+      };
+    });
+    const html = buildBarcodeStickerSheetHtml(this.schoolName || 'SoftCode School', items);
+    const ok = await printHtmlInHiddenFrame(html);
+    this.showToast(
+      ok ? `Prepared ${items.length} Staff/Faculty EMP Code-128 Gate Stickers for printing.` : 'Unable to launch sticker print job.',
+      ok ? 'success' : 'warning'
+    );
   }
 
   async printBarcodeStickerSheet(students?: StudentRecord[]): Promise<void> {
