@@ -160,46 +160,82 @@ export function printHtmlInHiddenFrame(htmlDocument: string): Promise<boolean> {
     const iframe = document.createElement('iframe');
     iframe.setAttribute('aria-hidden', 'true');
     iframe.style.position = 'fixed';
-    iframe.style.right = '0';
-    iframe.style.bottom = '0';
-    iframe.style.width = '0';
-    iframe.style.height = '0';
+    iframe.style.left = '-9999px';
+    iframe.style.top = '0';
+    iframe.style.width = '794px';
+    iframe.style.height = '1123px';
     iframe.style.border = '0';
-    iframe.style.opacity = '0';
+    iframe.style.opacity = '0.001';
     iframe.style.pointerEvents = 'none';
 
-    let cleaned = false;
-    const cleanup = () => {
-      if (cleaned) return;
-      cleaned = true;
+    let settled = false;
+    let fallbackTimer: ReturnType<typeof setTimeout> | null = null;
+    const cleanup = (ok: boolean) => {
+      if (settled) return;
+      settled = true;
+      if (fallbackTimer !== null) {
+        clearTimeout(fallbackTimer);
+        fallbackTimer = null;
+      }
+      resolve(ok);
       setTimeout(() => {
         try {
           iframe.remove();
         } catch {}
-      }, 1500);
+      }, 2000);
     };
 
+    fallbackTimer = setTimeout(() => {
+      cleanup(false);
+    }, 4500);
+
     iframe.onload = () => {
-      try {
-        const win = iframe.contentWindow;
-        if (!win) {
-          cleanup();
-          resolve(false);
-          return;
+      setTimeout(() => {
+        try {
+          const win = iframe.contentWindow;
+          if (!win) {
+            cleanup(false);
+            return;
+          }
+          win.focus();
+          win.print();
+          cleanup(true);
+        } catch {
+          cleanup(false);
         }
-        win.focus();
-        win.print();
-        cleanup();
-        resolve(true);
-      } catch {
-        cleanup();
-        resolve(false);
-      }
+      }, 110);
     };
 
     iframe.srcdoc = htmlDocument;
     document.body.appendChild(iframe);
   });
+}
+
+export function downloadPrintableHtmlFile(htmlDocument: string, filename: string): boolean {
+  if (typeof document === 'undefined' || typeof Blob === 'undefined') {
+    return false;
+  }
+  try {
+    const safeName = (filename || 'document_printable.html').replace(/[^a-zA-Z0-9._-]+/g, '_');
+    const finalName = safeName.endsWith('.html') ? safeName : `${safeName}.html`;
+    const blob = new Blob([htmlDocument], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = finalName;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    setTimeout(() => {
+      try {
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      } catch {}
+    }, 1000);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function buildCashDrawerKickBytes(pin: 0 | 1 = 0): Uint8Array {
@@ -289,7 +325,7 @@ function buildSingleThermalCopyHtml(
   const qrText =
     data.qrPayload ||
     `CHALLAN:${barcodeCode}|TXN:${data.txnRef}|ROLL:${data.rollNo}|AMT:${cur} ${Number(data.totalAmount || 0)}|STATUS:${data.status}`;
-  const svgQr = buildQrCodeSvgMarkup(qrText, paperWidth === '58mm' ? 58 : 72, '#000000', 2, 'M');
+  const svgQr = buildQrCodeSvgMarkup(qrText, paperWidth === '58mm' ? 40 : 48, '#000000', 2, 'M');
   const showBarcode = data.showBarcode !== false;
   const showQr = data.showQr !== false;
   const monogram = (data.monogramInitials || '').trim().slice(0, 4);
@@ -310,17 +346,18 @@ function buildSingleThermalCopyHtml(
     ? `<div class="logo-frame"><img src="${safeLogo}" alt="Logo" style="width:${logoSize}px;height:${logoSize}px;object-fit:contain;display:block;" /></div>`
     : (monogram ? `<div class="crest">${escapeHtml(monogram)}</div>` : '');
 
-  const headerTextHtml = `
-    <div style="flex:1;min-width:0;text-align:${logoPlacement === 'top' ? align : (logoPlacement === 'left' ? 'left' : 'right')};">
+  const topQrHtml = showQr ? `<div class="hdr-qr">${svgQr}</div>` : '';
+  const cornerCls = logoPlacement === 'right' ? 'hdr-corners rev' : 'hdr-corners';
+
+  const headerLayoutHtml = `
+    <div class="${cornerCls}">
+      ${badgeHtml || '<span></span>'}
+      ${topQrHtml}
+    </div>
+    <div class="hdr-center" style="text-align:${align};">
       <div class="title">${escapeHtml(data.schoolName || 'SoftCode Premier Academy')}</div>
       ${data.campusTagline ? `<div class="tagline">${escapeHtml(data.campusTagline)}</div>` : ''}
     </div>`;
-
-  const headerLayoutHtml = logoPlacement === 'left'
-    ? `<div style="display:flex;align-items:center;gap:9px;">${badgeHtml}${headerTextHtml}</div>`
-    : (logoPlacement === 'right'
-      ? `<div style="display:flex;align-items:center;gap:9px;">${headerTextHtml}${badgeHtml}</div>`
-      : `<div style="display:flex;flex-direction:column;align-items:${align === 'left' ? 'flex-start' : (align === 'right' ? 'flex-end' : 'center')};gap:5px;">${badgeHtml}${headerTextHtml}</div>`);
 
   const headerContactHtml = `
     <div class="contact-block" style="text-align:${align};">
@@ -393,18 +430,10 @@ function buildSingleThermalCopyHtml(
         ${data.verifiedBy ? `<div class="kv-row"><span class="lbl">Authorized By</span><span class="val">${escapeHtml(data.verifiedBy)}</span></div>` : ''}
       </div>`,
     verification: (() => {
-      if (!showBarcode && !showQr) return '';
-      const bBlock = showBarcode ? `<div class="barcode-wrap">${svgBarcode}<div class="barcode-label">${escapeHtml(barcodeCode)}</div></div>` : '';
-      const qBlock = showQr ? `<div class="qr-wrap">${svgQr}<div class="qr-cap">SCAN TO VERIFY RECEIPT</div></div>` : '';
-      const inner = (verifOrder === 'side_by_side' && showBarcode && showQr)
-        ? `<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
-            <div style="flex:1;min-width:0;text-align:center;">${svgBarcode}<div class="barcode-label">${escapeHtml(barcodeCode)}</div></div>
-            <div style="flex-shrink:0;text-align:center;">${svgQr}</div>
-          </div>`
-        : (verifOrder === 'qr_first' ? `${qBlock}${bBlock}` : `${bBlock}${qBlock}`);
+      if (!showBarcode) return '';
       return `<div class="ver-box">
         <div class="ver-cap">VERIFICATION</div>
-        ${inner}
+        <div class="barcode-wrap">${svgBarcode}<div class="barcode-label">${escapeHtml(barcodeCode)}</div></div>
       </div>`;
     })(),
     footer: `
@@ -441,45 +470,48 @@ export function buildThermalFeeReceiptHtml(data: ThermalFeeReceiptData, paperWid
   <title>Receipt ${escapeHtml(data.txnRef)}</title>
   <style>
     @page { size: ${pageMm} auto; margin: 2mm; }
-    * { box-sizing: border-box; }
-    body { margin: 0; padding: 6px; width: ${pageMm}; max-width: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: ${bodyFontPx}; line-height: 1.38; color: #000; background: #fff; font-variant-numeric: tabular-nums; }
-    .sec-header { margin-bottom: 5px; }
-    .copy-strip { text-align: center; font-size: 8px; font-weight: 900; letter-spacing: 1px; border: 1px solid #000; padding: 2px 4px; margin-bottom: 6px; text-transform: uppercase; background: #f4f4f5; }
-    .logo-frame { border: 1px solid #000; border-radius: 4px; padding: 2px; background: #fff; flex-shrink: 0; }
-    .crest { display: inline-flex; align-items: center; justify-content: center; border: 2px solid #000; border-radius: 5px; padding: 4px 9px; font-size: 12px; font-weight: 900; letter-spacing: 1.4px; flex-shrink: 0; background: #fff; }
-    .title { font-size: ${effectivePaper === '58mm' ? '11.5px' : '13px'}; font-weight: 900; text-transform: uppercase; letter-spacing: 0.3px; line-height: 1.18; }
-    .tagline { font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.25px; margin-top: 2px; color: #222; }
-    .contact-block { margin-top: 4px; line-height: 1.32; }
-    .sub { font-size: 9px; font-weight: 700; color: #111; }
-    .sub-muted { font-size: 8.5px; color: #222; }
-    .sub-phone { font-size: 8.5px; font-weight: 600; color: #111; }
-    .doc-rule { margin-top: 7px; border-top: 1.5px solid #000; border-bottom: 1.5px solid #000; padding: 4px 2px; display: flex; align-items: center; justify-content: space-between; gap: 6px; }
-    .doc-title { font-size: 9.5px; font-weight: 900; letter-spacing: 0.8px; text-transform: uppercase; }
-    .badge-pill { background: #000; color: #fff; padding: 1px 7px; font-size: 8px; font-weight: 900; letter-spacing: 0.8px; text-transform: uppercase; border-radius: 2px; }
+    * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    body { margin: 0; padding: 8px; width: ${pageMm}; max-width: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: ${bodyFontPx}; line-height: 1.4; color: #0f172a; background: #fff; font-variant-numeric: tabular-nums; }
+    .sec-header { margin-bottom: 6px; }
+    .copy-strip { display: inline-block; font-size: 8px; font-weight: 900; letter-spacing: 0.8px; padding: 2px 8px; margin-bottom: 6px; border-radius: 5px; text-transform: uppercase; background: linear-gradient(90deg, #059669, #0d9488); color: #fff; }
+    .hdr-corners { display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; }
+    .hdr-corners.rev { flex-direction: row-reverse; }
+    .hdr-qr { border: 1px solid #e2e8f0; border-radius: 7px; padding: 3px; background: #fff; flex-shrink: 0; line-height: 0; }
+    .hdr-center { margin-top: 6px; text-align: center; }
+    .logo-frame { border: 1px solid #e2e8f0; border-radius: 7px; padding: 2px; background: #fff; flex-shrink: 0; }
+    .crest { display: inline-flex; align-items: center; justify-content: center; border: 1px solid #cbd5e1; border-radius: 8px; width: 36px; height: 36px; font-size: 10.5px; font-weight: 900; letter-spacing: 1px; flex-shrink: 0; background: #f8fafc; color: #0f172a; }
+    .title { font-size: ${effectivePaper === '58mm' ? '11.5px' : '13px'}; font-weight: 900; text-transform: uppercase; letter-spacing: -0.2px; line-height: 1.2; color: #020617; }
+    .tagline { font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.25px; margin-top: 2px; color: #64748b; }
+    .contact-block { margin-top: 4px; line-height: 1.35; }
+    .sub { font-size: 9px; font-weight: 700; color: #1e293b; }
+    .sub-muted { font-size: 8.5px; color: #475569; }
+    .sub-phone { font-size: 8.5px; font-weight: 700; color: #0f172a; }
+    .doc-rule { margin-top: 8px; border-top: 1px solid #f1f5f9; padding-top: 7px; display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+    .doc-title { font-size: 8.5px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; background: linear-gradient(90deg, #059669, #0d9488); color: #fff; padding: 3px 8px; border-radius: 5px; }
+    .badge-pill { background: #eef2ff; color: #4338ca; padding: 2px 7px; font-size: 8px; font-weight: 800; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 0.5px; text-transform: uppercase; border-radius: 5px; }
     .badge-row { display: flex; justify-content: center; gap: 5px; margin-top: 4px; }
-    .badge-outline { border: 1px solid #000; padding: 1px 6px; font-size: 8px; font-weight: 900; text-transform: uppercase; border-radius: 2px; }
-    .sec-block { margin: 6px 0; border-top: 1px dashed #000; padding-top: 5px; }
+    .badge-outline { border: 1px solid #fecdd3; background: #fff1f2; color: #be123c; padding: 2px 7px; font-size: 8px; font-weight: 900; text-transform: uppercase; border-radius: 5px; }
+    .sec-block { margin: 8px 0; border-top: 1px solid #f1f5f9; padding-top: 7px; }
     .sec-meta { border-top: none; padding-top: 2px; }
-    .sec-cap { font-size: 8.5px; font-weight: 900; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 3px; color: #000; }
-    .tbl-head { display: flex; justify-content: space-between; font-size: 8.5px; font-weight: 900; letter-spacing: 0.7px; text-transform: uppercase; border-bottom: 1.5px solid #000; padding-bottom: 3px; margin-bottom: 4px; }
-    .kv-row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 2px 0; border-bottom: 1px dotted #d4d4d8; font-size: ${effectivePaper === '58mm' ? '9px' : '10px'}; }
-    .kv-row:last-child { border-bottom: none; }
-    .kv-row .lbl { font-weight: 600; color: #27272a; flex-shrink: 0; }
-    .kv-row .val { font-weight: 700; color: #000; text-align: right; }
-    .total-box { border-top: 2px solid #000; border-bottom: 2px solid #000; margin: 7px 0 4px; }
-    .total-row { display: flex; justify-content: space-between; align-items: center; background: #000; color: #fff; padding: 5px 7px; font-size: ${effectivePaper === '58mm' ? '11px' : '12px'}; font-weight: 900; }
-    .bal-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 7px; font-size: 9.5px; font-weight: 900; background: #fff; color: #000; border-top: 1px solid #000; }
-    .ver-box { border-top: 1px dashed #000; padding-top: 6px; margin-top: 6px; text-align: center; }
-    .ver-cap { font-size: 8px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+    .sec-cap { font-size: 8.5px; font-weight: 900; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 5px; color: #94a3b8; }
+    .tbl-head { display: flex; justify-content: space-between; font-size: 8.5px; font-weight: 900; letter-spacing: 0.7px; text-transform: uppercase; color: #94a3b8; padding-bottom: 4px; margin-bottom: 4px; }
+    .kv-row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 2.5px 0; font-size: ${effectivePaper === '58mm' ? '9px' : '10px'}; }
+    .kv-row .lbl { font-weight: 700; color: #64748b; flex-shrink: 0; }
+    .kv-row .val { font-weight: 800; color: #020617; text-align: right; }
+    .total-box { border-radius: 9px; border: 1px solid #d1fae5; background: linear-gradient(90deg, #eef2ff 0%, #ecfdf5 60%, #fff1f2 100%); margin: 8px 0 4px; overflow: hidden; }
+    .total-row { display: flex; justify-content: space-between; align-items: center; color: #1e1b4b; padding: 7px 9px; font-size: ${effectivePaper === '58mm' ? '11px' : '12px'}; font-weight: 900; }
+    .bal-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 9px; font-size: 9.5px; font-weight: 900; background: #fff1f2; color: #be123c; border-top: 1px solid #fecdd3; }
+    .ver-box { border-top: 1px solid #f1f5f9; padding-top: 7px; margin-top: 7px; text-align: center; }
+    .ver-cap { font-size: 8px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; color: #94a3b8; margin-bottom: 4px; }
     .barcode-wrap { text-align: center; }
-    .barcode-label { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 9px; font-weight: 800; letter-spacing: 1px; margin-top: 2px; }
+    .barcode-label { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 9px; font-weight: 800; color: #475569; letter-spacing: 1px; margin-top: 2px; }
     .qr-wrap { margin-top: 5px; display: flex; flex-direction: column; align-items: center; }
     .qr-cap { font-size: 7.5px; font-weight: 800; letter-spacing: 0.5px; margin-top: 2px; }
-    .sec-footer { margin-top: 6px; }
-    .sign-line { margin-top: 22px; border-top: 1px solid #000; padding-top: 3px; font-size: 8.5px; font-weight: 800; text-align: center; text-transform: uppercase; letter-spacing: 0.4px; }
-    .footer { font-size: 8px; text-align: center; margin-top: 6px; line-height: 1.35; }
-    .foot-meta { font-weight: 800; margin-top: 2px; letter-spacing: 0.5px; }
-    .tear-line { border-top: 1.5px dashed #000; margin: 14px 0 12px; text-align: center; font-size: 8px; font-weight: 900; letter-spacing: 0.6px; padding-top: 4px; }
+    .sec-footer { border-top: 1px solid #f1f5f9; padding-top: 6px; margin-top: 7px; }
+    .sign-line { margin-top: 18px; border-top: 1px solid #cbd5e1; padding-top: 3px; font-size: 8.5px; font-weight: 800; color: #475569; text-align: center; text-transform: uppercase; letter-spacing: 0.4px; }
+    .footer { font-size: 8px; text-align: center; margin-top: 6px; line-height: 1.35; color: #64748b; }
+    .foot-meta { font-weight: 800; margin-top: 2px; letter-spacing: 0.5px; color: #94a3b8; }
+    .tear-line { border-top: 1.5px dashed #cbd5e1; margin: 14px 0 12px; text-align: center; font-size: 8px; font-weight: 900; color: #64748b; letter-spacing: 0.6px; padding-top: 4px; }
   </style>
 </head>
 <body>

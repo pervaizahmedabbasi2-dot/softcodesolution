@@ -146,7 +146,7 @@ export class SchoolPrintStudioComponent implements OnDestroy {
   readonly tableFamilyMap: Record<string, string> = SCHOOL_TABLE_FAMILY_MAP;
   readonly tableOverrides = signal<Record<string, TablePrintOverride>>({});
   readonly selectedTableScope = signal<string>('__global__');
-  readonly tablePreviewSubMode = signal<'a4_slip' | 'a4_statement' | '80mm' | '58mm' | 'card'>('a4_slip');
+  readonly tablePreviewSubMode = signal<'a4_slip' | 'a4_statement' | '80mm' | '58mm' | 'card'>('80mm');
   readonly tableSearchQuery = signal<string>('');
   readonly tableCategoryFilter = signal<PrintTableCategoryKey>('all');
   readonly showTableDirectory = signal<boolean>(true);
@@ -721,12 +721,33 @@ export class SchoolPrintStudioComponent implements OnDestroy {
     const ds = this.sampleTableDataset();
     const row = ds.rows[0] || [];
     const amtSet = new Set(this.sampleTableSummary().amountColumns.map((c) => c.colIndex));
-    return ds.headers.map((h, idx) => ({
-      label: h,
-      value: row[idx] || '—',
-      isAmount: amtSet.has(idx)
-    }));
+    return ds.headers.map((h, idx) => {
+      const value = row[idx] || '—';
+      const isStatus = /\b(status|state|condition|verification|standing|grade|result)\b/i.test(h || '') && value !== '—';
+      return {
+        label: h,
+        value,
+        isAmount: amtSet.has(idx),
+        isStatus
+      };
+    });
   });
+
+  readonly sampleTableTextFields = computed(() =>
+    this.sampleTableSingleFields().filter((f) => !f.isAmount && f.value !== '—' && f.value !== '-')
+  );
+
+  isLongThermalText(value: string): boolean {
+    return String(value || '').trim().length > 32;
+  }
+
+  getTableFieldPillClass(value: string): string {
+    const v = String(value || '').toLowerCase();
+    if (/unpaid|overdue|pending|due|late|fail|absent|rejected|cancelled/.test(v)) {
+      return 'inline-flex items-center px-2 py-0.5 rounded-full text-[9.5px] font-black bg-amber-50 text-amber-800 border border-amber-200';
+    }
+    return 'inline-flex items-center px-2 py-0.5 rounded-full text-[9.5px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200';
+  }
 
   private syncDraftFromState(): void {
     const val = this.brandingForm.getRawValue();
@@ -749,6 +770,10 @@ export class SchoolPrintStudioComponent implements OnDestroy {
 
   isSectionHidden(key: PrintSectionKey): boolean {
     return this.effectiveBranding().hiddenSections.includes(key);
+  }
+
+  isTableSectionHidden(key: PrintSectionKey): boolean {
+    return this.effectiveTablePreview().branding.hiddenSections.includes(key);
   }
 
   canMoveSection(index: number, delta: -1 | 1): boolean {
@@ -960,7 +985,19 @@ export class SchoolPrintStudioComponent implements OnDestroy {
     const eff = this.effectiveTablePreview();
     if (eff.defaultFormat === '80mm' || eff.defaultFormat === '58mm') {
       this.tablePreviewSubMode.set(eff.defaultFormat);
+    } else {
+      this.tablePreviewSubMode.set('a4_slip');
     }
+  }
+
+  setTableThermalPaper(width: ThermalPaperWidth): void {
+    this.tablePreviewSubMode.set(width);
+    this.updateActiveTableSetting({ defaultFormat: width });
+  }
+
+  setTableDefaultPaper(fmt: TablePrintDefaultFormat): void {
+    this.updateActiveTableSetting({ defaultFormat: fmt });
+    this.tablePreviewSubMode.set(fmt === 'a4' ? 'a4_slip' : fmt);
   }
 
   onSelectTableScopeChange(event: Event): void {

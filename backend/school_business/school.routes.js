@@ -6580,6 +6580,46 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       : '#0f172a';
     const stampAllowed = new Set(['PAID', 'VERIFIED', 'ORIGINAL', 'NONE']);
     const currencyAllowed = new Set(['PKR', 'USD', 'AED', 'SAR', 'GBP']);
+    const normalizeTableOverridesServer = (rawMap) => {
+      if (!rawMap || typeof rawMap !== 'object' || Array.isArray(rawMap)) return {};
+      const out = {};
+      for (const [k, v] of Object.entries(rawMap)) {
+        const cleanKey = String(k || '').trim().slice(0, 80);
+        if (!cleanKey || !v || typeof v !== 'object') continue;
+        const ov = {};
+        if (typeof v.customHeading === 'string' && v.customHeading.trim()) {
+          ov.customHeading = v.customHeading.trim().slice(0, 140);
+        }
+        if (v.defaultFormat === 'a4' || v.defaultFormat === '80mm' || v.defaultFormat === '58mm') {
+          ov.defaultFormat = v.defaultFormat;
+        }
+        if (v.a4Orientation === 'landscape' || v.a4Orientation === 'portrait') {
+          ov.a4Orientation = v.a4Orientation;
+        }
+        if (v.slipLayout === 'voucher_grid' || v.slipLayout === 'ledger_row') {
+          ov.slipLayout = v.slipLayout;
+        }
+        if (typeof v.showFieldLogos === 'boolean') {
+          ov.showFieldLogos = v.showFieldLogos;
+        }
+        if (typeof v.showWatermark === 'boolean') {
+          ov.showWatermark = v.showWatermark;
+        }
+        if (v.logoPlacement === 'left' || v.logoPlacement === 'top' || v.logoPlacement === 'right') {
+          ov.logoPlacement = v.logoPlacement;
+        }
+        if (v.headerAlign === 'left' || v.headerAlign === 'center' || v.headerAlign === 'right') {
+          ov.headerAlign = v.headerAlign;
+        }
+        if (stampAllowed.has(v.stampLabel)) {
+          ov.stampLabel = v.stampLabel;
+        }
+        if (Object.keys(ov).length > 0) {
+          out[cleanKey] = ov;
+        }
+      }
+      return out;
+    };
     return {
       schoolName: String(src.schoolName || fallbackSchoolName || 'SoftCode Premier Academy').trim().slice(0, 140),
       campusTagline: String(src.campusTagline || '').trim().slice(0, 180),
@@ -6609,7 +6649,13 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       verificationOrder:
         src.verificationOrder === 'qr_first' || src.verificationOrder === 'side_by_side'
           ? src.verificationOrder
-          : 'barcode_first'
+          : 'barcode_first',
+      tableDefaultFormat: src.tableDefaultFormat === 'a4' || src.tableDefaultFormat === '58mm' ? src.tableDefaultFormat : '80mm',
+      tableA4Orientation: src.tableA4Orientation === 'portrait' ? 'portrait' : 'landscape',
+      tableSlipLayout: src.tableSlipLayout === 'ledger_row' ? 'ledger_row' : 'voucher_grid',
+      tableShowFieldLogos: Boolean(src.tableShowFieldLogos),
+      tableShowWatermark: src.tableShowWatermark !== false,
+      tableOverrides: normalizeTableOverridesServer(src.tableOverrides)
     };
   };
 

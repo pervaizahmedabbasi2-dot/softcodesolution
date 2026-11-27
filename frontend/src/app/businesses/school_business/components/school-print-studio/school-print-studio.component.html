@@ -195,6 +195,23 @@
                     58mm
                   </button>
                 </div>
+              } @else if (selectedFormat() === 'table_statement') {
+                <div class="inline-flex rounded-xl border border-slate-200 p-0.5 bg-slate-50">
+                  <button
+                    type="button"
+                    (click)="setTableThermalPaper('80mm')"
+                    class="px-2.5 py-1.5 rounded-lg text-[11px] font-black cursor-pointer"
+                    [class]="tablePreviewSubMode() === '80mm' ? 'bg-slate-900 text-white' : 'text-slate-700'">
+                    80mm
+                  </button>
+                  <button
+                    type="button"
+                    (click)="setTableThermalPaper('58mm')"
+                    class="px-2.5 py-1.5 rounded-lg text-[11px] font-black cursor-pointer"
+                    [class]="tablePreviewSubMode() === '58mm' ? 'bg-slate-900 text-white' : 'text-slate-700'">
+                    58mm
+                  </button>
+                </div>
               }
               <button
                 type="button"
@@ -817,17 +834,17 @@
                 <div>
                   <span class="block font-bold text-slate-600 mb-1">Default Print Paper</span>
                   <div class="grid grid-cols-3 gap-1">
-                    <button type="button" (click)="updateActiveTableSetting({ defaultFormat: 'a4' })" class="py-1.5 rounded-lg border font-bold cursor-pointer"
-                      [class]="effectiveTablePreview().defaultFormat === 'a4' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-200'">
-                      A4
-                    </button>
-                    <button type="button" (click)="updateActiveTableSetting({ defaultFormat: '80mm' })" class="py-1.5 rounded-lg border font-bold cursor-pointer"
+                    <button type="button" (click)="setTableDefaultPaper('80mm')" class="py-1.5 rounded-lg border font-bold cursor-pointer"
                       [class]="effectiveTablePreview().defaultFormat === '80mm' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-200'">
                       80mm
                     </button>
-                    <button type="button" (click)="updateActiveTableSetting({ defaultFormat: '58mm' })" class="py-1.5 rounded-lg border font-bold cursor-pointer"
+                    <button type="button" (click)="setTableDefaultPaper('58mm')" class="py-1.5 rounded-lg border font-bold cursor-pointer"
                       [class]="effectiveTablePreview().defaultFormat === '58mm' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-200'">
                       58mm
+                    </button>
+                    <button type="button" (click)="setTableDefaultPaper('a4')" class="py-1.5 rounded-lg border font-bold cursor-pointer"
+                      [class]="effectiveTablePreview().defaultFormat === 'a4' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-200'">
+                      A4
                     </button>
                   </div>
                 </div>
@@ -929,10 +946,10 @@
 
           <!-- 1. ENTERPRISE SCHOOL THERMAL FEE RECEIPT (80mm / 58mm THERMAL ROLL — DYNAMIC ORDER & LOGO) -->
           @if (selectedFormat() === 'thermal_receipt') {
-            <div class="flex flex-col items-center gap-2">
+            <div class="flex flex-col items-center gap-2.5 w-full">
               <div
-                class="bg-white text-slate-950 font-sans border border-slate-300 shadow-lg rounded-sm p-4 space-y-2.5 transition-all tabular-nums relative"
-                [class]="previewThermalWidth() === '58mm' ? 'w-[256px] text-[9.5px]' : 'w-[336px] text-[10.5px]'">
+                class="p-4 sm:p-5 rounded-2xl bg-white flex flex-col justify-between text-slate-900 space-y-3.5 scs-tile-3d border border-slate-200/90 transition-all tabular-nums relative font-sans"
+                [class]="previewThermalWidth() === '58mm' ? 'w-full max-w-[276px] text-[10px]' : 'w-full max-w-[356px] text-[11px]'">
                 @for (secKey of effectiveBranding().sectionOrder; track secKey) {
                   @if (!isSectionHidden(secKey)) {
                     @switch (secKey) {
@@ -943,70 +960,73 @@
                           (dragover)="onSectionDragOver($event, 'header')"
                           (drop)="onSectionDrop($event, 'header')"
                           (dragend)="onSectionDragEnd()"
-                          class="space-y-1.5 rounded transition-colors"
+                          class="space-y-2.5 rounded-xl transition-colors"
                           [class]="showQuickLayoutBar() ? 'hover:bg-indigo-50/60 p-1 -m-1 cursor-grab' : ''">
                           @if (effectiveBranding().thermalDualCopy) {
-                            <div class="text-center text-[8px] font-black tracking-[0.14em] uppercase border border-slate-900 bg-slate-100 py-0.5 px-1.5">
-                              STUDENT / GUARDIAN COPY
+                            <div class="flex items-center justify-between gap-2">
+                              <span class="text-[9.5px] font-black uppercase px-2.5 py-1 rounded-md bg-gradient-to-r from-emerald-600 to-teal-600 text-white tracking-wide shrink-0">
+                                STUDENT / GUARDIAN COPY
+                              </span>
+                              <span class="text-[9.5px] font-mono font-bold text-slate-500 uppercase tracking-tight">
+                                {{ previewThermalWidth().toUpperCase() }} SLIP
+                              </span>
                             </div>
                           }
-                          <!-- Brand Identity Row: Logo + School Name & Tagline -->
+                          <!-- Top Corners Row: Logo in One Corner, QR Scanner in Opposite Top Corner -->
                           <div
-                            class="flex gap-2.5"
-                            [class]="effectiveBranding().logoPlacement === 'top'
-                              ? (effectiveBranding().headerAlign === 'left'
-                                ? 'flex-col items-start'
-                                : (effectiveBranding().headerAlign === 'right' ? 'flex-col items-end' : 'flex-col items-center'))
-                              : (effectiveBranding().logoPlacement === 'right' ? 'flex-row-reverse items-center' : 'flex-row items-center')">
+                            class="flex items-start justify-between gap-2.5"
+                            [class]="effectiveBranding().logoPlacement === 'right' ? 'flex-row-reverse' : 'flex-row'">
                             @if (safeLogoUrl()) {
-                              <div class="border border-slate-900 rounded p-0.5 bg-white shrink-0">
-                                <img
-                                  [src]="safeLogoUrl()"
-                                  alt="School logo"
-                                  referrerpolicy="no-referrer"
-                                  [style.width.px]="effectiveBranding().logoSizePx"
-                                  [style.height.px]="effectiveBranding().logoSizePx"
-                                  class="object-contain block" />
-                              </div>
+                              <img
+                                [src]="safeLogoUrl()"
+                                alt="School logo"
+                                referrerpolicy="no-referrer"
+                                [style.width.px]="effectiveBranding().logoSizePx || 44"
+                                [style.height.px]="effectiveBranding().logoSizePx || 44"
+                                class="object-contain rounded-lg border border-slate-200 bg-white p-0.5 shrink-0 shadow-2xs" />
                             } @else if (effectiveBranding().showLogoCrest) {
-                              <div class="inline-flex items-center justify-center border-2 border-slate-900 rounded px-2.5 py-1.5 font-black text-xs tracking-[0.16em] bg-white shrink-0">
+                              <div class="w-10 h-10 rounded-lg border border-slate-300 bg-slate-50 text-slate-900 font-black text-[11px] flex items-center justify-center shrink-0 tracking-wider shadow-2xs">
                                 {{ effectiveBranding().monogramInitials }}
                               </div>
+                            } @else {
+                              <span class="shrink-0"></span>
                             }
-                            <div
-                              class="flex-1 min-w-0"
-                              [class]="effectiveBranding().logoPlacement === 'top'
-                                ? (effectiveBranding().headerAlign === 'left' ? 'text-left' : (effectiveBranding().headerAlign === 'right' ? 'text-right' : 'text-center'))
-                                : (effectiveBranding().logoPlacement === 'left' ? 'text-left' : 'text-right')">
-                              <div class="font-black text-[13px] uppercase tracking-tight leading-tight text-slate-950">
-                                {{ effectiveBranding().schoolName }}
+
+                            @if (effectiveBranding().showQrVerification) {
+                              <div class="shrink-0 bg-white p-1 rounded-lg border border-slate-200 shadow-2xs">
+                                <app-school-qr-code
+                                  [value]="'REC:' + resolvedTransaction().txnRef + '|CHALLAN:' + resolvedTransaction().challanNo + '|AMT:' + resolvedTransaction().totalAmount"
+                                  [size]="previewThermalWidth() === '58mm' ? 42 : 48" />
                               </div>
-                              @if (effectiveBranding().campusTagline) {
-                                <div class="text-[8px] uppercase font-bold tracking-wide text-slate-600 leading-tight mt-0.5">
-                                  {{ effectiveBranding().campusTagline }}
-                                </div>
-                              }
-                            </div>
+                            }
                           </div>
 
-                          <!-- Full-Width Centered Campus Contact Block (Prevents Blank Side Space) -->
+                          <!-- Centered Institution Header Below Top Corners -->
                           <div
-                            class="space-y-0.5 pt-0.5 text-[8.5px] leading-snug text-slate-700"
+                            class="space-y-0.5 pt-0.5"
                             [class]="effectiveBranding().headerAlign === 'left'
                               ? 'text-left'
                               : (effectiveBranding().headerAlign === 'right' ? 'text-right' : 'text-center')">
-                            <div class="font-bold text-slate-900">{{ branchLabel() }}</div>
-                            <div>{{ effectiveBranding().registrationNo }}</div>
-                            <div>{{ effectiveBranding().address }}</div>
-                            <div class="font-semibold text-slate-900">Tel: {{ effectiveBranding().phone }}</div>
+                            <div class="font-black text-[13px] uppercase tracking-tight leading-tight text-slate-950">
+                              {{ effectiveBranding().schoolName }}
+                            </div>
+                            @if (effectiveBranding().campusTagline) {
+                              <div class="text-[9px] uppercase font-bold tracking-wide text-slate-500 leading-tight">
+                                {{ effectiveBranding().campusTagline }}
+                              </div>
+                            }
+                            <div class="text-[10px] font-bold text-slate-800 pt-0.5">{{ branchLabel() }}</div>
+                            <div class="text-[9.5px] font-mono text-slate-500">{{ effectiveBranding().registrationNo }}</div>
+                            <div class="text-[10px] font-medium text-slate-600 leading-snug">{{ effectiveBranding().address }}</div>
+                            <div class="text-[10px] font-mono font-bold text-slate-800">Tel: {{ effectiveBranding().phone }}</div>
                           </div>
 
-                          <!-- Crisp Double-Ruled Title Bar -->
-                          <div class="mt-1.5 border-y-[1.5px] border-slate-950 py-1 px-0.5 flex items-center justify-between gap-2">
-                            <span class="font-black text-[9.5px] uppercase tracking-[0.08em] text-slate-950">
+                          <!-- Challan-Style Copy / Title + Status Badge Row -->
+                          <div class="flex items-center justify-between gap-2 pt-1.5 border-t border-slate-100">
+                            <span class="text-[9.5px] font-black uppercase px-2.5 py-1 rounded-md bg-gradient-to-r from-emerald-600 to-teal-600 text-white tracking-wide truncate">
                               FEE PAYMENT RECEIPT
                             </span>
-                            <span class="bg-slate-950 text-white px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.1em] rounded-xs">
+                            <span class="text-[10px] font-mono font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md shrink-0 uppercase">
                               {{ effectiveBranding().stampLabel !== 'NONE' ? effectiveBranding().stampLabel : resolvedTransaction().status }}
                             </span>
                           </div>
@@ -1020,23 +1040,23 @@
                           (dragover)="onSectionDragOver($event, 'meta')"
                           (drop)="onSectionDrop($event, 'meta')"
                           (dragend)="onSectionDragEnd()"
-                          class="space-y-1 transition-colors"
-                          [class]="showQuickLayoutBar() ? 'hover:bg-indigo-50/70 px-1 cursor-grab rounded' : ''">
-                          <div class="flex justify-between items-baseline gap-3 border-b border-dotted border-slate-300 py-0.5">
-                            <span class="font-semibold text-slate-700 shrink-0">Receipt No</span>
-                            <span class="font-bold text-right text-slate-950">{{ resolvedTransaction().txnRef }}</span>
+                          class="space-y-1.5 text-[11px] transition-colors"
+                          [class]="showQuickLayoutBar() ? 'hover:bg-indigo-50/70 px-1 cursor-grab rounded-xl' : ''">
+                          <div class="flex justify-between items-center gap-3">
+                            <span class="text-slate-500 font-bold shrink-0">Receipt No:</span>
+                            <span class="font-mono font-black text-right text-slate-950">{{ resolvedTransaction().txnRef }}</span>
                           </div>
-                          <div class="flex justify-between items-baseline gap-3 border-b border-dotted border-slate-300 py-0.5">
-                            <span class="font-semibold text-slate-700 shrink-0">Challan Ref</span>
-                            <span class="font-bold text-right text-slate-950">{{ resolvedTransaction().challanNo }}</span>
+                          <div class="flex justify-between items-center gap-3">
+                            <span class="text-slate-500 font-bold shrink-0">Challan Ref:</span>
+                            <span class="font-mono font-black text-right text-slate-950">{{ resolvedTransaction().challanNo }}</span>
                           </div>
-                          <div class="flex justify-between items-baseline gap-3 border-b border-dotted border-slate-300 py-0.5">
-                            <span class="font-semibold text-slate-700 shrink-0">Fee Month</span>
-                            <span class="font-bold text-right text-slate-950">November 2026</span>
+                          <div class="flex justify-between items-center gap-3">
+                            <span class="text-slate-500 font-bold shrink-0">Fee Month:</span>
+                            <span class="font-black text-right text-slate-950">November 2026</span>
                           </div>
-                          <div class="flex justify-between items-baseline gap-3 py-0.5">
-                            <span class="font-semibold text-slate-700 shrink-0">Date</span>
-                            <span class="font-bold text-right text-slate-950">{{ resolvedTransaction().paidAtLabel }}</span>
+                          <div class="flex justify-between items-center gap-3">
+                            <span class="text-slate-500 font-bold shrink-0">Date:</span>
+                            <span class="font-mono font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md text-right">{{ resolvedTransaction().paidAtLabel }}</span>
                           </div>
                         </div>
                       }
@@ -1048,30 +1068,30 @@
                           (dragover)="onSectionDragOver($event, 'person')"
                           (drop)="onSectionDrop($event, 'person')"
                           (dragend)="onSectionDragEnd()"
-                          class="border-t border-dashed border-slate-900 pt-2 space-y-1 rounded"
+                          class="border-t border-slate-100 pt-2.5 space-y-1.5 text-[11px] rounded-xl"
                           [class]="showQuickLayoutBar() ? 'hover:bg-indigo-50/60 px-1 cursor-grab' : ''">
-                          <div class="text-[8.5px] font-black uppercase tracking-[0.1em] text-slate-900 pb-0.5">
-                            STUDENT DETAILS
+                          <div class="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                            Student Details
                           </div>
-                          <div class="flex justify-between items-baseline gap-3 border-b border-dotted border-slate-300 py-0.5">
-                            <span class="font-semibold text-slate-700 shrink-0">Student Name</span>
-                            <span class="font-bold text-right text-slate-950">{{ resolvedStudent().name }}</span>
+                          <div class="flex justify-between items-center gap-3">
+                            <span class="text-slate-500 font-bold shrink-0">Student Name:</span>
+                            <span class="font-black text-right text-slate-950">{{ resolvedStudent().name }}</span>
                           </div>
-                          <div class="flex justify-between items-baseline gap-3 border-b border-dotted border-slate-300 py-0.5">
-                            <span class="font-semibold text-slate-700 shrink-0">Roll / ID</span>
-                            <span class="font-bold text-right text-slate-950">#{{ resolvedStudent().rollNo }}</span>
+                          <div class="flex justify-between items-center gap-3">
+                            <span class="text-slate-500 font-bold shrink-0">Roll / ID:</span>
+                            <span class="font-mono font-black text-right text-slate-950">#{{ resolvedStudent().rollNo }}</span>
                           </div>
-                          <div class="flex justify-between items-baseline gap-3 border-b border-dotted border-slate-300 py-0.5">
-                            <span class="font-semibold text-slate-700 shrink-0">Class</span>
-                            <span class="font-bold text-right text-slate-950">{{ resolvedStudent().grade }}</span>
+                          <div class="flex justify-between items-center gap-3">
+                            <span class="text-slate-500 font-bold shrink-0">Class &amp; Section:</span>
+                            <span class="font-black text-right text-slate-950">{{ resolvedStudent().grade }}</span>
                           </div>
-                          <div class="flex justify-between items-baseline gap-3 border-b border-dotted border-slate-300 py-0.5">
-                            <span class="font-semibold text-slate-700 shrink-0">Guardian</span>
-                            <span class="font-bold text-right text-slate-950">{{ resolvedStudent().guardian }}</span>
+                          <div class="flex justify-between items-center gap-3">
+                            <span class="text-slate-500 font-bold shrink-0">Father / Guardian:</span>
+                            <span class="font-bold text-right text-slate-900">{{ resolvedStudent().guardian }}</span>
                           </div>
-                          <div class="flex justify-between items-baseline gap-3 py-0.5">
-                            <span class="font-semibold text-slate-700 shrink-0">Received By</span>
-                            <span class="font-bold text-right text-slate-950">Accountant Desk</span>
+                          <div class="flex justify-between items-center gap-3">
+                            <span class="text-slate-500 font-bold shrink-0">Received By:</span>
+                            <span class="font-bold text-right text-slate-900">Accountant Desk</span>
                           </div>
                         </div>
                       }
@@ -1083,108 +1103,64 @@
                           (dragover)="onSectionDragOver($event, 'amounts')"
                           (drop)="onSectionDrop($event, 'amounts')"
                           (dragend)="onSectionDragEnd()"
-                          class="border-t border-dashed border-slate-900 pt-2 space-y-1.5 rounded"
+                          class="border-t border-slate-100 pt-2.5 space-y-2.5 rounded-xl"
                           [class]="showQuickLayoutBar() ? 'hover:bg-indigo-50/60 px-1 cursor-grab' : ''">
-                          <div class="flex justify-between text-[8.5px] font-black uppercase tracking-[0.08em] border-b-[1.5px] border-slate-900 pb-1 text-slate-950">
-                            <span>PARTICULARS</span>
-                            <span>AMOUNT ({{ effectiveBranding().currencySymbol }})</span>
-                          </div>
-                          <div class="flex justify-between items-baseline gap-3 border-b border-dotted border-slate-300 py-0.5">
-                            <span class="font-semibold text-slate-700 shrink-0">Payment Mode</span>
-                            <span class="font-bold text-right text-slate-950">{{ resolvedTransaction().gatewayName }}</span>
-                          </div>
-                          <div class="flex justify-between items-baseline gap-3 py-0.5"
-                            [class]="resolvedTransaction().gatewayFee > 0 ? 'border-b border-dotted border-slate-300' : ''">
-                            <span class="font-semibold text-slate-700 shrink-0">Tuition &amp; Academic Fee</span>
-                            <span class="font-bold text-right text-slate-950">{{ formatCurrency(resolvedTransaction().baseAmount) }}</span>
-                          </div>
-                          @if (resolvedTransaction().gatewayFee > 0) {
-                            <div class="flex justify-between items-baseline gap-3 py-0.5">
-                              <span class="font-semibold text-slate-700 shrink-0">Gateway / Service Fee</span>
-                              <span class="font-bold text-right text-slate-950">{{ formatCurrency(resolvedTransaction().gatewayFee) }}</span>
+                          <div class="space-y-1.5 text-[11px]">
+                            <div class="flex justify-between items-center text-[10px] font-black uppercase tracking-wider text-slate-400">
+                              <span>Fee Description</span>
+                              <span>Amount ({{ effectiveBranding().currencySymbol }})</span>
                             </div>
-                          }
-                          <div class="border-y-2 border-slate-950 mt-1.5">
-                            <div class="bg-slate-950 text-white px-2.5 py-1.5 flex justify-between items-center font-black text-[11.5px] tracking-tight">
-                              <span>TOTAL PAID</span>
-                              <span>{{ effectiveBranding().currencySymbol }} {{ formatCurrency(resolvedTransaction().totalAmount) }}</span>
+                            <div class="flex justify-between items-center gap-3">
+                              <span class="text-slate-700 font-medium shrink-0">Payment Mode</span>
+                              <span class="font-black text-right text-slate-950">{{ resolvedTransaction().gatewayName }}</span>
+                            </div>
+                            <div class="flex justify-between items-center gap-3">
+                              <span class="text-slate-700 font-medium shrink-0">Tuition &amp; Academic Fee</span>
+                              <span class="font-mono font-black text-right text-slate-950">{{ formatCurrency(resolvedTransaction().baseAmount) }}</span>
+                            </div>
+                            @if (resolvedTransaction().gatewayFee > 0) {
+                              <div class="flex justify-between items-center gap-3">
+                                <span class="text-slate-700 font-medium shrink-0">Gateway / Service Fee</span>
+                                <span class="font-mono font-bold text-right text-slate-800">{{ formatCurrency(resolvedTransaction().gatewayFee) }}</span>
+                              </div>
+                            }
+                          </div>
+                          <div class="rounded-xl p-3 bg-gradient-to-r from-indigo-50 via-emerald-50/70 to-rose-50/60 border border-emerald-100/80 space-y-1">
+                            <div class="flex justify-between items-center gap-2">
+                              <span class="text-[11px] font-black text-slate-950">Total Paid:</span>
+                              <span class="font-mono font-black text-sm text-indigo-950">{{ effectiveBranding().currencySymbol }} {{ formatCurrency(resolvedTransaction().totalAmount) }}</span>
                             </div>
                           </div>
                           @if (effectiveBranding().thermalDualCopy) {
-                            <div class="text-center text-[8px] font-bold uppercase tracking-wider text-slate-600 border-t border-dashed border-slate-400 pt-1.5">
-                              ✂ TEAR / CUT — OFFICE COPY PRINTED BELOW
+                            <div class="text-center text-[9px] font-bold uppercase tracking-wider text-slate-500 border-t border-dashed border-slate-300 pt-1.5">
+                              ✂ Tear / Cut — Office Copy Printed Below
                             </div>
                           }
                         </div>
                       }
 
                       @case ('verification') {
-                        <div
-                          [attr.draggable]="showQuickLayoutBar()"
-                          (dragstart)="onSectionDragStart($event, 'verification')"
-                          (dragover)="onSectionDragOver($event, 'verification')"
-                          (drop)="onSectionDrop($event, 'verification')"
-                          (dragend)="onSectionDragEnd()"
-                          class="border-t border-dashed border-slate-900 pt-2 text-center space-y-1.5"
-                          [class]="showQuickLayoutBar() ? 'hover:bg-indigo-50/60 cursor-grab rounded px-1' : ''">
-                          <div class="text-[8px] font-black uppercase tracking-[0.12em] text-slate-700">
-                            VERIFICATION
+                        @if (effectiveBranding().showBarcodeVerification) {
+                          <div
+                            [attr.draggable]="showQuickLayoutBar()"
+                            (dragstart)="onSectionDragStart($event, 'verification')"
+                            (dragover)="onSectionDragOver($event, 'verification')"
+                            (drop)="onSectionDrop($event, 'verification')"
+                            (dragend)="onSectionDragEnd()"
+                            class="border-t border-slate-100 pt-2.5 text-center space-y-1.5"
+                            [class]="showQuickLayoutBar() ? 'hover:bg-indigo-50/60 cursor-grab rounded-xl px-1' : ''">
+                            <div class="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                              Verification
+                            </div>
+                            <div class="flex justify-center">
+                              <app-school-barcode
+                                [value]="resolvedTransaction().challanNo"
+                                [label]="resolvedTransaction().challanNo"
+                                [height]="previewThermalWidth() === '58mm' ? 28 : 34"
+                                [barWidth]="previewThermalWidth() === '58mm' ? 1.05 : 1.25" />
+                            </div>
                           </div>
-                          @if (effectiveBranding().verificationOrder === 'side_by_side' && effectiveBranding().showBarcodeVerification && effectiveBranding().showQrVerification) {
-                            <div class="flex items-center justify-between gap-2">
-                              <div class="min-w-0 flex-1 flex justify-center">
-                                <app-school-barcode
-                                  [value]="resolvedTransaction().challanNo"
-                                  [label]="resolvedTransaction().challanNo"
-                                  [height]="26"
-                                  [barWidth]="0.95" />
-                              </div>
-                              <app-school-qr-code
-                                [value]="'REC:' + resolvedTransaction().txnRef + '|CHALLAN:' + resolvedTransaction().challanNo"
-                                [size]="50" />
-                            </div>
-                          } @else if (effectiveBranding().verificationOrder === 'qr_first') {
-                            <div class="space-y-1.5">
-                              @if (effectiveBranding().showQrVerification) {
-                                <div class="flex flex-col items-center">
-                                  <app-school-qr-code
-                                    [value]="'REC:' + resolvedTransaction().txnRef + '|CHALLAN:' + resolvedTransaction().challanNo + '|AMT:' + resolvedTransaction().totalAmount"
-                                    [size]="previewThermalWidth() === '58mm' ? 54 : 66"
-                                    [label]="'SCAN TO VERIFY RECEIPT'" />
-                                </div>
-                              }
-                              @if (effectiveBranding().showBarcodeVerification) {
-                                <div class="flex justify-center">
-                                  <app-school-barcode
-                                    [value]="resolvedTransaction().challanNo"
-                                    [label]="resolvedTransaction().challanNo"
-                                    [height]="previewThermalWidth() === '58mm' ? 28 : 34"
-                                    [barWidth]="previewThermalWidth() === '58mm' ? 1.05 : 1.25" />
-                                </div>
-                              }
-                            </div>
-                          } @else {
-                            <div class="space-y-1.5">
-                              @if (effectiveBranding().showBarcodeVerification) {
-                                <div class="flex justify-center">
-                                  <app-school-barcode
-                                    [value]="resolvedTransaction().challanNo"
-                                    [label]="resolvedTransaction().challanNo"
-                                    [height]="previewThermalWidth() === '58mm' ? 28 : 34"
-                                    [barWidth]="previewThermalWidth() === '58mm' ? 1.05 : 1.25" />
-                                </div>
-                              }
-                              @if (effectiveBranding().showQrVerification) {
-                                <div class="flex flex-col items-center">
-                                  <app-school-qr-code
-                                    [value]="'REC:' + resolvedTransaction().txnRef + '|CHALLAN:' + resolvedTransaction().challanNo + '|AMT:' + resolvedTransaction().totalAmount"
-                                    [size]="previewThermalWidth() === '58mm' ? 54 : 66"
-                                    [label]="'SCAN TO VERIFY RECEIPT'" />
-                                </div>
-                              }
-                            </div>
-                          }
-                        </div>
+                        }
                       }
 
                       @case ('footer') {
@@ -1194,15 +1170,17 @@
                           (dragover)="onSectionDragOver($event, 'footer')"
                           (drop)="onSectionDrop($event, 'footer')"
                           (dragend)="onSectionDragEnd()"
-                          class="pt-5 rounded space-y-1.5"
+                          class="border-t border-slate-100 pt-2.5 rounded-xl space-y-1.5 text-center"
                           [class]="showQuickLayoutBar() ? 'hover:bg-indigo-50/60 px-1 cursor-grab' : ''">
-                          <div class="border-t border-slate-900 pt-1 text-center text-[8.5px] font-black uppercase tracking-wide text-slate-900">
-                            {{ effectiveBranding().signatoryTitle }}
+                          <div class="pt-2">
+                            <span class="inline-block min-w-[150px] border-t border-slate-300 pt-1 text-[9px] font-bold text-slate-600 uppercase tracking-wide">
+                              {{ effectiveBranding().signatoryTitle }}
+                            </span>
                           </div>
-                          <div class="text-center text-[8.5px] text-slate-600 leading-snug pt-0.5">
+                          <p class="text-[9.5px] text-slate-500 font-medium leading-snug">
                             {{ effectiveBranding().footerNote }}
-                          </div>
-                          <div class="text-center text-[7.5px] font-bold uppercase tracking-[0.12em] text-slate-500 pt-0.5">
+                          </p>
+                          <div class="text-[8.5px] font-mono font-bold uppercase tracking-wider text-slate-400">
                             {{ effectiveBranding().website ? effectiveBranding().website + ' · ' : '' }}{{ previewThermalWidth().toUpperCase() }} POS
                           </div>
                         </div>
@@ -1795,206 +1773,534 @@
           <!-- 7. SCHOOL TABLES & ROW ACTION SLIPS LIVE SCALED PREVIEW -->
           @if (selectedFormat() === 'table_statement') {
             @if (tablePreviewSubMode() === '80mm' || tablePreviewSubMode() === '58mm') {
-              <div
-                class="bg-white text-slate-950 font-sans border border-slate-300 shadow-lg rounded-sm p-4 space-y-2.5 tabular-nums"
-                [class]="tablePreviewSubMode() === '58mm' ? 'w-[256px] text-[9.5px]' : 'w-[336px] text-[10.5px]'"
-              >
+              <div class="flex flex-col items-center gap-2.5 w-full">
                 <div
-                  class="flex gap-2 pb-2 border-b border-slate-300"
-                  [class]="effectiveTablePreview().branding.logoPlacement === 'top'
-                    ? (effectiveTablePreview().branding.headerAlign === 'left'
-                      ? 'flex-col items-start text-left'
-                      : (effectiveTablePreview().branding.headerAlign === 'right' ? 'flex-col items-end text-right' : 'flex-col items-center text-center'))
-                    : (effectiveTablePreview().branding.logoPlacement === 'right' ? 'flex-row-reverse items-center text-right' : 'flex-row items-center text-left')"
+                  class="p-4 sm:p-5 rounded-2xl bg-white flex flex-col justify-between text-slate-900 space-y-3.5 scs-tile-3d border border-slate-200/90 transition-all tabular-nums relative font-sans"
+                  [class]="tablePreviewSubMode() === '58mm' ? 'w-full max-w-[276px] text-[10px]' : 'w-full max-w-[356px] text-[11px]'"
                 >
-                  @if (effectiveTablePreview().branding.showLogoCrest !== false) {
-                    @if (safeLogoUrl()) {
-                      <img [src]="safeLogoUrl()" alt="Logo" referrerpolicy="no-referrer" class="w-10 h-10 object-contain border border-slate-900 p-0.5 rounded shrink-0" />
-                    } @else {
-                      <div class="px-2 py-1 border-2 border-slate-900 rounded font-black text-xs shrink-0">{{ effectiveTablePreview().branding.monogramInitials }}</div>
+                  @for (secKey of effectiveTablePreview().branding.sectionOrder; track secKey) {
+                    @if (!isTableSectionHidden(secKey)) {
+                      @switch (secKey) {
+                        @case ('header') {
+                          <div
+                            [attr.draggable]="showQuickLayoutBar()"
+                            (dragstart)="onSectionDragStart($event, 'header')"
+                            (dragover)="onSectionDragOver($event, 'header')"
+                            (drop)="onSectionDrop($event, 'header')"
+                            (dragend)="onSectionDragEnd()"
+                            class="space-y-2.5 rounded-xl transition-colors"
+                            [class]="showQuickLayoutBar() ? 'hover:bg-indigo-50/60 p-1 -m-1 cursor-grab' : ''">
+                            @if (effectiveTablePreview().branding.thermalDualCopy) {
+                              <div class="flex items-center justify-between gap-2">
+                                <span class="text-[9.5px] font-black uppercase px-2.5 py-1 rounded-md bg-gradient-to-r from-emerald-600 to-teal-600 text-white tracking-wide shrink-0">
+                                  CUSTOMER / GUARDIAN COPY
+                                </span>
+                                <span class="text-[9.5px] font-mono font-bold text-slate-500 uppercase tracking-tight">
+                                  {{ tablePreviewSubMode().toUpperCase() }} SLIP
+                                </span>
+                              </div>
+                            }
+                            <!-- Top Corners Row: Logo in One Corner, QR Scanner in Opposite Top Corner -->
+                            <div
+                              class="flex items-start justify-between gap-2.5"
+                              [class]="effectiveTablePreview().branding.logoPlacement === 'right' ? 'flex-row-reverse' : 'flex-row'">
+                              @if (safeLogoUrl()) {
+                                <img
+                                  [src]="safeLogoUrl()"
+                                  alt="School logo"
+                                  referrerpolicy="no-referrer"
+                                  [style.width.px]="effectiveTablePreview().branding.logoSizePx || 44"
+                                  [style.height.px]="effectiveTablePreview().branding.logoSizePx || 44"
+                                  class="object-contain rounded-lg border border-slate-200 bg-white p-0.5 shrink-0 shadow-2xs" />
+                              } @else if (effectiveTablePreview().branding.showLogoCrest !== false) {
+                                <div class="w-10 h-10 rounded-lg border border-slate-300 bg-slate-50 text-slate-900 font-black text-[11px] flex items-center justify-center shrink-0 tracking-wider shadow-2xs">
+                                  {{ effectiveTablePreview().branding.monogramInitials }}
+                                </div>
+                              } @else {
+                                <span class="shrink-0"></span>
+                              }
+
+                              @if (effectiveTablePreview().branding.showQrVerification !== false) {
+                                <div class="shrink-0 bg-white p-1 rounded-lg border border-slate-200 shadow-2xs">
+                                  <app-school-qr-code
+                                    [value]="'STM:' + sampleTableDataset().tableId"
+                                    [size]="tablePreviewSubMode() === '58mm' ? 42 : 48" />
+                                </div>
+                              }
+                            </div>
+
+                            <!-- Centered Institution Header Below Top Corners -->
+                            <div
+                              class="space-y-0.5 pt-0.5"
+                              [class]="effectiveTablePreview().branding.headerAlign === 'left'
+                                ? 'text-left'
+                                : (effectiveTablePreview().branding.headerAlign === 'right' ? 'text-right' : 'text-center')">
+                              <div class="font-black text-[13px] uppercase tracking-tight leading-tight text-slate-950">
+                                {{ effectiveTablePreview().branding.schoolName }}
+                              </div>
+                              @if (effectiveTablePreview().branding.campusTagline) {
+                                <div class="text-[9px] uppercase font-bold tracking-wide text-slate-500 leading-tight">
+                                  {{ effectiveTablePreview().branding.campusTagline }}
+                                </div>
+                              }
+                              <div class="text-[10px] font-bold text-slate-800 pt-0.5">{{ branchLabel() }}</div>
+                              @if (effectiveTablePreview().branding.registrationNo) {
+                                <div class="text-[9.5px] font-mono text-slate-500">{{ effectiveTablePreview().branding.registrationNo }}</div>
+                              }
+                              @if (effectiveTablePreview().branding.address) {
+                                <div class="text-[10px] font-medium text-slate-600 leading-snug">{{ effectiveTablePreview().branding.address }}</div>
+                              }
+                              <div class="text-[10px] font-mono font-bold text-slate-800">Tel: {{ effectiveTablePreview().branding.phone }}</div>
+                            </div>
+
+                            <!-- Challan-Style Copy / Title + Status Badge Row -->
+                            <div class="flex items-center justify-between gap-2 pt-1.5 border-t border-slate-100">
+                              <span class="text-[9.5px] font-black uppercase px-2.5 py-1 rounded-md bg-gradient-to-r from-emerald-600 to-teal-600 text-white tracking-wide truncate">
+                                {{ effectiveTablePreview().customHeading || sampleTableDataset().title }}
+                              </span>
+                              @if (effectiveTablePreview().branding.stampLabel !== 'NONE') {
+                                <span class="text-[10px] font-mono font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md shrink-0 uppercase">
+                                  {{ effectiveTablePreview().branding.stampLabel }}
+                                </span>
+                              }
+                            </div>
+                          </div>
+                        }
+
+                        @case ('meta') {
+                          <div
+                            [attr.draggable]="showQuickLayoutBar()"
+                            (dragstart)="onSectionDragStart($event, 'meta')"
+                            (dragover)="onSectionDragOver($event, 'meta')"
+                            (drop)="onSectionDrop($event, 'meta')"
+                            (dragend)="onSectionDragEnd()"
+                            class="space-y-1.5 text-[11px] transition-colors"
+                            [class]="showQuickLayoutBar() ? 'hover:bg-indigo-50/70 px-1 cursor-grab rounded-xl' : ''">
+                            <div class="flex justify-between items-center gap-3">
+                              <span class="text-slate-500 font-bold shrink-0">Slip Ref:</span>
+                              <span class="font-mono font-black text-right text-slate-950">STM-PREVIEW-2026</span>
+                            </div>
+                            <div class="flex justify-between items-center gap-3">
+                              <span class="text-slate-500 font-bold shrink-0">Portal Scope:</span>
+                              <span class="font-black text-right text-slate-950 truncate">{{ selectedTableScope() === '__global__' ? 'All 65 Categories' : selectedTableMeta().portals }}</span>
+                            </div>
+                            <div class="flex justify-between items-center gap-3">
+                              <span class="text-slate-500 font-bold shrink-0">Date:</span>
+                              <span class="font-mono font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md text-right">{{ resolvedTransaction().paidAtLabel }}</span>
+                            </div>
+                          </div>
+                        }
+
+                        @case ('person') {
+                          <div
+                            [attr.draggable]="showQuickLayoutBar()"
+                            (dragstart)="onSectionDragStart($event, 'person')"
+                            (dragover)="onSectionDragOver($event, 'person')"
+                            (drop)="onSectionDrop($event, 'person')"
+                            (dragend)="onSectionDragEnd()"
+                            class="border-t border-slate-100 pt-2.5 space-y-1.5 rounded-xl"
+                            [class]="showQuickLayoutBar() ? 'hover:bg-indigo-50/60 px-1 cursor-grab' : ''">
+                            <div class="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                              Record Particulars
+                            </div>
+                            @for (fld of sampleTableTextFields(); track $index) {
+                              @if (isLongThermalText(fld.value)) {
+                                <div class="rounded-xl bg-slate-50/85 border border-slate-200/70 p-2.5 space-y-1">
+                                  <div class="text-[9.5px] font-bold text-slate-500 uppercase tracking-wide inline-flex items-center gap-1">
+                                    @if (effectiveTablePreview().showFieldLogos) {
+                                      <span class="w-1.5 h-1.5 bg-emerald-600 rounded-full inline-block"></span>
+                                    }
+                                    <span>{{ fld.label }}</span>
+                                  </div>
+                                  <div class="text-[11px] font-semibold text-slate-900 leading-relaxed break-words">{{ fld.value }}</div>
+                                </div>
+                              } @else {
+                                <div class="flex justify-between items-baseline gap-3 text-[11px]">
+                                  <span class="text-slate-500 font-bold shrink-0 inline-flex items-center gap-1">
+                                    @if (effectiveTablePreview().showFieldLogos) {
+                                      <span class="w-1.5 h-1.5 bg-emerald-600 rounded-full inline-block"></span>
+                                    }
+                                    <span>{{ fld.label }}:</span>
+                                  </span>
+                                  <span class="font-black text-slate-950 text-right break-words">{{ fld.value }}</span>
+                                </div>
+                              }
+                            }
+                          </div>
+                        }
+
+                        @case ('amounts') {
+                          @if (sampleTableSummary().amountColumns.length > 0) {
+                            <div
+                              [attr.draggable]="showQuickLayoutBar()"
+                              (dragstart)="onSectionDragStart($event, 'amounts')"
+                              (dragover)="onSectionDragOver($event, 'amounts')"
+                              (drop)="onSectionDrop($event, 'amounts')"
+                              (dragend)="onSectionDragEnd()"
+                              class="border-t border-slate-100 pt-2.5 space-y-2.5 rounded-xl"
+                              [class]="showQuickLayoutBar() ? 'hover:bg-indigo-50/60 px-1 cursor-grab' : ''">
+                              <div class="space-y-1.5 text-[11px]">
+                                <div class="flex justify-between items-center text-[10px] font-black uppercase tracking-wider text-slate-400">
+                                  <span>Fee / Amount Description</span>
+                                  <span>Amount ({{ sampleTableSummary().currency }})</span>
+                                </div>
+                                @for (col of sampleTableSummary().amountColumns; track col.colIndex) {
+                                  <div class="flex justify-between items-center gap-3">
+                                    <span class="text-slate-700 font-medium shrink-0">{{ col.label }}</span>
+                                    <span class="font-mono font-black text-right text-slate-950">{{ formatCurrency(col.total) }}</span>
+                                  </div>
+                                }
+                              </div>
+                              <div class="rounded-xl p-3 bg-gradient-to-r from-indigo-50 via-emerald-50/70 to-rose-50/60 border border-emerald-100/80 space-y-1">
+                                <div class="flex justify-between items-center gap-2">
+                                  <span class="text-[11px] font-black text-slate-950">Total Verified Amount:</span>
+                                  <span class="font-mono font-black text-sm text-indigo-950">{{ sampleTableSummary().currency }} {{ formatCurrency(sampleTableSummary().primaryTotal) }}</span>
+                                </div>
+                              </div>
+                              @if (effectiveTablePreview().branding.thermalDualCopy) {
+                                <div class="text-center text-[9px] font-bold uppercase tracking-wider text-slate-500 border-t border-dashed border-slate-300 pt-1.5">
+                                  ✂ Tear / Cut — Office Copy Printed Below
+                                </div>
+                              }
+                            </div>
+                          }
+                        }
+
+                        @case ('verification') {
+                          @if (effectiveTablePreview().branding.showBarcodeVerification) {
+                            <div
+                              [attr.draggable]="showQuickLayoutBar()"
+                              (dragstart)="onSectionDragStart($event, 'verification')"
+                              (dragover)="onSectionDragOver($event, 'verification')"
+                              (drop)="onSectionDrop($event, 'verification')"
+                              (dragend)="onSectionDragEnd()"
+                              class="border-t border-slate-100 pt-2.5 text-center space-y-1.5"
+                              [class]="showQuickLayoutBar() ? 'hover:bg-indigo-50/60 cursor-grab rounded-xl px-1' : ''">
+                              <div class="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                                Verification
+                              </div>
+                              <div class="flex justify-center">
+                                <app-school-barcode
+                                  value="STM-PREVIEW-2026"
+                                  label="STM-PREVIEW-2026"
+                                  [height]="tablePreviewSubMode() === '58mm' ? 28 : 34"
+                                  [barWidth]="tablePreviewSubMode() === '58mm' ? 1.05 : 1.25" />
+                              </div>
+                            </div>
+                          }
+                        }
+
+                        @case ('footer') {
+                          <div
+                            [attr.draggable]="showQuickLayoutBar()"
+                            (dragstart)="onSectionDragStart($event, 'footer')"
+                            (dragover)="onSectionDragOver($event, 'footer')"
+                            (drop)="onSectionDrop($event, 'footer')"
+                            (dragend)="onSectionDragEnd()"
+                            class="border-t border-slate-100 pt-2.5 rounded-xl space-y-1.5 text-center"
+                            [class]="showQuickLayoutBar() ? 'hover:bg-indigo-50/60 px-1 cursor-grab' : ''">
+                            @if (effectiveTablePreview().branding.signatoryTitle) {
+                              <div class="pt-2">
+                                <span class="inline-block min-w-[150px] border-t border-slate-300 pt-1 text-[9px] font-bold text-slate-600 uppercase tracking-wide">
+                                  {{ effectiveTablePreview().branding.signatoryTitle }}
+                                </span>
+                              </div>
+                            }
+                            <p class="text-[9.5px] text-slate-500 font-medium leading-snug">
+                              {{ effectiveTablePreview().branding.footerNote }}
+                            </p>
+                            <div class="text-[8.5px] font-mono font-bold uppercase tracking-wider text-slate-400">
+                              {{ effectiveTablePreview().branding.website ? effectiveTablePreview().branding.website + ' · ' : '' }}{{ tablePreviewSubMode().toUpperCase() }} POS
+                            </div>
+                            @if (effectiveTablePreview().showWatermark) {
+                              <div class="text-[8px] font-black uppercase tracking-[0.18em] text-slate-300">
+                                *** {{ effectiveTablePreview().branding.schoolName }} ***
+                              </div>
+                            }
+                          </div>
+                        }
+                      }
                     }
                   }
-                  <div class="min-w-0">
-                    <div class="font-black text-xs uppercase leading-tight">{{ effectiveTablePreview().branding.schoolName }}</div>
-                    <div class="text-[8px] text-slate-500">{{ effectiveTablePreview().branding.phone }}</div>
-                  </div>
                 </div>
-                <div class="border-y-2 border-slate-950 py-1 flex items-center justify-between gap-2">
-                  <span class="font-black text-[9px] uppercase truncate">{{ effectiveTablePreview().customHeading || sampleTableDataset().title }}</span>
-                  <span class="px-1.5 py-0.5 bg-slate-950 text-white text-[8px] font-black uppercase rounded-xs">{{ effectiveTablePreview().branding.stampLabel }}</span>
-                </div>
-                <div class="space-y-1 border-b border-dashed border-slate-400 pb-2">
-                  @for (fld of sampleTableSingleFields(); track $index) {
-                    <div class="flex justify-between gap-2 text-[9.5px]">
-                      <span class="text-slate-600 inline-flex items-center gap-1">
-                        @if (effectiveTablePreview().showFieldLogos) {
-                          <span class="w-1.5 h-1.5 bg-slate-900 rounded-xs inline-block"></span>
-                        }
-                        <span>{{ fld.label }}</span>
-                      </span>
-                      <span class="font-bold text-right">{{ fld.value }}</span>
-                    </div>
-                  }
-                </div>
-                <div class="flex flex-col items-center gap-1.5 pt-1">
-                  @if (effectiveTablePreview().branding.showBarcodeVerification) {
-                    <app-school-barcode value="STM-PREVIEW-2026" [height]="22" [barWidth]="1" />
-                  }
-                  @if (effectiveTablePreview().branding.showQrVerification) {
-                    <app-school-qr-code [value]="'STM:' + sampleTableDataset().tableId" [size]="48" />
-                  }
-                </div>
-                @if (effectiveTablePreview().showWatermark) {
-                  <div class="text-center text-[7px] font-black uppercase tracking-[0.2em] text-slate-400">
-                    *** {{ effectiveTablePreview().branding.schoolName }} ***
-                  </div>
-                }
+                <span class="text-[10px] font-mono font-bold text-slate-500">
+                  School POS Table Rasheed · {{ tablePreviewSubMode().toUpperCase() }} Roll
+                </span>
               </div>
             } @else if (tablePreviewSubMode() === 'card') {
               <div
-                class="w-full max-w-[540px] bg-white rounded-2xl border-2 shadow-lg overflow-hidden text-slate-900 relative"
-                [style.border-color]="effectiveTablePreview().branding.headerAccentColor"
+                class="w-full max-w-[560px] bg-white rounded-2xl border border-slate-200/90 scs-tile-3d overflow-hidden text-slate-900 relative"
+                [style.border-top-width.px]="4"
+                [style.border-top-color]="effectiveTablePreview().branding.headerAccentColor"
               >
                 @if (effectiveTablePreview().showWatermark) {
-                  <div class="pointer-events-none select-none absolute inset-0 flex items-center justify-center opacity-[0.04] z-0">
+                  <div class="pointer-events-none select-none absolute inset-0 flex items-center justify-center opacity-[0.035] z-0">
                     <span class="text-3xl font-black uppercase tracking-[0.2em] -rotate-20 text-slate-900">{{ effectiveTablePreview().branding.schoolName }}</span>
                   </div>
                 }
-                <div class="px-4 py-3 text-white flex items-center justify-between gap-3 relative z-10" [style.background-color]="effectiveTablePreview().branding.headerAccentColor">
-                  <div class="flex items-center gap-2.5 min-w-0">
-                    @if (safeLogoUrl()) {
-                      <img [src]="safeLogoUrl()" alt="Logo" referrerpolicy="no-referrer" class="w-9 h-9 object-contain bg-white rounded p-0.5 shrink-0" />
-                    } @else {
-                      <div class="px-2 py-1 rounded bg-white/15 border border-white/40 font-black text-xs shrink-0">{{ effectiveTablePreview().branding.monogramInitials }}</div>
-                    }
-                    <div class="min-w-0">
-                      <div class="text-xs font-black uppercase truncate">{{ effectiveTablePreview().branding.schoolName }}</div>
-                      <div class="text-[9px] text-white/80 truncate">{{ effectiveTablePreview().customHeading || sampleTableDataset().title }}</div>
-                    </div>
-                  </div>
-                  <span class="px-2 py-0.5 rounded bg-white/15 border border-white/40 text-[9px] font-black uppercase shrink-0">{{ effectiveTablePreview().branding.stampLabel }} PASS</span>
-                </div>
-                <div class="p-4 space-y-3 relative z-10">
-                  <div class="grid grid-cols-2 gap-2">
-                    @for (fld of sampleTableSingleFields(); track $index) {
-                      <div class="p-2 rounded-lg bg-slate-50 border border-slate-200">
-                        <span class="flex items-center gap-1 text-[8px] font-black uppercase text-slate-500">
-                          @if (effectiveTablePreview().showFieldLogos) {
-                            <span class="w-2.5 h-2.5 rounded-xs text-[6px] text-white inline-flex items-center justify-center font-black" [style.background-color]="effectiveTablePreview().branding.headerAccentColor">{{ effectiveTablePreview().branding.monogramInitials.slice(0, 1) }}</span>
+                <div class="relative z-10">
+                  @if (!isTableSectionHidden('header')) {
+                    <div class="px-5 py-3.5 bg-slate-50/90 border-b border-slate-200 flex items-center justify-between gap-3">
+                      <div
+                        class="flex items-center gap-3 min-w-0 flex-1"
+                        [class]="effectiveTablePreview().branding.logoPlacement === 'top'
+                          ? 'flex-col items-start'
+                          : (effectiveTablePreview().branding.logoPlacement === 'right' ? 'flex-row-reverse text-right' : 'flex-row text-left')"
+                      >
+                        @if (effectiveTablePreview().branding.showLogoCrest !== false) {
+                          @if (safeLogoUrl()) {
+                            <img [src]="safeLogoUrl()" alt="Logo" referrerpolicy="no-referrer" class="w-9 h-9 object-contain bg-white border border-slate-200 rounded-lg p-0.5 shrink-0" />
+                          } @else {
+                            <div class="px-2.5 py-1.5 rounded-lg text-white font-black text-xs shrink-0" [style.background-color]="effectiveTablePreview().branding.headerAccentColor">
+                              {{ effectiveTablePreview().branding.monogramInitials }}
+                            </div>
                           }
-                          <span>{{ fld.label }}</span>
-                        </span>
-                        <span class="block text-[11px] font-bold text-slate-900 mt-0.5 truncate">{{ fld.value }}</span>
+                        }
+                        <div class="min-w-0">
+                          <div class="text-xs font-black uppercase text-slate-950 truncate">{{ effectiveTablePreview().branding.schoolName }}</div>
+                          <div class="text-[10px] text-slate-500 font-semibold truncate">{{ effectiveTablePreview().branding.phone }}</div>
+                        </div>
                       </div>
+                      <span class="px-2.5 py-1 rounded-lg text-white text-[9px] font-black uppercase tracking-wider shrink-0" [style.background-color]="effectiveTablePreview().branding.headerAccentColor">
+                        {{ effectiveTablePreview().branding.stampLabel !== 'NONE' ? effectiveTablePreview().branding.stampLabel : 'VERIFIED' }} PASS
+                      </span>
+                    </div>
+                  }
+
+                  <div class="p-5 space-y-4">
+                    @for (secKey of effectiveTablePreview().branding.sectionOrder; track secKey) {
+                      @if (secKey !== 'header' && !isTableSectionHidden(secKey)) {
+                        @switch (secKey) {
+                          @case ('meta') {
+                            <div class="flex items-center justify-between gap-3 pb-3 border-b border-slate-100">
+                              <div class="min-w-0">
+                                <div class="text-sm font-black text-slate-950 truncate">{{ effectiveTablePreview().customHeading || sampleTableDataset().title }}</div>
+                                <div class="text-[10px] font-mono text-slate-500 mt-0.5">Ref: STM-PREVIEW-2026 · {{ selectedTableMeta().portals }}</div>
+                              </div>
+                              @if (effectiveTablePreview().branding.showQrVerification) {
+                                <div class="p-1.5 rounded-xl bg-slate-50 border border-slate-200 shrink-0">
+                                  <app-school-qr-code [value]="'STM:' + sampleTableDataset().tableId" [size]="58" />
+                                </div>
+                              }
+                            </div>
+                          }
+                          @case ('person') {
+                            <div class="rounded-xl border border-slate-200/90 overflow-hidden bg-white">
+                              <div class="grid grid-cols-1 sm:grid-cols-2">
+                                @for (fld of sampleTableSingleFields(); track $index) {
+                                  <div class="px-3.5 py-2.5 border-b border-slate-100 sm:odd:border-r sm:odd:border-slate-100 flex flex-col gap-0.5">
+                                    <span class="flex items-center gap-1 text-[9px] font-black uppercase tracking-wider text-slate-500">
+                                      @if (effectiveTablePreview().showFieldLogos) {
+                                        <span class="w-2.5 h-2.5 rounded-xs text-[6px] text-white inline-flex items-center justify-center font-black" [style.background-color]="effectiveTablePreview().branding.headerAccentColor">{{ effectiveTablePreview().branding.monogramInitials.slice(0, 1) }}</span>
+                                      }
+                                      <span>{{ fld.label }}</span>
+                                    </span>
+                                    @if (fld.isStatus) {
+                                      <span [class]="getTableFieldPillClass(fld.value)" class="w-max mt-0.5">{{ fld.value }}</span>
+                                    } @else {
+                                      <span class="text-xs font-bold text-slate-900 truncate" [class.font-mono]="fld.isAmount" [class.font-black]="fld.isAmount">{{ fld.value }}</span>
+                                    }
+                                  </div>
+                                }
+                              </div>
+                            </div>
+                          }
+                          @case ('amounts') {
+                            @if (sampleTableSummary().amountColumns.length > 0) {
+                              <div class="rounded-xl p-3.5 bg-gradient-to-r from-emerald-50 via-teal-50/75 to-indigo-50/60 border border-emerald-200/70 flex items-center justify-between gap-2">
+                                <span class="text-[10px] font-black uppercase tracking-wider text-slate-700">Verified Total</span>
+                                <span class="text-base font-mono font-black text-emerald-800">{{ sampleTableSummary().currency }} {{ formatCurrency(sampleTableSummary().primaryTotal) }}</span>
+                              </div>
+                            }
+                          }
+                          @case ('verification') {
+                            @if (effectiveTablePreview().branding.showBarcodeVerification) {
+                              <div class="flex items-center justify-between gap-3 pt-2 border-t border-dashed border-slate-200">
+                                <app-school-barcode value="STM-PREVIEW-2026" [height]="22" [barWidth]="1.0" />
+                                <span class="text-[10px] font-mono font-bold text-slate-500">STM-PREVIEW-2026</span>
+                              </div>
+                            }
+                          }
+                          @case ('footer') {
+                            <div class="flex items-end justify-between gap-3 pt-2.5 border-t border-slate-100 text-[9px] text-slate-500">
+                              <span class="max-w-xs">{{ effectiveTablePreview().branding.footerNote }}</span>
+                              <span class="border-t border-slate-800 pt-1 font-black uppercase text-slate-900 shrink-0">{{ effectiveTablePreview().branding.signatoryTitle }}</span>
+                            </div>
+                          }
+                        }
+                      }
                     }
-                  </div>
-                  <div class="flex items-center justify-between pt-2 border-t border-dashed border-slate-300">
-                    <app-school-barcode value="STM-PREVIEW-2026" [height]="22" [barWidth]="1.05" />
-                    <app-school-qr-code [value]="'STM:' + sampleTableDataset().tableId" [size]="52" />
                   </div>
                 </div>
               </div>
             } @else {
               <div
-                class="w-full bg-white text-slate-900 border border-slate-300 shadow-lg p-6 space-y-4 text-[11px] relative overflow-hidden"
+                class="w-full bg-white text-slate-900 border border-slate-200/90 rounded-2xl scs-tile-3d p-5 sm:p-6 text-[11px] relative overflow-hidden"
                 [class]="effectiveTablePreview().a4Orientation === 'portrait' ? 'max-w-[560px]' : 'max-w-[740px]'"
               >
                 @if (effectiveTablePreview().showWatermark) {
-                  <div class="pointer-events-none select-none absolute inset-0 flex items-center justify-center opacity-[0.04] z-0">
+                  <div class="pointer-events-none select-none absolute inset-0 flex items-center justify-center opacity-[0.035] z-0">
                     <span class="text-4xl font-black uppercase tracking-[0.22em] -rotate-24 text-slate-900">{{ effectiveTablePreview().branding.schoolName }}</span>
                   </div>
                 }
                 <div class="relative z-10 space-y-4">
-                  <div
-                    class="flex items-start justify-between gap-4 pb-3 border-b-2"
-                    [style.border-bottom-color]="effectiveTablePreview().branding.headerAccentColor"
-                  >
-                    <div
-                      class="flex gap-3 flex-1 min-w-0"
-                      [class]="effectiveTablePreview().branding.logoPlacement === 'top'
-                        ? (effectiveTablePreview().branding.headerAlign === 'left'
-                          ? 'flex-col items-start text-left'
-                          : (effectiveTablePreview().branding.headerAlign === 'right' ? 'flex-col items-end text-right' : 'flex-col items-center text-center'))
-                        : (effectiveTablePreview().branding.logoPlacement === 'right' ? 'flex-row-reverse items-center text-right' : 'flex-row items-center text-left')"
-                    >
-                      @if (effectiveTablePreview().branding.showLogoCrest !== false) {
-                        @if (safeLogoUrl()) {
-                          <img [src]="safeLogoUrl()" alt="Logo" referrerpolicy="no-referrer" class="object-contain border border-slate-200 rounded p-1 shrink-0" [style.width.px]="effectiveTablePreview().branding.logoSizePx" [style.height.px]="effectiveTablePreview().branding.logoSizePx" />
-                        } @else {
-                          <div class="px-2.5 py-1.5 border-2 rounded font-black text-xs shrink-0" [style.border-color]="effectiveTablePreview().branding.headerAccentColor" [style.color]="effectiveTablePreview().branding.headerAccentColor">
-                            {{ effectiveTablePreview().branding.monogramInitials }}
+                  @for (secKey of effectiveTablePreview().branding.sectionOrder; track secKey) {
+                    @if (!isTableSectionHidden(secKey)) {
+                      @switch (secKey) {
+                        @case ('header') {
+                          <div
+                            class="flex items-start justify-between gap-4 pb-3 border-b-2"
+                            [style.border-bottom-color]="effectiveTablePreview().branding.headerAccentColor"
+                          >
+                            <div
+                              class="flex gap-3 flex-1 min-w-0"
+                              [class]="effectiveTablePreview().branding.logoPlacement === 'top'
+                                ? (effectiveTablePreview().branding.headerAlign === 'left'
+                                  ? 'flex-col items-start text-left'
+                                  : (effectiveTablePreview().branding.headerAlign === 'right' ? 'flex-col items-end text-right' : 'flex-col items-center text-center'))
+                                : (effectiveTablePreview().branding.logoPlacement === 'right' ? 'flex-row-reverse items-center text-right' : 'flex-row items-center text-left')"
+                            >
+                              @if (effectiveTablePreview().branding.showLogoCrest !== false) {
+                                @if (safeLogoUrl()) {
+                                  <img [src]="safeLogoUrl()" alt="Logo" referrerpolicy="no-referrer" class="object-contain border border-slate-200 rounded-xl p-1 shrink-0 bg-white" [style.width.px]="effectiveTablePreview().branding.logoSizePx" [style.height.px]="effectiveTablePreview().branding.logoSizePx" />
+                                } @else {
+                                  <div class="px-2.5 py-1.5 border-2 rounded-xl font-black text-xs shrink-0" [style.border-color]="effectiveTablePreview().branding.headerAccentColor" [style.color]="effectiveTablePreview().branding.headerAccentColor">
+                                    {{ effectiveTablePreview().branding.monogramInitials }}
+                                  </div>
+                                }
+                              }
+                              <div class="min-w-0">
+                                <span class="inline-block px-2 py-0.5 rounded-md text-white text-[8.5px] font-black uppercase tracking-wider mb-1" [style.background-color]="effectiveTablePreview().branding.headerAccentColor">
+                                  {{ effectiveTablePreview().branding.stampLabel !== 'NONE' ? effectiveTablePreview().branding.stampLabel : 'VERIFIED' }} {{ tablePreviewSubMode() === 'a4_slip' ? 'RECORD SLIP' : 'STATEMENT' }}
+                                </span>
+                                <div class="font-black text-sm uppercase leading-tight text-slate-950">{{ effectiveTablePreview().branding.schoolName }}</div>
+                                <div class="text-[9.5px] text-slate-500 font-semibold truncate">{{ effectiveTablePreview().branding.address }} · {{ effectiveTablePreview().branding.phone }}</div>
+                              </div>
+                            </div>
+                            <div class="text-right shrink-0 font-mono">
+                              <span class="px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200 text-[9.5px] font-black text-slate-900 inline-block">
+                                Ref: STM-PREVIEW-2026
+                              </span>
+                              <div class="text-[9px] text-slate-500 font-bold mt-1 uppercase">{{ effectiveTablePreview().a4Orientation }}</div>
+                            </div>
                           </div>
                         }
-                      }
-                      <div class="min-w-0">
-                        <div class="font-black text-sm uppercase">{{ effectiveTablePreview().branding.schoolName }}</div>
-                        <div class="text-[9px] text-slate-500">{{ effectiveTablePreview().branding.address }} · {{ effectiveTablePreview().branding.phone }}</div>
-                      </div>
-                    </div>
-                    <div class="text-right shrink-0">
-                      <span class="px-2 py-0.5 rounded text-white text-[9px] font-black uppercase" [style.background-color]="effectiveTablePreview().branding.headerAccentColor">
-                        {{ effectiveTablePreview().branding.stampLabel }} {{ tablePreviewSubMode() === 'a4_slip' ? 'RECORD SLIP' : 'STATEMENT' }}
-                      </span>
-                      <div class="text-[9px] font-mono text-slate-500 mt-1">Ref: STM-PREVIEW-2026</div>
-                    </div>
-                  </div>
 
-                  <div class="rounded-lg bg-slate-50 border border-slate-200 px-3 py-2 flex items-center justify-between gap-2">
-                    <div>
-                      <div class="font-black text-xs text-slate-950">{{ effectiveTablePreview().customHeading || sampleTableDataset().title }}</div>
-                      <div class="text-[9px] text-slate-500">Scope: {{ selectedTableScope() === '__global__' ? 'Global Table Design' : selectedTableMeta().portals }}</div>
-                    </div>
-                    <span class="text-[9px] font-bold uppercase text-slate-500">{{ effectiveTablePreview().a4Orientation }}</span>
-                  </div>
-
-                  @if (tablePreviewSubMode() === 'a4_slip' && effectiveTablePreview().slipLayout === 'voucher_grid') {
-                    <div class="grid grid-cols-2 gap-2.5">
-                      @for (fld of sampleTableSingleFields(); track $index) {
-                        <div class="rounded-lg border p-2.5" [class]="fld.isAmount ? 'bg-slate-50 border-slate-300' : 'bg-white border-slate-200'">
-                          <div class="flex items-center gap-1.5 text-[9px] font-black uppercase text-slate-500">
-                            @if (effectiveTablePreview().showFieldLogos) {
-                              <span class="w-3 h-3 rounded-xs text-[7px] text-white inline-flex items-center justify-center font-black" [style.background-color]="effectiveTablePreview().branding.headerAccentColor">{{ effectiveTablePreview().branding.monogramInitials.slice(0, 1) }}</span>
-                            }
-                            <span>{{ fld.label }}</span>
+                        @case ('meta') {
+                          <div class="flex items-baseline justify-between gap-3">
+                            <div class="min-w-0">
+                              <div class="font-black text-sm text-slate-950 truncate">{{ effectiveTablePreview().customHeading || sampleTableDataset().title }}</div>
+                              <div class="text-[10px] text-slate-500 font-semibold">
+                                {{ selectedTableScope() === '__global__' ? 'Global Table Design' : selectedTableMeta().portals }}
+                              </div>
+                            </div>
+                            <span class="text-[9.5px] font-bold uppercase text-slate-500 bg-slate-50 border border-slate-200 px-2 py-0.5 rounded-md shrink-0">
+                              {{ tablePreviewSubMode() === 'a4_slip' ? 'Single Record' : sampleTableDataset().rows.length + ' Records' }}
+                            </span>
                           </div>
-                          <div class="mt-0.5 font-bold text-slate-900" [class.font-mono]="fld.isAmount">{{ fld.value }}</div>
-                        </div>
-                      }
-                    </div>
-                  } @else {
-                    <table class="w-full border-collapse border border-slate-200 text-[10px]">
-                      <thead class="bg-slate-100 text-slate-700 font-black uppercase text-[9px]">
-                        <tr>
-                          @for (hdr of sampleTableDataset().headers; track $index) {
-                            <th class="px-2.5 py-1.5 text-left border-b border-r border-slate-200 last:border-r-0">{{ hdr }}</th>
+                        }
+
+                        @case ('person') {
+                          @if (tablePreviewSubMode() === 'a4_slip' && effectiveTablePreview().slipLayout === 'voucher_grid') {
+                            <div class="rounded-xl border border-slate-200/90 overflow-hidden bg-white">
+                              <div class="px-3.5 py-2 bg-slate-50/90 border-b border-slate-200 flex items-center justify-between text-[9px] font-black uppercase tracking-wider" [style.color]="effectiveTablePreview().branding.headerAccentColor">
+                                <span>Record Particulars</span>
+                                <span class="text-slate-500">{{ sampleTableSingleFields().length }} Field(s)</span>
+                              </div>
+                              <div class="grid grid-cols-1 sm:grid-cols-2">
+                                @for (fld of sampleTableSingleFields(); track $index) {
+                                  <div class="px-3.5 py-2.5 border-b border-slate-100 sm:odd:border-r sm:odd:border-slate-100 flex flex-col gap-0.5">
+                                    <div class="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider text-slate-500">
+                                      @if (effectiveTablePreview().showFieldLogos) {
+                                        <span class="w-3 h-3 rounded-xs text-[7px] text-white inline-flex items-center justify-center font-black" [style.background-color]="effectiveTablePreview().branding.headerAccentColor">{{ effectiveTablePreview().branding.monogramInitials.slice(0, 1) }}</span>
+                                      }
+                                      <span>{{ fld.label }}</span>
+                                    </div>
+                                    @if (fld.isStatus) {
+                                      <span [class]="getTableFieldPillClass(fld.value)" class="w-max mt-0.5">{{ fld.value }}</span>
+                                    } @else {
+                                      <div class="font-bold text-slate-900 truncate" [class.font-mono]="fld.isAmount" [class.font-black]="fld.isAmount">{{ fld.value }}</div>
+                                    }
+                                  </div>
+                                }
+                              </div>
+                            </div>
+                          } @else {
+                            <div class="rounded-xl border border-slate-200/90 overflow-hidden">
+                              <table class="w-full border-collapse text-[10px]">
+                                <thead class="bg-slate-50 text-slate-700 font-black uppercase text-[9px] border-b border-slate-200">
+                                  <tr>
+                                    @for (hdr of sampleTableDataset().headers; track $index) {
+                                      <th class="px-3 py-2 text-left border-r border-slate-100 last:border-r-0">{{ hdr }}</th>
+                                    }
+                                  </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                  @for (row of (tablePreviewSubMode() === 'a4_slip' ? sampleTableDataset().rows.slice(0, 1) : sampleTableDataset().rows); track $index) {
+                                    <tr [class.bg-slate-50/40]="$odd">
+                                      @for (cell of row; track $index) {
+                                        <td class="px-3 py-2 border-r border-slate-100 last:border-r-0 font-semibold text-slate-900">{{ cell }}</td>
+                                      }
+                                    </tr>
+                                  }
+                                </tbody>
+                              </table>
+                            </div>
                           }
-                        </tr>
-                      </thead>
-                      <tbody class="divide-y divide-slate-100">
-                        @for (row of (tablePreviewSubMode() === 'a4_slip' ? sampleTableDataset().rows.slice(0, 1) : sampleTableDataset().rows); track $index) {
-                          <tr>
-                            @for (cell of row; track $index) {
-                              <td class="px-2.5 py-1.5 border-r border-slate-100 last:border-r-0">{{ cell }}</td>
-                            }
-                          </tr>
                         }
-                      </tbody>
-                    </table>
-                  }
 
-                  <div class="pt-2 border-t border-dashed border-slate-300 flex items-end justify-between gap-4">
-                    <div class="flex items-center gap-3">
-                      @if (effectiveTablePreview().branding.showBarcodeVerification) {
-                        <app-school-barcode value="STM-PREVIEW-2026" [height]="22" [barWidth]="1.05" />
+                        @case ('amounts') {
+                          @if (sampleTableSummary().amountColumns.length > 0) {
+                            <div class="rounded-xl p-3.5 bg-gradient-to-r from-emerald-50 via-teal-50/75 to-indigo-50/60 border border-emerald-200/70 flex items-center justify-between gap-3 flex-wrap">
+                              <div class="space-y-0.5">
+                                <span class="text-[9.5px] font-black uppercase tracking-wider text-slate-800 block">
+                                  {{ tablePreviewSubMode() === 'a4_slip' ? 'Record Amount Summary' : 'Statement Summary' }}
+                                </span>
+                                <div class="flex flex-wrap gap-2 text-[10px] text-slate-600 font-bold">
+                                  @for (col of sampleTableSummary().amountColumns.slice(0, 3); track col.colIndex) {
+                                    <span>{{ col.label }}: <strong class="font-mono text-slate-900">{{ sampleTableSummary().currency }} {{ formatCurrency(col.total) }}</strong></span>
+                                  }
+                                </div>
+                              </div>
+                              <span class="text-base font-mono font-black text-emerald-800">
+                                {{ sampleTableSummary().currency }} {{ formatCurrency(sampleTableSummary().primaryTotal) }}
+                              </span>
+                            </div>
+                          }
+                        }
+
+                        @case ('verification') {
+                          @if (effectiveTablePreview().branding.showBarcodeVerification || effectiveTablePreview().branding.showQrVerification) {
+                            <div
+                              class="pt-2.5 border-t border-dashed border-slate-200 flex items-center gap-4 flex-wrap"
+                              [class]="effectiveTablePreview().branding.verificationOrder === 'side_by_side'
+                                ? 'justify-between flex-row'
+                                : (effectiveTablePreview().branding.verificationOrder === 'qr_first' ? 'flex-row-reverse justify-end' : 'flex-row justify-start')"
+                            >
+                              @if (effectiveTablePreview().branding.showBarcodeVerification) {
+                                <div class="text-center">
+                                  <app-school-barcode value="STM-PREVIEW-2026" [height]="22" [barWidth]="1.0" />
+                                  <div class="text-[8.5px] font-mono text-slate-500 mt-0.5">STM-PREVIEW-2026</div>
+                                </div>
+                              }
+                              @if (effectiveTablePreview().branding.showQrVerification) {
+                                <app-school-qr-code [value]="'STM:' + sampleTableDataset().tableId" [size]="44" />
+                              }
+                            </div>
+                          }
+                        }
+
+                        @case ('footer') {
+                          <div class="pt-2.5 border-t border-slate-200 flex items-end justify-between gap-4">
+                            <div class="text-[9px] text-slate-500 max-w-md">{{ effectiveTablePreview().branding.footerNote }}</div>
+                            <div class="border-t border-slate-800 pt-1 min-w-[150px] text-right text-[9px] font-black uppercase shrink-0">
+                              {{ effectiveTablePreview().branding.signatoryTitle }}
+                            </div>
+                          </div>
+                        }
                       }
-                      @if (effectiveTablePreview().branding.showQrVerification) {
-                        <app-school-qr-code [value]="'STM:' + sampleTableDataset().tableId" [size]="44" />
-                      }
-                    </div>
-                    <div class="border-t border-slate-800 pt-1 min-w-[140px] text-right text-[9px] font-black uppercase">
-                      {{ effectiveTablePreview().branding.signatoryTitle }}
-                    </div>
-                  </div>
+                    }
+                  }
                 </div>
               </div>
             }

@@ -260,7 +260,8 @@ export function computeStatementAmounts(
 
     for (const row of rows) {
       const cell = row[colIdx] ?? '';
-      if (/(?:PKR|USD|AED|SAR|GBP|RS\.?)/i.test(String(cell))) {
+      const cellStr = String(cell);
+      if (/\b(?:PKR|USD|AED|SAR|GBP|RS\.?)\s*[+-]?\s*\d/i.test(cellStr) || /\d\s*(?:PKR|USD|AED|SAR|GBP|RS\.?)\b/i.test(cellStr)) {
         currencyTokenHits++;
       }
       const n = parseAmountNumber(cell);
@@ -366,7 +367,7 @@ export function buildSchoolStatementA4Html(params: BuildStatementDocumentParams)
   const cur = String(b.currencySymbol || 'PKR').toUpperCase();
   const safeLogo = sanitizeBrandingLogoUrl(b.logoDataUrl);
   const monogram = (b.monogramInitials || 'SPA').trim().slice(0, 4);
-  const logoSize = Math.min(72, Math.max(30, Number(b.logoSizePx || 44)));
+  const logoSize = Math.min(64, Math.max(28, Number(b.logoSizePx || 42)));
   const summary = computeStatementAmounts(params.headers, params.rows, cur);
   const totalCount = params.totalUnfilteredCount ?? params.rows.length;
   const criteriaLine = buildStatementCriteriaSubtitle(params.criteria, params.rows.length, totalCount);
@@ -380,9 +381,9 @@ export function buildSchoolStatementA4Html(params: BuildStatementDocumentParams)
   });
 
   const accent = /^#[0-9a-fA-F]{6}$/.test(b.headerAccentColor || '') ? b.headerAccentColor : '#0f172a';
-  const barcodeSvg = buildCode128SvgMarkup(stmtRef, 32, '#0f172a');
+  const barcodeSvg = buildCode128SvgMarkup(stmtRef, 30, '#0f172a');
   const qrPayload = `STATEMENT:${stmtRef}|TITLE:${effectiveTitle}|RECORDS:${params.rows.length}|FROM:${params.criteria.fromDate || 'ALL'}|TO:${params.criteria.toDate || 'ALL'}|NET:${cur} ${Math.round(summary.primaryTotal)}`;
-  const qrSvg = buildQrCodeSvgMarkup(qrPayload, 64, accent, 2, 'M');
+  const qrSvg = buildQrCodeSvgMarkup(qrPayload, 60, accent, 2, 'M');
 
   const logoMarkup = b.showLogoCrest === false
     ? ''
@@ -403,49 +404,49 @@ export function buildSchoolStatementA4Html(params: BuildStatementDocumentParams)
     : (b.logoPlacement === 'right' ? 'brand-row rev' : 'brand-row');
 
   const textAlignStyle = `text-align:${b.logoPlacement === 'top' ? (b.headerAlign || 'center') : (b.headerAlign || 'left')};`;
+  const compactMetaLine = [b.address, b.phone ? `Tel: ${b.phone}` : ''].filter(Boolean).map(escapeHtml).join(' · ');
 
   const headerSectionHtml = `
     <div class="hdr">
       <div class="brand-wrap ${headerPlacementClass}">
         ${logoMarkup}
         <div style="${textAlignStyle}flex:1;min-width:0;">
+          <span class="badge">${escapeHtml(stampBadge)} ${isSingleRecord ? 'RECORD SLIP' : 'STATEMENT'}</span>
           <div class="school-name">${escapeHtml(b.schoolName || DEFAULT_SCHOOL_PRINT_BRANDING.schoolName)}</div>
-          ${b.campusTagline ? `<div class="tagline">${escapeHtml(b.campusTagline)}</div>` : ''}
-          <div class="contact">
-            ${[b.registrationNo, b.address, b.phone ? `Tel: ${b.phone}` : ''].filter(Boolean).map(escapeHtml).join(' · ')}
-          </div>
+          ${compactMetaLine ? `<div class="contact">${compactMetaLine}</div>` : ''}
         </div>
       </div>
       <div class="hdr-right">
-        <span class="badge">${escapeHtml(stampBadge)} ${isSingleRecord ? 'RECORD SLIP' : 'STATEMENT'}</span>
-        <div class="meta-line">Ref: ${escapeHtml(stmtRef)}</div>
-        <div class="meta-line">Issued: ${escapeHtml(issuedAt)}</div>
+        <div class="ref-chip">Ref: ${escapeHtml(stmtRef)}</div>
+        <div class="meta-line">${escapeHtml(issuedAt)}</div>
       </div>
     </div>`;
 
   const metaSectionHtml = `
-    <div class="title-bar">
-      <div>
+    <div class="doc-head-row">
+      <div class="min-w-0">
         <div class="stmt-title">${escapeHtml(effectiveTitle)}</div>
-        <div class="stmt-sub">${escapeHtml(isSingleRecord ? `Official Individual Record Voucher${params.roleLabel ? ` · ${params.roleLabel}` : ''}` : `${criteriaLine}${params.roleLabel ? ` · ${params.roleLabel}` : ''}`)}</div>
+        <div class="stmt-sub">${escapeHtml(isSingleRecord ? (params.roleLabel || 'Official Campus Record') : `${criteriaLine}${params.roleLabel ? ` · ${params.roleLabel}` : ''}`)}</div>
       </div>
+      <div class="orient-tag">${escapeHtml(eff.a4Orientation === 'portrait' ? 'Portrait' : 'Landscape')}</div>
     </div>`;
 
-  const summaryBoxes = summary.amountColumns.slice(0, 4).map((col) => `
-    <div class="sum-card">
-      <div class="sum-lbl">${fieldChip ? `<span class="lbl-row">${fieldChip}<span>${escapeHtml(col.label)}</span></span>` : escapeHtml(col.label)}</div>
-      <div class="sum-val ${col.kind === 'debit' ? 'debit' : (col.kind === 'credit' ? 'credit' : '')}">${escapeHtml(cur)} ${formatStatementMoney(col.total, cur)}</div>
+  const amtItemsHtml = summary.amountColumns.slice(0, 4).map((col) => `
+    <div class="amt-chip">
+      <span class="amt-chip-lbl">${fieldChip ? `<span class="lbl-row">${fieldChip}<span>${escapeHtml(col.label)}</span></span>` : escapeHtml(col.label)}</span>
+      <span class="amt-chip-val ${col.kind === 'debit' ? 'debit' : (col.kind === 'credit' ? 'credit' : '')}">${escapeHtml(cur)} ${formatStatementMoney(col.total, cur)}</span>
     </div>`).join('');
 
-  const netBox = summary.hasInflowOutflowSplit
-    ? `<div class="sum-card net">
-        <div class="sum-lbl">Net Statement Balance</div>
-        <div class="sum-val">${escapeHtml(cur)} ${formatStatementMoney(summary.netBalance, cur)}</div>
+  const amountsSectionHtml = summary.amountColumns.length > 0
+    ? `<div class="amt-highlight">
+        <div class="amt-main">
+          <div>
+            <div class="amt-main-lbl">${isSingleRecord ? 'Total Amount' : (summary.hasInflowOutflowSplit ? 'Net Statement Balance' : 'Statement Total')}</div>
+            ${summary.amountColumns.length > 1 || summary.hasInflowOutflowSplit ? `<div class="amt-chips">${amtItemsHtml}</div>` : ''}
+          </div>
+          <div class="amt-main-val">${escapeHtml(cur)} ${formatStatementMoney(summary.primaryTotal, cur)}</div>
+        </div>
       </div>`
-    : '';
-
-  const amountsSectionHtml = (summaryBoxes || netBox)
-    ? `<div class="sum-grid">${summaryBoxes}${netBox}</div>`
     : '';
 
   const thCells = params.headers.map((h, i) =>
@@ -466,7 +467,7 @@ export function buildSchoolStatementA4Html(params: BuildStatementDocumentParams)
     ? `<tfoot>
         <tr>
           ${params.headers.map((_, cIdx) => {
-            if (cIdx === 0) return `<td>STATEMENT TOTAL (${params.rows.length} Rows)</td>`;
+            if (cIdx === 0) return `<td>TOTAL (${params.rows.length} Rows)</td>`;
             const hit = amountMap.get(cIdx);
             if (hit) return `<td class="num">${escapeHtml(cur)} ${formatStatementMoney(hit.total, cur)}</td>`;
             return '<td></td>';
@@ -476,31 +477,37 @@ export function buildSchoolStatementA4Html(params: BuildStatementDocumentParams)
     : '';
 
   const singleRecordGrid = isSingleRecord
-    ? `<div class="voucher-grid">
-        ${params.headers.map((h, i) => {
-          const val = String(params.rows[0]?.[i] ?? '').trim() || '—';
-          const isAmt = amountColSet.has(i);
-          return `<div class="v-field ${isAmt ? 'v-amt' : ''}">
-            <div class="v-lbl">${fieldChip ? `<span class="lbl-row">${fieldChip}<span>${escapeHtml(h || `Field ${i + 1}`)}</span></span>` : escapeHtml(h || `Field ${i + 1}`)}</div>
-            <div class="v-val ${isAmt ? 'num' : ''}">${escapeHtml(val)}</div>
-          </div>`;
-        }).join('')}
+    ? `<div class="particulars-card">
+        <div class="particulars-hdr">
+          <span>Record Particulars</span>
+          <span class="particulars-count">${params.headers.length} Field(s)</span>
+        </div>
+        <div class="particulars-grid">
+          ${params.headers.map((h, i) => {
+            const val = String(params.rows[0]?.[i] ?? '').trim() || '—';
+            const isAmt = amountColSet.has(i);
+            return `<div class="p-row">
+              <div class="p-lbl">${fieldChip ? `<span class="lbl-row">${fieldChip}<span>${escapeHtml(h || `Field ${i + 1}`)}</span></span>` : escapeHtml(h || `Field ${i + 1}`)}</div>
+              <div class="p-val ${isAmt ? 'num' : ''}">${escapeHtml(val)}</div>
+            </div>`;
+          }).join('')}
+        </div>
       </div>`
     : '';
 
   const personSectionHtml = isSingleRecord && eff.slipLayout === 'voucher_grid'
     ? singleRecordGrid
-    : `<table>
+    : `<div class="tbl-wrap"><table>
         <thead><tr>${thCells}</tr></thead>
         <tbody>${bodyRows}</tbody>
         ${tfootRow}
-      </table>`;
+      </table></div>`;
 
   const showBarcode = b.showBarcodeVerification !== false;
   const showQr = b.showQrVerification !== false;
   const verFirst = b.verificationOrder === 'qr_first'
-    ? `${showQr ? `<div>${qrSvg}</div>` : ''}${showBarcode ? `<div>${barcodeSvg}<div class="meta-line" style="text-align:center;">${escapeHtml(stmtRef)}</div></div>` : ''}`
-    : `${showBarcode ? `<div>${barcodeSvg}<div class="meta-line" style="text-align:center;">${escapeHtml(stmtRef)}</div></div>` : ''}${showQr ? `<div>${qrSvg}</div>` : ''}`;
+    ? `${showQr ? `<div>${qrSvg}</div>` : ''}${showBarcode ? `<div class="bar-box">${barcodeSvg}<div class="bar-ref">${escapeHtml(stmtRef)}</div></div>` : ''}`
+    : `${showBarcode ? `<div class="bar-box">${barcodeSvg}<div class="bar-ref">${escapeHtml(stmtRef)}</div></div>` : ''}${showQr ? `<div>${qrSvg}</div>` : ''}`;
 
   const verificationSectionHtml = (showBarcode || showQr)
     ? `<div class="ver-strip ${b.verificationOrder === 'side_by_side' ? 'side' : ''}">${verFirst}</div>`
@@ -544,10 +551,10 @@ export function buildSchoolStatementA4Html(params: BuildStatementDocumentParams)
   <style>
     @page { size: A4 ${pageOrientation}; margin: 10mm; }
     * { box-sizing: border-box; }
-    body { margin: 0; padding: 14px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #0f172a; background: #fff; font-size: 11px; line-height: 1.4; font-variant-numeric: tabular-nums; position: relative; }
-    .sheet { position: relative; z-index: 1; }
-    .wm-bg { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 0; opacity: 0.045; font-size: 46px; font-weight: 900; letter-spacing: 6px; transform: rotate(-28deg); color: ${accent}; text-align: center; }
-    .hdr { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; border-bottom: 2.5px solid ${accent}; padding-bottom: 10px; margin-bottom: 10px; }
+    body { margin: 0; padding: 16px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #0f172a; background: #fff; font-size: 11px; line-height: 1.45; font-variant-numeric: tabular-nums; position: relative; }
+    .sheet { position: relative; z-index: 1; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px 20px; background: #fff; }
+    .wm-bg { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 0; opacity: 0.038; font-size: 44px; font-weight: 900; letter-spacing: 6px; transform: rotate(-28deg); color: ${accent}; text-align: center; }
+    .hdr { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; border-bottom: 2px solid ${accent}; padding-bottom: 12px; margin-bottom: 12px; }
     .brand-wrap { display: flex; gap: 12px; min-width: 0; flex: 1; }
     .brand-row { flex-direction: row; align-items: center; }
     .brand-row.rev { flex-direction: row-reverse; align-items: center; }
@@ -555,46 +562,55 @@ export function buildSchoolStatementA4Html(params: BuildStatementDocumentParams)
     .brand-col.align-center { align-items: center; }
     .brand-col.align-left { align-items: flex-start; }
     .brand-col.align-right { align-items: flex-end; }
-    .logo-box { border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 4px; background: #fff; flex-shrink: 0; }
-    .crest-box { border: 2px solid ${accent}; border-radius: 8px; padding: 8px 13px; font-size: 15px; font-weight: 900; letter-spacing: 1.5px; color: ${accent}; background: #f8fafc; flex-shrink: 0; }
-    .school-name { font-size: 17px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.3px; color: #0f172a; }
-    .tagline { font-size: 9.5px; font-weight: 700; color: #475569; text-transform: uppercase; margin-top: 1px; }
-    .contact { font-size: 9.5px; color: #475569; margin-top: 3px; }
+    .logo-box { border: 1px solid #e2e8f0; border-radius: 10px; padding: 4px; background: #fff; flex-shrink: 0; }
+    .crest-box { border: 2px solid ${accent}; border-radius: 10px; padding: 7px 11px; font-size: 13px; font-weight: 900; letter-spacing: 1.4px; color: ${accent}; background: #f8fafc; flex-shrink: 0; }
+    .badge { display: inline-block; background: ${accent}; color: #fff; font-size: 8.5px; font-weight: 900; letter-spacing: 0.9px; text-transform: uppercase; padding: 2px 8px; border-radius: 5px; margin-bottom: 4px; }
+    .school-name { font-size: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: -0.2px; color: #0f172a; line-height: 1.2; }
+    .contact { font-size: 9.5px; color: #64748b; margin-top: 2px; font-weight: 600; }
     .hdr-right { text-align: right; flex-shrink: 0; }
-    .badge { display: inline-block; background: ${accent}; color: #fff; font-size: 9px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; padding: 3px 9px; border-radius: 4px; }
-    .meta-line { font-size: 10px; font-weight: 700; color: #334155; margin-top: 4px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-    .title-bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 12px; margin-bottom: 10px; }
-    .stmt-title { font-size: 13.5px; font-weight: 900; color: #0f172a; }
-    .stmt-sub { font-size: 10.5px; font-weight: 600; color: #475569; margin-top: 2px; }
-    .sum-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
-    .sum-card { flex: 1 1 150px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 7px 10px; background: #fff; }
-    .sum-card.net { background: ${accent}; border-color: ${accent}; color: #fff; }
-    .sum-card.net .sum-lbl { color: #cbd5e1; }
-    .sum-card.net .sum-val { color: #fff; }
+    .ref-chip { display: inline-block; background: #f1f5f9; color: #0f172a; border: 1px solid #e2e8f0; border-radius: 7px; padding: 3px 8px; font-size: 9.5px; font-weight: 800; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .meta-line { font-size: 9.5px; font-weight: 600; color: #64748b; margin-top: 4px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .doc-head-row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 12px; }
+    .stmt-title { font-size: 14px; font-weight: 900; color: #0f172a; letter-spacing: -0.2px; }
+    .stmt-sub { font-size: 10px; font-weight: 600; color: #64748b; margin-top: 2px; }
+    .orient-tag { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px; color: #64748b; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 2px 8px; flex-shrink: 0; }
+    .particulars-card { border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; margin-bottom: 12px; background: #fff; }
+    .particulars-hdr { padding: 7px 14px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.7px; color: ${accent}; }
+    .particulars-count { color: #64748b; font-weight: 700; }
+    .particulars-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .p-row { padding: 8px 14px; border-bottom: 1px solid #f1f5f9; display: flex; flex-direction: column; gap: 2px; background: #fff; }
+    .p-row:nth-child(odd) { border-right: 1px solid #f1f5f9; }
     .lbl-row { display: inline-flex; align-items: center; gap: 4px; }
-    .sum-lbl { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px; color: #64748b; }
-    .sum-val { font-size: 13.5px; font-weight: 900; margin-top: 2px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: #0f172a; }
-    .sum-val.credit { color: #047857; }
-    .sum-val.debit { color: #be123c; }
-    .voucher-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 10px; }
-    .v-field { border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 10px; background: #fff; }
-    .v-field.v-amt { background: #f8fafc; border-color: #94a3b8; }
-    .v-lbl { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 2px; }
-    .v-val { font-size: 11.5px; font-weight: 800; color: #0f172a; word-break: break-word; }
-    .v-val.num { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; font-weight: 900; }
-    table { width: 100%; border-collapse: collapse; border: 1px solid #cbd5e1; margin-bottom: 10px; }
-    thead th { background: #f1f5f9; color: #1e293b; font-size: 9.5px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.4px; text-align: left; padding: 7px 8px; border-bottom: 1.5px solid #94a3b8; border-right: 1px solid #e2e8f0; }
+    .p-lbl { font-size: 8.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; }
+    .p-val { font-size: 11px; font-weight: 800; color: #0f172a; word-break: break-word; }
+    .p-val.num { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px; font-weight: 900; color: ${accent}; }
+    .amt-highlight { border-radius: 12px; padding: 11px 14px; margin-bottom: 12px; background: linear-gradient(90deg, #ecfdf5 0%, #f0fdfa 55%, #eef2ff 100%); border: 1px solid #d1fae5; }
+    .amt-main { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .amt-main-lbl { font-size: 9.5px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.7px; color: #0f172a; }
+    .amt-main-val { font-size: 17px; font-weight: 900; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: #065f46; }
+    .amt-chips { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
+    .amt-chip { font-size: 9.5px; color: #475569; font-weight: 700; }
+    .amt-chip-val { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 900; color: #0f172a; margin-left: 3px; }
+    .amt-chip-val.credit { color: #047857; }
+    .amt-chip-val.debit { color: #be123c; }
+    .tbl-wrap { border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; margin-bottom: 12px; }
+    table { width: 100%; border-collapse: collapse; }
+    thead th { background: #f8fafc; color: #334155; font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; text-align: left; padding: 8px 10px; border-bottom: 1.5px solid #cbd5e1; border-right: 1px solid #f1f5f9; }
+    thead th:last-child { border-right: none; }
     thead th.num, tbody td.num, tfoot td.num { text-align: right; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; white-space: nowrap; }
-    tbody td { padding: 6px 8px; font-size: 10.5px; color: #0f172a; border-bottom: 1px solid #e2e8f0; border-right: 1px solid #f1f5f9; vertical-align: top; }
-    tbody tr.alt { background: #f8fafc; }
-    tfoot td { background: ${accent}; color: #fff; font-weight: 900; font-size: 10.5px; padding: 7px 8px; }
+    tbody td { padding: 7px 10px; font-size: 10.5px; color: #0f172a; border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f8fafc; vertical-align: top; }
+    tbody td:last-child { border-right: none; }
+    tbody tr.alt { background: #fafbfc; }
+    tfoot td { background: ${accent}; color: #fff; font-weight: 900; font-size: 10.5px; padding: 8px 10px; }
     .empty { text-align: center; padding: 20px; font-weight: 700; color: #64748b; }
-    .ver-strip { margin-top: 10px; padding-top: 8px; border-top: 1px dashed #cbd5e1; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+    .ver-strip { margin-top: 10px; padding-top: 10px; border-top: 1px dashed #cbd5e1; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
     .ver-strip.side { justify-content: space-between; }
-    .footer-grid { margin-top: 10px; padding-top: 8px; border-top: 1.5px solid #cbd5e1; display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; }
+    .bar-box { text-align: center; }
+    .bar-ref { font-size: 8.5px; font-weight: 700; color: #475569; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; margin-top: 2px; }
+    .footer-grid { margin-top: 10px; padding-top: 8px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; }
     .sign-block { text-align: right; }
-    .sign-line { border-top: 1.5px solid #0f172a; padding-top: 4px; min-width: 190px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px; }
-    .foot-note { font-size: 9px; color: #64748b; max-width: 460px; }
+    .sign-line { border-top: 1.5px solid #0f172a; padding-top: 3px; min-width: 180px; font-size: 9.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px; }
+    .foot-note { font-size: 9px; color: #64748b; max-width: 440px; }
   </style>
 </head>
 <body>
@@ -633,7 +649,7 @@ export function buildSchoolStatementThermalHtml(
 
   const barcodeSvg = buildCode128SvgMarkup(stmtRef, effectivePaper === '58mm' ? 26 : 32, '#000000');
   const qrPayload = `STM:${stmtRef}|${effectiveTitle}|ROWS:${params.rows.length}|NET:${cur} ${Math.round(summary.primaryTotal)}`;
-  const qrSvg = buildQrCodeSvgMarkup(qrPayload, effectivePaper === '58mm' ? 56 : 68, '#000000', 2, 'M');
+  const qrSvg = buildQrCodeSvgMarkup(qrPayload, effectivePaper === '58mm' ? 40 : 48, '#000000', 2, 'M');
 
   const logoHtml = b.showLogoCrest === false
     ? ''
@@ -657,7 +673,11 @@ export function buildSchoolStatementThermalHtml(
         const v = String(params.rows[0]?.[i] ?? '').trim();
         if (!v || v === '-' || v === '—') return '';
         if (amountIdxSet.has(i)) return '';
-        return `<div class="kv-row"><span class="lbl">${fieldDot}${escapeHtml(h || `Field ${i + 1}`)}</span><span class="val">${escapeHtml(v)}</span></div>`;
+        const lbl = `${fieldDot}${escapeHtml(h || `Field ${i + 1}`)}`;
+        if (v.length > 32) {
+          return `<div class="kv-stack"><div class="lbl">${lbl}</div><div class="val-stack">${escapeHtml(v)}</div></div>`;
+        }
+        return `<div class="kv-row"><span class="lbl">${lbl}</span><span class="val">${escapeHtml(v)}</span></div>`;
       }).filter(Boolean).join('')
     : '';
 
@@ -700,22 +720,27 @@ export function buildSchoolStatementThermalHtml(
       <span class="val">${escapeHtml(cur)} ${formatStatementMoney(c.total, cur)}</span>
     </div>`).join('');
 
-  const placementClass = b.logoPlacement === 'top'
-    ? `hdr-col align-${b.headerAlign || 'center'}`
-    : (b.logoPlacement === 'right' ? 'hdr-row rev' : 'hdr-row');
-  const txtAlign = b.logoPlacement === 'top' ? (b.headerAlign || 'center') : (b.logoPlacement === 'right' ? 'right' : 'left');
+  const showBar = b.showBarcodeVerification !== false;
+  const showQr = b.showQrVerification !== false;
+  const cornerCls = b.logoPlacement === 'right' ? 'hdr-corners rev' : 'hdr-corners';
+  const topQrHtml = showQr ? `<div class="hdr-qr">${qrSvg}</div>` : '';
 
   const renderSingleCopy = (copyBadge?: string): string => {
+    const subAlign = b.headerAlign || 'center';
     const headerBlock = `
       ${copyBadge ? `<div class="copy-tag">${escapeHtml(copyBadge)}</div>` : ''}
-      <div class="hdr-wrap ${placementClass}">
-        ${logoHtml}
-        <div style="text-align:${txtAlign};min-width:0;flex:1;">
-          <div class="title">${escapeHtml(b.schoolName || DEFAULT_SCHOOL_PRINT_BRANDING.schoolName)}</div>
-          ${b.campusTagline ? `<div class="tagline">${escapeHtml(b.campusTagline)}</div>` : ''}
-          ${b.address ? `<div class="sub-muted">${escapeHtml(b.address)}</div>` : ''}
-          ${b.phone ? `<div class="sub-muted">Tel: ${escapeHtml(b.phone)}</div>` : ''}
-        </div>
+      <div class="${cornerCls}">
+        ${logoHtml || '<span></span>'}
+        ${topQrHtml}
+      </div>
+      <div class="hdr-center" style="text-align:${subAlign};">
+        <div class="title">${escapeHtml(b.schoolName || DEFAULT_SCHOOL_PRINT_BRANDING.schoolName)}</div>
+        ${b.campusTagline ? `<div class="tagline">${escapeHtml(b.campusTagline)}</div>` : ''}
+      </div>
+      <div class="sub-block" style="text-align:${subAlign};">
+        ${b.registrationNo ? `<div>${escapeHtml(b.registrationNo)}</div>` : ''}
+        ${b.address ? `<div>${escapeHtml(b.address)}</div>` : ''}
+        ${b.phone ? `<div style="font-weight:700;color:#000;">Tel: ${escapeHtml(b.phone)}</div>` : ''}
       </div>
       <div class="doc-rule">
         <span class="doc-title">${escapeHtml(effectiveTitle)}</span>
@@ -728,7 +753,7 @@ export function buildSchoolStatementThermalHtml(
         ${!isSingleRecord ? `<div class="kv-row"><span class="lbl">Date Range</span><span class="val">${escapeHtml((params.criteria.fromDate || 'Start') + ' → ' + (params.criteria.toDate || 'Latest'))}</span></div>` : ''}
         ${!isSingleRecord && params.criteria.searchQuery?.trim() ? `<div class="kv-row"><span class="lbl">Search Filter</span><span class="val">${escapeHtml(params.criteria.searchQuery.trim())}</span></div>` : ''}
         ${!isSingleRecord ? `<div class="kv-row"><span class="lbl">Records</span><span class="val">${params.rows.length}${totalCount > params.rows.length ? ` / ${totalCount}` : ''}</span></div>` : ''}
-        <div class="kv-row"><span class="lbl">Printed At</span><span class="val">${escapeHtml(issuedAt)}</span></div>
+        <div class="kv-row"><span class="lbl">Date</span><span class="val">${escapeHtml(issuedAt)}</span></div>
       </div>`;
 
     const personBlock = `
@@ -740,7 +765,10 @@ export function buildSchoolStatementThermalHtml(
 
     const amountsBlock = amountColList.length > 0 ? `
       <div class="sec-block">
-        <div class="sec-cap">AMOUNT SUMMARY</div>
+        <div class="amt-hdr">
+          <span>PARTICULARS</span>
+          <span>AMOUNT (${escapeHtml(cur)})</span>
+        </div>
         ${amountSummaryRows}
         <div class="total-box">
           <div class="total-row">
@@ -750,23 +778,17 @@ export function buildSchoolStatementThermalHtml(
         </div>
       </div>` : '';
 
-    const showBar = b.showBarcodeVerification !== false;
-    const showQr = b.showQrVerification !== false;
     const barMarkup = showBar ? `<div>${barcodeSvg}<div class="barcode-label">${escapeHtml(stmtRef)}</div></div>` : '';
-    const qrMarkup = showQr ? `<div class="qr-wrap">${qrSvg}</div>` : '';
-    const verificationBlock = (showBar || showQr) ? `
+    const verificationBlock = showBar ? `
       <div class="ver-box">
         <div class="ver-cap">VERIFICATION</div>
-        ${b.verificationOrder === 'qr_first'
-          ? `${qrMarkup}${barMarkup}`
-          : (b.verificationOrder === 'side_by_side'
-            ? `<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">${barMarkup}${qrMarkup}</div>`
-            : `${barMarkup}${qrMarkup}`)}
+        ${barMarkup}
       </div>` : '';
 
     const footerBlock = `
       ${b.signatoryTitle ? `<div class="sign-line">${escapeHtml(b.signatoryTitle)}</div>` : ''}
-      <div class="footer">${escapeHtml(b.footerNote || DEFAULT_SCHOOL_PRINT_BRANDING.footerNote)} (${effectivePaper.toUpperCase()})</div>
+      <div class="footer">${escapeHtml(b.footerNote || DEFAULT_SCHOOL_PRINT_BRANDING.footerNote)}</div>
+      <div class="pos-foot">${b.website ? `${escapeHtml(b.website)} · ` : ''}${effectivePaper.toUpperCase()} POS</div>
       ${eff.showWatermark ? `<div class="wm-foot">VERIFIED OFFICIAL COPY · ${escapeHtml((b.schoolName || monogram).toUpperCase())}</div>` : ''}`;
 
     const map: Record<PrintSectionKey, string> = {
@@ -798,47 +820,48 @@ export function buildSchoolStatementThermalHtml(
   <title>${escapeHtml(effectiveTitle)} (${effectivePaper})</title>
   <style>
     @page { size: ${pageMm} auto; margin: 2mm; }
-    * { box-sizing: border-box; }
-    body { margin: 0; padding: 6px; width: ${pageMm}; max-width: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: ${effectivePaper === '58mm' ? '9.5px' : '10.5px'}; line-height: 1.36; color: #000; background: #fff; font-variant-numeric: tabular-nums; }
-    .copy-tag { text-align: center; font-size: 8px; font-weight: 900; letter-spacing: 0.9px; border: 1px solid #000; padding: 2px 4px; margin-bottom: 5px; background: #f4f4f5; }
-    .cut-line { text-align: center; font-size: 8px; font-weight: 800; letter-spacing: 0.5px; margin: 10px 0; border-top: 1px dashed #000; padding-top: 6px; }
-    .hdr-wrap { display: flex; gap: 5px; }
-    .hdr-col { flex-direction: column; }
-    .hdr-col.align-center { align-items: center; }
-    .hdr-col.align-left { align-items: flex-start; }
-    .hdr-col.align-right { align-items: flex-end; }
-    .hdr-row { flex-direction: row; align-items: center; }
-    .hdr-row.rev { flex-direction: row-reverse; align-items: center; }
-    .logo-frame { border: 1px solid #000; border-radius: 4px; padding: 2px; background: #fff; flex-shrink: 0; }
-    .crest { display: inline-flex; align-items: center; justify-content: center; border: 2px solid #000; border-radius: 5px; padding: 4px 9px; font-size: 12px; font-weight: 900; letter-spacing: 1.4px; flex-shrink: 0; }
-    .title { font-size: ${effectivePaper === '58mm' ? '11.5px' : '13px'}; font-weight: 900; text-transform: uppercase; letter-spacing: 0.3px; }
-    .tagline { font-size: 8px; font-weight: 700; text-transform: uppercase; color: #222; }
-    .sub-muted { font-size: 8.5px; color: #222; }
-    .doc-rule { margin-top: 6px; border-top: 1.5px solid #000; border-bottom: 1.5px solid #000; padding: 4px 2px; display: flex; align-items: center; justify-content: space-between; gap: 6px; }
-    .doc-title { font-size: 9px; font-weight: 900; letter-spacing: 0.6px; text-transform: uppercase; }
-    .badge-pill { background: #000; color: #fff; padding: 1px 6px; font-size: 8px; font-weight: 900; text-transform: uppercase; border-radius: 2px; }
-    .sec-block { margin: 6px 0; border-top: 1px dashed #000; padding-top: 5px; }
-    .sec-cap { font-size: 8.5px; font-weight: 900; letter-spacing: 0.7px; text-transform: uppercase; margin-bottom: 3px; }
-    .kv-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 2px 0; border-bottom: 1px dotted #d4d4d8; font-size: ${effectivePaper === '58mm' ? '9px' : '10px'}; }
-    .kv-row:last-child { border-bottom: none; }
-    .kv-row .lbl { font-weight: 600; color: #27272a; }
-    .kv-row .val { font-weight: 700; color: #000; text-align: right; }
-    .item-row { padding: 3.5px 0; border-bottom: 1px dotted #cbd5e1; }
+    * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    body { margin: 0; padding: 8px; width: ${pageMm}; max-width: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: ${effectivePaper === '58mm' ? '9.5px' : '10.5px'}; line-height: 1.4; color: #0f172a; background: #fff; font-variant-numeric: tabular-nums; }
+    .copy-tag { display: inline-block; font-size: 8px; font-weight: 900; letter-spacing: 0.7px; padding: 2px 8px; margin-bottom: 6px; border-radius: 5px; background: linear-gradient(90deg, #059669, #0d9488); color: #fff; text-transform: uppercase; }
+    .cut-line { text-align: center; font-size: 8px; font-weight: 800; letter-spacing: 0.5px; margin: 12px 0; border-top: 1px dashed #cbd5e1; color: #64748b; padding-top: 6px; }
+    .hdr-corners { display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; }
+    .hdr-corners.rev { flex-direction: row-reverse; }
+    .hdr-qr { border: 1px solid #e2e8f0; border-radius: 7px; padding: 3px; background: #fff; flex-shrink: 0; line-height: 0; }
+    .hdr-center { margin-top: 6px; text-align: center; }
+    .logo-frame { border: 1px solid #e2e8f0; border-radius: 7px; padding: 2px; background: #fff; flex-shrink: 0; }
+    .crest { display: inline-flex; align-items: center; justify-content: center; border: 1px solid #cbd5e1; border-radius: 8px; width: 36px; height: 36px; font-size: 10.5px; font-weight: 900; letter-spacing: 1px; flex-shrink: 0; background: #f8fafc; color: #0f172a; }
+    .title { font-size: ${effectivePaper === '58mm' ? '11.5px' : '13px'}; font-weight: 900; text-transform: uppercase; letter-spacing: -0.2px; color: #020617; }
+    .tagline { font-size: 8px; font-weight: 700; text-transform: uppercase; color: #64748b; margin-top: 1px; }
+    .sub-block { margin-top: 3px; font-size: 8.5px; line-height: 1.35; color: #475569; }
+    .doc-rule { margin-top: 8px; border-top: 1px solid #f1f5f9; padding-top: 7px; display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+    .doc-title { font-size: 8.5px; font-weight: 900; letter-spacing: 0.4px; text-transform: uppercase; background: linear-gradient(90deg, #059669, #0d9488); color: #fff; padding: 3px 8px; border-radius: 5px; }
+    .badge-pill { background: #eef2ff; color: #4338ca; padding: 2px 7px; font-size: 8px; font-weight: 800; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; text-transform: uppercase; border-radius: 5px; flex-shrink: 0; }
+    .sec-block { margin: 8px 0; border-top: 1px solid #f1f5f9; padding-top: 7px; }
+    .sec-cap { font-size: 8.5px; font-weight: 900; letter-spacing: 0.7px; text-transform: uppercase; margin-bottom: 5px; color: #94a3b8; }
+    .amt-hdr { display: flex; justify-content: space-between; font-size: 8.5px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.6px; color: #94a3b8; padding-bottom: 4px; margin-bottom: 4px; }
+    .kv-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 2.5px 0; font-size: ${effectivePaper === '58mm' ? '9px' : '10px'}; }
+    .kv-row .lbl { font-weight: 700; color: #64748b; flex-shrink: 0; }
+    .kv-row .val { font-weight: 800; color: #020617; text-align: right; }
+    .kv-stack { margin: 4px 0; padding: 6px 8px; border-radius: 8px; background: #f8fafc; border: 1px solid #e2e8f0; font-size: ${effectivePaper === '58mm' ? '9px' : '10px'}; }
+    .kv-stack .lbl { font-weight: 700; color: #64748b; font-size: 8px; text-transform: uppercase; margin-bottom: 2px; }
+    .kv-stack .val-stack { font-weight: 600; color: #0f172a; line-height: 1.4; word-break: break-word; }
+    .item-row { padding: 4px 0; border-bottom: 1px solid #f1f5f9; }
     .item-row:last-child { border-bottom: none; }
     .item-top { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; font-size: ${effectivePaper === '58mm' ? '9px' : '10px'}; }
-    .item-title { font-weight: 800; color: #000; }
-    .item-amt { font-weight: 900; white-space: nowrap; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-    .item-meta { font-size: 8.5px; color: #3f3f46; line-height: 1.25; }
-    .total-box { border-top: 2px solid #000; border-bottom: 2px solid #000; margin: 7px 0 4px; }
-    .total-row { display: flex; justify-content: space-between; align-items: center; background: #000; color: #fff; padding: 5px 7px; font-size: ${effectivePaper === '58mm' ? '10.5px' : '11.5px'}; font-weight: 900; }
-    .ver-box { border-top: 1px dashed #000; padding-top: 6px; margin-top: 6px; text-align: center; }
-    .ver-cap { font-size: 8px; font-weight: 900; letter-spacing: 0.9px; text-transform: uppercase; margin-bottom: 4px; }
-    .barcode-label { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 8.5px; font-weight: 800; margin-top: 2px; }
+    .item-title { font-weight: 800; color: #020617; }
+    .item-amt { font-weight: 900; white-space: nowrap; color: #4338ca; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .item-meta { font-size: 8.5px; color: #64748b; line-height: 1.3; margin-top: 1px; }
+    .total-box { border-radius: 9px; border: 1px solid #d1fae5; background: linear-gradient(90deg, #eef2ff 0%, #ecfdf5 60%, #fff1f2 100%); margin: 8px 0 4px; overflow: hidden; }
+    .total-row { display: flex; justify-content: space-between; align-items: center; color: #1e1b4b; padding: 7px 9px; font-size: ${effectivePaper === '58mm' ? '10.5px' : '11.5px'}; font-weight: 900; }
+    .ver-box { border-top: 1px solid #f1f5f9; padding-top: 7px; margin-top: 7px; text-align: center; }
+    .ver-cap { font-size: 8px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; color: #94a3b8; margin-bottom: 4px; }
+    .barcode-label { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 8.5px; font-weight: 800; color: #475569; margin-top: 2px; }
     .qr-wrap { margin-top: 5px; display: flex; flex-direction: column; align-items: center; }
-    .sign-line { margin-top: 18px; border-top: 1px solid #000; padding-top: 3px; font-size: 8px; font-weight: 800; text-align: center; text-transform: uppercase; }
-    .footer { font-size: 8px; text-align: center; margin-top: 5px; }
-    .wm-foot { font-size: 7px; text-align: center; font-weight: 900; letter-spacing: 0.8px; color: #52525b; margin-top: 4px; }
-    .empty { text-align: center; padding: 10px 4px; font-weight: 700; }
+    .sign-line { margin-top: 18px; border-top: 1px solid #cbd5e1; padding-top: 3px; font-size: 8px; font-weight: 800; color: #475569; text-align: center; text-transform: uppercase; }
+    .footer { font-size: 8px; text-align: center; margin-top: 6px; color: #64748b; }
+    .pos-foot { font-size: 7.5px; font-weight: 800; letter-spacing: 0.9px; text-align: center; color: #94a3b8; text-transform: uppercase; margin-top: 3px; }
+    .wm-foot { font-size: 7px; text-align: center; font-weight: 900; letter-spacing: 0.8px; color: #cbd5e1; margin-top: 4px; }
+    .empty { text-align: center; padding: 10px 4px; font-weight: 700; color: #64748b; }
   </style>
 </head>
 <body>
@@ -921,7 +944,7 @@ export function buildSchoolStatementCardHtml(params: BuildStatementDocumentParam
   const cur = String(b.currencySymbol || 'PKR').toUpperCase();
   const safeLogo = sanitizeBrandingLogoUrl(b.logoDataUrl);
   const monogram = (b.monogramInitials || 'SPA').trim().slice(0, 4);
-  const logoSize = Math.min(64, Math.max(32, Number(b.logoSizePx || 44)));
+  const logoSize = Math.min(56, Math.max(28, Number(b.logoSizePx || 40)));
   const summary = computeStatementAmounts(params.headers, params.rows, cur);
   const stmtRef = params.statementRef || `CRD-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}`;
   const issuedAt = new Date().toLocaleString('en-GB', {
@@ -935,8 +958,8 @@ export function buildSchoolStatementCardHtml(params: BuildStatementDocumentParam
   const accent = /^#[0-9a-fA-F]{6}$/.test(b.headerAccentColor || '') ? b.headerAccentColor : '#0f172a';
   const row = params.rows[0] || [];
   const qrPayload = `CARD:${stmtRef}|${effectiveTitle}|NET:${cur} ${Math.round(summary.primaryTotal)}`;
-  const qrSvg = buildQrCodeSvgMarkup(qrPayload, 96, accent, 2, 'M');
-  const barcodeSvg = buildCode128SvgMarkup(stmtRef, 30, '#0f172a');
+  const qrSvg = buildQrCodeSvgMarkup(qrPayload, 88, accent, 2, 'M');
+  const barcodeSvg = buildCode128SvgMarkup(stmtRef, 28, '#0f172a');
 
   const logoMarkup = b.showLogoCrest === false
     ? ''
@@ -965,7 +988,7 @@ export function buildSchoolStatementCardHtml(params: BuildStatementDocumentParam
         ${logoMarkup}
         <div style="text-align:${b.headerAlign || 'left'};">
           <div class="s-name">${escapeHtml(b.schoolName || DEFAULT_SCHOOL_PRINT_BRANDING.schoolName)}</div>
-          ${b.campusTagline ? `<div class="s-tag">${escapeHtml(b.campusTagline)}</div>` : ''}
+          ${b.phone ? `<div class="s-tag">Tel: ${escapeHtml(b.phone)}</div>` : ''}
         </div>
       </div>
       <div class="badge">${escapeHtml(stampBadge)} PASS</div>
@@ -975,7 +998,7 @@ export function buildSchoolStatementCardHtml(params: BuildStatementDocumentParam
     <div class="hero">
       <div>
         <div class="doc-title">${escapeHtml(effectiveTitle)}</div>
-        <div class="doc-sub">Ref: ${escapeHtml(stmtRef)} · Issued: ${escapeHtml(issuedAt)}</div>
+        <div class="doc-sub">Ref: ${escapeHtml(stmtRef)} · ${escapeHtml(issuedAt)}</div>
         ${params.roleLabel ? `<div class="doc-sub">${escapeHtml(params.roleLabel)}</div>` : ''}
       </div>
       ${showQr ? `<div class="qr-panel">${qrSvg}<div class="qr-cap">SCAN TO VERIFY</div></div>` : ''}
@@ -986,12 +1009,11 @@ export function buildSchoolStatementCardHtml(params: BuildStatementDocumentParam
     : `<div class="doc-sub">Records Included: ${params.rows.length}</div>`;
 
   const amountsSec = summary.amountColumns.length > 0
-    ? `<div class="grid" style="margin-top:10px;">
-        ${summary.amountColumns.slice(0, 4).map((col) => `
-          <div class="f-box" style="background:#fff;border-color:${accent}44;">
-            <div class="f-lbl">${escapeHtml(col.label)}</div>
-            <div class="f-val" style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;">${escapeHtml(cur)} ${formatStatementMoney(col.total, cur)}</div>
-          </div>`).join('')}
+    ? `<div class="amt-highlight">
+        <div class="amt-row">
+          <span class="amt-lbl">Verified Total</span>
+          <span class="amt-val">${escapeHtml(cur)} ${formatStatementMoney(summary.primaryTotal, cur)}</span>
+        </div>
       </div>`
     : '';
 
@@ -1005,8 +1027,7 @@ export function buildSchoolStatementCardHtml(params: BuildStatementDocumentParam
       <div class="sign">${escapeHtml(b.signatoryTitle || 'Principal & Accounts Directorate')}</div>
     </div>`;
 
-  const bodyBlocks = (['meta', 'person', 'amounts', 'verification', 'footer'] as PrintSectionKey[])
-  ;
+  const bodyBlocks: PrintSectionKey[] = ['meta', 'person', 'amounts', 'verification', 'footer'];
   const orderedAll = (b.sectionOrder || DEFAULT_SCHOOL_PRINT_BRANDING.sectionOrder).filter((k) => !hidden.has(k));
   const cardBodyParts: Record<Exclude<PrintSectionKey, 'header'>, string> = {
     meta: metaSec,
@@ -1030,28 +1051,33 @@ export function buildSchoolStatementCardHtml(params: BuildStatementDocumentParam
     @page { size: A4 portrait; margin: 14mm; }
     * { box-sizing: border-box; }
     body { margin: 0; padding: 24px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #0f172a; background: #fff; font-variant-numeric: tabular-nums; }
-    .card { max-width: 640px; margin: 0 auto; border: 2px solid ${accent}; border-radius: 16px; overflow: hidden; position: relative; }
-    .wm-bg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; opacity: 0.04; font-size: 36px; font-weight: 900; letter-spacing: 5px; transform: rotate(-25deg); color: ${accent}; }
-    .card-top { background: ${accent}; color: #fff; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; gap: 14px; position: relative; z-index: 1; }
+    .card { max-width: 640px; margin: 0 auto; border: 1px solid #e2e8f0; border-top: 4px solid ${accent}; border-radius: 16px; overflow: hidden; position: relative; background: #fff; }
+    .wm-bg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; opacity: 0.035; font-size: 36px; font-weight: 900; letter-spacing: 5px; transform: rotate(-25deg); color: ${accent}; }
+    .card-top { background: #f8fafc; border-bottom: 1px solid #e2e8f0; color: #0f172a; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; gap: 14px; position: relative; z-index: 1; }
     .brand { display: flex; align-items: center; gap: 12px; }
     .brand.rev { flex-direction: row-reverse; }
     .brand.col { flex-direction: column; align-items: flex-start; }
-    .logo-box { background: #fff; border-radius: 8px; padding: 4px; flex-shrink: 0; }
-    .crest-box { background: rgba(255,255,255,0.16); border: 1.5px solid rgba(255,255,255,0.55); border-radius: 8px; padding: 7px 11px; font-weight: 900; font-size: 14px; letter-spacing: 1.4px; flex-shrink: 0; }
-    .s-name { font-size: 15px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.3px; }
-    .s-tag { font-size: 9px; opacity: 0.85; font-weight: 700; text-transform: uppercase; margin-top: 2px; }
-    .badge { background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.45); padding: 4px 10px; border-radius: 6px; font-size: 9px; font-weight: 900; letter-spacing: 0.9px; text-transform: uppercase; white-space: nowrap; }
+    .logo-box { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 4px; flex-shrink: 0; }
+    .crest-box { background: ${accent}; color: #fff; border-radius: 10px; padding: 7px 11px; font-weight: 900; font-size: 13px; letter-spacing: 1.4px; flex-shrink: 0; }
+    .s-name { font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: -0.2px; color: #0f172a; }
+    .s-tag { font-size: 9.5px; color: #64748b; font-weight: 700; margin-top: 2px; }
+    .badge { background: ${accent}; color: #fff; padding: 4px 10px; border-radius: 7px; font-size: 9px; font-weight: 900; letter-spacing: 0.9px; text-transform: uppercase; white-space: nowrap; }
     .card-body { padding: 16px 18px; position: relative; z-index: 1; }
-    .hero { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding-bottom: 14px; border-bottom: 1.5px dashed #cbd5e1; margin-bottom: 14px; }
-    .doc-title { font-size: 14px; font-weight: 900; color: #0f172a; }
-    .doc-sub { font-size: 10.5px; color: #475569; margin-top: 3px; font-weight: 600; }
-    .qr-panel { text-align: center; border: 1px solid #cbd5e1; border-radius: 10px; padding: 8px; background: #f8fafc; flex-shrink: 0; }
-    .qr-cap { font-size: 8px; font-weight: 900; letter-spacing: 0.7px; text-transform: uppercase; color: #475569; margin-top: 4px; }
-    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .hero { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding-bottom: 12px; border-bottom: 1px solid #f1f5f9; margin-bottom: 12px; }
+    .doc-title { font-size: 14.5px; font-weight: 900; color: #0f172a; }
+    .doc-sub { font-size: 10.5px; color: #64748b; margin-top: 3px; font-weight: 600; }
+    .qr-panel { text-align: center; border: 1px solid #e2e8f0; border-radius: 12px; padding: 8px; background: #f8fafc; flex-shrink: 0; }
+    .qr-cap { font-size: 7.5px; font-weight: 900; letter-spacing: 0.7px; text-transform: uppercase; color: #475569; margin-top: 4px; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; background: #fff; }
     .lbl-row { display: inline-flex; align-items: center; gap: 4px; }
-    .f-box { border: 1px solid #e2e8f0; border-radius: 8px; padding: 7px 10px; background: #f8fafc; }
+    .f-box { padding: 8px 12px; border-bottom: 1px solid #f1f5f9; display: flex; flex-direction: column; gap: 2px; background: #fff; }
+    .f-box:nth-child(odd) { border-right: 1px solid #f1f5f9; }
     .f-lbl { font-size: 8.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; }
-    .f-val { font-size: 11px; font-weight: 800; color: #0f172a; margin-top: 2px; word-break: break-word; }
+    .f-val { font-size: 10.5px; font-weight: 800; color: #0f172a; word-break: break-word; }
+    .amt-highlight { margin-top: 12px; border-radius: 12px; padding: 10px 14px; background: linear-gradient(90deg, #ecfdf5 0%, #f0fdfa 55%, #eef2ff 100%); border: 1px solid #d1fae5; }
+    .amt-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .amt-lbl { font-size: 9.5px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.7px; color: #0f172a; }
+    .amt-val { font-size: 15px; font-weight: 900; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: #065f46; }
     .ver-row { margin-top: 12px; padding-top: 10px; border-top: 1px dashed #cbd5e1; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
     .card-foot { margin-top: 12px; padding-top: 10px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; }
     .foot-note { font-size: 9px; color: #64748b; }

@@ -187,7 +187,7 @@ export const DEFAULT_SCHOOL_PRINT_BRANDING: SchoolPrintBrandingConfig = {
   dmcSessionLabel: 'Session 2026-27',
   salaryMonthLabel: 'October 2026',
   salaryPayModeLabel: 'Direct Bank IBFT',
-  tableDefaultFormat: 'a4',
+  tableDefaultFormat: '80mm',
   tableA4Orientation: 'landscape',
   tableSlipLayout: 'voucher_grid',
   tableShowFieldLogos: false,
@@ -305,7 +305,7 @@ export function normalizeSchoolPrintBranding(
     : 'PKR';
 
   const tableDefaultFormat: TablePrintDefaultFormat =
-    src.tableDefaultFormat === '80mm' || src.tableDefaultFormat === '58mm' ? src.tableDefaultFormat : 'a4';
+    src.tableDefaultFormat === 'a4' || src.tableDefaultFormat === '58mm' ? src.tableDefaultFormat : '80mm';
   const tableA4Orientation: TablePrintOrientation =
     src.tableA4Orientation === 'portrait' ? 'portrait' : 'landscape';
   const tableSlipLayout: TablePrintSlipLayout =
@@ -478,10 +478,10 @@ export const SCHOOL_DOCUMENT_CATALOG: SchoolDocumentFormatMeta[] = [
   {
     id: 'table_statement',
     title: 'School Tables & Row Action Slips',
-    urduHint: 'Statement & Print + Row Actions (Details / Print)',
-    paperBadge: 'A4 / 80mm / 58mm',
-    machineType: 'A4 Laser / Inkjet Printer or 80mm / 58mm Thermal POS',
-    usedFor: 'Customize header, logo, watermark, field logos, and block layout for every Finance & School table statement and row Print / Details slip.',
+    urduHint: '80mm / 58mm POS Rasheed · Record Card · A4',
+    paperBadge: '80mm / 58mm / A4',
+    machineType: 'Thermal Receipt Printer (80mm / 58mm) or A4 Office Printer',
+    usedFor: 'Universal POS Rasheed & Record Card layout for all 65 school table categories — defaults to Thermal POS slip and supports per-table customization.',
     printedFrom: 'Every School Table Toolbar (Statement & Print) · Every Row Actions (Details & Print)',
     sampleCode: 'STM-2026-101'
   }

@@ -1,10 +1,12 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  ElementRef,
   computed,
   effect,
   inject,
-  signal
+  signal,
+  viewChild
 } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { SchoolTableSchemaService } from '../../services/school-table-schema.service';
@@ -30,10 +32,19 @@ import {
   formatStatementMoney,
   parseAmountNumber
 } from '../../utils/school-statement-print.util';
-import { printHtmlInHiddenFrame } from '../../../../shared/hardware/thermal-print.util';
+import {
+  downloadPrintableHtmlFile,
+  printHtmlInHiddenFrame
+} from '../../../../shared/hardware/thermal-print.util';
 import { SchoolBarcodeComponent, SchoolQrCodeComponent } from '../school-barcode/school-barcode.component';
 
 type StatementFormatMode = 'a4' | '80mm' | '58mm' | 'card' | 'whatsapp';
+
+interface ActionFeedbackState {
+  message: string;
+  tone: 'success' | 'warn' | 'info';
+  offerHtmlDownload?: boolean;
+}
 
 @Component({
   selector: 'app-school-table-statement-modal',
@@ -45,952 +56,934 @@ type StatementFormatMode = 'a4' | '80mm' | '58mm' | 'card' | 'whatsapp';
   template: `
     @if (modalState().open && dataset(); as data) {
       <div
-        class="fixed inset-0 z-[10060] bg-slate-950/65 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4"
+        class="fixed inset-0 z-[10060] flex items-center justify-center bg-slate-950/55 p-3 sm:p-5 backdrop-blur-md animate-fade-in"
         (click)="close()"
       >
         <div
-          class="bg-white rounded-2xl sm:rounded-3xl shadow-xl border border-slate-200 w-full max-w-6xl max-h-[95vh] flex flex-col overflow-hidden"
+          class="flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-[28px] border border-white/80 bg-white shadow-[0_30px_70px_-15px_rgba(15,23,42,0.28)] animate-scale-up"
           (click)="$event.stopPropagation()"
         >
-          <!-- Modal Header -->
-          <div class="px-4 sm:px-6 py-3.5 bg-slate-950 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
-            <div class="flex items-center gap-3 min-w-0">
-              <div class="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center shrink-0">
-                <mat-icon class="!text-[20px] !w-5 !h-5 text-emerald-300">receipt_long</mat-icon>
-              </div>
-              <div class="min-w-0">
-                <h3 class="text-sm sm:text-base font-black tracking-tight truncate">
-                  {{ effectiveTitle() }} — Statement &amp; Print Studio
-                </h3>
-                <p class="text-[11px] text-slate-300 truncate">
-                  {{ branding().schoolName }} · {{ filteredRows().length }} of {{ data.rows.length }} record(s) matched · Ref: {{ statementRef() }}
-                  @if (effectiveTable().hasOverride) {
-                    <span class="ml-1.5 px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold text-[10px]">Custom Table Design</span>
+          <!-- Frosted Emerald-Glass Header (Matches SuperAdmin Client Overview Popup) -->
+          <div class="relative shrink-0 border-b border-slate-200/80 bg-gradient-to-br from-white/95 via-emerald-50/40 to-slate-50/90 px-5 py-4 sm:px-6 sm:py-5">
+            <div class="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-emerald-200/35 blur-2xl"></div>
+
+            <div class="relative z-10 flex items-start justify-between gap-3">
+              <div class="flex min-w-0 items-center gap-3.5 sm:gap-4">
+                <div class="relative shrink-0">
+                  @if (safeLogoUrl() && branding().showLogoCrest !== false) {
+                    <div class="flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-200/80 bg-white p-1.5 shadow-md sm:h-14 sm:w-14">
+                      <img
+                        [src]="safeLogoUrl()"
+                        alt="Campus logo"
+                        referrerpolicy="no-referrer"
+                        class="h-full w-full object-contain"
+                      />
+                    </div>
+                  } @else {
+                    <div class="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/40 bg-gradient-to-br from-emerald-600 via-teal-600 to-slate-800 text-base font-black uppercase text-white shadow-md shadow-emerald-600/20 sm:h-14 sm:w-14 sm:text-lg">
+                      {{ monogramText() }}
+                    </div>
                   }
-                </p>
+                  <span class="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-white bg-emerald-500 shadow-xs">
+                    <span class="h-1.5 w-1.5 rounded-full bg-white"></span>
+                  </span>
+                </div>
+
+                <div class="min-w-0">
+                  <div class="flex flex-wrap items-center gap-1.5">
+                    <span class="inline-flex items-center rounded-lg border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-emerald-700">
+                      {{ primaryStatusValue() || stampBadgeText() }}
+                    </span>
+                    <span class="inline-flex items-center rounded-lg border border-slate-200/80 bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-700 truncate max-w-[180px]">
+                      {{ branding().schoolName }}
+                    </span>
+                    <span class="hidden sm:inline-flex items-center rounded-lg border border-slate-200 bg-white px-2 py-0.5 font-mono text-[10px] font-bold text-slate-500">
+                      {{ statementRef() }}
+                    </span>
+                  </div>
+
+                  <h2 class="mt-1 truncate text-lg font-black tracking-tight text-slate-900 sm:text-xl">
+                    {{ effectiveTitle() }}
+                  </h2>
+
+                  <div class="mt-0.5 flex items-center gap-1.5 min-w-0">
+                    <p class="truncate text-xs font-semibold text-slate-500 sm:text-sm">
+                      @if (isSingleRecord()) {
+                        <span>{{ data.roleLabel || 'Official Campus Record' }} · {{ singleRecordFields().length }} Field(s)</span>
+                      } @else {
+                        <span>{{ data.roleLabel || 'Campus Register' }} · {{ filteredRows().length }} of {{ data.rows.length }} record(s)</span>
+                      }
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-2 shrink-0">
+                @if (isOwner()) {
+                  <button
+                    type="button"
+                    (click)="openPrintStudioForTable()"
+                    title="Customize print design for this table"
+                    class="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-slate-200/80 bg-white/90 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors cursor-pointer whitespace-nowrap"
+                  >
+                    <mat-icon class="!text-[15px] !w-[15px] !h-[15px] text-emerald-600">tune</mat-icon>
+                    <span>Print Design</span>
+                  </button>
+                }
+                <button
+                  type="button"
+                  (click)="close()"
+                  title="Close"
+                  aria-label="Close modal"
+                  class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200/80 bg-white/90 text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition-colors cursor-pointer"
+                >
+                  <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">close</mat-icon>
+                </button>
               </div>
             </div>
 
-            <div class="flex items-center gap-2 shrink-0 flex-wrap">
-              @if (isOwner()) {
-                <button
-                  type="button"
-                  (click)="openPrintStudioForTable()"
-                  class="px-2.5 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-200 font-bold text-[11px] inline-flex items-center gap-1.5 cursor-pointer transition-colors"
-                  title="Customize header, logo, watermark, field logos & layout for this table's receipts & slips"
-                >
-                  <mat-icon class="!text-[14px] !w-3.5 !h-3.5">palette</mat-icon>
-                  <span>Customize Design</span>
-                </button>
-              }
-              <!-- Format Switcher Tabs -->
-              <div class="inline-flex items-center bg-slate-900 border border-slate-700/80 rounded-xl p-1 gap-1">
-                <button
-                  type="button"
-                  (click)="activeFormat.set('a4')"
-                  class="px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-colors cursor-pointer inline-flex items-center gap-1"
-                  [class]="activeFormat() === 'a4' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-300 hover:text-white'"
-                >
-                  <mat-icon class="!text-[14px] !w-3.5 !h-3.5">description</mat-icon>
-                  <span>A4 Statement</span>
-                </button>
-                <button
-                  type="button"
-                  (click)="activeFormat.set('80mm')"
-                  class="px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-colors cursor-pointer inline-flex items-center gap-1"
-                  [class]="activeFormat() === '80mm' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-300 hover:text-white'"
-                >
-                  <mat-icon class="!text-[14px] !w-3.5 !h-3.5">receipt</mat-icon>
-                  <span>80mm Rasheed</span>
-                </button>
-                <button
-                  type="button"
-                  (click)="activeFormat.set('58mm')"
-                  class="px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-colors cursor-pointer inline-flex items-center gap-1"
-                  [class]="activeFormat() === '58mm' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-300 hover:text-white'"
-                >
-                  <mat-icon class="!text-[14px] !w-3.5 !h-3.5">receipt_long</mat-icon>
-                  <span>58mm Rasheed</span>
-                </button>
-                <button
-                  type="button"
-                  (click)="activeFormat.set('card')"
-                  class="px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-colors cursor-pointer inline-flex items-center gap-1"
-                  [class]="activeFormat() === 'card' ? 'bg-sky-600 text-white shadow-xs' : 'text-slate-300 hover:text-white'"
-                >
-                  <mat-icon class="!text-[14px] !w-3.5 !h-3.5">qr_code_2</mat-icon>
-                  <span>QR Card</span>
-                </button>
-                <button
-                  type="button"
-                  (click)="activeFormat.set('whatsapp')"
-                  class="px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-colors cursor-pointer inline-flex items-center gap-1"
-                  [class]="activeFormat() === 'whatsapp' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-300 hover:text-white'"
-                >
-                  <mat-icon class="!text-[14px] !w-3.5 !h-3.5">chat</mat-icon>
-                  <span>WhatsApp</span>
-                </button>
-              </div>
-
+            <!-- iOS Segmented Tab Bar (Matches Client Popup 3D Pill Bar) -->
+            <div class="relative z-10 mt-4 inline-flex w-full sm:w-auto max-w-full items-center gap-1 rounded-2xl bg-slate-200/60 p-1 overflow-x-auto custom-scroll">
               <button
                 type="button"
-                (click)="close()"
-                class="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
-                aria-label="Close statement modal"
+                (click)="selectFormat('a4')"
+                class="rounded-xl px-3.5 py-2 text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap shrink-0"
+                [class]="activeFormat() === 'a4' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'"
               >
-                <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">close</mat-icon>
+                <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">description</mat-icon>
+                <span>{{ isSingleRecord() ? 'Record Card' : 'A4 Statement' }}</span>
+              </button>
+              <button
+                type="button"
+                (click)="selectFormat('80mm')"
+                class="rounded-xl px-3.5 py-2 text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap shrink-0"
+                [class]="activeFormat() === '80mm' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'"
+              >
+                <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">receipt</mat-icon>
+                <span>80mm Rasheed</span>
+              </button>
+              <button
+                type="button"
+                (click)="selectFormat('58mm')"
+                class="rounded-xl px-3.5 py-2 text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap shrink-0"
+                [class]="activeFormat() === '58mm' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'"
+              >
+                <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">receipt_long</mat-icon>
+                <span>58mm</span>
+              </button>
+              <button
+                type="button"
+                (click)="selectFormat('card')"
+                class="rounded-xl px-3.5 py-2 text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap shrink-0"
+                [class]="activeFormat() === 'card' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'"
+              >
+                <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">qr_code_2</mat-icon>
+                <span>QR Card</span>
+              </button>
+              <button
+                type="button"
+                (click)="selectFormat('whatsapp')"
+                class="rounded-xl px-3.5 py-2 text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap shrink-0"
+                [class]="activeFormat() === 'whatsapp' ? 'bg-white text-emerald-700 shadow-xs' : 'text-slate-600 hover:text-slate-900'"
+              >
+                <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">chat</mat-icon>
+                <span>WhatsApp</span>
               </button>
             </div>
           </div>
 
-          <!-- Search + Date Range Statement Builder Bar (or Single Record Banner) -->
-          @if (isSingleDataset()) {
-            <div class="px-4 sm:px-6 py-2.5 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2 shrink-0">
-              <div class="inline-flex items-center gap-2 text-xs font-bold text-slate-700">
-                <mat-icon class="!text-[16px] !w-4 !h-4 text-emerald-600">verified</mat-icon>
-                <span>Individual Record Slip Preview — Print in A4, 80mm / 58mm Rasheed, PDF, or share on WhatsApp.</span>
-              </div>
-              <div class="flex flex-wrap items-center gap-2">
-                @for (col of amountSummary().amountColumns.slice(0, 3); track col.colIndex) {
-                  <div
-                    class="px-2.5 py-1 rounded-lg border text-[11px] font-bold tabular-nums"
-                    [class]="col.kind === 'debit' ? 'bg-rose-50 border-rose-200 text-rose-800' : (col.kind === 'credit' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-white border-slate-200 text-slate-800')"
-                  >
-                    {{ col.label }}: <strong>{{ amountSummary().currency }} {{ formatMoney(col.total) }}</strong>
+          <!-- Multi-Record Search + Date Filter Bar (Hidden for Single Record Cards) -->
+          @if (!isSingleDataset()) {
+            <div class="shrink-0 border-b border-slate-200/80 bg-slate-50/70 px-5 py-3 sm:px-6 space-y-2.5">
+              <div class="grid grid-cols-1 md:grid-cols-12 gap-2.5 items-end">
+                <div class="md:col-span-5">
+                  <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+                    Search Record
+                  </label>
+                  <div class="relative flex items-center">
+                    <mat-icon class="!text-[16px] !w-4 !h-4 text-slate-400 absolute left-3 pointer-events-none">search</mat-icon>
+                    <input
+                      type="text"
+                      [value]="searchQuery()"
+                      (input)="onSearchInput($event)"
+                      placeholder="Type name, ref, category, or keyword..."
+                      class="w-full pl-9 pr-8 py-2 rounded-xl bg-white border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none text-xs font-semibold text-slate-900 transition-all"
+                    />
+                    @if (searchQuery()) {
+                      <button
+                        type="button"
+                        (click)="searchQuery.set('')"
+                        class="absolute right-2 p-1 rounded-lg text-slate-400 hover:text-slate-700 cursor-pointer"
+                        aria-label="Clear search"
+                      >
+                        <mat-icon class="!text-[14px] !w-3.5 !h-3.5">close</mat-icon>
+                      </button>
+                    }
                   </div>
-                }
-              </div>
-            </div>
-          } @else {
-          <div class="px-4 sm:px-6 py-3 bg-slate-50 border-b border-slate-200 space-y-2.5 shrink-0">
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-2.5 items-end">
-              <!-- Search Keyword -->
-              <div class="md:col-span-5">
-                <label class="block text-[10px] font-black uppercase tracking-wider text-slate-600 mb-1">
-                  Search Record (Student / Name / Ref / Category / Amount)
-                </label>
-                <div class="relative flex items-center">
-                  <mat-icon class="!text-[16px] !w-4 !h-4 text-slate-400 absolute left-3 pointer-events-none">search</mat-icon>
-                  <input
-                    type="text"
-                    [value]="searchQuery()"
-                    (input)="onSearchInput($event)"
-                    placeholder="Type student, challan, voucher, category, or keyword..."
-                    class="w-full pl-9 pr-8 py-2 rounded-xl bg-white border border-slate-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-xs font-semibold text-slate-900"
-                  />
-                  @if (searchQuery()) {
-                    <button
-                      type="button"
-                      (click)="searchQuery.set('')"
-                      class="absolute right-2 p-1 rounded-lg text-slate-400 hover:text-slate-700 cursor-pointer"
-                      aria-label="Clear search"
-                    >
-                      <mat-icon class="!text-[14px] !w-3.5 !h-3.5">close</mat-icon>
-                    </button>
-                  }
+                </div>
+
+                <div class="grid grid-cols-2 md:col-span-6 gap-2">
+                  <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+                      From Date
+                    </label>
+                    <input
+                      type="date"
+                      [value]="fromDate()"
+                      (change)="onFromDateChange($event)"
+                      class="w-full px-2.5 py-2 rounded-xl bg-white border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none text-xs font-bold text-slate-900 tabular-nums transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+                      To Date
+                    </label>
+                    <input
+                      type="date"
+                      [value]="toDate()"
+                      (change)="onToDateChange($event)"
+                      class="w-full px-2.5 py-2 rounded-xl bg-white border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none text-xs font-bold text-slate-900 tabular-nums transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div class="md:col-span-1 flex items-center">
+                  <button
+                    type="button"
+                    (click)="resetFilters()"
+                    class="w-full px-2.5 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold text-xs cursor-pointer transition-colors inline-flex items-center justify-center gap-1"
+                  >
+                    <mat-icon class="!text-[14px] !w-3.5 !h-3.5">restart_alt</mat-icon>
+                    <span>Reset</span>
+                  </button>
                 </div>
               </div>
 
-              <!-- From Date -->
-              <div class="md:col-span-3">
-                <label class="block text-[10px] font-black uppercase tracking-wider text-slate-600 mb-1">
-                  From Date
-                </label>
-                <input
-                  type="date"
-                  [value]="fromDate()"
-                  (change)="onFromDateChange($event)"
-                  class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-xs font-bold text-slate-900 tabular-nums"
-                />
-              </div>
-
-              <!-- To Date -->
-              <div class="md:col-span-3">
-                <label class="block text-[10px] font-black uppercase tracking-wider text-slate-600 mb-1">
-                  To Date
-                </label>
-                <input
-                  type="date"
-                  [value]="toDate()"
-                  (change)="onToDateChange($event)"
-                  class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-xs font-bold text-slate-900 tabular-nums"
-                />
-              </div>
-
-              <!-- Reset Filters -->
-              <div class="md:col-span-1 flex items-center">
-                <button
-                  type="button"
-                  (click)="resetFilters()"
-                  class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold text-xs cursor-pointer transition-colors"
-                >
-                  Reset
-                </button>
-              </div>
-            </div>
-
-            <!-- Quick Date Presets & Live Computed Summary -->
-            <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
-              <div class="flex flex-wrap items-center gap-1.5">
-                <span class="text-[10px] font-black uppercase tracking-wider text-slate-500 mr-1 inline-flex items-center gap-1">
-                  <mat-icon class="!text-[14px] !w-3.5 !h-3.5">date_range</mat-icon>
-                  Quick Period:
-                </span>
-                <button
-                  type="button"
-                  (click)="applyDatePreset('all')"
-                  class="px-2.5 py-1 rounded-lg border text-[11px] font-bold cursor-pointer transition-colors"
-                  [class]="!fromDate() && !toDate() ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'"
-                >
-                  All Dates
-                </button>
-                <button
-                  type="button"
-                  (click)="applyDatePreset('today')"
-                  class="px-2.5 py-1 rounded-lg border bg-white text-slate-700 border-slate-200 hover:bg-slate-100 text-[11px] font-bold cursor-pointer transition-colors"
-                >
-                  Today
-                </button>
-                <button
-                  type="button"
-                  (click)="applyDatePreset('7d')"
-                  class="px-2.5 py-1 rounded-lg border bg-white text-slate-700 border-slate-200 hover:bg-slate-100 text-[11px] font-bold cursor-pointer transition-colors"
-                >
-                  Last 7 Days
-                </button>
-                <button
-                  type="button"
-                  (click)="applyDatePreset('month')"
-                  class="px-2.5 py-1 rounded-lg border bg-white text-slate-700 border-slate-200 hover:bg-slate-100 text-[11px] font-bold cursor-pointer transition-colors"
-                >
-                  This Month
-                </button>
-                <button
-                  type="button"
-                  (click)="applyDatePreset('30d')"
-                  class="px-2.5 py-1 rounded-lg border bg-white text-slate-700 border-slate-200 hover:bg-slate-100 text-[11px] font-bold cursor-pointer transition-colors"
-                >
-                  Last 30 Days
-                </button>
-              </div>
-
-              <!-- Live Computed Totals Pill Strip -->
-              <div class="flex flex-wrap items-center gap-2">
-                <div class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-[11px] font-bold text-slate-700 tabular-nums">
-                  Matched: <strong class="text-slate-950">{{ filteredRows().length }}</strong> / {{ data.rows.length }}
-                </div>
-                @for (col of amountSummary().amountColumns.slice(0, 3); track col.colIndex) {
-                  <div
-                    class="px-2.5 py-1 rounded-lg border text-[11px] font-bold tabular-nums"
-                    [class]="col.kind === 'debit' ? 'bg-rose-50 border-rose-200 text-rose-800' : (col.kind === 'credit' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-white border-slate-200 text-slate-800')"
+              <div class="flex flex-wrap items-center justify-between gap-2 pt-0.5">
+                <div class="flex flex-wrap items-center gap-1">
+                  <button
+                    type="button"
+                    (click)="applyDatePreset('all')"
+                    class="px-2.5 py-1 rounded-lg border text-[11px] font-bold cursor-pointer transition-colors"
+                    [class]="!fromDate() && !toDate() ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'"
                   >
-                    {{ col.label }}: <strong>{{ amountSummary().currency }} {{ formatMoney(col.total) }}</strong>
-                  </div>
-                }
-                @if (amountSummary().hasInflowOutflowSplit) {
-                  <div class="px-2.5 py-1 rounded-lg bg-slate-900 text-white text-[11px] font-black tabular-nums">
-                    Net: {{ amountSummary().currency }} {{ formatMoney(amountSummary().netBalance) }}
+                    All
+                  </button>
+                  <button
+                    type="button"
+                    (click)="applyDatePreset('today')"
+                    class="px-2.5 py-1 rounded-lg border bg-white text-slate-700 border-slate-200 hover:bg-slate-100 text-[11px] font-bold cursor-pointer transition-colors"
+                  >
+                    Today
+                  </button>
+                  <button
+                    type="button"
+                    (click)="applyDatePreset('7d')"
+                    class="px-2.5 py-1 rounded-lg border bg-white text-slate-700 border-slate-200 hover:bg-slate-100 text-[11px] font-bold cursor-pointer transition-colors"
+                  >
+                    7D
+                  </button>
+                  <button
+                    type="button"
+                    (click)="applyDatePreset('month')"
+                    class="px-2.5 py-1 rounded-lg border bg-white text-slate-700 border-slate-200 hover:bg-slate-100 text-[11px] font-bold cursor-pointer transition-colors"
+                  >
+                    Month
+                  </button>
+                  <button
+                    type="button"
+                    (click)="applyDatePreset('30d')"
+                    class="px-2.5 py-1 rounded-lg border bg-white text-slate-700 border-slate-200 hover:bg-slate-100 text-[11px] font-bold cursor-pointer transition-colors"
+                  >
+                    30D
+                  </button>
+                </div>
+
+                @if (amountSummary().amountColumns.length > 0) {
+                  <div class="flex flex-wrap items-center gap-1.5">
+                    @for (col of amountSummary().amountColumns.slice(0, 3); track col.colIndex) {
+                      <div
+                        class="px-2.5 py-1 rounded-lg border text-[11px] font-bold tabular-nums"
+                        [class]="col.kind === 'debit' ? 'bg-rose-50 border-rose-200 text-rose-800' : (col.kind === 'credit' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-white border-slate-200 text-slate-800')"
+                      >
+                        {{ col.label }}: <strong>{{ amountSummary().currency }} {{ formatMoney(col.total) }}</strong>
+                      </div>
+                    }
+                    @if (amountSummary().hasInflowOutflowSplit) {
+                      <div class="px-2.5 py-1 rounded-lg bg-slate-900 text-white text-[11px] font-black tabular-nums">
+                        Net: {{ amountSummary().currency }} {{ formatMoney(amountSummary().netBalance) }}
+                      </div>
+                    }
                   </div>
                 }
               </div>
             </div>
-          </div>
           }
 
-          <!-- Preview Viewport -->
-          <div class="flex-1 min-h-0 overflow-y-auto bg-slate-100/90 p-3 sm:p-5">
-            @if (activeFormat() === 'a4') {
-              <!-- A4 Branded Institutional Statement Preview -->
-              <div class="mx-auto max-w-5xl bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-7 space-y-5 text-slate-900 relative overflow-hidden">
-                @if (effectiveTable().showWatermark) {
-                  <div class="pointer-events-none select-none absolute inset-0 flex items-center justify-center opacity-[0.04] z-0">
-                    <span class="text-5xl sm:text-6xl font-black uppercase tracking-[0.25em] -rotate-24 text-slate-900 text-center">
-                      {{ branding().schoolName }}
-                    </span>
-                  </div>
-                }
-
-                <div class="relative z-10 space-y-5">
-                  @for (secKey of branding().sectionOrder; track secKey) {
-                    @if (!hiddenSectionSet().has(secKey)) {
-                      @switch (secKey) {
-                        @case ('header') {
-                          <div
-                            class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-4 border-b-2"
-                            [style.border-bottom-color]="branding().headerAccentColor || '#0f172a'"
-                          >
-                            <div
-                              class="flex gap-3.5 flex-1 min-w-0"
-                              [class]="branding().logoPlacement === 'top'
-                                ? (branding().headerAlign === 'left'
-                                  ? 'flex-col items-start'
-                                  : (branding().headerAlign === 'right' ? 'flex-col items-end' : 'flex-col items-center'))
-                                : (branding().logoPlacement === 'right' ? 'flex-row-reverse items-center' : 'flex-row items-center')"
-                            >
-                              @if (branding().showLogoCrest !== false) {
-                                @if (safeLogoUrl()) {
-                                  <div class="border border-slate-200 rounded-xl p-1.5 bg-white shrink-0">
-                                    <img
-                                      [src]="safeLogoUrl()"
-                                      alt="School Logo"
-                                      referrerpolicy="no-referrer"
-                                      class="object-contain block"
-                                      [style.width.px]="logoBoxSize()"
-                                      [style.height.px]="logoBoxSize()"
-                                    />
-                                  </div>
-                                } @else {
-                                  <div
-                                    class="px-3 py-2 rounded-xl border-2 font-black text-sm tracking-widest uppercase bg-white shrink-0"
-                                    [style.border-color]="branding().headerAccentColor || '#0f172a'"
-                                    [style.color]="branding().headerAccentColor || '#0f172a'"
-                                  >
-                                    {{ monogramText() }}
-                                  </div>
-                                }
-                              }
-                              <div
-                                class="min-w-0"
-                                [class]="branding().logoPlacement === 'top'
-                                  ? (branding().headerAlign === 'left' ? 'text-left' : (branding().headerAlign === 'right' ? 'text-right' : 'text-center'))
-                                  : (branding().headerAlign === 'right' ? 'text-right' : 'text-left')"
-                              >
-                                <h4 class="text-base sm:text-lg font-black uppercase tracking-tight text-slate-950 leading-tight">
-                                  {{ branding().schoolName }}
-                                </h4>
-                                @if (branding().campusTagline) {
-                                  <p class="text-[10px] font-bold uppercase tracking-wider text-slate-600 mt-0.5">
-                                    {{ branding().campusTagline }}
-                                  </p>
-                                }
-                                <p class="text-[11px] text-slate-500 mt-1">
-                                  {{ brandingContactLine() }}
-                                </p>
-                              </div>
-                            </div>
-
-                            <div class="text-left sm:text-right shrink-0">
-                              <span
-                                class="inline-block px-2.5 py-1 rounded-md text-white text-[10px] font-black uppercase tracking-wider"
-                                [style.background-color]="branding().headerAccentColor || '#0f172a'"
-                              >
-                                {{ stampBadgeLabel() }} {{ isSingleRecord() ? 'RECORD SLIP' : 'STATEMENT' }}
-                              </span>
-                              <p class="text-[11px] font-mono font-bold text-slate-700 mt-1.5">Ref: {{ statementRef() }}</p>
-                              <p class="text-[11px] text-slate-500">Issued: {{ issuedAtLabel() }}</p>
-                            </div>
-                          </div>
-                        }
-
-                        @case ('meta') {
-                          <div class="rounded-xl bg-slate-50 border border-slate-200 px-4 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                            <div>
-                              <h5 class="text-sm font-black text-slate-950">{{ effectiveTitle() }}</h5>
-                              <p class="text-[11px] text-slate-600">
-                                {{ isSingleRecord() ? ('Official Individual Record Voucher · ' + data.roleLabel) : (criteriaSubtitle() + ' · ' + data.roleLabel) }}
-                              </p>
-                            </div>
-                            <span class="px-2 py-0.5 rounded bg-white border border-slate-200 text-[10px] font-bold uppercase text-slate-600 shrink-0">
-                              {{ effectiveTable().a4Orientation === 'portrait' ? 'A4 Portrait' : 'A4 Landscape' }}
-                            </span>
-                          </div>
-                        }
-
-                        @case ('amounts') {
-                          @if (amountSummary().amountColumns.length > 0) {
-                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                              @for (col of amountSummary().amountColumns; track col.colIndex) {
-                                <div class="rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2">
-                                  <span class="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider text-slate-500 truncate">
-                                    @if (effectiveTable().showFieldLogos) {
-                                      @if (safeLogoUrl()) {
-                                        <img [src]="safeLogoUrl()" alt="" referrerpolicy="no-referrer" class="w-3.5 h-3.5 object-contain rounded-xs shrink-0" />
-                                      } @else {
-                                        <span class="px-1 py-0.2 rounded text-[7px] font-black text-white shrink-0" [style.background-color]="branding().headerAccentColor || '#0f172a'">{{ monogramText().slice(0, 2) }}</span>
-                                      }
-                                    }
-                                    <span class="truncate">{{ col.label }}</span>
-                                  </span>
-                                  <span
-                                    class="block text-sm font-black font-mono tabular-nums mt-0.5"
-                                    [class]="col.kind === 'debit' ? 'text-rose-700' : (col.kind === 'credit' ? 'text-emerald-700' : 'text-slate-950')"
-                                  >
-                                    {{ amountSummary().currency }} {{ formatMoney(col.total) }}
-                                  </span>
-                                </div>
-                              }
-                              @if (amountSummary().hasInflowOutflowSplit) {
-                                <div
-                                  class="rounded-xl border text-white px-3 py-2"
-                                  [style.background-color]="branding().headerAccentColor || '#0f172a'"
-                                  [style.border-color]="branding().headerAccentColor || '#0f172a'"
-                                >
-                                  <span class="block text-[9px] font-black uppercase tracking-wider text-slate-300">Net Statement Balance</span>
-                                  <span class="block text-sm font-black font-mono tabular-nums mt-0.5">
-                                    {{ amountSummary().currency }} {{ formatMoney(amountSummary().netBalance) }}
-                                  </span>
-                                </div>
-                              }
-                            </div>
-                          }
-                        }
-
-                        @case ('person') {
-                          @if (isSingleRecord() && effectiveTable().slipLayout === 'voucher_grid') {
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                              @for (fld of singleRecordFields(); track $index) {
-                                <div
-                                  class="rounded-xl border px-3.5 py-2.5"
-                                  [class]="fld.isAmount ? 'bg-slate-50 border-slate-300' : 'bg-white border-slate-200'"
-                                >
-                                  <span class="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-slate-500">
-                                    @if (effectiveTable().showFieldLogos) {
-                                      @if (safeLogoUrl()) {
-                                        <img [src]="safeLogoUrl()" alt="" referrerpolicy="no-referrer" class="w-3.5 h-3.5 object-contain rounded-xs shrink-0" />
-                                      } @else {
-                                        <span class="px-1 py-0.2 rounded text-[7px] font-black text-white shrink-0" [style.background-color]="branding().headerAccentColor || '#0f172a'">{{ monogramText().slice(0, 2) }}</span>
-                                      }
-                                    }
-                                    <span>{{ fld.label }}</span>
-                                  </span>
-                                  <span
-                                    class="block mt-0.5 break-words"
-                                    [class]="fld.isAmount ? 'font-mono font-black text-sm text-slate-950' : 'font-bold text-xs text-slate-900'"
-                                  >
-                                    {{ fld.value }}
-                                  </span>
-                                </div>
-                              }
-                            </div>
-                          } @else {
-                            <div class="overflow-x-auto border border-slate-200 rounded-xl">
-                              <table class="w-full text-left border-collapse text-xs tabular-nums">
-                                <thead class="bg-slate-100 text-slate-700 uppercase font-black text-[10px] border-b border-slate-300">
-                                  <tr>
-                                    <th class="px-3 py-2.5 border-r border-slate-200">#</th>
-                                    @for (hdr of data.headers; track $index) {
-                                      <th
-                                        class="px-3 py-2.5 border-r border-slate-200 last:border-r-0 whitespace-nowrap"
-                                        [class.text-right]="amountColIndexSet().has($index)"
-                                      >
-                                        {{ hdr }}
-                                      </th>
-                                    }
-                                  </tr>
-                                </thead>
-                                <tbody class="divide-y divide-slate-100">
-                                  @for (row of filteredRows(); track $index) {
-                                    <tr class="hover:bg-slate-50/70" [class.bg-slate-50/40]="$odd">
-                                      <td class="px-3 py-2 font-mono text-slate-500 border-r border-slate-100">{{ $index + 1 }}</td>
-                                      @for (hdr of data.headers; track $index; let cIdx = $index) {
-                                        <td
-                                          class="px-3 py-2 border-r border-slate-100 last:border-r-0"
-                                          [class.text-right]="amountColIndexSet().has(cIdx)"
-                                          [class.font-mono]="amountColIndexSet().has(cIdx)"
-                                          [class.font-bold]="amountColIndexSet().has(cIdx)"
-                                        >
-                                          {{ row[cIdx] || '—' }}
-                                        </td>
-                                      }
-                                    </tr>
-                                  } @empty {
-                                    <tr>
-                                      <td [attr.colspan]="data.headers.length + 1" class="px-4 py-8 text-center text-slate-500 font-bold">
-                                        No records match your current search or date range filter.
-                                      </td>
-                                    </tr>
-                                  }
-                                </tbody>
-                                @if (filteredRows().length > 0 && amountSummary().amountColumns.length > 0) {
-                                  <tfoot
-                                    class="text-white font-black text-xs"
-                                    [style.background-color]="branding().headerAccentColor || '#0f172a'"
-                                  >
-                                    <tr>
-                                      <td class="px-3 py-2.5">TOTAL</td>
-                                      @for (hdr of data.headers; track $index; let cIdx = $index) {
-                                        @if (amountColumnByIndex().get(cIdx); as sumCol) {
-                                          <td class="px-3 py-2.5 text-right font-mono whitespace-nowrap">
-                                            {{ amountSummary().currency }} {{ formatMoney(sumCol.total) }}
-                                          </td>
-                                        } @else {
-                                          <td class="px-3 py-2.5 text-slate-200">
-                                            {{ cIdx === 0 ? filteredRows().length + ' Rows' : '' }}
-                                          </td>
-                                        }
-                                      }
-                                    </tr>
-                                  </tfoot>
-                                }
-                              </table>
-                            </div>
-                          }
-                        }
-
-                        @case ('verification') {
-                          @if (branding().showQrVerification !== false || branding().showBarcodeVerification !== false) {
-                            <div
-                              class="pt-3 border-t border-dashed border-slate-300 flex items-center gap-4 flex-wrap"
-                              [class]="branding().verificationOrder === 'qr_first'
-                                ? 'flex-row-reverse justify-end'
-                                : (branding().verificationOrder === 'side_by_side' ? 'justify-between' : 'flex-row justify-start')"
-                            >
-                              @if (branding().showBarcodeVerification !== false) {
-                                <app-school-barcode [value]="statementRef()" [height]="26" [barWidth]="1.15" />
-                              }
-                              @if (branding().showQrVerification !== false) {
-                                <app-school-qr-code [value]="qrPayload()" [size]="56" />
-                              }
-                            </div>
-                          }
-                        }
-
-                        @case ('footer') {
-                          <div class="pt-4 border-t border-slate-200 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-                            <p class="text-[10px] text-slate-500 max-w-md">{{ branding().footerNote }}</p>
-                            <div class="text-left sm:text-right">
-                              <div class="inline-block border-t border-slate-900 pt-1 min-w-[180px] text-[10px] font-black uppercase tracking-wider text-slate-900">
-                                {{ branding().signatoryTitle || 'Principal & Accounts Directorate' }}
-                              </div>
-                            </div>
-                          </div>
-                        }
-                      }
-                    }
+          <!-- Inline Alert / Feedback Banner (Matches Client Popup) -->
+          @if (actionFeedback(); as fb) {
+            <div
+              class="border-b px-5 py-2.5 text-xs font-bold shrink-0 transition-all"
+              [class]="fb.tone === 'warn'
+                ? 'bg-amber-50 border-amber-200 text-amber-800'
+                : (fb.tone === 'info' ? 'bg-sky-50 border-sky-200 text-sky-800' : 'bg-emerald-50 border-emerald-200 text-emerald-700')"
+            >
+              <div class="flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2 min-w-0">
+                  <mat-icon class="!text-[16px] !w-4 !h-4 shrink-0">
+                    {{ fb.tone === 'warn' ? 'warning' : (fb.tone === 'info' ? 'info' : 'check_circle') }}
+                  </mat-icon>
+                  <span class="truncate">{{ fb.message }}</span>
+                </div>
+                <div class="flex items-center gap-2 shrink-0">
+                  @if (fb.offerHtmlDownload) {
+                    <button
+                      type="button"
+                      (click)="downloadPrintableFallback()"
+                      class="px-2.5 py-1 rounded-lg bg-slate-900 text-white text-[11px] font-bold inline-flex items-center gap-1 cursor-pointer"
+                    >
+                      <mat-icon class="!text-[13px] !w-3.5 !h-3.5">download</mat-icon>
+                      <span>Save Print File</span>
+                    </button>
                   }
+                  <button
+                    type="button"
+                    (click)="clearActionFeedback()"
+                    class="opacity-60 hover:opacity-100 shrink-0 cursor-pointer"
+                    aria-label="Dismiss notice"
+                  >
+                    <mat-icon class="!text-[15px] !w-4 !h-4">close</mat-icon>
+                  </button>
                 </div>
               </div>
-            } @else if (activeFormat() === '80mm' || activeFormat() === '58mm') {
-              <!-- Thermal Rasheed Roll Preview (80mm or 58mm) -->
-              <div
-                class="mx-auto bg-white border border-slate-300 shadow-sm rounded-xl p-4 text-slate-950 font-sans tabular-nums space-y-2"
-                [class]="activeFormat() === '58mm' ? 'max-w-[265px] text-[10px]' : 'max-w-[355px] text-[11px]'"
-              >
-                @if (branding().thermalDualCopy) {
-                  <div class="text-center text-[8px] font-black uppercase tracking-[0.14em] border border-slate-900 bg-slate-100 py-0.5 px-2">
-                    CUSTOMER / STUDENT COPY · (+ OFFICE COPY ON PRINT)
-                  </div>
-                }
-                @for (secKey of branding().sectionOrder; track secKey) {
-                  @if (!hiddenSectionSet().has(secKey)) {
-                    @switch (secKey) {
-                      @case ('header') {
-                        <div
-                          class="flex gap-2 pb-2 border-b border-slate-200"
-                          [class]="branding().logoPlacement === 'top'
-                            ? (branding().headerAlign === 'left'
-                              ? 'flex-col items-start text-left'
-                              : (branding().headerAlign === 'right' ? 'flex-col items-end text-right' : 'flex-col items-center text-center'))
-                            : (branding().logoPlacement === 'right' ? 'flex-row-reverse items-center text-right' : 'flex-row items-center text-left')"
-                        >
-                          @if (branding().showLogoCrest !== false) {
-                            @if (safeLogoUrl()) {
-                              <div class="border border-slate-900 rounded-md p-1 bg-white shrink-0">
-                                <img
-                                  [src]="safeLogoUrl()"
-                                  alt="School Logo"
-                                  referrerpolicy="no-referrer"
-                                  class="w-10 h-10 object-contain block"
-                                />
-                              </div>
-                            } @else {
-                              <div class="px-2.5 py-1 border-2 border-slate-950 rounded-md text-xs font-black tracking-widest uppercase shrink-0">
-                                {{ monogramText() }}
-                              </div>
-                            }
-                          }
-                          <div class="min-w-0">
-                            <div class="text-xs font-black uppercase tracking-tight leading-tight">{{ branding().schoolName }}</div>
-                            @if (branding().campusTagline) {
-                              <div class="text-[8px] font-bold uppercase text-slate-600">{{ branding().campusTagline }}</div>
-                            }
-                            @if (branding().address) {
-                              <div class="text-[9px] text-slate-600">{{ branding().address }}</div>
-                            }
-                            @if (branding().phone) {
-                              <div class="text-[9px] text-slate-600">Tel: {{ branding().phone }}</div>
-                            }
-                          </div>
-                        </div>
-                      }
+            </div>
+          }
 
-                      @case ('meta') {
-                        <div>
-                          <div class="border-y-2 border-slate-950 py-1 flex items-center justify-between gap-2">
-                            <span class="text-[9px] font-black uppercase tracking-wider truncate">{{ effectiveTitle() }}</span>
-                            <span class="px-1.5 py-0.5 bg-slate-950 text-white text-[8px] font-black uppercase rounded-xs shrink-0">
-                              {{ stampBadgeLabel() }}
-                            </span>
-                          </div>
-                          <div class="py-2 space-y-1 text-[10px] border-b border-dashed border-slate-400">
-                            <div class="flex justify-between gap-2">
-                              <span class="text-slate-600">{{ isSingleRecord() ? 'Slip Ref' : 'Statement Ref' }}</span>
-                              <span class="font-bold font-mono">{{ statementRef() }}</span>
-                            </div>
-                            @if (!isSingleRecord()) {
-                              <div class="flex justify-between gap-2">
-                                <span class="text-slate-600">Date Range</span>
-                                <span class="font-bold">{{ (fromDate() || 'Start') + ' → ' + (toDate() || 'Latest') }}</span>
-                              </div>
-                              @if (searchQuery().trim()) {
-                                <div class="flex justify-between gap-2">
-                                  <span class="text-slate-600">Filter</span>
-                                  <span class="font-bold truncate max-w-[160px]">{{ searchQuery().trim() }}</span>
-                                </div>
-                              }
-                              <div class="flex justify-between gap-2">
-                                <span class="text-slate-600">Records</span>
-                                <span class="font-bold">{{ filteredRows().length }} / {{ data.rows.length }}</span>
-                              </div>
-                            }
-                            <div class="flex justify-between gap-2">
-                              <span class="text-slate-600">Printed At</span>
-                              <span class="font-bold">{{ issuedAtLabel() }}</span>
-                            </div>
-                          </div>
-                        </div>
-                      }
-
-                      @case ('person') {
-                        <div class="py-1.5 border-b border-dashed border-slate-400 space-y-1.5">
-                          <div class="text-[8px] font-black uppercase tracking-wider text-slate-700">
-                            {{ isSingleRecord() ? 'RECORD PARTICULARS' : 'ITEMIZED ENTRIES' }}
-                          </div>
-                          @if (isSingleRecord()) {
-                            @for (fld of singleRecordTextFields(); track $index) {
-                              <div class="flex justify-between items-baseline gap-2 py-0.5 border-b border-dotted border-slate-200 last:border-b-0 text-[10px]">
-                                <span class="text-slate-600 shrink-0 inline-flex items-center gap-1">
-                                  @if (effectiveTable().showFieldLogos) {
-                                    <span class="w-1.5 h-1.5 bg-slate-900 rounded-xs inline-block"></span>
-                                  }
-                                  <span>{{ fld.label }}</span>
-                                </span>
-                                <span class="font-bold text-slate-950 text-right break-words">{{ fld.value }}</span>
-                              </div>
-                            } @empty {
-                              <p class="text-center py-2 font-bold text-slate-500">See amount summary below.</p>
-                            }
-                          } @else {
-                            @for (item of thermalPreviewRows(); track $index) {
-                              <div class="py-1 border-b border-dotted border-slate-300 last:border-b-0">
-                                <div class="flex justify-between items-baseline gap-2">
-                                  <span class="font-extrabold text-slate-950 truncate inline-flex items-center gap-1">
-                                    @if (effectiveTable().showFieldLogos) {
-                                      <span class="w-1.5 h-1.5 bg-slate-900 rounded-xs inline-block shrink-0"></span>
-                                    }
-                                    <span>{{ $index + 1 }}. {{ item.primary }}</span>
-                                  </span>
-                                  @if (item.amount) {
-                                    <span class="font-mono font-black shrink-0">{{ item.amount }}</span>
-                                  }
-                                </div>
-                                @if (item.meta) {
-                                  <div class="text-[9px] text-slate-600 leading-snug">{{ item.meta }}</div>
-                                }
-                              </div>
-                            } @empty {
-                              <p class="text-center py-3 font-bold text-slate-500">No matching records found.</p>
-                            }
-                            @if (filteredRows().length > 40) {
-                              <p class="text-[9px] text-center text-slate-500 font-semibold pt-1">
-                                + {{ filteredRows().length - 40 }} more row(s) included on print (up to 120 rows)
-                              </p>
-                            }
-                          }
-                        </div>
-                      }
-
-                      @case ('amounts') {
-                        @if (amountSummary().amountColumns.length > 0) {
-                          <div class="py-1.5 space-y-1">
-                            <div class="text-[8px] font-black uppercase tracking-wider text-slate-700">AMOUNT SUMMARY</div>
-                            @for (col of amountSummary().amountColumns; track col.colIndex) {
-                              <div class="flex justify-between gap-2 text-[10px]">
-                                <span class="text-slate-700 font-semibold inline-flex items-center gap-1">
-                                  @if (effectiveTable().showFieldLogos) {
-                                    <span class="w-1.5 h-1.5 bg-slate-900 rounded-xs inline-block"></span>
-                                  }
-                                  <span>{{ col.label }}</span>
-                                </span>
-                                <span class="font-mono font-bold">{{ amountSummary().currency }} {{ formatMoney(col.total) }}</span>
-                              </div>
-                            }
-                            <div class="mt-2 bg-slate-950 text-white px-2.5 py-1.5 flex items-center justify-between font-black text-xs">
-                              <span>{{ isSingleRecord() ? 'TOTAL AMOUNT' : (amountSummary().hasInflowOutflowSplit ? 'NET BALANCE' : 'STATEMENT TOTAL') }}</span>
-                              <span class="font-mono">{{ amountSummary().currency }} {{ formatMoney(amountSummary().primaryTotal) }}</span>
-                            </div>
-                          </div>
-                        }
-                      }
-
-                      @case ('verification') {
-                        @if (branding().showBarcodeVerification !== false || branding().showQrVerification !== false) {
-                          <div class="pt-2.5 mt-1 border-t border-dashed border-slate-400 flex flex-col items-center gap-2 text-center">
-                            <span class="text-[8px] font-black uppercase tracking-widest text-slate-700">VERIFICATION</span>
-                            <div
-                              class="flex flex-col items-center gap-2"
-                              [class]="branding().verificationOrder === 'qr_first' ? 'flex-col-reverse' : 'flex-col'"
-                            >
-                              @if (branding().showBarcodeVerification !== false) {
-                                <app-school-barcode [value]="statementRef()" [height]="24" [barWidth]="1.05" />
-                              }
-                              @if (branding().showQrVerification !== false) {
-                                <app-school-qr-code [value]="qrPayload()" [size]="56" />
-                              }
-                            </div>
-                          </div>
-                        }
-                      }
-
-                      @case ('footer') {
-                        <div>
-                          <div class="mt-2 pt-1.5 border-t border-slate-900 text-center text-[8px] font-black uppercase tracking-wider">
-                            {{ branding().signatoryTitle || 'Accounts Officer' }}
-                          </div>
-                          <div class="text-center text-[8px] text-slate-500 mt-1">
-                            {{ branding().footerNote }} ({{ activeFormat().toUpperCase() }})
-                          </div>
-                          @if (effectiveTable().showWatermark) {
-                            <div class="text-center text-[7px] font-black uppercase tracking-[0.2em] text-slate-400 mt-1">
-                              *** {{ branding().schoolName }} · OFFICIAL SLIP ***
-                            </div>
-                          }
-                        </div>
-                      }
-                    }
-                  }
-                }
-              </div>
-            } @else if (activeFormat() === 'card') {
-              <!-- Digital QR & Verification Record Card Preview -->
-              <div
-                class="mx-auto max-w-2xl bg-white rounded-2xl border-2 shadow-sm overflow-hidden text-slate-900 relative"
-                [style.border-color]="branding().headerAccentColor || '#0f172a'"
-              >
-                @if (effectiveTable().showWatermark) {
-                  <div class="pointer-events-none select-none absolute inset-0 flex items-center justify-center opacity-[0.04] z-0">
-                    <span class="text-4xl font-black uppercase tracking-[0.22em] -rotate-20 text-slate-900">
-                      {{ branding().schoolName }}
+          <!-- Scrollable Modal Body (Matches Client Overview HiOS/iOS 3D White Canvas) -->
+          <main #previewViewport class="flex-1 min-h-0 overflow-y-auto bg-white p-4 sm:p-6 custom-scroll">
+            @if ((activeFormat() === 'a4' || activeFormat() === 'card') && isSingleRecord()) {
+              <!-- SUPERADMIN EYE-CLICK POPUP 2-PANEL DESIGN -->
+              <section class="grid gap-5 lg:grid-cols-[1fr_290px]">
+                <!-- Left Panel: Clean Record Identity & Particulars -->
+                <div class="rounded-2xl bg-white p-5 shadow-xs border border-slate-200/70">
+                  <div class="flex items-center justify-between gap-2 pb-3.5 border-b border-slate-100">
+                    <div class="min-w-0">
+                      <p class="text-[10px] font-black uppercase tracking-widest text-emerald-600">
+                        {{ activeFormat() === 'card' ? 'Digital Verification Pass' : 'Record Particulars' }}
+                      </p>
+                      <h3 class="text-base font-black text-slate-900 truncate">{{ effectiveTitle() }}</h3>
+                    </div>
+                    <span class="rounded-lg bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-700 border border-emerald-200/70 shrink-0">
+                      {{ primaryStatusValue() || 'Verified Record' }}
                     </span>
                   </div>
-                }
 
-                <div class="relative z-10">
-                  @if (!hiddenSectionSet().has('header')) {
-                    <div
-                      class="px-5 py-4 text-white flex items-center justify-between gap-3"
-                      [style.background-color]="branding().headerAccentColor || '#0f172a'"
-                    >
+                  <div class="mt-4 grid gap-3 sm:grid-cols-2">
+                    @for (fld of singleRecordFields(); track $index) {
                       <div
-                        class="flex items-center gap-3 min-w-0 flex-1"
-                        [class]="branding().logoPlacement === 'right' ? 'flex-row-reverse text-right' : 'flex-row text-left'"
+                        class="rounded-xl bg-white border border-slate-200/80 p-3.5"
+                        [class.sm:col-span-2]="isLongCardText(fld.value)"
                       >
-                        @if (branding().showLogoCrest !== false) {
-                          @if (safeLogoUrl()) {
-                            <div class="bg-white rounded-lg p-1 shrink-0">
-                              <img
-                                [src]="safeLogoUrl()"
-                                alt="School Logo"
-                                referrerpolicy="no-referrer"
-                                class="w-10 h-10 object-contain block"
-                              />
-                            </div>
-                          } @else {
-                            <div class="px-2.5 py-1.5 rounded-lg bg-white/15 border border-white/40 font-black text-xs tracking-widest uppercase shrink-0">
-                              {{ monogramText() }}
-                            </div>
-                          }
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                          {{ fld.label }}
+                        </p>
+                        @if (fld.isStatus) {
+                          <div class="mt-1.5">
+                            <span [class]="getStatusPillClass(fld.value)">{{ fld.value }}</span>
+                          </div>
+                        } @else {
+                          <p
+                            class="mt-1 text-sm break-words leading-snug"
+                            [class]="fld.isAmount ? 'font-mono font-black text-emerald-700' : 'font-bold text-slate-900'"
+                          >
+                            {{ fld.value }}
+                          </p>
                         }
-                        <div class="min-w-0">
-                          <h4 class="text-sm sm:text-base font-black uppercase tracking-tight truncate">{{ branding().schoolName }}</h4>
-                          @if (branding().campusTagline) {
-                            <p class="text-[10px] font-bold uppercase tracking-wider text-white/80 truncate">{{ branding().campusTagline }}</p>
-                          }
-                        </div>
                       </div>
-                      <span class="px-2.5 py-1 rounded-md bg-white/15 border border-white/40 text-[10px] font-black uppercase tracking-wider shrink-0">
-                        {{ stampBadgeLabel() }} PASS
+                    }
+                  </div>
+
+                  @if (amountSummary().amountColumns.length > 0) {
+                    <div class="mt-4 rounded-xl bg-gradient-to-r from-emerald-50 via-teal-50/70 to-white border border-emerald-200/70 p-3.5 flex items-center justify-between gap-3 flex-wrap">
+                      <div>
+                        <p class="text-[10px] font-black uppercase tracking-wider text-emerald-700">Verified Total Amount</p>
+                        <p class="text-xs font-semibold text-slate-500 mt-0.5">{{ issuedAtLabel() }}</p>
+                      </div>
+                      <span class="text-lg font-mono font-black text-emerald-700">
+                        {{ amountSummary().currency }} {{ formatMoney(amountSummary().primaryTotal) }}
                       </span>
                     </div>
                   }
+                </div>
 
-                  <div class="p-5 space-y-4">
-                    @if (!hiddenSectionSet().has('meta')) {
-                      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-dashed border-slate-300">
-                        <div class="space-y-1 min-w-0">
-                          <h5 class="text-sm sm:text-base font-black text-slate-950">{{ effectiveTitle() }}</h5>
-                          <p class="text-xs font-mono font-bold text-slate-600">Ref: {{ statementRef() }}</p>
-                          <p class="text-[11px] text-slate-500">Issued: {{ issuedAtLabel() }} · {{ data.roleLabel }}</p>
-                        </div>
-                        @if (!hiddenSectionSet().has('verification') && branding().showQrVerification !== false) {
-                          <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-center shrink-0 self-start sm:self-center">
-                            <app-school-qr-code [value]="qrPayload()" [size]="84" />
-                            <span class="block text-[8px] font-black uppercase tracking-widest text-slate-500 mt-1">SCAN TO VERIFY</span>
-                          </div>
+                <!-- Right Panel: Verification Code, Quick Actions & Export -->
+                <div class="rounded-2xl bg-white p-5 shadow-xs border border-slate-200/70 flex flex-col justify-between gap-4">
+                  <div class="space-y-3.5">
+                    <div>
+                      <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Print &amp; Verification</p>
+                      <h3 class="text-base font-black text-slate-900">Quick Actions</h3>
+                    </div>
+
+                    @if (branding().showQrVerification !== false || branding().showBarcodeVerification !== false) {
+                      <div class="rounded-xl bg-slate-50/80 border border-slate-200/80 p-3 flex flex-col items-center gap-2 text-center">
+                        @if (branding().showQrVerification !== false) {
+                          <app-school-qr-code [value]="qrPayload()" [size]="84" />
                         }
+                        @if (branding().showBarcodeVerification !== false) {
+                          <app-school-barcode [value]="statementRef()" [height]="22" [barWidth]="0.95" />
+                        }
+                        <span class="font-mono text-[10px] font-bold text-slate-500">{{ statementRef() }}</span>
                       </div>
                     }
 
-                    @if (!hiddenSectionSet().has('person') && singleRecordFields().length > 0) {
-                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                        @for (fld of singleRecordFields(); track $index) {
-                          <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
-                            <span class="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider text-slate-500">
-                              @if (effectiveTable().showFieldLogos) {
-                                @if (safeLogoUrl()) {
-                                  <img [src]="safeLogoUrl()" alt="" referrerpolicy="no-referrer" class="w-3 h-3 object-contain rounded-xs shrink-0" />
-                                } @else {
-                                  <span class="px-1 rounded text-[7px] font-black text-white shrink-0" [style.background-color]="branding().headerAccentColor || '#0f172a'">{{ monogramText().slice(0, 2) }}</span>
-                                }
-                              }
-                              <span>{{ fld.label }}</span>
-                            </span>
-                            <span
-                              class="block mt-0.5 break-words"
-                              [class]="fld.isAmount ? 'font-mono font-black text-xs text-slate-950' : 'font-bold text-xs text-slate-900'"
-                            >
-                              {{ fld.value }}
-                            </span>
-                          </div>
-                        }
-                      </div>
-                    } @else if (!hiddenSectionSet().has('amounts') && amountSummary().amountColumns.length > 0) {
-                      <div class="grid grid-cols-2 gap-2.5">
-                        @for (col of amountSummary().amountColumns; track col.colIndex) {
-                          <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
-                            <span class="block text-[9px] font-black uppercase tracking-wider text-slate-500">{{ col.label }}</span>
-                            <span class="block font-mono font-black text-sm text-slate-950 mt-0.5">{{ amountSummary().currency }} {{ formatMoney(col.total) }}</span>
-                          </div>
-                        }
-                      </div>
-                    }
+                    <div class="space-y-2">
+                      <button
+                        type="button"
+                        (click)="printCurrentFormat()"
+                        [disabled]="isPrinting()"
+                        class="w-full rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 px-4 py-2.5 text-xs font-bold text-white shadow-xs disabled:opacity-50 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        <mat-icon class="!text-[16px] !w-4 !h-4">print</mat-icon>
+                        <span>{{ isPrinting() ? 'Printing...' : (activeFormat() === 'card' ? 'Print QR Card' : 'Print Record Card') }}</span>
+                      </button>
 
-                    @if (!hiddenSectionSet().has('footer') || !hiddenSectionSet().has('verification')) {
-                      <div class="pt-3 border-t border-dashed border-slate-300 flex flex-col sm:flex-row sm:items-end justify-between gap-3">
-                        <div>
-                          @if (!hiddenSectionSet().has('verification') && branding().showBarcodeVerification !== false) {
-                            <app-school-barcode [value]="statementRef()" [height]="26" [barWidth]="1.15" />
-                          }
-                          @if (!hiddenSectionSet().has('footer')) {
-                            <p class="text-[10px] text-slate-500 mt-1">{{ branding().footerNote }}</p>
-                          }
-                        </div>
-                        @if (!hiddenSectionSet().has('footer')) {
-                          <div class="border-t border-slate-900 pt-1 min-w-[170px] text-left sm:text-right text-[10px] font-black uppercase tracking-wider text-slate-900">
-                            {{ branding().signatoryTitle || 'Principal & Accounts Directorate' }}
-                          </div>
-                        }
-                      </div>
+                      <button
+                        type="button"
+                        (click)="selectFormat('80mm')"
+                        class="w-full rounded-xl bg-emerald-600 hover:bg-emerald-700 px-4 py-2.5 text-xs font-bold text-white shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        <mat-icon class="!text-[16px] !w-4 !h-4">receipt</mat-icon>
+                        <span>Open 80mm POS Slip</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        (click)="downloadFilteredCardsPdf()"
+                        class="w-full rounded-xl bg-slate-900 hover:bg-slate-800 px-4 py-2.5 text-xs font-bold text-white shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        <mat-icon class="!text-[16px] !w-4 !h-4">picture_as_pdf</mat-icon>
+                        <span>Download Record PDF</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        (click)="sendWhatsApp()"
+                        class="w-full rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-4 py-2.5 text-xs font-bold text-emerald-700 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        <mat-icon class="!text-[16px] !w-4 !h-4">chat</mat-icon>
+                        <span>Send WhatsApp</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="pt-3 border-t border-slate-100 space-y-2">
+                    <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Export Record</p>
+                    <div class="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        (click)="downloadFilteredCsv()"
+                        class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                      >
+                        <mat-icon class="!text-[15px] !w-[15px] !h-[15px] text-emerald-600">download</mat-icon>
+                        <span>CSV</span>
+                      </button>
+                      <button
+                        type="button"
+                        (click)="copyRecordSummary()"
+                        class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                      >
+                        <mat-icon class="!text-[15px] !w-[15px] !h-[15px] text-slate-600">content_copy</mat-icon>
+                        <span>Copy</span>
+                      </button>
+                    </div>
+                    @if (branding().signatoryTitle) {
+                      <p class="pt-1 text-center text-[10px] font-semibold text-slate-400 truncate">
+                        {{ branding().signatoryTitle }}
+                      </p>
                     }
                   </div>
                 </div>
-              </div>
+              </section>
+            } @else if (activeFormat() === 'a4' || activeFormat() === 'card') {
+              <!-- MULTI-ROW REGISTER STATEMENT IN SAME HiOS/iOS 3D CARD STYLE -->
+              <section class="space-y-4">
+                <div class="rounded-2xl bg-white p-5 shadow-xs border border-slate-200/70 space-y-4">
+                  <div class="flex flex-wrap items-center justify-between gap-3 pb-3.5 border-b border-slate-100">
+                    <div class="min-w-0">
+                      <p class="text-[10px] font-black uppercase tracking-widest text-emerald-600">Campus Statement Register</p>
+                      <h3 class="text-base font-black text-slate-900 truncate">{{ effectiveTitle() }}</h3>
+                      <p class="text-xs font-semibold text-slate-500 mt-0.5">{{ criteriaSubtitle() }}</p>
+                    </div>
+                    <div class="flex items-center gap-2 flex-wrap shrink-0">
+                      <button
+                        type="button"
+                        (click)="downloadFilteredTablePdf()"
+                        class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer shadow-xs"
+                      >
+                        <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">picture_as_pdf</mat-icon>
+                        <span>Table PDF</span>
+                      </button>
+                      <button
+                        type="button"
+                        (click)="downloadFilteredCardsPdf()"
+                        class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <mat-icon class="!text-[15px] !w-[15px] !h-[15px] text-emerald-600">view_agenda</mat-icon>
+                        <span>Cards PDF</span>
+                      </button>
+                      <button
+                        type="button"
+                        (click)="downloadFilteredCsv()"
+                        class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <mat-icon class="!text-[15px] !w-[15px] !h-[15px] text-slate-600">download</mat-icon>
+                        <span>CSV</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="rounded-xl border border-slate-200/80 overflow-hidden bg-white">
+                    <div class="overflow-x-auto">
+                      <table class="w-full text-left border-collapse text-xs tabular-nums">
+                        <thead class="bg-slate-50 text-slate-700 uppercase font-black text-[10px] border-b border-slate-200">
+                          <tr>
+                            <th class="px-3 py-2.5 border-r border-slate-200/80">#</th>
+                            @for (hdr of data.headers; track $index) {
+                              <th
+                                class="px-3 py-2.5 border-r border-slate-200/80 last:border-r-0 whitespace-nowrap"
+                                [class.text-right]="amountColIndexSet().has($index)"
+                              >
+                                {{ hdr }}
+                              </th>
+                            }
+                          </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                          @for (row of filteredRows(); track $index) {
+                            <tr class="hover:bg-emerald-50/35 transition-colors" [class.bg-slate-50/40]="$odd">
+                              <td class="px-3 py-2 font-mono text-slate-500 border-r border-slate-100">{{ $index + 1 }}</td>
+                              @for (hdr of data.headers; track $index; let cIdx = $index) {
+                                <td
+                                  class="px-3 py-2 border-r border-slate-100 last:border-r-0 text-slate-800 font-medium"
+                                  [class.text-right]="amountColIndexSet().has(cIdx)"
+                                  [class.font-mono]="amountColIndexSet().has(cIdx)"
+                                  [class.font-bold]="amountColIndexSet().has(cIdx)"
+                                >
+                                  {{ row[cIdx] || '—' }}
+                                </td>
+                              }
+                            </tr>
+                          } @empty {
+                            <tr>
+                              <td [attr.colspan]="data.headers.length + 1" class="px-4 py-8 text-center text-slate-500 font-bold">
+                                No records match your current search or date range filter.
+                              </td>
+                            </tr>
+                          }
+                        </tbody>
+                        @if (filteredRows().length > 0 && amountSummary().amountColumns.length > 0) {
+                          <tfoot class="bg-slate-900 text-white font-black text-xs">
+                            <tr>
+                              <td class="px-3 py-2.5">TOTAL</td>
+                              @for (hdr of data.headers; track $index; let cIdx = $index) {
+                                @if (amountColumnByIndex().get(cIdx); as sumCol) {
+                                  <td class="px-3 py-2.5 text-right font-mono whitespace-nowrap">
+                                    {{ amountSummary().currency }} {{ formatMoney(sumCol.total) }}
+                                  </td>
+                                } @else {
+                                  <td class="px-3 py-2.5 opacity-80">
+                                    {{ cIdx === 0 ? filteredRows().length + ' Rows' : '' }}
+                                  </td>
+                                }
+                              }
+                            </tr>
+                          </tfoot>
+                        }
+                      </table>
+                    </div>
+                  </div>
+
+                  @if (amountSummary().amountColumns.length > 0 || branding().showQrVerification !== false || branding().showBarcodeVerification !== false) {
+                    <div class="pt-2 flex items-center justify-between gap-4 flex-wrap">
+                      @if (amountSummary().amountColumns.length > 0) {
+                        <div class="rounded-xl bg-emerald-50 border border-emerald-200/80 px-4 py-2.5 flex items-center gap-3">
+                          <span class="text-[10px] font-black uppercase tracking-wider text-emerald-700">
+                            {{ amountSummary().hasInflowOutflowSplit ? 'Net Balance' : 'Statement Total' }}
+                          </span>
+                          <span class="text-base font-mono font-black text-emerald-800">
+                            {{ amountSummary().currency }} {{ formatMoney(amountSummary().primaryTotal) }}
+                          </span>
+                        </div>
+                      }
+                      <div class="flex items-center gap-3 ml-auto">
+                        @if (branding().showBarcodeVerification !== false) {
+                          <app-school-barcode [value]="statementRef()" [height]="22" [barWidth]="0.95" />
+                        }
+                        @if (branding().showQrVerification !== false) {
+                          <app-school-qr-code [value]="qrPayload()" [size]="46" />
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+              </section>
+            } @else if (activeFormat() === '80mm' || activeFormat() === '58mm') {
+              <!-- 1:1 THERMAL POS SLIP IN OFFICIAL CHALLAN 3D CARD LAYOUT -->
+              <section class="flex flex-col items-center gap-4">
+                <div class="w-full rounded-2xl bg-slate-50/75 border border-slate-200/70 p-4 sm:p-6 flex flex-col items-center gap-3">
+                  <div
+                    class="p-4 sm:p-5 rounded-2xl bg-white flex flex-col justify-between text-slate-900 space-y-3.5 scs-tile-3d border border-slate-200/90 transition-all tabular-nums relative font-sans"
+                    [class]="activeFormat() === '58mm' ? 'w-full max-w-[276px] text-[10px]' : 'w-full max-w-[356px] text-[11px]'"
+                  >
+                    @for (secKey of branding().sectionOrder; track secKey) {
+                      @if (!hiddenSectionSet().has(secKey)) {
+                        @switch (secKey) {
+                          @case ('header') {
+                            <div class="space-y-2.5">
+                              @if (branding().thermalDualCopy) {
+                                <div class="flex items-center justify-between gap-2">
+                                  <span class="text-[9.5px] font-black uppercase px-2.5 py-1 rounded-md bg-gradient-to-r from-emerald-600 to-teal-600 text-white tracking-wide shrink-0">
+                                    STUDENT / GUARDIAN COPY
+                                  </span>
+                                  <span class="text-[9.5px] font-mono font-bold text-slate-500 uppercase tracking-tight">
+                                    {{ activeFormat().toUpperCase() }} SLIP
+                                  </span>
+                                </div>
+                              }
+
+                              <!-- Top Corners Row: Logo in One Corner, QR Scanner in Opposite Top Corner -->
+                              <div
+                                class="flex items-start justify-between gap-2.5"
+                                [class]="branding().logoPlacement === 'right' ? 'flex-row-reverse' : 'flex-row'"
+                              >
+                                @if (safeLogoUrl() && branding().showLogoCrest !== false) {
+                                  <img
+                                    [src]="safeLogoUrl()"
+                                    alt="School logo"
+                                    referrerpolicy="no-referrer"
+                                    [style.width.px]="branding().logoSizePx || 44"
+                                    [style.height.px]="branding().logoSizePx || 44"
+                                    class="object-contain rounded-lg border border-slate-200 bg-white p-0.5 shrink-0 shadow-2xs"
+                                  />
+                                } @else if (branding().showLogoCrest !== false) {
+                                  <div class="w-10 h-10 rounded-lg border border-slate-300 bg-slate-50 text-slate-900 font-black text-[11px] flex items-center justify-center shrink-0 tracking-wider shadow-2xs">
+                                    {{ monogramText() }}
+                                  </div>
+                                } @else {
+                                  <span class="shrink-0"></span>
+                                }
+
+                                @if (branding().showQrVerification !== false) {
+                                  <div class="shrink-0 bg-white p-1 rounded-lg border border-slate-200 shadow-2xs">
+                                    <app-school-qr-code
+                                      [value]="qrPayload()"
+                                      [size]="activeFormat() === '58mm' ? 42 : 48"
+                                    />
+                                  </div>
+                                }
+                              </div>
+
+                              <!-- Centered Institution Header Below Corners -->
+                              <div
+                                class="space-y-0.5 pt-0.5"
+                                [class]="branding().headerAlign === 'left'
+                                  ? 'text-left'
+                                  : (branding().headerAlign === 'right' ? 'text-right' : 'text-center')"
+                              >
+                                <div class="font-black text-[13px] uppercase tracking-tight leading-tight text-slate-950">
+                                  {{ branding().schoolName }}
+                                </div>
+                                @if (branding().campusTagline) {
+                                  <div class="text-[9px] uppercase font-bold tracking-wide text-slate-500 leading-tight">
+                                    {{ branding().campusTagline }}
+                                  </div>
+                                }
+                                @if (branding().registrationNo) {
+                                  <div class="text-[9.5px] font-mono text-slate-500 pt-0.5">{{ branding().registrationNo }}</div>
+                                }
+                                @if (branding().address) {
+                                  <div class="text-[10px] font-medium text-slate-600 leading-snug">{{ branding().address }}</div>
+                                }
+                                @if (branding().phone) {
+                                  <div class="text-[10px] font-mono font-bold text-slate-800">Tel: {{ branding().phone }}</div>
+                                }
+                              </div>
+
+                              <!-- Challan-Style Copy / Title + Status Badge Row -->
+                              <div class="flex items-center justify-between gap-2 pt-1.5 border-t border-slate-100">
+                                <span class="text-[9.5px] font-black uppercase px-2.5 py-1 rounded-md bg-gradient-to-r from-emerald-600 to-teal-600 text-white tracking-wide truncate">
+                                  {{ effectiveTitle() }}
+                                </span>
+                                @if (branding().stampLabel !== 'NONE') {
+                                  <span class="text-[10px] font-mono font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md shrink-0 uppercase">
+                                    {{ branding().stampLabel }}
+                                  </span>
+                                }
+                              </div>
+                            </div>
+                          }
+
+                          @case ('meta') {
+                            <div class="space-y-1.5 text-[11px]">
+                              <div class="flex justify-between items-center gap-3">
+                                <span class="text-slate-500 font-bold shrink-0">{{ isSingleRecord() ? 'Slip Ref:' : 'Statement Ref:' }}</span>
+                                <span class="font-mono font-black text-slate-950 text-right">{{ statementRef() }}</span>
+                              </div>
+                              <div class="flex justify-between items-center gap-3">
+                                <span class="text-slate-500 font-bold shrink-0">Date:</span>
+                                <span class="font-mono font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md text-right">{{ issuedAtLabel() }}</span>
+                              </div>
+                            </div>
+                          }
+
+                          @case ('person') {
+                            <div class="border-t border-slate-100 pt-2.5 space-y-1.5">
+                              <div class="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                                {{ isSingleRecord() ? 'Record Particulars' : 'Itemized Entries' }}
+                              </div>
+                              @if (isSingleRecord()) {
+                                @for (fld of singleRecordTextFields(); track $index) {
+                                  @if (isLongThermalText(fld.value)) {
+                                    <div class="rounded-xl bg-slate-50/85 border border-slate-200/70 p-2.5 space-y-1">
+                                      <div class="text-[9.5px] font-bold text-slate-500 uppercase tracking-wide inline-flex items-center gap-1">
+                                        @if (effectiveTable().showFieldLogos) {
+                                          <span class="w-1.5 h-1.5 bg-emerald-600 rounded-full inline-block"></span>
+                                        }
+                                        <span>{{ fld.label }}</span>
+                                      </div>
+                                      <div class="text-[11px] font-semibold text-slate-900 leading-relaxed break-words">{{ fld.value }}</div>
+                                    </div>
+                                  } @else {
+                                    <div class="flex justify-between items-baseline gap-3 text-[11px]">
+                                      <span class="text-slate-500 font-bold shrink-0 inline-flex items-center gap-1">
+                                        @if (effectiveTable().showFieldLogos) {
+                                          <span class="w-1.5 h-1.5 bg-emerald-600 rounded-full inline-block"></span>
+                                        }
+                                        <span>{{ fld.label }}:</span>
+                                      </span>
+                                      <span class="font-black text-slate-950 text-right break-words">{{ fld.value }}</span>
+                                    </div>
+                                  }
+                                } @empty {
+                                  <p class="text-center py-2 font-bold text-slate-500">See amount summary below.</p>
+                                }
+                              } @else {
+                                @for (item of thermalPreviewRows(); track $index) {
+                                  <div class="py-1.5 border-b border-slate-100 last:border-b-0">
+                                    <div class="flex justify-between items-baseline gap-2 text-[11px]">
+                                      <span class="font-black text-slate-950 truncate">{{ $index + 1 }}. {{ item.primary }}</span>
+                                      @if (item.amount) {
+                                        <span class="font-mono font-black text-indigo-700 shrink-0">{{ item.amount }}</span>
+                                      }
+                                    </div>
+                                    @if (item.meta) {
+                                      <div class="text-[10px] font-medium text-slate-500 leading-snug mt-0.5">{{ item.meta }}</div>
+                                    }
+                                  </div>
+                                } @empty {
+                                  <p class="text-center py-3 font-bold text-slate-500">No matching records found.</p>
+                                }
+                              }
+                            </div>
+                          }
+
+                          @case ('amounts') {
+                            @if (amountSummary().amountColumns.length > 0) {
+                              <div class="border-t border-slate-100 pt-2.5 space-y-2.5">
+                                <div class="space-y-1.5 text-[11px]">
+                                  <div class="flex justify-between items-center text-[10px] font-black uppercase tracking-wider text-slate-400">
+                                    <span>Fee / Amount Description</span>
+                                    <span>Amount ({{ amountSummary().currency }})</span>
+                                  </div>
+                                  @for (col of amountSummary().amountColumns; track col.colIndex) {
+                                    <div class="flex justify-between items-center gap-3">
+                                      <span class="text-slate-700 font-medium shrink-0">{{ col.label }}</span>
+                                      <span class="font-mono font-black text-slate-950 text-right">{{ formatMoney(col.total) }}</span>
+                                    </div>
+                                  }
+                                </div>
+                                <div class="rounded-xl p-3 bg-gradient-to-r from-indigo-50 via-emerald-50/70 to-rose-50/60 border border-emerald-100/80 space-y-1">
+                                  <div class="flex justify-between items-center gap-2">
+                                    <span class="text-[11px] font-black text-slate-950">{{ isSingleRecord() ? 'Total Verified Amount:' : 'Statement Total:' }}</span>
+                                    <span class="font-mono font-black text-sm text-indigo-950">{{ amountSummary().currency }} {{ formatMoney(amountSummary().primaryTotal) }}</span>
+                                  </div>
+                                </div>
+                                @if (branding().thermalDualCopy) {
+                                  <div class="text-center text-[9px] font-bold uppercase tracking-wider text-slate-500 border-t border-dashed border-slate-300 pt-1.5">
+                                    ✂ Tear / Cut — Office Copy Printed Below
+                                  </div>
+                                }
+                              </div>
+                            }
+                          }
+
+                          @case ('verification') {
+                            @if (branding().showBarcodeVerification !== false) {
+                              <div class="border-t border-slate-100 pt-2.5 text-center space-y-1.5">
+                                <div class="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                                  Verification
+                                </div>
+                                <div class="flex justify-center">
+                                  <app-school-barcode
+                                    [value]="statementRef()"
+                                    [label]="statementRef()"
+                                    [height]="activeFormat() === '58mm' ? 28 : 34"
+                                    [barWidth]="activeFormat() === '58mm' ? 1.05 : 1.25"
+                                  />
+                                </div>
+                              </div>
+                            }
+                          }
+
+                          @case ('footer') {
+                            <div class="border-t border-slate-100 pt-2.5 space-y-1.5 text-center">
+                              @if (branding().signatoryTitle) {
+                                <div class="pt-2">
+                                  <span class="inline-block min-w-[150px] border-t border-slate-300 pt-1 text-[9px] font-bold text-slate-600 uppercase tracking-wide">
+                                    {{ branding().signatoryTitle }}
+                                  </span>
+                                </div>
+                              }
+                              <p class="text-[9.5px] text-slate-500 font-medium leading-snug">
+                                {{ branding().footerNote }}
+                              </p>
+                              <div class="text-[8.5px] font-mono font-bold uppercase tracking-wider text-slate-400">
+                                {{ branding().website ? branding().website + ' · ' : '' }}{{ activeFormat().toUpperCase() }} POS
+                              </div>
+                              @if (effectiveTable().showWatermark) {
+                                <div class="text-[8px] font-black uppercase tracking-[0.18em] text-slate-300">
+                                  *** {{ branding().schoolName }} ***
+                                </div>
+                              }
+                            </div>
+                          }
+                        }
+                      }
+                    }
+                  </div>
+                  <span class="text-[10px] font-mono font-bold text-slate-500">
+                    School POS Thermal Slip · {{ activeFormat().toUpperCase() }} Roll
+                  </span>
+                </div>
+
+                <!-- Compact Quick Export Strip Below Receipt -->
+                <div class="flex flex-wrap items-center justify-center gap-2">
+                  <button
+                    type="button"
+                    (click)="downloadFilteredCardsPdf()"
+                    class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <mat-icon class="!text-[15px] !w-[15px] !h-[15px] text-emerald-600">picture_as_pdf</mat-icon>
+                    <span>PDF</span>
+                  </button>
+                  <button
+                    type="button"
+                    (click)="downloadFilteredCsv()"
+                    class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <mat-icon class="!text-[15px] !w-[15px] !h-[15px] text-slate-600">download</mat-icon>
+                    <span>CSV</span>
+                  </button>
+                  <button
+                    type="button"
+                    (click)="copyRecordSummary()"
+                    class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <mat-icon class="!text-[15px] !w-[15px] !h-[15px] text-slate-600">content_copy</mat-icon>
+                    <span>Copy</span>
+                  </button>
+                  <button
+                    type="button"
+                    (click)="sendWhatsApp()"
+                    class="px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">chat</mat-icon>
+                    <span>WhatsApp</span>
+                  </button>
+                </div>
+              </section>
             } @else {
-              <!-- WhatsApp Formatted Slip Preview & Direct Dispatch -->
-              <div class="mx-auto max-w-2xl bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
-                <div class="flex items-start justify-between gap-3">
+              <!-- WhatsApp Message Preview (Matches Client Overview Card) -->
+              <section class="mx-auto max-w-xl rounded-2xl bg-white p-5 shadow-xs border border-slate-200/70 space-y-4">
+                <div class="flex items-start justify-between gap-3 pb-3.5 border-b border-slate-100">
                   <div>
-                    <h4 class="text-sm font-black text-slate-950">WhatsApp Statement &amp; Rasheed Message</h4>
-                    <p class="text-xs text-slate-500">
-                      Formatted with school branding, filtered dates, and computed amount totals — ready to copy or open in WhatsApp.
-                    </p>
+                    <p class="text-[10px] font-black uppercase tracking-widest text-emerald-600">Direct Share</p>
+                    <h3 class="text-base font-black text-slate-900">WhatsApp Dispatch</h3>
+                    <p class="text-xs font-medium text-slate-500 mt-0.5">Copy or send formatted slip directly via WhatsApp.</p>
                   </div>
                   <button
                     type="button"
                     (click)="copyWhatsAppText()"
-                    class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs cursor-pointer inline-flex items-center gap-1.5 shrink-0"
+                    class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs cursor-pointer inline-flex items-center gap-1.5 shrink-0 shadow-xs"
                   >
                     <mat-icon class="!text-[15px] !w-3.5 !h-3.5">{{ copiedWhatsApp() ? 'check' : 'content_copy' }}</mat-icon>
-                    <span>{{ copiedWhatsApp() ? 'Copied!' : 'Copy Message' }}</span>
+                    <span>{{ copiedWhatsApp() ? 'Copied!' : 'Copy' }}</span>
                   </button>
                 </div>
 
-                <div>
-                  <label class="block text-[10px] font-black uppercase tracking-wider text-slate-600 mb-1">
-                    Recipient WhatsApp Number (Optional — leave blank to pick contact in WhatsApp)
-                  </label>
+                <label class="block">
+                  <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                    Recipient Phone (Optional)
+                  </span>
                   <input
                     type="tel"
                     [value]="whatsappPhone()"
                     (input)="onWhatsAppPhoneInput($event)"
                     placeholder="e.g. +92 300 1234567"
-                    class="w-full sm:w-72 px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 focus:border-emerald-500 outline-none text-xs font-mono font-bold text-slate-900"
+                    class="mt-1.5 w-full sm:w-72 rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs font-mono font-bold text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all"
                   />
-                </div>
+                </label>
 
-                <pre class="p-4 rounded-xl bg-emerald-50/50 border border-emerald-200 text-xs font-mono text-slate-900 whitespace-pre-wrap break-words max-h-[380px] overflow-y-auto leading-relaxed">{{ whatsappText() }}</pre>
-
-                <p class="text-[11px] text-slate-500">
-                  Tip: You can also download <strong>Table PDF</strong> or <strong>Cards PDF</strong> below to attach alongside this WhatsApp summary.
-                </p>
-              </div>
+                <pre class="p-4 rounded-xl bg-emerald-50/50 border border-emerald-200/80 text-xs font-mono text-slate-900 whitespace-pre-wrap break-words max-h-[320px] overflow-y-auto leading-relaxed">{{ whatsappText() }}</pre>
+              </section>
             }
-          </div>
+          </main>
 
-          <!-- Modal Action Footer -->
-          <div class="px-4 sm:px-6 py-3.5 bg-white border-t border-slate-200 flex flex-wrap items-center justify-between gap-2 shrink-0">
-            <div class="text-[11px] text-slate-500 font-medium">
-              Exports &amp; prints automatically reflect your active search &amp; date range filter.
+          <!-- Clean Minimal Footer (Matches SuperAdmin Client Overview Popup) -->
+          <footer class="shrink-0 border-t border-slate-200/80 bg-white px-5 py-3.5 sm:px-6 flex items-center justify-between gap-3">
+            @if (activeFormat() !== 'a4') {
+              <button
+                type="button"
+                (click)="selectFormat('a4')"
+                class="rounded-xl bg-slate-100 hover:bg-slate-200 px-4 py-2 text-xs font-bold text-slate-800 transition-all cursor-pointer inline-flex items-center gap-1.5"
+              >
+                <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">arrow_back</mat-icon>
+                <span>{{ isSingleRecord() ? 'Back to Card' : 'Back to Statement' }}</span>
+              </button>
+            } @else {
+              <button
+                type="button"
+                (click)="close()"
+                class="rounded-xl bg-slate-100 hover:bg-slate-200 px-4 py-2 text-xs font-bold text-slate-800 transition-all cursor-pointer inline-flex items-center gap-1.5"
+              >
+                <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">close</mat-icon>
+                <span>Close</span>
+              </button>
+            }
+
+            <div class="flex items-center gap-2">
+              @if (activeFormat() === 'whatsapp') {
+                <button
+                  type="button"
+                  (click)="sendWhatsApp()"
+                  class="rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 px-5 py-2 text-xs font-bold text-white shadow-xs transition-all cursor-pointer inline-flex items-center gap-1.5"
+                >
+                  <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">chat</mat-icon>
+                  <span>Send WhatsApp</span>
+                </button>
+              } @else {
+                <button
+                  type="button"
+                  (click)="printCurrentFormat()"
+                  [disabled]="isPrinting()"
+                  class="rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-60 px-5 py-2 text-xs font-bold text-white shadow-xs transition-all cursor-pointer inline-flex items-center gap-1.5"
+                >
+                  <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">print</mat-icon>
+                  <span>{{ isPrinting() ? 'Printing...' : primaryPrintLabel() }}</span>
+                </button>
+              }
             </div>
-            <div class="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                (click)="printCurrentFormat()"
-                class="px-3.5 py-2 rounded-xl bg-slate-950 hover:bg-slate-800 text-white font-black text-xs cursor-pointer inline-flex items-center gap-1.5 shadow-xs transition-all active:scale-95"
-              >
-                <mat-icon class="!text-[16px] !w-4 !h-4 text-emerald-300">print</mat-icon>
-                <span>
-                  {{ activeFormat() === '80mm' ? 'Print 80mm Rasheed' : (activeFormat() === '58mm' ? 'Print 58mm Rasheed' : (activeFormat() === 'card' ? 'Print QR Card' : (isSingleRecord() ? 'Print A4 Slip' : 'Print A4 Statement'))) }}
-                </span>
-              </button>
-
-              <button
-                type="button"
-                (click)="downloadFilteredTablePdf()"
-                class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs cursor-pointer inline-flex items-center gap-1.5 shadow-2xs transition-all active:scale-95"
-              >
-                <mat-icon class="!text-[15px] !w-3.5 !h-3.5">picture_as_pdf</mat-icon>
-                <span>Table PDF</span>
-              </button>
-
-              <button
-                type="button"
-                (click)="downloadFilteredCardsPdf()"
-                class="px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs cursor-pointer inline-flex items-center gap-1.5 shadow-2xs transition-all active:scale-95"
-              >
-                <mat-icon class="!text-[15px] !w-3.5 !h-3.5">view_agenda</mat-icon>
-                <span>Cards PDF</span>
-              </button>
-
-              <button
-                type="button"
-                (click)="downloadFilteredCsv()"
-                class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 font-bold text-xs cursor-pointer inline-flex items-center gap-1.5 transition-all active:scale-95"
-              >
-                <mat-icon class="!text-[15px] !w-3.5 !h-3.5">download</mat-icon>
-                <span>CSV</span>
-              </button>
-
-              <button
-                type="button"
-                (click)="copyWhatsAppText()"
-                class="px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold text-xs cursor-pointer inline-flex items-center gap-1.5 transition-all active:scale-95"
-              >
-                <mat-icon class="!text-[15px] !w-3.5 !h-3.5">{{ copiedWhatsApp() ? 'check' : 'content_copy' }}</mat-icon>
-                <span>{{ copiedWhatsApp() ? 'Copied' : 'Copy Slip' }}</span>
-              </button>
-
-              <a
-                [href]="whatsappHref()"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="px-3.5 py-2 rounded-xl bg-green-600 hover:bg-green-500 text-white font-black text-xs inline-flex items-center gap-1.5 shadow-xs transition-all active:scale-95 no-underline"
-              >
-                <mat-icon class="!text-[16px] !w-4 !h-4">chat</mat-icon>
-                <span>Send WhatsApp</span>
-              </a>
-            </div>
-          </div>
+          </footer>
         </div>
       </div>
     }
@@ -998,6 +991,7 @@ type StatementFormatMode = 'a4' | '80mm' | '58mm' | 'card' | 'whatsapp';
 })
 export class SchoolTableStatementModalComponent {
   private readonly schemaService = inject(SchoolTableSchemaService);
+  private readonly previewViewport = viewChild<ElementRef<HTMLElement>>('previewViewport');
 
   readonly modalState = this.schemaService.statementModalState;
   readonly rawBranding = this.schemaService.printBranding;
@@ -1009,8 +1003,13 @@ export class SchoolTableStatementModalComponent {
   readonly activeFormat = signal<StatementFormatMode>('a4');
   readonly whatsappPhone = signal<string>('');
   readonly copiedWhatsApp = signal<boolean>(false);
+  readonly isPrinting = signal<boolean>(false);
+  readonly actionFeedback = signal<ActionFeedbackState | null>(null);
 
   private copyResetTimer: ReturnType<typeof setTimeout> | null = null;
+  private feedbackResetTimer: ReturnType<typeof setTimeout> | null = null;
+  private lastBuiltHtml = '';
+  private lastBuiltFilename = 'school_statement.html';
 
   constructor() {
     effect(() => {
@@ -1021,6 +1020,10 @@ export class SchoolTableStatementModalComponent {
         this.toDate.set(state.presetToDate || '');
         this.activeFormat.set(state.initialFormat || 'a4');
         this.copiedWhatsApp.set(false);
+        this.isPrinting.set(false);
+        this.actionFeedback.set(null);
+        this.prefillDetectedPhone();
+        this.scrollPreviewToTop();
       }
     });
   }
@@ -1092,11 +1095,22 @@ export class SchoolTableStatementModalComponent {
     const row = this.filteredRows()[0];
     if (!data || !row) return [];
     const amtSet = this.amountColIndexSet();
-    return data.headers.map((hdr, idx) => ({
-      label: hdr || `Field ${idx + 1}`,
-      value: String(row[idx] ?? '').trim() || '—',
-      isAmount: amtSet.has(idx)
-    }));
+    return data.headers.map((hdr, idx) => {
+      const label = hdr || `Field ${idx + 1}`;
+      const value = String(row[idx] ?? '').trim() || '—';
+      const isStatus = /\b(status|state|result|grade|attendance|verified)\b/i.test(label) && value !== '—';
+      return {
+        label,
+        value,
+        isAmount: amtSet.has(idx),
+        isStatus
+      };
+    });
+  });
+
+  readonly primaryStatusValue = computed(() => {
+    const hit = this.singleRecordFields().find((f) => f.isStatus && f.value !== '-' && f.value !== '—');
+    return hit ? hit.value : '';
   });
 
   readonly singleRecordTextFields = computed(() => {
@@ -1120,17 +1134,44 @@ export class SchoolTableStatementModalComponent {
     return mono.slice(0, 4) || 'SPA';
   });
 
-  readonly logoBoxSize = computed(() => Math.min(72, Math.max(32, Number(this.branding().logoSizePx || 44))));
-
-  readonly stampBadgeLabel = computed(() => {
-    const lbl = this.branding().stampLabel;
-    return lbl && lbl !== 'NONE' ? lbl : 'VERIFIED';
+  readonly accentColor = computed(() => {
+    const c = this.branding().headerAccentColor || '';
+    return /^#[0-9a-fA-F]{6}$/.test(c) ? c : '#0f172a';
   });
 
-  readonly brandingContactLine = computed(() => {
+  readonly stampBadgeText = computed(() => {
+    const s = this.branding().stampLabel;
+    return s && s !== 'NONE' ? s : 'VERIFIED';
+  });
+
+  readonly compactContactLine = computed(() => {
     const b = this.branding();
-    return [b.registrationNo, b.address, b.phone ? `Tel: ${b.phone}` : ''].filter(Boolean).join(' · ');
+    return [b.address, b.phone ? `Tel: ${b.phone}` : ''].filter(Boolean).join(' · ');
   });
+
+  readonly primaryPrintLabel = computed(() => {
+    const mode = this.activeFormat();
+    if (mode === '80mm') return 'Print 80mm Rasheed';
+    if (mode === '58mm') return 'Print 58mm Rasheed';
+    if (mode === 'card') return 'Print QR Card';
+    return this.isSingleRecord() ? 'Print Record Card' : 'Print Statement';
+  });
+
+  isLongThermalText(value: string): boolean {
+    return String(value || '').trim().length > 32;
+  }
+
+  isLongCardText(value: string): boolean {
+    return String(value || '').trim().length > 42;
+  }
+
+  getStatusPillClass(value: string): string {
+    const v = String(value || '').toLowerCase();
+    if (/unpaid|overdue|pending|due|late|fail|absent|rejected|cancelled/.test(v)) {
+      return 'inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-black bg-amber-50 text-amber-800 border border-amber-200';
+    }
+    return 'inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200';
+  }
 
   readonly statementRef = computed(() => {
     const data = this.dataset();
@@ -1179,7 +1220,7 @@ export class SchoolTableStatementModalComponent {
         for (let i = 0; i < data.headers.length; i++) {
           const val = String(row[i] ?? '').trim();
           if (!val || val === '-' || val === '—') continue;
-          if (amtSet.has(i) || parseAmountNumber(val) !== null && /pkr|rs|fee|amount|total|salary|paid|due|bakaya|expense|credit|debit/i.test(data.headers[i])) {
+          if (amtSet.has(i) || (parseAmountNumber(val) !== null && /pkr|rs|fee|amount|total|salary|paid|due|bakaya|expense|credit|debit/i.test(data.headers[i]))) {
             amtCols.push(`${data.headers[i]}: ${val}`);
           } else {
             textCols.push(val);
@@ -1218,6 +1259,8 @@ export class SchoolTableStatementModalComponent {
     let digits = this.whatsappPhone().replace(/\D/g, '');
     if (digits.startsWith('03') && digits.length === 11) {
       digits = '92' + digits.slice(1);
+    } else if (digits.startsWith('0092')) {
+      digits = digits.slice(2);
     }
     if (digits.length >= 10) {
       return `https://wa.me/${digits}?text=${encoded}`;
@@ -1233,6 +1276,36 @@ export class SchoolTableStatementModalComponent {
 
   close(): void {
     this.schemaService.closeStatementModal();
+  }
+
+  selectFormat(format: StatementFormatMode): void {
+    this.activeFormat.set(format);
+    this.scrollPreviewToTop();
+  }
+
+  private scrollPreviewToTop(): void {
+    setTimeout(() => {
+      const el = this.previewViewport()?.nativeElement;
+      if (el) {
+        el.scrollTop = 0;
+      }
+    }, 0);
+  }
+
+  private prefillDetectedPhone(): void {
+    const data = this.dataset();
+    if (!data || data.rows.length !== 1) return;
+    const row = data.rows[0] || [];
+    for (let i = 0; i < data.headers.length; i++) {
+      if (/phone|mobile|whatsapp|contact|tel|cell/i.test(data.headers[i] || '')) {
+        const val = String(row[i] ?? '').trim();
+        if (val && val.replace(/\D/g, '').length >= 9) {
+          this.whatsappPhone.set(val);
+          return;
+        }
+      }
+    }
+    this.whatsappPhone.set('');
   }
 
   onSearchInput(event: Event): void {
@@ -1304,9 +1377,9 @@ export class SchoolTableStatementModalComponent {
     this.close();
   }
 
-  printCurrentFormat(): void {
+  private buildPrintableHtmlForCurrentMode(): { html: string; label: string; filename: string } | null {
     const data = this.dataset();
-    if (!data) return;
+    if (!data) return null;
     const rows = this.filteredRows();
     const criteria = {
       searchQuery: this.searchQuery(),
@@ -1327,72 +1400,144 @@ export class SchoolTableStatementModalComponent {
       statementRef: this.statementRef()
     };
     if (mode === '80mm' || mode === '58mm') {
-      const html = buildSchoolStatementThermalHtml(params, mode);
-      printHtmlInHiddenFrame(html);
-      return;
+      return {
+        html: buildSchoolStatementThermalHtml(params, mode),
+        label: `${mode} Rasheed`,
+        filename: `${data.safeBaseName}_${mode}_rasheed.html`
+      };
     }
     if (mode === 'card') {
-      const html = buildSchoolStatementCardHtml(params);
-      printHtmlInHiddenFrame(html);
+      return {
+        html: buildSchoolStatementCardHtml(params),
+        label: 'QR Verification Card',
+        filename: `${data.safeBaseName}_qr_card.html`
+      };
+    }
+    return {
+      html: buildSchoolStatementA4Html(params),
+      label: this.isSingleRecord() ? 'Record Card' : 'Statement',
+      filename: `${data.safeBaseName}_a4.html`
+    };
+  }
+
+  async printCurrentFormat(): Promise<void> {
+    if (this.isPrinting()) return;
+    if (this.filteredRows().length === 0) {
+      this.showFeedback('No records match your filter to print.', 'warn');
       return;
     }
-    const html = buildSchoolStatementA4Html(params);
-    printHtmlInHiddenFrame(html);
+    const built = this.buildPrintableHtmlForCurrentMode();
+    if (!built) return;
+    this.lastBuiltHtml = built.html;
+    this.lastBuiltFilename = built.filename;
+    this.isPrinting.set(true);
+    try {
+      const ok = await printHtmlInHiddenFrame(built.html);
+      if (ok) {
+        this.showFeedback(`Print dialog opened for ${built.label}.`, 'success', true);
+      } else {
+        this.showFeedback(`Browser print preview blocked — tap Save Print File or PDF.`, 'warn', true);
+      }
+    } finally {
+      this.isPrinting.set(false);
+    }
+  }
+
+  downloadPrintableFallback(): void {
+    if (!this.lastBuiltHtml) {
+      const built = this.buildPrintableHtmlForCurrentMode();
+      if (!built) return;
+      this.lastBuiltHtml = built.html;
+      this.lastBuiltFilename = built.filename;
+    }
+    const ok = downloadPrintableHtmlFile(this.lastBuiltHtml, this.lastBuiltFilename);
+    if (ok) {
+      this.showFeedback(`Saved printable file (${this.lastBuiltFilename}).`, 'success');
+    } else {
+      this.showFeedback('Unable to save printable file. Please use PDF.', 'warn');
+    }
   }
 
   downloadFilteredTablePdf(): void {
     const data = this.dataset();
     if (!data) return;
     const rows = this.filteredRows();
-    const branding = this.schemaService.getPdfBranding(data.tableId);
-    const subtitle = `${data.roleLabel} | ${this.criteriaSubtitle()}`;
-    downloadStudentsTablePdf({
-      title: `${this.effectiveTitle()} (Statement Register)`,
-      subtitle,
-      headers: data.headers,
-      rows,
-      filename: `${data.safeBaseName}_statement_table.pdf`,
-      footerLabel: `${branding.schoolName || 'SoftCode School ERP'} | ${this.statementRef()} | Statement PDF`,
-      emptyMessage: 'No records matched the selected search or date range filter.',
-      branding
-    });
+    if (rows.length === 0) {
+      this.showFeedback('No records matched your filter for Table PDF.', 'warn');
+      return;
+    }
+    try {
+      const branding = this.schemaService.getPdfBranding(data.tableId);
+      const subtitle = `${data.roleLabel} | ${this.criteriaSubtitle()}`;
+      downloadStudentsTablePdf({
+        title: `${this.effectiveTitle()} (Statement Register)`,
+        subtitle,
+        headers: data.headers,
+        rows,
+        filename: `${data.safeBaseName}_statement_table.pdf`,
+        footerLabel: `${branding.schoolName || 'SoftCode School ERP'} | ${this.statementRef()} | Statement PDF`,
+        emptyMessage: 'No records matched the selected search or date range filter.',
+        branding
+      });
+      this.showFeedback(`Table PDF downloaded (${rows.length} record${rows.length === 1 ? '' : 's'}).`, 'success');
+    } catch {
+      this.showFeedback('Could not generate Table PDF. Please try again.', 'warn');
+    }
   }
 
   downloadFilteredCardsPdf(): void {
     const data = this.dataset();
     if (!data) return;
     const rows = this.filteredRows();
-    const branding = this.schemaService.getPdfBranding(data.tableId);
-    const titleText = this.effectiveTitle();
-    const cards: PdfGenericCardEntry[] = rows.map((row, idx) => {
-      const fields = data.headers.map((h, hIdx) => ({
-        label: h || `Field ${hIdx + 1}`,
-        value: row[hIdx] || '-'
-      }));
-      const nonEmpty = row.filter((v) => v && v !== '-' && v !== '—');
-      const statusField = fields.find((f) => /status|grade|result|fee|state/i.test(f.label));
-      return {
-        title: nonEmpty[0] || `Record #${idx + 1}`,
-        subtitle: `${data.roleLabel} | ${titleText} | Entry #${idx + 1}`,
-        badgeText: statusField?.value && statusField.value !== '-' ? statusField.value : `#${idx + 1}`,
-        fields
-      };
-    });
-    downloadTableCardsPdf({
-      title: `${titleText} (Statement Cards)`,
-      subtitle: `${data.roleLabel} | ${this.criteriaSubtitle()}`,
-      cards,
-      filename: `${data.safeBaseName}_statement_cards.pdf`,
-      footerLabel: `${branding.schoolName || 'SoftCode School ERP'} | ${this.statementRef()} | Cards PDF`,
-      emptyMessage: 'No records matched the selected search or date range filter.',
-      branding
-    });
+    if (rows.length === 0) {
+      this.showFeedback('No records matched your filter for PDF.', 'warn');
+      return;
+    }
+    try {
+      const branding = this.schemaService.getPdfBranding(data.tableId);
+      const titleText = this.effectiveTitle();
+      const cards: PdfGenericCardEntry[] = rows.map((row, idx) => {
+        const fields = data.headers.map((h, hIdx) => ({
+          label: h || `Field ${hIdx + 1}`,
+          value: row[hIdx] || '-'
+        }));
+        const nonEmpty = row.filter((v) => v && v !== '-' && v !== '—');
+        const statusField = fields.find((f) => /status|grade|result|fee|state/i.test(f.label));
+        return {
+          title: nonEmpty[0] || `Record #${idx + 1}`,
+          subtitle: `${data.roleLabel} | ${titleText} | Entry #${idx + 1}`,
+          badgeText: statusField?.value && statusField.value !== '-' ? statusField.value : `#${idx + 1}`,
+          fields
+        };
+      });
+      downloadTableCardsPdf({
+        title: this.isSingleRecord() ? `${titleText} (Record Details)` : `${titleText} (Statement Cards)`,
+        subtitle: `${data.roleLabel} | ${this.criteriaSubtitle()}`,
+        cards,
+        filename: this.isSingleRecord() ? `${data.safeBaseName}_card.pdf` : `${data.safeBaseName}_statement_cards.pdf`,
+        footerLabel: `${branding.schoolName || 'SoftCode School ERP'} | ${this.statementRef()} | PDF`,
+        emptyMessage: 'No records matched the selected search or date range filter.',
+        branding
+      });
+      this.showFeedback(
+        this.isSingleRecord()
+          ? 'PDF downloaded.'
+          : `Cards PDF downloaded (${cards.length} card${cards.length === 1 ? '' : 's'}).`,
+        'success'
+      );
+    } catch {
+      this.showFeedback('Could not generate PDF. Please try again.', 'warn');
+    }
   }
 
   downloadFilteredCsv(): void {
     const data = this.dataset();
     if (!data || typeof document === 'undefined') return;
     const rows = this.filteredRows();
+    if (rows.length === 0) {
+      this.showFeedback('No records matched your filter for CSV export.', 'warn');
+      return;
+    }
     const csvLines: string[][] = [data.headers, ...rows];
     const csv = csvLines
       .map((r) => r.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(','))
@@ -1402,25 +1547,90 @@ export class SchoolTableStatementModalComponent {
     const a = document.createElement('a');
     a.href = url;
     a.download = `${data.safeBaseName}_statement.csv`;
+    a.style.display = 'none';
+    document.body.appendChild(a);
     a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    setTimeout(() => {
+      try {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } catch {}
+    }, 1000);
+    this.showFeedback(`CSV exported (${rows.length} row${rows.length === 1 ? '' : 's'}).`, 'success');
   }
 
-  copyWhatsAppText(): void {
+  sendWhatsApp(): void {
+    this.copyWhatsAppText(true);
+    if (typeof document !== 'undefined') {
+      const link = document.createElement('a');
+      link.href = this.whatsappHref();
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      setTimeout(() => {
+        try {
+          document.body.removeChild(link);
+        } catch {}
+      }, 400);
+    }
+    this.showFeedback('Message copied & WhatsApp opened.', 'success');
+  }
+
+  copyRecordSummary(): void {
+    const lines = [
+      `${this.branding().schoolName} — ${this.effectiveTitle()} (${this.statementRef()})`,
+      ...this.singleRecordFields().map((f) => `${f.label}: ${f.value}`)
+    ];
+    const txt = lines.join('\n');
+    if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+      void navigator.clipboard.writeText(txt).then(() => {
+        this.showFeedback('Record details copied to clipboard.', 'success');
+      }).catch(() => {
+        this.fallbackCopy(txt, true);
+        this.showFeedback('Record details copied to clipboard.', 'success');
+      });
+      return;
+    }
+    this.fallbackCopy(txt, true);
+    this.showFeedback('Record details copied to clipboard.', 'success');
+  }
+
+  copyWhatsAppText(silentFeedback = false): void {
     const txt = this.whatsappText();
     if (!txt) return;
     if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
       void navigator.clipboard.writeText(txt).then(() => {
-        this.markCopied();
+        this.markCopied(silentFeedback);
       }).catch(() => {
-        this.fallbackCopy(txt);
+        this.fallbackCopy(txt, silentFeedback);
       });
       return;
     }
-    this.fallbackCopy(txt);
+    this.fallbackCopy(txt, silentFeedback);
   }
 
-  private fallbackCopy(text: string): void {
+  clearActionFeedback(): void {
+    this.actionFeedback.set(null);
+    if (this.feedbackResetTimer !== null) {
+      clearTimeout(this.feedbackResetTimer);
+      this.feedbackResetTimer = null;
+    }
+  }
+
+  private showFeedback(message: string, tone: 'success' | 'warn' | 'info', offerHtmlDownload = false): void {
+    this.actionFeedback.set({ message, tone, offerHtmlDownload });
+    if (this.feedbackResetTimer !== null) {
+      clearTimeout(this.feedbackResetTimer);
+    }
+    this.feedbackResetTimer = setTimeout(() => {
+      this.actionFeedback.set(null);
+      this.feedbackResetTimer = null;
+    }, offerHtmlDownload ? 9000 : 4500);
+  }
+
+  private fallbackCopy(text: string, silentFeedback = false): void {
     if (typeof document === 'undefined') return;
     try {
       const ta = document.createElement('textarea');
@@ -1431,12 +1641,15 @@ export class SchoolTableStatementModalComponent {
       ta.select();
       document.execCommand('copy');
       document.body.removeChild(ta);
-      this.markCopied();
+      this.markCopied(silentFeedback);
     } catch {}
   }
 
-  private markCopied(): void {
+  private markCopied(silentFeedback = false): void {
     this.copiedWhatsApp.set(true);
+    if (!silentFeedback) {
+      this.showFeedback('Copied to clipboard.', 'success');
+    }
     if (this.copyResetTimer !== null) {
       clearTimeout(this.copyResetTimer);
     }

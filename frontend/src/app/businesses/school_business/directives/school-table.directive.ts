@@ -974,7 +974,25 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
       if (!value) {
         const clone = td.cloneNode(true) as HTMLElement;
         clone.querySelectorAll('[data-scs-ignore-export]').forEach((n) => n.remove());
-        value = (clone.textContent || '').replace(/\s+/g, ' ').trim();
+        // Remove decorative 2-letter monogram avatar circles/squares so e.g. "DR" does not prepend "Dr. Tahir Malik"
+        clone.querySelectorAll('div, span').forEach((el) => {
+          const cls = el.className || '';
+          if (typeof cls === 'string' && /\bw-(?:7|8|9|10)\b/.test(cls) && /\bh-(?:7|8|9|10)\b/.test(cls)) {
+            const rawTxt = (el.textContent || '').trim();
+            if (rawTxt.length <= 3 && el.children.length === 0) {
+              el.remove();
+            }
+          }
+        });
+        const chunks: string[] = [];
+        const walker = document.createTreeWalker(clone, NodeFilter.SHOW_TEXT);
+        let node = walker.nextNode();
+        while (node) {
+          const t = (node.textContent || '').replace(/\s+/g, ' ').trim();
+          if (t) chunks.push(t);
+          node = walker.nextNode();
+        }
+        value = chunks.join(' ').replace(/\s+/g, ' ').trim();
       }
 
       const cleanLabel = label || `Field ${i + 1}`;
