@@ -3,7 +3,9 @@ import { BackendService } from '../../../services/backend.service';
 import {
   DEFAULT_SCHOOL_PRINT_BRANDING,
   SchoolPrintBrandingConfig,
-  normalizeSchoolPrintBranding
+  SchoolPrintDocumentType,
+  normalizeSchoolPrintBranding,
+  resolveEffectiveTableBranding
 } from '../utils/school-print-templates.util';
 import { StatementDataset } from '../utils/school-statement-print.util';
 import {
@@ -176,6 +178,7 @@ export const SCHOOL_TABLE_FAMILY_MAP: Record<string, string> = {
   principal_master_teachers: 'teachers_master',
   // Parents directory
   owner_overview_parents: 'parents_master',
+  owner_parents_directory: 'parents_master',
   principal_master_parents: 'parents_master',
   // Fee receipts & cashiering
   owner_overview_fee_cashiering: 'fee_receipts_cashiering',
@@ -184,6 +187,10 @@ export const SCHOOL_TABLE_FAMILY_MAP: Record<string, string> = {
   principal_master_cashiering: 'fee_receipts_cashiering',
   accountant_recent_receipts: 'fee_receipts_cashiering',
   accountant_posted_receipts: 'fee_receipts_cashiering',
+  // Online payment verification & student/parent payment history
+  owner_gateway_pending_slips: 'online_payment_slips',
+  accountant_pending_slips: 'online_payment_slips',
+  parent_payment_history: 'student_payment_history',
   // Fee defaulters
   owner_fee_defaulters: 'fee_defaulters',
   owner_overview_defaulters: 'fee_defaulters',
@@ -564,6 +571,160 @@ export const SCHOOL_TABLE_CATALOG: TableCatalogItem[] = [
     title: 'Parent Student Leave Requests',
     portals: 'Owner, Principal, Parent',
     defaultHeaders: ['Child', 'From', 'To', 'Reason', 'Status']
+  },
+  {
+    tableId: 'owner_fee_structure_catalog',
+    canonicalId: 'owner_fee_structure_catalog',
+    title: 'Campus & Wing Fee Structure Catalog',
+    portals: 'Owner, Principal',
+    defaultHeaders: ['CAMPUS & WING', 'CLASS / GRADE TIER', 'ADMISSION', 'TUITION (MO)', 'LAB', 'EXAM', 'TOTAL MO.']
+  },
+  {
+    tableId: 'owner_fee_deletion_audit',
+    canonicalId: 'owner_fee_deletion_audit',
+    title: 'Fee Deletion & Void Receipts Register',
+    portals: 'Owner',
+    defaultHeaders: ['RECEIPT #', 'STUDENT & CLASS', 'VOID REASON', 'DELETED BY', 'AMOUNT']
+  },
+  {
+    tableId: 'owner_notice_read_receipts',
+    canonicalId: 'owner_notice_read_receipts',
+    title: 'Circular & Notice Reader Audit',
+    portals: 'Owner, Principal',
+    defaultHeaders: ['Reader Identity', 'Role & Role Badge', 'Class / Designation', 'Read Timestamp', 'Audit Status']
+  },
+  {
+    tableId: 'attendance_roster_students',
+    canonicalId: 'attendance_roster_students',
+    title: 'Student Attendance & Identity Roster',
+    portals: 'Owner, Principal, Teacher',
+    defaultHeaders: ['ID / Roll', 'Member Details', 'Class / Section', 'Father / Guardian', 'CNIC / B-Form', 'Mobile / Phone', 'Check-In / Out', 'Status']
+  },
+  {
+    tableId: 'attendance_roster_teachers',
+    canonicalId: 'attendance_roster_teachers',
+    title: 'Faculty Attendance & Identity Roster',
+    portals: 'Owner, Principal',
+    defaultHeaders: ['ID / Code', 'Faculty Member', 'Role / Dept', 'CNIC / B-Form', 'Mobile / Phone', 'Check-In / Out', 'Late Status', 'Status']
+  },
+  {
+    tableId: 'attendance_marked_details',
+    canonicalId: 'attendance_marked_details',
+    title: 'Marked Attendance Verification Details',
+    portals: 'Owner, Principal, Teacher',
+    defaultHeaders: ['Date', 'ID / Roll', 'Member & Face', 'Category', 'Class / Dept', 'Father / Guardian', 'Phone', 'Check-In (IN)', 'Check-Out (OUT)', 'Verification', 'Status']
+  },
+  {
+    tableId: 'owner_overview_branch_comparison',
+    canonicalId: 'owner_overview_branch_comparison',
+    title: 'Multi-Campus Branch Overview',
+    portals: 'Owner',
+    defaultHeaders: ['Campus Branch', 'Campus Principal', 'Wings', 'Students', 'Total Staff', 'Revenue (PKR)', 'Expenses (PKR)', 'Pending Dues', 'Pending Closings']
+  },
+  {
+    tableId: 'owner_campus_directory_summary',
+    canonicalId: 'owner_campus_directory_summary',
+    title: 'Campus Directory Summary',
+    portals: 'Owner',
+    defaultHeaders: ['Campus Role / Group', 'Total Registered', 'Active / Present / Clear', 'Remaining / Away / Dues']
+  },
+  {
+    tableId: 'owner_branch_financial_matrix',
+    canonicalId: 'owner_branch_financial_matrix',
+    title: 'Branch-Wise Financial & Closing Report',
+    portals: 'Owner',
+    defaultHeaders: ['Branch', 'Students', 'Revenue', 'Pending Dues', 'Closings']
+  },
+  {
+    tableId: 'owner_wing_breakdown',
+    canonicalId: 'owner_wing_breakdown',
+    title: 'Academic Wing Breakdown',
+    portals: 'Owner',
+    defaultHeaders: ['Wing & Campus', 'Coordinator', 'Students', 'Faculty', 'Pending Dues']
+  },
+  {
+    tableId: 'owner_all_personnel',
+    canonicalId: 'owner_all_personnel',
+    title: 'Complete Campus Personnel Directory',
+    portals: 'Owner',
+    defaultHeaders: ['Emp Code', 'Full Name', 'Hierarchy Tier', 'Designation & Department', 'Phone & Email', 'CNIC No', 'Shift / Load', 'Monthly Salary', 'Today Status']
+  },
+  {
+    tableId: 'owner_principals_directory',
+    canonicalId: 'owner_principals_directory',
+    title: 'Principals Executive Directory',
+    portals: 'Owner',
+    defaultHeaders: ['Emp Code', 'Principal Name', 'Designation & Department', 'CNIC', 'Phone & Email', 'Shift & Clearance', 'Portal PIN', 'Monthly Salary', 'Duty Status']
+  },
+  {
+    tableId: 'owner_accountants_directory',
+    canonicalId: 'owner_accountants_directory',
+    title: 'Accountants & Fee Clerks Directory',
+    portals: 'Owner',
+    defaultHeaders: ['Emp Code', 'Accountant / Clerk Name', 'Role & Department', 'CNIC', 'Phone & Email', 'Counter Shift & Clearance', 'PIN', 'Monthly Salary', 'Desk Status']
+  },
+  {
+    tableId: 'owner_support_staff_directory',
+    canonicalId: 'owner_support_staff_directory',
+    title: 'Campus Support & Admin Staff',
+    portals: 'Owner',
+    defaultHeaders: ['Emp Code', 'Staff Member Name', 'Role & Department', 'CNIC', 'Phone & Email', 'Shift', 'Monthly Salary', 'Today Status']
+  },
+  {
+    tableId: 'owner_permission_matrix',
+    canonicalId: 'owner_permission_matrix',
+    title: 'Role-Based Access Control Matrix',
+    portals: 'Owner',
+    defaultHeaders: ['Module / Feature Name', 'Description', 'Accountant Desk', 'Teacher Portal', 'Student Portal', 'Parent Portal']
+  },
+  {
+    tableId: 'owner_teacher_arrears',
+    canonicalId: 'owner_teacher_arrears',
+    title: 'Faculty Salary Arrears & Tenure',
+    portals: 'Owner',
+    defaultHeaders: ['Teacher Name & Subject', 'Appointment Date', 'Tenure / Service Duration', 'Status', 'Monthly Salary', 'Unpaid Months', 'Remaining Salary Arrears']
+  },
+  {
+    tableId: 'owner_profit_loss',
+    canonicalId: 'owner_profit_loss',
+    title: 'Profit & Loss Ledger Khata',
+    portals: 'Owner',
+    defaultHeaders: ['Month & Session', 'Tuition & Admissions Income', 'Transport Income', 'Gross Income (Aamdani)', 'Salaries Expense', 'Rent & Utilities', 'Operating Expenses (Kharcha)', 'Net Margin (Nafa / Naqsan)', 'Status']
+  },
+  {
+    tableId: 'owner_rooznama_branch_matrix',
+    canonicalId: 'owner_rooznama_branch_matrix',
+    title: 'Multi-Branch Rooznama Consolidation',
+    portals: 'Owner',
+    defaultHeaders: ['Campus Branch', 'Cash', 'Meezan', 'HBL', 'Digital', 'Petty', 'Collected', 'Variance', 'Review Queue']
+  },
+  {
+    tableId: 'owner_alerts_log',
+    canonicalId: 'owner_alerts_log',
+    title: 'Dispatched WhatsApp & SMS Alerts Log',
+    portals: 'Owner',
+    defaultHeaders: ['Alert Ref #', 'Recipient & Phone', 'Channel', 'Message Copy', 'Sent Timestamp', 'Delivery Status']
+  },
+  {
+    tableId: 'owner_audit_trail',
+    canonicalId: 'owner_audit_trail',
+    title: 'System Audit Trail Log',
+    portals: 'Owner',
+    defaultHeaders: ['Audit ID & Time', 'Operator', 'Action & Category', 'Target Entity', 'Audit Details', 'Severity', 'Verified By']
+  },
+  {
+    tableId: 'online_payment_slips',
+    canonicalId: 'online_payment_slips',
+    title: 'Online Payment Slips Awaiting Verification',
+    portals: 'Owner, Accountant',
+    defaultHeaders: ['Date & TXN / Challan', 'Student & Depositor', 'PK Channel & Proof TID', 'Slip Image', 'Amount', 'Verification']
+  },
+  {
+    tableId: 'student_payment_history',
+    canonicalId: 'student_payment_history',
+    title: 'Student & Ward Payment History',
+    portals: 'Student, Parent',
+    defaultHeaders: ['Deposit Date & TXN', 'Paid By / Depositor', 'Channel & Proof TID', 'Slip Image', 'Deposit Amount', 'Status', 'Voucher']
   }
 ];
 
@@ -1007,6 +1168,11 @@ export class SchoolTableSchemaService {
     initialFormat: 'a4',
     directDataset: null
   });
+  readonly printStudioJumpRequest = signal<{
+    docType: SchoolPrintDocumentType;
+    tableId?: string;
+    seq: number;
+  } | null>(null);
 
   private activeTenantId = 'tenant-root-platform';
   private persistHook: (() => void) | null = null;
@@ -2946,8 +3112,29 @@ export class SchoolTableSchemaService {
     this.printBranding.set(normalized);
   }
 
-  getPdfBranding(): PdfBrandingOptions {
-    const b = this.printBranding();
+  requestOpenPrintStudio(docType: SchoolPrintDocumentType = 'table_statement', tableId?: string): void {
+    const cleanId = String(tableId || '').trim().replace(/_single_record$/, '');
+    const canonical = cleanId ? this.resolveCanonicalTableId(cleanId) : '';
+    const nextSeq = (this.printStudioJumpRequest()?.seq || 0) + 1;
+    this.printStudioJumpRequest.set({
+      docType,
+      tableId: canonical || cleanId || undefined,
+      seq: nextSeq
+    });
+  }
+
+  clearPrintStudioJumpRequest(): void {
+    if (this.printStudioJumpRequest()) {
+      this.printStudioJumpRequest.set(null);
+    }
+  }
+
+  getPdfBranding(tableId?: string): PdfBrandingOptions {
+    const cleanId = String(tableId || '').trim().replace(/_single_record$/, '');
+    const eff = cleanId
+      ? resolveEffectiveTableBranding(this.printBranding(), cleanId, this.resolveCanonicalTableId(cleanId))
+      : resolveEffectiveTableBranding(this.printBranding());
+    const b = eff.branding;
     return {
       schoolName: b.schoolName || DEFAULT_SCHOOL_PRINT_BRANDING.schoolName,
       headerAccentColor: b.headerAccentColor || DEFAULT_SCHOOL_PRINT_BRANDING.headerAccentColor,
@@ -2982,8 +3169,8 @@ export class SchoolTableSchemaService {
     const schema = this.getSchema(cleanId);
     const entry = this.tableRegistry.get(cleanId);
     const resolvedTitle = (schema.customTitle || fallbackTitle || entry?.title || cleanId.replace(/_/g, ' ')).trim();
-    const defaultPaper = this.printBranding().defaultPaperWidth;
-    const initialFormat = opts?.initialFormat || (defaultPaper === '58mm' || defaultPaper === '80mm' ? 'a4' : 'a4');
+    const eff = resolveEffectiveTableBranding(this.printBranding(), cleanId, this.resolveCanonicalTableId(cleanId));
+    const initialFormat = opts?.initialFormat || eff.defaultFormat || 'a4';
     this.statementModalState.set({
       open: true,
       tableId: cleanId,
@@ -3005,6 +3192,8 @@ export class SchoolTableSchemaService {
       initialFormat?: 'a4' | '80mm' | '58mm' | 'card' | 'whatsapp';
     }
   ): void {
+    const rawId = (dataset.tableId || 'custom_statement').replace(/_single_record$/, '');
+    const eff = resolveEffectiveTableBranding(this.printBranding(), rawId, this.resolveCanonicalTableId(rawId));
     this.statementModalState.set({
       open: true,
       tableId: dataset.tableId || 'custom_statement',
@@ -3012,7 +3201,7 @@ export class SchoolTableSchemaService {
       presetFromDate: opts?.presetFromDate || '',
       presetToDate: opts?.presetToDate || '',
       presetSearch: opts?.presetSearch || '',
-      initialFormat: opts?.initialFormat || 'a4',
+      initialFormat: opts?.initialFormat || eff.defaultFormat || 'a4',
       directDataset: dataset
     });
   }
@@ -3030,6 +3219,8 @@ export class SchoolTableSchemaService {
     const title = label && !cleanTitle.toLowerCase().includes(label.toLowerCase())
       ? `${cleanTitle} — ${label}`
       : cleanTitle;
+    const cleanId = (opts.tableId || '').trim();
+    const eff = resolveEffectiveTableBranding(this.printBranding(), cleanId, this.resolveCanonicalTableId(cleanId));
     this.openDirectStatement(
       {
         tableId: `${opts.tableId}_single_record`,
@@ -3040,7 +3231,7 @@ export class SchoolTableSchemaService {
         rows: [opts.values]
       },
       {
-        initialFormat: opts.initialFormat || 'a4'
+        initialFormat: opts.initialFormat || eff.defaultFormat || 'a4'
       }
     );
   }
@@ -3146,9 +3337,11 @@ export class SchoolTableSchemaService {
   exportTablePdf(tableId: string, fallbackTitle?: string): void {
     const extracted = this.extractVisibleTableData(tableId, fallbackTitle);
     if (!extracted) return;
-    const branding = this.getPdfBranding();
+    const eff = resolveEffectiveTableBranding(this.printBranding(), tableId, this.resolveCanonicalTableId(tableId));
+    const branding = this.getPdfBranding(tableId);
+    const titleText = eff.customHeading || extracted.title;
     downloadStudentsTablePdf({
-      title: `${extracted.title} (Row & Column Register)`,
+      title: `${titleText} (Row & Column Register)`,
       subtitle: `${extracted.roleLabel} | ${extracted.rows.length} Record(s) | ${extracted.headers.length} Column(s)`,
       headers: extracted.headers,
       rows: extracted.rows,
@@ -3162,9 +3355,11 @@ export class SchoolTableSchemaService {
   exportTableCardsPdf(tableId: string, fallbackTitle?: string): void {
     const extracted = this.extractVisibleTableData(tableId, fallbackTitle);
     if (!extracted) return;
-    const branding = this.getPdfBranding();
+    const eff = resolveEffectiveTableBranding(this.printBranding(), tableId, this.resolveCanonicalTableId(tableId));
+    const branding = this.getPdfBranding(tableId);
+    const titleText = eff.customHeading || extracted.title;
     downloadTableCardsPdf({
-      title: `${extracted.title} (Card / Widget-Wise)`,
+      title: `${titleText} (Card / Widget-Wise)`,
       subtitle: `${extracted.roleLabel} | ${extracted.cards.length} Record Card(s) | ${extracted.headers.length} Field(s) Each`,
       cards: extracted.cards,
       filename: `${extracted.safeBaseName}_cards.pdf`,

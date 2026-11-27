@@ -3927,7 +3927,7 @@
 
               <!-- Payroll Table -->
               <div class="overflow-x-auto custom-scrollbar rounded-[20px] scs-surface-3d">
-                <table appSchoolTable="owner_payroll" tableTitle="Staff Payroll Register" [canAddRow]="true" addRowLabel="Disburse Salary" [disableRowDetails]="true" class="w-full text-left border-collapse text-xs tabular-nums">
+                <table appSchoolTable="owner_payroll" tableTitle="Staff Payroll Register" [canAddRow]="true" addRowLabel="Disburse Salary" class="w-full text-left border-collapse text-xs tabular-nums">
                   <thead class="bg-white text-slate-700 uppercase font-black tracking-wider text-[10px] border-b border-slate-200/80 select-none">
                     <tr>
                       <th class="px-4 py-3.5">Staff &amp; Role</th>
@@ -4063,7 +4063,7 @@
 
               <!-- Staff Leaves Table -->
               <div class="overflow-x-auto custom-scrollbar rounded-[20px] scs-surface-3d">
-                <table appSchoolTable="owner_staff_leaves" tableTitle="Staff Leave Applications" [canAddRow]="true" addRowLabel="Apply Staff Leave" [disableRowDetails]="true" class="w-full text-left border-collapse text-xs tabular-nums">
+                <table appSchoolTable="owner_staff_leaves" tableTitle="Staff Leave Applications" [canAddRow]="true" addRowLabel="Apply Staff Leave" class="w-full text-left border-collapse text-xs tabular-nums">
                   <thead class="bg-white text-slate-700 uppercase font-black tracking-wider text-[10px] border-b border-slate-200/80 select-none">
                     <tr>
                       <th class="px-4 py-3.5">Staff Name</th>
@@ -10622,6 +10622,9 @@
           [bankIban]="primaryVoucherBankGateway?.iban || 'PK36MEZN0001020105829102'"
           [oneBillPrefix]="schoolGatewaySettings.oneBillPrefix || '10089'"
           [lateFeeFinePkr]="schoolGatewaySettings.lateFeeFinePkr || 500"
+          [initialFormat]="printStudioJumpFormat"
+          [initialTableScope]="printStudioJumpTableScope"
+          [initialJumpSeq]="printStudioJumpSeq"
           (saveBranding)="savePrintBranding($event)"
           (resetBranding)="resetPrintBranding()"
           (paperSizeChange)="onStudioPaperSizeChange($event)"
@@ -26946,7 +26949,10 @@
         </div>
 
         <div class="text-center space-y-1 border-b border-slate-200 pb-3">
-          <h3 class="text-lg font-black text-slate-900 uppercase tracking-tight">{{ schoolName }}</h3>
+          @if (printSafeLogoUrl) {
+            <img [src]="printSafeLogoUrl" alt="School Logo" referrerpolicy="no-referrer" class="w-10 h-10 object-contain mx-auto mb-1" />
+          }
+          <h3 class="text-lg font-black text-slate-900 uppercase tracking-tight">{{ printBranding.schoolName || schoolName }}</h3>
           <p class="text-[10px] font-black uppercase tracking-widest text-emerald-700 bg-emerald-50 py-0.5 px-3 rounded-full inline-block">CONFIDENTIAL SALARY PAY SLIP ({{ activePaySlipStaff.month }})</p>
         </div>
 
@@ -26967,25 +26973,25 @@
           <div class="bg-white p-3 rounded-xl space-y-1.5 border border-slate-200 mt-2">
             <div class="flex justify-between">
               <span class="text-slate-500 font-bold">Base Basic Salary:</span>
-              <span class="font-mono font-bold text-slate-900">PKR {{ formatCurrency(((activePaySlipStaff?.baseSalary) || 0)) }}</span>
+              <span class="font-mono font-bold text-slate-900">{{ printBranding.currencySymbol || 'PKR' }} {{ formatCurrency(((activePaySlipStaff?.baseSalary) || 0)) }}</span>
             </div>
             <div class="flex justify-between">
-              <span class="text-slate-500 font-bold">+ Allowances & Perks:</span>
-              <span class="font-mono font-bold text-emerald-700">+ PKR {{ formatCurrency(((activePaySlipStaff?.allowances) || 0)) }}</span>
+              <span class="text-slate-500 font-bold">+ Allowances &amp; Perks:</span>
+              <span class="font-mono font-bold text-emerald-700">+ {{ printBranding.currencySymbol || 'PKR' }} {{ formatCurrency(((activePaySlipStaff?.allowances) || 0)) }}</span>
             </div>
             <div class="flex justify-between font-mono font-bold text-rose-700">
-              <span class="text-slate-500 font-bold">- Tax & Deductions:</span>
-              <span>- PKR {{ formatCurrency(((activePaySlipStaff?.deductions) || 0)) }}</span>
+              <span class="text-slate-500 font-bold">- Tax &amp; Deductions:</span>
+              <span>- {{ printBranding.currencySymbol || 'PKR' }} {{ formatCurrency(((activePaySlipStaff?.deductions) || 0)) }}</span>
             </div>
             <div class="flex justify-between pt-1.5 border-t border-slate-200 font-black text-sm">
               <span class="text-slate-900">Net Salary Paid:</span>
-              <span class="font-mono text-emerald-800">PKR {{ formatCurrency(((activePaySlipStaff?.netPayable) || 0)) }}</span>
+              <span class="font-mono text-emerald-800">{{ printBranding.currencySymbol || 'PKR' }} {{ formatCurrency(((activePaySlipStaff?.netPayable) || 0)) }}</span>
             </div>
           </div>
         </div>
 
         <div class="grid grid-cols-2 gap-4 pt-6 text-[9px] font-bold text-slate-500 text-center">
-          <div class="border-t border-slate-400 pt-1">Accounts & Finance Officer</div>
+          <div class="border-t border-slate-400 pt-1">{{ printBranding.signatoryTitle || 'Accounts & Finance Officer' }}</div>
           <div class="border-t border-slate-400 pt-1">Employee Signature</div>
         </div>
       </div>
@@ -30603,8 +30609,8 @@
           </button>
         </div>
 
-        <div class="overflow-x-auto text-xs border border-slate-200 rounded-2xl">
-          <table class="w-full text-left">
+        <div data-scs-table-scroll="1" class="overflow-x-auto text-xs border border-slate-200 rounded-2xl">
+          <table appSchoolTable="owner_fee_structure_catalog" tableTitle="Campus &amp; Wing Fee Structure Catalog" class="w-full text-left">
             <thead>
               <tr class="text-[10px] font-black uppercase text-slate-500 border-b border-slate-200 bg-slate-50">
                 <th class="py-2.5 px-3">CAMPUS &amp; WING</th>
@@ -30619,7 +30625,7 @@
             </thead>
             <tbody class="divide-y divide-slate-100 font-bold">
               @for (f of scopedFeeStructureCatalog; track f.id) {
-                <tr class="hover:bg-slate-50">
+                <tr [attr.data-row-key]="f.id" class="hover:bg-slate-50">
                   <td class="py-3 px-3">
                     <div class="text-slate-900 font-black">{{ f.branchName }}</div>
                     <div class="text-[10px] text-indigo-700 font-bold">{{ f.wingName || 'Campus-Wide' }}</div>
@@ -30831,8 +30837,8 @@
           </button>
         </div>
 
-        <div class="overflow-x-auto text-xs">
-          <table class="w-full text-left">
+        <div data-scs-table-scroll="1" class="overflow-x-auto text-xs">
+          <table appSchoolTable="owner_fee_deletion_audit" tableTitle="Fee Deletion &amp; Void Receipts Register" class="w-full text-left">
             <thead>
               <tr class="text-[10px] font-black uppercase text-slate-400 border-b border-slate-200 bg-white">
                 <th class="py-2.5 px-3">RECEIPT #</th>
@@ -30844,7 +30850,7 @@
             </thead>
             <tbody class="divide-y divide-slate-100 font-bold">
               @for (log of feeDeletionLogs; track log.id) {
-                <tr class="hover:bg-slate-50">
+                <tr [attr.data-row-key]="log.id" class="hover:bg-slate-50">
                   <td class="py-3 px-3 text-rose-600 font-mono text-[11px]">{{ log.receiptNo }}</td>
                   <td class="py-3 px-3 text-slate-900 font-black">
                     {{ log.studentName }}
@@ -31392,8 +31398,8 @@
         </div>
 
         <!-- Reader Audit Table -->
-        <div class="overflow-x-auto custom-scrollbar border border-slate-200/90 rounded-2xl bg-white shadow-2xs">
-          <table class="w-full text-left border-collapse text-xs tabular-nums">
+        <div data-scs-table-scroll="1" class="overflow-x-auto custom-scrollbar border border-slate-200/90 rounded-2xl bg-white shadow-2xs">
+          <table appSchoolTable="owner_notice_read_receipts" tableTitle="Circular &amp; Notice Reader Audit" class="w-full text-left border-collapse text-xs tabular-nums">
             <thead class="bg-white text-slate-700 uppercase font-black text-[10px] border-b border-slate-200 select-none">
               <tr>
                 <th class="px-4 py-3">Reader Identity</th>
@@ -31405,7 +31411,7 @@
             </thead>
             <tbody class="divide-y divide-slate-100 font-medium bg-white">
               @for (r of getFilteredReceiptsList(selectedNoticeForReceipts); track r.id) {
-                <tr class="hover:bg-slate-50/70 transition-colors">
+                <tr [attr.data-row-key]="r.id" class="hover:bg-slate-50/70 transition-colors">
                   <td class="px-4 py-3">
                     <div class="flex items-center gap-2.5">
                       <div class="w-8 h-8 rounded-full text-white font-black text-xs flex items-center justify-center shrink-0 shadow-2xs"
@@ -32128,13 +32134,24 @@
         <div class="p-6 sm:p-7 rounded-2xl bg-white space-y-5 font-sans scs-tile-3d border border-slate-200/90">
           
           <!-- Header Logo & Academy Title -->
-          <div class="flex items-start justify-between gap-3 flex-wrap">
-            <div>
-              <span class="px-2.5 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200 font-black text-[10px] uppercase tracking-widest">OFFICIAL CASHIER RECEIPT</span>
-              <h2 class="text-lg sm:text-xl font-black text-slate-950 tracking-tight mt-1 uppercase">{{ schoolName || 'SoftCode Premier Academy' }}</h2>
-              <p class="text-xs text-slate-600 font-semibold">
-                Main Campus · {{ activeCashieringReceipt.collectorRole === 'accountant' ? 'Accountant / Fee Clerk Counter' : 'Office of the Principal & Executive Desk' }}
-              </p>
+          <div class="flex items-start justify-between gap-3 flex-wrap border-b pb-4" [style.border-color]="printBranding.headerAccentColor || '#0f172a'">
+            <div class="flex items-center gap-3">
+              @if (printSafeLogoUrl) {
+                <img [src]="printSafeLogoUrl" alt="School Logo" referrerpolicy="no-referrer" class="w-11 h-11 object-contain border border-slate-200 rounded-lg p-1 shrink-0" />
+              } @else if (printBranding.showLogoCrest !== false) {
+                <div class="px-2.5 py-2 rounded-lg border-2 font-black text-xs tracking-wider shrink-0" [style.border-color]="printBranding.headerAccentColor || '#0f172a'" [style.color]="printBranding.headerAccentColor || '#0f172a'">
+                  {{ printBranding.monogramInitials || 'SPA' }}
+                </div>
+              }
+              <div>
+                <span class="px-2.5 py-0.5 rounded-md text-white font-black text-[10px] uppercase tracking-widest" [style.background-color]="printBranding.headerAccentColor || '#0f172a'">
+                  {{ printBranding.stampLabel !== 'NONE' ? printBranding.stampLabel : 'OFFICIAL' }} CASHIER RECEIPT
+                </span>
+                <h2 class="text-lg sm:text-xl font-black text-slate-950 tracking-tight mt-1 uppercase">{{ printBranding.schoolName || schoolName || 'SoftCode Premier Academy' }}</h2>
+                <p class="text-xs text-slate-600 font-semibold">
+                  {{ printBranding.address || 'Main Campus' }} · {{ activeCashieringReceipt.collectorRole === 'accountant' ? 'Accountant / Fee Clerk Counter' : 'Office of the Principal & Executive Desk' }}
+                </p>
+              </div>
             </div>
             <div class="text-right font-mono">
               <p class="text-xs font-black text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-lg inline-block">
@@ -32167,11 +32184,11 @@
           <div class="rounded-xl p-4 bg-gradient-to-r from-emerald-50 via-teal-50/75 to-indigo-50/60 space-y-2">
             <div class="flex items-center justify-between font-black">
               <span class="text-xs text-slate-900 uppercase tracking-wider">Total Net Amount Received:</span>
-              <span class="text-xl sm:text-2xl font-mono text-emerald-800">PKR {{ formatCurrency(activeCashieringReceipt.amount || activeCashieringReceipt.amountPaid) }}</span>
+              <span class="text-xl sm:text-2xl font-mono text-emerald-800">{{ printBranding.currencySymbol || 'PKR' }} {{ formatCurrency(activeCashieringReceipt.amount || activeCashieringReceipt.amountPaid) }}</span>
             </div>
             <div class="text-[10px] text-slate-600 font-mono flex items-center justify-between flex-wrap gap-2">
-              <span>[Copy 1: {{ activeCashieringReceipt.collectorRole === 'accountant' ? 'Accountant Desk' : 'Principal Office' }}] · [Copy 2: Parent Voucher] · [Copy 3: Accounts Ledger]</span>
-              <span class="font-black text-emerald-700">✓ Digitally Signed &amp; Verified</span>
+              <span>{{ printBranding.footerNote }}</span>
+              <span class="font-black text-emerald-700">✓ {{ printBranding.signatoryTitle || 'Digitally Verified' }}</span>
             </div>
           </div>
         </div>
@@ -33179,21 +33196,24 @@
 
         <!-- Printable Certificate Sheet Body -->
         <div class="p-8 overflow-y-auto max-h-[75vh] bg-gradient-to-b from-amber-50/20 via-white to-amber-50/10">
-          <div class="p-8 border-4 border-double border-indigo-950/80 rounded-2xl bg-white shadow-sm space-y-6 relative overflow-hidden">
+          <div class="p-8 border-4 border-double rounded-2xl bg-white shadow-sm space-y-6 relative overflow-hidden" [style.border-color]="printBranding.headerAccentColor || '#1e1b4b'">
             
             <!-- Watermark Background -->
-            <div class="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none select-none text-slate-900 font-black text-6xl rotate-[-25deg]">
-              AL-HUDA ACADEMY
+            <div class="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none select-none text-slate-900 font-black text-5xl rotate-[-25deg] text-center uppercase">
+              {{ printBranding.schoolName || schoolName }}
             </div>
 
             <!-- Certificate Header -->
             <div class="text-center space-y-1 relative z-10">
-              <div class="text-[11px] font-black uppercase tracking-widest text-indigo-900">Government of Pakistan Registered · Affiliation No. FBISE-ISB-8921</div>
-              <h1 class="text-2xl font-black tracking-tight text-slate-900 uppercase">AL-HUDA INTERNATIONAL ACADEMY</h1>
-              <p class="text-xs text-slate-600 font-serif italic">Sector H-11/4, Islamabad Capital Territory, Pakistan</p>
+              @if (printSafeLogoUrl) {
+                <img [src]="printSafeLogoUrl" alt="School Logo" referrerpolicy="no-referrer" class="w-14 h-14 object-contain mx-auto mb-1.5" />
+              }
+              <div class="text-[11px] font-black uppercase tracking-widest" [style.color]="printBranding.headerAccentColor || '#312e81'">{{ printBranding.registrationNo }}</div>
+              <h1 class="text-2xl font-black tracking-tight text-slate-900 uppercase">{{ printBranding.schoolName || schoolName }}</h1>
+              <p class="text-xs text-slate-600 font-serif italic">{{ printBranding.address }} · {{ printBranding.phone }}</p>
               <div class="pt-2">
-                <span class="inline-block px-4 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-xs">
-                  Official School Leaving & Character Certificate
+                <span class="inline-block px-4 py-1 rounded-full text-xs font-black uppercase tracking-wider text-white shadow-xs" [style.background-color]="printBranding.headerAccentColor || '#0f172a'">
+                  Official School Leaving &amp; Character Certificate
                 </span>
               </div>
             </div>
@@ -33218,17 +33238,17 @@
                 <div><span class="text-slate-500">Date of Admission:</span> <span class="font-bold text-slate-900">{{ selectedSLCForView.admissionDate }}</span></div>
                 <div><span class="text-slate-500">Date of Leaving:</span> <span class="font-bold text-slate-900">{{ selectedSLCForView.leavingDate }}</span></div>
                 <div><span class="text-slate-500">Reason for Leaving:</span> <span class="font-bold text-slate-900">{{ selectedSLCForView.reasonForLeaving }}</span></div>
-                <div><span class="text-slate-500">Conduct & Character:</span> <span class="font-bold text-emerald-700">{{ selectedSLCForView.conductRating }}</span></div>
+                <div><span class="text-slate-500">Conduct &amp; Character:</span> <span class="font-bold text-emerald-700">{{ selectedSLCForView.conductRating }}</span></div>
               </div>
 
               <div class="pt-2">
-                <span class="text-slate-500 font-sans">Academic & Co-Curricular Achievement:</span>
+                <span class="text-slate-500 font-sans">Academic &amp; Co-Curricular Achievement:</span>
                 <p class="font-bold font-sans text-slate-900 mt-0.5">{{ selectedSLCForView.academicAchievement }}</p>
               </div>
 
               <!-- Clearance Section -->
               <div class="p-3 bg-white border border-slate-200 rounded-xl font-sans text-[11px] space-y-1">
-                <span class="font-black text-slate-900 uppercase tracking-wider block text-[10px]">Institutional Dues & Departmental Clearance</span>
+                <span class="font-black text-slate-900 uppercase tracking-wider block text-[10px]">Institutional Dues &amp; Departmental Clearance</span>
                 <div class="grid grid-cols-4 gap-2 pt-1">
                   <div class="text-emerald-700 font-bold">✓ Accounts: Cleared</div>
                   <div class="text-emerald-700 font-bold">✓ Library: Cleared</div>
@@ -33247,16 +33267,16 @@
               </div>
 
               <!-- Digital Seal Stamp -->
-              <div class="w-24 h-24 rounded-full border-2 border-indigo-900 text-indigo-900 flex flex-col items-center justify-center p-1 text-center font-bold text-[8px] uppercase tracking-tighter shadow-xs">
-                <span>★ AL-HUDA ★</span>
+              <div class="w-24 h-24 rounded-full border-2 flex flex-col items-center justify-center p-1 text-center font-bold text-[8px] uppercase tracking-tighter shadow-xs" [style.border-color]="printBranding.headerAccentColor || '#312e81'" [style.color]="printBranding.headerAccentColor || '#312e81'">
+                <span>★ {{ printBranding.monogramInitials || 'SPA' }} ★</span>
                 <span class="font-black text-[10px] my-0.5">SEALED</span>
-                <span>AUTHENTIC</span>
+                <span>{{ printBranding.stampLabel !== 'NONE' ? printBranding.stampLabel : 'VERIFIED' }}</span>
               </div>
 
               <div class="text-center space-y-1">
                 <div class="w-48 border-b border-slate-400"></div>
                 <div class="text-[11px] font-bold text-slate-800">{{ selectedSLCForView.issuedBy }}</div>
-                <div class="text-[9px] text-slate-500">Principal & Academic Director</div>
+                <div class="text-[9px] text-slate-500">{{ printBranding.signatoryTitle || 'Principal & Academic Director' }}</div>
               </div>
             </div>
 
@@ -33532,8 +33552,11 @@
     <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in">
       <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full space-y-5 shadow-2xl border border-slate-200">
         <div class="text-center pb-4 border-b border-dashed border-slate-200 space-y-1">
-          <h3 class="font-black text-slate-900 text-base uppercase tracking-tight">{{ schoolName }}</h3>
-          <p class="text-[11px] font-bold text-slate-500">Official Central Library Circulation Receipt</p>
+          @if (printSafeLogoUrl) {
+            <img [src]="printSafeLogoUrl" alt="School Logo" referrerpolicy="no-referrer" class="w-10 h-10 object-contain mx-auto mb-1" />
+          }
+          <h3 class="font-black text-slate-900 text-base uppercase tracking-tight">{{ printBranding.schoolName || schoolName }}</h3>
+          <p class="text-[11px] font-bold text-slate-500">Official Central Library Circulation Receipt · {{ printBranding.phone }}</p>
           <div class="inline-block px-3 py-0.5 rounded-full font-mono text-[10px] font-black bg-indigo-50 text-indigo-800 border border-indigo-200">
             Token: {{ selectedCirculationSlip.issueNo }}
           </div>
@@ -33568,7 +33591,7 @@
 
         <div class="p-3 bg-white rounded-xl border border-slate-200/90 text-[10px] text-amber-900 leading-relaxed space-y-1">
           <p class="font-black">📌 Institutional Library Notice:</p>
-          <p>Books must be returned on or before due date. Overdue fine of PKR 20/day will be charged for delayed returns. Unreturned books block terminal examination admit cards & School Leaving Certificates (SLC).</p>
+          <p>Books must be returned on or before due date. Overdue fine of {{ printBranding.currencySymbol || 'PKR' }} {{ dailyFineRatePKR || 20 }}/day will be charged for delayed returns. {{ printBranding.footerNote }}</p>
         </div>
 
         <div class="pt-2 flex items-center justify-between">

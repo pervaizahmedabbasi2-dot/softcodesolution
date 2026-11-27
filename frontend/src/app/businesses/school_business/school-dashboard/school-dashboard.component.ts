@@ -99,7 +99,7 @@ import {
   printHtmlInHiddenFrame
 } from '../utils/thermal-print.util';
 import { SchoolTableSchemaService, SchoolCustomColumn, TableColumnPositionOption } from '../services/school-table-schema.service';
-import { StatementDataset } from '../utils/school-statement-print.util';
+import { StatementDataset, buildSchoolStatementA4Html } from '../utils/school-statement-print.util';
 import { PdfStudentCardEntry, downloadStudentsCardsPdf, downloadStudentsTablePdf, downloadTableCardsPdf } from '../services/school-pdf-export.util';
 import { PasskeyManagerComponent } from '../../../auth_security/passkey-manager/passkey-manager.component';
 import { SchoolPrintStudioComponent } from '../components/school-print-studio/school-print-studio.component';
@@ -111,13 +111,16 @@ import {
   PrintSectionKey,
   PrintSectionMeta,
   SchoolPrintBrandingConfig,
+  SchoolPrintDocumentType,
   buildA4BankChallanHtml,
   buildAdmitCardPrintHtml,
   buildBorrowSlipPrintHtml,
   buildBulkIdCardSheetHtml,
+  buildCashieringReceiptA4Html,
   buildGatePassPrintHtml,
   buildResultDmcHtml,
   buildSalarySlipHtml,
+  buildSlcCertificatePrintHtml,
   buildStudentIdCardPrintHtml,
   normalizeSchoolPrintBranding,
   sanitizeBrandingLogoUrl
@@ -1211,6 +1214,17 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
       const req = this.tableSchemaService.addRowRequest();
       if (req && req.tableId && this.isOwnerPortal) {
         this.handleTableAddRow(req.tableId);
+      }
+    });
+    effect(() => {
+      const jump = this.tableSchemaService.printStudioJumpRequest();
+      if (jump && this.canManagePrintStudio) {
+        this.printStudioJumpFormat = jump.docType;
+        this.printStudioJumpTableScope = jump.tableId || null;
+        this.printStudioJumpSeq = jump.seq;
+        this.setTab('print_studio');
+        this.tableSchemaService.clearPrintStudioJumpRequest();
+        this.cdr.detectChanges();
       }
     });
   }
@@ -3826,6 +3840,12 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
 
   // --- PRINTER & BARCODE SCANNER HARDWARE STATE ---
   printBranding: SchoolPrintBrandingConfig = { ...DEFAULT_SCHOOL_PRINT_BRANDING };
+  printStudioJumpFormat: SchoolPrintDocumentType | null = null;
+  printStudioJumpTableScope: string | null = null;
+  printStudioJumpSeq: number = 0;
+  get printSafeLogoUrl(): string {
+    return sanitizeBrandingLogoUrl(this.printBranding?.logoDataUrl);
+  }
   isVoucherCustomizerOpen: boolean = false;
   isProcessingVoucherLogo: boolean = false;
   voucherLogoDragOver: boolean = false;
@@ -6601,8 +6621,33 @@ INSTRUCTIONS:
   activeCashieringReceipt: PrincipalFeeCollectionRecord | null = null;
   isReceiptModalOpen: boolean = false;
 
-  printCashieringReceipt(receipt: any): void {
-    if (typeof window !== 'undefined') window.print();
+  async printCashieringReceipt(receipt: any): Promise<void> {
+    const rec = receipt || this.activeCashieringReceipt;
+    if (!rec) return;
+    const recNo = rec.receiptNo || rec.challanNo || rec.id || `REC-${Date.now().toString().slice(-6)}`;
+    const html = buildCashieringReceiptA4Html(
+      {
+        receiptNo: recNo,
+        timestamp: rec.timestamp || new Date().toLocaleString(),
+        studentName: rec.studentName || 'Student',
+        rollNo: rec.rollNo || rec.studentRollNo || '—',
+        grade: rec.grade || 'Campus',
+        guardianName: rec.guardianName || rec.guardian || 'On File',
+        monthsPaid: rec.monthsPaid || rec.month || 'Current Term',
+        paymentResource: rec.paymentResource || 'Cash Counter',
+        resourceReference: rec.resourceReference || recNo,
+        collectedBy: rec.collectedBy || 'Accounts Desk',
+        collectorRole: rec.collectorRole,
+        amount: Number(rec.amount || rec.amountPaid || 0),
+        notes: rec.notes
+      },
+      this.printBranding
+    );
+    const ok = await printHtmlInHiddenFrame(html);
+    this.showToast(
+      ok ? `Prepared branded Cashier Receipt (${recNo}).` : 'Print dialog unavailable in this view.',
+      ok ? 'success' : 'warning'
+    );
   }
 
   openDispatchAlertModal(data: any): void {
@@ -20433,10 +20478,31 @@ INSTRUCTIONS:
     this.cdr.detectChanges();
   }
 
-  printLibraryPDFReport(): void {
-    if (typeof window !== 'undefined') {
-      window.print();
-    }
+  async printLibraryPDFReport(): Promise<void> {
+    const rows = (this.scopedLibraryCirculations || []).map((c) => [
+      String(c.issueNo || c.id || ''),
+      `${c.bookTitle || ''} (${c.isbn || ''})`,
+      String(c.borrowerName || ''),
+      String(c.gradeOrDept || ''),
+      String(c.issueDate || ''),
+      String(c.dueDate || ''),
+      String(c.status || ''),
+      `PKR ${this.formatCurrency(c.fineAmount || 0)}`
+    ]);
+    const html = buildSchoolStatementA4Html({
+      tableId: 'owner_library_circulation',
+      canonicalTableId: 'library_circulation',
+      title: 'Official Library Book Circulation Ledger',
+      subtitle: `${this.activeScopeSummaryLabel} · ${rows.length} Circulation Records`,
+      roleLabel: this.currentPortalRole?.toUpperCase(),
+      headers: ['Issue #', 'Book Title & ISBN', 'Borrower', 'Class / Dept', 'Issue Date', 'Due Date', 'Status', 'Fine'],
+      rows,
+      totalUnfilteredCount: rows.length,
+      criteria: {},
+      branding: this.printBranding,
+      statementRef: 'LIB-CIRC-2026'
+    });
+    await printHtmlInHiddenFrame(html);
   }
 
   // --- BARCODE / ISBN SCANNER METHODS ---
@@ -20773,10 +20839,30 @@ INSTRUCTIONS:
     this.closePromissoryModal();
   }
 
-  printPromissoryBond(): void {
-    if (typeof window !== 'undefined') {
-      window.print();
-    }
+  async printPromissoryBond(): Promise<void> {
+    const d = this.selectedPromissoryDefaulter;
+    if (!d) return;
+    const installments = this.getCalculatedInstallments();
+    const rows = installments.map((inst) => [
+      `Installment ${inst.num}`,
+      String(inst.dueDate || ''),
+      `PKR ${this.formatCurrency(inst.amount || 0)}`,
+      String(inst.status || 'Scheduled')
+    ]);
+    const html = buildSchoolStatementA4Html({
+      tableId: 'owner_fee_defaulters',
+      canonicalTableId: 'fee_defaulters',
+      title: `Promissory Fee Recovery Bond (${this.promissoryBondNo})`,
+      subtitle: `${d.studentName} (${d.rollNo} · ${d.grade}) · Guardian: ${d.guardianName} (CNIC: ${this.promissoryForm.cnicNo || 'N/A'}) · Down Payment: PKR ${this.formatCurrency(this.promissoryForm.downPayment || 0)}`,
+      roleLabel: 'ACCOUNTS RECOVERY',
+      headers: ['Installment #', 'Scheduled Due Date', 'Installment Amount', 'Status'],
+      rows,
+      totalUnfilteredCount: rows.length,
+      criteria: {},
+      branding: this.printBranding,
+      statementRef: this.promissoryBondNo || 'BOND-2026'
+    });
+    await printHtmlInHiddenFrame(html);
   }
 
   sendDefaulterWhatsAppDirect(defaulter: StudentFeeDefaulterRecord): void {
@@ -20808,10 +20894,30 @@ INSTRUCTIONS:
     this.cdr.detectChanges();
   }
 
-  printSubstitutionPDFReport(): void {
-    if (typeof window !== 'undefined') {
-      window.print();
-    }
+  async printSubstitutionPDFReport(): Promise<void> {
+    const rows = (this.scopedSubstituteArrangements || []).map((s) => [
+      String(s.id || ''),
+      String(s.date || ''),
+      String(s.absentTeacher || ''),
+      String(s.substituteTeacher || ''),
+      `${s.grade || ''} · ${s.subject || ''}`,
+      `${s.period || ''} (${s.roomNo || 'Main Room'})`,
+      String(s.status || '')
+    ]);
+    const html = buildSchoolStatementA4Html({
+      tableId: 'principal_substitutions',
+      canonicalTableId: 'principal_substitutions',
+      title: 'Daily Faculty Substitution Cover Duty Chart',
+      subtitle: `${this.activeScopeSummaryLabel} · ${rows.length} Cover Assignments`,
+      roleLabel: 'ACADEMIC OPERATIONS',
+      headers: ['Ref #', 'Date', 'Absent Faculty', 'Assigned Substitute', 'Class & Subject', 'Period & Room', 'Status'],
+      rows,
+      totalUnfilteredCount: rows.length,
+      criteria: {},
+      branding: this.printBranding,
+      statementRef: 'SUB-CHART-2026'
+    });
+    await printHtmlInHiddenFrame(html);
   }
 
   sendSubstituteWhatsApp(sub: SubstituteArrangementRecord): void {
@@ -23200,8 +23306,31 @@ INSTRUCTIONS:
     this.cdr.detectChanges();
   }
 
-  printReportCard() {
-    if (typeof window !== 'undefined') window.print();
+  async printReportCard(): Promise<void> {
+    const stu = this.selectedReportStudent;
+    if (!stu) return;
+    const html = buildResultDmcHtml(
+      {
+        dmcNo: `TRC-2026-${stu.rollNo || stu.id}`,
+        examTitle: this.printBranding.dmcExamTitle || 'Annual Terminal Assessment Report Card',
+        session: this.printBranding.dmcSessionLabel || 'Session 2026-27',
+        studentName: stu.name,
+        guardianName: stu.guardian || 'Guardian',
+        rollNo: stu.rollNo || '1001',
+        grade: `${stu.grade || 'Class'}${stu.section ? ` (${stu.section})` : ''}`,
+        subjects: [
+          { subject: 'Advanced Mathematics', maxMarks: 100, obtainedMarks: 96, grade: 'A+', remarks: 'Distinction' },
+          { subject: 'Physics & Mechanics', maxMarks: 100, obtainedMarks: 92, grade: 'A+', remarks: 'Excellent' },
+          { subject: 'Chemistry & Lab Practice', maxMarks: 100, obtainedMarks: 89, grade: 'A', remarks: 'Very Good' },
+          { subject: 'Computer Science & Python', maxMarks: 100, obtainedMarks: 98, grade: 'A+', remarks: 'Top Performer' },
+          { subject: 'English Literature & Syntax', maxMarks: 100, obtainedMarks: 85, grade: 'A', remarks: 'Exemplary' }
+        ],
+        classRank: '#1 (GPA 3.92)',
+        attendancePercent: stu.attendance || '96%'
+      },
+      this.printBranding
+    );
+    await printHtmlInHiddenFrame(html);
   }
 
   // --- SUBJECT SYLLABUS & CURRICULUM PROGRESS TRACKER ---
@@ -23911,56 +24040,39 @@ INSTRUCTIONS:
     this.cdr.detectChanges();
   }
 
-  printSLCCertificate(slc?: StudentLeavingCertificateRecord): void {
-    if (typeof window !== 'undefined') window.print();
+  async printSLCCertificate(slc?: StudentLeavingCertificateRecord): Promise<void> {
+    const target = slc || this.selectedSLCForView;
+    if (!target) return;
+    const html = buildSlcCertificatePrintHtml(
+      {
+        certificateNo: target.certificateNo,
+        securityHash: target.securityHash,
+        studentName: target.studentName,
+        fatherName: target.fatherName,
+        rollNo: target.rollNo,
+        grade: target.grade,
+        admissionDate: target.admissionDate,
+        leavingDate: target.leavingDate,
+        reasonForLeaving: target.reasonForLeaving,
+        conductRating: target.conductRating,
+        academicAchievement: target.academicAchievement,
+        issuedBy: target.issuedBy,
+        accountsClearance: target.accountsClearance,
+        libraryClearance: target.libraryClearance,
+        labClearance: target.labClearance,
+        sportsClearance: target.sportsClearance
+      },
+      this.printBranding
+    );
+    const ok = await printHtmlInHiddenFrame(html);
+    this.showToast(
+      ok ? `Prepared branded School Leaving Certificate (${target.certificateNo}).` : 'Print dialog unavailable in this view.',
+      ok ? 'success' : 'warning'
+    );
   }
 
-  downloadSLCPDF(slc: StudentLeavingCertificateRecord): void {
-    const content = `===================================================================
-                    ${this.schoolName.toUpperCase()}
-      OFFICIAL SCHOOL LEAVING / TRANSFER CERTIFICATE (SLC)
-===================================================================
-Certificate Serial No : ${slc.certificateNo}
-Cryptographic Hash    : ${slc.securityHash}
-Date of Issue         : ${slc.leavingDate}
-===================================================================
-STUDENT PARTICULARS:
--------------------------------------------------------------------
-Full Name             : ${slc.studentName}
-Father / Guardian     : ${slc.fatherName}
-Class & Stream        : ${slc.grade}
-Roll Number           : ${slc.rollNo}
-Date of Admission     : ${slc.admissionDate}
-Date of Leaving       : ${slc.leavingDate}
-Reason for Leaving    : ${slc.reasonForLeaving}
-Character & Conduct   : ${slc.conductRating}
-Academic Standing     : ${slc.academicAchievement}
-
-INSTITUTIONAL CLEARANCE CHECKLIST:
--------------------------------------------------------------------
-Accounts & Fee Dues   : [ ${slc.accountsClearance ? 'CLEARED & PAID' : 'PENDING'} ]
-Library Books Return  : [ ${slc.libraryClearance ? 'ALL BOOKS RETURNED' : 'PENDING'} ]
-Science / IT Lab Dues : [ ${slc.labClearance ? 'CLEARED' : 'PENDING'} ]
-Sports Equipment      : [ ${slc.sportsClearance ? 'CLEARED' : 'PENDING'} ]
-
-OFFICIAL ATTESTATION:
--------------------------------------------------------------------
-Certified that the above information is in strict accordance with the 
-Official Admission and Withdrawal Register of the Institution.
-
-Issued & Attested By  : ${slc.issuedBy}
-Official Seal         : ${this.schoolName.toUpperCase()} [DIGITALLY SEALED]
-Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
-===================================================================`;
-
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `SLC_${slc.certificateNo.replace(/\//g, '_')}_${slc.studentName.replace(/\s+/g, '_')}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
-    this.showToast(`Downloaded Official School Leaving Certificate (${slc.certificateNo})`, 'success');
+  async downloadSLCPDF(slc: StudentLeavingCertificateRecord): Promise<void> {
+    await this.printSLCCertificate(slc);
   }
 
   openAddReconciliationModal(): void {
@@ -27627,10 +27739,37 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     }
   }
 
-  printCertificate(): void {
-    if (typeof window !== 'undefined') {
-      window.print();
-    }
+  async printCertificate(): Promise<void> {
+    const stu = this.selectedCertStudent;
+    if (!stu) return;
+    const certTitle =
+      this.certificateType === 'SLC'
+        ? 'School Leaving Certificate'
+        : this.certificateType === 'Character'
+          ? 'Character & Conduct Certificate'
+          : 'Transfer Certificate';
+    const html = buildSlcCertificatePrintHtml(
+      {
+        certificateNo: `CERT-${stu.id || stu.rollNo || '2026'}`,
+        securityHash: `SCS-CERT-${stu.rollNo || stu.id || '2026'}`,
+        studentName: `${stu.name} (${certTitle})`,
+        fatherName: stu.guardian || 'Guardian',
+        rollNo: String(stu.rollNo || stu.id || '1001'),
+        grade: `${stu.grade || 'Class'}${stu.section ? ` (${stu.section})` : ''}`,
+        admissionDate: stu.admissionDate || 'Apr 01, 2024',
+        leavingDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        reasonForLeaving: certTitle,
+        conductRating: 'EXCELLENT',
+        academicAchievement: 'Bona-fide Academic Standing',
+        issuedBy: this.schoolName || 'Principal & Directorate',
+        accountsClearance: true,
+        libraryClearance: true,
+        labClearance: true,
+        sportsClearance: true
+      },
+      this.printBranding
+    );
+    await printHtmlInHiddenFrame(html);
   }
 
   // =========================================================================

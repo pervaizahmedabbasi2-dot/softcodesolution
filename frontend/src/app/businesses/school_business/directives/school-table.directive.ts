@@ -182,7 +182,15 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
             lower === 'remove' ||
             lower === 'scope action' ||
             lower === 'focus' ||
-            lower === 'manage')
+            lower === 'manage' ||
+            lower === 'owner verification & actions' ||
+            lower === 'dmc card' ||
+            lower === 'verification' ||
+            lower === 'principal verification' ||
+            lower === 'print voucher' ||
+            lower === 'voucher' ||
+            lower === 'challan' ||
+            lower === 'verify')
         ) {
           actionsColIndex = idx;
         } else {
@@ -925,6 +933,7 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
 
       const label = (th.textContent || '').replace(/\s+/g, ' ').trim();
       const lower = label.toLowerCase();
+      const isLastBuiltInCol = i === headerCells.length - 1;
       if (
         (actionsColIndex >= 0 && i === actionsColIndex) ||
         lower === 'actions' ||
@@ -933,7 +942,16 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
         lower === 'remove' ||
         lower === 'scope action' ||
         lower === 'focus' ||
-        lower === 'manage'
+        lower === 'manage' ||
+        lower === 'owner verification & actions' ||
+        lower === 'principal verification' ||
+        lower === 'print voucher' ||
+        (isLastBuiltInCol &&
+          (lower === 'dmc card' ||
+            lower === 'verification' ||
+            lower === 'voucher' ||
+            lower === 'challan' ||
+            lower === 'verify'))
       ) {
         continue;
       }
@@ -995,8 +1013,8 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
     const hasNativeDossier = /\b(dossier|details?)\b/.test(existingText) || /\b(dossier|detail)\b/.test(existingTitles);
     const hasNativeQr = /\bid\s*card\b/.test(existingText) || /\b(id\s*card|qr)\b/.test(existingTitles);
     const hasNativePrintSlip =
-      /\b(print|receipt|challan|slip)\b/.test(existingText) ||
-      /salary\s*slip|fee\s*challan|fee\s*receipt|3-copy\s*bank\s*challan|cashiering\s*receipt/.test(existingTitles);
+      /\bstatement\b/.test(existingText) ||
+      /statement\s*&\s*print|record\s*slip\s*\(a4/.test(existingTitles);
 
     if (hasNativeDossier && hasNativeQr && hasNativePrintSlip) return;
 
@@ -1066,8 +1084,7 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
           tableTitle: effectiveTableTitle,
           recordLabel: rowLabel,
           headers: extracted.headers,
-          values: extracted.values,
-          initialFormat: 'a4'
+          values: extracted.values
         });
       });
       quickBar.appendChild(printBtn);
@@ -1331,6 +1348,28 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
 
     const headRight = document.createElement('div');
     headRight.className = 'flex items-center gap-2 shrink-0 flex-wrap';
+
+    const qrCardBtn = document.createElement('button');
+    qrCardBtn.type = 'button';
+    qrCardBtn.title = 'Open QR Verification & Digital Record Card';
+    qrCardBtn.className =
+      'px-3 py-1 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200/80 font-bold text-[11px] inline-flex items-center gap-1.5 cursor-pointer shrink-0 transition-colors';
+    qrCardBtn.appendChild(this.createToolbarIcon('qr', 'w-3.5 h-3.5'));
+    const qrTxt = document.createElement('span');
+    qrTxt.textContent = 'QR Card';
+    qrCardBtn.appendChild(qrTxt);
+    qrCardBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.schemaService.openSingleRecordStatement({
+        tableId,
+        tableTitle: resolvedTableTitle,
+        recordLabel: rowLabel,
+        headers: extracted.headers,
+        values: extracted.values,
+        initialFormat: 'card'
+      });
+    });
+    headRight.appendChild(qrCardBtn);
 
     const printSlipBtn = document.createElement('button');
     printSlipBtn.type = 'button';

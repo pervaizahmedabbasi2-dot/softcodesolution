@@ -46,6 +46,9 @@ import {
 } from '../../../../services/fingerprint-verification.service';
 import { SchoolTableDirective } from '../../directives/school-table.directive';
 import { SchoolCustomFormFieldsComponent } from '../school-custom-form-fields/school-custom-form-fields.component';
+import { SchoolTableSchemaService } from '../../services/school-table-schema.service';
+import { buildSchoolStatementA4Html } from '../../utils/school-statement-print.util';
+import { printHtmlInHiddenFrame } from '../../utils/thermal-print.util';
 
 export type AttendanceSubTab = 'terminal' | 'students' | 'teachers' | 'staff' | 'principals' | 'enrollment' | 'setup';
 export type ScannerCategoryFilter = 'all' | AttendanceMemberCategory;
@@ -63,6 +66,7 @@ export type ScannerCategoryFilter = 'all' | AttendanceMemberCategory;
 export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   private readonly faceVerifier = inject(FaceVerificationService);
   private readonly fingerprintVerifier = inject(FingerprintVerificationService);
+  private readonly tableSchemaService = inject(SchoolTableSchemaService);
 
   @ViewChild('verifyVideoEl') verifyVideoEl?: ElementRef<HTMLVideoElement>;
   @ViewChild('enrollVideoEl') enrollVideoEl?: ElementRef<HTMLVideoElement>;
@@ -3760,7 +3764,7 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     this.emitToast(`Exported ${list.length} records (${cols.length} ticked columns) as CSV.`, 'success');
   }
 
-  exportCurrentCategoryPDF(): void {
+  async exportCurrentCategoryPDF(): Promise<void> {
     if (!this.canExportCurrentPortal()) {
       this.emitToast('Export permission is restricted for this role by School Owner.', 'warning');
       return;
@@ -3772,143 +3776,52 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     }
     if (typeof document === 'undefined') return;
     const cols = this.visibleColumns();
-    const rSum = this.rosterTabSummary();
+    const subTab = this.activeSubTab();
+    const tableId = `attendance_roster_${subTab}`;
+    const canonicalTableId = this.tableSchemaService.resolveCanonicalTableId(tableId);
+    const branding = this.tableSchemaService.printBranding();
     const reportTitle =
-      this.activeSubTab() === 'students'
+      subTab === 'students'
         ? 'Student Attendance & Compliance Register'
-        : this.activeSubTab() === 'teachers'
+        : subTab === 'teachers'
           ? 'Faculty Attendance & Timing Register'
-          : this.activeSubTab() === 'principals'
+          : subTab === 'principals'
             ? 'Executive Directorate Attendance Register'
-            : this.activeSubTab() === 'staff'
+            : subTab === 'staff'
               ? 'Campus Staff Attendance Register'
               : 'Campus Master Attendance Register';
 
-    const esc = (v: string) =>
-      String(v ?? '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
+    const headers = ['#', ...cols.map((c) => c.shortLabel)];
+    const rows = list.map((m, idx) => [
+      String(idx + 1),
+      ...cols.map((c) => this.formatColumnValue(m, c.key))
+    ]);
 
-    const headerCells = cols.map((c) => `<th>${esc(c.shortLabel)}</th>`).join('');
-    const bodyRows = list
-      .map((m, idx) => {
-        const tds = cols
-          .map((c) => {
-            const val = this.formatColumnValue(m, c.key);
-            let cls = '';
-            if (c.key === 'lateByLabel') {
-              cls =
-                m.lateSeverity === 'late'
-                  ? 'badge-late'
-                  : m.lateSeverity === 'grace'
-                    ? 'badge-grace'
-                    : m.lateSeverity === 'early' || m.lateSeverity === 'on_time'
-                      ? 'badge-ok'
-                      : '';
-            } else if (c.key === 'status') {
-              cls = m.status === 'Present' ? 'badge-ok' : m.status === 'Late' ? 'badge-late' : m.status === 'Absent' ? 'badge-absent' : '';
-            } else if (c.key === 'cnicBForm' || c.key === 'guardianCnic' || c.key === 'passportNo' || c.key === 'code') {
-              cls = 'mono';
-            }
-            return `<td class="${cls}">${esc(val)}</td>`;
-          })
-          .join('');
-        return `<tr><td class="mono muted">${idx + 1}</td>${tds}</tr>`;
-      })
-      .join('');
+    const html = buildSchoolStatementA4Html({
+      tableId,
+      canonicalTableId,
+      title: reportTitle,
+      subtitle: `Date: ${this.selectedDate()} · Start: ${this.policy().scheduledStartTime || '08:00'} · Cutoff: ${this.policy().lateCutoffTime || '08:15'} · Scope: ${this.activeBranchLabel()}`,
+      roleLabel: this.portalContext().toUpperCase(),
+      headers,
+      rows,
+      totalUnfilteredCount: list.length,
+      criteria: {
+        fromDate: this.selectedDate(),
+        toDate: this.selectedDate(),
+        searchQuery: this.searchQuery()
+      },
+      branding,
+      statementRef: `ATT-${subTab.toUpperCase()}-${this.selectedDate()}`
+    });
 
-    const html = `<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8" />
-<title>${esc(this.schoolName())} — ${esc(reportTitle)}</title>
-<style>
-  @page { size: ${cols.length > 8 ? 'landscape' : 'portrait'}; margin: 10mm; }
-  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #0f172a; margin: 0; font-size: 10px; }
-  .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0f172a; padding-bottom: 8px; margin-bottom: 10px; }
-  .title { font-size: 16px; font-weight: 800; margin: 0 0 2px 0; }
-  .sub { font-size: 10px; color: #475569; margin: 0; }
-  .meta { text-align: right; font-size: 10px; color: #334155; }
-  .kpis { display: flex; gap: 14px; margin-bottom: 10px; font-size: 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 10px; }
-  .kpis strong { color: #0f172a; }
-  table { width: 100%; border-collapse: collapse; table-layout: auto; }
-  th, td { border: 1px solid #cbd5e1; padding: 5px 6px; text-align: left; vertical-align: middle; word-break: break-word; }
-  th { background: #f1f5f9; font-size: 9px; text-transform: uppercase; letter-spacing: 0.03em; font-weight: 800; color: #334155; }
-  tr:nth-child(even) td { background: #fafafa; }
-  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; white-space: nowrap; }
-  .muted { color: #64748b; }
-  .badge-ok { color: #047857; font-weight: 700; }
-  .badge-grace { color: #0369a1; font-weight: 700; }
-  .badge-late { color: #b45309; font-weight: 700; }
-  .badge-absent { color: #be123c; font-weight: 700; }
-  .footer { margin-top: 12px; display: flex; justify-content: space-between; font-size: 9px; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 6px; }
-</style>
-</head>
-<body>
-  <div class="header">
-    <div>
-      <h1 class="title">${esc(this.schoolName())}</h1>
-      <p class="sub">${esc(reportTitle)} · Selected Fields (${cols.length})</p>
-    </div>
-    <div class="meta">
-      <div><strong>Date:</strong> ${esc(this.selectedDate())}</div>
-      <div><strong>Start Time:</strong> ${esc(this.policy().scheduledStartTime || '08:00')} · <strong>Late Cutoff:</strong> ${esc(this.policy().lateCutoffTime || '08:15')}</div>
-      <div><strong>Generated By:</strong> ${esc(this.currentActorName())}</div>
-    </div>
-  </div>
-  <div class="kpis">
-    <span><strong>Total Rows:</strong> ${list.length}</span>
-    <span><strong>Checked IN:</strong> ${rSum.checkedIn}</span>
-    <span><strong>Checked OUT:</strong> ${rSum.checkedOut}</span>
-    <span><strong>Pending/Absent:</strong> ${rSum.pending}</span>
-    <span><strong>Face Enrolled:</strong> ${rSum.enrolled}/${rSum.total}</span>
-  </div>
-  <table>
-    <thead>
-      <tr><th>#</th>${headerCells}</tr>
-    </thead>
-    <tbody>${bodyRows}</tbody>
-  </table>
-  <div class="footer">
-    <span>Official Biometric &amp; Registry Audit Export · Local &amp; International Compliance Fields</span>
-    <span>Signature / Stamp: __________________________</span>
-  </div>
-</body>
-</html>`;
-
-    const iframe = document.createElement('iframe');
-    iframe.style.position = 'fixed';
-    iframe.style.right = '0';
-    iframe.style.bottom = '0';
-    iframe.style.width = '0';
-    iframe.style.height = '0';
-    iframe.style.border = '0';
-    document.body.appendChild(iframe);
-
-    const doc = iframe.contentDocument || iframe.contentWindow?.document;
-    if (!doc || !iframe.contentWindow) {
-      iframe.remove();
-      this.emitToast('Print preview could not initialize.', 'warning');
-      return;
-    }
-    doc.open();
-    doc.write(html);
-    doc.close();
-
-    setTimeout(() => {
-      try {
-        iframe.contentWindow?.focus();
-        iframe.contentWindow?.print();
-      } catch {
-        this.emitToast('Print dialog blocked by browser.', 'warning');
-      } finally {
-        setTimeout(() => iframe.remove(), 1200);
-      }
-    }, 180);
-
-    this.emitToast(`Prepared PDF/Print with ${cols.length} ticked columns (${list.length} rows).`, 'success');
+    const ok = await printHtmlInHiddenFrame(html);
+    this.emitToast(
+      ok
+        ? `Prepared Print Studio branded PDF with ${cols.length} ticked columns (${list.length} rows).`
+        : 'Print dialog blocked by browser.',
+      ok ? 'success' : 'warning'
+    );
   }
 
   private buildMemberPunchView(

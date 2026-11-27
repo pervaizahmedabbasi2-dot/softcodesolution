@@ -15,6 +15,8 @@ import {
 } from '../../services/school-pdf-export.util';
 import {
   DEFAULT_SCHOOL_PRINT_BRANDING,
+  PrintSectionKey,
+  resolveEffectiveTableBranding,
   sanitizeBrandingLogoUrl
 } from '../../utils/school-print-templates.util';
 import {
@@ -58,15 +60,29 @@ type StatementFormatMode = 'a4' | '80mm' | '58mm' | 'card' | 'whatsapp';
               </div>
               <div class="min-w-0">
                 <h3 class="text-sm sm:text-base font-black tracking-tight truncate">
-                  {{ data.title }} — Statement &amp; Print Studio
+                  {{ effectiveTitle() }} — Statement &amp; Print Studio
                 </h3>
                 <p class="text-[11px] text-slate-300 truncate">
                   {{ branding().schoolName }} · {{ filteredRows().length }} of {{ data.rows.length }} record(s) matched · Ref: {{ statementRef() }}
+                  @if (effectiveTable().hasOverride) {
+                    <span class="ml-1.5 px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold text-[10px]">Custom Table Design</span>
+                  }
                 </p>
               </div>
             </div>
 
             <div class="flex items-center gap-2 shrink-0 flex-wrap">
+              @if (isOwner()) {
+                <button
+                  type="button"
+                  (click)="openPrintStudioForTable()"
+                  class="px-2.5 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-200 font-bold text-[11px] inline-flex items-center gap-1.5 cursor-pointer transition-colors"
+                  title="Customize header, logo, watermark, field logos & layout for this table's receipts & slips"
+                >
+                  <mat-icon class="!text-[14px] !w-3.5 !h-3.5">palette</mat-icon>
+                  <span>Customize Design</span>
+                </button>
+              }
               <!-- Format Switcher Tabs -->
               <div class="inline-flex items-center bg-slate-900 border border-slate-700/80 rounded-xl p-1 gap-1">
                 <button
@@ -285,420 +301,587 @@ type StatementFormatMode = 'a4' | '80mm' | '58mm' | 'card' | 'whatsapp';
           <div class="flex-1 min-h-0 overflow-y-auto bg-slate-100/90 p-3 sm:p-5">
             @if (activeFormat() === 'a4') {
               <!-- A4 Branded Institutional Statement Preview -->
-              <div class="mx-auto max-w-5xl bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-7 space-y-5 text-slate-900">
-                <!-- Letterhead -->
-                <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-4 border-b-2 border-slate-900">
-                  <div class="flex items-start gap-3.5" [class.flex-row-reverse]="branding().logoPlacement === 'right'">
-                    @if (branding().showLogoCrest !== false) {
-                      @if (safeLogoUrl()) {
-                        <div class="border border-slate-200 rounded-xl p-1.5 bg-white shrink-0">
-                          <img
-                            [src]="safeLogoUrl()"
-                            alt="School Logo"
-                            referrerpolicy="no-referrer"
-                            class="object-contain block"
-                            [style.width.px]="logoBoxSize()"
-                            [style.height.px]="logoBoxSize()"
-                          />
-                        </div>
-                      } @else {
-                        <div class="px-3 py-2 rounded-xl border-2 border-slate-900 font-black text-sm tracking-widest uppercase bg-white shrink-0">
-                          {{ monogramText() }}
-                        </div>
-                      }
-                    }
-                    <div>
-                      <h4 class="text-base sm:text-lg font-black uppercase tracking-tight text-slate-950 leading-tight">
-                        {{ branding().schoolName }}
-                      </h4>
-                      @if (branding().campusTagline) {
-                        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-600 mt-0.5">
-                          {{ branding().campusTagline }}
-                        </p>
-                      }
-                      <p class="text-[11px] text-slate-500 mt-1">
-                        {{ brandingContactLine() }}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div class="text-left sm:text-right shrink-0">
-                    <span
-                      class="inline-block px-2.5 py-1 rounded-md text-white text-[10px] font-black uppercase tracking-wider"
-                      [style.background-color]="branding().headerAccentColor || '#0f172a'"
-                    >
-                      {{ stampBadgeLabel() }} {{ isSingleRecord() ? 'RECORD SLIP' : 'STATEMENT' }}
+              <div class="mx-auto max-w-5xl bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-7 space-y-5 text-slate-900 relative overflow-hidden">
+                @if (effectiveTable().showWatermark) {
+                  <div class="pointer-events-none select-none absolute inset-0 flex items-center justify-center opacity-[0.04] z-0">
+                    <span class="text-5xl sm:text-6xl font-black uppercase tracking-[0.25em] -rotate-24 text-slate-900 text-center">
+                      {{ branding().schoolName }}
                     </span>
-                    <p class="text-[11px] font-mono font-bold text-slate-700 mt-1.5">Ref: {{ statementRef() }}</p>
-                    <p class="text-[11px] text-slate-500">Issued: {{ issuedAtLabel() }}</p>
-                  </div>
-                </div>
-
-                <!-- Statement Title Banner -->
-                <div class="rounded-xl bg-slate-50 border border-slate-200 px-4 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div>
-                    <h5 class="text-sm font-black text-slate-950">{{ data.title }}</h5>
-                    <p class="text-[11px] text-slate-600">
-                      {{ isSingleRecord() ? ('Official Individual Record Voucher · ' + data.roleLabel) : (criteriaSubtitle() + ' · ' + data.roleLabel) }}
-                    </p>
-                  </div>
-                </div>
-
-                <!-- Amount Summary Grid -->
-                @if (amountSummary().amountColumns.length > 0) {
-                  <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                    @for (col of amountSummary().amountColumns; track col.colIndex) {
-                      <div class="rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2">
-                        <span class="block text-[9px] font-black uppercase tracking-wider text-slate-500 truncate">{{ col.label }}</span>
-                        <span
-                          class="block text-sm font-black font-mono tabular-nums mt-0.5"
-                          [class]="col.kind === 'debit' ? 'text-rose-700' : (col.kind === 'credit' ? 'text-emerald-700' : 'text-slate-950')"
-                        >
-                          {{ amountSummary().currency }} {{ formatMoney(col.total) }}
-                        </span>
-                      </div>
-                    }
-                    @if (amountSummary().hasInflowOutflowSplit) {
-                      <div class="rounded-xl border border-slate-900 bg-slate-900 text-white px-3 py-2">
-                        <span class="block text-[9px] font-black uppercase tracking-wider text-slate-300">Net Statement Balance</span>
-                        <span class="block text-sm font-black font-mono tabular-nums mt-0.5">
-                          {{ amountSummary().currency }} {{ formatMoney(amountSummary().netBalance) }}
-                        </span>
-                      </div>
-                    }
                   </div>
                 }
 
-                @if (isSingleRecord()) {
-                  <!-- Single-Record Voucher Field Grid -->
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    @for (fld of singleRecordFields(); track $index) {
-                      <div
-                        class="rounded-xl border px-3.5 py-2.5"
-                        [class]="fld.isAmount ? 'bg-slate-50 border-slate-300' : 'bg-white border-slate-200'"
-                      >
-                        <span class="block text-[10px] font-black uppercase tracking-wider text-slate-500">{{ fld.label }}</span>
-                        <span
-                          class="block mt-0.5 break-words"
-                          [class]="fld.isAmount ? 'font-mono font-black text-sm text-slate-950' : 'font-bold text-xs text-slate-900'"
-                        >
-                          {{ fld.value }}
-                        </span>
-                      </div>
-                    }
-                  </div>
-                } @else {
-                <!-- Ledger Table -->
-                <div class="overflow-x-auto border border-slate-200 rounded-xl">
-                  <table class="w-full text-left border-collapse text-xs tabular-nums">
-                    <thead class="bg-slate-100 text-slate-700 uppercase font-black text-[10px] border-b border-slate-300">
-                      <tr>
-                        <th class="px-3 py-2.5 border-r border-slate-200">#</th>
-                        @for (hdr of data.headers; track $index) {
-                          <th
-                            class="px-3 py-2.5 border-r border-slate-200 last:border-r-0 whitespace-nowrap"
-                            [class.text-right]="amountColIndexSet().has($index)"
+                <div class="relative z-10 space-y-5">
+                  @for (secKey of branding().sectionOrder; track secKey) {
+                    @if (!hiddenSectionSet().has(secKey)) {
+                      @switch (secKey) {
+                        @case ('header') {
+                          <div
+                            class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-4 border-b-2"
+                            [style.border-bottom-color]="branding().headerAccentColor || '#0f172a'"
                           >
-                            {{ hdr }}
-                          </th>
-                        }
-                      </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100">
-                      @for (row of filteredRows(); track $index) {
-                        <tr class="hover:bg-slate-50/70" [class.bg-slate-50/40]="$odd">
-                          <td class="px-3 py-2 font-mono text-slate-500 border-r border-slate-100">{{ $index + 1 }}</td>
-                          @for (hdr of data.headers; track $index; let cIdx = $index) {
-                            <td
-                              class="px-3 py-2 border-r border-slate-100 last:border-r-0"
-                              [class.text-right]="amountColIndexSet().has(cIdx)"
-                              [class.font-mono]="amountColIndexSet().has(cIdx)"
-                              [class.font-bold]="amountColIndexSet().has(cIdx)"
+                            <div
+                              class="flex gap-3.5 flex-1 min-w-0"
+                              [class]="branding().logoPlacement === 'top'
+                                ? (branding().headerAlign === 'left'
+                                  ? 'flex-col items-start'
+                                  : (branding().headerAlign === 'right' ? 'flex-col items-end' : 'flex-col items-center'))
+                                : (branding().logoPlacement === 'right' ? 'flex-row-reverse items-center' : 'flex-row items-center')"
                             >
-                              {{ row[cIdx] || '—' }}
-                            </td>
-                          }
-                        </tr>
-                      } @empty {
-                        <tr>
-                          <td [attr.colspan]="data.headers.length + 1" class="px-4 py-8 text-center text-slate-500 font-bold">
-                            No records match your current search or date range filter.
-                          </td>
-                        </tr>
-                      }
-                    </tbody>
-                    @if (filteredRows().length > 0 && amountSummary().amountColumns.length > 0) {
-                      <tfoot class="bg-slate-900 text-white font-black text-xs">
-                        <tr>
-                          <td class="px-3 py-2.5">TOTAL</td>
-                          @for (hdr of data.headers; track $index; let cIdx = $index) {
-                            @if (amountColumnByIndex().get(cIdx); as sumCol) {
-                              <td class="px-3 py-2.5 text-right font-mono whitespace-nowrap">
-                                {{ amountSummary().currency }} {{ formatMoney(sumCol.total) }}
-                              </td>
-                            } @else {
-                              <td class="px-3 py-2.5 text-slate-300">
-                                {{ cIdx === 0 ? filteredRows().length + ' Rows' : '' }}
-                              </td>
-                            }
-                          }
-                        </tr>
-                      </tfoot>
-                    }
-                  </table>
-                </div>
-                }
+                              @if (branding().showLogoCrest !== false) {
+                                @if (safeLogoUrl()) {
+                                  <div class="border border-slate-200 rounded-xl p-1.5 bg-white shrink-0">
+                                    <img
+                                      [src]="safeLogoUrl()"
+                                      alt="School Logo"
+                                      referrerpolicy="no-referrer"
+                                      class="object-contain block"
+                                      [style.width.px]="logoBoxSize()"
+                                      [style.height.px]="logoBoxSize()"
+                                    />
+                                  </div>
+                                } @else {
+                                  <div
+                                    class="px-3 py-2 rounded-xl border-2 font-black text-sm tracking-widest uppercase bg-white shrink-0"
+                                    [style.border-color]="branding().headerAccentColor || '#0f172a'"
+                                    [style.color]="branding().headerAccentColor || '#0f172a'"
+                                  >
+                                    {{ monogramText() }}
+                                  </div>
+                                }
+                              }
+                              <div
+                                class="min-w-0"
+                                [class]="branding().logoPlacement === 'top'
+                                  ? (branding().headerAlign === 'left' ? 'text-left' : (branding().headerAlign === 'right' ? 'text-right' : 'text-center'))
+                                  : (branding().headerAlign === 'right' ? 'text-right' : 'text-left')"
+                              >
+                                <h4 class="text-base sm:text-lg font-black uppercase tracking-tight text-slate-950 leading-tight">
+                                  {{ branding().schoolName }}
+                                </h4>
+                                @if (branding().campusTagline) {
+                                  <p class="text-[10px] font-bold uppercase tracking-wider text-slate-600 mt-0.5">
+                                    {{ branding().campusTagline }}
+                                  </p>
+                                }
+                                <p class="text-[11px] text-slate-500 mt-1">
+                                  {{ brandingContactLine() }}
+                                </p>
+                              </div>
+                            </div>
 
-                <!-- Verification & Signatory Footer -->
-                <div class="pt-4 border-t border-dashed border-slate-300 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-                  <div class="flex items-center gap-3 flex-wrap">
-                    @if (branding().showQrVerification !== false) {
-                      <app-school-qr-code [value]="qrPayload()" [size]="56" />
-                    }
-                    <div>
-                      @if (branding().showBarcodeVerification !== false) {
-                        <app-school-barcode [value]="statementRef()" [height]="26" [barWidth]="1.15" />
+                            <div class="text-left sm:text-right shrink-0">
+                              <span
+                                class="inline-block px-2.5 py-1 rounded-md text-white text-[10px] font-black uppercase tracking-wider"
+                                [style.background-color]="branding().headerAccentColor || '#0f172a'"
+                              >
+                                {{ stampBadgeLabel() }} {{ isSingleRecord() ? 'RECORD SLIP' : 'STATEMENT' }}
+                              </span>
+                              <p class="text-[11px] font-mono font-bold text-slate-700 mt-1.5">Ref: {{ statementRef() }}</p>
+                              <p class="text-[11px] text-slate-500">Issued: {{ issuedAtLabel() }}</p>
+                            </div>
+                          </div>
+                        }
+
+                        @case ('meta') {
+                          <div class="rounded-xl bg-slate-50 border border-slate-200 px-4 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <div>
+                              <h5 class="text-sm font-black text-slate-950">{{ effectiveTitle() }}</h5>
+                              <p class="text-[11px] text-slate-600">
+                                {{ isSingleRecord() ? ('Official Individual Record Voucher · ' + data.roleLabel) : (criteriaSubtitle() + ' · ' + data.roleLabel) }}
+                              </p>
+                            </div>
+                            <span class="px-2 py-0.5 rounded bg-white border border-slate-200 text-[10px] font-bold uppercase text-slate-600 shrink-0">
+                              {{ effectiveTable().a4Orientation === 'portrait' ? 'A4 Portrait' : 'A4 Landscape' }}
+                            </span>
+                          </div>
+                        }
+
+                        @case ('amounts') {
+                          @if (amountSummary().amountColumns.length > 0) {
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                              @for (col of amountSummary().amountColumns; track col.colIndex) {
+                                <div class="rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2">
+                                  <span class="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider text-slate-500 truncate">
+                                    @if (effectiveTable().showFieldLogos) {
+                                      @if (safeLogoUrl()) {
+                                        <img [src]="safeLogoUrl()" alt="" referrerpolicy="no-referrer" class="w-3.5 h-3.5 object-contain rounded-xs shrink-0" />
+                                      } @else {
+                                        <span class="px-1 py-0.2 rounded text-[7px] font-black text-white shrink-0" [style.background-color]="branding().headerAccentColor || '#0f172a'">{{ monogramText().slice(0, 2) }}</span>
+                                      }
+                                    }
+                                    <span class="truncate">{{ col.label }}</span>
+                                  </span>
+                                  <span
+                                    class="block text-sm font-black font-mono tabular-nums mt-0.5"
+                                    [class]="col.kind === 'debit' ? 'text-rose-700' : (col.kind === 'credit' ? 'text-emerald-700' : 'text-slate-950')"
+                                  >
+                                    {{ amountSummary().currency }} {{ formatMoney(col.total) }}
+                                  </span>
+                                </div>
+                              }
+                              @if (amountSummary().hasInflowOutflowSplit) {
+                                <div
+                                  class="rounded-xl border text-white px-3 py-2"
+                                  [style.background-color]="branding().headerAccentColor || '#0f172a'"
+                                  [style.border-color]="branding().headerAccentColor || '#0f172a'"
+                                >
+                                  <span class="block text-[9px] font-black uppercase tracking-wider text-slate-300">Net Statement Balance</span>
+                                  <span class="block text-sm font-black font-mono tabular-nums mt-0.5">
+                                    {{ amountSummary().currency }} {{ formatMoney(amountSummary().netBalance) }}
+                                  </span>
+                                </div>
+                              }
+                            </div>
+                          }
+                        }
+
+                        @case ('person') {
+                          @if (isSingleRecord() && effectiveTable().slipLayout === 'voucher_grid') {
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              @for (fld of singleRecordFields(); track $index) {
+                                <div
+                                  class="rounded-xl border px-3.5 py-2.5"
+                                  [class]="fld.isAmount ? 'bg-slate-50 border-slate-300' : 'bg-white border-slate-200'"
+                                >
+                                  <span class="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-slate-500">
+                                    @if (effectiveTable().showFieldLogos) {
+                                      @if (safeLogoUrl()) {
+                                        <img [src]="safeLogoUrl()" alt="" referrerpolicy="no-referrer" class="w-3.5 h-3.5 object-contain rounded-xs shrink-0" />
+                                      } @else {
+                                        <span class="px-1 py-0.2 rounded text-[7px] font-black text-white shrink-0" [style.background-color]="branding().headerAccentColor || '#0f172a'">{{ monogramText().slice(0, 2) }}</span>
+                                      }
+                                    }
+                                    <span>{{ fld.label }}</span>
+                                  </span>
+                                  <span
+                                    class="block mt-0.5 break-words"
+                                    [class]="fld.isAmount ? 'font-mono font-black text-sm text-slate-950' : 'font-bold text-xs text-slate-900'"
+                                  >
+                                    {{ fld.value }}
+                                  </span>
+                                </div>
+                              }
+                            </div>
+                          } @else {
+                            <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                              <table class="w-full text-left border-collapse text-xs tabular-nums">
+                                <thead class="bg-slate-100 text-slate-700 uppercase font-black text-[10px] border-b border-slate-300">
+                                  <tr>
+                                    <th class="px-3 py-2.5 border-r border-slate-200">#</th>
+                                    @for (hdr of data.headers; track $index) {
+                                      <th
+                                        class="px-3 py-2.5 border-r border-slate-200 last:border-r-0 whitespace-nowrap"
+                                        [class.text-right]="amountColIndexSet().has($index)"
+                                      >
+                                        {{ hdr }}
+                                      </th>
+                                    }
+                                  </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                  @for (row of filteredRows(); track $index) {
+                                    <tr class="hover:bg-slate-50/70" [class.bg-slate-50/40]="$odd">
+                                      <td class="px-3 py-2 font-mono text-slate-500 border-r border-slate-100">{{ $index + 1 }}</td>
+                                      @for (hdr of data.headers; track $index; let cIdx = $index) {
+                                        <td
+                                          class="px-3 py-2 border-r border-slate-100 last:border-r-0"
+                                          [class.text-right]="amountColIndexSet().has(cIdx)"
+                                          [class.font-mono]="amountColIndexSet().has(cIdx)"
+                                          [class.font-bold]="amountColIndexSet().has(cIdx)"
+                                        >
+                                          {{ row[cIdx] || '—' }}
+                                        </td>
+                                      }
+                                    </tr>
+                                  } @empty {
+                                    <tr>
+                                      <td [attr.colspan]="data.headers.length + 1" class="px-4 py-8 text-center text-slate-500 font-bold">
+                                        No records match your current search or date range filter.
+                                      </td>
+                                    </tr>
+                                  }
+                                </tbody>
+                                @if (filteredRows().length > 0 && amountSummary().amountColumns.length > 0) {
+                                  <tfoot
+                                    class="text-white font-black text-xs"
+                                    [style.background-color]="branding().headerAccentColor || '#0f172a'"
+                                  >
+                                    <tr>
+                                      <td class="px-3 py-2.5">TOTAL</td>
+                                      @for (hdr of data.headers; track $index; let cIdx = $index) {
+                                        @if (amountColumnByIndex().get(cIdx); as sumCol) {
+                                          <td class="px-3 py-2.5 text-right font-mono whitespace-nowrap">
+                                            {{ amountSummary().currency }} {{ formatMoney(sumCol.total) }}
+                                          </td>
+                                        } @else {
+                                          <td class="px-3 py-2.5 text-slate-200">
+                                            {{ cIdx === 0 ? filteredRows().length + ' Rows' : '' }}
+                                          </td>
+                                        }
+                                      }
+                                    </tr>
+                                  </tfoot>
+                                }
+                              </table>
+                            </div>
+                          }
+                        }
+
+                        @case ('verification') {
+                          @if (branding().showQrVerification !== false || branding().showBarcodeVerification !== false) {
+                            <div
+                              class="pt-3 border-t border-dashed border-slate-300 flex items-center gap-4 flex-wrap"
+                              [class]="branding().verificationOrder === 'qr_first'
+                                ? 'flex-row-reverse justify-end'
+                                : (branding().verificationOrder === 'side_by_side' ? 'justify-between' : 'flex-row justify-start')"
+                            >
+                              @if (branding().showBarcodeVerification !== false) {
+                                <app-school-barcode [value]="statementRef()" [height]="26" [barWidth]="1.15" />
+                              }
+                              @if (branding().showQrVerification !== false) {
+                                <app-school-qr-code [value]="qrPayload()" [size]="56" />
+                              }
+                            </div>
+                          }
+                        }
+
+                        @case ('footer') {
+                          <div class="pt-4 border-t border-slate-200 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                            <p class="text-[10px] text-slate-500 max-w-md">{{ branding().footerNote }}</p>
+                            <div class="text-left sm:text-right">
+                              <div class="inline-block border-t border-slate-900 pt-1 min-w-[180px] text-[10px] font-black uppercase tracking-wider text-slate-900">
+                                {{ branding().signatoryTitle || 'Principal & Accounts Directorate' }}
+                              </div>
+                            </div>
+                          </div>
+                        }
                       }
-                      <p class="text-[10px] text-slate-500 mt-1 max-w-md">{{ branding().footerNote }}</p>
-                    </div>
-                  </div>
-                  <div class="text-left sm:text-right">
-                    <div class="inline-block border-t border-slate-900 pt-1 min-w-[180px] text-[10px] font-black uppercase tracking-wider text-slate-900">
-                      {{ branding().signatoryTitle || 'Principal & Accounts Directorate' }}
-                    </div>
-                  </div>
+                    }
+                  }
                 </div>
               </div>
             } @else if (activeFormat() === '80mm' || activeFormat() === '58mm') {
               <!-- Thermal Rasheed Roll Preview (80mm or 58mm) -->
               <div
-                class="mx-auto bg-white border border-slate-300 shadow-sm rounded-xl p-4 text-slate-950 font-sans tabular-nums"
+                class="mx-auto bg-white border border-slate-300 shadow-sm rounded-xl p-4 text-slate-950 font-sans tabular-nums space-y-2"
                 [class]="activeFormat() === '58mm' ? 'max-w-[265px] text-[10px]' : 'max-w-[355px] text-[11px]'"
               >
-                <div class="flex flex-col items-center text-center gap-1 pb-2.5">
-                  @if (branding().showLogoCrest !== false) {
-                    @if (safeLogoUrl()) {
-                      <div class="border border-slate-900 rounded-md p-1 bg-white">
-                        <img
-                          [src]="safeLogoUrl()"
-                          alt="School Logo"
-                          referrerpolicy="no-referrer"
-                          class="w-10 h-10 object-contain block"
-                        />
-                      </div>
-                    } @else {
-                      <div class="px-2.5 py-1 border-2 border-slate-950 rounded-md text-xs font-black tracking-widest uppercase">
-                        {{ monogramText() }}
-                      </div>
-                    }
-                  }
-                  <div class="text-xs font-black uppercase tracking-tight leading-tight">{{ branding().schoolName }}</div>
-                  @if (branding().campusTagline) {
-                    <div class="text-[8px] font-bold uppercase text-slate-600">{{ branding().campusTagline }}</div>
-                  }
-                  @if (branding().address) {
-                    <div class="text-[9px] text-slate-600">{{ branding().address }}</div>
-                  }
-                  @if (branding().phone) {
-                    <div class="text-[9px] text-slate-600">Tel: {{ branding().phone }}</div>
-                  }
-                </div>
-
-                <div class="border-y-2 border-slate-950 py-1 flex items-center justify-between gap-2">
-                  <span class="text-[9px] font-black uppercase tracking-wider truncate">{{ data.title }}</span>
-                  <span class="px-1.5 py-0.5 bg-slate-950 text-white text-[8px] font-black uppercase rounded-xs shrink-0">
-                    {{ stampBadgeLabel() }}
-                  </span>
-                </div>
-
-                <div class="py-2 space-y-1 text-[10px] border-b border-dashed border-slate-400">
-                  <div class="flex justify-between gap-2">
-                    <span class="text-slate-600">{{ isSingleRecord() ? 'Slip Ref' : 'Statement Ref' }}</span>
-                    <span class="font-bold font-mono">{{ statementRef() }}</span>
+                @if (branding().thermalDualCopy) {
+                  <div class="text-center text-[8px] font-black uppercase tracking-[0.14em] border border-slate-900 bg-slate-100 py-0.5 px-2">
+                    CUSTOMER / STUDENT COPY · (+ OFFICE COPY ON PRINT)
                   </div>
-                  @if (!isSingleRecord()) {
-                    <div class="flex justify-between gap-2">
-                      <span class="text-slate-600">Date Range</span>
-                      <span class="font-bold">{{ (fromDate() || 'Start') + ' → ' + (toDate() || 'Latest') }}</span>
-                    </div>
-                    @if (searchQuery().trim()) {
-                      <div class="flex justify-between gap-2">
-                        <span class="text-slate-600">Filter</span>
-                        <span class="font-bold truncate max-w-[160px]">{{ searchQuery().trim() }}</span>
-                      </div>
-                    }
-                    <div class="flex justify-between gap-2">
-                      <span class="text-slate-600">Records</span>
-                      <span class="font-bold">{{ filteredRows().length }} / {{ data.rows.length }}</span>
-                    </div>
-                  }
-                  <div class="flex justify-between gap-2">
-                    <span class="text-slate-600">Printed At</span>
-                    <span class="font-bold">{{ issuedAtLabel() }}</span>
-                  </div>
-                </div>
+                }
+                @for (secKey of branding().sectionOrder; track secKey) {
+                  @if (!hiddenSectionSet().has(secKey)) {
+                    @switch (secKey) {
+                      @case ('header') {
+                        <div
+                          class="flex gap-2 pb-2 border-b border-slate-200"
+                          [class]="branding().logoPlacement === 'top'
+                            ? (branding().headerAlign === 'left'
+                              ? 'flex-col items-start text-left'
+                              : (branding().headerAlign === 'right' ? 'flex-col items-end text-right' : 'flex-col items-center text-center'))
+                            : (branding().logoPlacement === 'right' ? 'flex-row-reverse items-center text-right' : 'flex-row items-center text-left')"
+                        >
+                          @if (branding().showLogoCrest !== false) {
+                            @if (safeLogoUrl()) {
+                              <div class="border border-slate-900 rounded-md p-1 bg-white shrink-0">
+                                <img
+                                  [src]="safeLogoUrl()"
+                                  alt="School Logo"
+                                  referrerpolicy="no-referrer"
+                                  class="w-10 h-10 object-contain block"
+                                />
+                              </div>
+                            } @else {
+                              <div class="px-2.5 py-1 border-2 border-slate-950 rounded-md text-xs font-black tracking-widest uppercase shrink-0">
+                                {{ monogramText() }}
+                              </div>
+                            }
+                          }
+                          <div class="min-w-0">
+                            <div class="text-xs font-black uppercase tracking-tight leading-tight">{{ branding().schoolName }}</div>
+                            @if (branding().campusTagline) {
+                              <div class="text-[8px] font-bold uppercase text-slate-600">{{ branding().campusTagline }}</div>
+                            }
+                            @if (branding().address) {
+                              <div class="text-[9px] text-slate-600">{{ branding().address }}</div>
+                            }
+                            @if (branding().phone) {
+                              <div class="text-[9px] text-slate-600">Tel: {{ branding().phone }}</div>
+                            }
+                          </div>
+                        </div>
+                      }
 
-                <!-- Itemized Thermal Entries (or Full Single-Record Particulars) -->
-                <div class="py-2 border-b border-dashed border-slate-400 space-y-1.5">
-                  <div class="text-[8px] font-black uppercase tracking-wider text-slate-700">
-                    {{ isSingleRecord() ? 'RECORD PARTICULARS' : 'ITEMIZED ENTRIES' }}
-                  </div>
-                  @if (isSingleRecord()) {
-                    @for (fld of singleRecordTextFields(); track $index) {
-                      <div class="flex justify-between items-baseline gap-2 py-0.5 border-b border-dotted border-slate-200 last:border-b-0 text-[10px]">
-                        <span class="text-slate-600 shrink-0">{{ fld.label }}</span>
-                        <span class="font-bold text-slate-950 text-right break-words">{{ fld.value }}</span>
-                      </div>
-                    } @empty {
-                      <p class="text-center py-2 font-bold text-slate-500">See amount summary below.</p>
-                    }
-                  } @else {
-                    @for (item of thermalPreviewRows(); track $index) {
-                      <div class="py-1 border-b border-dotted border-slate-300 last:border-b-0">
-                        <div class="flex justify-between items-baseline gap-2">
-                          <span class="font-extrabold text-slate-950 truncate">{{ $index + 1 }}. {{ item.primary }}</span>
-                          @if (item.amount) {
-                            <span class="font-mono font-black shrink-0">{{ item.amount }}</span>
+                      @case ('meta') {
+                        <div>
+                          <div class="border-y-2 border-slate-950 py-1 flex items-center justify-between gap-2">
+                            <span class="text-[9px] font-black uppercase tracking-wider truncate">{{ effectiveTitle() }}</span>
+                            <span class="px-1.5 py-0.5 bg-slate-950 text-white text-[8px] font-black uppercase rounded-xs shrink-0">
+                              {{ stampBadgeLabel() }}
+                            </span>
+                          </div>
+                          <div class="py-2 space-y-1 text-[10px] border-b border-dashed border-slate-400">
+                            <div class="flex justify-between gap-2">
+                              <span class="text-slate-600">{{ isSingleRecord() ? 'Slip Ref' : 'Statement Ref' }}</span>
+                              <span class="font-bold font-mono">{{ statementRef() }}</span>
+                            </div>
+                            @if (!isSingleRecord()) {
+                              <div class="flex justify-between gap-2">
+                                <span class="text-slate-600">Date Range</span>
+                                <span class="font-bold">{{ (fromDate() || 'Start') + ' → ' + (toDate() || 'Latest') }}</span>
+                              </div>
+                              @if (searchQuery().trim()) {
+                                <div class="flex justify-between gap-2">
+                                  <span class="text-slate-600">Filter</span>
+                                  <span class="font-bold truncate max-w-[160px]">{{ searchQuery().trim() }}</span>
+                                </div>
+                              }
+                              <div class="flex justify-between gap-2">
+                                <span class="text-slate-600">Records</span>
+                                <span class="font-bold">{{ filteredRows().length }} / {{ data.rows.length }}</span>
+                              </div>
+                            }
+                            <div class="flex justify-between gap-2">
+                              <span class="text-slate-600">Printed At</span>
+                              <span class="font-bold">{{ issuedAtLabel() }}</span>
+                            </div>
+                          </div>
+                        </div>
+                      }
+
+                      @case ('person') {
+                        <div class="py-1.5 border-b border-dashed border-slate-400 space-y-1.5">
+                          <div class="text-[8px] font-black uppercase tracking-wider text-slate-700">
+                            {{ isSingleRecord() ? 'RECORD PARTICULARS' : 'ITEMIZED ENTRIES' }}
+                          </div>
+                          @if (isSingleRecord()) {
+                            @for (fld of singleRecordTextFields(); track $index) {
+                              <div class="flex justify-between items-baseline gap-2 py-0.5 border-b border-dotted border-slate-200 last:border-b-0 text-[10px]">
+                                <span class="text-slate-600 shrink-0 inline-flex items-center gap-1">
+                                  @if (effectiveTable().showFieldLogos) {
+                                    <span class="w-1.5 h-1.5 bg-slate-900 rounded-xs inline-block"></span>
+                                  }
+                                  <span>{{ fld.label }}</span>
+                                </span>
+                                <span class="font-bold text-slate-950 text-right break-words">{{ fld.value }}</span>
+                              </div>
+                            } @empty {
+                              <p class="text-center py-2 font-bold text-slate-500">See amount summary below.</p>
+                            }
+                          } @else {
+                            @for (item of thermalPreviewRows(); track $index) {
+                              <div class="py-1 border-b border-dotted border-slate-300 last:border-b-0">
+                                <div class="flex justify-between items-baseline gap-2">
+                                  <span class="font-extrabold text-slate-950 truncate inline-flex items-center gap-1">
+                                    @if (effectiveTable().showFieldLogos) {
+                                      <span class="w-1.5 h-1.5 bg-slate-900 rounded-xs inline-block shrink-0"></span>
+                                    }
+                                    <span>{{ $index + 1 }}. {{ item.primary }}</span>
+                                  </span>
+                                  @if (item.amount) {
+                                    <span class="font-mono font-black shrink-0">{{ item.amount }}</span>
+                                  }
+                                </div>
+                                @if (item.meta) {
+                                  <div class="text-[9px] text-slate-600 leading-snug">{{ item.meta }}</div>
+                                }
+                              </div>
+                            } @empty {
+                              <p class="text-center py-3 font-bold text-slate-500">No matching records found.</p>
+                            }
+                            @if (filteredRows().length > 40) {
+                              <p class="text-[9px] text-center text-slate-500 font-semibold pt-1">
+                                + {{ filteredRows().length - 40 }} more row(s) included on print (up to 120 rows)
+                              </p>
+                            }
                           }
                         </div>
-                        @if (item.meta) {
-                          <div class="text-[9px] text-slate-600 leading-snug">{{ item.meta }}</div>
+                      }
+
+                      @case ('amounts') {
+                        @if (amountSummary().amountColumns.length > 0) {
+                          <div class="py-1.5 space-y-1">
+                            <div class="text-[8px] font-black uppercase tracking-wider text-slate-700">AMOUNT SUMMARY</div>
+                            @for (col of amountSummary().amountColumns; track col.colIndex) {
+                              <div class="flex justify-between gap-2 text-[10px]">
+                                <span class="text-slate-700 font-semibold inline-flex items-center gap-1">
+                                  @if (effectiveTable().showFieldLogos) {
+                                    <span class="w-1.5 h-1.5 bg-slate-900 rounded-xs inline-block"></span>
+                                  }
+                                  <span>{{ col.label }}</span>
+                                </span>
+                                <span class="font-mono font-bold">{{ amountSummary().currency }} {{ formatMoney(col.total) }}</span>
+                              </div>
+                            }
+                            <div class="mt-2 bg-slate-950 text-white px-2.5 py-1.5 flex items-center justify-between font-black text-xs">
+                              <span>{{ isSingleRecord() ? 'TOTAL AMOUNT' : (amountSummary().hasInflowOutflowSplit ? 'NET BALANCE' : 'STATEMENT TOTAL') }}</span>
+                              <span class="font-mono">{{ amountSummary().currency }} {{ formatMoney(amountSummary().primaryTotal) }}</span>
+                            </div>
+                          </div>
                         }
-                      </div>
-                    } @empty {
-                      <p class="text-center py-3 font-bold text-slate-500">No matching records found.</p>
-                    }
-                    @if (filteredRows().length > 40) {
-                      <p class="text-[9px] text-center text-slate-500 font-semibold pt-1">
-                        + {{ filteredRows().length - 40 }} more row(s) included on print (up to 120 rows)
-                      </p>
+                      }
+
+                      @case ('verification') {
+                        @if (branding().showBarcodeVerification !== false || branding().showQrVerification !== false) {
+                          <div class="pt-2.5 mt-1 border-t border-dashed border-slate-400 flex flex-col items-center gap-2 text-center">
+                            <span class="text-[8px] font-black uppercase tracking-widest text-slate-700">VERIFICATION</span>
+                            <div
+                              class="flex flex-col items-center gap-2"
+                              [class]="branding().verificationOrder === 'qr_first' ? 'flex-col-reverse' : 'flex-col'"
+                            >
+                              @if (branding().showBarcodeVerification !== false) {
+                                <app-school-barcode [value]="statementRef()" [height]="24" [barWidth]="1.05" />
+                              }
+                              @if (branding().showQrVerification !== false) {
+                                <app-school-qr-code [value]="qrPayload()" [size]="56" />
+                              }
+                            </div>
+                          </div>
+                        }
+                      }
+
+                      @case ('footer') {
+                        <div>
+                          <div class="mt-2 pt-1.5 border-t border-slate-900 text-center text-[8px] font-black uppercase tracking-wider">
+                            {{ branding().signatoryTitle || 'Accounts Officer' }}
+                          </div>
+                          <div class="text-center text-[8px] text-slate-500 mt-1">
+                            {{ branding().footerNote }} ({{ activeFormat().toUpperCase() }})
+                          </div>
+                          @if (effectiveTable().showWatermark) {
+                            <div class="text-center text-[7px] font-black uppercase tracking-[0.2em] text-slate-400 mt-1">
+                              *** {{ branding().schoolName }} · OFFICIAL SLIP ***
+                            </div>
+                          }
+                        </div>
+                      }
                     }
                   }
-                </div>
-
-                <!-- Thermal Totals Block -->
-                @if (amountSummary().amountColumns.length > 0) {
-                  <div class="py-2 space-y-1">
-                    <div class="text-[8px] font-black uppercase tracking-wider text-slate-700">AMOUNT SUMMARY</div>
-                    @for (col of amountSummary().amountColumns; track col.colIndex) {
-                      <div class="flex justify-between gap-2 text-[10px]">
-                        <span class="text-slate-700 font-semibold">{{ col.label }}</span>
-                        <span class="font-mono font-bold">{{ amountSummary().currency }} {{ formatMoney(col.total) }}</span>
-                      </div>
-                    }
-                    <div class="mt-2 bg-slate-950 text-white px-2.5 py-1.5 flex items-center justify-between font-black text-xs">
-                      <span>{{ isSingleRecord() ? 'TOTAL AMOUNT' : (amountSummary().hasInflowOutflowSplit ? 'NET BALANCE' : 'STATEMENT TOTAL') }}</span>
-                      <span class="font-mono">{{ amountSummary().currency }} {{ formatMoney(amountSummary().primaryTotal) }}</span>
-                    </div>
-                  </div>
                 }
-
-                <!-- Barcode + QR Verification -->
-                @if (branding().showBarcodeVerification !== false || branding().showQrVerification !== false) {
-                  <div class="pt-2.5 mt-1 border-t border-dashed border-slate-400 flex flex-col items-center gap-2 text-center">
-                    <span class="text-[8px] font-black uppercase tracking-widest text-slate-700">VERIFICATION</span>
-                    @if (branding().showBarcodeVerification !== false) {
-                      <app-school-barcode [value]="statementRef()" [height]="24" [barWidth]="1.05" />
-                    }
-                    @if (branding().showQrVerification !== false) {
-                      <app-school-qr-code [value]="qrPayload()" [size]="56" />
-                    }
-                  </div>
-                }
-
-                <div class="mt-3 pt-1.5 border-t border-slate-900 text-center text-[8px] font-black uppercase tracking-wider">
-                  {{ branding().signatoryTitle || 'Accounts Officer' }}
-                </div>
-                <div class="text-center text-[8px] text-slate-500 mt-1">
-                  {{ branding().footerNote }} ({{ activeFormat().toUpperCase() }})
-                </div>
               </div>
             } @else if (activeFormat() === 'card') {
               <!-- Digital QR & Verification Record Card Preview -->
-              <div class="mx-auto max-w-2xl bg-white rounded-2xl border-2 border-slate-900 shadow-sm overflow-hidden text-slate-900">
-                <div
-                  class="px-5 py-4 text-white flex items-center justify-between gap-3"
-                  [style.background-color]="branding().headerAccentColor || '#0f172a'"
-                >
-                  <div class="flex items-center gap-3 min-w-0">
-                    @if (branding().showLogoCrest !== false) {
-                      @if (safeLogoUrl()) {
-                        <div class="bg-white rounded-lg p-1 shrink-0">
-                          <img
-                            [src]="safeLogoUrl()"
-                            alt="School Logo"
-                            referrerpolicy="no-referrer"
-                            class="w-10 h-10 object-contain block"
-                          />
-                        </div>
-                      } @else {
-                        <div class="px-2.5 py-1.5 rounded-lg bg-white/15 border border-white/40 font-black text-xs tracking-widest uppercase shrink-0">
-                          {{ monogramText() }}
-                        </div>
-                      }
-                    }
-                    <div class="min-w-0">
-                      <h4 class="text-sm sm:text-base font-black uppercase tracking-tight truncate">{{ branding().schoolName }}</h4>
-                      @if (branding().campusTagline) {
-                        <p class="text-[10px] font-bold uppercase tracking-wider text-white/80 truncate">{{ branding().campusTagline }}</p>
-                      }
-                    </div>
+              <div
+                class="mx-auto max-w-2xl bg-white rounded-2xl border-2 shadow-sm overflow-hidden text-slate-900 relative"
+                [style.border-color]="branding().headerAccentColor || '#0f172a'"
+              >
+                @if (effectiveTable().showWatermark) {
+                  <div class="pointer-events-none select-none absolute inset-0 flex items-center justify-center opacity-[0.04] z-0">
+                    <span class="text-4xl font-black uppercase tracking-[0.22em] -rotate-20 text-slate-900">
+                      {{ branding().schoolName }}
+                    </span>
                   </div>
-                  <span class="px-2.5 py-1 rounded-md bg-white/15 border border-white/40 text-[10px] font-black uppercase tracking-wider shrink-0">
-                    {{ stampBadgeLabel() }} PASS
-                  </span>
-                </div>
+                }
 
-                <div class="p-5 space-y-4">
-                  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-dashed border-slate-300">
-                    <div class="space-y-1 min-w-0">
-                      <h5 class="text-sm sm:text-base font-black text-slate-950">{{ data.title }}</h5>
-                      <p class="text-xs font-mono font-bold text-slate-600">Ref: {{ statementRef() }}</p>
-                      <p class="text-[11px] text-slate-500">Issued: {{ issuedAtLabel() }} · {{ data.roleLabel }}</p>
-                    </div>
-                    @if (branding().showQrVerification !== false) {
-                      <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-center shrink-0 self-start sm:self-center">
-                        <app-school-qr-code [value]="qrPayload()" [size]="84" />
-                        <span class="block text-[8px] font-black uppercase tracking-widest text-slate-500 mt-1">SCAN TO VERIFY</span>
+                <div class="relative z-10">
+                  @if (!hiddenSectionSet().has('header')) {
+                    <div
+                      class="px-5 py-4 text-white flex items-center justify-between gap-3"
+                      [style.background-color]="branding().headerAccentColor || '#0f172a'"
+                    >
+                      <div
+                        class="flex items-center gap-3 min-w-0 flex-1"
+                        [class]="branding().logoPlacement === 'right' ? 'flex-row-reverse text-right' : 'flex-row text-left'"
+                      >
+                        @if (branding().showLogoCrest !== false) {
+                          @if (safeLogoUrl()) {
+                            <div class="bg-white rounded-lg p-1 shrink-0">
+                              <img
+                                [src]="safeLogoUrl()"
+                                alt="School Logo"
+                                referrerpolicy="no-referrer"
+                                class="w-10 h-10 object-contain block"
+                              />
+                            </div>
+                          } @else {
+                            <div class="px-2.5 py-1.5 rounded-lg bg-white/15 border border-white/40 font-black text-xs tracking-widest uppercase shrink-0">
+                              {{ monogramText() }}
+                            </div>
+                          }
+                        }
+                        <div class="min-w-0">
+                          <h4 class="text-sm sm:text-base font-black uppercase tracking-tight truncate">{{ branding().schoolName }}</h4>
+                          @if (branding().campusTagline) {
+                            <p class="text-[10px] font-bold uppercase tracking-wider text-white/80 truncate">{{ branding().campusTagline }}</p>
+                          }
+                        </div>
                       </div>
-                    }
-                  </div>
-
-                  @if (singleRecordFields().length > 0) {
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                      @for (fld of singleRecordFields(); track $index) {
-                        <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
-                          <span class="block text-[9px] font-black uppercase tracking-wider text-slate-500">{{ fld.label }}</span>
-                          <span
-                            class="block mt-0.5 break-words"
-                            [class]="fld.isAmount ? 'font-mono font-black text-xs text-slate-950' : 'font-bold text-xs text-slate-900'"
-                          >
-                            {{ fld.value }}
-                          </span>
-                        </div>
-                      }
-                    </div>
-                  } @else if (amountSummary().amountColumns.length > 0) {
-                    <div class="grid grid-cols-2 gap-2.5">
-                      @for (col of amountSummary().amountColumns; track col.colIndex) {
-                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
-                          <span class="block text-[9px] font-black uppercase tracking-wider text-slate-500">{{ col.label }}</span>
-                          <span class="block font-mono font-black text-sm text-slate-950 mt-0.5">{{ amountSummary().currency }} {{ formatMoney(col.total) }}</span>
-                        </div>
-                      }
+                      <span class="px-2.5 py-1 rounded-md bg-white/15 border border-white/40 text-[10px] font-black uppercase tracking-wider shrink-0">
+                        {{ stampBadgeLabel() }} PASS
+                      </span>
                     </div>
                   }
 
-                  <div class="pt-3 border-t border-dashed border-slate-300 flex flex-col sm:flex-row sm:items-end justify-between gap-3">
-                    <div>
-                      @if (branding().showBarcodeVerification !== false) {
-                        <app-school-barcode [value]="statementRef()" [height]="26" [barWidth]="1.15" />
-                      }
-                      <p class="text-[10px] text-slate-500 mt-1">{{ branding().footerNote }}</p>
-                    </div>
-                    <div class="border-t border-slate-900 pt-1 min-w-[170px] text-left sm:text-right text-[10px] font-black uppercase tracking-wider text-slate-900">
-                      {{ branding().signatoryTitle || 'Principal & Accounts Directorate' }}
-                    </div>
+                  <div class="p-5 space-y-4">
+                    @if (!hiddenSectionSet().has('meta')) {
+                      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-dashed border-slate-300">
+                        <div class="space-y-1 min-w-0">
+                          <h5 class="text-sm sm:text-base font-black text-slate-950">{{ effectiveTitle() }}</h5>
+                          <p class="text-xs font-mono font-bold text-slate-600">Ref: {{ statementRef() }}</p>
+                          <p class="text-[11px] text-slate-500">Issued: {{ issuedAtLabel() }} · {{ data.roleLabel }}</p>
+                        </div>
+                        @if (!hiddenSectionSet().has('verification') && branding().showQrVerification !== false) {
+                          <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-center shrink-0 self-start sm:self-center">
+                            <app-school-qr-code [value]="qrPayload()" [size]="84" />
+                            <span class="block text-[8px] font-black uppercase tracking-widest text-slate-500 mt-1">SCAN TO VERIFY</span>
+                          </div>
+                        }
+                      </div>
+                    }
+
+                    @if (!hiddenSectionSet().has('person') && singleRecordFields().length > 0) {
+                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        @for (fld of singleRecordFields(); track $index) {
+                          <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+                            <span class="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider text-slate-500">
+                              @if (effectiveTable().showFieldLogos) {
+                                @if (safeLogoUrl()) {
+                                  <img [src]="safeLogoUrl()" alt="" referrerpolicy="no-referrer" class="w-3 h-3 object-contain rounded-xs shrink-0" />
+                                } @else {
+                                  <span class="px-1 rounded text-[7px] font-black text-white shrink-0" [style.background-color]="branding().headerAccentColor || '#0f172a'">{{ monogramText().slice(0, 2) }}</span>
+                                }
+                              }
+                              <span>{{ fld.label }}</span>
+                            </span>
+                            <span
+                              class="block mt-0.5 break-words"
+                              [class]="fld.isAmount ? 'font-mono font-black text-xs text-slate-950' : 'font-bold text-xs text-slate-900'"
+                            >
+                              {{ fld.value }}
+                            </span>
+                          </div>
+                        }
+                      </div>
+                    } @else if (!hiddenSectionSet().has('amounts') && amountSummary().amountColumns.length > 0) {
+                      <div class="grid grid-cols-2 gap-2.5">
+                        @for (col of amountSummary().amountColumns; track col.colIndex) {
+                          <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                            <span class="block text-[9px] font-black uppercase tracking-wider text-slate-500">{{ col.label }}</span>
+                            <span class="block font-mono font-black text-sm text-slate-950 mt-0.5">{{ amountSummary().currency }} {{ formatMoney(col.total) }}</span>
+                          </div>
+                        }
+                      </div>
+                    }
+
+                    @if (!hiddenSectionSet().has('footer') || !hiddenSectionSet().has('verification')) {
+                      <div class="pt-3 border-t border-dashed border-slate-300 flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+                        <div>
+                          @if (!hiddenSectionSet().has('verification') && branding().showBarcodeVerification !== false) {
+                            <app-school-barcode [value]="statementRef()" [height]="26" [barWidth]="1.15" />
+                          }
+                          @if (!hiddenSectionSet().has('footer')) {
+                            <p class="text-[10px] text-slate-500 mt-1">{{ branding().footerNote }}</p>
+                          }
+                        </div>
+                        @if (!hiddenSectionSet().has('footer')) {
+                          <div class="border-t border-slate-900 pt-1 min-w-[170px] text-left sm:text-right text-[10px] font-black uppercase tracking-wider text-slate-900">
+                            {{ branding().signatoryTitle || 'Principal & Accounts Directorate' }}
+                          </div>
+                        }
+                      </div>
+                    }
                   </div>
                 </div>
               </div>
@@ -817,7 +1000,8 @@ export class SchoolTableStatementModalComponent {
   private readonly schemaService = inject(SchoolTableSchemaService);
 
   readonly modalState = this.schemaService.statementModalState;
-  readonly branding = this.schemaService.printBranding;
+  readonly rawBranding = this.schemaService.printBranding;
+  readonly isOwner = this.schemaService.isOwner;
 
   readonly searchQuery = signal<string>('');
   readonly fromDate = signal<string>('');
@@ -850,6 +1034,26 @@ export class SchoolTableStatementModalComponent {
       state.directDataset
     );
   });
+
+  readonly canonicalTableId = computed(() => {
+    const rawId = (this.dataset()?.tableId || this.modalState().tableId || '').replace(/_single_record$/, '');
+    return rawId ? this.schemaService.resolveCanonicalTableId(rawId) : '';
+  });
+
+  readonly effectiveTable = computed(() => {
+    const data = this.dataset();
+    const rawId = (data?.tableId || this.modalState().tableId || '').replace(/_single_record$/, '');
+    return resolveEffectiveTableBranding(this.rawBranding(), rawId, this.canonicalTableId());
+  });
+
+  readonly branding = computed(() => this.effectiveTable().branding);
+
+  readonly effectiveTitle = computed(() => {
+    const data = this.dataset();
+    return this.effectiveTable().customHeading || data?.title || 'Statement';
+  });
+
+  readonly hiddenSectionSet = computed(() => new Set<PrintSectionKey>(this.branding().hiddenSections || []));
 
   readonly filteredRows = computed(() => {
     const data = this.dataset();
@@ -959,9 +1163,8 @@ export class SchoolTableStatementModalComponent {
   });
 
   readonly qrPayload = computed(() => {
-    const data = this.dataset();
     const sum = this.amountSummary();
-    return `STM:${this.statementRef()}|${data?.title || 'Statement'}|ROWS:${this.filteredRows().length}|NET:${sum.currency} ${Math.round(sum.primaryTotal)}`;
+    return `STM:${this.statementRef()}|${this.effectiveTitle()}|ROWS:${this.filteredRows().length}|NET:${sum.currency} ${Math.round(sum.primaryTotal)}`;
   });
 
   readonly thermalPreviewRows = computed(() => {
@@ -993,7 +1196,9 @@ export class SchoolTableStatementModalComponent {
     const data = this.dataset();
     if (!data) return '';
     return buildSchoolStatementWhatsAppText({
-      title: data.title,
+      tableId: data.tableId,
+      canonicalTableId: this.canonicalTableId(),
+      title: this.effectiveTitle(),
       roleLabel: data.roleLabel,
       headers: data.headers,
       rows: this.filteredRows(),
@@ -1092,6 +1297,13 @@ export class SchoolTableStatementModalComponent {
     return formatStatementMoney(val, this.branding().currencySymbol || DEFAULT_SCHOOL_PRINT_BRANDING.currencySymbol);
   }
 
+  openPrintStudioForTable(): void {
+    const data = this.dataset();
+    const tid = this.canonicalTableId() || data?.tableId || this.modalState().tableId;
+    this.schemaService.requestOpenPrintStudio('table_statement', tid);
+    this.close();
+  }
+
   printCurrentFormat(): void {
     const data = this.dataset();
     if (!data) return;
@@ -1103,13 +1315,15 @@ export class SchoolTableStatementModalComponent {
     };
     const mode = this.activeFormat();
     const params = {
+      tableId: data.tableId,
+      canonicalTableId: this.canonicalTableId(),
       title: data.title,
       roleLabel: data.roleLabel,
       headers: data.headers,
       rows,
       totalUnfilteredCount: data.rows.length,
       criteria,
-      branding: this.branding(),
+      branding: this.rawBranding(),
       statementRef: this.statementRef()
     };
     if (mode === '80mm' || mode === '58mm') {
@@ -1130,10 +1344,10 @@ export class SchoolTableStatementModalComponent {
     const data = this.dataset();
     if (!data) return;
     const rows = this.filteredRows();
-    const branding = this.schemaService.getPdfBranding();
+    const branding = this.schemaService.getPdfBranding(data.tableId);
     const subtitle = `${data.roleLabel} | ${this.criteriaSubtitle()}`;
     downloadStudentsTablePdf({
-      title: `${data.title} (Statement Register)`,
+      title: `${this.effectiveTitle()} (Statement Register)`,
       subtitle,
       headers: data.headers,
       rows,
@@ -1148,7 +1362,8 @@ export class SchoolTableStatementModalComponent {
     const data = this.dataset();
     if (!data) return;
     const rows = this.filteredRows();
-    const branding = this.schemaService.getPdfBranding();
+    const branding = this.schemaService.getPdfBranding(data.tableId);
+    const titleText = this.effectiveTitle();
     const cards: PdfGenericCardEntry[] = rows.map((row, idx) => {
       const fields = data.headers.map((h, hIdx) => ({
         label: h || `Field ${hIdx + 1}`,
@@ -1158,13 +1373,13 @@ export class SchoolTableStatementModalComponent {
       const statusField = fields.find((f) => /status|grade|result|fee|state/i.test(f.label));
       return {
         title: nonEmpty[0] || `Record #${idx + 1}`,
-        subtitle: `${data.roleLabel} | ${data.title} | Entry #${idx + 1}`,
+        subtitle: `${data.roleLabel} | ${titleText} | Entry #${idx + 1}`,
         badgeText: statusField?.value && statusField.value !== '-' ? statusField.value : `#${idx + 1}`,
         fields
       };
     });
     downloadTableCardsPdf({
-      title: `${data.title} (Statement Cards)`,
+      title: `${titleText} (Statement Cards)`,
       subtitle: `${data.roleLabel} | ${this.criteriaSubtitle()}`,
       cards,
       filename: `${data.safeBaseName}_statement_cards.pdf`,

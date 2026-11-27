@@ -1586,3 +1586,260 @@ export function buildBorrowSlipPrintHtml(
 </html>`;
 }
 
+export interface CashieringReceiptPrintData {
+  receiptNo: string;
+  timestamp: string;
+  studentName: string;
+  rollNo: string;
+  grade: string;
+  guardianName?: string;
+  monthsPaid: string;
+  paymentResource: string;
+  resourceReference?: string;
+  collectedBy: string;
+  collectorRole?: string;
+  amount: number;
+  notes?: string;
+}
+
+export function buildCashieringReceiptA4Html(
+  data: CashieringReceiptPrintData,
+  rawBranding: SchoolPrintBrandingConfig
+): string {
+  const branding = normalizeSchoolPrintBranding(rawBranding);
+  const cur = branding.currencySymbol || 'PKR';
+  const accent = safeAccent(branding.headerAccentColor);
+  const badgeHtml = branding.showLogoCrest !== false
+    ? renderLogoOrCrestHtml(branding, accent, Math.min(54, branding.logoSizePx), 12, 8)
+    : '';
+  const barcodeSvg = branding.showBarcodeVerification !== false
+    ? buildCode128SvgMarkup(data.receiptNo, 28, '#0f172a')
+    : '';
+  const qrSvg = branding.showQrVerification !== false
+    ? buildQrCodeSvgMarkup(
+        `REC:${data.receiptNo}|STU:${data.studentName}|ROLL:${data.rollNo}|AMT:${cur} ${data.amount}|DATE:${data.timestamp}`,
+        64,
+        accent,
+        2,
+        'M'
+      )
+    : '';
+  const stampText = branding.stampLabel && branding.stampLabel !== 'NONE' ? branding.stampLabel : 'PAID';
+  const deskLabel = data.collectorRole === 'accountant'
+    ? 'Accountant / Fee Clerk Counter'
+    : 'Office of the Principal & Executive Desk';
+
+  const alignClass = branding.logoPlacement === 'top'
+    ? `flex-direction:column;align-items:${branding.headerAlign === 'left' ? 'flex-start' : (branding.headerAlign === 'right' ? 'flex-end' : 'center')};text-align:${branding.headerAlign || 'center'};`
+    : (branding.logoPlacement === 'right' ? 'flex-direction:row-reverse;align-items:center;text-align:right;' : 'flex-direction:row;align-items:center;text-align:left;');
+
+  return `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Fee Receipt - ${escapeHtml(data.receiptNo)}</title>
+  <style>
+    @page { size: A4 portrait; margin: 12mm; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #0f172a; background: #fff; font-size: 11px; }
+    .card { border: 2px solid ${accent}; border-radius: 12px; padding: 20px; max-width: 185mm; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; position: relative; overflow: hidden; }
+    .wm { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; opacity: 0.04; font-size: 42px; font-weight: 900; letter-spacing: 5px; transform: rotate(-22deg); pointer-events: none; color: ${accent}; }
+    .hdr { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; border-bottom: 2px solid ${accent}; padding-bottom: 12px; position: relative; z-index: 1; }
+    .brand { display: flex; gap: 12px; flex: 1; min-width: 0; ${alignClass} }
+    .school { font-size: 17px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.3px; }
+    .sub { font-size: 10px; color: #475569; margin-top: 2px; }
+    .meta-r { text-align: right; flex-shrink: 0; }
+    .badge { display: inline-block; background: ${accent}; color: #fff; padding: 4px 10px; border-radius: 5px; font-weight: 900; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; position: relative; z-index: 1; }
+    .sec-title { font-size: 9.5px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.8px; color: ${accent}; margin-bottom: 6px; }
+    .kv { display: flex; justify-content: space-between; gap: 8px; padding: 4px 0; border-bottom: 1px dotted #e2e8f0; }
+    .kv-l { color: #64748b; font-weight: 600; }
+    .kv-v { font-weight: 800; color: #0f172a; text-align: right; }
+    .amt-strip { background: #f8fafc; border: 1.5px solid ${accent}; border-radius: 10px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 1; }
+    .amt-val { font-size: 20px; font-weight: 900; color: ${accent}; }
+    .ver { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; padding-top: 10px; border-top: 1px dashed #cbd5e1; position: relative; z-index: 1; }
+    .sign { border-top: 1.5px solid #0f172a; padding-top: 4px; min-width: 180px; text-align: right; font-size: 10px; font-weight: 800; text-transform: uppercase; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="wm">${escapeHtml(branding.schoolName.toUpperCase())}</div>
+    <div class="hdr">
+      <div class="brand">
+        ${badgeHtml}
+        <div>
+          <div class="school">${escapeHtml(branding.schoolName)}</div>
+          ${branding.campusTagline ? `<div class="sub" style="font-weight:700;text-transform:uppercase;">${escapeHtml(branding.campusTagline)}</div>` : ''}
+          <div class="sub">${escapeHtml(deskLabel)} · ${escapeHtml(branding.address)} · ${escapeHtml(branding.phone)}</div>
+        </div>
+      </div>
+      <div class="meta-r">
+        <span class="badge">${escapeHtml(stampText)} · CASHIER RECEIPT</span>
+        <div class="mono" style="font-weight:800;margin-top:6px;">Receipt #: ${escapeHtml(data.receiptNo)}</div>
+        <div class="sub">${escapeHtml(data.timestamp)}</div>
+      </div>
+    </div>
+    <div class="grid2">
+      <div>
+        <div class="sec-title">Student Details</div>
+        <div class="kv"><span class="kv-l">Student Name</span><span class="kv-v">${escapeHtml(data.studentName)}</span></div>
+        <div class="kv"><span class="kv-l">Roll Number</span><span class="kv-v mono">${escapeHtml(data.rollNo)}</span></div>
+        <div class="kv"><span class="kv-l">Class &amp; Grade</span><span class="kv-v">${escapeHtml(data.grade)}</span></div>
+        <div class="kv"><span class="kv-l">Father / Guardian</span><span class="kv-v">${escapeHtml(data.guardianName || 'On File')}</span></div>
+      </div>
+      <div>
+        <div class="sec-title">Collection Audit</div>
+        <div class="kv"><span class="kv-l">Month / Term</span><span class="kv-v">${escapeHtml(data.monthsPaid)}</span></div>
+        <div class="kv"><span class="kv-l">Payment Channel</span><span class="kv-v">${escapeHtml(data.paymentResource)}</span></div>
+        <div class="kv"><span class="kv-l">Reference #</span><span class="kv-v mono">${escapeHtml(data.resourceReference || 'COUNTER-REF')}</span></div>
+        <div class="kv"><span class="kv-l">Collected By</span><span class="kv-v">${escapeHtml(data.collectedBy)}</span></div>
+      </div>
+    </div>
+    <div class="amt-strip">
+      <div>
+        <div style="font-weight:900;text-transform:uppercase;font-size:11px;">Total Net Amount Received</div>
+        <div class="sub">[Copy 1: Counter Desk] · [Copy 2: Parent Voucher] · [Copy 3: Accounts Ledger]</div>
+      </div>
+      <div class="amt-val mono">${escapeHtml(cur)} ${formatMoney(data.amount, cur)}</div>
+    </div>
+    <div class="ver">
+      <div style="display:flex;align-items:center;gap:12px;">
+        ${qrSvg}
+        <div>
+          ${barcodeSvg}
+          <div class="sub" style="margin-top:4px;max-width:340px;">${escapeHtml(branding.footerNote)}</div>
+        </div>
+      </div>
+      <div class="sign">${escapeHtml(branding.signatoryTitle || 'Principal & Accounts Directorate')}</div>
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
+export interface SlcCertificatePrintData {
+  certificateNo: string;
+  securityHash: string;
+  studentName: string;
+  fatherName: string;
+  rollNo: string;
+  grade: string;
+  admissionDate: string;
+  leavingDate: string;
+  reasonForLeaving: string;
+  conductRating: string;
+  academicAchievement: string;
+  issuedBy: string;
+  accountsClearance?: boolean;
+  libraryClearance?: boolean;
+  labClearance?: boolean;
+  sportsClearance?: boolean;
+}
+
+export function buildSlcCertificatePrintHtml(
+  data: SlcCertificatePrintData,
+  rawBranding: SchoolPrintBrandingConfig
+): string {
+  const branding = normalizeSchoolPrintBranding(rawBranding);
+  const accent = safeAccent(branding.headerAccentColor);
+  const badgeHtml = branding.showLogoCrest !== false
+    ? renderLogoOrCrestHtml(branding, accent, Math.min(64, branding.logoSizePx + 8), 14, 10)
+    : '';
+  const barcodeSvg = branding.showBarcodeVerification !== false
+    ? buildCode128SvgMarkup(data.certificateNo, 28, '#0f172a')
+    : '';
+  const qrSvg = branding.showQrVerification !== false
+    ? buildQrCodeSvgMarkup(
+        `SLC:${data.certificateNo}|HASH:${data.securityHash}|STU:${data.studentName}|ROLL:${data.rollNo}`,
+        70,
+        accent,
+        2,
+        'M'
+      )
+    : '';
+
+  return `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>School Leaving Certificate - ${escapeHtml(data.certificateNo)}</title>
+  <style>
+    @page { size: A4 portrait; margin: 12mm; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #0f172a; background: #fff; font-size: 12px; }
+    .cert { border: 4px double ${accent}; border-radius: 14px; padding: 26px; max-width: 190mm; margin: 0 auto; position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 18px; }
+    .wm { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; opacity: 0.045; font-size: 48px; font-weight: 900; letter-spacing: 6px; transform: rotate(-25deg); pointer-events: none; color: ${accent}; text-align: center; }
+    .hdr { text-align: center; position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .reg { font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 1.5px; color: ${accent}; }
+    .school { font-size: 22px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; color: #0f172a; }
+    .addr { font-size: 11px; color: #475569; font-style: italic; }
+    .pill { display: inline-block; background: ${accent}; color: #fff; padding: 5px 16px; border-radius: 6px; font-weight: 900; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+    .meta { display: flex; justify-content: space-between; border-top: 1.5px solid #cbd5e1; border-bottom: 1.5px solid #cbd5e1; padding: 8px 4px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 10.5px; position: relative; z-index: 1; }
+    .prose { font-family: Georgia, Cambria, "Times New Roman", serif; font-size: 13px; line-height: 1.7; position: relative; z-index: 1; }
+    .u { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-weight: 800; text-transform: uppercase; border-bottom: 1px solid #64748b; padding: 0 3px; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 20px; font-size: 11.5px; position: relative; z-index: 1; }
+    .clr { border: 1px solid #cbd5e1; background: #f8fafc; border-radius: 10px; padding: 10px 14px; position: relative; z-index: 1; }
+    .clr-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 6px; font-size: 10.5px; font-weight: 800; color: #047857; }
+    .signs { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; padding-top: 26px; position: relative; z-index: 1; }
+    .seal { width: 84px; height: 84px; border-radius: 9999px; border: 2px solid ${accent}; color: ${accent}; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; font-weight: 900; font-size: 8.5px; letter-spacing: 0.6px; text-transform: uppercase; }
+    .s-line { border-top: 1.5px solid #0f172a; padding-top: 4px; min-width: 165px; text-align: center; font-size: 10.5px; font-weight: 800; }
+    .ver { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-top: 10px; border-top: 1px dashed #cbd5e1; position: relative; z-index: 1; }
+  </style>
+</head>
+<body>
+  <div class="cert">
+    <div class="wm">${escapeHtml(branding.schoolName.toUpperCase())}</div>
+    <div class="hdr">
+      ${badgeHtml}
+      <div class="reg">${escapeHtml(branding.registrationNo)}</div>
+      <div class="school">${escapeHtml(branding.schoolName)}</div>
+      <div class="addr">${escapeHtml(branding.address)} · ${escapeHtml(branding.phone)}</div>
+      <div class="pill">Official School Leaving &amp; Character Certificate</div>
+    </div>
+    <div class="meta">
+      <div>Serial No: <strong>${escapeHtml(data.certificateNo)}</strong></div>
+      <div>Security Hash: <strong style="color:${accent};">${escapeHtml(data.securityHash)}</strong></div>
+      <div>Issue Date: <strong>${escapeHtml(data.leavingDate)}</strong></div>
+    </div>
+    <div class="prose">
+      This is to certify that <span class="u">${escapeHtml(data.studentName)}</span>,
+      son/daughter of <span class="u">${escapeHtml(data.fatherName)}</span>,
+      bearing Institutional Roll No. <span class="u">${escapeHtml(data.rollNo)}</span>,
+      was a bonafide student of this institution in <span class="u">${escapeHtml(data.grade)}</span>.
+    </div>
+    <div class="grid2">
+      <div><span style="color:#64748b;">Date of Admission:</span> <strong>${escapeHtml(data.admissionDate)}</strong></div>
+      <div><span style="color:#64748b;">Date of Leaving:</span> <strong>${escapeHtml(data.leavingDate)}</strong></div>
+      <div><span style="color:#64748b;">Reason for Leaving:</span> <strong>${escapeHtml(data.reasonForLeaving)}</strong></div>
+      <div><span style="color:#64748b;">Conduct &amp; Character:</span> <strong style="color:#047857;">${escapeHtml(data.conductRating)}</strong></div>
+      <div style="grid-column:span 2;"><span style="color:#64748b;">Academic &amp; Co-Curricular Achievement:</span> <strong>${escapeHtml(data.academicAchievement)}</strong></div>
+    </div>
+    <div class="clr">
+      <div style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.6px;">Institutional Dues &amp; Departmental Clearance</div>
+      <div class="clr-grid">
+        <div>${data.accountsClearance !== false ? '✓ Accounts: Cleared' : '• Accounts: Pending'}</div>
+        <div>${data.libraryClearance !== false ? '✓ Library: Cleared' : '• Library: Pending'}</div>
+        <div>${data.labClearance !== false ? '✓ Labs: Cleared' : '• Labs: Pending'}</div>
+        <div>${data.sportsClearance !== false ? '✓ Sports: Cleared' : '• Sports: Pending'}</div>
+      </div>
+    </div>
+    <div class="signs">
+      <div><div class="s-line">Registrar / Incharge Admissions</div></div>
+      <div class="seal">
+        <span>★ ${escapeHtml(branding.monogramInitials || 'SEAL')} ★</span>
+        <span style="font-size:10px;margin:2px 0;">SEALED</span>
+        <span>${escapeHtml(branding.stampLabel === 'NONE' ? 'VERIFIED' : branding.stampLabel)}</span>
+      </div>
+      <div><div class="s-line">${escapeHtml(data.issuedBy)}<br/><span style="font-size:9px;color:#64748b;font-weight:600;">${escapeHtml(branding.signatoryTitle)}</span></div></div>
+    </div>
+    <div class="ver">
+      <div>${barcodeSvg}<div style="font-size:9px;color:#64748b;margin-top:4px;">${escapeHtml(branding.footerNote)}</div></div>
+      <div>${qrSvg}</div>
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
+

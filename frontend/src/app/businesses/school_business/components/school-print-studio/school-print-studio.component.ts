@@ -36,15 +36,51 @@ import {
   SchoolDocumentFormatMeta,
   SchoolPrintBrandingConfig,
   SchoolPrintDocumentType,
+  TablePrintDefaultFormat,
+  TablePrintOrientation,
+  TablePrintOverride,
+  TablePrintSlipLayout,
   buildA4BankChallanHtml,
   buildResultDmcHtml,
   buildSalarySlipHtml,
   buildStudentIdCardPrintHtml,
   normalizeSchoolPrintBranding,
+  resolveEffectiveTableBranding,
   sanitizeBrandingLogoUrl
 } from '../../utils/school-print-templates.util';
+import {
+  SCHOOL_TABLE_CATALOG,
+  SCHOOL_TABLE_FAMILY_MAP,
+  TableCatalogItem
+} from '../../services/school-table-schema.service';
+import {
+  StatementDataset,
+  buildSchoolStatementA4Html,
+  buildSchoolStatementCardHtml,
+  buildSchoolStatementThermalHtml,
+  computeStatementAmounts,
+  formatStatementMoney
+} from '../../utils/school-statement-print.util';
 
 export type PrintStudioTab = 'formats' | 'branding' | 'hardware';
+
+export type PrintTableCategoryKey =
+  | 'all'
+  | 'students_identity'
+  | 'finance_fees'
+  | 'academics_exams'
+  | 'hr_attendance'
+  | 'operations_audit'
+  | 'custom_only';
+
+export interface EnrichedTableDirectoryItem extends TableCatalogItem {
+  categoryKey: Exclude<PrintTableCategoryKey, 'all' | 'custom_only'>;
+  categoryLabel: string;
+  linkedPortalCount: number;
+  specialFormatId?: SchoolPrintDocumentType;
+  specialFormatLabel?: string;
+  isCustom: boolean;
+}
 
 @Component({
   selector: 'app-school-print-studio',
@@ -75,6 +111,9 @@ export class SchoolPrintStudioComponent implements OnDestroy {
   readonly bankIban = input<string>('PK36MEZN0001020105829102');
   readonly oneBillPrefix = input<string>('10089');
   readonly lateFeeFinePkr = input<number>(500);
+  readonly initialFormat = input<SchoolPrintDocumentType | null>(null);
+  readonly initialTableScope = input<string | null>(null);
+  readonly initialJumpSeq = input<number>(0);
 
   readonly saveBranding = output<SchoolPrintBrandingConfig>();
   readonly resetBranding = output<void>();
@@ -103,7 +142,22 @@ export class SchoolPrintStudioComponent implements OnDestroy {
   readonly hiddenSections = signal<PrintSectionKey[]>([]);
   readonly sectionMetaMap = PRINT_SECTION_META;
 
+  readonly tableCatalog: TableCatalogItem[] = SCHOOL_TABLE_CATALOG;
+  readonly tableFamilyMap: Record<string, string> = SCHOOL_TABLE_FAMILY_MAP;
+  readonly tableOverrides = signal<Record<string, TablePrintOverride>>({});
+  readonly selectedTableScope = signal<string>('__global__');
+  readonly tablePreviewSubMode = signal<'a4_slip' | 'a4_statement' | '80mm' | '58mm' | 'card'>('a4_slip');
+  readonly tableSearchQuery = signal<string>('');
+  readonly tableCategoryFilter = signal<PrintTableCategoryKey>('all');
+  readonly showTableDirectory = signal<boolean>(true);
+  private lastHandledJumpSeq = 0;
+
   readonly documentCatalog: SchoolDocumentFormatMeta[] = SCHOOL_DOCUMENT_CATALOG;
+  readonly specialDocumentCatalog: SchoolDocumentFormatMeta[] = SCHOOL_DOCUMENT_CATALOG.filter(
+    (d) => d.id !== 'table_statement'
+  );
+  readonly universalTableDocumentMeta: SchoolDocumentFormatMeta =
+    SCHOOL_DOCUMENT_CATALOG.find((d) => d.id === 'table_statement') || SCHOOL_DOCUMENT_CATALOG[0];
 
   readonly accentSwatches = [
     { label: 'Institutional Navy', hex: '#0f172a' },
@@ -153,7 +207,12 @@ export class SchoolPrintStudioComponent implements OnDestroy {
     dmcExamTitle: new FormControl<string>(DEFAULT_SCHOOL_PRINT_BRANDING.dmcExamTitle, { nonNullable: true }),
     dmcSessionLabel: new FormControl<string>(DEFAULT_SCHOOL_PRINT_BRANDING.dmcSessionLabel, { nonNullable: true }),
     salaryMonthLabel: new FormControl<string>(DEFAULT_SCHOOL_PRINT_BRANDING.salaryMonthLabel, { nonNullable: true }),
-    salaryPayModeLabel: new FormControl<string>(DEFAULT_SCHOOL_PRINT_BRANDING.salaryPayModeLabel, { nonNullable: true })
+    salaryPayModeLabel: new FormControl<string>(DEFAULT_SCHOOL_PRINT_BRANDING.salaryPayModeLabel, { nonNullable: true }),
+    tableDefaultFormat: new FormControl<TablePrintDefaultFormat>(DEFAULT_SCHOOL_PRINT_BRANDING.tableDefaultFormat, { nonNullable: true }),
+    tableA4Orientation: new FormControl<TablePrintOrientation>(DEFAULT_SCHOOL_PRINT_BRANDING.tableA4Orientation, { nonNullable: true }),
+    tableSlipLayout: new FormControl<TablePrintSlipLayout>(DEFAULT_SCHOOL_PRINT_BRANDING.tableSlipLayout, { nonNullable: true }),
+    tableShowFieldLogos: new FormControl<boolean>(DEFAULT_SCHOOL_PRINT_BRANDING.tableShowFieldLogos, { nonNullable: true }),
+    tableShowWatermark: new FormControl<boolean>(DEFAULT_SCHOOL_PRINT_BRANDING.tableShowWatermark, { nonNullable: true })
   });
 
   readonly liveFormDraft = signal<SchoolPrintBrandingConfig>({ ...DEFAULT_SCHOOL_PRINT_BRANDING });
@@ -169,6 +228,7 @@ export class SchoolPrintStudioComponent implements OnDestroy {
       const normalized = normalizeSchoolPrintBranding(incoming, this.schoolName());
       this.sectionOrder.set([...normalized.sectionOrder]);
       this.hiddenSections.set([...normalized.hiddenSections]);
+      this.tableOverrides.set({ ...(normalized.tableOverrides || {}) });
       this.brandingForm.patchValue(
         {
           schoolName: normalized.schoolName,
@@ -210,12 +270,38 @@ export class SchoolPrintStudioComponent implements OnDestroy {
           dmcExamTitle: normalized.dmcExamTitle,
           dmcSessionLabel: normalized.dmcSessionLabel,
           salaryMonthLabel: normalized.salaryMonthLabel,
-          salaryPayModeLabel: normalized.salaryPayModeLabel
+          salaryPayModeLabel: normalized.salaryPayModeLabel,
+          tableDefaultFormat: normalized.tableDefaultFormat,
+          tableA4Orientation: normalized.tableA4Orientation,
+          tableSlipLayout: normalized.tableSlipLayout,
+          tableShowFieldLogos: normalized.tableShowFieldLogos,
+          tableShowWatermark: normalized.tableShowWatermark
         },
         { emitEvent: false }
       );
       this.liveFormDraft.set(normalized);
       this.previewThermalWidth.set(normalized.defaultPaperWidth === '58mm' ? '58mm' : '80mm');
+    });
+
+    effect(() => {
+      const seq = this.initialJumpSeq();
+      const fmt = this.initialFormat();
+      const scope = this.initialTableScope();
+      if (seq > 0 && seq !== this.lastHandledJumpSeq) {
+        this.lastHandledJumpSeq = seq;
+        if (fmt) {
+          this.selectedFormat.set(fmt);
+        } else {
+          this.selectedFormat.set('table_statement');
+        }
+        this.activeStudioTab.set('formats');
+        if (scope) {
+          const hit = this.tableCatalog.find((t) => t.tableId === scope || t.canonicalId === scope);
+          this.selectedTableScope.set(hit ? hit.tableId : scope);
+        } else {
+          this.selectedTableScope.set('__global__');
+        }
+      }
     });
   }
 
@@ -361,6 +447,287 @@ export class SchoolPrintStudioComponent implements OnDestroy {
     };
   });
 
+  readonly overrideCount = computed(() => Object.keys(this.tableOverrides()).length);
+
+  readonly totalMappedPortalAliases = computed(() => Object.keys(this.tableFamilyMap).length);
+  readonly totalCoveredTableCount = computed(() => {
+    const uniqueIds = new Set<string>([
+      ...this.tableCatalog.map((t) => t.tableId),
+      ...Object.keys(this.tableFamilyMap)
+    ]);
+    return uniqueIds.size;
+  });
+
+  readonly enrichedTableCatalog = computed<EnrichedTableDirectoryItem[]>(() => {
+    const overrides = this.tableOverrides();
+    const aliasCounts: Record<string, number> = {};
+    for (const canonicalId of Object.values(this.tableFamilyMap)) {
+      aliasCounts[canonicalId] = (aliasCounts[canonicalId] || 0) + 1;
+    }
+
+    return this.tableCatalog.map((tbl) => {
+      const cls = this.classifyTableMeta(tbl.tableId);
+      return {
+        ...tbl,
+        categoryKey: cls.categoryKey,
+        categoryLabel: cls.categoryLabel,
+        linkedPortalCount: Math.max(1, aliasCounts[tbl.canonicalId] || 1),
+        specialFormatId: cls.specialFormatId,
+        specialFormatLabel: cls.specialFormatLabel,
+        isCustom: Boolean(overrides[tbl.tableId] || overrides[tbl.canonicalId])
+      };
+    });
+  });
+
+  readonly tableCategoryTabs = computed(() => {
+    const items = this.enrichedTableCatalog();
+    const countOf = (key: Exclude<PrintTableCategoryKey, 'all' | 'custom_only'>) =>
+      items.filter((i) => i.categoryKey === key).length;
+    return [
+      { key: 'all' as PrintTableCategoryKey, label: 'All Tables', count: items.length },
+      { key: 'students_identity' as PrintTableCategoryKey, label: 'Students & Admissions', count: countOf('students_identity') },
+      { key: 'finance_fees' as PrintTableCategoryKey, label: 'Fees & Finance', count: countOf('finance_fees') },
+      { key: 'academics_exams' as PrintTableCategoryKey, label: 'Exams & Academics', count: countOf('academics_exams') },
+      { key: 'hr_attendance' as PrintTableCategoryKey, label: 'Attendance & HR', count: countOf('hr_attendance') },
+      { key: 'operations_audit' as PrintTableCategoryKey, label: 'Campus, Transport & Audit', count: countOf('operations_audit') },
+      { key: 'custom_only' as PrintTableCategoryKey, label: 'Customized', count: items.filter((i) => i.isCustom).length }
+    ];
+  });
+
+  readonly filteredTableCatalog = computed<EnrichedTableDirectoryItem[]>(() => {
+    const items = this.enrichedTableCatalog();
+    const cat = this.tableCategoryFilter();
+    const q = this.tableSearchQuery().trim().toLowerCase();
+
+    return items.filter((item) => {
+      if (cat === 'custom_only' && !item.isCustom) return false;
+      if (cat !== 'all' && cat !== 'custom_only' && item.categoryKey !== cat) return false;
+      if (!q) return true;
+      const haystack = [
+        item.title,
+        item.tableId,
+        item.portals,
+        item.categoryLabel,
+        item.specialFormatLabel || '',
+        ...(item.defaultHeaders || [])
+      ]
+        .join(' ')
+        .toLowerCase();
+      return haystack.includes(q);
+    });
+  });
+
+  readonly selectedTableMeta = computed<EnrichedTableDirectoryItem>(() => {
+    const items = this.enrichedTableCatalog();
+    const scope = this.selectedTableScope();
+    if (scope && scope !== '__global__') {
+      const hit = items.find((t) => t.tableId === scope || t.canonicalId === scope);
+      if (hit) return hit;
+    }
+    return items[0];
+  });
+
+  readonly effectiveTablePreview = computed(() => {
+    const scope = this.selectedTableScope();
+    const tid = scope && scope !== '__global__' ? scope : undefined;
+    return resolveEffectiveTableBranding(this.effectiveBranding(), tid, tid);
+  });
+
+  readonly sampleTableDataset = computed<StatementDataset>(() => {
+    const meta = this.selectedTableMeta();
+    const stu = this.resolvedStudent();
+    const st = this.resolvedStaff();
+    const tx = this.resolvedTransaction();
+    const cur = this.effectiveTablePreview().branding.currencySymbol || 'PKR';
+    const hdrs = (meta?.defaultHeaders || ['Ref #', 'Particulars', 'Date', 'Amount', 'Status']).slice(0, 6);
+
+    const buildCell = (header: string, rowIdx: number): string => {
+      const h = header.toLowerCase();
+      if (h.includes('roll')) return rowIdx === 0 ? stu.rollNo : '1002';
+      if (h.includes('student id') || h.includes('emp') || h.includes('staff / roll')) {
+        return rowIdx === 0 ? stu.idBarcode : st.empCode;
+      }
+      if (
+        h.includes('student') ||
+        h.includes('candidate') ||
+        h.includes('applicant') ||
+        h.includes('borrower') ||
+        h.includes('graduate') ||
+        h.includes('child') ||
+        h.includes('member details') ||
+        h.includes('member & face') ||
+        h === 'member'
+      ) {
+        return rowIdx === 0 ? stu.name : 'Ayesha Siddiqui';
+      }
+      if (h.includes('father') || h.includes('guardian') || h.includes('parent')) {
+        return rowIdx === 0 ? stu.guardian : 'Muhammad Khalid';
+      }
+      if (
+        h.includes('teacher') ||
+        h.includes('staff') ||
+        h.includes('faculty') ||
+        h.includes('principal') ||
+        h.includes('accountant') ||
+        h.includes('collector') ||
+        h.includes('cashier') ||
+        h.includes('coordinator') ||
+        h.includes('warden') ||
+        h.includes('officer') ||
+        h.includes('operator') ||
+        h.includes('author') ||
+        h.includes('physician') ||
+        h.includes('custodian')
+      ) {
+        return rowIdx === 0 ? st.name : 'Ms. Fatima Noor';
+      }
+      if (h.includes('visitor')) return rowIdx === 0 ? 'Imran Qureshi' : 'Sadia Tariq';
+      if (h.includes('driver')) return rowIdx === 0 ? 'Ustad Nawaz' : 'Rashid Ali';
+      if (h.includes('vendor') || h.includes('payee') || h.includes('recipient')) {
+        return rowIdx === 0 ? 'Al-Karam Stationers' : 'Islamabad Electric Co.';
+      }
+      if (h.includes('full name') || h.includes('reader identity')) {
+        return rowIdx === 0 ? st.name : stu.name;
+      }
+      if (h.includes('class') || h.includes('grade') || h.includes('wing')) {
+        return rowIdx === 0 ? stu.grade : 'Class 9-B';
+      }
+      if (h.includes('section')) return rowIdx === 0 ? 'Section A' : 'Section B';
+      if (h.includes('branch')) return rowIdx === 0 ? 'Main Campus HQ' : 'Girls Wing Branch';
+      if (h.includes('isbn')) return rowIdx === 0 ? '978-0-13-468599-1' : '978-0-32-112521-7';
+      if (h.includes('book title')) return rowIdx === 0 ? 'Advanced Physics Vol. II' : 'Oxford Mathematics IX';
+      if (h.includes('rack')) return rowIdx === 0 ? 'Rack A-14 (Science)' : 'Rack B-03 (Math)';
+      if (h.includes('copies')) return rowIdx === 0 ? '4 / 6 Available' : '2 / 5 Available';
+      if (h.includes('subject')) return rowIdx === 0 ? 'Physics & Lab' : 'Mathematics Core';
+      if (h.includes('topic') || h.includes('experiment')) return rowIdx === 0 ? 'Electromagnetic Induction' : 'Quadratic Functions';
+      if (h.includes('exam title')) return rowIdx === 0 ? 'Mid-Term Examination 2026' : 'Final Term Assessment';
+      if (h.includes('obtained') || h.includes('marks')) return rowIdx === 0 ? '92 / 100' : '86 / 100';
+      if (h.includes('gpa')) return rowIdx === 0 ? '3.85 GPA' : '3.60 GPA';
+      if (h.includes('blood')) return rowIdx === 0 ? stu.bloodGroup : 'B+';
+      if (h.includes('vaccination')) return rowIdx === 0 ? 'Fully Immunized' : 'Up to Date';
+      if (h.includes('allerg')) return rowIdx === 0 ? 'None Reported' : 'Mild Dust';
+      if (h.includes('route')) return rowIdx === 0 ? 'Route 01 — F-10 / G-11' : 'Route 04 — Bahria Link';
+      if (h.includes('vehicle')) return rowIdx === 0 ? 'ICT-BUS-204' : 'ICT-VAN-118';
+      if (h.includes('room') || h.includes('lab') || h.includes('venue') || h.includes('location')) {
+        return rowIdx === 0 ? 'Room 104 / Main Hall' : 'Physics Lab 02';
+      }
+      if (h.includes('period') || h.includes('time slot') || h.includes('shift')) {
+        return rowIdx === 0 ? 'Period 2 (09:00 AM)' : 'Morning Shift';
+      }
+      if (h.includes('check-in') || h.includes('time')) return rowIdx === 0 ? '07:52 AM / 01:45 PM' : '08:04 AM / 02:00 PM';
+      if (h.includes('gate')) return rowIdx === 0 ? 'Gate A (RFID Auto)' : 'Gate B (QR Scan)';
+      if (h.includes('leave type')) return rowIdx === 0 ? 'Medical Leave' : 'Casual Leave';
+      if (h.includes('days')) return rowIdx === 0 ? '2 Days' : '1 Day';
+      if (h.includes('unpaid')) return rowIdx === 0 ? '1 Month (Nov)' : '2 Months';
+      if (h.includes('certificate')) return rowIdx === 0 ? 'SLC-2026-041' : 'SLC-2026-042';
+      if (h.includes('clearance')) return rowIdx === 0 ? '4/4 Cleared (Fee/Lib/Lab/Hostel)' : '3/4 Pending';
+      if (h.includes('conduct') || h.includes('severity')) return rowIdx === 0 ? 'Exemplary / Low' : 'Good';
+      if (h.includes('asset name') || h.includes('event title') || h.includes('title / circular') || h.includes('title & type')) {
+        return rowIdx === 0 ? 'Annual Science & Robotics Expo' : 'Smart Interactive Board 75"';
+      }
+      if (h.includes('asset code')) return rowIdx === 0 ? 'AST-IT-089' : 'AST-LAB-014';
+      if (h.includes('qty') || h.includes('capacity') || h.includes('enrolled') || h.includes('students') || h.includes('wings')) {
+        return rowIdx === 0 ? '28' : '14';
+      }
+      if (h.includes('date') || h.includes('month') || h.includes('period') || h.includes('year')) {
+        return rowIdx === 0 ? '2026-11-26' : '2026-11-25';
+      }
+      if (
+        h.includes('ref') ||
+        h.includes('challan') ||
+        h.includes('receipt') ||
+        h.includes('voucher') ||
+        h.includes('slip') ||
+        h.includes('token') ||
+        h.includes('issue #') ||
+        h.includes('pass #') ||
+        h.includes('log #') ||
+        h.includes('task #') ||
+        h.includes('audit id') ||
+        h.includes('alert ref') ||
+        h.includes('invoice')
+      ) {
+        return rowIdx === 0 ? tx.txnRef : 'REF-2026-88413';
+      }
+      if (h.includes('cnic') || h.includes('b-form')) return rowIdx === 0 ? '61101-4829103-1' : '37405-9182734-2';
+      if (h.includes('phone') || h.includes('mobile') || h.includes('whatsapp') || h.includes('emergency')) return stu.phone;
+      if (h.includes('email')) return rowIdx === 0 ? 'parent@campus.edu.pk' : 'accounts@campus.edu.pk';
+      if (h.includes('pin')) return rowIdx === 0 ? '••••' : '••••';
+      if (
+        h.includes('fee') ||
+        h.includes('amount') ||
+        h.includes('tuition') ||
+        h.includes('salary') ||
+        h.includes('pay') ||
+        h.includes('total') ||
+        h.includes('bakaya') ||
+        h.includes('due') ||
+        h.includes('fine') ||
+        h.includes('expense') ||
+        h.includes('credit') ||
+        h.includes('debit') ||
+        h.includes('cash') ||
+        h.includes('meezan') ||
+        h.includes('hbl') ||
+        h.includes('kuickpay') ||
+        h.includes('digital') ||
+        h.includes('revenue') ||
+        h.includes('income') ||
+        h.includes('margin') ||
+        h.includes('collected') ||
+        h.includes('billed') ||
+        h.includes('variance') ||
+        h.includes('discount') ||
+        h.includes('tax') ||
+        h.includes('allowance') ||
+        h.includes('deduction') ||
+        h.includes('value') ||
+        h.includes('budget')
+      ) {
+        return rowIdx === 0 ? `${cur} ${formatStatementMoney(stu.feeAmount, cur)}` : `${cur} ${formatStatementMoney(18500, cur)}`;
+      }
+      if (h.includes('channel') || h.includes('method') || h.includes('desk')) {
+        return rowIdx === 0 ? 'Meezan Bank / Counter' : 'Raast Digital QR';
+      }
+      if (h.includes('role') || h.includes('designation') || h.includes('department') || h.includes('category') || h.includes('priority')) {
+        return rowIdx === 0 ? 'Senior Academic / Verified' : 'Campus Operations';
+      }
+      if (h.includes('status') || h.includes('state') || h.includes('condition') || h.includes('verification') || h.includes('standing')) {
+        return rowIdx === 0 ? 'VERIFIED' : 'ACTIVE';
+      }
+      if (h.includes('gender')) return rowIdx === 0 ? 'Male' : 'Female';
+      return rowIdx === 0 ? 'Verified Campus Entry' : 'Synced Record';
+    };
+
+    return {
+      tableId: meta?.tableId || 'students_master',
+      title: meta?.title || 'Students Master Directory',
+      roleLabel: meta?.portals || 'School Business Owner',
+      headers: hdrs,
+      rows: [
+        hdrs.map((h) => buildCell(h, 0)),
+        hdrs.map((h) => buildCell(h, 1))
+      ]
+    };
+  });
+
+  readonly sampleTableSummary = computed(() => {
+    const ds = this.sampleTableDataset();
+    const cur = this.effectiveTablePreview().branding.currencySymbol || 'PKR';
+    return computeStatementAmounts(ds.headers, ds.rows, cur);
+  });
+
+  readonly sampleTableSingleFields = computed(() => {
+    const ds = this.sampleTableDataset();
+    const row = ds.rows[0] || [];
+    const amtSet = new Set(this.sampleTableSummary().amountColumns.map((c) => c.colIndex));
+    return ds.headers.map((h, idx) => ({
+      label: h,
+      value: row[idx] || '—',
+      isAmount: amtSet.has(idx)
+    }));
+  });
+
   private syncDraftFromState(): void {
     const val = this.brandingForm.getRawValue();
     this.liveFormDraft.set(
@@ -368,7 +735,8 @@ export class SchoolPrintStudioComponent implements OnDestroy {
         {
           ...val,
           sectionOrder: this.sectionOrder(),
-          hiddenSections: this.hiddenSections()
+          hiddenSections: this.hiddenSections(),
+          tableOverrides: this.tableOverrides()
         },
         this.schoolName()
       )
@@ -427,6 +795,229 @@ export class SchoolPrintStudioComponent implements OnDestroy {
 
   setChallanLogoCorner(corner: PrintChallanLogoCorner): void {
     this.brandingForm.patchValue({ challanLogoCorner: corner });
+  }
+
+  private classifyTableMeta(tableId: string): {
+    categoryKey: Exclude<PrintTableCategoryKey, 'all' | 'custom_only'>;
+    categoryLabel: string;
+    specialFormatId?: SchoolPrintDocumentType;
+    specialFormatLabel?: string;
+  } {
+    switch (tableId) {
+      case 'students_master':
+      case 'owner_admissions':
+        return {
+          categoryKey: 'students_identity',
+          categoryLabel: 'Students & Admissions',
+          specialFormatId: 'id_card',
+          specialFormatLabel: 'ID Card & Stickers'
+        };
+      case 'slc_certificates':
+        return {
+          categoryKey: 'students_identity',
+          categoryLabel: 'Students & Admissions',
+          specialFormatId: 'result_dmc',
+          specialFormatLabel: 'Official SLC Print'
+        };
+      case 'parents_master':
+      case 'owner_medical':
+      case 'owner_discipline':
+      case 'owner_alumni':
+      case 'owner_student_leaves':
+        return {
+          categoryKey: 'students_identity',
+          categoryLabel: 'Students & Admissions'
+        };
+
+      case 'fee_receipts_cashiering':
+      case 'online_payment_slips':
+      case 'student_payment_history':
+        return {
+          categoryKey: 'finance_fees',
+          categoryLabel: 'Fees & Finance',
+          specialFormatId: 'thermal_receipt',
+          specialFormatLabel: '80/58mm POS Receipt'
+        };
+      case 'fee_challans_invoices':
+      case 'fee_defaulters':
+      case 'owner_finance_ledger':
+        return {
+          categoryKey: 'finance_fees',
+          categoryLabel: 'Fees & Finance',
+          specialFormatId: 'bank_challan',
+          specialFormatLabel: '3-Copy Bank Challan'
+        };
+      case 'petty_vouchers':
+      case 'daily_closing_reconciliation':
+      case 'owner_expenses':
+      case 'owner_audit_waivers':
+      case 'owner_fee_structure_catalog':
+      case 'owner_fee_deletion_audit':
+      case 'owner_branch_financial_matrix':
+      case 'owner_profit_loss':
+      case 'owner_rooznama_branch_matrix':
+        return {
+          categoryKey: 'finance_fees',
+          categoryLabel: 'Fees & Finance'
+        };
+
+      case 'academics_gradebook_results':
+      case 'owner_exams':
+        return {
+          categoryKey: 'academics_exams',
+          categoryLabel: 'Exams & Academics',
+          specialFormatId: 'result_dmc',
+          specialFormatLabel: 'Official Result DMC'
+        };
+      case 'owner_library_catalog':
+      case 'library_circulation':
+        return {
+          categoryKey: 'academics_exams',
+          categoryLabel: 'Exams & Academics',
+          specialFormatId: 'barcode_stickers',
+          specialFormatLabel: 'Book Barcode Stickers'
+        };
+      case 'principal_lesson_plans':
+      case 'principal_substitutions':
+      case 'owner_subjects':
+      case 'owner_timetable':
+      case 'owner_labs_schedule':
+      case 'owner_homework_log':
+      case 'owner_wing_breakdown':
+        return {
+          categoryKey: 'academics_exams',
+          categoryLabel: 'Exams & Academics'
+        };
+
+      case 'owner_payroll':
+      case 'owner_teacher_arrears':
+        return {
+          categoryKey: 'hr_attendance',
+          categoryLabel: 'Attendance & HR',
+          specialFormatId: 'salary_slip',
+          specialFormatLabel: 'Monthly Salary Slip'
+        };
+      case 'teachers_master':
+      case 'attendance_roster_staff':
+      case 'attendance_roster_principals':
+      case 'attendance_roster_students':
+      case 'attendance_roster_teachers':
+      case 'owner_all_personnel':
+      case 'owner_principals_directory':
+      case 'owner_accountants_directory':
+      case 'owner_support_staff_directory':
+        return {
+          categoryKey: 'hr_attendance',
+          categoryLabel: 'Attendance & HR',
+          specialFormatId: 'id_card',
+          specialFormatLabel: 'Gate ID Badge'
+        };
+      case 'attendance_gate_logs':
+      case 'attendance_marked_details':
+      case 'principal_appraisals':
+      case 'principal_faculty_tasks':
+      case 'owner_staff_leaves':
+        return {
+          categoryKey: 'hr_attendance',
+          categoryLabel: 'Attendance & HR'
+        };
+
+      case 'owner_assets':
+        return {
+          categoryKey: 'operations_audit',
+          categoryLabel: 'Campus, Transport & Audit',
+          specialFormatId: 'barcode_stickers',
+          specialFormatLabel: 'Asset Barcode Stickers'
+        };
+      default:
+        return {
+          categoryKey: 'operations_audit',
+          categoryLabel: 'Campus, Transport & Audit'
+        };
+    }
+  }
+
+  onTableSearchInput(event: Event): void {
+    const val = (event.target as HTMLInputElement | null)?.value ?? '';
+    this.tableSearchQuery.set(val);
+  }
+
+  clearTableSearch(): void {
+    this.tableSearchQuery.set('');
+  }
+
+  setTableCategoryFilter(cat: PrintTableCategoryKey): void {
+    this.tableCategoryFilter.set(cat);
+  }
+
+  toggleTableDirectory(): void {
+    this.showTableDirectory.update((v) => !v);
+  }
+
+  selectTableAndPreview(scopeId: string): void {
+    this.selectedTableScope.set(scopeId || '__global__');
+    this.selectedFormat.set('table_statement');
+    const eff = this.effectiveTablePreview();
+    if (eff.defaultFormat === '80mm' || eff.defaultFormat === '58mm') {
+      this.tablePreviewSubMode.set(eff.defaultFormat);
+    }
+  }
+
+  onSelectTableScopeChange(event: Event): void {
+    const sel = event.target as HTMLSelectElement | null;
+    this.selectTableAndPreview(sel?.value || '__global__');
+  }
+
+  selectTableScope(scope: string): void {
+    this.selectTableAndPreview(scope || '__global__');
+  }
+
+  onTableCustomHeadingInput(event: Event): void {
+    const val = (event.target as HTMLInputElement | null)?.value ?? '';
+    this.updateActiveTableSetting({ customHeading: val });
+  }
+
+  updateActiveTableSetting(patch: Partial<TablePrintOverride>): void {
+    const scope = this.selectedTableScope();
+    if (!scope || scope === '__global__') {
+      const formPatch: Record<string, unknown> = {};
+      if (patch.defaultFormat) formPatch['tableDefaultFormat'] = patch.defaultFormat;
+      if (patch.a4Orientation) formPatch['tableA4Orientation'] = patch.a4Orientation;
+      if (patch.slipLayout) formPatch['tableSlipLayout'] = patch.slipLayout;
+      if (typeof patch.showFieldLogos === 'boolean') formPatch['tableShowFieldLogos'] = patch.showFieldLogos;
+      if (typeof patch.showWatermark === 'boolean') formPatch['tableShowWatermark'] = patch.showWatermark;
+      if (patch.logoPlacement) formPatch['logoPlacement'] = patch.logoPlacement;
+      if (patch.headerAlign) formPatch['headerAlign'] = patch.headerAlign;
+      if (patch.stampLabel) formPatch['stampLabel'] = patch.stampLabel;
+      if (Object.keys(formPatch).length > 0) {
+        this.brandingForm.patchValue(formPatch);
+      }
+      return;
+    }
+
+    const next = { ...this.tableOverrides() };
+    const existing = { ...(next[scope] || {}) };
+    const merged: TablePrintOverride = { ...existing, ...patch };
+    if (typeof merged.customHeading === 'string' && !merged.customHeading.trim()) {
+      delete merged.customHeading;
+    }
+    next[scope] = merged;
+    this.tableOverrides.set(next);
+    this.syncDraftFromState();
+  }
+
+  clearTableOverride(scopeId?: string): void {
+    const target = scopeId || this.selectedTableScope();
+    if (!target || target === '__global__') return;
+    const next = { ...this.tableOverrides() };
+    if (!next[target]) return;
+    delete next[target];
+    this.tableOverrides.set(next);
+    this.syncDraftFromState();
+    this.toast.emit({
+      message: 'Table override cleared — now inheriting Global School Table Print Design.',
+      type: 'info'
+    });
   }
 
   removeUploadedLogo(): void {
@@ -671,13 +1262,14 @@ export class SchoolPrintStudioComponent implements OnDestroy {
         schoolName: val.schoolName.trim() || DEFAULT_SCHOOL_PRINT_BRANDING.schoolName,
         monogramInitials: (val.monogramInitials || 'SC').trim().toUpperCase().slice(0, 4),
         sectionOrder: this.sectionOrder(),
-        hiddenSections: this.hiddenSections()
+        hiddenSections: this.hiddenSections(),
+        tableOverrides: this.tableOverrides()
       },
       this.schoolName()
     );
     this.saveBranding.emit(cleaned);
     this.toast.emit({
-      message: 'Custom logo, layout order, and print branding saved — active for all thermal and A4 prints.',
+      message: 'Custom logo, table rasheed styles, layout order, and print branding saved across all portals.',
       type: 'success'
     });
   }
@@ -687,10 +1279,13 @@ export class SchoolPrintStudioComponent implements OnDestroy {
       ...DEFAULT_SCHOOL_PRINT_BRANDING,
       schoolName: this.schoolName() || DEFAULT_SCHOOL_PRINT_BRANDING.schoolName,
       sectionOrder: [...DEFAULT_PRINT_SECTION_ORDER],
-      hiddenSections: []
+      hiddenSections: [],
+      tableOverrides: {}
     };
     this.sectionOrder.set([...DEFAULT_PRINT_SECTION_ORDER]);
     this.hiddenSections.set([]);
+    this.tableOverrides.set({});
+    this.selectedTableScope.set('__global__');
     this.brandingForm.reset(
       {
         schoolName: resetVal.schoolName,
@@ -732,7 +1327,12 @@ export class SchoolPrintStudioComponent implements OnDestroy {
         dmcExamTitle: resetVal.dmcExamTitle,
         dmcSessionLabel: resetVal.dmcSessionLabel,
         salaryMonthLabel: resetVal.salaryMonthLabel,
-        salaryPayModeLabel: resetVal.salaryPayModeLabel
+        salaryPayModeLabel: resetVal.salaryPayModeLabel,
+        tableDefaultFormat: resetVal.tableDefaultFormat,
+        tableA4Orientation: resetVal.tableA4Orientation,
+        tableSlipLayout: resetVal.tableSlipLayout,
+        tableShowFieldLogos: resetVal.tableShowFieldLogos,
+        tableShowWatermark: resetVal.tableShowWatermark
       },
       { emitEvent: false }
     );
@@ -869,7 +1469,7 @@ export class SchoolPrintStudioComponent implements OnDestroy {
           b
         );
         label = 'A4 Official Exam Result DMC';
-      } else {
+      } else if (format === 'salary_slip') {
         const sb = this.salaryBreakdown();
         html = buildSalarySlipHtml(
           {
@@ -890,6 +1490,34 @@ export class SchoolPrintStudioComponent implements OnDestroy {
           b
         );
         label = 'A4 Monthly Salary Slip';
+      } else {
+        const ds = this.sampleTableDataset();
+        const subMode = this.tablePreviewSubMode();
+        const scope = this.selectedTableScope();
+        const tableId = scope !== '__global__' ? scope : ds.tableId;
+        const useRows = subMode === 'a4_slip' ? ds.rows.slice(0, 1) : ds.rows;
+        const stmtParams = {
+          tableId,
+          canonicalTableId: tableId,
+          title: ds.title,
+          roleLabel: ds.roleLabel,
+          headers: ds.headers,
+          rows: useRows,
+          totalUnfilteredCount: ds.rows.length,
+          criteria: {},
+          branding: b,
+          statementRef: 'STM-PREVIEW-2026'
+        };
+        if (subMode === '80mm' || subMode === '58mm') {
+          html = buildSchoolStatementThermalHtml(stmtParams, subMode);
+          label = `${subMode} Table Rasheed (${ds.title})`;
+        } else if (subMode === 'card') {
+          html = buildSchoolStatementCardHtml({ ...stmtParams, rows: ds.rows.slice(0, 1) });
+          label = `QR Verification Card (${ds.title})`;
+        } else {
+          html = buildSchoolStatementA4Html(stmtParams);
+          label = `${subMode === 'a4_slip' ? 'A4 Row Slip' : 'A4 Table Statement'} (${ds.title})`;
+        }
       }
 
       const ok = await printHtmlInHiddenFrame(html);
