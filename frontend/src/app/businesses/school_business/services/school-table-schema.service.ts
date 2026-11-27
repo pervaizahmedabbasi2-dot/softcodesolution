@@ -1,6 +1,13 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { BackendService } from '../../../services/backend.service';
 import {
+  DEFAULT_SCHOOL_PRINT_BRANDING,
+  SchoolPrintBrandingConfig,
+  normalizeSchoolPrintBranding
+} from '../utils/school-print-templates.util';
+import { StatementDataset } from '../utils/school-statement-print.util';
+import {
+  PdfBrandingOptions,
   PdfGenericCardEntry,
   downloadStudentsTablePdf,
   downloadTableCardsPdf
@@ -141,6 +148,17 @@ export interface TableCatalogItem {
   title: string;
   portals: string;
   defaultHeaders: string[];
+}
+
+export interface StatementModalState {
+  open: boolean;
+  tableId: string;
+  title: string;
+  presetFromDate?: string;
+  presetToDate?: string;
+  presetSearch?: string;
+  initialFormat?: 'a4' | '80mm' | '58mm' | 'card' | 'whatsapp';
+  directDataset?: StatementDataset | null;
 }
 
 const STORAGE_KEY_BASE = 'scs_school_table_schemas_v1';
@@ -981,9 +999,18 @@ export class SchoolTableSchemaService {
   readonly cellEditorState = signal<CellEditorState | null>(null);
   readonly addRowRequest = signal<{ tableId: string; tableTitle: string; seq: number } | null>(null);
   readonly confirmDialogState = signal<SchoolConfirmDialogState | null>(null);
+  readonly printBranding = signal<SchoolPrintBrandingConfig>({ ...DEFAULT_SCHOOL_PRINT_BRANDING });
+  readonly statementModalState = signal<StatementModalState>({
+    open: false,
+    tableId: '',
+    title: '',
+    initialFormat: 'a4',
+    directDataset: null
+  });
 
   private activeTenantId = 'tenant-root-platform';
   private persistHook: (() => void) | null = null;
+  private readonly statementProviders = new Map<string, () => StatementDataset | null>();
   private tableRegistry = new Map<string, {
     tableEl: HTMLTableElement;
     title: string;
@@ -2834,7 +2861,7 @@ export class SchoolTableSchemaService {
     const headerRow = tableEl.querySelector('thead tr');
     const keptColIndices: number[] = [];
     const headers: string[] = [];
-    const skipHeaderLabels = new Set(['actions', 'action', 'quick actions', 'remove']);
+    const skipHeaderLabels = new Set(['actions', 'action', 'quick actions', 'remove', 'scope action', 'focus', 'manage']);
 
     if (headerRow) {
       Array.from(headerRow.children).forEach((th, idx) => {
@@ -2914,6 +2941,187 @@ export class SchoolTableSchemaService {
     };
   }
 
+  setPrintBranding(config: SchoolPrintBrandingConfig | null | undefined): void {
+    const normalized = normalizeSchoolPrintBranding(config, config?.schoolName || DEFAULT_SCHOOL_PRINT_BRANDING.schoolName);
+    this.printBranding.set(normalized);
+  }
+
+  getPdfBranding(): PdfBrandingOptions {
+    const b = this.printBranding();
+    return {
+      schoolName: b.schoolName || DEFAULT_SCHOOL_PRINT_BRANDING.schoolName,
+      headerAccentColor: b.headerAccentColor || DEFAULT_SCHOOL_PRINT_BRANDING.headerAccentColor,
+      footerNote: b.footerNote || DEFAULT_SCHOOL_PRINT_BRANDING.footerNote
+    };
+  }
+
+  registerStatementDataProvider(tableId: string, provider: () => StatementDataset | null): void {
+    const clean = (tableId || '').trim();
+    if (!clean) return;
+    this.statementProviders.set(clean, provider);
+  }
+
+  unregisterStatementDataProvider(tableId: string): void {
+    const clean = (tableId || '').trim();
+    if (!clean) return;
+    this.statementProviders.delete(clean);
+  }
+
+  openStatementModal(
+    tableId: string,
+    fallbackTitle?: string,
+    opts?: {
+      presetFromDate?: string;
+      presetToDate?: string;
+      presetSearch?: string;
+      initialFormat?: 'a4' | '80mm' | '58mm' | 'card' | 'whatsapp';
+    }
+  ): void {
+    const cleanId = (tableId || '').trim();
+    if (!cleanId) return;
+    const schema = this.getSchema(cleanId);
+    const entry = this.tableRegistry.get(cleanId);
+    const resolvedTitle = (schema.customTitle || fallbackTitle || entry?.title || cleanId.replace(/_/g, ' ')).trim();
+    const defaultPaper = this.printBranding().defaultPaperWidth;
+    const initialFormat = opts?.initialFormat || (defaultPaper === '58mm' || defaultPaper === '80mm' ? 'a4' : 'a4');
+    this.statementModalState.set({
+      open: true,
+      tableId: cleanId,
+      title: resolvedTitle,
+      presetFromDate: opts?.presetFromDate || '',
+      presetToDate: opts?.presetToDate || '',
+      presetSearch: opts?.presetSearch || '',
+      initialFormat,
+      directDataset: null
+    });
+  }
+
+  openDirectStatement(
+    dataset: StatementDataset,
+    opts?: {
+      presetFromDate?: string;
+      presetToDate?: string;
+      presetSearch?: string;
+      initialFormat?: 'a4' | '80mm' | '58mm' | 'card' | 'whatsapp';
+    }
+  ): void {
+    this.statementModalState.set({
+      open: true,
+      tableId: dataset.tableId || 'custom_statement',
+      title: dataset.title || 'School Statement',
+      presetFromDate: opts?.presetFromDate || '',
+      presetToDate: opts?.presetToDate || '',
+      presetSearch: opts?.presetSearch || '',
+      initialFormat: opts?.initialFormat || 'a4',
+      directDataset: dataset
+    });
+  }
+
+  openSingleRecordStatement(opts: {
+    tableId: string;
+    tableTitle: string;
+    recordLabel?: string;
+    headers: string[];
+    values: string[];
+    initialFormat?: 'a4' | '80mm' | '58mm' | 'card' | 'whatsapp';
+  }): void {
+    const cleanTitle = (opts.tableTitle || opts.tableId || 'Record Slip').trim();
+    const label = (opts.recordLabel || '').trim();
+    const title = label && !cleanTitle.toLowerCase().includes(label.toLowerCase())
+      ? `${cleanTitle} — ${label}`
+      : cleanTitle;
+    this.openDirectStatement(
+      {
+        tableId: `${opts.tableId}_single_record`,
+        title,
+        subtitle: `Individual Record Print · ${cleanTitle}`,
+        roleLabel: this.getPortalRoleLabel(),
+        headers: opts.headers,
+        rows: [opts.values]
+      },
+      {
+        initialFormat: opts.initialFormat || 'a4'
+      }
+    );
+  }
+
+  closeStatementModal(): void {
+    const cur = this.statementModalState();
+    if (cur.open) {
+      this.statementModalState.set({ ...cur, open: false });
+    }
+  }
+
+  resolveStatementDataset(
+    tableId: string,
+    fallbackTitle?: string,
+    directOverride?: StatementDataset | null
+  ): {
+    tableId: string;
+    title: string;
+    subtitle: string;
+    roleLabel: string;
+    safeBaseName: string;
+    headers: string[];
+    rows: string[][];
+    dateColHint?: number;
+  } | null {
+    const roleLabel = this.getPortalRoleLabel();
+    const roleSlug = this.portalRole() || 'school';
+    const dateStamp = new Date().toISOString().slice(0, 10);
+
+    const buildBaseName = (title: string, id: string) => {
+      const safeName = title.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || id;
+      return `${roleSlug}_${safeName}_${dateStamp}`;
+    };
+
+    if (directOverride && directOverride.headers.length > 0) {
+      const title = (directOverride.title || fallbackTitle || 'Statement').trim();
+      return {
+        tableId: directOverride.tableId || tableId,
+        title,
+        subtitle: directOverride.subtitle || roleLabel,
+        roleLabel: directOverride.roleLabel || roleLabel,
+        safeBaseName: buildBaseName(title, directOverride.tableId || tableId),
+        headers: directOverride.headers,
+        rows: directOverride.rows,
+        dateColHint: directOverride.dateColHint
+      };
+    }
+
+    const canonical = this.resolveCanonicalTableId(tableId);
+    const provider = this.statementProviders.get(tableId) || this.statementProviders.get(canonical);
+    if (provider) {
+      const supplied = provider();
+      if (supplied && supplied.headers.length > 0) {
+        const schema = this.getSchema(tableId);
+        const title = (schema.customTitle || supplied.title || fallbackTitle || tableId.replace(/_/g, ' ')).trim();
+        return {
+          tableId,
+          title,
+          subtitle: supplied.subtitle || roleLabel,
+          roleLabel: supplied.roleLabel || roleLabel,
+          safeBaseName: buildBaseName(title, tableId),
+          headers: supplied.headers,
+          rows: supplied.rows,
+          dateColHint: supplied.dateColHint
+        };
+      }
+    }
+
+    const extracted = this.extractVisibleTableData(tableId, fallbackTitle);
+    if (!extracted) return null;
+    return {
+      tableId,
+      title: extracted.title,
+      subtitle: extracted.roleLabel,
+      roleLabel: extracted.roleLabel,
+      safeBaseName: extracted.safeBaseName,
+      headers: extracted.headers,
+      rows: extracted.rows
+    };
+  }
+
   exportTableCsv(tableId: string, fallbackTitle?: string): void {
     const extracted = this.extractVisibleTableData(tableId, fallbackTitle);
     if (!extracted || typeof document === 'undefined') return;
@@ -2938,27 +3146,31 @@ export class SchoolTableSchemaService {
   exportTablePdf(tableId: string, fallbackTitle?: string): void {
     const extracted = this.extractVisibleTableData(tableId, fallbackTitle);
     if (!extracted) return;
+    const branding = this.getPdfBranding();
     downloadStudentsTablePdf({
       title: `${extracted.title} (Row & Column Register)`,
       subtitle: `${extracted.roleLabel} | ${extracted.rows.length} Record(s) | ${extracted.headers.length} Column(s)`,
       headers: extracted.headers,
       rows: extracted.rows,
       filename: `${extracted.safeBaseName}_table.pdf`,
-      footerLabel: `SoftCode School ERP | ${extracted.roleLabel} | Table PDF`,
-      emptyMessage: 'No records found in this table view.'
+      footerLabel: `${branding.schoolName || 'SoftCode School ERP'} | ${extracted.roleLabel} | Table PDF`,
+      emptyMessage: 'No records found in this table view.',
+      branding
     });
   }
 
   exportTableCardsPdf(tableId: string, fallbackTitle?: string): void {
     const extracted = this.extractVisibleTableData(tableId, fallbackTitle);
     if (!extracted) return;
+    const branding = this.getPdfBranding();
     downloadTableCardsPdf({
       title: `${extracted.title} (Card / Widget-Wise)`,
       subtitle: `${extracted.roleLabel} | ${extracted.cards.length} Record Card(s) | ${extracted.headers.length} Field(s) Each`,
       cards: extracted.cards,
       filename: `${extracted.safeBaseName}_cards.pdf`,
-      footerLabel: `SoftCode School ERP | ${extracted.roleLabel} | Cards PDF`,
-      emptyMessage: 'No records found in this table view.'
+      footerLabel: `${branding.schoolName || 'SoftCode School ERP'} | ${extracted.roleLabel} | Cards PDF`,
+      emptyMessage: 'No records found in this table view.',
+      branding
     });
   }
 

@@ -84,6 +84,7 @@ import {
 } from '../models/school-attendance.models';
 import { SchoolTableDirective } from '../directives/school-table.directive';
 import { SchoolTableColumnModalComponent } from '../components/school-table-column-modal/school-table-column-modal.component';
+import { SchoolTableStatementModalComponent } from '../components/school-table-statement-modal/school-table-statement-modal.component';
 import { SchoolCustomFormFieldsComponent } from '../components/school-custom-form-fields/school-custom-form-fields.component';
 import { SchoolBarcodeComponent, SchoolQrCodeComponent } from '../components/school-barcode/school-barcode.component';
 import {
@@ -98,6 +99,7 @@ import {
   printHtmlInHiddenFrame
 } from '../utils/thermal-print.util';
 import { SchoolTableSchemaService, SchoolCustomColumn, TableColumnPositionOption } from '../services/school-table-schema.service';
+import { StatementDataset } from '../utils/school-statement-print.util';
 import { PdfStudentCardEntry, downloadStudentsCardsPdf, downloadStudentsTablePdf, downloadTableCardsPdf } from '../services/school-pdf-export.util';
 import { PasskeyManagerComponent } from '../../../auth_security/passkey-manager/passkey-manager.component';
 import { SchoolPrintStudioComponent } from '../components/school-print-studio/school-print-studio.component';
@@ -1119,7 +1121,7 @@ export interface PrincipalFeeCollectionRecord {
 @Component({
   selector: 'app-school-dashboard',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule, FormsModule, MatIconModule, DataTableComponent, AuditReconciliationTrendsComponent, AnalyticsDashboardComponent, SchoolAttendanceHubComponent, SchoolPrintStudioComponent, SchoolTableDirective, SchoolTableColumnModalComponent, SchoolCustomFormFieldsComponent, SchoolBarcodeComponent, SchoolQrCodeComponent, PasskeyManagerComponent],
+  imports: [CommonModule, LucideAngularModule, FormsModule, MatIconModule, DataTableComponent, AuditReconciliationTrendsComponent, AnalyticsDashboardComponent, SchoolAttendanceHubComponent, SchoolPrintStudioComponent, SchoolTableDirective, SchoolTableColumnModalComponent, SchoolTableStatementModalComponent, SchoolCustomFormFieldsComponent, SchoolBarcodeComponent, SchoolQrCodeComponent, PasskeyManagerComponent],
   templateUrl: './school-dashboard.component.html',
   host: {
     '(window:keydown)': 'onHardwareScannerKeydown($event)'
@@ -2409,9 +2411,69 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
   }
 
   printDailyClosingSlip(): void {
-    if (typeof window !== 'undefined') {
-      window.print();
-    }
+    this.tableSchemaService.openStatementModal(
+      'owner_daily_closing',
+      'Daily Cash Closing (Rooznama) & Bank Scroll Statement'
+    );
+  }
+
+  openFinanceMonitoringStatement(): void {
+    const cf = this.monitoringCashFlowSummary;
+    const rows: string[][] = [
+      ['Opening Vault Cash Balance', 'Cash Counter', 'Today', 'PKR ' + this.formatCurrency(cf.openingVault), '-', 'Opening Balance'],
+      ['Accountant / Fee Clerk Counter', 'Fee Desk Collections', 'Today', 'PKR ' + this.formatCurrency(cf.accInflow), '-', '6th Role Counter'],
+      ['Principal Desk Collection', 'Principal Office', 'Today', 'PKR ' + this.formatCurrency(cf.prinInflow), '-', 'Verified'],
+      ['Owner / Online Portal Collections', 'Online / Direct', 'Today', 'PKR ' + this.formatCurrency(cf.onlineInflow), '-', 'Direct Deposit'],
+      ['Channel Breakdown — Counter Cash', 'Physical Drawer', 'Today', 'PKR ' + this.formatCurrency(cf.cashInflow), '-', 'Reconciled'],
+      ['Channel Breakdown — Meezan Bank', 'Bank Challan / IBFT', 'Today', 'PKR ' + this.formatCurrency(cf.meezanInflow), '-', 'Bank Cleared'],
+      ['Channel Breakdown — HBL Bank', 'Bank Challan / IBFT', 'Today', 'PKR ' + this.formatCurrency(cf.hblInflow), '-', 'Bank Cleared'],
+      ['Channel Breakdown — Digital Wallets', 'JazzCash / EasyPaisa / Raast', 'Today', 'PKR ' + this.formatCurrency(cf.digitalInflow), '-', 'Instant Settlement'],
+      ['Petty Cash Vouchers Outflow', 'Counter Expenses', 'Today', '-', 'PKR ' + this.formatCurrency(cf.pettyOutflow), `${this.scopedAccountantPettyVouchers.length} Vouchers`],
+      ['Payroll & Operating Expenses', 'Master Ledger', 'Session', '-', 'PKR ' + this.formatCurrency(cf.payrollAndOpsOutflow), 'Operating Outflow'],
+      ['Pending Student Fee Bakaya', 'Outstanding Receivables', 'Current', 'PKR ' + this.formatCurrency(cf.pendingBakaya), '-', `${cf.recoveryRatePct}% Recovery`],
+      ['Vault Cash In Hand (Closing)', 'Net Physical Drawer', 'Today', 'PKR ' + this.formatCurrency(cf.vaultCashOnHand), '-', 'Reconciled Balance']
+    ];
+    this.tableSchemaService.openDirectStatement({
+      tableId: 'finance_monitoring_executive',
+      title: `Executive Financial Monitoring Statement (${this.activeScopeSummaryLabel})`,
+      headers: ['Account Head / Metric', 'Desk / Channel', 'Period', 'Inflow / Credit', 'Outflow / Debit', 'Status / Audit Note'],
+      rows,
+      dateColHint: 2
+    });
+  }
+
+  openClassWiseBakayaStatement(): void {
+    const summaries = this.calculatedClassFeeSummaries || [];
+    const rows = summaries.map((cls) => [
+      cls.className,
+      String(cls.totalStudentsCount),
+      'PKR ' + this.formatCurrency(cls.totalMonthlyBilled),
+      'PKR ' + this.formatCurrency(cls.totalFeeCollected),
+      'PKR ' + this.formatCurrency(cls.totalRemainingBakaya),
+      String(cls.defaulterStudentsCount),
+      `${cls.collectionRate}%`
+    ]);
+    this.tableSchemaService.openDirectStatement({
+      tableId: 'finance_class_wise_bakaya',
+      title: 'Class-Wise Fee Collection & Bakaya Statement',
+      headers: ['Class / Section', 'Students', 'Monthly Billed', 'Fee Collected', 'Remaining Bakaya', 'Defaulters', 'Recovery Rate'],
+      rows
+    });
+  }
+
+  openBankVaultsStatement(): void {
+    const scName = this.schoolName || this.printBranding?.schoolName || 'SoftCode Premier Academy';
+    const rows: string[][] = [
+      ['Meezan Bank Limited', 'Main Campus Branch (0102)', scName, '0102-0105829102 / PK36MEZN0001020105829102', 'Primary Fee Account', 'PKR 12,450,000'],
+      ['Habib Bank Limited (HBL)', 'Model Town Branch (0042)', scName, '0042-7901829100 / PK42HABB0000427901829100', 'Secondary Collection', 'PKR 3,820,000'],
+      ['Campus Cashier Vault', 'Head Accountant Desk', 'Head Accountant', 'CASH-VAULT-MAIN-01', 'Campus Physical Vault', 'PKR 900,000']
+    ];
+    this.tableSchemaService.openDirectStatement({
+      tableId: 'finance_bank_vaults',
+      title: 'Official Bank Accounts & Campus Vaults Statement',
+      headers: ['Institution / Vault', 'Branch / Desk', 'A/C Title / Custodian', 'Account # / IBAN', 'Category', 'Ledger Balance']
+    , rows
+    });
   }
 
   printAdmissionChallan(adm: any): void {
@@ -9621,6 +9683,7 @@ INSTRUCTIONS:
 
     this.tableSchemaService.setTenantId(this.activeTenantId);
     this.tableSchemaService.setPortalRole(this.currentPortalRole);
+    this.registerStatementProviders();
     this.loadStateFromStorage();
     this.loadOfflineQueue();
     void this.loadStateFromBackend();
@@ -9701,6 +9764,7 @@ INSTRUCTIONS:
     if (typeof window !== 'undefined') {
       window.removeEventListener('online', this.boundOnlineSyncHandler);
     }
+    this.unregisterStatementProviders();
   }
 
   private loadOfflineQueue(): void {
@@ -10450,6 +10514,7 @@ INSTRUCTIONS:
           phone: this.settingsForm.phone || DEFAULT_SCHOOL_PRINT_BRANDING.phone
         };
       }
+      this.tableSchemaService.setPrintBranding(this.printBranding);
 
       if (savedStaffLeaves) this.staffLeaveRequests = JSON.parse(savedStaffLeaves);
       else this.staffLeaveRequests = this.getInitialStaffLeaves();
@@ -10830,6 +10895,7 @@ INSTRUCTIONS:
             this.hardwarePrinterPaper = this.printBranding.defaultPaperWidth;
           }
           void this.refreshEscPosLogoBitmap();
+          this.tableSchemaService.setPrintBranding(this.printBranding);
         }
         if (Array.isArray(w.announcements) && w.announcements.length > 0) this.announcements = w.announcements;
         if (Array.isArray(w.timetables) && w.timetables.length > 0) this.timetables = w.timetables;
@@ -21885,6 +21951,7 @@ INSTRUCTIONS:
       schoolName: this.settingsForm.schoolName || this.printBranding.schoolName,
       phone: this.settingsForm.phone || this.printBranding.phone
     };
+    this.tableSchemaService.setPrintBranding(this.printBranding);
     this.setScopedItem('scs_school_settings_v2', JSON.stringify(this.settingsForm));
     this.saveStateToStorage();
     this.showToast('Campus Configuration & Settings updated successfully!', 'success');
@@ -26606,6 +26673,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
             this.hardwarePrinterPaper = this.printBranding.defaultPaperWidth;
           }
           void this.refreshEscPosLogoBitmap();
+          this.tableSchemaService.setPrintBranding(this.printBranding);
         }
         if (Array.isArray(cloudData.schoolBranchRecords) && cloudData.schoolBranchRecords.length > 0) {
           this.schoolBranchRecords = cloudData.schoolBranchRecords;
@@ -28120,6 +28188,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
       this.hardwarePrinterPaper = this.printBranding.defaultPaperWidth;
     }
     void this.refreshEscPosLogoBitmap();
+    this.tableSchemaService.setPrintBranding(this.printBranding);
     this.saveStateToStorage();
     void this.backend.saveSchoolPrintBranding(this.printBranding).catch(() => null);
     this.cdr.detectChanges();
@@ -28137,10 +28206,406 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     this.hardwarePrinterPaper = this.printBranding.defaultPaperWidth;
     this.cachedEscPosLogoBmp = null;
     this.cachedEscPosLogoUrl = '';
+    this.tableSchemaService.setPrintBranding(this.printBranding);
     this.saveStateToStorage();
     void this.backend.resetSchoolPrintBranding().catch(() => null);
     this.showToast('Reset print design, logo & layout to default institutional format.', 'info');
     this.cdr.detectChanges();
+  }
+
+  private readonly registeredStatementIds = [
+    'owner_finance_ledger',
+    'owner_overview_fee_cashiering',
+    'principal_master_cashiering',
+    'accountant_recent_receipts',
+    'accountant_posted_receipts',
+    'owner_fee_defaulters',
+    'accountant_defaulters',
+    'owner_teacher_arrears',
+    'owner_profit_loss',
+    'owner_alerts_log',
+    'owner_petty_vouchers',
+    'accountant_petty_vouchers',
+    'owner_daily_closing',
+    'owner_audit_reconciliation',
+    'accountant_closings',
+    'accountant_challans',
+    'owner_students_roster',
+    'owner_teachers_faculty',
+    'owner_admissions',
+    'owner_expenses',
+    'owner_payroll',
+    'owner_invoices',
+    'owner_payment_gateway',
+    'owner_audit_trail'
+  ];
+
+  private unregisterStatementProviders(): void {
+    for (const id of this.registeredStatementIds) {
+      this.tableSchemaService.unregisterStatementDataProvider(id);
+    }
+  }
+
+  private registerStatementProviders(): void {
+    const fmtPkr = (n: number | undefined | null) => `PKR ${this.formatCurrency(Number(n || 0))}`;
+
+    // 1. Master Cash Book & Ledger
+    this.tableSchemaService.registerStatementDataProvider('owner_finance_ledger', (): StatementDataset => ({
+      tableId: 'owner_finance_ledger',
+      title: `Master Cash Book & Ledger (${this.activeScopeSummaryLabel})`,
+      headers: ['Challan / Ref #', 'Particulars / Student', 'Category', 'Date', 'Channel', 'Credit / Income', 'Debit / Expense', 'Status'],
+      dateColHint: 3,
+      rows: (this.filteredFinances || []).map((fin) => [
+        fin.challanNo || fin.id,
+        fin.studentName ? `${fin.title} (${fin.studentName})` : fin.title,
+        fin.category,
+        fin.date,
+        fin.paymentMethod || 'Counter / Bank',
+        fin.type === 'Income' ? fmtPkr(fin.amount) : '-',
+        fin.type === 'Expense' ? fmtPkr(fin.amount) : '-',
+        fin.status
+      ])
+    }));
+
+    // 2. Cashiering & Fee Receipts Registers (Owner / Principal / Accountant)
+    const cashieringProvider = (id: string, title: string) => (): StatementDataset => ({
+      tableId: id,
+      title,
+      headers: ['Receipt #', 'Student Name', 'Roll / ID', 'Class', 'Collector Desk', 'Channel', 'Timestamp', 'Paid Amount', 'Audit Status'],
+      dateColHint: 6,
+      rows: (this.scopedPrincipalFeeCollections || []).map((rec) => [
+        rec.receiptNo,
+        rec.studentName,
+        rec.rollNo,
+        rec.grade,
+        rec.collectedBy,
+        rec.paymentResource,
+        rec.timestamp,
+        fmtPkr(rec.amount),
+        rec.auditStatus
+      ])
+    });
+    this.tableSchemaService.registerStatementDataProvider(
+      'owner_overview_fee_cashiering',
+      cashieringProvider('owner_overview_fee_cashiering', 'Principal Desk Cashiering & Fee Receipts Register')
+    );
+    this.tableSchemaService.registerStatementDataProvider(
+      'principal_master_cashiering',
+      cashieringProvider('principal_master_cashiering', 'Principal Desk Fee Collection Statement')
+    );
+    this.tableSchemaService.registerStatementDataProvider(
+      'accountant_recent_receipts',
+      cashieringProvider('accountant_recent_receipts', 'Accountant Fee Desk Recent Receipts')
+    );
+    this.tableSchemaService.registerStatementDataProvider(
+      'accountant_posted_receipts',
+      cashieringProvider('accountant_posted_receipts', 'Accountant Posted Fee Receipts Statement')
+    );
+
+    // 3. Fee Defaulters Khata
+    const defaultersProvider = (id: string, title: string) => (): StatementDataset => {
+      const list = id === 'accountant_defaulters' ? this.filteredAccountantDefaulters : this.filteredFeeDefaulters;
+      return {
+        tableId: id,
+        title,
+        headers: ['Roll #', 'Student Name', 'Class', 'Guardian & Phone', 'Unpaid Months', 'Last Paid Date', 'Remaining Bakaya', 'Alert Status'],
+        dateColHint: 5,
+        rows: (list || []).map((d) => [
+          d.rollNo,
+          d.studentName,
+          d.grade,
+          `${d.guardianName} (${d.guardianPhone})`,
+          `${d.unpaidMonthsCount} Mo (${(d.unpaidMonthsList || []).join(', ')})`,
+          d.lastPaymentDate || '-',
+          fmtPkr(d.totalRemainingBakaya),
+          d.alertStatus
+        ])
+      };
+    };
+    this.tableSchemaService.registerStatementDataProvider(
+      'owner_fee_defaulters',
+      defaultersProvider('owner_fee_defaulters', 'Fee Defaulters Khata Statement')
+    );
+    this.tableSchemaService.registerStatementDataProvider(
+      'accountant_defaulters',
+      defaultersProvider('accountant_defaulters', 'Accountant Fee Defaulters Register')
+    );
+
+    // 4. Teacher Salary & Tenure
+    this.tableSchemaService.registerStatementDataProvider('owner_teacher_arrears', (): StatementDataset => ({
+      tableId: 'owner_teacher_arrears',
+      title: 'Teacher Salary & Tenure Statement',
+      headers: ['Teacher / Faculty', 'Subject', 'Joined Date', 'Tenure', 'Monthly Salary', 'Unpaid Months', 'Remaining Arrears', 'Salary Status'],
+      dateColHint: 2,
+      rows: (this.scopedTeachers || []).map((t) => [
+        t.name,
+        t.subject,
+        t.appointmentDate || '-',
+        t.tenureDuration || '-',
+        fmtPkr(t.monthlySalary),
+        String(t.unpaidSalaryMonths || 0),
+        fmtPkr(t.remainingSalaryArrears || 0),
+        t.salaryStatus
+      ])
+    }));
+
+    // 5. Profit & Loss Khata
+    this.tableSchemaService.registerStatementDataProvider('owner_profit_loss', (): StatementDataset => ({
+      tableId: 'owner_profit_loss',
+      title: 'Monthly Profit & Loss Khata Statement',
+      headers: ['Month & Year', 'Tuition Income', 'Other & Transport', 'Gross Income', 'Operating Expense', 'Net Profit / Loss', 'Status'],
+      dateColHint: 0,
+      rows: (this.profitLossLedger || []).map((pl) => [
+        pl.monthYear,
+        fmtPkr(pl.tuitionFeeIncome),
+        fmtPkr(Number(pl.transportFeeIncome || 0) + Number(pl.otherIncome || 0)),
+        fmtPkr(pl.totalGrossIncome),
+        fmtPkr(pl.totalOperatingExpense),
+        fmtPkr(pl.netProfitOrLoss),
+        pl.status
+      ])
+    }));
+
+    // 6. Alerts History
+    this.tableSchemaService.registerStatementDataProvider('owner_alerts_log', (): StatementDataset => ({
+      tableId: 'owner_alerts_log',
+      title: 'Dispatched WhatsApp & SMS Alerts History',
+      headers: ['Alert Ref #', 'Recipient', 'Phone', 'Channel', 'Message Summary', 'Sent Timestamp', 'Delivery Status'],
+      dateColHint: 5,
+      rows: (this.dispatchAlertLogs || []).map((log) => [
+        log.id,
+        `${log.recipientName} (${log.targetRole})`,
+        log.recipientPhone,
+        log.channel,
+        log.messageText,
+        log.sentAt,
+        log.deliveryStatus
+      ])
+    }));
+
+    // 7. Petty Cash Vouchers
+    const pettyProvider = (id: string) => (): StatementDataset => ({
+      tableId: id,
+      title: 'Fee Counter Petty Cash Vouchers Statement',
+      headers: ['Voucher #', 'Date', 'Category', 'Description', 'Paid To', 'Recorded By', 'Voucher Amount'],
+      dateColHint: 1,
+      rows: (this.scopedAccountantPettyVouchers || []).map((pv) => [
+        pv.voucherNo || pv.id,
+        pv.date,
+        pv.category,
+        pv.description,
+        pv.paidTo,
+        pv.recordedBy,
+        fmtPkr(pv.amount)
+      ])
+    });
+    this.tableSchemaService.registerStatementDataProvider('owner_petty_vouchers', pettyProvider('owner_petty_vouchers'));
+    this.tableSchemaService.registerStatementDataProvider('accountant_petty_vouchers', pettyProvider('accountant_petty_vouchers'));
+
+    // 8. Daily Cash Closing (Rooznama)
+    this.tableSchemaService.registerStatementDataProvider('owner_daily_closing', (): StatementDataset => {
+      const d = this.dailyClosingDate || new Date().toISOString().slice(0, 10);
+      return {
+        tableId: 'owner_daily_closing',
+        title: `Daily Cash Closing (Rooznama) Statement (${this.activeScopeSummaryLabel})`,
+        headers: ['Date', 'Category / Head', 'Description', 'Payment Channel', 'Inflow (PKR)', 'Outflow (PKR)'],
+        dateColHint: 0,
+        rows: [
+          [d, 'Opening Vault Balance', 'Carried forward from yesterday closing', 'Physical Vault', fmtPkr(this.dailyOpeningVaultCash), '-'],
+          [d, 'Student Tuition Fees', 'Monthly Tuition Vouchers (Accountant + Principal)', 'Counter Cash', fmtPkr(this.todayFeeCashCollections), '-'],
+          [d, 'New Admissions Desk', 'Admission & Prospectus Fee Collections', 'Counter Cash', fmtPkr(this.todayAdmissionCashCollections), '-'],
+          [d, 'Online & Bank Deposits', 'Meezan, HBL & Raast Transfers', 'Bank / IBFT', fmtPkr(this.todayOnlineBankCollections), '-'],
+          [d, 'Digital Wallets', 'EasyPaisa, JazzCash & KuickPay', 'Digital Wallet', fmtPkr(this.todayEasyPaisaCollections), '-'],
+          [d, 'Petty Counter Expenses', `${this.scopedAccountantPettyVouchers.length} Counter Expense Vouchers`, 'Petty Cash', '-', fmtPkr(this.todayPettyExpensesOutflow)],
+          [d, 'Daily Bank Deposit', 'Cash Remitted to Meezan / HBL Vault', 'Bank Deposit', '-', fmtPkr(this.dailyBankDepositAmount)],
+          [d, 'Physical Cash In Hand', 'Reconciled Closing Drawer Balance', 'Vault Closing', fmtPkr(this.netPhysicalCashInHand), '-']
+        ]
+      };
+    });
+
+    // 9. Bank Reconciliation & Accountant Closings
+    const closingQueueProvider = (id: string, title: string) => (): StatementDataset => ({
+      tableId: id,
+      title,
+      headers: ['Closing ID', 'Date', 'Campus / Cashier', 'Counter Cash', 'Meezan Bank', 'HBL Bank', 'Digital Wallets', 'Total Collected', 'Variance', 'Owner Status'],
+      dateColHint: 1,
+      rows: (this.scopedFeeReconciliations || []).map((rec) => [
+        rec.id,
+        rec.date,
+        `${rec.branchName || 'Main'} · ${rec.cashierName}`,
+        fmtPkr(rec.counterCashReceived),
+        fmtPkr(rec.bankDepositedMeezan),
+        fmtPkr(rec.bankDepositedHBL),
+        fmtPkr(rec.onlineDigitalKuickPay),
+        fmtPkr(rec.actualCollected),
+        fmtPkr(rec.varianceAmount),
+        rec.ownerApprovalStatus || rec.reconciliationStatus
+      ])
+    });
+    this.tableSchemaService.registerStatementDataProvider('owner_audit_reconciliation', closingQueueProvider('owner_audit_reconciliation', 'Cash & Bank Reconciliation Statement'));
+    this.tableSchemaService.registerStatementDataProvider('accountant_closings', closingQueueProvider('accountant_closings', 'Accountant Day-End Closings Statement'));
+
+    // 10. Accountant Challans Register
+    this.tableSchemaService.registerStatementDataProvider('accountant_challans', (): StatementDataset => ({
+      tableId: 'accountant_challans',
+      title: 'Fee Challans Register Statement',
+      headers: ['Challan #', 'Student', 'Roll #', 'Class', 'Billing Month', 'Due Date', 'Total Payable', 'Status'],
+      dateColHint: 5,
+      rows: (this.filteredAccountantChallans || []).map((c) => [
+        c.challanNo,
+        c.studentName,
+        c.rollNo,
+        c.grade,
+        c.month,
+        c.dueDate,
+        fmtPkr(c.total),
+        c.status
+      ])
+    }));
+
+    // 11. Students Master Roster
+    this.tableSchemaService.registerStatementDataProvider('owner_students_roster', (): StatementDataset => ({
+      tableId: 'owner_students_roster',
+      title: 'Students Master Directory Statement',
+      headers: ['Roll #', 'Student Name', 'Class / Section', 'Father / Guardian', 'Phone', 'Admission Date', 'Monthly Fee', 'Due Bakaya', 'Fee Status'],
+      dateColHint: 5,
+      rows: (this.filteredStudents || []).map((s) => [
+        s.rollNo,
+        s.name,
+        `${s.grade}${s.section ? ' - ' + s.section : ''}`,
+        s.guardian,
+        s.guardianPhone,
+        s.admissionDate,
+        fmtPkr(s.feeAmount),
+        fmtPkr(s.dueBakaya || 0),
+        s.feeStatus
+      ])
+    }));
+
+    // 12. Teachers Faculty Roster
+    this.tableSchemaService.registerStatementDataProvider('owner_teachers_faculty', (): StatementDataset => ({
+      tableId: 'owner_teachers_faculty',
+      title: 'Faculty & Staff Directory Statement',
+      headers: ['Emp ID', 'Name', 'Designation / Subject', 'Phone', 'Appointment Date', 'Monthly Salary', 'Remaining Arrears', 'Salary Status'],
+      dateColHint: 4,
+      rows: (this.scopedTeachers || []).map((t) => [
+        t.empCode || t.id,
+        t.name,
+        t.designation || t.subject,
+        t.phone,
+        t.appointmentDate || '-',
+        fmtPkr(t.monthlySalary),
+        fmtPkr(t.remainingSalaryArrears || 0),
+        t.salaryStatus
+      ])
+    }));
+
+    // 13. Admissions Pipeline
+    this.tableSchemaService.registerStatementDataProvider('owner_admissions', (): StatementDataset => ({
+      tableId: 'owner_admissions',
+      title: 'Admissions & Registration Statement',
+      headers: ['App ID', 'Applicant Name', 'Class Applied', 'Guardian', 'Phone', 'Date', 'Admission Fee', 'Tuition Fee', 'Status'],
+      dateColHint: 5,
+      rows: (this.filteredAdmissions || []).map((a) => [
+        a.id,
+        a.applicant,
+        a.appliedFor,
+        a.fatherName,
+        a.phone,
+        a.date,
+        fmtPkr(a.admissionFee || 0),
+        fmtPkr(a.tuitionFee || 0),
+        a.status
+      ])
+    }));
+
+    // 14. Expenses, Payroll & Invoices
+    this.tableSchemaService.registerStatementDataProvider('owner_expenses', (): StatementDataset => ({
+      tableId: 'owner_expenses',
+      title: 'School Expenses & Vendor Bills Statement',
+      headers: ['Receipt #', 'Title & Purpose', 'Category', 'Vendor / Payee', 'Date', 'Mode', 'Amount (PKR)'],
+      dateColHint: 4,
+      rows: (this.filteredExpenses || []).map((e) => [
+        e.receiptNo,
+        e.title,
+        e.category,
+        e.vendor,
+        e.date,
+        e.paymentMode,
+        fmtPkr(e.amount)
+      ])
+    }));
+
+    this.tableSchemaService.registerStatementDataProvider('owner_payroll', (): StatementDataset => ({
+      tableId: 'owner_payroll',
+      title: 'Staff Payroll Register Statement',
+      headers: ['Staff Name', 'Role', 'Payroll Month', 'Disbursed Date', 'Base Salary', 'Allowances', 'Deductions', 'Net Payable', 'Status'],
+      dateColHint: 3,
+      rows: (this.filteredStaffPayrolls || []).map((p) => [
+        p.staffName,
+        p.role,
+        p.month,
+        p.disbursedDate || 'Pending',
+        fmtPkr(p.baseSalary),
+        fmtPkr(p.allowances),
+        fmtPkr(p.deductions),
+        fmtPkr(p.netPayable),
+        p.status
+      ])
+    }));
+
+    this.tableSchemaService.registerStatementDataProvider('owner_invoices', (): StatementDataset => ({
+      tableId: 'owner_invoices',
+      title: 'Master Invoices & Billing Statement',
+      headers: ['Invoice #', 'Type', 'Recipient', 'Issue Date', 'Due Date', 'Subtotal', 'Discount', 'Net Payable', 'Status'],
+      dateColHint: 3,
+      rows: (this.filteredMasterInvoices || []).map((inv) => [
+        inv.invoiceNo,
+        inv.type,
+        inv.recipientName,
+        inv.issueDate,
+        inv.dueDate,
+        fmtPkr(inv.amount),
+        fmtPkr(inv.discount),
+        fmtPkr(inv.netPayable),
+        inv.status
+      ])
+    }));
+
+    // 15. Payment Gateway & Audit Trail
+    this.tableSchemaService.registerStatementDataProvider('owner_payment_gateway', (): StatementDataset => ({
+      tableId: 'owner_payment_gateway',
+      title: 'Online Fee & Digital Gateway Statement',
+      headers: ['TXN Ref', 'Challan #', 'Student', 'Class', 'Gateway Channel', 'Proof TID', 'Timestamp', 'Total Amount', 'Status'],
+      dateColHint: 6,
+      rows: (this.schoolPaymentTransactions || []).map((tx) => [
+        tx.txnRef,
+        tx.challanNo,
+        tx.studentName,
+        tx.grade,
+        tx.gatewayName,
+        tx.proofReference || '-',
+        tx.createdAt || '-',
+        fmtPkr(tx.totalAmount),
+        tx.status
+      ])
+    }));
+
+    this.tableSchemaService.registerStatementDataProvider('owner_audit_trail', (): StatementDataset => ({
+      tableId: 'owner_audit_trail',
+      title: 'System Security & Audit Trail Log',
+      headers: ['Timestamp', 'Operator', 'Action Type', 'Category', 'Entity Details', 'Severity', 'Verified By'],
+      dateColHint: 0,
+      rows: (this.filteredAuditLogs || []).map((log) => [
+        log.timestamp,
+        `${log.operatorName} (${log.operatorRole})`,
+        log.actionType,
+        log.category,
+        `${log.entityDescription} - ${log.details}`,
+        log.severity,
+        log.verifiedBy
+      ])
+    }));
   }
 
   onStudioPaperSizeChange(paper: 'a4' | '80mm' | '58mm'): void {
@@ -28151,6 +28616,7 @@ Verification Portal   : https://campus.edu/verify-slc/${slc.securityHash}
     this.hardwarePrinterPaper = paper;
     if (paper === '80mm' || paper === '58mm') {
       this.printBranding = { ...this.printBranding, defaultPaperWidth: paper };
+      this.tableSchemaService.setPrintBranding(this.printBranding);
       this.saveStateToStorage();
       void this.backend.saveSchoolPrintBranding(this.printBranding).catch(() => null);
     }

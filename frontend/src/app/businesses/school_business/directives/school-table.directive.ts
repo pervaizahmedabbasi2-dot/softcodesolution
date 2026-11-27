@@ -155,9 +155,10 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
         return;
       }
 
-      // Remove previously injected custom <th> headers
+      // Remove previously injected custom <th> headers and auto-injected Actions header
       Array.from(headerRow.children).forEach((child) => {
-        if ((child as HTMLElement).hasAttribute('data-scs-custom-col')) {
+        const el = child as HTMLElement;
+        if (el.hasAttribute('data-scs-custom-col') || el.hasAttribute('data-scs-auto-actions')) {
           headerRow.removeChild(child);
         }
       });
@@ -175,7 +176,13 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
         const lower = origLabel.toLowerCase();
         if (
           idx === builtInThs.length - 1 &&
-          (lower === 'actions' || lower === 'action' || lower === 'quick actions' || lower === 'remove')
+          (lower === 'actions' ||
+            lower === 'action' ||
+            lower === 'quick actions' ||
+            lower === 'remove' ||
+            lower === 'scope action' ||
+            lower === 'focus' ||
+            lower === 'manage')
         ) {
           actionsColIndex = idx;
         } else {
@@ -184,6 +191,8 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
       });
 
       this.schemaService.updateRegisteredHeaders(tableId, detectedHeaders);
+      const enableRowQuickActions = !this.hideToolbar() && !this.hideToolbarExports();
+      const needsAutoActionsCol = enableRowQuickActions && actionsColIndex === -1;
 
       const hiddenLabelSet = new Set((schema.hiddenColumnLabels || []).map((l) => l.toLowerCase()));
       const isCanonicalMatch = schema.tableId === tableId;
@@ -262,6 +271,31 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
         }
       });
 
+      if (needsAutoActionsCol) {
+        const autoTh = document.createElement('th');
+        autoTh.setAttribute('data-scs-auto-actions', '1');
+        autoTh.className = `${nativeThClass} text-right whitespace-nowrap`;
+        autoTh.textContent = 'Actions';
+        headerRow.appendChild(autoTh);
+      }
+
+      // Align <tfoot> rows if an auto Actions column was added
+      Array.from(tableEl.querySelectorAll('tfoot tr')).forEach((ftr) => {
+        Array.from(ftr.children).forEach((child) => {
+          if ((child as HTMLElement).hasAttribute('data-scs-auto-actions')) {
+            ftr.removeChild(child);
+          }
+        });
+        if (needsAutoActionsCol) {
+          const blankTd = document.createElement('td');
+          blankTd.setAttribute('data-scs-auto-actions', '1');
+          blankTd.className = 'px-3 py-2';
+          ftr.appendChild(blankTd);
+        }
+      });
+
+      const effectiveTableTitle = (schema.customTitle || this.tableTitle() || tableId.replace(/_/g, ' ')).trim();
+
       // Update tbody rows
       this.detailViewports.clear();
       const tbodies = Array.from(tableEl.querySelectorAll('tbody'));
@@ -283,12 +317,14 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
         let firstBuiltInTr: HTMLTableRowElement | null = null;
 
         rows.forEach((tr, rowIdx) => {
-          // Remove previously injected custom <td> cells
+          // Remove previously injected custom <td> cells, auto Actions <td>, and inline quick actions
           Array.from(tr.children).forEach((child) => {
-            if ((child as HTMLElement).hasAttribute('data-scs-custom-cell')) {
+            const el = child as HTMLElement;
+            if (el.hasAttribute('data-scs-custom-cell') || el.hasAttribute('data-scs-auto-actions')) {
               tr.removeChild(child);
             }
           });
+          tr.querySelectorAll('[data-scs-row-quick-actions]').forEach((el) => el.remove());
 
           const builtInTds = Array.from(tr.children) as HTMLTableCellElement[];
           const isEmptyStateRow =
@@ -302,7 +338,7 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
             builtInTds[0].setAttribute('data-scs-empty-row', '1');
             builtInTds[0].setAttribute(
               'colspan',
-              String(Math.max(1, visibleBuiltInCount + visibleCustomCount))
+              String(Math.max(1, visibleBuiltInCount + visibleCustomCount + (needsAutoActionsCol ? 1 : 0)))
             );
             return;
           }
@@ -370,6 +406,29 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
               tr.appendChild(td);
             }
           });
+
+          // Inject universal per-row Details & Print quick actions into existing or auto-created Actions column
+          if (enableRowQuickActions) {
+            let targetActTd = actionsTd;
+            const isAutoCell = !targetActTd;
+            if (!targetActTd) {
+              targetActTd = document.createElement('td');
+              targetActTd.setAttribute('data-scs-auto-actions', '1');
+              targetActTd.className = 'px-3.5 py-2.5 text-right whitespace-nowrap';
+              tr.appendChild(targetActTd);
+            }
+            this.injectRowQuickActions(
+              targetActTd,
+              isAutoCell,
+              tableId,
+              effectiveTableTitle,
+              headerRow as HTMLTableRowElement,
+              tr,
+              rowKey,
+              rowLabel,
+              actionsColIndex
+            );
+          }
         });
 
         if (tbodyIdx === 0) {
@@ -381,10 +440,13 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
           const buildRow = (crow: SchoolCustomRow) =>
             this.createStandaloneCustomRow(
               tableId,
+              effectiveTableTitle,
+              headerRow as HTMLTableRowElement,
               crow,
               orderedColumns,
               detectedHeaders,
               actionsColIndex,
+              enableRowQuickActions,
               schema,
               isOwner
             );
@@ -458,8 +520,8 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
           }
         }
 
-        // Render inline expanded Row Details card beneath the clicked row
-        if (!this.disableRowDetails() && this.expandedRowKey) {
+        // Render inline expanded Row Details card beneath the clicked/Dossier-toggled row
+        if (this.expandedRowKey) {
           const allTbodyRows = Array.from(tbody.children).filter(
             (el) =>
               el.tagName === 'TR' &&
@@ -589,10 +651,13 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
 
   private createStandaloneCustomRow(
     tableId: string,
+    effectiveTableTitle: string,
+    headerRow: HTMLTableRowElement,
     crow: SchoolCustomRow,
     orderedColumns: OrderedTableColumn[],
     detectedHeaders: DetectedBuiltInHeader[],
     actionsColIndex: number,
+    enableRowQuickActions: boolean,
     schema: SchoolTableSchema,
     isOwner: boolean
   ): HTMLTableRowElement {
@@ -600,7 +665,8 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
     tr.setAttribute('data-scs-custom-row', crow.rowKey);
     tr.setAttribute('data-row-key', crow.rowKey);
     tr.setAttribute('data-scs-resolved-key', crow.rowKey);
-    tr.setAttribute('data-scs-resolved-label', crow.rowLabel || 'Custom Row');
+    const resolvedLabel = crow.rowLabel || 'Custom Row';
+    tr.setAttribute('data-scs-resolved-label', resolvedLabel);
     tr.className = 'hover:bg-slate-50/80 transition-colors';
     this.syncRowDetailInteraction(tr, crow.rowKey);
 
@@ -627,7 +693,7 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
           tableId,
           col,
           crow.rowKey,
-          crow.rowLabel || 'Custom Row',
+          resolvedLabel,
           savedVal,
           isOwner
         );
@@ -635,13 +701,17 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
       }
     });
 
-    if (actionsColIndex >= 0) {
+    if (actionsColIndex >= 0 || enableRowQuickActions) {
+      const isAutoCell = actionsColIndex < 0;
       const actTd = document.createElement('td');
+      if (isAutoCell) {
+        actTd.setAttribute('data-scs-auto-actions', '1');
+      }
       actTd.className = 'px-3.5 py-2.5 text-right whitespace-nowrap';
-      if (isOwner) {
-        const wrap = document.createElement('div');
-        wrap.className = 'inline-flex items-center gap-1';
+      const wrap = document.createElement('div');
+      wrap.className = 'inline-flex items-center justify-end gap-1';
 
+      if (actionsColIndex >= 0 && isOwner) {
         const editBtn = document.createElement('button');
         editBtn.type = 'button';
         editBtn.className =
@@ -651,7 +721,7 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
           e.stopPropagation();
           this.schemaService.openColumnManager(
             tableId,
-            schema.customTitle || this.tableTitle() || tableId,
+            effectiveTableTitle,
             detectedHeaders,
             'rows'
           );
@@ -667,7 +737,7 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
           e.stopPropagation();
           this.schemaService.openConfirm({
             title: 'Delete Table Row?',
-            message: `Are you sure you want to delete "${crow.rowLabel || 'this row'}" from the table?`,
+            message: `Are you sure you want to delete "${resolvedLabel}" from the table?`,
             confirmLabel: 'Delete',
             danger: true,
             onConfirm: () => {
@@ -676,13 +746,21 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
           });
         });
         wrap.appendChild(delBtn);
+      }
 
-        actTd.appendChild(wrap);
-      } else {
-        const badge = document.createElement('span');
-        badge.className = 'text-[10px] font-semibold text-slate-400';
-        badge.textContent = crow.submittedByRole ? `Via ${crow.submittedByRole}` : 'Synced';
-        actTd.appendChild(badge);
+      actTd.appendChild(wrap);
+      if (enableRowQuickActions) {
+        this.injectRowQuickActions(
+          actTd,
+          isAutoCell,
+          tableId,
+          effectiveTableTitle,
+          headerRow,
+          tr,
+          crow.rowKey,
+          resolvedLabel,
+          actionsColIndex
+        );
       }
       tr.appendChild(actTd);
     }
@@ -785,7 +863,7 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
     return td;
   }
 
-  private createToolbarIcon(kind: 'csv' | 'table' | 'cards'): SVGSVGElement {
+  private createToolbarIcon(kind: 'csv' | 'table' | 'cards' | 'statement' | 'dossier' | 'qr', sizeClass = 'w-3.5 h-3.5'): SVGSVGElement {
     const ns = 'http://www.w3.org/2000/svg';
     const svg = document.createElementNS(ns, 'svg');
     svg.setAttribute('viewBox', '0 0 24 24');
@@ -794,14 +872,18 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
     svg.setAttribute('stroke-width', '2');
     svg.setAttribute('stroke-linecap', 'round');
     svg.setAttribute('stroke-linejoin', 'round');
-    svg.setAttribute('class', 'w-3.5 h-3.5 shrink-0');
+    svg.setAttribute('class', `${sizeClass} shrink-0`);
 
     const paths: string[] =
       kind === 'csv'
         ? ['M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4', 'M7 10l5 5 5-5', 'M12 15V3']
-        : kind === 'table'
+        : kind === 'table' || kind === 'dossier'
           ? ['M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z', 'M14 2v6h6', 'M16 13H8', 'M16 17H8', 'M10 9H8']
-          : ['M6 9V2h12v7', 'M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2', 'M6 14h12v8H6z'];
+          : kind === 'statement'
+            ? ['M6 9V2h12v7', 'M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2', 'M6 14h12v8H6z']
+            : kind === 'qr'
+              ? ['M3 3h7v7H3z', 'M14 3h7v7h-7z', 'M3 14h7v7H3z', 'M14 14h3v3h-3z', 'M19 14h2v2h-2z', 'M14 19h2v2h-2z', 'M18 18h3v3h-3z']
+              : ['M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z', 'M4 12h16', 'M12 4v16'];
 
     for (const d of paths) {
       const p = document.createElementNS(ns, 'path');
@@ -809,6 +891,202 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
       svg.appendChild(p);
     }
     return svg;
+  }
+
+  private extractSingleRowFields(
+    headerRow: HTMLTableRowElement,
+    sourceTr: HTMLTableRowElement,
+    actionsColIndex: number
+  ): {
+    fields: Array<{ label: string; value: string; isCustom: boolean }>;
+    headers: string[];
+    values: string[];
+  } {
+    const headerCells = Array.from(headerRow.children) as HTMLElement[];
+    const rowCells = Array.from(sourceTr.children) as HTMLElement[];
+    const fields: Array<{ label: string; value: string; isCustom: boolean }> = [];
+    const headers: string[] = [];
+    const values: string[] = [];
+    const pairCount = Math.min(headerCells.length, rowCells.length);
+
+    for (let i = 0; i < pairCount; i++) {
+      const th = headerCells[i];
+      const td = rowCells[i];
+      if (
+        !th ||
+        !td ||
+        th.style.display === 'none' ||
+        td.style.display === 'none' ||
+        th.hasAttribute('data-scs-auto-actions') ||
+        td.hasAttribute('data-scs-auto-actions')
+      ) {
+        continue;
+      }
+
+      const label = (th.textContent || '').replace(/\s+/g, ' ').trim();
+      const lower = label.toLowerCase();
+      if (
+        (actionsColIndex >= 0 && i === actionsColIndex) ||
+        lower === 'actions' ||
+        lower === 'action' ||
+        lower === 'quick actions' ||
+        lower === 'remove' ||
+        lower === 'scope action' ||
+        lower === 'focus' ||
+        lower === 'manage'
+      ) {
+        continue;
+      }
+
+      const inputEl = td.querySelector('input, select, textarea') as
+        | HTMLInputElement
+        | HTMLSelectElement
+        | HTMLTextAreaElement
+        | null;
+      let value = '';
+      if (inputEl) {
+        if (inputEl instanceof HTMLSelectElement) {
+          value = inputEl.options[inputEl.selectedIndex]?.text || inputEl.value || '';
+        } else if (inputEl instanceof HTMLInputElement && inputEl.type === 'checkbox') {
+          value = inputEl.checked ? 'Yes' : 'No';
+        } else {
+          value = inputEl.value || '';
+        }
+      }
+      if (!value) {
+        const clone = td.cloneNode(true) as HTMLElement;
+        clone.querySelectorAll('[data-scs-ignore-export]').forEach((n) => n.remove());
+        value = (clone.textContent || '').replace(/\s+/g, ' ').trim();
+      }
+
+      const cleanLabel = label || `Field ${i + 1}`;
+      const cleanValue = value || '—';
+      fields.push({
+        label: cleanLabel,
+        value: cleanValue,
+        isCustom: td.hasAttribute('data-scs-custom-cell')
+      });
+      headers.push(cleanLabel);
+      values.push(cleanValue);
+    }
+
+    return { fields, headers, values };
+  }
+
+  private injectRowQuickActions(
+    targetActTd: HTMLTableCellElement,
+    isAutoCell: boolean,
+    tableId: string,
+    effectiveTableTitle: string,
+    headerRow: HTMLTableRowElement,
+    sourceTr: HTMLTableRowElement,
+    rowKey: string,
+    rowLabel: string,
+    actionsColIndex: number
+  ): void {
+    const existingButtons = Array.from(targetActTd.querySelectorAll('button, a')) as HTMLElement[];
+    const existingText = existingButtons
+      .map((b) => (b.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase())
+      .join(' ');
+    const existingTitles = existingButtons
+      .map((b) => ((b.getAttribute('title') || '') + ' ' + (b.getAttribute('aria-label') || '')).toLowerCase())
+      .join(' ');
+
+    const hasNativeDossier = /\b(dossier|details?)\b/.test(existingText) || /\b(dossier|detail)\b/.test(existingTitles);
+    const hasNativeQr = /\bid\s*card\b/.test(existingText) || /\b(id\s*card|qr)\b/.test(existingTitles);
+    const hasNativePrintSlip =
+      /\b(print|receipt|challan|slip)\b/.test(existingText) ||
+      /salary\s*slip|fee\s*challan|fee\s*receipt|3-copy\s*bank\s*challan|cashiering\s*receipt/.test(existingTitles);
+
+    if (hasNativeDossier && hasNativeQr && hasNativePrintSlip) return;
+
+    const isExpanded = this.expandedRowKey === rowKey;
+
+    const quickBar = document.createElement('div');
+    quickBar.setAttribute('data-scs-row-quick-actions', '1');
+    quickBar.setAttribute('data-scs-ignore-export', '1');
+    quickBar.setAttribute('data-scs-ignore-detail', '1');
+    quickBar.className = 'inline-flex items-center justify-end gap-1 align-middle whitespace-nowrap';
+
+    if (!hasNativeDossier) {
+      const dossierBtn = document.createElement('button');
+      dossierBtn.type = 'button';
+      dossierBtn.title = isExpanded ? 'Hide Record Dossier & Details' : 'View Full Record Dossier & Details';
+      dossierBtn.className = isExpanded
+        ? 'px-2.5 py-1 rounded-lg bg-indigo-600 text-white font-black text-[10px] inline-flex items-center gap-1 cursor-pointer transition-colors shadow-2xs'
+        : 'px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-black text-[10px] inline-flex items-center gap-1 cursor-pointer transition-colors';
+      dossierBtn.appendChild(this.createToolbarIcon('dossier', 'w-3 h-3'));
+      const dTxt = document.createElement('span');
+      dTxt.textContent = isExpanded ? 'Hide' : 'Dossier';
+      dossierBtn.appendChild(dTxt);
+      dossierBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.expandedRowKey = this.expandedRowKey === rowKey ? null : rowKey;
+        this.scheduleApply();
+      });
+      quickBar.appendChild(dossierBtn);
+    }
+
+    if (!hasNativeQr) {
+      const qrBtn = document.createElement('button');
+      qrBtn.type = 'button';
+      qrBtn.title = 'View QR Verification & Digital Record Card';
+      qrBtn.className =
+        'p-1.5 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-700 cursor-pointer inline-flex items-center justify-center transition-colors';
+      qrBtn.appendChild(this.createToolbarIcon('qr', 'w-3.5 h-3.5'));
+      qrBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const extracted = this.extractSingleRowFields(headerRow, sourceTr, actionsColIndex);
+        if (extracted.headers.length === 0) return;
+        this.schemaService.openSingleRecordStatement({
+          tableId,
+          tableTitle: effectiveTableTitle,
+          recordLabel: rowLabel,
+          headers: extracted.headers,
+          values: extracted.values,
+          initialFormat: 'card'
+        });
+      });
+      quickBar.appendChild(qrBtn);
+    }
+
+    if (!hasNativePrintSlip) {
+      const printBtn = document.createElement('button');
+      printBtn.type = 'button';
+      printBtn.title = 'Print Record Slip (A4 / 80mm & 58mm Rasheed / PDF / WhatsApp)';
+      printBtn.className =
+        'p-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 cursor-pointer inline-flex items-center justify-center transition-colors';
+      printBtn.appendChild(this.createToolbarIcon('statement', 'w-3.5 h-3.5'));
+      printBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const extracted = this.extractSingleRowFields(headerRow, sourceTr, actionsColIndex);
+        if (extracted.headers.length === 0) return;
+        this.schemaService.openSingleRecordStatement({
+          tableId,
+          tableTitle: effectiveTableTitle,
+          recordLabel: rowLabel,
+          headers: extracted.headers,
+          values: extracted.values,
+          initialFormat: 'a4'
+        });
+      });
+      quickBar.appendChild(printBtn);
+    }
+
+    const innerFlex = !isAutoCell
+      ? (Array.from(targetActTd.children).find(
+          (c) => c.tagName === 'DIV' && /flex/.test((c as HTMLElement).className)
+        ) as HTMLElement | undefined)
+      : undefined;
+
+    if (innerFlex) {
+      innerFlex.appendChild(quickBar);
+    } else {
+      if (!isAutoCell && targetActTd.children.length > 0) {
+        quickBar.classList.add('ml-1');
+      }
+      targetActTd.appendChild(quickBar);
+    }
   }
 
   private syncToolbar(
@@ -886,6 +1164,21 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
     right.className = 'flex items-center gap-1.5 flex-wrap';
 
     if (showExports) {
+      const statementBtn = document.createElement('button');
+      statementBtn.type = 'button';
+      statementBtn.className =
+        'px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-[11px] inline-flex items-center gap-1.5 shadow-2xs active:scale-95 transition-all cursor-pointer whitespace-nowrap';
+      statementBtn.title = 'Search, filter by date range, view & print (A4 / 80mm / 58mm Rasheed / PDF / WhatsApp)';
+      statementBtn.appendChild(this.createToolbarIcon('statement'));
+      const stmtTxt = document.createElement('span');
+      stmtTxt.textContent = 'Statement & Print';
+      statementBtn.appendChild(stmtTxt);
+      statementBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.schemaService.openStatementModal(tableId, title);
+      });
+      right.appendChild(statementBtn);
+
       const csvBtn = document.createElement('button');
       csvBtn.type = 'button';
       csvBtn.className =
@@ -988,55 +1281,9 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
     schema: SchoolTableSchema
   ): HTMLTableRowElement {
     const headerCells = Array.from(headerRow.children) as HTMLElement[];
-    const rowCells = Array.from(sourceTr.children) as HTMLElement[];
     const totalVisibleCols = Math.max(1, headerCells.filter((h) => h.style.display !== 'none').length);
-
-    const fields: Array<{ label: string; value: string; isCustom: boolean }> = [];
-    const pairCount = Math.min(headerCells.length, rowCells.length);
-
-    for (let i = 0; i < pairCount; i++) {
-      const th = headerCells[i];
-      const td = rowCells[i];
-      if (!th || !td || th.style.display === 'none' || td.style.display === 'none') continue;
-
-      const label = (th.textContent || '').replace(/\s+/g, ' ').trim();
-      const lower = label.toLowerCase();
-      if (
-        (actionsColIndex >= 0 && i === headerCells.length - 1 &&
-          (lower === 'actions' || lower === 'action' || lower === 'quick actions' || lower === 'remove')) ||
-        lower === 'actions' ||
-        lower === 'action'
-      ) {
-        continue;
-      }
-
-      const inputEl = td.querySelector('input, select, textarea') as
-        | HTMLInputElement
-        | HTMLSelectElement
-        | HTMLTextAreaElement
-        | null;
-      let value = '';
-      if (inputEl) {
-        if (inputEl instanceof HTMLSelectElement) {
-          value = inputEl.options[inputEl.selectedIndex]?.text || inputEl.value || '';
-        } else if (inputEl instanceof HTMLInputElement && inputEl.type === 'checkbox') {
-          value = inputEl.checked ? 'Yes' : 'No';
-        } else {
-          value = inputEl.value || '';
-        }
-      }
-      if (!value) {
-        const clone = td.cloneNode(true) as HTMLElement;
-        clone.querySelectorAll('[data-scs-ignore-export]').forEach((n) => n.remove());
-        value = (clone.textContent || '').replace(/\s+/g, ' ').trim();
-      }
-
-      fields.push({
-        label: label || `Field ${i + 1}`,
-        value: value || '—',
-        isCustom: td.hasAttribute('data-scs-custom-cell')
-      });
-    }
+    const extracted = this.extractSingleRowFields(headerRow, sourceTr, actionsColIndex);
+    const fields = extracted.fields;
 
     const detailTr = document.createElement('tr');
     detailTr.setAttribute('data-scs-row-detail', '1');
@@ -1063,6 +1310,7 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
     headLeft.className = 'flex items-center gap-2 min-w-0 flex-wrap';
 
     const rowLabel = (sourceTr.getAttribute('data-scs-resolved-label') || 'Row Details').trim();
+    const resolvedTableTitle = (schema.customTitle || this.tableTitle() || tableId.replace(/_/g, ' ')).trim();
     const titleEl = document.createElement('span');
     titleEl.className = 'text-sm font-black text-slate-900 truncate max-w-[260px] sm:max-w-md';
     titleEl.textContent = rowLabel;
@@ -1071,7 +1319,7 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
     const tableBadge = document.createElement('span');
     tableBadge.className =
       'px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 text-[10px] font-bold border border-indigo-200/80 shrink-0';
-    tableBadge.textContent = schema.customTitle || this.tableTitle() || tableId.replace(/_/g, ' ');
+    tableBadge.textContent = resolvedTableTitle;
     headLeft.appendChild(tableBadge);
 
     const countBadge = document.createElement('span');
@@ -1080,6 +1328,29 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
     headLeft.appendChild(countBadge);
 
     head.appendChild(headLeft);
+
+    const headRight = document.createElement('div');
+    headRight.className = 'flex items-center gap-2 shrink-0 flex-wrap';
+
+    const printSlipBtn = document.createElement('button');
+    printSlipBtn.type = 'button';
+    printSlipBtn.className =
+      'px-3 py-1 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-[11px] inline-flex items-center gap-1.5 cursor-pointer shrink-0 transition-colors shadow-2xs';
+    printSlipBtn.appendChild(this.createToolbarIcon('statement', 'w-3.5 h-3.5'));
+    const printTxt = document.createElement('span');
+    printTxt.textContent = 'Print / Rasheed';
+    printSlipBtn.appendChild(printTxt);
+    printSlipBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.schemaService.openSingleRecordStatement({
+        tableId,
+        tableTitle: resolvedTableTitle,
+        recordLabel: rowLabel,
+        headers: extracted.headers,
+        values: extracted.values
+      });
+    });
+    headRight.appendChild(printSlipBtn);
 
     const hideBtn = document.createElement('button');
     hideBtn.type = 'button';
@@ -1091,7 +1362,9 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
       this.expandedRowKey = null;
       this.scheduleApply();
     });
-    head.appendChild(hideBtn);
+    headRight.appendChild(hideBtn);
+
+    head.appendChild(headRight);
 
     card.appendChild(head);
 

@@ -7,7 +7,8 @@ export type SchoolPrintDocumentType =
   | 'id_card'
   | 'barcode_stickers'
   | 'result_dmc'
-  | 'salary_slip';
+  | 'salary_slip'
+  | 'table_statement';
 
 export type PrintSectionKey =
   | 'header'
@@ -51,13 +52,13 @@ export const PRINT_SECTION_META: Record<PrintSectionKey, PrintSectionMeta> = {
   },
   person: {
     key: 'person',
-    label: 'Student / Staff Details',
-    urduHint: 'Holder Name, Roll / EMP Code, Class & Guardian'
+    label: 'Student / Record Particulars',
+    urduHint: 'Holder Name, Roll / EMP Code, Class, Guardian & Row Details'
   },
   amounts: {
     key: 'amounts',
-    label: 'Fee / Marks / Pay Breakdown',
-    urduHint: 'Payment Channel, Particulars & Net Total',
+    label: 'Fee / Table Totals & Breakdown',
+    urduHint: 'Payment Channel, Statement Table, Particulars & Net Total',
     locked: true
   },
   verification: {
@@ -75,6 +76,22 @@ export const PRINT_SECTION_META: Record<PrintSectionKey, PrintSectionMeta> = {
 export type SchoolCurrencyCode = 'PKR' | 'USD' | 'AED' | 'SAR' | 'GBP';
 
 export type PrintChallanLogoCorner = 'top-right' | 'top-left' | 'top-center';
+
+export type TablePrintDefaultFormat = 'a4' | '80mm' | '58mm';
+export type TablePrintOrientation = 'landscape' | 'portrait';
+export type TablePrintSlipLayout = 'voucher_grid' | 'ledger_row';
+
+export interface TablePrintOverride {
+  customHeading?: string;
+  defaultFormat?: TablePrintDefaultFormat;
+  a4Orientation?: TablePrintOrientation;
+  slipLayout?: TablePrintSlipLayout;
+  showFieldLogos?: boolean;
+  showWatermark?: boolean;
+  logoPlacement?: PrintLogoPlacement;
+  headerAlign?: PrintHeaderAlign;
+  stampLabel?: 'PAID' | 'VERIFIED' | 'ORIGINAL' | 'NONE';
+}
 
 export interface SchoolPrintBrandingConfig {
   schoolName: string;
@@ -119,6 +136,12 @@ export interface SchoolPrintBrandingConfig {
   dmcSessionLabel: string;
   salaryMonthLabel: string;
   salaryPayModeLabel: string;
+  tableDefaultFormat: TablePrintDefaultFormat;
+  tableA4Orientation: TablePrintOrientation;
+  tableSlipLayout: TablePrintSlipLayout;
+  tableShowFieldLogos: boolean;
+  tableShowWatermark: boolean;
+  tableOverrides: Record<string, TablePrintOverride>;
 }
 
 export const DEFAULT_SCHOOL_PRINT_BRANDING: SchoolPrintBrandingConfig = {
@@ -163,7 +186,13 @@ export const DEFAULT_SCHOOL_PRINT_BRANDING: SchoolPrintBrandingConfig = {
   dmcExamTitle: 'Mid-Term Examination 2026',
   dmcSessionLabel: 'Session 2026-27',
   salaryMonthLabel: 'October 2026',
-  salaryPayModeLabel: 'Direct Bank IBFT'
+  salaryPayModeLabel: 'Direct Bank IBFT',
+  tableDefaultFormat: 'a4',
+  tableA4Orientation: 'landscape',
+  tableSlipLayout: 'voucher_grid',
+  tableShowFieldLogos: false,
+  tableShowWatermark: true,
+  tableOverrides: {}
 };
 
 export function sanitizeBrandingLogoUrl(raw?: string): string {
@@ -184,6 +213,53 @@ function sanitizeCardPhotoUrl(raw?: string): string {
     return val;
   }
   return '';
+}
+
+function normalizeTableOverrides(raw: unknown): Record<string, TablePrintOverride> {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
+  const result: Record<string, TablePrintOverride> = {};
+  for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+    const cleanKey = String(k || '').trim();
+    if (!cleanKey || !v || typeof v !== 'object') continue;
+    const obj = v as Record<string, unknown>;
+    const clean: TablePrintOverride = {};
+    if (typeof obj['customHeading'] === 'string' && obj['customHeading'].trim()) {
+      clean.customHeading = obj['customHeading'].trim();
+    }
+    if (obj['defaultFormat'] === 'a4' || obj['defaultFormat'] === '80mm' || obj['defaultFormat'] === '58mm') {
+      clean.defaultFormat = obj['defaultFormat'];
+    }
+    if (obj['a4Orientation'] === 'landscape' || obj['a4Orientation'] === 'portrait') {
+      clean.a4Orientation = obj['a4Orientation'];
+    }
+    if (obj['slipLayout'] === 'voucher_grid' || obj['slipLayout'] === 'ledger_row') {
+      clean.slipLayout = obj['slipLayout'];
+    }
+    if (typeof obj['showFieldLogos'] === 'boolean') {
+      clean.showFieldLogos = obj['showFieldLogos'];
+    }
+    if (typeof obj['showWatermark'] === 'boolean') {
+      clean.showWatermark = obj['showWatermark'];
+    }
+    if (obj['logoPlacement'] === 'left' || obj['logoPlacement'] === 'top' || obj['logoPlacement'] === 'right') {
+      clean.logoPlacement = obj['logoPlacement'];
+    }
+    if (obj['headerAlign'] === 'left' || obj['headerAlign'] === 'center' || obj['headerAlign'] === 'right') {
+      clean.headerAlign = obj['headerAlign'];
+    }
+    if (
+      obj['stampLabel'] === 'PAID' ||
+      obj['stampLabel'] === 'VERIFIED' ||
+      obj['stampLabel'] === 'ORIGINAL' ||
+      obj['stampLabel'] === 'NONE'
+    ) {
+      clean.stampLabel = obj['stampLabel'];
+    }
+    if (Object.keys(clean).length > 0) {
+      result[cleanKey] = clean;
+    }
+  }
+  return result;
 }
 
 export function normalizeSchoolPrintBranding(
@@ -228,6 +304,13 @@ export function normalizeSchoolPrintBranding(
     ? (src.currencySymbol as SchoolCurrencyCode)
     : 'PKR';
 
+  const tableDefaultFormat: TablePrintDefaultFormat =
+    src.tableDefaultFormat === '80mm' || src.tableDefaultFormat === '58mm' ? src.tableDefaultFormat : 'a4';
+  const tableA4Orientation: TablePrintOrientation =
+    src.tableA4Orientation === 'portrait' ? 'portrait' : 'landscape';
+  const tableSlipLayout: TablePrintSlipLayout =
+    src.tableSlipLayout === 'ledger_row' ? 'ledger_row' : 'voucher_grid';
+
   return {
     ...DEFAULT_SCHOOL_PRINT_BRANDING,
     ...src,
@@ -259,7 +342,64 @@ export function normalizeSchoolPrintBranding(
     dmcExamTitle: String(src.dmcExamTitle || DEFAULT_SCHOOL_PRINT_BRANDING.dmcExamTitle),
     dmcSessionLabel: String(src.dmcSessionLabel || DEFAULT_SCHOOL_PRINT_BRANDING.dmcSessionLabel),
     salaryMonthLabel: String(src.salaryMonthLabel || DEFAULT_SCHOOL_PRINT_BRANDING.salaryMonthLabel),
-    salaryPayModeLabel: String(src.salaryPayModeLabel || DEFAULT_SCHOOL_PRINT_BRANDING.salaryPayModeLabel)
+    salaryPayModeLabel: String(src.salaryPayModeLabel || DEFAULT_SCHOOL_PRINT_BRANDING.salaryPayModeLabel),
+    tableDefaultFormat,
+    tableA4Orientation,
+    tableSlipLayout,
+    tableShowFieldLogos: Boolean(src.tableShowFieldLogos),
+    tableShowWatermark: src.tableShowWatermark !== false,
+    tableOverrides: normalizeTableOverrides(src.tableOverrides)
+  };
+}
+
+export interface EffectiveTablePrintBranding {
+  branding: SchoolPrintBrandingConfig;
+  defaultFormat: TablePrintDefaultFormat;
+  a4Orientation: TablePrintOrientation;
+  slipLayout: TablePrintSlipLayout;
+  showFieldLogos: boolean;
+  showWatermark: boolean;
+  customHeading: string;
+  hasOverride: boolean;
+}
+
+export function resolveEffectiveTableBranding(
+  rawBranding: SchoolPrintBrandingConfig | null | undefined,
+  tableId?: string,
+  canonicalTableId?: string
+): EffectiveTablePrintBranding {
+  const b = normalizeSchoolPrintBranding(rawBranding);
+  const cleanId = String(tableId || '').trim().replace(/_single_record$/, '');
+  const cleanCanonical = String(canonicalTableId || '').trim().replace(/_single_record$/, '');
+  const overrides = b.tableOverrides || {};
+  const ov =
+    (cleanId && overrides[cleanId]) ||
+    (cleanCanonical && overrides[cleanCanonical]) ||
+    undefined;
+
+  const merged: SchoolPrintBrandingConfig = ov
+    ? {
+        ...b,
+        logoPlacement: ov.logoPlacement || b.logoPlacement,
+        headerAlign: ov.headerAlign || b.headerAlign,
+        stampLabel: ov.stampLabel || b.stampLabel,
+        tableDefaultFormat: ov.defaultFormat || b.tableDefaultFormat,
+        tableA4Orientation: ov.a4Orientation || b.tableA4Orientation,
+        tableSlipLayout: ov.slipLayout || b.tableSlipLayout,
+        tableShowFieldLogos: typeof ov.showFieldLogos === 'boolean' ? ov.showFieldLogos : b.tableShowFieldLogos,
+        tableShowWatermark: typeof ov.showWatermark === 'boolean' ? ov.showWatermark : b.tableShowWatermark
+      }
+    : b;
+
+  return {
+    branding: merged,
+    defaultFormat: merged.tableDefaultFormat,
+    a4Orientation: merged.tableA4Orientation,
+    slipLayout: merged.tableSlipLayout,
+    showFieldLogos: merged.tableShowFieldLogos,
+    showWatermark: merged.tableShowWatermark,
+    customHeading: ov?.customHeading ? ov.customHeading : '',
+    hasOverride: Boolean(ov && Object.keys(ov).length > 0)
   };
 }
 
@@ -334,6 +474,16 @@ export const SCHOOL_DOCUMENT_CATALOG: SchoolDocumentFormatMeta[] = [
     usedFor: 'For issuing monthly salary, allowances, and deduction statements to faculty and staff.',
     printedFrom: 'Teachers & Staff Payroll Tab · Finance Arrears & Salary Reports',
     sampleCode: 'PAY-2026-301'
+  },
+  {
+    id: 'table_statement',
+    title: 'School Tables & Row Action Slips',
+    urduHint: 'Statement & Print + Row Actions (Details / Print)',
+    paperBadge: 'A4 / 80mm / 58mm',
+    machineType: 'A4 Laser / Inkjet Printer or 80mm / 58mm Thermal POS',
+    usedFor: 'Customize header, logo, watermark, field logos, and block layout for every Finance & School table statement and row Print / Details slip.',
+    printedFrom: 'Every School Table Toolbar (Statement & Print) · Every Row Actions (Details & Print)',
+    sampleCode: 'STM-2026-101'
   }
 ];
 

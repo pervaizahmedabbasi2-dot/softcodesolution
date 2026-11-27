@@ -894,7 +894,7 @@
             </div>
 
             <div data-scs-table-scroll="1" class="w-full overflow-x-auto custom-scrollbar rounded-xl border border-slate-200/80">
-              <table class="w-max min-w-full text-left border-collapse text-xs tabular-nums">
+              <table appSchoolTable="owner_overview_branch_comparison" tableTitle="Multi-Campus Branch Overview" class="w-max min-w-full text-left border-collapse text-xs tabular-nums">
                 <thead class="bg-slate-50/90 text-slate-700 uppercase font-black tracking-wider text-[10px] border-b border-slate-200">
                   <tr>
                     <th class="px-4 py-3">Campus Branch</th>
@@ -4640,7 +4640,7 @@
                   </div>
                 </div>
                 <div data-scs-table-scroll="1" class="w-full overflow-x-auto custom-scrollbar">
-                  <table appSchoolTable="owner_admissions" tableTitle="Admissions & Enrollment Inquiries" [canAddRow]="true" addRowLabel="Record Application" [disableRowDetails]="true" [hideToolbar]="true" class="w-max min-w-full text-left border-collapse text-xs tabular-nums">
+                  <table appSchoolTable="owner_admissions" tableTitle="Admissions & Enrollment Inquiries" [canAddRow]="true" addRowLabel="Record Application" [disableRowDetails]="true" class="w-max min-w-full text-left border-collapse text-xs tabular-nums">
                     <thead class="bg-white text-slate-500 uppercase font-bold text-[10px] tracking-wider border-b border-slate-200/80 select-none">
                       <tr>
                         <th class="px-3.5 py-3.5 whitespace-nowrap">Ref ID</th>
@@ -5190,6 +5190,10 @@
                       <button (click)="setMonitoringRange(30)" class="px-2.5 py-1 rounded-lg cursor-pointer transition-colors"
                         [class]="monitoringRangeDays === 30 ? 'bg-white text-slate-950 shadow-2xs font-black' : 'text-slate-500 hover:text-slate-900'">30D</button>
                     </div>
+                    <button (click)="openFinanceMonitoringStatement()" class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs cursor-pointer flex items-center gap-1.5 shadow-2xs">
+                      <lucide-icon [name]="'printer'" class="w-3.5 h-3.5 text-emerald-300"></lucide-icon>
+                      <span>Statement &amp; Print</span>
+                    </button>
                     <button (click)="refreshOwnerFinancialMonitoring()" class="px-3 py-1.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 font-bold text-xs cursor-pointer flex items-center gap-1.5">
                       <lucide-icon [name]="'activity'" class="w-3.5 h-3.5 text-teal-600"></lucide-icon>
                       <span>Sync Live</span>
@@ -5804,9 +5808,15 @@
                     <h4 class="font-black text-slate-900 text-sm">Class-by-Class Fee Collection & Bakaya Summary</h4>
                     <p class="text-xs text-slate-500">Monitor fee collection rates, outstanding dues, and defaulter counts per class section</p>
                   </div>
-                  <span class="text-xs font-bold text-indigo-700 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-200">
-                    Total School Bakaya: PKR {{ formatCurrency(totalSchoolBakayaDues) }}
-                  </span>
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <button (click)="openClassWiseBakayaStatement()" class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs cursor-pointer flex items-center gap-1.5 shadow-2xs">
+                      <lucide-icon [name]="'printer'" class="w-3.5 h-3.5 text-emerald-300"></lucide-icon>
+                      <span>Statement &amp; Print</span>
+                    </button>
+                    <span class="text-xs font-bold text-indigo-700 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-200">
+                      Total School Bakaya: PKR {{ formatCurrency(totalSchoolBakayaDues) }}
+                    </span>
+                  </div>
                 </div>
 
                 <!-- Class Cards Grid -->
@@ -6167,7 +6177,18 @@
 
             <!-- SUB-TAB 6: OFFICIAL BANK ACCOUNTS & VAULTS -->
             @if (financeSubTab === 'accounts') {
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div class="space-y-4">
+                <div class="flex items-center justify-between flex-wrap gap-2">
+                  <div>
+                    <h4 class="font-black text-slate-900 text-sm">Official Bank Accounts &amp; Campus Vaults</h4>
+                    <p class="text-xs text-slate-500">Institutional collection bank accounts, IBANs, and campus physical vault ledger balances</p>
+                  </div>
+                  <button (click)="openBankVaultsStatement()" class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs cursor-pointer flex items-center gap-1.5 shadow-2xs">
+                    <lucide-icon [name]="'printer'" class="w-3.5 h-3.5 text-emerald-300"></lucide-icon>
+                    <span>Statement &amp; Print</span>
+                  </button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 
                 <!-- Account 1: Meezan Bank -->
                 <div class="p-5 rounded-[24px] scs-tile-3d text-slate-900 space-y-3 relative overflow-hidden">
@@ -6232,6 +6253,7 @@
                   </div>
                 </div>
 
+                </div>
               </div>
             }
 
@@ -6384,8 +6406,8 @@
                       </button>
                     }
                   </div>
-                  <div class="overflow-x-auto border border-slate-200 rounded-xl bg-white">
-                    <table class="w-full text-left text-xs border-collapse">
+                  <div data-scs-table-scroll="1" class="overflow-x-auto border border-slate-200 rounded-xl bg-white">
+                    <table appSchoolTable="owner_rooznama_branch_matrix" tableTitle="Multi-Branch Rooznama Consolidation" [disableRowDetails]="true" class="w-full text-left text-xs border-collapse">
                       <thead class="bg-slate-50 text-slate-600 uppercase font-black text-[10px] border-b border-slate-200">
                         <tr>
                           <th class="px-3 py-2.5">Campus Branch</th>
@@ -9322,8 +9344,8 @@
                 <span>Download All Personnel CSV</span>
               </button>
             </div>
-            <div class="overflow-x-auto custom-scrollbar">
-              <table class="w-full text-left border-collapse text-xs tabular-nums">
+            <div data-scs-table-scroll="1" class="overflow-x-auto custom-scrollbar">
+              <table appSchoolTable="owner_campus_directory_summary" tableTitle="Campus Directory Summary" class="w-full text-left border-collapse text-xs tabular-nums">
                 <thead class="bg-slate-50 text-slate-700 uppercase font-black tracking-wider text-[10px] border-b border-slate-200">
                   <tr>
                     <th class="px-4 py-3">Campus Role / Group</th>
@@ -9409,7 +9431,7 @@
                 </button>
               </div>
               <div data-scs-table-scroll="1" class="w-full overflow-x-auto custom-scrollbar rounded-xl border border-slate-200/80">
-                <table class="w-max min-w-full text-left border-collapse text-xs tabular-nums">
+                <table appSchoolTable="owner_branch_financial_matrix" tableTitle="Branch-Wise Financial & Closing Report" class="w-max min-w-full text-left border-collapse text-xs tabular-nums">
                   <thead class="bg-slate-50 text-slate-700 uppercase font-black text-[10px] border-b border-slate-200">
                     <tr>
                       <th class="px-3.5 py-2.5">Branch</th>
@@ -9455,7 +9477,7 @@
                 </button>
               </div>
               <div data-scs-table-scroll="1" class="w-full overflow-x-auto custom-scrollbar rounded-xl border border-slate-200/80">
-                <table class="w-max min-w-full text-left border-collapse text-xs tabular-nums">
+                <table appSchoolTable="owner_wing_breakdown" tableTitle="Academic Wing Breakdown" class="w-max min-w-full text-left border-collapse text-xs tabular-nums">
                   <thead class="bg-slate-50 text-slate-700 uppercase font-black text-[10px] border-b border-slate-200">
                     <tr>
                       <th class="px-3.5 py-2.5">Wing &amp; Campus</th>
@@ -15171,8 +15193,8 @@
               </button>
             </div>
             @if (pendingVerificationGatewayTransactions.length > 0) {
-              <div class="overflow-x-auto border border-slate-200 rounded-xl">
-                <table class="w-full text-left text-xs">
+              <div data-scs-table-scroll="1" class="overflow-x-auto border border-slate-200 rounded-xl">
+                <table appSchoolTable="owner_gateway_pending_slips" tableTitle="Online Payment Slips Awaiting Verification" class="w-full text-left text-xs">
                   <thead class="bg-slate-50 text-slate-600 uppercase font-black text-[10px] border-b border-slate-200">
                     <tr>
                       <th class="px-3 py-2.5">Date &amp; TXN / Challan</th>
@@ -18771,8 +18793,8 @@
           <!-- Student Online Payment & Deposit History -->
           <div class="apple-card scs-surface-3d rounded-2xl p-5 space-y-3">
             <h4 class="font-black text-slate-900 text-sm">My Payment &amp; Deposit Record History</h4>
-            <div class="overflow-x-auto border border-slate-200 rounded-xl">
-              <table class="w-full text-left text-xs">
+            <div data-scs-table-scroll="1" class="overflow-x-auto border border-slate-200 rounded-xl">
+              <table appSchoolTable="student_payment_history" tableTitle="Student Payment &amp; Deposit History" class="w-full text-left text-xs">
                 <thead class="bg-white text-slate-600 uppercase font-black text-[10px] border-b border-slate-200">
                   <tr>
                     <th class="px-3 py-2.5">Deposit Date &amp; TXN</th>
@@ -20473,8 +20495,8 @@
           <!-- Ward Online Payment & Deposit History -->
           <div class="apple-card scs-surface-3d rounded-2xl p-5 space-y-3">
             <h4 class="font-black text-slate-900 text-sm">Ward Payment &amp; Deposit Record History</h4>
-            <div class="overflow-x-auto border border-slate-200 rounded-xl">
-              <table class="w-full text-left text-xs">
+            <div data-scs-table-scroll="1" class="overflow-x-auto border border-slate-200 rounded-xl">
+              <table appSchoolTable="parent_payment_history" tableTitle="Ward Payment &amp; Deposit History" class="w-full text-left text-xs">
                 <thead class="bg-white text-slate-600 uppercase font-black text-[10px] border-b border-slate-200">
                   <tr>
                     <th class="px-3 py-2.5">Deposit Date &amp; TXN</th>
@@ -21851,8 +21873,8 @@
                     <button type="button" (click)="refreshPaymentGatewayData()" class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 font-bold text-[10px] cursor-pointer">Sync Queue</button>
                   </div>
                   @if (pendingVerificationGatewayTransactions.length > 0) {
-                    <div class="overflow-x-auto border border-slate-200 rounded-xl">
-                      <table class="w-full text-left text-xs">
+                    <div data-scs-table-scroll="1" class="overflow-x-auto border border-slate-200 rounded-xl">
+                      <table appSchoolTable="accountant_pending_slips" tableTitle="Pending Online Payment Slips" class="w-full text-left text-xs">
                         <thead class="bg-slate-50 text-slate-600 uppercase font-black text-[10px] border-b border-slate-200">
                           <tr>
                             <th class="px-3 py-2">Date &amp; TXN</th>
@@ -34905,6 +34927,9 @@
 
   <!-- School Business Owner Column Schema & Custom Cell Value Editor Modal -->
   <app-school-table-column-modal />
+
+  <!-- School Business Universal Search, Date-Range Statement & Print (A4 / 80mm / 58mm / WhatsApp) Modal -->
+  <app-school-table-statement-modal />
 
   <!-- School Portal Account Passkey Security Modal -->
   @if (isPasskeyProfileModalOpen) {
