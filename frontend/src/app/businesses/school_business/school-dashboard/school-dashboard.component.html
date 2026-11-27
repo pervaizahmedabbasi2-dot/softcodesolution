@@ -586,7 +586,7 @@
                     <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105" [class]="currentTab === 'settings' ? 'bg-white/20 text-white' : 'bg-gradient-to-tr from-emerald-500 via-emerald-600 to-teal-600 text-white shadow-2xs'">
                       <lucide-icon [name]="'settings'" class="w-4 h-4"></lucide-icon>
                     </div>
-                    <span class="text-xs truncate">Admin Settings</span>
+                    <span class="text-xs truncate">School Settings</span>
                   </div>
                 </button>
               </div>
@@ -10618,7 +10618,7 @@
       @if (currentTab === 'settings') {
         <div class="apple-card scs-surface-3d rounded-2xl p-6 space-y-6 max-w-4xl">
           <div>
-            <h3 class="font-black text-slate-900 text-base">Campus System Settings & Credentials</h3>
+            <h3 class="font-black text-slate-900 text-base">School Settings</h3>
             <p class="text-xs text-slate-500">Configure institutional metadata, biometric IP, and SMS Gateway keys</p>
           </div>
 
@@ -10652,7 +10652,7 @@
           <div class="pt-4 border-t border-slate-100 flex items-center justify-end">
             <button (click)="saveSettings()" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs shadow-md shadow-indigo-600/30 cursor-pointer transition-all active:scale-95 flex items-center gap-1.5">
               <lucide-icon [name]="'check'" class="w-4 h-4"></lucide-icon>
-              <span>Save System Settings</span>
+              <span>Save School Settings</span>
             </button>
           </div>
         </div>

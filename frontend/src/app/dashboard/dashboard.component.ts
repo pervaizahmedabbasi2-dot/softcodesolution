@@ -2061,8 +2061,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         { id: 'audit', label: 'Campus Audit Hub', icon: 'ShieldCheck', badge: '98.4%' },
         { id: 'visitors', label: 'Security & Visitors', icon: 'ShieldCheck', badge: 'Gate' },
         { id: 'assets', label: 'Assets & Inventory', icon: 'Layers', badge: 'Stock' },
-        { id: 'admin_settings', label: 'Admin Settings', icon: 'SlidersHorizontal', badge: 'Setup' },
-        { id: 'settings', label: 'Settings', icon: 'Settings', badge: 'Campus' },
+        { id: 'settings', label: 'School Settings', icon: 'Settings', badge: 'Campus' },
       ]
     },
     {

@@ -5673,7 +5673,7 @@ INSTRUCTIONS:
     { id: 'portals', label: 'Role Portals & RBAC', shortLabel: 'Portals', icon: ShieldCheck, count: '5 Portals' },
     { id: 'audit', label: 'Campus Audit & Compliance', shortLabel: 'Audit Hub', icon: ShieldCheck, badge: '98.4%' },
     { id: 'print_studio', label: 'Print & Hardware Studio', shortLabel: 'Print Studio', icon: Printer, badge: 'A4/80mm' },
-    { id: 'settings', label: 'School Settings', shortLabel: 'Settings', icon: Settings }
+    { id: 'settings', label: 'School Settings', shortLabel: 'School Settings', icon: Settings }
   ];
 
   gradeOptions = ['All', 'Class Nursery', 'Class KG', 'Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5', 'Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10'];
