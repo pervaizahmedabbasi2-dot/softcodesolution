@@ -391,6 +391,18 @@ export class SchoolAttendanceAnalyticsComponent {
       const yearLeave = yearMonths.reduce((s, m) => s + m.leaveDays, 0);
       const yearPct = yearWorking > 0 ? Number(((yearAttended / yearWorking) * 100).toFixed(1)) : 0;
 
+      const useYearFiltered = !customRange && yearFilter !== 'ALL';
+      const totalWorkingDays = rb ? rb.workingDays : (useYearFiltered ? yearWorking : single.totalWorkingDays);
+      const totalPresent = rb ? rb.presentDays : (useYearFiltered ? yearPresent : single.totalPresent);
+      const totalLate = rb ? rb.lateDays : (useYearFiltered ? yearLate : single.totalLate);
+      const totalAbsent = rb ? rb.absentDays : (useYearFiltered ? yearAbsent : single.totalAbsent);
+      const totalLeave = rb ? rb.leaveDays : (useYearFiltered ? yearLeave : single.totalLeave);
+      const totalAttended = rb ? rb.attendedDays : (useYearFiltered ? yearAttended : single.totalAttended);
+      const overallPct = rb ? rb.attendancePct : (useYearFiltered ? yearPct : single.overallPct);
+      const presentPct = totalWorkingDays > 0 ? Number(((totalAttended / totalWorkingDays) * 100).toFixed(1)) : 0;
+      const absentPct = totalWorkingDays > 0 ? Number(((totalAbsent / totalWorkingDays) * 100).toFixed(1)) : 0;
+      const leavePct = totalWorkingDays > 0 ? Number(((totalLeave / totalWorkingDays) * 100).toFixed(1)) : 0;
+
       return {
         isAggregate: false,
         title: single.member.name,
@@ -400,13 +412,16 @@ export class SchoolAttendanceAnalyticsComponent {
         sectionOrDept: single.member.sectionOrDept,
         rfidOrTag: single.member.rfidOrTag,
         memberCount: 1,
-        totalWorkingDays: rb ? rb.workingDays : single.totalWorkingDays,
-        totalPresent: rb ? rb.presentDays : single.totalPresent,
-        totalLate: rb ? rb.lateDays : single.totalLate,
-        totalAbsent: rb ? rb.absentDays : single.totalAbsent,
-        totalLeave: rb ? rb.leaveDays : single.totalLeave,
-        totalAttended: rb ? rb.attendedDays : single.totalAttended,
-        overallPct: rb ? rb.attendancePct : single.overallPct,
+        totalWorkingDays,
+        totalPresent,
+        totalLate,
+        totalAbsent,
+        totalLeave,
+        totalAttended,
+        overallPct,
+        presentPct,
+        absentPct,
+        leavePct,
         sixMonthWorkingDays: single.sixMonthWorkingDays,
         sixMonthAttended: single.sixMonthAttended,
         sixMonthPresent: single.sixMonthPresent,
@@ -554,14 +569,6 @@ export class SchoolAttendanceAnalyticsComponent {
     const prevSixA = prevSixKeys.reduce((s, k) => s + (fullBucket.get(k)?.attendedDays || 0), 0);
     const prevSixPct = prevSixW > 0 ? (prevSixA / prevSixW) * 100 : sixMonthPct;
 
-    const totalWorkingDays = customRange ? aggWorkingRange : allAggMonths.reduce((s, m) => s + m.workingDays, 0);
-    const totalAttended = customRange ? aggAttendedRange : allAggMonths.reduce((s, m) => s + m.attendedDays, 0);
-    const totalPresent = customRange ? aggPresentRange : allAggMonths.reduce((s, m) => s + m.presentDays, 0);
-    const totalLate = customRange ? aggLateRange : allAggMonths.reduce((s, m) => s + m.lateDays, 0);
-    const totalAbsent = customRange ? aggAbsentRange : allAggMonths.reduce((s, m) => s + m.absentDays, 0);
-    const totalLeave = customRange ? aggLeaveRange : allAggMonths.reduce((s, m) => s + m.leaveDays, 0);
-    const overallPct = totalWorkingDays > 0 ? Number(((totalAttended / totalWorkingDays) * 100).toFixed(1)) : 0;
-
     const yearWorking = yearMonths.reduce((s, m) => s + m.workingDays, 0);
     const yearAttended = yearMonths.reduce((s, m) => s + m.attendedDays, 0);
     const yearPresent = yearMonths.reduce((s, m) => s + m.presentDays, 0);
@@ -569,6 +576,18 @@ export class SchoolAttendanceAnalyticsComponent {
     const yearAbsent = yearMonths.reduce((s, m) => s + m.absentDays, 0);
     const yearLeave = yearMonths.reduce((s, m) => s + m.leaveDays, 0);
     const yearPct = yearWorking > 0 ? Number(((yearAttended / yearWorking) * 100).toFixed(1)) : 0;
+
+    const useYearFiltered = !customRange && yearFilter !== 'ALL';
+    const totalWorkingDays = customRange ? aggWorkingRange : (useYearFiltered ? yearWorking : allAggMonths.reduce((s, m) => s + m.workingDays, 0));
+    const totalAttended = customRange ? aggAttendedRange : (useYearFiltered ? yearAttended : allAggMonths.reduce((s, m) => s + m.attendedDays, 0));
+    const totalPresent = customRange ? aggPresentRange : (useYearFiltered ? yearPresent : allAggMonths.reduce((s, m) => s + m.presentDays, 0));
+    const totalLate = customRange ? aggLateRange : (useYearFiltered ? yearLate : allAggMonths.reduce((s, m) => s + m.lateDays, 0));
+    const totalAbsent = customRange ? aggAbsentRange : (useYearFiltered ? yearAbsent : allAggMonths.reduce((s, m) => s + m.absentDays, 0));
+    const totalLeave = customRange ? aggLeaveRange : (useYearFiltered ? yearLeave : allAggMonths.reduce((s, m) => s + m.leaveDays, 0));
+    const overallPct = totalWorkingDays > 0 ? Number(((totalAttended / totalWorkingDays) * 100).toFixed(1)) : 0;
+    const presentPct = totalWorkingDays > 0 ? Number(((totalAttended / totalWorkingDays) * 100).toFixed(1)) : 0;
+    const absentPct = totalWorkingDays > 0 ? Number(((totalAbsent / totalWorkingDays) * 100).toFixed(1)) : 0;
+    const leavePct = totalWorkingDays > 0 ? Number(((totalLeave / totalWorkingDays) * 100).toFixed(1)) : 0;
 
     const presentTodayCount = list.filter((a) => a.todayLiveEntry?.status === 'Present' || a.todayLiveEntry?.status === 'Late').length;
 
@@ -588,6 +607,9 @@ export class SchoolAttendanceAnalyticsComponent {
       totalLeave,
       totalAttended,
       overallPct,
+      presentPct,
+      absentPct,
+      leavePct,
       sixMonthWorkingDays,
       sixMonthAttended,
       sixMonthPresent,

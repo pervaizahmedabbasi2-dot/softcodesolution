@@ -148,102 +148,121 @@
       }
     </div>
 
-    <!-- 5 CORE HISTORICAL METRIC CARDS: TOTAL · 6-MONTH · SELECTED YEAR · MINIMUM · MAXIMUM -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3.5">
+    <!-- 6 STRAIGHTFORWARD KPI CARDS: TOTAL · PRESENT · ABSENT · LEAVE · LOWEST ATTENDANCE · HIGHEST ATTENDANCE -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3.5">
+      <!-- 1. Total Attendance -->
       <div class="rounded-2xl p-4 bg-white border border-slate-200/90 scs-tile-3d space-y-2">
         <div class="flex items-center justify-between gap-2">
-          <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
-            {{ hasCustomDateRange() ? 'Range Statement' : 'Total (All Years)' }}
-          </span>
-          <lucide-icon [name]="'calendar-check'" class="w-4 h-4 text-emerald-600"></lucide-icon>
+          <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Total Attendance</span>
+          <lucide-icon [name]="'calendar-check'" class="w-4 h-4 text-emerald-600 shrink-0"></lucide-icon>
         </div>
-        <div class="flex items-baseline gap-2">
+        <div class="flex items-baseline gap-2 flex-wrap">
           <span class="text-2xl font-black text-slate-900 tabular-nums">{{ summary.overallPct }}%</span>
-          <span class="text-[11px] font-bold text-emerald-700 tabular-nums">{{ summary.totalAttended }}/{{ summary.totalWorkingDays }}d</span>
+          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-md tabular-nums"
+            [class]="summary.sixMonthTrendDelta >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-800'">
+            6M: {{ summary.sixMonthPct }}%
+          </span>
         </div>
         <div class="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
           <div class="h-full bg-emerald-500 rounded-full" [style.width.%]="summary.overallPct"></div>
         </div>
-        <p class="text-[11px] font-medium text-slate-500 tabular-nums">
-          Present {{ summary.totalPresent }} · Late {{ summary.totalLate }} · Absent {{ summary.totalAbsent }} · Leave {{ summary.totalLeave }}
+        <p class="text-[11px] font-medium text-slate-500 tabular-nums truncate">
+          {{ activeRangeDisplayLabel() }} · {{ summary.totalWorkingDays | number }} {{ summary.isAggregate ? 'Logs' : 'Days' }}
         </p>
       </div>
 
+      <!-- 2. Total Present (On-Time + Late) -->
       <div class="rounded-2xl p-4 bg-white border border-slate-200/90 scs-tile-3d space-y-2">
         <div class="flex items-center justify-between gap-2">
-          <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Last 6 Months</span>
-          <lucide-icon [name]="'trending-up'" class="w-4 h-4 text-indigo-600"></lucide-icon>
+          <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Total Present</span>
+          <lucide-icon [name]="'user-check'" class="w-4 h-4 text-teal-600 shrink-0"></lucide-icon>
         </div>
         <div class="flex items-baseline gap-2">
-          <span class="text-2xl font-black text-slate-900 tabular-nums">{{ summary.sixMonthPct }}%</span>
-          <span class="text-[11px] font-bold px-1.5 py-0.5 rounded-md tabular-nums"
-            [class]="summary.sixMonthTrendDelta >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-800'">
-            {{ summary.sixMonthTrendDelta >= 0 ? '+' : '' }}{{ summary.sixMonthTrendDelta }}% vs prior 6M
-          </span>
+          <span class="text-2xl font-black text-emerald-700 tabular-nums">{{ summary.totalAttended | number }}</span>
+          <span class="text-[11px] font-bold text-slate-500 tabular-nums">{{ summary.presentPct }}%</span>
         </div>
         <div class="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
-          <div class="h-full bg-indigo-500 rounded-full" [style.width.%]="summary.sixMonthPct"></div>
+          <div class="h-full bg-teal-500 rounded-full" [style.width.%]="summary.presentPct"></div>
         </div>
-        <p class="text-[11px] font-medium text-slate-500 tabular-nums">
-          {{ summary.sixMonthAttended }}/{{ summary.sixMonthWorkingDays }} days · {{ summary.sixMonthLate }} late · {{ summary.sixMonthAbsent }} absent
+        <p class="text-[11px] font-medium text-slate-500 tabular-nums truncate">
+          On-Time {{ summary.totalPresent | number }} · Late {{ summary.totalLate | number }}
         </p>
       </div>
 
+      <!-- 3. Total Absent -->
       <div class="rounded-2xl p-4 bg-white border border-slate-200/90 scs-tile-3d space-y-2">
         <div class="flex items-center justify-between gap-2">
-          <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 truncate">
-            {{ hasCustomDateRange() ? activeRangeDisplayLabel() : (selectedYearFilter() === 'ALL' ? 'Combined Years' : ('Year ' + selectedYearFilter())) }}
-          </span>
-          <lucide-icon [name]="'calendar'" class="w-4 h-4 text-sky-600 shrink-0"></lucide-icon>
+          <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Total Absent</span>
+          <lucide-icon [name]="'user-x'" class="w-4 h-4 text-rose-600 shrink-0"></lucide-icon>
         </div>
         <div class="flex items-baseline gap-2">
-          <span class="text-2xl font-black text-slate-900 tabular-nums">{{ summary.yearPct }}%</span>
-          <span class="text-[11px] font-bold text-sky-700 tabular-nums">{{ summary.yearAttended }}/{{ summary.yearWorking }}d</span>
+          <span class="text-2xl font-black text-rose-700 tabular-nums">{{ summary.totalAbsent | number }}</span>
+          <span class="text-[11px] font-bold text-rose-600 tabular-nums">{{ summary.absentPct }}%</span>
         </div>
         <div class="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
-          <div class="h-full bg-sky-500 rounded-full" [style.width.%]="summary.yearPct"></div>
+          <div class="h-full bg-rose-500 rounded-full" [style.width.%]="summary.absentPct"></div>
         </div>
-        <p class="text-[11px] font-medium text-slate-500 tabular-nums">
-          Present {{ summary.yearPresent }} · Late {{ summary.yearLate }} · Leave {{ summary.yearLeave }}
+        <p class="text-[11px] font-medium text-slate-500 tabular-nums truncate">
+          Missed · Last 6M: {{ summary.sixMonthAbsent | number }}
         </p>
       </div>
 
+      <!-- 4. Total Leave -->
       <div class="rounded-2xl p-4 bg-white border border-slate-200/90 scs-tile-3d space-y-2">
         <div class="flex items-center justify-between gap-2">
-          <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Minimum Record</span>
-          <lucide-icon [name]="'arrow-down-right'" class="w-4 h-4 text-rose-600"></lucide-icon>
+          <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Total Leave</span>
+          <lucide-icon [name]="'file-text'" class="w-4 h-4 text-sky-600 shrink-0"></lucide-icon>
+        </div>
+        <div class="flex items-baseline gap-2">
+          <span class="text-2xl font-black text-sky-700 tabular-nums">{{ summary.totalLeave | number }}</span>
+          <span class="text-[11px] font-bold text-sky-600 tabular-nums">{{ summary.leavePct }}%</span>
+        </div>
+        <div class="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
+          <div class="h-full bg-sky-500 rounded-full" [style.width.%]="summary.leavePct"></div>
+        </div>
+        <p class="text-[11px] font-medium text-slate-500 tabular-nums truncate">
+          Approved · Last 6M: {{ summary.sixMonthLeave | number }}
+        </p>
+      </div>
+
+      <!-- 5. Lowest Attendance Month (Renamed from Minimum Record) -->
+      <div class="rounded-2xl p-4 bg-white border border-slate-200/90 scs-tile-3d space-y-2">
+        <div class="flex items-center justify-between gap-2">
+          <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Lowest Attendance</span>
+          <lucide-icon [name]="'arrow-down-right'" class="w-4 h-4 text-amber-600 shrink-0"></lucide-icon>
         </div>
         @if (summary.minMonth; as minM) {
           <div class="flex items-baseline gap-2">
-            <span class="text-2xl font-black text-rose-700 tabular-nums">{{ minM.attendancePct }}%</span>
-            <span class="text-[11px] font-bold text-slate-700 truncate">{{ minM.monthLabel }}</span>
+            <span class="text-2xl font-black text-amber-700 tabular-nums">{{ minM.attendancePct }}%</span>
+            <span class="text-[11px] font-bold text-slate-700 truncate">{{ minM.shortLabel }}</span>
           </div>
           <div class="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
-            <div class="h-full bg-rose-500 rounded-full" [style.width.%]="minM.attendancePct"></div>
+            <div class="h-full bg-amber-500 rounded-full" [style.width.%]="minM.attendancePct"></div>
           </div>
-          <p class="text-[11px] font-medium text-slate-500 tabular-nums">
-            {{ minM.attendedDays }}/{{ minM.workingDays }}d · {{ minM.absentDays }} absent · {{ minM.leaveDays }} leave
+          <p class="text-[11px] font-medium text-slate-500 tabular-nums truncate">
+            Absent {{ minM.absentDays | number }} · Leave {{ minM.leaveDays | number }}
           </p>
         } @else {
           <p class="text-xs text-slate-400">No data</p>
         }
       </div>
 
+      <!-- 6. Highest Attendance Month (Renamed from Maximum Record) -->
       <div class="rounded-2xl p-4 bg-white border border-slate-200/90 scs-tile-3d space-y-2">
         <div class="flex items-center justify-between gap-2">
-          <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Maximum Record</span>
-          <lucide-icon [name]="'award'" class="w-4 h-4 text-emerald-600"></lucide-icon>
+          <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Highest Attendance</span>
+          <lucide-icon [name]="'award'" class="w-4 h-4 text-indigo-600 shrink-0"></lucide-icon>
         </div>
         @if (summary.maxMonth; as maxM) {
           <div class="flex items-baseline gap-2">
-            <span class="text-2xl font-black text-emerald-700 tabular-nums">{{ maxM.attendancePct }}%</span>
-            <span class="text-[11px] font-bold text-slate-700 truncate">{{ maxM.monthLabel }}</span>
+            <span class="text-2xl font-black text-indigo-700 tabular-nums">{{ maxM.attendancePct }}%</span>
+            <span class="text-[11px] font-bold text-slate-700 truncate">{{ maxM.shortLabel }}</span>
           </div>
           <div class="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
-            <div class="h-full bg-emerald-500 rounded-full" [style.width.%]="maxM.attendancePct"></div>
+            <div class="h-full bg-indigo-500 rounded-full" [style.width.%]="maxM.attendancePct"></div>
           </div>
-          <p class="text-[11px] font-medium text-slate-500 tabular-nums">
-            Peak: {{ maxM.attendedDays }}/{{ maxM.workingDays }}d · Streak {{ summary.longestStreakDays }}d
+          <p class="text-[11px] font-medium text-slate-500 tabular-nums truncate">
+            Present {{ maxM.attendedDays | number }}/{{ maxM.workingDays | number }} · {{ summary.longestStreakDays }}d Streak
           </p>
         } @else {
           <p class="text-xs text-slate-400">No data</p>
