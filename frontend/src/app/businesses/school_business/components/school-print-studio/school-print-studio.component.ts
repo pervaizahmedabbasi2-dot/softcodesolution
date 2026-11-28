@@ -4,6 +4,7 @@ import {
   OnDestroy,
   computed,
   effect,
+  inject,
   input,
   output,
   signal
@@ -12,6 +13,7 @@ import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { Subscription } from 'rxjs';
+import { BackendService } from '../../../../services/backend.service';
 import { SchoolBarcodeComponent, SchoolQrCodeComponent } from '../school-barcode/school-barcode.component';
 import {
   BarcodeStickerItem,
@@ -126,8 +128,11 @@ export class SchoolPrintStudioComponent implements OnDestroy {
   readonly connectSerialPrinter = output<void>();
   readonly disconnectSerialPrinter = output<void>();
   readonly openHardwareTerminal = output<'auto' | 'fee' | 'attendance' | 'library'>();
+  readonly openQrScanner = output<void>();
   readonly navigateToTab = output<string>();
   readonly toast = output<{ message: string; type: 'success' | 'info' | 'warning' }>();
+
+  private readonly backend = inject(BackendService);
 
   readonly activeStudioTab = signal<PrintStudioTab>('formats');
   readonly selectedFormat = signal<SchoolPrintDocumentType>('thermal_receipt');
@@ -1400,8 +1405,49 @@ export class SchoolPrintStudioComponent implements OnDestroy {
       let html = '';
       let label = '';
 
+      const registerStudioPrint = async (params: {
+        docType: string;
+        docLabel: string;
+        tableId: string;
+        tableTitle: string;
+        portalTab: string;
+        rowKey: string;
+        rowLabel: string;
+        subjectName: string;
+        rollOrCode: string;
+        amountPkr?: number;
+        statusSnapshot?: string;
+        snapshot?: Record<string, any>;
+      }): Promise<{ qrToken?: string; printId?: string }> => {
+        try {
+          const res = await this.backend.registerSchoolPrintVerification({
+            ...params,
+            generatedBy: 'School Owner (Print Studio)',
+            generatedByRole: 'owner'
+          });
+          if (res?.ok && res.qrToken) {
+            return { qrToken: res.qrToken, printId: res.printId };
+          }
+        } catch {}
+        return {};
+      };
+
       if (format === 'thermal_receipt') {
         const width = this.previewThermalWidth();
+        const signed = await registerStudioPrint({
+          docType: 'thermal_receipt',
+          docLabel: `${width} Thermal Fee Receipt`,
+          tableId: 'fee_receipts_cashiering',
+          tableTitle: 'Fee Collection & Cashiering Register',
+          portalTab: 'finance',
+          rowKey: tx.challanNo || tx.txnRef,
+          rowLabel: stu.name,
+          subjectName: stu.name,
+          rollOrCode: stu.rollNo || tx.challanNo,
+          amountPkr: Number(tx.totalAmount || 0),
+          statusSnapshot: tx.status || 'VERIFIED',
+          snapshot: { txnRef: tx.txnRef, challanNo: tx.challanNo, totalAmount: tx.totalAmount, status: tx.status }
+        });
         const data: ThermalFeeReceiptData = {
           schoolName: b.schoolName,
           branchName: this.branchLabel(),
@@ -1440,6 +1486,7 @@ export class SchoolPrintStudioComponent implements OnDestroy {
           status: tx.status,
           paidAtLabel: tx.paidAtLabel,
           verifiedBy: 'Accountant Fee Desk',
+          qrPayload: signed.qrToken,
           footerNote: b.footerNote,
           dualCopy: b.thermalDualCopy,
           paperWidth: width,
@@ -1449,6 +1496,21 @@ export class SchoolPrintStudioComponent implements OnDestroy {
         html = buildThermalFeeReceiptHtml(data, width);
         label = `${width} Thermal Fee Receipt`;
       } else if (format === 'bank_challan') {
+        const challanTotal = challan.tuition + challan.lab + challan.exam + challan.activity;
+        const signed = await registerStudioPrint({
+          docType: 'bank_challan',
+          docLabel: 'A4 3-Copy Bank Fee Challan',
+          tableId: 'fee_challans_invoices',
+          tableTitle: 'Fee Challans & Invoices Ledger',
+          portalTab: 'finance',
+          rowKey: stu.challanNo || stu.rollNo,
+          rowLabel: stu.name,
+          subjectName: stu.name,
+          rollOrCode: stu.challanNo || stu.rollNo,
+          amountPkr: challanTotal,
+          statusSnapshot: 'UNPAID',
+          snapshot: { challanNo: stu.challanNo, totalAmount: challanTotal, status: 'UNPAID' }
+        });
         html = buildA4BankChallanHtml(
           {
             challanNo: stu.challanNo,
@@ -1469,12 +1531,27 @@ export class SchoolPrintStudioComponent implements OnDestroy {
             examFee: challan.exam,
             activityFee: challan.activity,
             lateFine: this.lateFeeFinePkr(),
-            statusLabel: 'UNPAID'
+            statusLabel: 'UNPAID',
+            qrPayload: signed.qrToken,
+            printId: signed.printId,
+            generatedBy: 'School Owner (Print Studio)'
           },
           b
         );
         label = 'A4 3-Copy Bank Fee Challan';
       } else if (format === 'id_card') {
+        const signed = await registerStudioPrint({
+          docType: 'id_card',
+          docLabel: 'Student Gate ID Card',
+          tableId: 'students_master',
+          tableTitle: 'Students Master Directory',
+          portalTab: 'students',
+          rowKey: stu.rollNo || stu.idBarcode,
+          rowLabel: stu.name,
+          subjectName: stu.name,
+          rollOrCode: stu.idBarcode || stu.rollNo,
+          statusSnapshot: 'ACTIVE'
+        });
         html = buildStudentIdCardPrintHtml(
           {
             holderName: stu.name,
@@ -1487,7 +1564,10 @@ export class SchoolPrintStudioComponent implements OnDestroy {
             initials: stu.initials,
             photoDataUrl: stu.photoDataUrl,
             bloodGroup: stu.bloodGroup,
-            cardTypeLabel: b.idCardBadgeLabel || 'Official Gate Card'
+            cardTypeLabel: b.idCardBadgeLabel || 'Official Gate Card',
+            qrPayload: signed.qrToken,
+            printId: signed.printId,
+            generatedBy: 'School Owner (Print Studio)'
           },
           b
         );
@@ -1502,9 +1582,22 @@ export class SchoolPrintStudioComponent implements OnDestroy {
         });
         label = 'A4 Barcode Sticker Sheet';
       } else if (format === 'result_dmc') {
+        const dmcNo = `DMC-2026-${stu.rollNo}`;
+        const signed = await registerStudioPrint({
+          docType: 'result_dmc',
+          docLabel: 'Official Exam Result DMC',
+          tableId: 'academics_gradebook_results',
+          tableTitle: 'Academics & Class Result Sheet',
+          portalTab: 'exams',
+          rowKey: stu.rollNo || dmcNo,
+          rowLabel: stu.name,
+          subjectName: stu.name,
+          rollOrCode: dmcNo,
+          statusSnapshot: 'EVALUATED'
+        });
         html = buildResultDmcHtml(
           {
-            dmcNo: `DMC-2026-${stu.rollNo}`,
+            dmcNo,
             examTitle: b.dmcExamTitle || 'Mid-Term Examination 2026',
             session: b.dmcSessionLabel || 'Session 2026-27',
             studentName: stu.name,
@@ -1512,16 +1605,34 @@ export class SchoolPrintStudioComponent implements OnDestroy {
             rollNo: stu.rollNo,
             grade: stu.grade,
             subjects: this.sampleDmcSubjects,
-            classRank: '2nd / 42'
+            classRank: '2nd / 42',
+            qrPayload: signed.qrToken,
+            printId: signed.printId,
+            generatedBy: 'School Owner (Print Studio)'
           },
           b
         );
         label = 'A4 Official Exam Result DMC';
       } else if (format === 'salary_slip') {
         const sb = this.salaryBreakdown();
+        const slipNo = `PAY-2026-${st.empCode}`;
+        const signed = await registerStudioPrint({
+          docType: 'salary_slip',
+          docLabel: 'Monthly Salary Slip',
+          tableId: 'owner_payroll',
+          tableTitle: 'Staff Payroll & Salary Slips',
+          portalTab: 'teachers',
+          rowKey: st.empCode || slipNo,
+          rowLabel: st.name,
+          subjectName: st.name,
+          rollOrCode: st.empCode,
+          amountPkr: Number(sb.net || 0),
+          statusSnapshot: 'PAID',
+          snapshot: { slipNo, totalAmount: sb.net, status: 'PAID' }
+        });
         html = buildSalarySlipHtml(
           {
-            slipNo: `PAY-2026-${st.empCode}`,
+            slipNo,
             payMonth: b.salaryMonthLabel || 'October 2026',
             empCode: st.empCode,
             employeeName: st.name,
@@ -1533,7 +1644,10 @@ export class SchoolPrintStudioComponent implements OnDestroy {
             medicalAllowance: sb.medical,
             taxDeduction: sb.tax,
             advanceDeduction: sb.advance,
-            paymentMode: b.salaryPayModeLabel || 'Direct Bank IBFT'
+            paymentMode: b.salaryPayModeLabel || 'Direct Bank IBFT',
+            qrPayload: signed.qrToken,
+            printId: signed.printId,
+            generatedBy: 'School Owner (Print Studio)'
           },
           b
         );
@@ -1544,6 +1658,18 @@ export class SchoolPrintStudioComponent implements OnDestroy {
         const scope = this.selectedTableScope();
         const tableId = scope !== '__global__' ? scope : ds.tableId;
         const useRows = subMode === 'a4_slip' ? ds.rows.slice(0, 1) : ds.rows;
+        const signed = await registerStudioPrint({
+          docType: subMode === 'card' || subMode === 'a4_slip' ? 'table_record_card' : 'table_statement',
+          docLabel: `${ds.title} (${subMode.toUpperCase()})`,
+          tableId,
+          tableTitle: ds.title,
+          portalTab: 'overview',
+          rowKey: String(useRows[0]?.[0] || 'STM-PREVIEW-2026'),
+          rowLabel: String(useRows[0]?.[1] || ds.title),
+          subjectName: ds.title,
+          rollOrCode: 'STM-PREVIEW-2026',
+          statusSnapshot: 'VERIFIED'
+        });
         const stmtParams = {
           tableId,
           canonicalTableId: tableId,
@@ -1554,7 +1680,9 @@ export class SchoolPrintStudioComponent implements OnDestroy {
           totalUnfilteredCount: ds.rows.length,
           criteria: {},
           branding: b,
-          statementRef: 'STM-PREVIEW-2026'
+          statementRef: signed.printId || 'STM-PREVIEW-2026',
+          qrPayload: signed.qrToken,
+          generatedBy: 'School Owner (Print Studio)'
         };
         if (subMode === '80mm' || subMode === '58mm') {
           html = buildSchoolStatementThermalHtml(stmtParams, subMode);

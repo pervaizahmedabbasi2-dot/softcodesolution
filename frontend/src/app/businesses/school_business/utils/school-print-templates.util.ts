@@ -562,6 +562,9 @@ export interface A4ChallanPrintData {
   balanceDue?: number;
   lateFine: number;
   statusLabel: 'PAID' | 'UNPAID' | 'PENDING' | 'PARTIAL';
+  qrPayload?: string;
+  printId?: string;
+  generatedBy?: string;
 }
 
 export function buildA4BankChallanHtml(
@@ -593,7 +596,9 @@ export function buildA4BankChallanHtml(
   const barcodeSvg = branding.showBarcodeVerification
     ? buildCode128SvgMarkup(data.challanNo, 28, '#0f172a')
     : '';
-  const qrPayload = `CHALLAN:${data.challanNo}|NAME:${data.studentName}|ROLL:${data.rollNo}|DUE:${cur} ${totalWithin}|STATUS:${data.statusLabel}`;
+  const qrPayload = (data.qrPayload && data.qrPayload.trim())
+    ? data.qrPayload.trim()
+    : `CHALLAN:${data.challanNo}|NAME:${data.studentName}|ROLL:${data.rollNo}|DUE:${cur} ${totalWithin}|STATUS:${data.statusLabel}`;
   const qrSvg = branding.showQrVerification
     ? buildQrCodeSvgMarkup(qrPayload, 50, accent, 2, 'M')
     : '';
@@ -779,6 +784,9 @@ export interface StudentIdCardPrintData {
   bloodGroup?: string;
   issueDate?: string;
   cardTypeLabel?: string;
+  qrPayload?: string;
+  printId?: string;
+  generatedBy?: string;
 }
 
 function buildSingleIdCardPairHtml(
@@ -791,7 +799,9 @@ function buildSingleIdCardPairHtml(
     : '';
   const qrSvg = branding.showQrVerification !== false
     ? buildQrCodeSvgMarkup(
-        `ID:${data.code}|NAME:${data.holderName}|SCHOOL:${branding.schoolName}|VALID:${data.validThrough}`,
+        (data.qrPayload && data.qrPayload.trim())
+          ? data.qrPayload.trim()
+          : `ID:${data.code}|NAME:${data.holderName}|SCHOOL:${branding.schoolName}|VALID:${data.validThrough}`,
         66,
         accent,
         2,
@@ -955,6 +965,9 @@ export interface ResultDmcPrintData {
   passingPercent?: number;
   attendancePercent?: string;
   principalRemarks?: string;
+  qrPayload?: string;
+  printId?: string;
+  generatedBy?: string;
 }
 
 export function buildResultDmcHtml(
@@ -984,7 +997,15 @@ export function buildResultDmcHtml(
     : (computedResultStatus.includes('COMPARTMENT') ? '#b45309' : '#065f46');
 
   const qrSvg = branding.showQrVerification
-    ? buildQrCodeSvgMarkup(`DMC:${data.dmcNo}|ROLL:${data.rollNo}|SCORE:${totalObt}/${totalMax}|PCT:${pct}%|RES:${computedResultStatus}`, 68, accent, 2, 'M')
+    ? buildQrCodeSvgMarkup(
+        (data.qrPayload && data.qrPayload.trim())
+          ? data.qrPayload.trim()
+          : `DMC:${data.dmcNo}|ROLL:${data.rollNo}|SCORE:${totalObt}/${totalMax}|PCT:${pct}%|RES:${computedResultStatus}`,
+        68,
+        accent,
+        2,
+        'M'
+      )
     : '';
   const barcodeSvg = branding.showBarcodeVerification
     ? buildCode128SvgMarkup(data.dmcNo, 26, '#0f172a')
@@ -1150,6 +1171,9 @@ export interface SalarySlipPrintData {
   advanceDeduction: number;
   paymentMode: string;
   statusLabel?: string;
+  qrPayload?: string;
+  printId?: string;
+  generatedBy?: string;
 }
 
 export function buildSalarySlipHtml(
@@ -1163,7 +1187,15 @@ export function buildSalarySlipHtml(
   const deductions = Number(data.taxDeduction || 0) + Number(data.advanceDeduction || 0);
   const net = gross - deductions;
   const qrSvg = branding.showQrVerification
-    ? buildQrCodeSvgMarkup(`PAY:${data.slipNo}|EMP:${data.empCode}|NET:${cur} ${net}|MONTH:${data.payMonth}`, 62, accent, 2, 'M')
+    ? buildQrCodeSvgMarkup(
+        (data.qrPayload && data.qrPayload.trim())
+          ? data.qrPayload.trim()
+          : `PAY:${data.slipNo}|EMP:${data.empCode}|NET:${cur} ${net}|MONTH:${data.payMonth}`,
+        62,
+        accent,
+        2,
+        'M'
+      )
     : '';
   const barcodeSvg = branding.showBarcodeVerification
     ? buildCode128SvgMarkup(data.empCode, 26, '#0f172a')
@@ -1312,6 +1344,9 @@ export interface AdmitCardPrintData {
   photoDataUrl?: string;
   initials: string;
   scheduleRows?: Array<{ subject: string; date: string; time: string }>;
+  qrPayload?: string;
+  printId?: string;
+  generatedBy?: string;
 }
 
 export function buildAdmitCardPrintHtml(
@@ -1329,7 +1364,15 @@ export function buildAdmitCardPrintHtml(
     ? buildCode128SvgMarkup(data.admitCode, 30, '#0f172a')
     : '';
   const qrSvg = branding.showQrVerification !== false
-    ? buildQrCodeSvgMarkup(`ADMIT:${data.admitCode}|ROLL:${data.rollNo}|EXAM:${data.examTitle}|NAME:${data.studentName}`, 64, accent, 2, 'M')
+    ? buildQrCodeSvgMarkup(
+        (data.qrPayload && data.qrPayload.trim())
+          ? data.qrPayload.trim()
+          : `ADMIT:${data.admitCode}|ROLL:${data.rollNo}|EXAM:${data.examTitle}|NAME:${data.studentName}`,
+        64,
+        accent,
+        2,
+        'M'
+      )
     : '';
 
   const scheduleRows = data.scheduleRows && data.scheduleRows.length > 0
@@ -1431,6 +1474,9 @@ export interface GatePassPrintData {
   checkInTime: string;
   status: string;
   issuedBy?: string;
+  qrPayload?: string;
+  printId?: string;
+  generatedBy?: string;
 }
 
 export function buildGatePassPrintHtml(
@@ -1444,7 +1490,15 @@ export function buildGatePassPrintHtml(
     ? buildCode128SvgMarkup(data.passCode, 28, '#0f172a')
     : '';
   const qrSvg = branding.showQrVerification !== false
-    ? buildQrCodeSvgMarkup(`GATEPASS:${data.passCode}|VISITOR:${data.visitorName}|CNIC:${data.cnicOrId}|STATUS:${data.status}`, 58, accent, 2, 'M')
+    ? buildQrCodeSvgMarkup(
+        (data.qrPayload && data.qrPayload.trim())
+          ? data.qrPayload.trim()
+          : `GATEPASS:${data.passCode}|VISITOR:${data.visitorName}|CNIC:${data.cnicOrId}|STATUS:${data.status}`,
+        58,
+        accent,
+        2,
+        'M'
+      )
     : '';
 
   return `<!doctype html>
@@ -1520,6 +1574,9 @@ export interface BorrowSlipPrintData {
   status: string;
   fineAmount?: number;
   dailyFineRate?: number;
+  qrPayload?: string;
+  printId?: string;
+  generatedBy?: string;
 }
 
 export function buildBorrowSlipPrintHtml(
@@ -1534,7 +1591,15 @@ export function buildBorrowSlipPrintHtml(
     ? buildCode128SvgMarkup(data.accessionCode || data.bookIsbn || data.slipId, 28, '#0f172a')
     : '';
   const qrSvg = branding.showQrVerification !== false
-    ? buildQrCodeSvgMarkup(`LIB:${data.slipId}|ISBN:${data.bookIsbn}|MEMBER:${data.borrowerId}|DUE:${data.dueDate}`, 56, accent, 2, 'M')
+    ? buildQrCodeSvgMarkup(
+        (data.qrPayload && data.qrPayload.trim())
+          ? data.qrPayload.trim()
+          : `LIB:${data.slipId}|ISBN:${data.bookIsbn}|MEMBER:${data.borrowerId}|DUE:${data.dueDate}`,
+        56,
+        accent,
+        2,
+        'M'
+      )
     : '';
 
   return `<!doctype html>
@@ -1614,6 +1679,9 @@ export interface CashieringReceiptPrintData {
   collectorRole?: string;
   amount: number;
   notes?: string;
+  qrPayload?: string;
+  printId?: string;
+  generatedBy?: string;
 }
 
 export function buildCashieringReceiptA4Html(
@@ -1631,7 +1699,9 @@ export function buildCashieringReceiptA4Html(
     : '';
   const qrSvg = branding.showQrVerification !== false
     ? buildQrCodeSvgMarkup(
-        `REC:${data.receiptNo}|STU:${data.studentName}|ROLL:${data.rollNo}|AMT:${cur} ${data.amount}|DATE:${data.timestamp}`,
+        (data.qrPayload && data.qrPayload.trim())
+          ? data.qrPayload.trim()
+          : `REC:${data.receiptNo}|STU:${data.studentName}|ROLL:${data.rollNo}|AMT:${cur} ${data.amount}|DATE:${data.timestamp}`,
         64,
         accent,
         2,
@@ -1749,6 +1819,9 @@ export interface SlcCertificatePrintData {
   libraryClearance?: boolean;
   labClearance?: boolean;
   sportsClearance?: boolean;
+  qrPayload?: string;
+  printId?: string;
+  generatedBy?: string;
 }
 
 export function buildSlcCertificatePrintHtml(
@@ -1765,7 +1838,9 @@ export function buildSlcCertificatePrintHtml(
     : '';
   const qrSvg = branding.showQrVerification !== false
     ? buildQrCodeSvgMarkup(
-        `SLC:${data.certificateNo}|HASH:${data.securityHash}|STU:${data.studentName}|ROLL:${data.rollNo}`,
+        (data.qrPayload && data.qrPayload.trim())
+          ? data.qrPayload.trim()
+          : `SLC:${data.certificateNo}|HASH:${data.securityHash}|STU:${data.studentName}|ROLL:${data.rollNo}`,
         70,
         accent,
         2,

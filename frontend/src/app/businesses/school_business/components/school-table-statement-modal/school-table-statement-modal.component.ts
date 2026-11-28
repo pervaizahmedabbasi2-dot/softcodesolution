@@ -9,6 +9,7 @@ import {
   viewChild
 } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
+import { BackendService } from '../../../../services/backend.service';
 import { SchoolTableSchemaService } from '../../services/school-table-schema.service';
 import {
   PdfGenericCardEntry,
@@ -1402,7 +1403,9 @@ export class SchoolTableStatementModalComponent {
     this.close();
   }
 
-  private buildPrintableHtmlForCurrentMode(): { html: string; label: string; filename: string } | null {
+  private readonly backend = inject(BackendService);
+
+  private buildPrintableHtmlForCurrentMode(signedQrToken?: string): { html: string; label: string; filename: string } | null {
     const data = this.dataset();
     if (!data) return null;
     const rows = this.filteredRows();
@@ -1422,7 +1425,9 @@ export class SchoolTableStatementModalComponent {
       totalUnfilteredCount: data.rows.length,
       criteria,
       branding: this.rawBranding(),
-      statementRef: this.statementRef()
+      statementRef: this.statementRef(),
+      qrPayload: signedQrToken,
+      generatedBy: data.roleLabel || 'Campus Portal'
     };
     if (mode === '80mm' || mode === '58mm') {
       return {
@@ -1447,16 +1452,51 @@ export class SchoolTableStatementModalComponent {
 
   async printCurrentFormat(): Promise<void> {
     if (this.isPrinting()) return;
-    if (this.filteredRows().length === 0) {
+    const rows = this.filteredRows();
+    if (rows.length === 0) {
       this.showFeedback('No records match your filter to print.', 'warn');
       return;
     }
-    const built = this.buildPrintableHtmlForCurrentMode();
-    if (!built) return;
-    this.lastBuiltHtml = built.html;
-    this.lastBuiltFilename = built.filename;
     this.isPrinting.set(true);
     try {
+      const data = this.dataset();
+      let signedQrToken: string | undefined;
+      if (data) {
+        try {
+          const firstRow = rows[0] || [];
+          const amtSummary = computeStatementAmounts(data.headers, rows);
+          const actorRole = this.schemaService.portalRole();
+          const res = await this.backend.registerSchoolPrintVerification({
+            docType: this.isSingleRecord() ? 'table_record_card' : 'table_statement',
+            docLabel: `${this.effectiveTitle()} (${this.activeFormat().toUpperCase()})`,
+            tableId: this.canonicalTableId() || data.tableId,
+            tableTitle: this.effectiveTitle(),
+            portalTab: 'overview',
+            rowKey: String(firstRow[0] || this.statementRef() || ''),
+            rowLabel: String(firstRow[1] || firstRow[0] || this.effectiveTitle()),
+            subjectName: this.isSingleRecord() ? String(firstRow[1] || firstRow[0] || this.effectiveTitle()) : this.effectiveTitle(),
+            rollOrCode: String(firstRow[0] || this.statementRef() || ''),
+            amountPkr: Number(amtSummary?.primaryTotal || 0),
+            statusSnapshot: this.primaryStatusValue() || 'VERIFIED',
+            generatedBy: data.roleLabel || 'School Portal',
+            generatedByRole: actorRole || 'owner',
+            payload: {
+              statementRef: this.statementRef(),
+              rowCount: rows.length,
+              totalAmount: Number(amtSummary?.primaryTotal || 0),
+              status: this.primaryStatusValue() || 'VERIFIED'
+            }
+          });
+          if (res?.ok && res.qrToken) {
+            signedQrToken = res.qrToken;
+          }
+        } catch {}
+      }
+
+      const built = this.buildPrintableHtmlForCurrentMode(signedQrToken);
+      if (!built) return;
+      this.lastBuiltHtml = built.html;
+      this.lastBuiltFilename = built.filename;
       const ok = await printHtmlInHiddenFrame(built.html);
       if (ok) {
         this.showFeedback(`Print dialog opened for ${built.label}.`, 'success', true);

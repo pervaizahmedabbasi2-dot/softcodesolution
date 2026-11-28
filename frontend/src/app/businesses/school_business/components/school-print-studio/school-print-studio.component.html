@@ -20,6 +20,13 @@
       <div class="flex items-center gap-2 flex-wrap shrink-0">
         <button
           type="button"
+          (click)="openQrScanner.emit()"
+          class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs cursor-pointer inline-flex items-center gap-1.5 shadow-sm transition-colors">
+          <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">qr_code_2</mat-icon>
+          <span>Open QR Scanner</span>
+        </button>
+        <button
+          type="button"
           (click)="openHardwareTerminal.emit('auto')"
           class="px-3.5 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 font-bold text-xs cursor-pointer inline-flex items-center gap-1.5 transition-colors">
           <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-indigo-600">qr_code_scanner</mat-icon>

@@ -1710,6 +1710,126 @@ export class BackendService {
     } catch { return { ok: false, matchType: 'none' }; }
   }
 
+  // --- CRYPTOGRAPHIC QR PRINT VERIFICATION, ANTI-FAKE LEDGER & OWNER ACCESS POLICY ---
+  async getSchoolQrScannerAccess(actorName?: string) {
+    try {
+      const q = actorName ? `?actorName=${encodeURIComponent(actorName)}` : '';
+      const res = await fetch(`/api/school/qr-scanner/access${q}`, {
+        headers: this.getSchoolHeaders(false),
+        credentials: 'include'
+      });
+      return await res.json().catch(() => ({ ok: false, policy: null, canUseQrScanner: true }));
+    } catch {
+      return { ok: false, policy: null, canUseQrScanner: true };
+    }
+  }
+
+  async saveSchoolQrScannerAccess(policy: any, updatedBy?: string) {
+    try {
+      const res = await fetch('/api/school/qr-scanner/access', {
+        method: 'PUT',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify({ policy, updatedBy }),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch {
+      return { ok: false, message: 'Unable to save QR scanner access policy.' };
+    }
+  }
+
+  async registerSchoolPrintVerification(
+    payload: {
+      docType: string;
+      docLabel: string;
+      tableId?: string;
+      tableTitle?: string;
+      portalTab?: string;
+      subTab?: string;
+      rowKey?: string;
+      rowLabel?: string;
+      subjectName?: string;
+      rollOrCode?: string;
+      amountPkr?: number;
+      statusSnapshot?: string;
+      generatedBy?: string;
+      generatedByRole?: string;
+      payload?: Record<string, any>;
+    },
+    branchId?: string,
+    wingId?: string
+  ) {
+    try {
+      const res = await fetch('/api/school/print-verifications', {
+        method: 'POST',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify({
+          ...payload,
+          ...(branchId && branchId !== 'ALL' ? { branchId } : {}),
+          ...(wingId && wingId !== 'ALL' ? { wingId } : {})
+        }),
+        credentials: 'include'
+      });
+      return await res.json().catch(() => ({ ok: false, qrToken: '', printId: '' }));
+    } catch {
+      return { ok: false, qrToken: '', printId: '' };
+    }
+  }
+
+  async getSchoolPrintVerifications(params?: { status?: string; q?: string }, branchId?: string, wingId?: string) {
+    try {
+      const extra: Record<string, string> = {};
+      if (params?.status) extra['status'] = params.status;
+      if (params?.q) extra['q'] = params.q;
+      const q = this.buildSchoolScopeQuery(branchId, wingId, extra);
+      const res = await fetch(`/api/school/print-verifications${q}`, {
+        headers: this.getSchoolHeaders(false),
+        credentials: 'include'
+      });
+      return await res.json().catch(() => ({ ok: false, items: [], scanLogs: [], stats: null }));
+    } catch {
+      return { ok: false, items: [], scanLogs: [], stats: null };
+    }
+  }
+
+  async revokeSchoolPrintVerification(idOrPrintId: string, status: 'REVOKED' | 'ACTIVE', reason?: string, actorName?: string) {
+    try {
+      const res = await fetch(`/api/school/print-verifications/${encodeURIComponent(idOrPrintId)}/revoke`, {
+        method: 'PUT',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify({ status, reason, actorName }),
+        credentials: 'include'
+      });
+      return await res.json();
+    } catch {
+      return { ok: false, message: 'Failed to update print status.' };
+    }
+  }
+
+  async verifySchoolQrCode(
+    payload: {
+      rawCode: string;
+      scanSource?: 'camera' | 'file' | 'usb_gun' | 'manual';
+      scannerRole?: string;
+      scannerName?: string;
+    },
+    branchId?: string,
+    wingId?: string
+  ) {
+    try {
+      const q = this.buildSchoolScopeQuery(branchId, wingId);
+      const res = await fetch(`/api/school/qr-verify${q}`, {
+        method: 'POST',
+        headers: this.getSchoolHeaders(),
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      return await res.json().catch(() => ({ ok: false, verdict: 'FAKE', isReal: false, reason: 'Verification request failed.' }));
+    } catch {
+      return { ok: false, verdict: 'FAKE', isReal: false, reason: 'Network error during QR verification.' };
+    }
+  }
+
   // --- DYNAMIC TABLE SCHEMAS, CUSTOM FORM FIELDS & CROSS-PORTAL DATA CRUD ---
   async getSchoolTableSchemas() {
     try {

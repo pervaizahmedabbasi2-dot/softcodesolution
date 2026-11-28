@@ -1,4 +1,5 @@
 import express from 'express';
+import crypto from 'node:crypto';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { getCryptoVault } from '../auth_security/crypto_vault.js';
 
@@ -903,6 +904,75 @@ function ensureColumnMigrations(sqliteDb) {
       CREATE INDEX IF NOT EXISTS idx_school_pg_gateways_tenant ON local_school_payment_gateways (tenant_id, sort_order);
       CREATE INDEX IF NOT EXISTS idx_school_pg_txns_tenant_status ON local_school_payment_transactions (tenant_id, status, created_at);
       CREATE INDEX IF NOT EXISTS idx_school_pg_txns_student ON local_school_payment_transactions (tenant_id, student_id);
+      CREATE TABLE IF NOT EXISTS local_school_print_verifications (
+        id TEXT PRIMARY KEY,
+        print_id TEXT NOT NULL UNIQUE,
+        tenant_id TEXT DEFAULT 'tenant-root-platform',
+        branch_id TEXT DEFAULT 'BR-LHR-01',
+        wing_id TEXT DEFAULT 'WNG-LHR-SR',
+        doc_type TEXT NOT NULL,
+        doc_label TEXT NOT NULL,
+        table_id TEXT DEFAULT '',
+        table_title TEXT DEFAULT '',
+        portal_tab TEXT DEFAULT '',
+        sub_tab TEXT DEFAULT '',
+        row_key TEXT DEFAULT '',
+        row_label TEXT DEFAULT '',
+        subject_name TEXT DEFAULT '',
+        roll_or_code TEXT DEFAULT '',
+        amount_pkr REAL DEFAULT 0,
+        status_snapshot TEXT DEFAULT 'ACTIVE',
+        generated_by TEXT DEFAULT 'School Owner',
+        generated_by_role TEXT DEFAULT 'owner',
+        payload_json TEXT NOT NULL,
+        payload_hash TEXT NOT NULL,
+        hmac_sig TEXT NOT NULL,
+        qr_token TEXT NOT NULL,
+        status TEXT DEFAULT 'ACTIVE',
+        revoke_reason TEXT DEFAULT '',
+        revoked_by TEXT DEFAULT '',
+        revoked_at TEXT DEFAULT '',
+        scan_count INTEGER DEFAULT 0,
+        first_scanned_at TEXT DEFAULT '',
+        last_scanned_at TEXT DEFAULT '',
+        last_scanned_by TEXT DEFAULT '',
+        printed_at TEXT NOT NULL,
+        is_synced INTEGER DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE TABLE IF NOT EXISTS local_school_qr_scan_logs (
+        id TEXT PRIMARY KEY,
+        tenant_id TEXT DEFAULT 'tenant-root-platform',
+        branch_id TEXT DEFAULT 'BR-LHR-01',
+        wing_id TEXT DEFAULT 'WNG-LHR-SR',
+        print_id TEXT DEFAULT '',
+        scanned_code TEXT NOT NULL,
+        scan_source TEXT DEFAULT 'camera',
+        verdict TEXT NOT NULL,
+        is_real INTEGER DEFAULT 0,
+        reason TEXT DEFAULT '',
+        doc_type TEXT DEFAULT '',
+        table_id TEXT DEFAULT '',
+        table_title TEXT DEFAULT '',
+        row_key TEXT DEFAULT '',
+        subject_name TEXT DEFAULT '',
+        generated_by TEXT DEFAULT '',
+        generated_by_role TEXT DEFAULT '',
+        scanned_by TEXT DEFAULT 'School Owner',
+        scanned_by_role TEXT DEFAULT 'owner',
+        is_synced INTEGER DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE TABLE IF NOT EXISTS local_school_qr_scanner_access (
+        tenant_id TEXT PRIMARY KEY,
+        policy_json TEXT NOT NULL,
+        updated_by TEXT DEFAULT 'School Owner',
+        is_synced INTEGER DEFAULT 0,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE INDEX IF NOT EXISTS idx_school_print_verif_tenant_pid ON local_school_print_verifications (tenant_id, print_id);
+      CREATE INDEX IF NOT EXISTS idx_school_print_verif_tenant_type ON local_school_print_verifications (tenant_id, doc_type, created_at);
+      CREATE INDEX IF NOT EXISTS idx_school_qr_scans_tenant ON local_school_qr_scan_logs (tenant_id, created_at);
     `);
     safeAddCol('local_school_branches', 'established_year', 'TEXT');
     const branchScopedTables = [
@@ -8158,6 +8228,1141 @@ export function createSchoolRouter(sqliteDb, db, getCollectionDocs, memorySeedDa
       openChallan,
       paidChallan,
       latestTransaction
+    });
+  });
+
+  // =========================================================================
+  // CRYPTOGRAPHIC QR PRINT VERIFICATION, ANTI-FAKE LEDGER & OWNER RBAC APIs
+  // =========================================================================
+  const getQrSigningKey = () => {
+    const envSecret = String(process.env.SCS_QR_SIGNING_SECRET || '').trim();
+    if (envSecret) return Buffer.from(envSecret, 'utf8');
+    if (vault?.blindKey) return Buffer.from(vault.blindKey);
+    return crypto.createHash('sha256').update('softcodesolution-qr-signing-fallback-key').digest();
+  };
+
+  const computeCanonicalPayloadHash = (payloadObj) => {
+    const canonical = JSON.stringify(payloadObj || {});
+    return crypto.createHash('sha256').update(canonical).digest('hex');
+  };
+
+  const signQrPrintToken = (printId, payloadHash) => {
+    const hmac = crypto
+      .createHmac('sha256', getQrSigningKey())
+      .update(`${printId}|${payloadHash}`)
+      .digest('hex')
+      .toUpperCase();
+    return {
+      fullHmac: hmac,
+      shortSig12: hmac.slice(0, 12)
+    };
+  };
+
+  const timingSafeEqualHex = (a, b) => {
+    const sA = String(a || '').trim().toUpperCase();
+    const sB = String(b || '').trim().toUpperCase();
+    if (!sA || sA.length !== sB.length) return false;
+    try {
+      return crypto.timingSafeEqual(Buffer.from(sA, 'utf8'), Buffer.from(sB, 'utf8'));
+    } catch {
+      return false;
+    }
+  };
+
+  const getDefaultQrScannerAccessPolicy = () => ({
+    ownerLockedControl: true,
+    antiFakeStrictMode: true,
+    duplicateScanAlertEnabled: true,
+    roles: {
+      owner: {
+        enabled: true,
+        canScanCamera: true,
+        canFileScan: true,
+        canViewLedger: true,
+        canJumpToRecord: true,
+        canRevokePrints: true
+      },
+      principal: {
+        enabled: false,
+        canScanCamera: true,
+        canFileScan: true,
+        canViewLedger: true,
+        canJumpToRecord: true,
+        canRevokePrints: false
+      },
+      teacher: {
+        enabled: false,
+        canScanCamera: true,
+        canFileScan: true,
+        canViewLedger: false,
+        canJumpToRecord: true,
+        canRevokePrints: false
+      },
+      accountant: {
+        enabled: false,
+        canScanCamera: true,
+        canFileScan: true,
+        canViewLedger: true,
+        canJumpToRecord: true,
+        canRevokePrints: false
+      },
+      staff: {
+        enabled: false,
+        canScanCamera: true,
+        canFileScan: false,
+        canViewLedger: false,
+        canJumpToRecord: false,
+        canRevokePrints: false
+      }
+    },
+    allowedUserNames: []
+  });
+
+  const mergeQrScannerAccessPolicy = (rawPolicy) => {
+    const base = getDefaultQrScannerAccessPolicy();
+    if (!rawPolicy || typeof rawPolicy !== 'object') return base;
+    const roles = { ...base.roles };
+    for (const rk of ['principal', 'teacher', 'accountant', 'staff']) {
+      if (rawPolicy.roles && rawPolicy.roles[rk] && typeof rawPolicy.roles[rk] === 'object') {
+        roles[rk] = { ...base.roles[rk], ...rawPolicy.roles[rk] };
+      }
+    }
+    return {
+      ...base,
+      antiFakeStrictMode: rawPolicy.antiFakeStrictMode !== undefined ? Boolean(rawPolicy.antiFakeStrictMode) : base.antiFakeStrictMode,
+      duplicateScanAlertEnabled: rawPolicy.duplicateScanAlertEnabled !== undefined ? Boolean(rawPolicy.duplicateScanAlertEnabled) : base.duplicateScanAlertEnabled,
+      roles,
+      allowedUserNames: Array.isArray(rawPolicy.allowedUserNames)
+        ? rawPolicy.allowedUserNames.map((v) => String(v || '').trim()).filter(Boolean)
+        : []
+    };
+  };
+
+  const readQrScannerAccessPolicy = (tid) => {
+    if (!sqliteDb) return getDefaultQrScannerAccessPolicy();
+    try {
+      const row = sqliteDb.prepare('SELECT policy_json, updated_by, updated_at FROM local_school_qr_scanner_access WHERE tenant_id = ?').get(tid);
+      if (row?.policy_json) {
+        return {
+          ...mergeQrScannerAccessPolicy(JSON.parse(row.policy_json)),
+          updatedBy: row.updated_by || 'School Owner',
+          updatedAt: row.updated_at || new Date().toISOString()
+        };
+      }
+    } catch {}
+    return {
+      ...getDefaultQrScannerAccessPolicy(),
+      updatedBy: 'School Owner',
+      updatedAt: new Date().toISOString()
+    };
+  };
+
+  const isRoleAllowedForQrScanner = (tid, roleRaw, actorNameRaw = '') => {
+    const role = String(roleRaw || 'owner').trim().toLowerCase();
+    if (!role || OWNER_ROLES.has(role)) return { allowed: true, perms: getDefaultQrScannerAccessPolicy().roles.owner };
+    const policy = readQrScannerAccessPolicy(tid);
+    const roleCfg = policy.roles?.[role];
+    const actorNorm = String(actorNameRaw || '').trim().toLowerCase();
+    const userOverride = actorNorm && Array.isArray(policy.allowedUserNames)
+      ? policy.allowedUserNames.some((n) => String(n || '').trim().toLowerCase() === actorNorm)
+      : false;
+    if (roleCfg?.enabled || userOverride) {
+      return {
+        allowed: true,
+        perms: roleCfg || { enabled: true, canScanCamera: true, canFileScan: true, canViewLedger: false, canJumpToRecord: true, canRevokePrints: false }
+      };
+    }
+    return { allowed: false, perms: roleCfg || { enabled: false } };
+  };
+
+  const mapPrintVerificationRow = (r, tid) => {
+    let parsedPayload = {};
+    try {
+      parsedPayload = r.payload_json ? JSON.parse(r.payload_json) : {};
+    } catch {}
+    return {
+      id: r.id,
+      printId: r.print_id,
+      tenantId: r.tenant_id || tid,
+      branchId: r.branch_id || DEFAULT_BRANCH_ID,
+      wingId: r.wing_id || DEFAULT_WING_ID,
+      docType: r.doc_type,
+      docLabel: r.doc_label,
+      tableId: r.table_id || '',
+      tableTitle: r.table_title || '',
+      portalTab: r.portal_tab || '',
+      subTab: r.sub_tab || '',
+      rowKey: r.row_key || '',
+      rowLabel: r.row_label || '',
+      subjectName: dec(r.tenant_id || tid, r.subject_name),
+      rollOrCode: r.roll_or_code || '',
+      amountPkr: Number(r.amount_pkr || 0),
+      statusSnapshot: r.status_snapshot || 'ACTIVE',
+      generatedBy: dec(r.tenant_id || tid, r.generated_by) || 'School Owner',
+      generatedByRole: r.generated_by_role || 'owner',
+      payload: parsedPayload,
+      payloadHash: r.payload_hash,
+      qrToken: r.qr_token,
+      status: r.status || 'ACTIVE',
+      revokeReason: r.revoke_reason || '',
+      revokedBy: r.revoked_by || '',
+      revokedAt: r.revoked_at || '',
+      scanCount: Number(r.scan_count || 0),
+      firstScannedAt: r.first_scanned_at || '',
+      lastScannedAt: r.last_scanned_at || '',
+      lastScannedBy: r.last_scanned_by || '',
+      printedAt: r.printed_at || r.created_at
+    };
+  };
+
+  const mapQrScanLogRow = (r, tid) => ({
+    id: r.id,
+    tenantId: r.tenant_id || tid,
+    branchId: r.branch_id || DEFAULT_BRANCH_ID,
+    wingId: r.wing_id || DEFAULT_WING_ID,
+    printId: r.print_id || '',
+    scannedCode: r.scanned_code,
+    scanSource: r.scan_source || 'camera',
+    verdict: r.verdict,
+    isReal: Boolean(r.is_real),
+    reason: r.reason || '',
+    docType: r.doc_type || '',
+    tableId: r.table_id || '',
+    tableTitle: r.table_title || '',
+    rowKey: r.row_key || '',
+    subjectName: dec(r.tenant_id || tid, r.subject_name),
+    generatedBy: dec(r.tenant_id || tid, r.generated_by),
+    generatedByRole: r.generated_by_role || '',
+    scannedBy: dec(r.tenant_id || tid, r.scanned_by) || 'School Owner',
+    scannedByRole: r.scanned_by_role || 'owner',
+    createdAt: r.created_at || new Date().toISOString()
+  });
+
+  const DOC_TYPE_LOCATION_DEFAULTS = {
+    bank_challan: { tableId: 'owner_finance_ledger', tableTitle: 'Fee Challans & Collection Ledger', portalTab: 'finance', subTab: 'challan' },
+    thermal_receipt: { tableId: 'owner_payment_gateway', tableTitle: 'Online Fee & Digital Deposit Ledger', portalTab: 'payment_gateway', subTab: '' },
+    cashiering_receipt: { tableId: 'owner_overview_fee_cashiering', tableTitle: 'Principal Fee Cashiering Register', portalTab: 'finance', subTab: 'cashiering' },
+    student_id_card: { tableId: 'owner_students_roster', tableTitle: 'Enrolled Student Body Directory', portalTab: 'students', subTab: '' },
+    staff_id_card: { tableId: 'owner_all_personnel', tableTitle: 'Complete Campus Personnel Directory', portalTab: 'teachers', subTab: '' },
+    result_dmc: { tableId: 'owner_class_results', tableTitle: 'Class Results & Merit List', portalTab: 'exams', subTab: 'results' },
+    salary_slip: { tableId: 'owner_payroll', tableTitle: 'Staff Payroll Register', portalTab: 'teachers', subTab: 'payroll' },
+    admit_card: { tableId: 'owner_exams', tableTitle: 'Examinations & Datesheets', portalTab: 'exams', subTab: 'schedule' },
+    gate_pass: { tableId: 'owner_visitors', tableTitle: 'Visitor Security & Gate Passes', portalTab: 'visitors', subTab: '' },
+    borrow_slip: { tableId: 'owner_library_circulation', tableTitle: 'Library Book Circulation & Loans', portalTab: 'library', subTab: 'circulation' },
+    slc_certificate: { tableId: 'owner_alumni', tableTitle: 'Alumni & SLC Archive', portalTab: 'alumni', subTab: '' },
+    table_statement: { tableId: 'owner_students_roster', tableTitle: 'Table Statement Printout', portalTab: 'overview', subTab: '' },
+    table_record_card: { tableId: 'owner_students_roster', tableTitle: 'Table Record Verification Card', portalTab: 'overview', subTab: '' }
+  };
+
+  // Helper: Deep search across ALL school SQLite tables + Workspace JSON collections
+  const deepSearchSchoolEntities = (tid, scope, searchTerms = [], preferredTableId = '') => {
+    const terms = [...new Set(searchTerms.map((t) => String(t || '').trim().toLowerCase()).filter(Boolean))];
+    if (!sqliteDb || terms.length === 0) return { hits: [], primaryHit: null };
+
+    const scopeSql = buildScopeSql(scope);
+    const nameMaps = getBranchWingNameMaps(tid);
+    const hits = [];
+
+    const matchesAnyTerm = (fields) => {
+      const normalized = fields.map((v) => String(v || '').trim().toLowerCase()).filter(Boolean);
+      return terms.some((term) => normalized.some((fv) => fv === term || (term.length >= 4 && fv.includes(term))));
+    };
+
+    try {
+      // 1. Transactions
+      const txRows = sqliteDb.prepare(`SELECT * FROM local_school_payment_transactions WHERE tenant_id = ?${scopeSql.sql} ORDER BY created_at DESC`).all(tid, ...scopeSql.params);
+      txRows.forEach((r, idx) => {
+        const mapped = mapPaymentTransactionRow(r, tid, nameMaps);
+        if (matchesAnyTerm([mapped.txnRef, mapped.challanNo, mapped.id, mapped.rollNo, mapped.proofReference])) {
+          hits.push({
+            entityKind: 'transaction',
+            tableId: 'owner_payment_gateway',
+            tableTitle: 'Online Fee & Digital Deposit Ledger',
+            portalTab: 'payment_gateway',
+            subTab: '',
+            rowKey: mapped.id || mapped.txnRef,
+            rowIndex: idx + 1,
+            rowLabel: `${mapped.txnRef} · ${mapped.studentName}`,
+            amountPkr: Number(mapped.totalAmount || mapped.baseAmount || 0),
+            status: mapped.status,
+            record: mapped
+          });
+        }
+      });
+
+      // 2. Fees / Challans
+      const feeRows = sqliteDb.prepare(`SELECT * FROM local_school_fees WHERE tenant_id = ?${scopeSql.sql} ORDER BY created_at DESC`).all(tid, ...scopeSql.params);
+      feeRows.forEach((r, idx) => {
+        const mapped = mapFeeRow(r, tid, nameMaps);
+        if (matchesAnyTerm([mapped.challanNo, mapped.id, mapped.rollNo, mapped.studentId, mapped.resourceReference])) {
+          hits.push({
+            entityKind: 'challan',
+            tableId: 'owner_finance_ledger',
+            tableTitle: 'Master Cash Book & Fee Ledger',
+            portalTab: 'finance',
+            subTab: '',
+            rowKey: mapped.id || mapped.challanNo,
+            rowIndex: idx + 1,
+            rowLabel: `${mapped.challanNo || mapped.id} · ${mapped.studentName}`,
+            amountPkr: Number(mapped.total || 0),
+            status: mapped.status,
+            record: mapped
+          });
+        }
+      });
+
+      // 3. Students
+      const stuRows = sqliteDb.prepare(`SELECT * FROM local_school_students WHERE tenant_id = ?${scopeSql.sql}`).all(tid, ...scopeSql.params);
+      stuRows.forEach((r, idx) => {
+        const mapped = mapStudentRow(r, tid, nameMaps);
+        if (matchesAnyTerm([mapped.id, mapped.rollNo, mapped.rfidCard, `stu-${mapped.rollNo}`, `ch-2026-${mapped.rollNo}`])) {
+          hits.push({
+            entityKind: 'student',
+            tableId: 'owner_students_roster',
+            tableTitle: 'Enrolled Student Body Directory',
+            portalTab: 'students',
+            subTab: '',
+            rowKey: mapped.id || mapped.rollNo,
+            rowIndex: idx + 1,
+            rowLabel: `${mapped.fullName} (Roll #${mapped.rollNo})`,
+            amountPkr: Number(mapped.feeAmount || 0),
+            status: mapped.feeStatus || mapped.status,
+            record: mapped
+          });
+        }
+      });
+
+      // 4. Principals, Teachers, Staff
+      const priRows = sqliteDb.prepare(`SELECT * FROM local_school_principals WHERE tenant_id = ?${scopeSql.sql}`).all(tid, ...scopeSql.params);
+      priRows.forEach((r, idx) => {
+        const mapped = mapPrincipalRow(r, tid, nameMaps);
+        if (matchesAnyTerm([mapped.id, mapped.empCode, `emp-${mapped.empCode}`])) {
+          hits.push({
+            entityKind: 'principal',
+            tableId: 'owner_principals_directory',
+            tableTitle: 'Principals Executive Directory',
+            portalTab: 'teachers',
+            subTab: '',
+            rowKey: mapped.id || mapped.empCode,
+            rowIndex: idx + 1,
+            rowLabel: `${mapped.name} (${mapped.empCode})`,
+            amountPkr: 0,
+            status: mapped.status,
+            record: mapped
+          });
+        }
+      });
+
+      const tchRows = sqliteDb.prepare(`SELECT * FROM local_school_teachers WHERE tenant_id = ?${scopeSql.sql}`).all(tid, ...scopeSql.params);
+      tchRows.forEach((r, idx) => {
+        const mapped = mapTeacherRow(r, tid, nameMaps);
+        if (matchesAnyTerm([mapped.id, mapped.empCode, `emp-${mapped.empCode}`])) {
+          hits.push({
+            entityKind: 'teacher',
+            tableId: 'owner_teachers_faculty',
+            tableTitle: 'Faculty Directory',
+            portalTab: 'teachers',
+            subTab: '',
+            rowKey: mapped.id || mapped.empCode,
+            rowIndex: idx + 1,
+            rowLabel: `${mapped.name} (${mapped.empCode})`,
+            amountPkr: Number(mapped.basicSalary || 0),
+            status: mapped.salaryStatus || mapped.status,
+            record: mapped
+          });
+        }
+      });
+
+      const stfRows = sqliteDb.prepare(`SELECT * FROM local_school_staff WHERE tenant_id = ?${scopeSql.sql}`).all(tid, ...scopeSql.params);
+      stfRows.forEach((r, idx) => {
+        const mapped = mapStaffRow(r, tid, nameMaps);
+        if (matchesAnyTerm([mapped.id, mapped.empCode, `emp-${mapped.empCode}`])) {
+          hits.push({
+            entityKind: 'staff',
+            tableId: 'owner_support_staff_directory',
+            tableTitle: 'Campus Support & Admin Staff',
+            portalTab: 'teachers',
+            subTab: '',
+            rowKey: mapped.id || mapped.empCode,
+            rowIndex: idx + 1,
+            rowLabel: `${mapped.name} (${mapped.empCode})`,
+            amountPkr: 0,
+            status: mapped.status,
+            record: mapped
+          });
+        }
+      });
+
+      // 5. Admissions, Results, Exams, Reconciliation, Petty Vouchers, Custom Table Rows
+      const admRows = sqliteDb.prepare(`SELECT * FROM local_school_admissions WHERE tenant_id = ?${scopeSql.sql}`).all(tid, ...scopeSql.params);
+      admRows.forEach((r, idx) => {
+        const appNo = String(r.application_no || r.id || '').trim();
+        if (matchesAnyTerm([r.id, appNo, r.phone])) {
+          hits.push({
+            entityKind: 'admission',
+            tableId: 'owner_admissions',
+            tableTitle: 'Admissions & Enrollment Inquiries',
+            portalTab: 'admissions',
+            subTab: '',
+            rowKey: r.id,
+            rowIndex: idx + 1,
+            rowLabel: `${dec(tid, r.student_name)} (${appNo})`,
+            amountPkr: 0,
+            status: r.status || 'New',
+            record: { id: r.id, applicationNo: appNo, studentName: dec(tid, r.student_name), grade: r.applying_grade, status: r.status }
+          });
+        }
+      });
+
+      const resRows = sqliteDb.prepare(`SELECT * FROM local_school_results WHERE tenant_id = ?${scopeSql.sql}`).all(tid, ...scopeSql.params);
+      resRows.forEach((r, idx) => {
+        if (matchesAnyTerm([r.id, r.roll_no, r.student_id, r.exam_id, `dmc-${r.roll_no}`])) {
+          hits.push({
+            entityKind: 'result_dmc',
+            tableId: 'owner_class_results',
+            tableTitle: 'Class Results & Merit List',
+            portalTab: 'exams',
+            subTab: '',
+            rowKey: r.id,
+            rowIndex: idx + 1,
+            rowLabel: `${dec(tid, r.student_name)} · Roll #${r.roll_no}`,
+            amountPkr: 0,
+            status: r.status || 'Published',
+            record: { id: r.id, rollNo: r.roll_no, studentName: dec(tid, r.student_name), grade: r.grade, totalMarks: r.total_marks, obtainedMarks: r.obtained_marks, gradeLetter: r.grade_letter, status: r.status }
+          });
+        }
+      });
+
+      const recRows = sqliteDb.prepare(`SELECT * FROM local_school_reconciliation WHERE tenant_id = ?${scopeSql.sql}`).all(tid, ...scopeSql.params);
+      recRows.forEach((r, idx) => {
+        if (matchesAnyTerm([r.id, r.date])) {
+          hits.push({
+            entityKind: 'daily_closing',
+            tableId: 'owner_daily_closing',
+            tableTitle: 'Daily Rooznama & Bank Scroll',
+            portalTab: 'finance',
+            subTab: '',
+            rowKey: r.id,
+            rowIndex: idx + 1,
+            rowLabel: `Closing ${r.id} (${r.date})`,
+            amountPkr: Number(r.actual_collected || 0),
+            status: r.reconciliation_status || 'Submitted',
+            record: { id: r.id, date: r.date, actualCollected: r.actual_collected, status: r.reconciliation_status }
+          });
+        }
+      });
+
+      const pettyRows = sqliteDb.prepare(`SELECT * FROM local_school_petty_vouchers WHERE tenant_id = ?${scopeSql.sql}`).all(tid, ...scopeSql.params);
+      pettyRows.forEach((r, idx) => {
+        if (matchesAnyTerm([r.id, r.voucher_no])) {
+          hits.push({
+            entityKind: 'petty_voucher',
+            tableId: 'owner_petty_vouchers',
+            tableTitle: 'Fee Counter Petty Cash Vouchers',
+            portalTab: 'finance',
+            subTab: '',
+            rowKey: r.id,
+            rowIndex: idx + 1,
+            rowLabel: `${r.voucher_no} · ${r.category}`,
+            amountPkr: Number(r.amount || 0),
+            status: 'Recorded',
+            record: { id: r.id, voucherNo: r.voucher_no, category: r.category, amount: r.amount, date: r.date }
+          });
+        }
+      });
+
+      const customRows = sqliteDb.prepare('SELECT * FROM local_school_table_rows WHERE tenant_id = ?').all(tid);
+      customRows.forEach((r, idx) => {
+        let vals = {};
+        try { vals = JSON.parse(r.values_json || '{}'); } catch {}
+        const allVals = [r.row_key, r.row_label, ...Object.values(vals)];
+        if (matchesAnyTerm(allVals)) {
+          hits.push({
+            entityKind: 'custom_table_row',
+            tableId: r.table_id,
+            tableTitle: r.table_id,
+            portalTab: 'overview',
+            subTab: '',
+            rowKey: r.row_key,
+            rowIndex: idx + 1,
+            rowLabel: r.row_label || r.row_key,
+            amountPkr: 0,
+            status: 'Custom Row',
+            record: { rowKey: r.row_key, tableId: r.table_id, ...vals }
+          });
+        }
+      });
+
+      // 6. Workspace JSON collections (Visitor Gate Passes, Library Loans, SLC, Staff Payroll, Invoices, Expenses, Assets, Transport, Hostel, Alumni)
+      const wsRow = sqliteDb.prepare('SELECT payload_json FROM local_school_workspaces WHERE tenant_id = ?').get(tid);
+      if (wsRow?.payload_json) {
+        let ws = {};
+        try { ws = JSON.parse(wsRow.payload_json); } catch {}
+        const wsMaps = [
+          { key: 'visitorGatePasses', entityKind: 'gate_pass', tableId: 'owner_visitors', tableTitle: 'Visitor Security & Gate Passes', portalTab: 'visitors', idFields: ['id', 'passNo', 'badgeNo', 'visitorPhone'], nameField: 'visitorName', amountField: '' },
+          { key: 'libraryCirculation', entityKind: 'borrow_slip', tableId: 'owner_library_circulation', tableTitle: 'Library Book Circulation & Loans', portalTab: 'library', idFields: ['id', 'slipNo', 'bookCode', 'borrowerCode'], nameField: 'borrowerName', amountField: 'fineAmount' },
+          { key: 'slcCertificates', entityKind: 'slc_certificate', tableId: 'owner_alumni', tableTitle: 'Alumni & SLC Archive', portalTab: 'alumni', idFields: ['id', 'slcNo', 'serialNo', 'rollNo'], nameField: 'studentName', amountField: '' },
+          { key: 'staffPayrolls', entityKind: 'salary_slip', tableId: 'owner_payroll', tableTitle: 'Staff Payroll Register', portalTab: 'teachers', idFields: ['id', 'slipNo', 'empCode'], nameField: 'staffName', amountField: 'netPayable' },
+          { key: 'masterInvoices', entityKind: 'invoice', tableId: 'owner_invoices', tableTitle: 'Master Invoices & Billing Register', portalTab: 'invoices', idFields: ['id', 'invoiceNo'], nameField: 'recipientName', amountField: 'netPayable' },
+          { key: 'schoolExpenses', entityKind: 'expense', tableId: 'owner_expenses', tableTitle: 'School Expenses & Vendor Bills', portalTab: 'expenses', idFields: ['id', 'voucherNo', 'billNo'], nameField: 'title', amountField: 'amount' },
+          { key: 'schoolAssets', entityKind: 'asset', tableId: 'owner_assets', tableTitle: 'Campus Assets & Inventory Ledger', portalTab: 'assets', idFields: ['id', 'assetCode', 'serialNo'], nameField: 'name', amountField: 'unitValue' },
+          { key: 'feeReceipts', entityKind: 'cashiering_receipt', tableId: 'owner_overview_fee_cashiering', tableTitle: 'Principal Fee Cashiering Register', portalTab: 'finance', idFields: ['id', 'receiptNo', 'challanNo', 'rollNo'], nameField: 'studentName', amountField: 'amount' }
+        ];
+        for (const cfg of wsMaps) {
+          const arr = Array.isArray(ws[cfg.key]) ? ws[cfg.key] : [];
+          arr.forEach((item, idx) => {
+            if (!item || typeof item !== 'object') return;
+            const candidates = cfg.idFields.map((f) => item[f]);
+            if (matchesAnyTerm(candidates)) {
+              hits.push({
+                entityKind: cfg.entityKind,
+                tableId: cfg.tableId,
+                tableTitle: cfg.tableTitle,
+                portalTab: cfg.portalTab,
+                subTab: '',
+                rowKey: String(item.id || item[cfg.idFields[1]] || item[cfg.idFields[0]] || ''),
+                rowIndex: idx + 1,
+                rowLabel: `${item[cfg.nameField] || cfg.entityKind} (${item[cfg.idFields[1]] || item.id || ''})`,
+                amountPkr: cfg.amountField ? Number(item[cfg.amountField] || 0) : 0,
+                status: String(item.status || item.auditStatus || 'ACTIVE'),
+                record: item
+              });
+            }
+          });
+        }
+      }
+    } catch {}
+
+    let primaryHit = null;
+    if (preferredTableId) {
+      primaryHit = hits.find((h) => h.tableId === preferredTableId) || null;
+    }
+    if (!primaryHit && hits.length > 0) {
+      primaryHit = hits[0];
+    }
+    return { hits, primaryHit };
+  };
+
+  // GET /api/school/qr-scanner/access — Current tenant QR Scanner permission matrix
+  router.get('/qr-scanner/access', (req, res) => {
+    const tid = resolveTenantId(req);
+    const role = resolveUserRole(req) || 'owner';
+    const actorName = String(req.headers['x-user-name'] || req.query.actorName || '').trim();
+    const policy = readQrScannerAccessPolicy(tid);
+    const accessCheck = isRoleAllowedForQrScanner(tid, role, actorName);
+    res.json({
+      ok: true,
+      policy,
+      currentRole: role,
+      canUseQrScanner: accessCheck.allowed,
+      currentPermissions: accessCheck.perms
+    });
+  });
+
+  // PUT /api/school/qr-scanner/access — Strictly School Owner controlled
+  router.put('/qr-scanner/access', requireOwnerRole, async (req, res) => {
+    const tid = resolveTenantId(req);
+    if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
+    const actorName = String(req.headers['x-user-name'] || req.body?.updatedBy || 'School Owner').trim();
+    const existing = readQrScannerAccessPolicy(tid);
+    const incoming = req.body?.policy || req.body || {};
+    const merged = mergeQrScannerAccessPolicy({
+      ...existing,
+      ...incoming,
+      roles: {
+        ...existing.roles,
+        ...(incoming.roles || {})
+      }
+    });
+    const nowIso = new Date().toISOString();
+    sqliteDb.prepare(`
+      INSERT OR REPLACE INTO local_school_qr_scanner_access (tenant_id, policy_json, updated_by, is_synced, updated_at)
+      VALUES (?, ?, ?, 0, ?)
+    `).run(tid, JSON.stringify(merged), actorName, nowIso);
+
+    recordAudit(tid, {
+      operatorName: actorName,
+      operatorRole: 'School Owner',
+      actionType: 'QR Scanner Access Policy Updated',
+      category: 'Administrative',
+      entityId: 'QR-ACCESS-POLICY',
+      entityDescription: 'Updated QR & Anti-Fake Scanner Role Permissions (Principal, Teacher, Accountant, Staff)',
+      details: `Principal=${Boolean(merged.roles.principal?.enabled)}, Teacher=${Boolean(merged.roles.teacher?.enabled)}, Accountant=${Boolean(merged.roles.accountant?.enabled)}, Staff=${Boolean(merged.roles.staff?.enabled)}`,
+      severity: 'Authorized Override'
+    });
+
+    if (db) {
+      setDoc(doc(db, 'school_qr_scanner_access', tid), {
+        tenant_id: tid,
+        policy: merged,
+        updatedBy: actorName,
+        updatedAt: nowIso
+      }, { merge: true }).catch(() => {});
+    }
+
+    res.json({
+      ok: true,
+      policy: { ...merged, updatedBy: actorName, updatedAt: nowIso }
+    });
+  });
+
+  // POST /api/school/print-verifications — Register signed anti-fake print record & return SCS1 QR token
+  router.post('/print-verifications', (req, res) => {
+    const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
+    if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
+
+    const body = req.body || {};
+    const docType = String(body.docType || 'table_statement').trim().toLowerCase().slice(0, 64);
+    const defaults = DOC_TYPE_LOCATION_DEFAULTS[docType] || DOC_TYPE_LOCATION_DEFAULTS.table_statement;
+    const printId = `PRT-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
+    const id = `PV-${Date.now()}-${crypto.randomBytes(2).toString('hex').toUpperCase()}`;
+
+    const docLabel = String(body.docLabel || defaults.tableTitle || 'Verified Print Document').trim().slice(0, 120);
+    const tableId = String(body.tableId || defaults.tableId || '').trim().slice(0, 80);
+    const tableTitle = String(body.tableTitle || defaults.tableTitle || '').trim().slice(0, 120);
+    const portalTab = String(body.portalTab || defaults.portalTab || '').trim().slice(0, 60);
+    const subTab = String(body.subTab || defaults.subTab || '').trim().slice(0, 60);
+    const rowKey = String(body.rowKey || body.rollOrCode || '').trim().slice(0, 120);
+    const rowLabel = String(body.rowLabel || body.subjectName || docLabel).trim().slice(0, 160);
+    const subjectName = String(body.subjectName || '').trim().slice(0, 160);
+    const rollOrCode = String(body.rollOrCode || '').trim().slice(0, 120);
+    const amountPkr = Number.isFinite(Number(body.amountPkr)) ? Number(body.amountPkr) : 0;
+    const statusSnapshot = String(body.statusSnapshot || 'ACTIVE').trim().toUpperCase().slice(0, 40);
+    const generatedBy = String(body.generatedBy || req.headers['x-user-name'] || 'School Owner').trim().slice(0, 100);
+    const generatedByRole = String(body.generatedByRole || resolveUserRole(req) || 'owner').trim().toLowerCase().slice(0, 40);
+    const printedAt = new Date().toISOString();
+
+    const canonicalPayload = {
+      printId,
+      tenantId: tid,
+      docType,
+      tableId,
+      rowKey,
+      rollOrCode,
+      subjectName,
+      amountPkr,
+      statusSnapshot,
+      generatedBy,
+      generatedByRole,
+      printedAt,
+      extra: body.payload && typeof body.payload === 'object' ? body.payload : {}
+    };
+
+    const payloadHash = computeCanonicalPayloadHash(canonicalPayload);
+    const { fullHmac, shortSig12 } = signQrPrintToken(printId, payloadHash);
+    const qrToken = `SCS1|${printId}|${shortSig12}`;
+
+    sqliteDb.prepare(`
+      INSERT INTO local_school_print_verifications (
+        id, print_id, tenant_id, branch_id, wing_id, doc_type, doc_label,
+        table_id, table_title, portal_tab, sub_tab, row_key, row_label,
+        subject_name, roll_or_code, amount_pkr, status_snapshot,
+        generated_by, generated_by_role, payload_json, payload_hash, hmac_sig, qr_token,
+        status, scan_count, printed_at, is_synced
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ACTIVE', 0, ?, 0)
+    `).run(
+      id, printId, tid, scope.writeBranchId, scope.writeWingId, docType, docLabel,
+      tableId, tableTitle, portalTab, subTab, rowKey, rowLabel,
+      enc(tid, subjectName), rollOrCode, amountPkr, statusSnapshot,
+      enc(tid, generatedBy), generatedByRole, JSON.stringify(canonicalPayload), payloadHash, fullHmac, qrToken,
+      printedAt
+    );
+
+    const savedRow = sqliteDb.prepare('SELECT * FROM local_school_print_verifications WHERE id = ?').get(id);
+    const item = mapPrintVerificationRow(savedRow, tid);
+
+    if (db) {
+      setDoc(doc(db, 'school_print_verifications', id), {
+        id,
+        printId,
+        tenant_id: tid,
+        docType,
+        docLabel,
+        tableId,
+        rowKey,
+        rollOrCode,
+        amountPkr,
+        statusSnapshot,
+        generatedByRole,
+        payloadHash,
+        qrToken,
+        status: 'ACTIVE',
+        printedAt
+      }, { merge: true }).catch(() => {});
+    }
+
+    res.status(201).json({
+      ok: true,
+      printId,
+      qrToken,
+      item
+    });
+  });
+
+  // GET /api/school/print-verifications — List registered print ledger & scan audit history
+  router.get('/print-verifications', (req, res) => {
+    const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
+    if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
+
+    const reqRole = resolveUserRole(req) || 'owner';
+    const actorName = String(req.headers['x-user-name'] || '').trim();
+    const accessCheck = isRoleAllowedForQrScanner(tid, reqRole, actorName);
+    if (!accessCheck.allowed && !OWNER_ROLES.has(reqRole)) {
+      return res.status(403).json({
+        ok: false,
+        error: 'QR_SCANNER_ACCESS_DISABLED',
+        message: `QR Scanner access is currently disabled for '${reqRole}' by the School Owner.`
+      });
+    }
+
+    const scopeSql = buildScopeSql(scope);
+    const rawItems = sqliteDb.prepare(
+      `SELECT * FROM local_school_print_verifications WHERE tenant_id = ?${scopeSql.sql} ORDER BY printed_at DESC LIMIT 300`
+    ).all(tid, ...scopeSql.params);
+    const rawScans = sqliteDb.prepare(
+      `SELECT * FROM local_school_qr_scan_logs WHERE tenant_id = ?${scopeSql.sql} ORDER BY created_at DESC LIMIT 300`
+    ).all(tid, ...scopeSql.params);
+
+    const items = rawItems.map((r) => mapPrintVerificationRow(r, tid));
+    const scanLogs = rawScans.map((r) => mapQrScanLogRow(r, tid));
+
+    const statusFilter = String(req.query.status || 'all').trim().toUpperCase();
+    const q = String(req.query.q || '').trim().toLowerCase();
+    const filteredItems = items.filter((it) => {
+      if (statusFilter === 'REVOKED' && it.status !== 'REVOKED') return false;
+      if (statusFilter === 'ACTIVE' && it.status !== 'ACTIVE') return false;
+      if (statusFilter === 'SCANNED' && it.scanCount <= 0) return false;
+      if (!q) return true;
+      return (
+        it.printId.toLowerCase().includes(q) ||
+        it.docLabel.toLowerCase().includes(q) ||
+        it.subjectName.toLowerCase().includes(q) ||
+        it.rollOrCode.toLowerCase().includes(q) ||
+        it.tableTitle.toLowerCase().includes(q) ||
+        it.generatedBy.toLowerCase().includes(q)
+      );
+    });
+
+    res.json({
+      ok: true,
+      items: filteredItems,
+      scanLogs,
+      stats: {
+        totalRegisteredPrints: items.length,
+        activePrints: items.filter((i) => i.status === 'ACTIVE').length,
+        revokedPrints: items.filter((i) => i.status === 'REVOKED').length,
+        totalScans: scanLogs.length,
+        authenticScans: scanLogs.filter((s) => s.isReal).length,
+        blockedFakeOrTampered: scanLogs.filter((s) => !s.isReal).length
+      }
+    });
+  });
+
+  // PUT /api/school/print-verifications/:id/revoke — Void / Revoke or Restore a registered printout
+  router.put('/print-verifications/:id/revoke', (req, res) => {
+    const tid = resolveTenantId(req);
+    if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
+    const reqRole = resolveUserRole(req) || 'owner';
+    const actorName = String(req.headers['x-user-name'] || req.body?.actorName || 'School Owner').trim();
+    const accessCheck = isRoleAllowedForQrScanner(tid, reqRole, actorName);
+    if (!OWNER_ROLES.has(reqRole) && !(accessCheck.allowed && accessCheck.perms?.canRevokePrints)) {
+      return res.status(403).json({
+        ok: false,
+        error: 'QR_REVOKE_FORBIDDEN',
+        message: 'Only the School Owner or explicitly authorized verifier can revoke/void official printouts.'
+      });
+    }
+
+    const idOrPrintId = String(req.params.id || '').trim();
+    const row = sqliteDb.prepare(
+      'SELECT * FROM local_school_print_verifications WHERE (id = ? OR print_id = ?) AND tenant_id = ?'
+    ).get(idOrPrintId, idOrPrintId, tid);
+    if (!row) {
+      return res.status(404).json({ ok: false, message: 'Registered print record not found.' });
+    }
+
+    const nextStatus = String(req.body?.status || 'REVOKED').trim().toUpperCase() === 'ACTIVE' ? 'ACTIVE' : 'REVOKED';
+    const reason = String(req.body?.reason || (nextStatus === 'REVOKED' ? 'Voided by School Administration' : 'Restored by School Owner')).trim().slice(0, 240);
+    const nowIso = new Date().toISOString();
+
+    sqliteDb.prepare(`
+      UPDATE local_school_print_verifications
+      SET status = ?, revoke_reason = ?, revoked_by = ?, revoked_at = ?, is_synced = 0
+      WHERE id = ? AND tenant_id = ?
+    `).run(nextStatus, reason, nextStatus === 'REVOKED' ? actorName : '', nextStatus === 'REVOKED' ? nowIso : '', row.id, tid);
+
+    recordAudit(tid, {
+      branchId: row.branch_id || DEFAULT_BRANCH_ID,
+      wingId: row.wing_id || DEFAULT_WING_ID,
+      operatorName: actorName,
+      operatorRole: reqRole,
+      actionType: nextStatus === 'REVOKED' ? 'Print Document Revoked' : 'Print Document Restored',
+      category: 'Security',
+      entityId: row.print_id,
+      entityDescription: `${row.doc_label} (${row.roll_or_code || row.row_key})`,
+      details: reason,
+      severity: nextStatus === 'REVOKED' ? 'Compliance Flag' : 'Normal Audit'
+    });
+
+    const updated = sqliteDb.prepare('SELECT * FROM local_school_print_verifications WHERE id = ?').get(row.id);
+    res.json({ ok: true, item: mapPrintVerificationRow(updated, tid) });
+  });
+
+  // POST /api/school/qr-verify — Full Anti-Fake Cryptographic Verify + Deep Table/Row Locator
+  router.post('/qr-verify', (req, res) => {
+    const tid = resolveTenantId(req);
+    const scope = resolveBranchWingScope(req);
+    if (scope.errorStatus) return sendScopeError(res, scope);
+    if (!sqliteDb) return res.status(503).json({ ok: false, message: 'Database unavailable' });
+
+    const scannerRole = String(req.body?.scannerRole || resolveUserRole(req) || 'owner').trim().toLowerCase();
+    const scannerName = String(req.body?.scannerName || req.headers['x-user-name'] || 'School Owner').trim();
+    const accessCheck = isRoleAllowedForQrScanner(tid, scannerRole, scannerName);
+    if (!accessCheck.allowed && !OWNER_ROLES.has(scannerRole)) {
+      return res.status(403).json({
+        ok: false,
+        error: 'QR_SCANNER_ACCESS_DISABLED',
+        message: `QR Scanner access is disabled for role '${scannerRole}'. Ask the School Owner to grant access.`
+      });
+    }
+
+    const rawCode = String(req.body?.rawCode || req.body?.code || '').trim();
+    if (!rawCode) {
+      return res.status(400).json({ ok: false, message: 'Scanned QR or barcode payload is required.' });
+    }
+    const scanSource = String(req.body?.scanSource || 'camera').trim().toLowerCase();
+    const policy = readQrScannerAccessPolicy(tid);
+
+    // Parse signed SCS1 token OR legacy structured key:value QR strings OR raw codes
+    let tokenPrintId = '';
+    let tokenSig = '';
+    let isSignedToken = false;
+    const scsMatch = rawCode.match(/^SCS1[|:]([A-Za-z0-9_-]+)[|:]([A-Za-z0-9]+)(?:[|:](.*))?$/i);
+    if (scsMatch) {
+      isSignedToken = true;
+      tokenPrintId = scsMatch[1].trim();
+      tokenSig = scsMatch[2].trim().toUpperCase();
+    }
+
+    const kvParts = {};
+    for (const seg of rawCode.split('|')) {
+      const idx = seg.indexOf(':');
+      if (idx > 0) {
+        const k = seg.slice(0, idx).trim().toUpperCase();
+        const v = seg.slice(idx + 1).trim();
+        if (k && v) kvParts[k] = v;
+      }
+    }
+
+    const candidateTerms = [
+      rawCode,
+      tokenPrintId,
+      kvParts['CHALLAN'],
+      kvParts['REC'],
+      kvParts['TXN'],
+      kvParts['ROLL'],
+      kvParts['ID'],
+      kvParts['EMP'],
+      kvParts['PASS'],
+      kvParts['SLIP'],
+      kvParts['SLC'],
+      kvParts['STATEMENT'],
+      kvParts['PAY'],
+      kvParts['ADMIT']
+    ].filter(Boolean);
+
+    // Strip SCS1 or prefix tokens if pasted directly
+    const strippedTerms = [];
+    for (const t of candidateTerms) {
+      const m = String(t).match(/^(?:ch|chln|stu|st|adm|roll|emp|rec|dmc|pay|gatepass|lib|slc|stm|prt)[-_:]?(.+)$/i);
+      if (m && m[1]) strippedTerms.push(m[1].trim());
+    }
+    const allTerms = [...new Set([...candidateTerms, ...strippedTerms])];
+
+    let printRow = null;
+    if (tokenPrintId) {
+      printRow = sqliteDb.prepare('SELECT * FROM local_school_print_verifications WHERE print_id = ? AND tenant_id = ?').get(tokenPrintId, tid) || null;
+    } else {
+      const exactTokenHit = sqliteDb.prepare('SELECT * FROM local_school_print_verifications WHERE qr_token = ? AND tenant_id = ? ORDER BY printed_at DESC LIMIT 1').get(rawCode, tid);
+      if (exactTokenHit) {
+        printRow = exactTokenHit;
+      } else if (allTerms.length > 0) {
+        const recentPrints = sqliteDb.prepare('SELECT * FROM local_school_print_verifications WHERE tenant_id = ? ORDER BY printed_at DESC LIMIT 250').all(tid);
+        printRow = recentPrints.find((pr) => {
+          const pId = String(pr.print_id || '').toLowerCase();
+          const rCode = String(pr.roll_or_code || '').toLowerCase();
+          const rKey = String(pr.row_key || '').toLowerCase();
+          return allTerms.some((t) => {
+            const tl = t.toLowerCase();
+            return (pId && pId === tl) || (rCode && rCode === tl) || (rKey && rKey === tl);
+          });
+        }) || null;
+      }
+    }
+
+    const mappedPrint = printRow ? mapPrintVerificationRow(printRow, tid) : null;
+    const searchBundle = deepSearchSchoolEntities(
+      tid,
+      scope,
+      [
+        ...allTerms,
+        mappedPrint?.rowKey || '',
+        mappedPrint?.rollOrCode || ''
+      ].filter(Boolean),
+      mappedPrint?.tableId || ''
+    );
+    const primaryHit = searchBundle.primaryHit;
+
+    // Anti-fake cryptographic checks & live comparison
+    let verdict = 'FAKE';
+    let isReal = false;
+    let sigValid = false;
+    let reason = '';
+    const mismatches = [];
+    let duplicateWarning = false;
+
+    if (isSignedToken) {
+      if (!mappedPrint || !printRow) {
+        verdict = 'FAKE';
+        isReal = false;
+        sigValid = false;
+        reason = `Forged or unregistered QR reference (${tokenPrintId}). This print ID does not exist in the school's server ledger.`;
+      } else {
+        const expected = signQrPrintToken(printRow.print_id, printRow.payload_hash);
+        const matchesStoredHmac = timingSafeEqualHex(expected.fullHmac, printRow.hmac_sig);
+        const matchesScannedSig = timingSafeEqualHex(expected.shortSig12, tokenSig);
+        sigValid = matchesStoredHmac && matchesScannedSig;
+
+        if (!sigValid) {
+          verdict = 'FAKE';
+          isReal = false;
+          reason = 'Cryptographic HMAC-SHA256 signature verification FAILED. This QR token was tampered with or forged externally.';
+        } else if (mappedPrint.status === 'REVOKED') {
+          verdict = 'REVOKED';
+          isReal = false;
+          reason = `This document was officially REVOKED / VOIDED by ${mappedPrint.revokedBy || 'School Owner'}${mappedPrint.revokeReason ? `: ${mappedPrint.revokeReason}` : '.'}`;
+        } else {
+          // Compare printed snapshot vs live database state
+          const printedAmt = Number(mappedPrint.amountPkr || 0);
+          const printedStatus = String(mappedPrint.statusSnapshot || '').toUpperCase();
+          if (primaryHit) {
+            const liveAmt = Number(primaryHit.amountPkr || 0);
+            const liveStatus = String(primaryHit.status || '').toUpperCase();
+            if (printedAmt > 0 && liveAmt > 0 && Math.abs(printedAmt - liveAmt) > 1) {
+              mismatches.push({
+                field: 'Amount (PKR)',
+                printedValue: `PKR ${printedAmt.toLocaleString()}`,
+                liveValue: `PKR ${liveAmt.toLocaleString()}`,
+                severity: 'critical'
+              });
+            }
+            const printedLooksPaid = printedStatus.includes('PAID') || printedStatus === 'VERIFIED' || printedStatus === 'SETTLED';
+            const liveLooksUnpaid = liveStatus === 'PENDING' || liveStatus === 'UNPAID' || liveStatus === 'OVERDUE' || liveStatus === 'PENDING_VERIFICATION' || liveStatus === 'REJECTED';
+            if (printedLooksPaid && liveLooksUnpaid) {
+              mismatches.push({
+                field: 'Payment Status',
+                printedValue: printedStatus,
+                liveValue: liveStatus,
+                severity: 'critical'
+              });
+            }
+          }
+
+          if (mismatches.some((m) => m.severity === 'critical')) {
+            verdict = 'TAMPERED';
+            isReal = false;
+            reason = 'Printed document claims PAID or different amount compared to live school database ledger. Possible altered challan or fake stamp.';
+          } else {
+            verdict = 'AUTHENTIC';
+            isReal = true;
+            const prevScans = Number(mappedPrint.scanCount || 0);
+            const sensitiveSingleUse = ['bank_challan', 'thermal_receipt', 'cashiering_receipt', 'gate_pass', 'slc_certificate'].includes(mappedPrint.docType);
+            if (policy.duplicateScanAlertEnabled && sensitiveSingleUse && prevScans >= 1) {
+              duplicateWarning = true;
+              reason = `Authentic HMAC signature verified, but this ${mappedPrint.docLabel} has already been scanned ${prevScans} time(s) before (last by ${mappedPrint.lastScannedBy || 'Operator'}). Inspect for duplicate photocopy reuse.`;
+            } else {
+              reason = `100% Authentic & Verified. Cryptographic HMAC signature matches print issued by ${mappedPrint.generatedBy} (${mappedPrint.generatedByRole}).`;
+            }
+          }
+        }
+      }
+    } else if (mappedPrint && printRow) {
+      // Un-tokenized code matched a registered print record by ref/challan/ID
+      sigValid = true;
+      if (mappedPrint.status === 'REVOKED') {
+        verdict = 'REVOKED';
+        isReal = false;
+        reason = `Document ${mappedPrint.printId} was REVOKED by ${mappedPrint.revokedBy || 'School Owner'}.`;
+      } else {
+        verdict = 'AUTHENTIC';
+        isReal = true;
+        reason = `Matched registered school print (${mappedPrint.printId}) generated by ${mappedPrint.generatedBy} (${mappedPrint.generatedByRole}).`;
+      }
+    } else if (primaryHit) {
+      // Legacy non-SCS1 QR or printed barcode matched live database record — check amount/status mismatches if present in QR string
+      const qrAmtRaw = kvParts['AMT'] ? Number(String(kvParts['AMT']).replace(/[^0-9.]/g, '')) : 0;
+      const qrStatus = String(kvParts['STATUS'] || '').toUpperCase();
+      const liveAmt = Number(primaryHit.amountPkr || 0);
+      const liveStatus = String(primaryHit.status || '').toUpperCase();
+
+      if (qrAmtRaw > 0 && liveAmt > 0 && Math.abs(qrAmtRaw - liveAmt) > 1) {
+        mismatches.push({
+          field: 'Amount (PKR)',
+          printedValue: `PKR ${qrAmtRaw.toLocaleString()}`,
+          liveValue: `PKR ${liveAmt.toLocaleString()}`,
+          severity: 'critical'
+        });
+      }
+      if ((qrStatus.includes('PAID') || qrStatus === 'VERIFIED') && ['PENDING', 'UNPAID', 'OVERDUE', 'PENDING_VERIFICATION', 'REJECTED'].includes(liveStatus)) {
+        mismatches.push({
+          field: 'Payment Status',
+          printedValue: qrStatus,
+          liveValue: liveStatus,
+          severity: 'critical'
+        });
+      }
+
+      if (mismatches.length > 0) {
+        verdict = 'TAMPERED';
+        isReal = false;
+        reason = 'QR details conflict with live database record (amount or payment status mismatch).';
+      } else {
+        verdict = 'LEGACY_MATCH';
+        isReal = true;
+        reason = `Matched live school record in "${primaryHit.tableTitle}" (Row: ${primaryHit.rowLabel}). Print was generated before HMAC ledger signing or via legacy barcode.`;
+      }
+    } else {
+      verdict = 'FAKE';
+      isReal = false;
+      sigValid = false;
+      reason = 'FAKE / UNREGISTERED CODE: No matching student, challan, staff ID, receipt, or signed print exists in the school database.';
+    }
+
+    const nowIso = new Date().toISOString();
+    if (printRow) {
+      try {
+        sqliteDb.prepare(`
+          UPDATE local_school_print_verifications
+          SET scan_count = COALESCE(scan_count, 0) + 1,
+              first_scanned_at = CASE WHEN first_scanned_at = '' OR first_scanned_at IS NULL THEN ? ELSE first_scanned_at END,
+              last_scanned_at = ?,
+              last_scanned_by = ?,
+              is_synced = 0
+          WHERE id = ? AND tenant_id = ?
+        `).run(nowIso, nowIso, scannerName, printRow.id, tid);
+      } catch {}
+    }
+
+    const docType = mappedPrint?.docType || primaryHit?.entityKind || 'unknown';
+    const resolvedTableId = mappedPrint?.tableId || primaryHit?.tableId || '';
+    const resolvedTableTitle = mappedPrint?.tableTitle || primaryHit?.tableTitle || '';
+    const resolvedPortalTab = mappedPrint?.portalTab || primaryHit?.portalTab || 'overview';
+    const resolvedSubTab = mappedPrint?.subTab || primaryHit?.subTab || '';
+    const resolvedRowKey = mappedPrint?.rowKey || primaryHit?.rowKey || '';
+    const resolvedRowLabel = mappedPrint?.rowLabel || primaryHit?.rowLabel || '';
+    const subjectName = mappedPrint?.subjectName || kvParts['NAME'] || primaryHit?.record?.studentName || primaryHit?.record?.fullName || primaryHit?.record?.name || '';
+    const generatedBy = mappedPrint?.generatedBy || primaryHit?.record?.collectedBy || primaryHit?.record?.verifiedBy || 'System Legacy Record';
+    const generatedByRole = mappedPrint?.generatedByRole || (mappedPrint ? 'owner' : 'system');
+
+    const scanLogId = `QRS-${Date.now()}-${crypto.randomBytes(2).toString('hex').toUpperCase()}`;
+    try {
+      sqliteDb.prepare(`
+        INSERT INTO local_school_qr_scan_logs (
+          id, tenant_id, branch_id, wing_id, print_id, scanned_code, scan_source,
+          verdict, is_real, reason, doc_type, table_id, table_title, row_key,
+          subject_name, generated_by, generated_by_role, scanned_by, scanned_by_role, is_synced
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+      `).run(
+        scanLogId, tid, scope.writeBranchId, scope.writeWingId,
+        mappedPrint?.printId || tokenPrintId || '', rawCode.slice(0, 500), scanSource,
+        verdict, isReal ? 1 : 0, reason, docType, resolvedTableId, resolvedTableTitle,
+        resolvedRowKey, enc(tid, subjectName), enc(tid, generatedBy), generatedByRole,
+        enc(tid, scannerName), scannerRole
+      );
+    } catch {}
+
+    if (db) {
+      setDoc(doc(db, 'school_qr_scan_logs', scanLogId), {
+        id: scanLogId,
+        tenant_id: tid,
+        printId: mappedPrint?.printId || tokenPrintId || '',
+        verdict,
+        isReal,
+        docType,
+        tableId: resolvedTableId,
+        rowKey: resolvedRowKey,
+        scannedByRole: scannerRole,
+        createdAt: nowIso
+      }, { merge: true }).catch(() => {});
+    }
+
+    if (!isReal) {
+      recordAudit(tid, {
+        branchId: scope.writeBranchId,
+        wingId: scope.writeWingId,
+        operatorName: scannerName,
+        operatorRole: scannerRole,
+        actionType: `QR Verification Alert (${verdict})`,
+        category: 'Security',
+        entityId: mappedPrint?.printId || tokenPrintId || rawCode.slice(0, 40),
+        entityDescription: `${verdict} scan detected via ${scanSource}`,
+        details: reason,
+        severity: 'Compliance Flag'
+      });
+    }
+
+    res.json({
+      ok: true,
+      scanLogId,
+      rawCode,
+      verdict,
+      isReal,
+      sigValid,
+      duplicateWarning,
+      reason,
+      docType,
+      docLabel: mappedPrint?.docLabel || primaryHit?.tableTitle || 'Scanned Document',
+      printId: mappedPrint?.printId || tokenPrintId || '',
+      printStatus: mappedPrint?.status || (isReal ? 'ACTIVE' : 'UNREGISTERED'),
+      generator: {
+        generatedBy,
+        generatedByRole,
+        printedAt: mappedPrint?.printedAt || '',
+        scanCount: mappedPrint ? Number(mappedPrint.scanCount || 0) + 1 : 1,
+        lastScannedAt: mappedPrint?.lastScannedAt || '',
+        lastScannedBy: mappedPrint?.lastScannedBy || ''
+      },
+      location: {
+        tableId: resolvedTableId,
+        tableTitle: resolvedTableTitle,
+        portalTab: resolvedPortalTab,
+        subTab: resolvedSubTab,
+        rowKey: resolvedRowKey,
+        rowIndex: primaryHit?.rowIndex || 1,
+        rowLabel: resolvedRowLabel,
+        searchHint: mappedPrint?.rollOrCode || primaryHit?.record?.rollNo || primaryHit?.record?.challanNo || primaryHit?.record?.txnRef || primaryHit?.record?.empCode || resolvedRowKey
+      },
+      printedSnapshot: mappedPrint
+        ? {
+            amountPkr: mappedPrint.amountPkr,
+            status: mappedPrint.statusSnapshot,
+            rollOrCode: mappedPrint.rollOrCode,
+            subjectName: mappedPrint.subjectName,
+            payload: mappedPrint.payload
+          }
+        : (Object.keys(kvParts).length ? kvParts : null),
+      liveRecord: primaryHit?.record || null,
+      allMatches: searchBundle.hits.slice(0, 8),
+      mismatches,
+      securityTips: [
+        'Always prefer SCS1 cryptographically signed QR printouts generated from Print Studio or Table Statements.',
+        'If a receipt/challan triggers DUPLICATE_SCAN, verify cash/bank deposit in Finance Ledger before releasing goods or clearance.',
+        'If any challan is lost or replaced, Revoke/Void the old printout in the Print Verification Ledger so photocopies fail immediately.'
+      ]
     });
   });
 

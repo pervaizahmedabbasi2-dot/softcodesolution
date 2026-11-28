@@ -765,3 +765,80 @@ CREATE INDEX IF NOT EXISTS idx_school_pg_gateways_tenant ON local_school_payment
 CREATE INDEX IF NOT EXISTS idx_school_pg_txns_tenant_status ON local_school_payment_transactions (tenant_id, status, created_at);
 CREATE INDEX IF NOT EXISTS idx_school_pg_txns_student ON local_school_payment_transactions (tenant_id, student_id);
 
+-- QR Print Verification Ledger (Anti-Fake / Anti-Tamper Cryptographic Print Registry)
+CREATE TABLE IF NOT EXISTS local_school_print_verifications (
+  id TEXT PRIMARY KEY,
+  print_id TEXT NOT NULL UNIQUE,
+  tenant_id TEXT DEFAULT 'tenant-root-platform',
+  branch_id TEXT DEFAULT 'BR-LHR-01',
+  wing_id TEXT DEFAULT 'WNG-LHR-SR',
+  doc_type TEXT NOT NULL,
+  doc_label TEXT NOT NULL,
+  table_id TEXT DEFAULT '',
+  table_title TEXT DEFAULT '',
+  portal_tab TEXT DEFAULT '',
+  sub_tab TEXT DEFAULT '',
+  row_key TEXT DEFAULT '',
+  row_label TEXT DEFAULT '',
+  subject_name TEXT DEFAULT '',
+  roll_or_code TEXT DEFAULT '',
+  amount_pkr REAL DEFAULT 0,
+  status_snapshot TEXT DEFAULT 'ACTIVE',
+  generated_by TEXT DEFAULT 'School Owner',
+  generated_by_role TEXT DEFAULT 'owner',
+  payload_json TEXT NOT NULL,
+  payload_hash TEXT NOT NULL,
+  hmac_sig TEXT NOT NULL,
+  qr_token TEXT NOT NULL,
+  status TEXT DEFAULT 'ACTIVE',
+  revoke_reason TEXT DEFAULT '',
+  revoked_by TEXT DEFAULT '',
+  revoked_at TEXT DEFAULT '',
+  scan_count INTEGER DEFAULT 0,
+  first_scanned_at TEXT DEFAULT '',
+  last_scanned_at TEXT DEFAULT '',
+  last_scanned_by TEXT DEFAULT '',
+  printed_at TEXT NOT NULL,
+  is_synced INTEGER DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- QR Scan Verification Audit Logs
+CREATE TABLE IF NOT EXISTS local_school_qr_scan_logs (
+  id TEXT PRIMARY KEY,
+  tenant_id TEXT DEFAULT 'tenant-root-platform',
+  branch_id TEXT DEFAULT 'BR-LHR-01',
+  wing_id TEXT DEFAULT 'WNG-LHR-SR',
+  print_id TEXT DEFAULT '',
+  scanned_code TEXT NOT NULL,
+  scan_source TEXT DEFAULT 'camera',
+  verdict TEXT NOT NULL,
+  is_real INTEGER DEFAULT 0,
+  reason TEXT DEFAULT '',
+  doc_type TEXT DEFAULT '',
+  table_id TEXT DEFAULT '',
+  table_title TEXT DEFAULT '',
+  row_key TEXT DEFAULT '',
+  subject_name TEXT DEFAULT '',
+  generated_by TEXT DEFAULT '',
+  generated_by_role TEXT DEFAULT '',
+  scanned_by TEXT DEFAULT 'School Owner',
+  scanned_by_role TEXT DEFAULT 'owner',
+  is_synced INTEGER DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Owner-Controlled QR Scanner Access Policy
+CREATE TABLE IF NOT EXISTS local_school_qr_scanner_access (
+  tenant_id TEXT PRIMARY KEY,
+  policy_json TEXT NOT NULL,
+  updated_by TEXT DEFAULT 'School Owner',
+  is_synced INTEGER DEFAULT 0,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_school_print_verif_tenant_pid ON local_school_print_verifications (tenant_id, print_id);
+CREATE INDEX IF NOT EXISTS idx_school_print_verif_tenant_type ON local_school_print_verifications (tenant_id, doc_type, created_at);
+CREATE INDEX IF NOT EXISTS idx_school_qr_scans_tenant ON local_school_qr_scan_logs (tenant_id, created_at);
+
+

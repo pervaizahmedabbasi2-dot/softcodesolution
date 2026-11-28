@@ -1,0 +1,834 @@
+<div class="space-y-6">
+  <!-- TOP CONTROL HEADER -->
+  <div class="apple-card scs-surface-3d rounded-2xl p-5 sm:p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+    <div class="space-y-1 min-w-0">
+      <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500">
+        <mat-icon class="!text-[17px] !w-[17px] !h-[17px] text-blue-600">qr_code_scanner</mat-icon>
+        <span>Anti-Fake Document Verification &amp; Android QR Scanner</span>
+        <span class="text-slate-300">·</span>
+        <span class="font-mono text-slate-700">{{ schoolName() }}</span>
+      </div>
+      <h2 class="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
+        QR Scanner — Instant Authenticity, Creator Attribution &amp; Exact Table Lookup
+      </h2>
+      <p class="text-xs text-slate-600 max-w-3xl leading-relaxed">
+        Scan any <strong class="text-slate-800">Bank Challan, Fee Receipt, Student/Staff ID Card, DMC Result, Gate Pass, Salary Slip, or Statement</strong> via Android camera, gallery image upload, or USB scanner gun to verify HMAC authenticity, see who generated it, and jump straight to its exact table row.
+      </p>
+    </div>
+
+    <div class="flex items-center gap-2 flex-wrap shrink-0">
+      <button
+        type="button"
+        (click)="loadAccessAndLedger()"
+        class="px-3.5 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 font-bold text-xs cursor-pointer inline-flex items-center gap-1.5 transition-colors min-h-[40px]">
+        <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-slate-700">refresh</mat-icon>
+        <span>Refresh Ledger</span>
+      </button>
+
+      @if (isOwner()) {
+        <button
+          type="button"
+          (click)="showOwnerAccessPanel.set(!showOwnerAccessPanel())"
+          class="px-4 py-2 rounded-xl font-black text-xs cursor-pointer inline-flex items-center gap-1.5 transition-colors border min-h-[40px]"
+          [class]="showOwnerAccessPanel()
+            ? 'bg-slate-900 text-white border-slate-900'
+            : 'bg-blue-600 hover:bg-blue-700 text-white border-blue-600 shadow-sm'">
+          <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">admin_panel_settings</mat-icon>
+          <span>{{ showOwnerAccessPanel() ? 'Hide Access Controls' : 'Owner Access Controls (Principal / Teacher)' }}</span>
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- OWNER ROLE DELEGATION PANEL (ONLY VISIBLE TO SCHOOL OWNER) -->
+  @if (isOwner() && showOwnerAccessPanel()) {
+    <div class="apple-card scs-surface-3d rounded-2xl p-5 sm:p-6 border border-blue-200/80 space-y-5">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200/80 pb-4">
+        <div>
+          <span class="text-[10px] font-black uppercase tracking-wider text-blue-700">School Owner Exclusive Governance</span>
+          <h3 class="text-base font-black text-slate-900 mt-0.5">Grant or Revoke QR Scanner Access (Principal, Teacher, Accountant &amp; Staff)</h3>
+          <p class="text-xs text-slate-600">Only the School Owner controls who sees the QR Scanner card and which anti-fake actions they can execute.</p>
+        </div>
+
+        <div class="flex items-center gap-2 flex-wrap">
+          <button
+            type="button"
+            (click)="toggleGlobalSecurityFlag('duplicateScanAlertEnabled')"
+            [disabled]="savingAccess()"
+            class="px-3 py-2 rounded-xl text-xs font-bold border cursor-pointer inline-flex items-center gap-1.5 transition-colors"
+            [class]="localPolicy().duplicateScanAlertEnabled ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-slate-50 text-slate-600 border-slate-200'">
+            <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">content_copy</mat-icon>
+            <span>Duplicate Photocopy Alert: {{ localPolicy().duplicateScanAlertEnabled ? 'ON' : 'OFF' }}</span>
+          </button>
+          <button
+            type="button"
+            (click)="toggleGlobalSecurityFlag('antiFakeStrictMode')"
+            [disabled]="savingAccess()"
+            class="px-3 py-2 rounded-xl text-xs font-bold border cursor-pointer inline-flex items-center gap-1.5 transition-colors"
+            [class]="localPolicy().antiFakeStrictMode ? 'bg-blue-50 text-blue-800 border-blue-200' : 'bg-slate-50 text-slate-600 border-slate-200'">
+            <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">verified_user</mat-icon>
+            <span>Strict HMAC Guard: {{ localPolicy().antiFakeStrictMode ? 'ON' : 'OFF' }}</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3.5">
+        @for (rk of roleCards; track rk.key) {
+          @let cfg = localPolicy().roles[rk.key];
+          <div class="rounded-2xl p-4 border bg-white space-y-3" [class]="cfg.enabled ? 'border-blue-300 shadow-xs' : 'border-slate-200'">
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <h4 class="text-xs font-black text-slate-900">{{ rk.label }}</h4>
+                <p class="text-[11px] text-slate-500">{{ rk.hint }}</p>
+              </div>
+              <button
+                type="button"
+                (click)="toggleRoleAccess(rk.key, 'enabled')"
+                [disabled]="savingAccess()"
+                class="px-2.5 py-1 rounded-lg text-[11px] font-black cursor-pointer transition-colors border"
+                [class]="cfg.enabled ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-100 text-slate-600 border-slate-200'">
+                {{ cfg.enabled ? 'ENABLED' : 'LOCKED' }}
+              </button>
+            </div>
+
+            <div class="space-y-1.5 pt-2 border-t border-slate-100 text-[11px]">
+              <button type="button" (click)="toggleRoleAccess(rk.key, 'canScanCamera')" [disabled]="!cfg.enabled || savingAccess()"
+                class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-slate-50 cursor-pointer disabled:opacity-40">
+                <span class="font-semibold text-slate-700">Live Camera Scan</span>
+                <span class="font-mono font-black" [class]="cfg.canScanCamera ? 'text-emerald-600' : 'text-slate-400'">{{ cfg.canScanCamera ? 'YES' : 'NO' }}</span>
+              </button>
+              <button type="button" (click)="toggleRoleAccess(rk.key, 'canFileScan')" [disabled]="!cfg.enabled || savingAccess()"
+                class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-slate-50 cursor-pointer disabled:opacity-40">
+                <span class="font-semibold text-slate-700">Gallery / File Scan</span>
+                <span class="font-mono font-black" [class]="cfg.canFileScan ? 'text-emerald-600' : 'text-slate-400'">{{ cfg.canFileScan ? 'YES' : 'NO' }}</span>
+              </button>
+              <button type="button" (click)="toggleRoleAccess(rk.key, 'canViewLedger')" [disabled]="!cfg.enabled || savingAccess()"
+                class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-slate-50 cursor-pointer disabled:opacity-40">
+                <span class="font-semibold text-slate-700">View Print Ledger</span>
+                <span class="font-mono font-black" [class]="cfg.canViewLedger ? 'text-emerald-600' : 'text-slate-400'">{{ cfg.canViewLedger ? 'YES' : 'NO' }}</span>
+              </button>
+              <button type="button" (click)="toggleRoleAccess(rk.key, 'canJumpToRecord')" [disabled]="!cfg.enabled || savingAccess()"
+                class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-slate-50 cursor-pointer disabled:opacity-40">
+                <span class="font-semibold text-slate-700">Jump to Table &amp; Row</span>
+                <span class="font-mono font-black" [class]="cfg.canJumpToRecord ? 'text-emerald-600' : 'text-slate-400'">{{ cfg.canJumpToRecord ? 'YES' : 'NO' }}</span>
+              </button>
+              <button type="button" (click)="toggleRoleAccess(rk.key, 'canRevokePrints')" [disabled]="!cfg.enabled || savingAccess()"
+                class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-slate-50 cursor-pointer disabled:opacity-40">
+                <span class="font-semibold text-slate-700">Revoke / Void Printouts</span>
+                <span class="font-mono font-black" [class]="cfg.canRevokePrints ? 'text-rose-600' : 'text-slate-400'">{{ cfg.canRevokePrints ? 'YES' : 'NO' }}</span>
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Optional specific staff/teacher override by name -->
+      <form [formGroup]="allowedNamesForm" (ngSubmit)="saveAllowedOperatorNames()" class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 pt-2 border-t border-slate-200/70">
+        <div class="flex-1 min-w-0">
+          <label class="text-[11px] font-bold text-slate-600 block mb-1">Optional Individual Staff / Teacher Grant (comma-separated names)</label>
+          <input
+            type="text"
+            formControlName="namesText"
+            placeholder="e.g. Prof. Dr. Tahir Malik, Sir Farhan Qureshi"
+            class="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/30" />
+        </div>
+        <button
+          type="submit"
+          [disabled]="savingAccess()"
+          class="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs cursor-pointer shrink-0 sm:mt-5 inline-flex items-center justify-center gap-1.5">
+          <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">save</mat-icon>
+          <span>Save Named Grants</span>
+        </button>
+      </form>
+    </div>
+  }
+
+  <!-- KPI SUMMARY STRIP -->
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+    <div class="apple-card scs-tile-3d rounded-2xl p-4 space-y-1">
+      <div class="text-[10px] font-black uppercase tracking-wider text-slate-500">Registered Signed Prints</div>
+      <div class="text-2xl font-black text-slate-900 font-mono tabular-nums">{{ ledgerStats().totalRegisteredPrints }}</div>
+      <div class="text-[11px] text-emerald-700 font-bold tabular-nums">{{ ledgerStats().activePrints }} Active · {{ ledgerStats().revokedPrints }} Revoked</div>
+    </div>
+    <div class="apple-card scs-tile-3d rounded-2xl p-4 space-y-1">
+      <div class="text-[10px] font-black uppercase tracking-wider text-slate-500">Authentic Verified Scans</div>
+      <div class="text-2xl font-black text-emerald-700 font-mono tabular-nums">{{ ledgerStats().authenticScans }}</div>
+      <div class="text-[11px] text-slate-500 font-semibold tabular-nums">HMAC-SHA256 + DB Matched</div>
+    </div>
+    <div class="apple-card scs-tile-3d rounded-2xl p-4 space-y-1">
+      <div class="text-[10px] font-black uppercase tracking-wider text-slate-500">Blocked Fake / Tampered</div>
+      <div class="text-2xl font-black text-rose-600 font-mono tabular-nums">{{ ledgerStats().blockedFakeOrTampered }}</div>
+      <div class="text-[11px] text-rose-600 font-semibold">Forged or altered prints caught</div>
+    </div>
+    <div class="apple-card scs-tile-3d rounded-2xl p-4 space-y-1">
+      <div class="text-[10px] font-black uppercase tracking-wider text-slate-500">Active Scanner Role</div>
+      <div class="text-lg font-black text-blue-700 uppercase tracking-tight">{{ portalRole() }}</div>
+      <div class="text-[11px] text-slate-500 font-semibold truncate">{{ actorName() }}</div>
+    </div>
+  </div>
+
+  <!-- MAIN WORKSPACE: ANDROID SCANNER VIEWPORT + VERIFICATION INTELLIGENCE -->
+  <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+
+    <!-- LEFT COLUMN: ANDROID-STYLE SCANNER SHELL (5 cols) -->
+    <div class="xl:col-span-5 flex flex-col items-center space-y-4">
+      <div
+        class="w-full max-w-[390px] rounded-[28px] overflow-hidden shadow-xl border border-slate-800/80 relative flex flex-col justify-between select-none"
+        [class]="fillLightFallback() ? 'bg-slate-700' : 'bg-[#121418]'"
+        style="min-height: 580px;">
+
+        <!-- Live Camera Stream / Uploaded File Backdrop -->
+        @if (scannerMode() === 'scan' && cameraActive()) {
+          <video
+            #videoPreview
+            autoplay
+            playsinline
+            muted
+            class="absolute inset-0 w-full h-full object-cover"></video>
+        } @else if (scannerMode() === 'file' && uploadedPreviewUrl()) {
+          <img
+            [src]="uploadedPreviewUrl()"
+            alt="Uploaded QR document preview"
+            referrerpolicy="no-referrer"
+            class="absolute inset-0 w-full h-full object-contain bg-black/95 p-4" />
+        } @else {
+          <div class="absolute inset-0 bg-gradient-to-b from-[#2b2928] via-[#1c1b1c] to-[#0f1013]"></div>
+        }
+
+        <!-- Fill-light soft white boost if hardware torch isn't available -->
+        @if (fillLightFallback()) {
+          <div class="absolute inset-0 bg-white/15 pointer-events-none"></div>
+        }
+
+        <!-- TOP HEADER OVERLAY ("Scanner" left + Flip & Gallery Icon right) -->
+        <div class="relative z-20 flex items-center justify-between px-5 pt-5 pb-3 bg-gradient-to-b from-black/75 via-black/35 to-transparent">
+          <div class="flex items-center gap-2.5">
+            <span class="text-white text-lg font-semibold tracking-tight">Scanner</span>
+            @if (cameraActive()) {
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/25 text-blue-200 border border-blue-400/30">
+                <span class="w-1.5 h-1.5 rounded-full bg-[#1D8EFF] animate-pulse"></span>
+                <span>Live</span>
+              </span>
+            }
+          </div>
+
+          <div class="flex items-center gap-2">
+            @if (scannerMode() === 'scan' && cameraActive()) {
+              <button
+                type="button"
+                (click)="flipCamera()"
+                title="Switch Front / Rear Camera"
+                class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center cursor-pointer transition-colors">
+                <mat-icon class="!text-[20px] !w-[20px] !h-[20px]">cameraswitch</mat-icon>
+              </button>
+            }
+            <button
+              type="button"
+              (click)="openGalleryPicker()"
+              title="Pick QR Photo or Challan Image from Gallery"
+              class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center cursor-pointer transition-colors">
+              <mat-icon class="!text-[22px] !w-[22px] !h-[22px]">photo_library</mat-icon>
+            </button>
+          </div>
+        </div>
+
+        <!-- CENTER VIEWFINDER RETICLE -->
+        <div class="relative z-10 flex-1 flex flex-col items-center justify-center px-6 py-4">
+          @if (scannerMode() === 'scan') {
+            <div class="relative w-56 h-56 sm:w-60 sm:h-60 rounded-2xl bg-white/[0.06] backdrop-blur-[1px] shadow-[0_0_0_9999px_rgba(0,0,0,0.44)] flex items-center justify-center overflow-hidden">
+              <!-- Electric-Blue Android Corner Brackets -->
+              <span class="absolute top-0 left-0 w-9 h-9 border-t-[4px] border-l-[4px] border-[#1D8EFF] rounded-tl-xl pointer-events-none"></span>
+              <span class="absolute top-0 right-0 w-9 h-9 border-t-[4px] border-r-[4px] border-[#1D8EFF] rounded-tr-xl pointer-events-none"></span>
+              <span class="absolute bottom-0 left-0 w-9 h-9 border-b-[4px] border-l-[4px] border-[#1D8EFF] rounded-bl-xl pointer-events-none"></span>
+              <span class="absolute bottom-0 right-0 w-9 h-9 border-b-[4px] border-r-[4px] border-[#1D8EFF] rounded-br-xl pointer-events-none"></span>
+
+              <!-- Animated Blue Laser Sweep -->
+              <div
+                class="absolute left-3 right-3 h-[3px] rounded-full bg-[#1D8EFF] shadow-[0_0_16px_3px_rgba(29,142,255,0.85)] pointer-events-none transition-all duration-700"
+                [class]="cameraActive() ? 'animate-bounce top-1/2' : 'bottom-6'"></div>
+
+              @if (!cameraActive()) {
+                <div class="relative z-10 text-center px-4 space-y-3">
+                  @if (cameraError()) {
+                    <p class="text-[11px] text-amber-200 font-medium leading-snug">{{ cameraError() }}</p>
+                  }
+                  <button
+                    type="button"
+                    (click)="startCamera()"
+                    [disabled]="cameraStarting()"
+                    class="px-4 py-2.5 rounded-xl bg-[#1D8EFF] hover:bg-blue-500 text-white font-bold text-xs cursor-pointer inline-flex items-center gap-1.5 shadow-lg shadow-blue-600/40 transition-colors">
+                    <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">videocam</mat-icon>
+                    <span>{{ cameraStarting() ? 'Opening Camera...' : 'Start Camera Scan' }}</span>
+                  </button>
+                </div>
+              }
+            </div>
+
+            <p class="mt-5 text-center text-[13px] font-medium text-white/95 leading-snug max-w-[230px]">
+              Align the QR code within the frame to scan
+            </p>
+          } @else {
+            <!-- File Scanning Interactive Card -->
+            <div class="relative z-10 w-full rounded-2xl bg-black/70 border border-white/20 p-5 text-center space-y-3 backdrop-blur-md">
+              <div class="w-12 h-12 mx-auto rounded-2xl bg-[#1D8EFF]/20 border border-[#1D8EFF]/50 text-[#1D8EFF] flex items-center justify-center">
+                <mat-icon class="!text-[26px] !w-[26px] !h-[26px]">image_search</mat-icon>
+              </div>
+              <div class="space-y-1">
+                <h4 class="text-sm font-bold text-white">File &amp; Gallery QR Scanning</h4>
+                <p class="text-[11px] text-slate-300 leading-relaxed">
+                  Select a WhatsApp screenshot, Challan photo, ID card picture, or downloaded QR image to verify it.
+                </p>
+              </div>
+              @if (uploadedFileName()) {
+                <div class="text-[11px] font-mono text-blue-300 truncate px-2">{{ uploadedFileName() }}</div>
+              }
+              <button
+                type="button"
+                (click)="openGalleryPicker()"
+                class="w-full py-2.5 rounded-xl bg-[#1D8EFF] hover:bg-blue-500 text-white font-bold text-xs cursor-pointer inline-flex items-center justify-center gap-2 transition-colors">
+                <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">upload_file</mat-icon>
+                <span>Choose Image / Challan Photo</span>
+              </button>
+            </div>
+          }
+        </div>
+
+        <!-- BOTTOM CONTROLS: FLASHLIGHT TORCH + ANDROID MODE STRIP -->
+        <div class="relative z-20 flex flex-col items-center">
+          <div class="pb-4 pt-2 flex items-center gap-4">
+            <button
+              type="button"
+              (click)="toggleTorch()"
+              title="Toggle Flashlight / Fill Light"
+              class="w-11 h-11 rounded-full flex items-center justify-center cursor-pointer transition-colors"
+              [class]="torchEnabled() ? 'bg-[#1D8EFF] text-white shadow-lg shadow-blue-500/40' : 'bg-black/40 hover:bg-black/60 text-white/90'">
+              <mat-icon class="!text-[22px] !w-[22px] !h-[22px]">{{ torchEnabled() ? 'flashlight_on' : 'flashlight_off' }}</mat-icon>
+            </button>
+            @if (cameraActive()) {
+              <button
+                type="button"
+                (click)="stopCamera()"
+                title="Stop Camera"
+                class="w-11 h-11 rounded-full bg-rose-600/80 hover:bg-rose-600 text-white flex items-center justify-center cursor-pointer transition-colors">
+                <mat-icon class="!text-[20px] !w-[20px] !h-[20px]">videocam_off</mat-icon>
+              </button>
+            }
+          </div>
+
+          <!-- Bottom Navigation Bar matching Android Screenshot -->
+          <div class="w-full bg-black px-6 pt-3 pb-4 flex items-center justify-center gap-10 border-t border-white/10">
+            <button
+              type="button"
+              (click)="setScannerMode('file')"
+              class="flex flex-col items-center gap-1 cursor-pointer min-h-[40px] justify-center transition-colors"
+              [class]="scannerMode() === 'file' ? 'text-white font-semibold' : 'text-slate-400 hover:text-white font-normal'">
+              <span class="text-sm tracking-tight">File Scanning</span>
+              <span class="w-1.5 h-1.5 rounded-full transition-opacity" [class]="scannerMode() === 'file' ? 'bg-[#1D8EFF] opacity-100' : 'opacity-0'"></span>
+            </button>
+
+            <button
+              type="button"
+              (click)="setScannerMode('scan')"
+              class="flex flex-col items-center gap-1 cursor-pointer min-h-[40px] justify-center transition-colors"
+              [class]="scannerMode() === 'scan' ? 'text-white font-semibold' : 'text-slate-400 hover:text-white font-normal'">
+              <span class="text-sm tracking-tight">Scan</span>
+              <span class="w-1.5 h-1.5 rounded-full transition-opacity" [class]="scannerMode() === 'scan' ? 'bg-[#1D8EFF] opacity-100' : 'opacity-0'"></span>
+            </button>
+          </div>
+        </div>
+
+        <input
+          #fileInput
+          type="file"
+          accept="image/*"
+          class="hidden"
+          (change)="onQrFileSelected($event)" />
+        <canvas #decodeCanvas class="hidden"></canvas>
+      </div>
+
+      <!-- USB / BLUETOOTH BARCODE GUN & MANUAL TOKEN LOOKUP -->
+      <form
+        [formGroup]="manualLookupForm"
+        (ngSubmit)="submitManualLookup()"
+        class="w-full max-w-[390px] apple-card scs-surface-3d rounded-2xl p-3.5 space-y-2.5">
+        <label class="text-[11px] font-black uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
+          <mat-icon class="!text-[15px] !w-[15px] !h-[15px] text-blue-600">keyboard</mat-icon>
+          <span>USB Scanner Gun / Manual Token Lookup</span>
+        </label>
+        <div class="flex items-center gap-2">
+          <input
+            type="text"
+            formControlName="code"
+            placeholder="Scan or paste SCS1|PRT-..., CH-2026-..., EMP-..."
+            class="flex-1 min-w-0 px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/30" />
+          <button
+            type="submit"
+            [disabled]="isVerifying()"
+            class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs cursor-pointer shrink-0 disabled:opacity-50 min-h-[36px]">
+            {{ isVerifying() ? 'Checking...' : 'Verify' }}
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- RIGHT COLUMN: VERIFICATION INTELLIGENCE, ATTRIBUTION & TABLE LOCATOR (7 cols) -->
+    <div class="xl:col-span-7 space-y-5">
+      @if (verificationResult(); as res) {
+        <!-- VERDICT STATUS CARD -->
+        <div
+          class="rounded-2xl p-5 sm:p-6 border space-y-4 shadow-sm"
+          [class]="res.isReal
+            ? (res.duplicateWarning ? 'bg-amber-50/70 border-amber-300' : 'bg-emerald-50/70 border-emerald-300')
+            : 'bg-rose-50/80 border-rose-300'">
+
+          <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+            <div class="flex items-start gap-3">
+              <div
+                class="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 text-white shadow-sm"
+                [class]="res.isReal ? (res.duplicateWarning ? 'bg-amber-500' : 'bg-emerald-600') : 'bg-rose-600'">
+                <mat-icon class="!text-[26px] !w-[26px] !h-[26px]">
+                  {{ res.isReal ? (res.duplicateWarning ? 'warning' : 'verified') : 'gpp_bad' }}
+                </mat-icon>
+              </div>
+              <div class="space-y-1">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span
+                    class="px-2.5 py-0.5 rounded-lg text-[11px] font-black uppercase tracking-wider"
+                    [class]="res.isReal
+                      ? (res.duplicateWarning ? 'bg-amber-200/80 text-amber-950' : 'bg-emerald-200/80 text-emerald-950')
+                      : 'bg-rose-200 text-rose-950'">
+                    {{ res.verdict === 'AUTHENTIC' ? 'REAL & AUTHENTIC' : (res.verdict === 'LEGACY_MATCH' ? 'MATCHED LIVE DB' : res.verdict) }}
+                  </span>
+                  @if (res.sigValid) {
+                    <span class="text-[11px] font-mono font-bold text-emerald-800">HMAC-SHA256 Valid</span>
+                  } @else {
+                    <span class="text-[11px] font-mono font-bold text-rose-700">Signature Missing / Invalid</span>
+                  }
+                  @if (res.printId) {
+                    <span class="text-[11px] font-mono text-slate-700">Ref: {{ res.printId }}</span>
+                  }
+                </div>
+                <h3 class="text-base sm:text-lg font-black text-slate-900 leading-tight">{{ res.docLabel }}</h3>
+                <p class="text-xs font-medium text-slate-700 leading-relaxed">{{ res.reason }}</p>
+              </div>
+            </div>
+
+            @if (res.location?.tableId && (currentRolePermissions().canJumpToRecord || isOwner())) {
+              <button
+                type="button"
+                (click)="triggerJumpToLocation(res.location)"
+                class="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs cursor-pointer inline-flex items-center gap-1.5 shrink-0 shadow-sm min-h-[42px]">
+                <mat-icon class="!text-[17px] !w-[17px] !h-[17px]">open_in_new</mat-icon>
+                <span>Open Exact Table &amp; Highlight Row</span>
+              </button>
+            }
+          </div>
+
+          <!-- DUPLICATE PHOTOCOPY WARNING -->
+          @if (res.duplicateWarning) {
+            <div class="rounded-xl bg-amber-100/90 border border-amber-300 px-4 py-3 text-xs text-amber-950 flex items-start gap-2.5">
+              <mat-icon class="!text-[18px] !w-[18px] !h-[18px] text-amber-700 shrink-0 mt-0.5">content_copy</mat-icon>
+              <div>
+                <strong>Duplicate Copy / Multi-Scan Warning:</strong>
+                This print reference has now been scanned <strong class="font-mono tabular-nums">{{ res.generator?.scanCount }}</strong> times
+                (previously scanned by <strong>{{ res.generator?.lastScannedBy || 'another operator' }}</strong>). Confirm the student or visitor is not reusing a photocopy of an older challan or pass.
+              </div>
+            </div>
+          }
+
+          <!-- TAMPERED FIELD MISMATCHES -->
+          @if (res.mismatches && res.mismatches.length > 0) {
+            <div class="rounded-xl bg-white border border-rose-300 p-3.5 space-y-2">
+              <div class="text-xs font-black text-rose-700 uppercase tracking-wider flex items-center gap-1.5">
+                <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">report</mat-icon>
+                <span>Tampered / Conflicting Values Detected</span>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                @for (m of res.mismatches; track m.field) {
+                  <div class="rounded-lg bg-rose-50 border border-rose-200 p-2.5 text-xs space-y-1">
+                    <div class="font-black text-slate-900">{{ m.field }}</div>
+                    <div class="flex items-center justify-between text-[11px]">
+                      <span class="text-slate-500">Printed Copy:</span>
+                      <span class="font-mono font-bold text-rose-700">{{ m.printedValue }}</span>
+                    </div>
+                    <div class="flex items-center justify-between text-[11px]">
+                      <span class="text-slate-500">Live School DB:</span>
+                      <span class="font-mono font-bold text-emerald-700">{{ m.liveValue }}</span>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- 3-COLUMN INTELLIGENCE BREAKDOWN: WHERE IT IS · WHO GENERATED IT · LIVE RECORD -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5 pt-1">
+            <!-- WHERE IT EXISTS -->
+            <div class="rounded-xl bg-white border border-slate-200/90 p-3.5 space-y-2">
+              <div class="text-[10px] font-black uppercase tracking-wider text-blue-700 flex items-center gap-1">
+                <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">table_view</mat-icon>
+                <span>Exact Table &amp; Row</span>
+              </div>
+              <div class="space-y-1 text-xs">
+                <div class="font-black text-slate-900 leading-snug">{{ res.location?.tableTitle || 'Not Linked' }}</div>
+                <div class="text-[11px] font-mono text-slate-500">Table ID: {{ res.location?.tableId || '—' }}</div>
+                <div class="text-[11px] text-slate-700">
+                  <strong>Row:</strong> {{ res.location?.rowLabel || res.location?.rowKey || '—' }}
+                  @if (res.location?.rowIndex) {
+                    <span class="font-mono text-slate-500"> (#{{ res.location?.rowIndex }})</span>
+                  }
+                </div>
+                <div class="text-[11px] text-slate-600">
+                  <strong>Portal Option:</strong> <span class="font-mono uppercase">{{ res.location?.portalTab || 'overview' }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- WHO GENERATED IT -->
+            <div class="rounded-xl bg-white border border-slate-200/90 p-3.5 space-y-2">
+              <div class="text-[10px] font-black uppercase tracking-wider text-indigo-700 flex items-center gap-1">
+                <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">badge</mat-icon>
+                <span>Generated By (Creator)</span>
+              </div>
+              <div class="space-y-1 text-xs">
+                <div class="font-black text-slate-900">{{ res.generator?.generatedBy || 'Unknown / Forged' }}</div>
+                <div class="text-[11px] text-slate-600">
+                  <strong>Role:</strong> <span class="uppercase font-mono font-bold text-indigo-700">{{ res.generator?.generatedByRole || 'none' }}</span>
+                </div>
+                <div class="text-[11px] text-slate-600">
+                  <strong>Printed:</strong> {{ res.generator?.printedAt ? (res.generator?.printedAt | date:'medium') : 'Not in print ledger' }}
+                </div>
+                <div class="text-[11px] font-mono font-bold text-slate-700 tabular-nums">
+                  Scans Recorded: {{ res.generator?.scanCount || 0 }}
+                </div>
+              </div>
+            </div>
+
+            <!-- PRINTED VS LIVE SNAPSHOT -->
+            <div class="rounded-xl bg-white border border-slate-200/90 p-3.5 space-y-2">
+              <div class="text-[10px] font-black uppercase tracking-wider text-emerald-700 flex items-center gap-1">
+                <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">fact_check</mat-icon>
+                <span>Live Database Record</span>
+              </div>
+              @if (res.liveRecord) {
+                <div class="space-y-1 text-xs">
+                  <div class="font-black text-slate-900 truncate">
+                    {{ res.liveRecord.studentName || res.liveRecord.fullName || res.liveRecord.name || res.liveRecord.visitorName || res.liveRecord.borrowerName || res.docLabel }}
+                  </div>
+                  @if (res.liveRecord.rollNo || res.liveRecord.empCode || res.liveRecord.challanNo || res.liveRecord.txnRef) {
+                    <div class="text-[11px] font-mono text-slate-600 truncate">
+                      {{ res.liveRecord.challanNo || res.liveRecord.txnRef || res.liveRecord.rollNo || res.liveRecord.empCode }}
+                    </div>
+                  }
+                  @if (res.liveRecord.totalAmount || res.liveRecord.total || res.liveRecord.amount || res.liveRecord.feeAmount || res.liveRecord.netPayable) {
+                    <div class="text-[11px] font-mono font-black text-emerald-700 tabular-nums">
+                      PKR {{ (res.liveRecord.totalAmount || res.liveRecord.total || res.liveRecord.amount || res.liveRecord.feeAmount || res.liveRecord.netPayable) | number }}
+                    </div>
+                  }
+                  <div class="text-[11px] font-bold text-slate-700">
+                    Live Status: <span class="font-mono uppercase">{{ res.liveRecord.status || res.liveRecord.feeStatus || res.liveRecord.auditStatus || 'ACTIVE' }}</span>
+                  </div>
+                </div>
+              } @else {
+                <p class="text-[11px] text-rose-700 font-semibold">No matching live row exists in any campus table for this code.</p>
+              }
+            </div>
+          </div>
+
+          <!-- ALL MATCHING TABLES (if found across multiple ledgers) -->
+          @if (res.allMatches && res.allMatches.length > 1) {
+            <div class="pt-2 border-t border-slate-200/70 space-y-2">
+              <div class="text-[10px] font-black uppercase tracking-wider text-slate-500">Additional Linked Campus Records ({{ res.allMatches.length }})</div>
+              <div class="flex flex-wrap gap-2">
+                @for (hit of res.allMatches; track hit.tableId + hit.rowKey) {
+                  <button
+                    type="button"
+                    (click)="triggerJumpToLocation(hit)"
+                    class="px-3 py-1.5 rounded-xl bg-white border border-slate-200 hover:border-blue-400 text-xs font-bold text-slate-800 cursor-pointer inline-flex items-center gap-1.5 transition-colors">
+                    <mat-icon class="!text-[14px] !w-[14px] !h-[14px] text-blue-600">subdirectory_arrow_right</mat-icon>
+                    <span>{{ hit.tableTitle }} · {{ hit.rowLabel }}</span>
+                  </button>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      } @else {
+        <!-- EMPTY READY STATE -->
+        <div class="apple-card scs-surface-3d rounded-2xl p-6 sm:p-8 space-y-5">
+          <div class="flex items-start gap-4">
+            <div class="w-12 h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+              <mat-icon class="!text-[26px] !w-[26px] !h-[26px]">qr_code_2</mat-icon>
+            </div>
+            <div class="space-y-1">
+              <h3 class="text-base font-black text-slate-900">Ready to Verify Physical Printouts &amp; Photos</h3>
+              <p class="text-xs text-slate-600 leading-relaxed">
+                Start the Android camera on the left, tap <strong>File Scanning</strong> to upload a Challan/Receipt photo, or click <strong>Verify Live</strong> on any row in the Print Verification Ledger below.
+              </p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+            <div class="rounded-xl bg-slate-50 border border-slate-200/80 p-3.5 space-y-1">
+              <div class="text-xs font-black text-slate-900">1. HMAC Anti-Fake Seal</div>
+              <p class="text-[11px] text-slate-600 leading-relaxed">Every challan &amp; slip gets a server-signed <code class="font-mono text-blue-700">SCS1|PRT-...</code> QR token that cannot be forged outside the server.</p>
+            </div>
+            <div class="rounded-xl bg-slate-50 border border-slate-200/80 p-3.5 space-y-1">
+              <div class="text-xs font-black text-slate-900">2. Creator &amp; Copy Audit</div>
+              <p class="text-[11px] text-slate-600 leading-relaxed">Displays who printed the document, exact timestamp, and alerts if a single-use challan photocopy is scanned twice.</p>
+            </div>
+            <div class="rounded-xl bg-slate-50 border border-slate-200/80 p-3.5 space-y-1">
+              <div class="text-xs font-black text-slate-900">3. Instant Table Jump</div>
+              <p class="text-[11px] text-slate-600 leading-relaxed">Identifies the exact table, row key, and portal section, and highlights the live row in one click.</p>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ANTI-FAKE PROTECTION GUIDE ACCORDION / CARD -->
+      <div class="apple-card scs-surface-3d rounded-2xl p-5 space-y-3">
+        <div class="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-700">
+          <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-emerald-600">shield</mat-icon>
+          <span>How Fake Printouts &amp; Altered Challans Are Blocked</span>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-slate-600">
+          <div class="p-3 rounded-xl bg-white border border-slate-200/80">
+            <strong class="text-slate-900 block mb-0.5">Fake QR / Edited PDF Protection</strong>
+            External QR generators lack the server HMAC secret key, so forged codes immediately trigger a red <strong>FAKE</strong> security alert.
+          </div>
+          <div class="p-3 rounded-xl bg-white border border-slate-200/80">
+            <strong class="text-slate-900 block mb-0.5">Fake PAID Stamp / Altered Amount</strong>
+            Scanner compares the signed print snapshot against the live SQLite/Firestore record and flags <strong>TAMPERED</strong> if amounts or PAID status disagree.
+          </div>
+          <div class="p-3 rounded-xl bg-white border border-slate-200/80">
+            <strong class="text-slate-900 block mb-0.5">Photocopy / Double-Use Guard</strong>
+            Tracks scan count per Challan/Gate Pass/Receipt so clerks see a <strong>DUPLICATE SCAN</strong> warning if a slip is presented again.
+          </div>
+          <div class="p-3 rounded-xl bg-white border border-slate-200/80">
+            <strong class="text-slate-900 block mb-0.5">1-Click Document Revocation</strong>
+            If a challan, SLC, or gate pass is lost or cancelled, Owner revokes it in the table below and all copies immediately turn <strong>REVOKED</strong>.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMPLETE TABLE FEATURE: REGISTERED PRINT VERIFICATION LEDGER & SCAN AUDIT HISTORY -->
+  @if (currentRolePermissions().canViewLedger || isOwner()) {
+    <div class="apple-card scs-surface-3d rounded-2xl p-5 sm:p-6 space-y-4">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+        <div class="flex items-center gap-2 flex-wrap">
+          <button
+            type="button"
+            (click)="tableTab.set('ledger')"
+            class="px-4 py-2 rounded-xl text-xs font-extrabold cursor-pointer inline-flex items-center gap-1.5 border transition-colors"
+            [class]="tableTab() === 'ledger' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'">
+            <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">receipt_long</mat-icon>
+            <span>Registered Print Verification Ledger ({{ filteredLedgerItems().length }})</span>
+          </button>
+          <button
+            type="button"
+            (click)="tableTab.set('scans')"
+            class="px-4 py-2 rounded-xl text-xs font-extrabold cursor-pointer inline-flex items-center gap-1.5 border transition-colors"
+            [class]="tableTab() === 'scans' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'">
+            <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">history</mat-icon>
+            <span>Live Scan Audit History ({{ filteredScanLogs().length }})</span>
+          </button>
+        </div>
+
+        <div class="flex items-center gap-2 flex-wrap">
+          @if (tableTab() === 'ledger') {
+            <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+              @for (st of [
+                { id: 'all', label: 'All' },
+                { id: 'active', label: 'Active' },
+                { id: 'scanned', label: 'Scanned' },
+                { id: 'revoked', label: 'Revoked' }
+              ]; track st.id) {
+                <button
+                  type="button"
+                  (click)="ledgerFilterStatus.set($any(st.id))"
+                  class="px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer transition-colors"
+                  [class]="ledgerFilterStatus() === st.id ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-600 hover:text-slate-900'">
+                  {{ st.label }}
+                </button>
+              }
+            </div>
+          }
+
+          <form [formGroup]="ledgerFilterForm" class="relative">
+            <input
+              type="text"
+              formControlName="query"
+              placeholder="Search Print ID, Student, Table, Creator..."
+              class="w-60 sm:w-72 pl-8 pr-3 py-2 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/30" />
+            <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-slate-400 absolute left-2.5 top-2.5 pointer-events-none">search</mat-icon>
+          </form>
+        </div>
+      </div>
+
+      <!-- TABLE 1: PRINT VERIFICATION LEDGER -->
+      @if (tableTab() === 'ledger') {
+        <div class="overflow-x-auto border border-slate-200 rounded-xl">
+          <table appSchoolTable="qr_verification_ledger" tableTitle="Cryptographic Print Verification Ledger" class="w-max min-w-full text-left border-collapse text-xs tabular-nums">
+            <thead class="bg-slate-50 text-slate-600 uppercase font-black text-[10px] border-b border-slate-200">
+              <tr>
+                <th class="px-3.5 py-3">Print Ref ID</th>
+                <th class="px-3.5 py-3">Document Type</th>
+                <th class="px-3.5 py-3">Student / Code</th>
+                <th class="px-3.5 py-3">Exact Table &amp; Row</th>
+                <th class="px-3.5 py-3 text-right">Amount</th>
+                <th class="px-3.5 py-3">Generated By</th>
+                <th class="px-3.5 py-3 text-center">Scans</th>
+                <th class="px-3.5 py-3">Status</th>
+                <th class="px-3.5 py-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 bg-white">
+              @if (filteredLedgerItems().length === 0) {
+                <tr>
+                  <td colspan="9" class="px-4 py-8 text-center text-xs text-slate-500 font-medium">
+                    No signed printouts recorded yet. Print any Bank Challan, Fee Receipt, ID Card, DMC, Gate Pass, or Table Statement and it will automatically register here.
+                  </td>
+                </tr>
+              } @else {
+                @for (item of filteredLedgerItems(); track item.id) {
+                  <tr [attr.data-row-key]="item.printId" class="hover:bg-slate-50/80 transition-colors">
+                    <td class="px-3.5 py-3">
+                      <div class="font-mono font-black text-slate-900">{{ item.printId }}</div>
+                      <div class="font-mono text-[10px] text-slate-500">{{ item.printedAt | date:'short' }}</div>
+                    </td>
+                    <td class="px-3.5 py-3">
+                      <div class="font-bold text-slate-900">{{ item.docLabel }}</div>
+                      <div class="text-[10px] font-mono uppercase text-slate-500">{{ item.docType }}</div>
+                    </td>
+                    <td class="px-3.5 py-3">
+                      <div class="font-bold text-slate-900">{{ item.subjectName || item.rowLabel || '—' }}</div>
+                      <div class="font-mono text-[10px] text-slate-500">{{ item.rollOrCode || item.rowKey || '—' }}</div>
+                    </td>
+                    <td class="px-3.5 py-3">
+                      <div class="font-semibold text-slate-800">{{ item.tableTitle || item.tableId || '—' }}</div>
+                      <div class="text-[10px] font-mono text-slate-500">Row: {{ item.rowKey || '—' }} · Tab: {{ item.portalTab || 'overview' }}</div>
+                    </td>
+                    <td class="px-3.5 py-3 text-right font-mono font-bold text-slate-900">
+                      {{ item.amountPkr > 0 ? ('PKR ' + (item.amountPkr | number)) : '—' }}
+                    </td>
+                    <td class="px-3.5 py-3">
+                      <div class="font-bold text-slate-900">{{ item.generatedBy }}</div>
+                      <div class="text-[10px] font-mono uppercase text-indigo-700">{{ item.generatedByRole }}</div>
+                    </td>
+                    <td class="px-3.5 py-3 text-center font-mono font-black" [class]="item.scanCount > 1 ? 'text-amber-700' : 'text-slate-700'">
+                      {{ item.scanCount }}
+                    </td>
+                    <td class="px-3.5 py-3">
+                      <span
+                        class="px-2 py-0.5 rounded-md text-[10px] font-black uppercase border inline-block"
+                        [class]="item.status === 'REVOKED'
+                          ? 'bg-rose-50 text-rose-700 border-rose-200'
+                          : 'bg-emerald-50 text-emerald-700 border-emerald-200'">
+                        {{ item.status }}
+                      </span>
+                    </td>
+                    <td class="px-3.5 py-3 text-right">
+                      <div class="inline-flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          (click)="verifyCodeNow(item.qrToken || item.printId, 'manual')"
+                          class="px-2.5 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-[11px] cursor-pointer">
+                          Verify Live
+                        </button>
+                        @if (item.tableId && (currentRolePermissions().canJumpToRecord || isOwner())) {
+                          <button
+                            type="button"
+                            (click)="jumpFromLedgerItem(item)"
+                            class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-[11px] cursor-pointer">
+                            Open Row
+                          </button>
+                        }
+                        @if (currentRolePermissions().canRevokePrints || isOwner()) {
+                          <button
+                            type="button"
+                            (click)="toggleRevokeLedgerItem(item)"
+                            class="px-2.5 py-1.5 rounded-lg font-bold text-[11px] cursor-pointer"
+                            [class]="item.status === 'REVOKED'
+                              ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700'
+                              : 'bg-rose-50 hover:bg-rose-100 text-rose-700'">
+                            {{ item.status === 'REVOKED' ? 'Restore' : 'Revoke' }}
+                          </button>
+                        }
+                      </div>
+                    </td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+
+      <!-- TABLE 2: LIVE QR SCAN AUDIT HISTORY -->
+      @if (tableTab() === 'scans') {
+        <div class="overflow-x-auto border border-slate-200 rounded-xl">
+          <table appSchoolTable="qr_scan_audit_logs" tableTitle="QR Verification Scan Audit Logs" class="w-max min-w-full text-left border-collapse text-xs tabular-nums">
+            <thead class="bg-slate-50 text-slate-600 uppercase font-black text-[10px] border-b border-slate-200">
+              <tr>
+                <th class="px-3.5 py-3">Scanned At</th>
+                <th class="px-3.5 py-3">Verdict</th>
+                <th class="px-3.5 py-3">Source</th>
+                <th class="px-3.5 py-3">Scanned Code / Print Ref</th>
+                <th class="px-3.5 py-3">Table &amp; Row</th>
+                <th class="px-3.5 py-3">Creator</th>
+                <th class="px-3.5 py-3">Verified By</th>
+                <th class="px-3.5 py-3">Verification Details</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 bg-white">
+              @if (filteredScanLogs().length === 0) {
+                <tr>
+                  <td colspan="8" class="px-4 py-8 text-center text-xs text-slate-500 font-medium">
+                    No QR scan attempts recorded yet.
+                  </td>
+                </tr>
+              } @else {
+                @for (log of filteredScanLogs(); track log.id) {
+                  <tr [attr.data-row-key]="log.id" class="hover:bg-slate-50/80">
+                    <td class="px-3.5 py-3 font-mono text-[11px] text-slate-600">{{ log.createdAt | date:'short' }}</td>
+                    <td class="px-3.5 py-3">
+                      <span
+                        class="px-2 py-0.5 rounded-md text-[10px] font-black uppercase border inline-block"
+                        [class]="log.isReal
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                          : 'bg-rose-50 text-rose-700 border-rose-200'">
+                        {{ log.verdict }}
+                      </span>
+                    </td>
+                    <td class="px-3.5 py-3 font-mono uppercase text-[10px] text-slate-600">{{ log.scanSource }}</td>
+                    <td class="px-3.5 py-3">
+                      <div class="font-mono font-bold text-slate-900 max-w-[200px] truncate">{{ log.printId || log.scannedCode }}</div>
+                      @if (log.subjectName) {
+                        <div class="text-[11px] text-slate-600">{{ log.subjectName }}</div>
+                      }
+                    </td>
+                    <td class="px-3.5 py-3">
+                      <div class="font-semibold text-slate-800">{{ log.tableTitle || '—' }}</div>
+                      <div class="font-mono text-[10px] text-slate-500">{{ log.rowKey || '—' }}</div>
+                    </td>
+                    <td class="px-3.5 py-3">
+                      <div class="font-semibold text-slate-800">{{ log.generatedBy || '—' }}</div>
+                      <div class="font-mono text-[10px] text-slate-500 uppercase">{{ log.generatedByRole || '' }}</div>
+                    </td>
+                    <td class="px-3.5 py-3">
+                      <div class="font-semibold text-slate-800">{{ log.scannedBy }}</div>
+                      <div class="font-mono text-[10px] text-indigo-700 uppercase">{{ log.scannedByRole }}</div>
+                    </td>
+                    <td class="px-3.5 py-3 max-w-[280px] text-[11px] text-slate-600">{{ log.reason }}</td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  }
+</div>

@@ -105,6 +105,11 @@ import { PdfStudentCardEntry, downloadStudentsCardsPdf, downloadStudentsTablePdf
 import { PasskeyManagerComponent } from '../../../auth_security/passkey-manager/passkey-manager.component';
 import { SchoolPrintStudioComponent } from '../components/school-print-studio/school-print-studio.component';
 import {
+  QrScannerAccessPolicy,
+  QrScannerJumpRequest,
+  SchoolQrScannerComponent
+} from '../components/school-qr-scanner/school-qr-scanner.component';
+import {
   DEFAULT_PRINT_SECTION_ORDER,
   DEFAULT_SCHOOL_PRINT_BRANDING,
   PRINT_SECTION_META,
@@ -127,7 +132,7 @@ import {
   sanitizeBrandingLogoUrl
 } from '../utils/school-print-templates.util';
 
-export type SchoolDashboardTab = 'overview' | 'stage_wise' | 'feed' | 'events' | 'students' | 'teachers' | 'admissions' | 'attendance' | 'finance' | 'invoices' | 'expenses' | 'payment_gateway' | 'transport' | 'library' | 'exams' | 'timetable' | 'hostel' | 'labs' | 'alumni' | 'portals' | 'reports' | 'visitors' | 'assets' | 'print_studio' | 'settings' | 'audit' | 'lesson_plans' | 'appraisals' | 'inspections' | 'exam_moderation' | 'parent_complaints' | 'substitutions' | 'syllabus' | 'safeguarding' | 'directives';
+export type SchoolDashboardTab = 'overview' | 'stage_wise' | 'feed' | 'events' | 'students' | 'teachers' | 'admissions' | 'attendance' | 'finance' | 'invoices' | 'expenses' | 'payment_gateway' | 'transport' | 'library' | 'exams' | 'timetable' | 'hostel' | 'labs' | 'alumni' | 'portals' | 'reports' | 'visitors' | 'assets' | 'print_studio' | 'qr_scanner' | 'settings' | 'audit' | 'lesson_plans' | 'appraisals' | 'inspections' | 'exam_moderation' | 'parent_complaints' | 'substitutions' | 'syllabus' | 'safeguarding' | 'directives';
 export type SchoolPortalRole = 'owner' | 'principal' | 'teacher' | 'student' | 'parent' | 'accountant';
 
 export interface PersonnelIdCardData {
@@ -1125,7 +1130,7 @@ export interface PrincipalFeeCollectionRecord {
 @Component({
   selector: 'app-school-dashboard',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule, FormsModule, MatIconModule, DataTableComponent, AuditReconciliationTrendsComponent, AnalyticsDashboardComponent, SchoolAttendanceHubComponent, SchoolAttendanceAnalyticsComponent, SchoolPrintStudioComponent, SchoolTableDirective, SchoolTableColumnModalComponent, SchoolTableStatementModalComponent, SchoolCustomFormFieldsComponent, SchoolBarcodeComponent, SchoolQrCodeComponent, PasskeyManagerComponent],
+  imports: [CommonModule, LucideAngularModule, FormsModule, MatIconModule, DataTableComponent, AuditReconciliationTrendsComponent, AnalyticsDashboardComponent, SchoolAttendanceHubComponent, SchoolAttendanceAnalyticsComponent, SchoolPrintStudioComponent, SchoolQrScannerComponent, SchoolTableDirective, SchoolTableColumnModalComponent, SchoolTableStatementModalComponent, SchoolCustomFormFieldsComponent, SchoolBarcodeComponent, SchoolQrCodeComponent, PasskeyManagerComponent],
   templateUrl: './school-dashboard.component.html',
   host: {
     '(window:keydown)': 'onHardwareScannerKeydown($event)'
@@ -2285,12 +2290,96 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
   get canManagePrintStudio(): boolean {
     return this.isOwnerPortal && this.isOwnerSession;
   }
+
+  qrScannerAccessPolicy: QrScannerAccessPolicy = {
+    ownerLockedControl: true,
+    antiFakeStrictMode: true,
+    duplicateScanAlertEnabled: true,
+    roles: {
+      owner: { enabled: true, canScanCamera: true, canFileScan: true, canViewLedger: true, canJumpToRecord: true, canRevokePrints: true },
+      principal: { enabled: false, canScanCamera: true, canFileScan: true, canViewLedger: true, canJumpToRecord: true, canRevokePrints: false },
+      teacher: { enabled: false, canScanCamera: true, canFileScan: true, canViewLedger: false, canJumpToRecord: true, canRevokePrints: false },
+      accountant: { enabled: false, canScanCamera: true, canFileScan: true, canViewLedger: true, canJumpToRecord: true, canRevokePrints: false },
+      staff: { enabled: false, canScanCamera: true, canFileScan: false, canViewLedger: false, canJumpToRecord: false, canRevokePrints: false }
+    },
+    allowedUserNames: []
+  };
+
+  get activeQrActorName(): string {
+    switch (this.currentPortalRole) {
+      case 'principal': return this.activePrincipalProfile?.name || 'Campus Principal';
+      case 'teacher': return this.currentTeacherProfile?.name || 'Class Teacher';
+      case 'accountant': return 'Muhammad Rizwan (Accountant)';
+      case 'student': return this.currentStudentProfile?.name || 'Student';
+      case 'parent': return this.currentGuardianProfile?.name || 'Parent';
+      default: return 'School Owner';
+    }
+  }
+
+  get activeQrPortalRole(): 'owner' | 'principal' | 'teacher' | 'accountant' | 'staff' {
+    if (this.currentPortalRole === 'principal') return 'principal';
+    if (this.currentPortalRole === 'teacher') return 'teacher';
+    if (this.currentPortalRole === 'accountant') return 'accountant';
+    return 'owner';
+  }
+
+  private isQrScannerAllowedForRole(roleKey: 'principal' | 'teacher' | 'accountant' | 'staff', actorName: string): boolean {
+    const pol = this.qrScannerAccessPolicy;
+    if (!pol) return false;
+    if (pol.roles?.[roleKey]?.enabled) return true;
+    const named = (pol.allowedUserNames || []).map((n) => String(n).trim().toLowerCase()).filter(Boolean);
+    if (named.length === 0) return false;
+    const cleanActor = String(actorName || '').trim().toLowerCase();
+    return Boolean(cleanActor && named.some((n) => cleanActor.includes(n) || n.includes(cleanActor)));
+  }
+
+  get canPrincipalUseQrScanner(): boolean {
+    return this.isQrScannerAllowedForRole('principal', this.activePrincipalProfile?.name || 'Principal');
+  }
+
+  get canTeacherUseQrScanner(): boolean {
+    return this.isQrScannerAllowedForRole('teacher', this.currentTeacherProfile?.name || '');
+  }
+
+  get canAccountantUseQrScanner(): boolean {
+    return this.isQrScannerAllowedForRole('accountant', 'Muhammad Rizwan');
+  }
+
+  async loadQrScannerAccess(): Promise<void> {
+    try {
+      const res = await this.backend.getSchoolQrScannerAccess(this.activeQrActorName);
+      if (res?.ok && res.policy) {
+        this.qrScannerAccessPolicy = res.policy;
+        this.syncPortalQrScannerAccess();
+        this.cdr.detectChanges();
+      }
+    } catch {}
+  }
+
+  onQrScannerAccessChanged(policy: QrScannerAccessPolicy): void {
+    this.qrScannerAccessPolicy = policy;
+    this.syncPortalQrScannerAccess();
+    this.cdr.detectChanges();
+  }
+
+  private syncPortalQrScannerAccess(): void {
+    if (this.principalTab === 'qr_scanner' && !this.canPrincipalUseQrScanner) {
+      this.principalTab = 'overview';
+    }
+    if (this.teacherTab === 'qr_scanner' && !this.canTeacherUseQrScanner) {
+      this.teacherTab = 'schedule';
+    }
+    if (this.accountantTab === 'qr_scanner' && !this.canAccountantUseQrScanner) {
+      this.accountantTab = 'overview';
+    }
+  }
+
   currentTab: SchoolDashboardTab = 'overview';
-  principalTab: 'overview' | 'stage_wise' | 'master_registries' | 'supervision' | 'substitutions' | 'syllabus' | 'inspections' | 'discipline' | 'directives' | 'appraisals' | 'exam_moderation' | 'academic_reports' | 'faculty_tasks' | 'teacher_leaves' | 'student_certificates' | 'ptm_interventions' | 'admissions_review' | 'fee_oversight' | 'parent_complaints' | 'safeguarding' | 'facilities_transport' | 'library' | 'biometric_attendance' = 'overview';
-  teacherTab: 'schedule' | 'feed' | 'events' | 'attendance' | 'marks' | 'lessons' | 'homework' | 'students' | 'duties' | 'communication' | 'library' = 'schedule';
+  principalTab: 'overview' | 'stage_wise' | 'master_registries' | 'supervision' | 'substitutions' | 'syllabus' | 'inspections' | 'discipline' | 'directives' | 'appraisals' | 'exam_moderation' | 'academic_reports' | 'faculty_tasks' | 'teacher_leaves' | 'student_certificates' | 'ptm_interventions' | 'admissions_review' | 'fee_oversight' | 'parent_complaints' | 'safeguarding' | 'facilities_transport' | 'library' | 'biometric_attendance' | 'qr_scanner' = 'overview';
+  teacherTab: 'schedule' | 'feed' | 'events' | 'attendance' | 'marks' | 'lessons' | 'homework' | 'students' | 'duties' | 'communication' | 'library' | 'qr_scanner' = 'schedule';
   studentTab: 'overview' | 'feed' | 'events' | 'routine' | 'academics' | 'attendance' | 'fee' | 'homework' | 'library' = 'overview';
   parentTab: 'overview' | 'feed' | 'events' | 'attendance' | 'academics' | 'fee' | 'leave' | 'library' | 'communication' = 'overview';
-  accountantTab: 'overview' | 'challans' | 'collect' | 'defaulters' | 'daily_closing' = 'overview';
+  accountantTab: 'overview' | 'challans' | 'collect' | 'defaulters' | 'daily_closing' | 'qr_scanner' = 'overview';
   studentSubTab: 'directory' | 'parents' | 'medical' | 'disciplinary' = 'directory';
   teacherSubTab: 'all_staff' | 'principals' | 'accountants' | 'directory' | 'support_staff' | 'payroll' | 'leaves' | 'lesson_plans' = 'directory';
   financeSubTab: 'monitoring' | 'ledger' | 'cashiering' | 'class_wise' | 'defaulters' | 'teacher_arrears' | 'profit_loss' | 'accounts' | 'alerts_log' | 'daily_closing' = 'monitoring';
@@ -2799,10 +2888,14 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
     setTimeout(scrollTopNow, 50);
   }
 
-  setPrincipalTab(tab: 'overview' | 'stage_wise' | 'master_registries' | 'supervision' | 'substitutions' | 'syllabus' | 'inspections' | 'discipline' | 'directives' | 'appraisals' | 'exam_moderation' | 'academic_reports' | 'faculty_tasks' | 'teacher_leaves' | 'student_certificates' | 'ptm_interventions' | 'admissions_review' | 'fee_oversight' | 'parent_complaints' | 'safeguarding' | 'facilities_transport' | 'library' | 'biometric_attendance'): void {
+  setPrincipalTab(tab: 'overview' | 'stage_wise' | 'master_registries' | 'supervision' | 'substitutions' | 'syllabus' | 'inspections' | 'discipline' | 'directives' | 'appraisals' | 'exam_moderation' | 'academic_reports' | 'faculty_tasks' | 'teacher_leaves' | 'student_certificates' | 'ptm_interventions' | 'admissions_review' | 'fee_oversight' | 'parent_complaints' | 'safeguarding' | 'facilities_transport' | 'library' | 'biometric_attendance' | 'qr_scanner'): void {
     const principalAllowed = this.canPrincipalUseAttendanceVerification || Boolean(this.ownerAttendancePolicy?.roleAccess?.principal?.enabled);
     if (tab === 'biometric_attendance' && !principalAllowed) {
       this.showToast('Attendance Verification access is locked by School Owner Setup.', 'warning');
+      return;
+    }
+    if (tab === 'qr_scanner' && !this.canPrincipalUseQrScanner) {
+      this.showToast('QR Scanner access is locked for Principal by the School Owner. Ask Owner to enable it in QR Scanner > Owner Access Controls.', 'warning');
       return;
     }
     this.principalTab = tab;
@@ -2847,6 +2940,7 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
 
   get currentPrincipalTabLabel(): string {
     switch (this.principalTab) {
+      case 'qr_scanner': return 'QR Scanner — Anti-Fake Document Verification & Exact Table Lookup';
       case 'biometric_attendance': return 'Principal Biometric Attendance & Sensor Gate Station (Eye-Scan & Fingerprint)';
       case 'stage_wise': return 'Stage-Wise Academic Operations & Student Maintenance (Nursery to Class 10)';
       case 'master_registries': return 'Institutional Master Registries & Data Tables (اسڪول ماسٽر ڊيٽا ٽيبلز)';
@@ -2875,6 +2969,7 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
 
   get currentTeacherTabLabel(): string {
     switch (this.teacherTab) {
+      case 'qr_scanner': return 'QR Scanner — Verify Student Cards, Challans & DMCs';
       case 'feed': return 'Campus Top Feed & Academic Notices';
       case 'events': return 'School Events & Organizing Committees';
       case 'attendance': return 'Class Attendance Roll Call & Verification';
@@ -2957,10 +3052,14 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
     this.resetScrollToTop();
   }
 
-  setTeacherTab(tab: 'schedule' | 'feed' | 'events' | 'attendance' | 'marks' | 'lessons' | 'homework' | 'students' | 'duties' | 'communication' | 'library'): void {
+  setTeacherTab(tab: 'schedule' | 'feed' | 'events' | 'attendance' | 'marks' | 'lessons' | 'homework' | 'students' | 'duties' | 'communication' | 'library' | 'qr_scanner'): void {
     const teacherAllowed = this.canTeacherUseAttendanceVerification || Boolean(this.ownerAttendancePolicy?.roleAccess?.teacher?.enabled);
     if (tab === 'attendance' && !teacherAllowed) {
       this.showToast('Class Attendance Verification access is disabled by School Owner Setup.', 'warning');
+      return;
+    }
+    if (tab === 'qr_scanner' && !this.canTeacherUseQrScanner) {
+      this.showToast('QR Scanner access is locked for Teachers by the School Owner.', 'warning');
       return;
     }
     this.teacherTab = tab;
@@ -3221,7 +3320,7 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
     const ownerExplicitTabs = new Set([
       'students', 'teachers', 'admissions', 'attendance', 'finance', 'payment_gateway',
       'transport', 'exams', 'timetable', 'portals', 'reports', 'settings',
-      'hostel', 'labs', 'alumni', 'expenses', 'invoices', 'audit', 'print_studio',
+      'hostel', 'labs', 'alumni', 'expenses', 'invoices', 'audit', 'print_studio', 'qr_scanner',
       'lesson_plans', 'appraisals', 'inspections', 'exam_moderation',
       'parent_complaints', 'substitutions', 'syllabus', 'safeguarding', 'directives'
     ]);
@@ -3248,7 +3347,9 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
 
     // 2. Route tabs cleanly within the resolved active portal role!
     if (this.currentPortalRole === 'principal') {
-      if (v.includes('biometric') || v.includes('attendance')) {
+      if (v.includes('qr_scanner') || v.includes('qr-scanner')) {
+        this.principalTab = this.canPrincipalUseQrScanner ? 'qr_scanner' : 'overview';
+      } else if (v.includes('biometric') || v.includes('attendance')) {
         if (this.canPrincipalUseAttendanceVerification || this.ownerAttendancePolicy?.roleAccess?.principal?.enabled) {
           this.principalTab = 'biometric_attendance';
         } else {
@@ -3277,7 +3378,8 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
       else if (v.includes('facility') || v.includes('transport_supervision') || v.includes('bus_route')) this.principalTab = 'facilities_transport';
       else this.principalTab = 'overview';
     } else if (this.currentPortalRole === 'accountant') {
-      if (v.includes('challan')) this.accountantTab = 'challans';
+      if (v.includes('qr_scanner') || v.includes('qr-scanner')) this.accountantTab = this.canAccountantUseQrScanner ? 'qr_scanner' : 'overview';
+      else if (v.includes('challan')) this.accountantTab = 'challans';
       else if (v.includes('collect') || v.includes('receipt') || v.includes('cash')) this.accountantTab = 'collect';
       else if (v.includes('defaulter') || v.includes('reminder')) this.accountantTab = 'defaulters';
       else if (v.includes('closing') || v.includes('reconcil') || v.includes('owner')) {
@@ -3285,7 +3387,8 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
         this.populateAccountantClosingFromReceipts();
       } else this.accountantTab = 'overview';
     } else if (this.currentPortalRole === 'teacher') {
-      if (v.includes('feed') || v.includes('notice')) this.teacherTab = 'feed';
+      if (v.includes('qr_scanner') || v.includes('qr-scanner')) this.teacherTab = this.canTeacherUseQrScanner ? 'qr_scanner' : 'schedule';
+      else if (v.includes('feed') || v.includes('notice')) this.teacherTab = 'feed';
       else if (v.includes('event')) this.teacherTab = 'events';
       else if (v.includes('attendance')) {
         if (this.canTeacherUseAttendanceVerification || this.ownerAttendancePolicy?.roleAccess?.teacher?.enabled) {
@@ -3694,7 +3797,8 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
     notices: true,
     admin_settings: true,
     password_change: true,
-    print_studio: true
+    print_studio: true,
+    qr_scanner: true
   };
 
   releaseAllModules(): void {
@@ -3713,6 +3817,7 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
     switch (id) {
       case 'portals': return 'shield-check';
       case 'print_studio': return 'printer';
+      case 'qr_scanner': return 'qr-code';
       case 'settings': return 'settings';
       case 'overview': return 'layout-dashboard';
       case 'students': return 'users';
@@ -3772,6 +3877,7 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
     visitors: 1,
     assets: 1,
     print_studio: 1,
+    qr_scanner: 1,
     settings: 1,
     audit: 1,
     lesson_plans: 1,
@@ -6661,6 +6767,22 @@ INSTRUCTIONS:
     const rec = receipt || this.activeCashieringReceipt;
     if (!rec) return;
     const recNo = rec.receiptNo || rec.challanNo || rec.id || `REC-${Date.now().toString().slice(-6)}`;
+    const amt = Number(rec.amount || rec.amountPaid || 0);
+    const signed = await this.registerSignedPrintForDoc({
+      docType: 'cashier_receipt',
+      docLabel: `Official Cashier Fee Receipt (${recNo})`,
+      tableId: 'fee_receipts_cashiering',
+      tableTitle: 'Fee Collection & Cashiering Register',
+      portalTab: 'finance',
+      subTab: 'cashiering',
+      rowKey: rec.challanNo || recNo,
+      rowLabel: rec.studentName || 'Student',
+      subjectName: rec.studentName || 'Student',
+      rollOrCode: rec.rollNo || rec.studentRollNo || recNo,
+      amountPkr: amt,
+      statusSnapshot: rec.auditStatus || 'PAID',
+      snapshot: { receiptNo: recNo, challanNo: rec.challanNo || recNo, totalAmount: amt, status: rec.auditStatus || 'PAID' }
+    });
     const html = buildCashieringReceiptA4Html(
       {
         receiptNo: recNo,
@@ -6674,8 +6796,11 @@ INSTRUCTIONS:
         resourceReference: rec.resourceReference || recNo,
         collectedBy: rec.collectedBy || 'Accounts Desk',
         collectorRole: rec.collectorRole,
-        amount: Number(rec.amount || rec.amountPaid || 0),
-        notes: rec.notes
+        amount: amt,
+        notes: rec.notes,
+        qrPayload: signed.qrToken,
+        printId: signed.printId,
+        generatedBy: rec.collectedBy || this.activeQrActorName
       },
       this.printBranding
     );
@@ -9965,6 +10090,8 @@ INSTRUCTIONS:
       const sub = a.replace('accountant-', '').replace('accountant', '').trim();
       if (!sub || sub === 'portal' || sub === 'overview') {
         this.setAccountantTab('overview');
+      } else if (sub.includes('qr_scanner') || sub.includes('qr-scanner') || sub === 'scanner') {
+        this.setAccountantTab('qr_scanner');
       } else if (sub.includes('challan')) {
         this.setAccountantTab('challans');
       } else if (sub.includes('collect') || sub.includes('receipt') || sub.includes('cash')) {
@@ -9984,13 +10111,15 @@ INSTRUCTIONS:
       a === 'principal' ||
       a === 'principal-portal' ||
       a.startsWith('principal-') ||
-      (this.currentPortalRole === 'principal' && (a === 'overview' || a === 'library' || principalSubTabs.has(a)))
+      (this.currentPortalRole === 'principal' && (a === 'overview' || a === 'library' || a === 'qr_scanner' || principalSubTabs.has(a)))
     ) {
       this.currentPortalRole = 'principal';
       try { localStorage.setItem('activeSchoolRole', 'principal'); } catch {}
       const sub = a.replace('principal-', '').replace('principal', '').trim();
       if (!sub || sub === 'portal' || sub === 'overview') {
         this.setPrincipalTab('overview');
+      } else if (sub.includes('qr_scanner') || sub.includes('qr-scanner')) {
+        this.setPrincipalTab('qr_scanner');
       } else if (sub.includes('biometric')) {
         this.setPrincipalTab('biometric_attendance');
       } else if (sub.includes('stage')) {
@@ -10045,13 +10174,15 @@ INSTRUCTIONS:
     const isTeacherSub = this.currentPortalRole === 'teacher' && (
       a === 'feed' || a === 'events' || a === 'schedule' || a.includes('attendance') ||
       a === 'marks' || a === 'lessons' || a === 'homework' || a === 'students' ||
-      a === 'communication' || a === 'library'
+      a === 'communication' || a === 'library' || a === 'qr_scanner'
     );
     if (a === 'teacher' || a === 'teacher-portal' || a.startsWith('teacher-') || isTeacherSub) {
       this.currentPortalRole = 'teacher';
       try { localStorage.setItem('activeSchoolRole', 'teacher'); } catch {}
       const sub = a.replace('teacher-', '').replace('teacher', '').trim();
-      if (sub === 'feed' || sub.includes('feed') || sub.includes('notice')) {
+      if (sub.includes('qr_scanner') || sub.includes('qr-scanner')) {
+        this.setTeacherTab('qr_scanner');
+      } else if (sub === 'feed' || sub.includes('feed') || sub.includes('notice')) {
         this.setTeacherTab('feed');
       } else if (sub === 'events' || sub.includes('event')) {
         this.setTeacherTab('events');
@@ -11300,6 +11431,8 @@ INSTRUCTIONS:
         this.syncPortalAttendanceTabAccess();
         this.cdr.detectChanges();
       }
+
+      void this.loadQrScannerAccess();
 
       if (fpRes?.ok && Array.isArray(fpRes.profiles)) {
         const mapFp = new Map<string, FaceProfileRecord>();
@@ -15283,6 +15416,10 @@ INSTRUCTIONS:
       this.showToast('Access Restricted: Print & Hardware Studio is restricted to the School Owner.', 'warning');
       return;
     }
+    if (nextTab === 'qr_scanner' && !this.isOwnerPortal && !this.isOwnerSession) {
+      this.showToast('Use your role portal QR Scanner option (if enabled by School Owner).', 'warning');
+      return;
+    }
     if (this.currentTab === nextTab) {
       this.cdr.detectChanges();
       this.resetScrollToTop();
@@ -15295,6 +15432,190 @@ INSTRUCTIONS:
     this.tabChanged.emit(tab);
     this.cdr.detectChanges();
     this.resetScrollToTop();
+  }
+
+  async registerSignedPrintForDoc(params: {
+    docType: string;
+    docLabel: string;
+    tableId: string;
+    tableTitle: string;
+    portalTab: string;
+    subTab?: string;
+    rowKey: string;
+    rowLabel?: string;
+    subjectName?: string;
+    rollOrCode?: string;
+    amountPkr?: number;
+    statusSnapshot?: string;
+    snapshot?: Record<string, any>;
+  }): Promise<{ qrToken?: string; printId?: string }> {
+    try {
+      const { snapshot, ...rest } = params;
+      const res = await this.backend.registerSchoolPrintVerification(
+        {
+          ...rest,
+          generatedBy: this.activeQrActorName,
+          generatedByRole: this.activeQrPortalRole,
+          ...(snapshot ? { payload: snapshot } : {})
+        },
+        this.selectedBranchScope !== 'ALL' ? this.selectedBranchScope : undefined,
+        this.selectedWingScope !== 'ALL' ? this.selectedWingScope : undefined
+      );
+      if (res?.ok && res.qrToken) {
+        return { qrToken: res.qrToken, printId: res.printId };
+      }
+    } catch {}
+    return {};
+  }
+
+  handleQrScannerJump(req: QrScannerJumpRequest): void {
+    const tid = (req.tableId || '').toLowerCase();
+    const pTab = (req.portalTab || 'overview').toLowerCase();
+    const hint = req.searchHint || req.rowKey || req.rowLabel || '';
+
+    if (this.currentPortalRole === 'principal') {
+      if (tid.includes('student') || tid === 'students_master') {
+        this.openPrincipalMasterRegistry('students');
+      } else if (tid.includes('teacher') || tid === 'teachers_master') {
+        this.openPrincipalMasterRegistry('teachers');
+      } else if (tid.includes('parent') || tid === 'parents_master') {
+        this.openPrincipalMasterRegistry('parents');
+      } else if (tid.includes('fee') || tid.includes('challan') || tid.includes('cashier') || pTab === 'finance') {
+        this.setPrincipalTab('fee_oversight');
+      } else if (tid.includes('slc')) {
+        this.setPrincipalTab('student_certificates');
+      } else if (tid.includes('library')) {
+        this.setPrincipalTab('library');
+      } else if (tid.includes('attendance')) {
+        this.setPrincipalTab(this.canPrincipalUseAttendanceVerification ? 'biometric_attendance' : 'overview');
+      } else {
+        this.setPrincipalTab('master_registries');
+      }
+    } else if (this.currentPortalRole === 'accountant') {
+      if (tid.includes('challan') || tid.includes('invoice')) {
+        this.setAccountantTab('challans');
+      } else if (tid.includes('defaulter')) {
+        this.setAccountantTab('defaulters');
+      } else if (tid.includes('closing') || tid.includes('reconcil')) {
+        this.setAccountantTab('daily_closing');
+      } else {
+        this.setAccountantTab('collect');
+      }
+    } else if (this.currentPortalRole === 'teacher') {
+      if (tid.includes('academics') || tid.includes('marks') || tid.includes('grade')) {
+        this.setTeacherTab('marks');
+      } else if (tid.includes('attendance')) {
+        this.setTeacherTab(this.canTeacherUseAttendanceVerification ? 'attendance' : 'students');
+      } else if (tid.includes('library')) {
+        this.setTeacherTab('library');
+      } else {
+        this.setTeacherTab('students');
+      }
+    } else {
+      // Owner ERP routing
+      if (tid === 'fee_challans_invoices' || pTab === 'invoices') {
+        this.setTab('invoices');
+      } else if (tid === 'fee_receipts_cashiering') {
+        this.setTab('finance');
+        this.financeSubTab = 'cashiering';
+      } else if (tid === 'online_payment_slips' || tid === 'owner_payment_gateway' || pTab === 'payment_gateway') {
+        this.setTab('payment_gateway');
+      } else if (tid === 'fee_defaulters') {
+        this.setTab('finance');
+        this.financeSubTab = 'defaulters';
+      } else if (pTab === 'finance') {
+        this.setTab('finance');
+        if (req.subTab) this.financeSubTab = req.subTab as any;
+      } else if (tid === 'owner_payroll' || tid === 'teachers_master' || tid === 'owner_all_personnel' || pTab === 'teachers') {
+        this.setTab('teachers');
+        if (tid === 'owner_payroll') this.teacherSubTab = 'payroll';
+        else if (tid === 'owner_all_personnel') this.teacherSubTab = 'all_staff';
+        else this.teacherSubTab = 'directory';
+      } else if (tid.includes('student') || tid === 'students_master' || pTab === 'students') {
+        this.setTab('students');
+        this.studentSubTab = 'directory';
+      } else if (tid.includes('academics') || pTab === 'exams') {
+        this.setTab('exams');
+      } else if (tid.includes('library') || pTab === 'library') {
+        this.setTab('library');
+      } else if (tid.includes('visitor') || pTab === 'visitors') {
+        this.setTab('visitors');
+      } else if (tid.includes('slc') || pTab === 'audit') {
+        this.setTab('audit');
+        if (tid.includes('slc')) this.setAuditSubTab('slc');
+      } else if (tid.includes('admission') || pTab === 'admissions') {
+        this.setTab('admissions');
+      } else if (tid.includes('attendance') || pTab === 'attendance') {
+        this.setTab('attendance');
+      } else {
+        this.setTab((req.portalTab as SchoolDashboardTab) || 'overview');
+      }
+    }
+
+    this.cdr.detectChanges();
+    this.highlightLocatedTableRow(req.tableId, req.rowKey || hint, req.rowLabel || hint, req.tableTitle);
+  }
+
+  private highlightLocatedTableRow(tableId: string, rowKey?: string, searchHint?: string, tableTitle?: string): void {
+    if (typeof document === 'undefined') return;
+    const normKey = String(rowKey || '').trim().toLowerCase();
+    const normHint = String(searchHint || '').trim().toLowerCase();
+    const attemptDelays = [100, 260, 520, 900];
+    let highlighted = false;
+
+    attemptDelays.forEach((delay) => {
+      setTimeout(() => {
+        if (highlighted) return;
+        const tables = Array.from(document.querySelectorAll('table')) as HTMLTableElement[];
+        const exactTable = tables.find((t) => (t.getAttribute('appSchoolTable') || '').toLowerCase() === String(tableId || '').toLowerCase());
+        const orderedTables = exactTable ? [exactTable, ...tables.filter((t) => t !== exactTable)] : tables;
+
+        let matchedRow: HTMLElement | null = null;
+        for (const tbl of orderedTables) {
+          const rows = Array.from(tbl.querySelectorAll('tbody tr')) as HTMLElement[];
+          if (normKey) {
+            matchedRow = rows.find((r) => {
+              const dk = (r.getAttribute('data-row-key') || '').trim().toLowerCase();
+              return dk === normKey || (dk.length > 2 && (dk.includes(normKey) || normKey.includes(dk)));
+            }) || null;
+          }
+          if (!matchedRow && (normKey || normHint)) {
+            matchedRow = rows.find((r) => {
+              const txt = (r.textContent || '').toLowerCase();
+              return (normKey && txt.includes(normKey)) || (normHint && normHint.length >= 3 && txt.includes(normHint));
+            }) || null;
+          }
+          if (matchedRow) break;
+        }
+
+        if (matchedRow) {
+          highlighted = true;
+          matchedRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          const prevOutline = matchedRow.style.outline;
+          const prevBg = matchedRow.style.backgroundColor;
+          const prevTransition = matchedRow.style.transition;
+          matchedRow.style.transition = 'all 0.3s ease';
+          matchedRow.style.outline = '3px solid #1D8EFF';
+          matchedRow.style.backgroundColor = 'rgba(29, 142, 255, 0.14)';
+          setTimeout(() => {
+            if (matchedRow) {
+              matchedRow.style.outline = prevOutline;
+              matchedRow.style.backgroundColor = prevBg;
+              matchedRow.style.transition = prevTransition;
+            }
+          }, 4200);
+          this.showToast(
+            `Located & highlighted row "${rowKey || searchHint}" in ${tableTitle || tableId}.`,
+            'success'
+          );
+        } else if (delay === attemptDelays[attemptDelays.length - 1]) {
+          this.showToast(
+            `Opened ${tableTitle || tableId} (Ref: ${rowKey || searchHint}).`,
+            'info'
+          );
+        }
+      }, delay);
+    });
   }
 
   setPage(tab: SchoolDashboardTab, page: number) {
@@ -20517,9 +20838,24 @@ INSTRUCTIONS:
   async printBorrowSlip(): Promise<void> {
     const rec = this.selectedCirculationSlip;
     if (!rec) return;
+    const slipId = rec.issueNo || rec.id;
+    const signed = await this.registerSignedPrintForDoc({
+      docType: 'borrow_slip',
+      docLabel: `Library Borrow Slip (${slipId})`,
+      tableId: 'library_circulation',
+      tableTitle: 'Library Book Circulation Ledger',
+      portalTab: 'library',
+      rowKey: slipId,
+      rowLabel: rec.borrowerName,
+      subjectName: rec.borrowerName,
+      rollOrCode: rec.borrowerId || slipId,
+      amountPkr: Number(rec.fineAmount || 0),
+      statusSnapshot: rec.status || 'Issued',
+      snapshot: { slipId, bookTitle: rec.bookTitle, borrowerName: rec.borrowerName, status: rec.status }
+    });
     const html = buildBorrowSlipPrintHtml(
       {
-        slipId: rec.issueNo || rec.id,
+        slipId,
         bookTitle: rec.bookTitle,
         bookIsbn: rec.isbn || 'N/A',
         accessionCode: rec.bookId || rec.isbn,
@@ -20530,13 +20866,16 @@ INSTRUCTIONS:
         dueDate: rec.dueDate,
         status: rec.status,
         fineAmount: Number(rec.fineAmount || 0),
-        dailyFineRate: Number(this.dailyFineRatePKR || 50)
+        dailyFineRate: Number(this.dailyFineRatePKR || 50),
+        qrPayload: signed.qrToken,
+        printId: signed.printId,
+        generatedBy: this.activeQrActorName
       },
       this.printBranding
     );
     const ok = await printHtmlInHiddenFrame(html);
     this.showToast(
-      ok ? `Prepared branded Library Circulation Slip (${rec.issueNo || rec.id}).` : 'Print dialog unavailable in this view.',
+      ok ? `Prepared branded Library Circulation Slip (${slipId}).` : 'Print dialog unavailable in this view.',
       ok ? 'success' : 'warning'
     );
   }
@@ -22439,9 +22778,23 @@ INSTRUCTIONS:
   async printGatePassVoucher(): Promise<void> {
     const v = this.activeGatePassVisitor;
     if (!v) return;
+    const passCode = v.gatePassNo || v.badgeNo || v.id;
+    const signed = await this.registerSignedPrintForDoc({
+      docType: 'gate_pass',
+      docLabel: `Visitor Gate Pass (${passCode})`,
+      tableId: 'owner_visitors',
+      tableTitle: 'Visitor & Security Gate Passes',
+      portalTab: 'visitors',
+      rowKey: passCode,
+      rowLabel: v.visitorName,
+      subjectName: v.visitorName,
+      rollOrCode: passCode,
+      statusSnapshot: v.status || 'Checked In',
+      snapshot: { passCode, visitorName: v.visitorName, status: v.status }
+    });
     const html = buildGatePassPrintHtml(
       {
-        passCode: v.gatePassNo || v.badgeNo || v.id,
+        passCode,
         visitorName: v.visitorName,
         cnicOrId: v.cnicOrPhone,
         phone: v.cnicOrPhone,
@@ -22450,13 +22803,16 @@ INSTRUCTIONS:
         vehiclePlate: v.vehicleNo,
         checkInTime: v.checkInTime,
         status: v.status,
-        issuedBy: 'Campus Security Desk'
+        issuedBy: this.activeQrActorName || 'Campus Security Desk',
+        qrPayload: signed.qrToken,
+        printId: signed.printId,
+        generatedBy: this.activeQrActorName
       },
       this.printBranding
     );
     const ok = await printHtmlInHiddenFrame(html);
     this.showToast(
-      ok ? `Prepared branded Gate Pass (${v.gatePassNo || v.id}) for printing.` : 'Print dialog unavailable in this view.',
+      ok ? `Prepared branded Gate Pass (${passCode}) for printing.` : 'Print dialog unavailable in this view.',
       ok ? 'success' : 'warning'
     );
   }
@@ -22785,6 +23141,22 @@ INSTRUCTIONS:
     const allow = Number(p.allowances || 0);
     const houseAllowance = Math.round(allow * 0.65);
     const medicalAllowance = Math.max(0, allow - houseAllowance);
+    const netPay = Number(p.netPayable ?? (Number(p.baseSalary || 0) + allow - Number(p.deductions || 0)));
+    const signed = await this.registerSignedPrintForDoc({
+      docType: 'salary_slip',
+      docLabel: `Monthly Salary Slip (${p.id})`,
+      tableId: 'owner_payroll',
+      tableTitle: 'Staff Payroll & Salary Slips',
+      portalTab: 'teachers',
+      subTab: 'payroll',
+      rowKey: p.staffId || p.id,
+      rowLabel: p.staffName,
+      subjectName: p.staffName,
+      rollOrCode: p.staffId || p.id,
+      amountPkr: netPay,
+      statusSnapshot: p.status || 'Paid',
+      snapshot: { slipNo: p.id, totalAmount: netPay, status: p.status }
+    });
     const html = buildSalarySlipHtml(
       {
         slipNo: p.id,
@@ -22800,7 +23172,10 @@ INSTRUCTIONS:
         taxDeduction: Number(p.deductions || 0),
         advanceDeduction: 0,
         paymentMode: p.paymentMethod || this.printBranding.salaryPayModeLabel || 'Bank Transfer',
-        statusLabel: p.status
+        statusLabel: p.status,
+        qrPayload: signed.qrToken,
+        printId: signed.printId,
+        generatedBy: this.activeQrActorName
       },
       this.printBranding
     );
@@ -23338,9 +23713,22 @@ INSTRUCTIONS:
   async printCard(): Promise<void> {
     if (this.isAdmitCardModalOpen && this.selectedCardStudent) {
       const stu = this.selectedCardStudent;
+      const admitCode = this.admitCardBarcodeValue;
+      const signed = await this.registerSignedPrintForDoc({
+        docType: 'admit_card',
+        docLabel: `Exam Admit Card (${admitCode})`,
+        tableId: 'students_master',
+        tableTitle: 'Students Master Directory',
+        portalTab: 'exams',
+        rowKey: stu.rollNo || stu.id,
+        rowLabel: stu.name,
+        subjectName: stu.name,
+        rollOrCode: admitCode,
+        statusSnapshot: 'ELIGIBLE'
+      });
       const html = buildAdmitCardPrintHtml(
         {
-          admitCode: this.admitCardBarcodeValue,
+          admitCode,
           studentName: stu.name,
           guardianName: stu.guardian || 'Parent / Guardian',
           rollNo: stu.rollNo || '1001',
@@ -23350,7 +23738,10 @@ INSTRUCTIONS:
           session: this.dmcAcademicYear || '2025 - 2026',
           seatNo: `DESK-${stu.rollNo || '1001'}`,
           photoDataUrl: stu.image,
-          initials: this.getStaffInitials(stu.name)
+          initials: this.getStaffInitials(stu.name),
+          qrPayload: signed.qrToken,
+          printId: signed.printId,
+          generatedBy: this.activeQrActorName
         },
         this.printBranding
       );
@@ -23364,18 +23755,35 @@ INSTRUCTIONS:
 
     if (this.selectedCardPersonnel) {
       const p = this.selectedCardPersonnel;
+      const cardCode = this.idCardBarcodeValue;
+      const signed = await this.registerSignedPrintForDoc({
+        docType: 'id_card',
+        docLabel: `${String(p.category || 'STAFF').toUpperCase()} Gate ID Card`,
+        tableId: 'owner_all_personnel',
+        tableTitle: 'Complete Campus Personnel Directory',
+        portalTab: 'teachers',
+        subTab: 'all_staff',
+        rowKey: p.empCode || p.id,
+        rowLabel: p.name,
+        subjectName: p.name,
+        rollOrCode: cardCode,
+        statusSnapshot: 'ACTIVE'
+      });
       const html = buildStudentIdCardPrintHtml(
         {
           holderName: p.name,
           roleOrGrade: `${p.roleTitle} · ${p.department}`,
-          code: this.idCardBarcodeValue,
+          code: cardCode,
           guardianOrDept: p.department,
           phone: p.phone || this.printBranding.phone,
           validThrough: this.printBranding.idCardValidThru || 'Mar 2027',
           campusBranch: p.branchName || this.activeScopeSummaryLabel || 'Main Campus',
           initials: this.getStaffInitials(p.name),
           photoDataUrl: p.image,
-          cardTypeLabel: `${String(p.category || 'STAFF').toUpperCase()} GATE CARD`
+          cardTypeLabel: `${String(p.category || 'STAFF').toUpperCase()} GATE CARD`,
+          qrPayload: signed.qrToken,
+          printId: signed.printId,
+          generatedBy: this.activeQrActorName
         },
         this.printBranding
       );
@@ -23389,11 +23797,24 @@ INSTRUCTIONS:
 
     if (this.selectedCardStudent) {
       const stu = this.selectedCardStudent;
+      const cardCode = this.idCardBarcodeValue;
+      const signed = await this.registerSignedPrintForDoc({
+        docType: 'id_card',
+        docLabel: `Student Gate ID Card (${cardCode})`,
+        tableId: 'students_master',
+        tableTitle: 'Students Master Directory',
+        portalTab: 'students',
+        rowKey: stu.rollNo || stu.id,
+        rowLabel: stu.name,
+        subjectName: stu.name,
+        rollOrCode: cardCode,
+        statusSnapshot: 'ACTIVE'
+      });
       const html = buildStudentIdCardPrintHtml(
         {
           holderName: stu.name,
           roleOrGrade: `${stu.grade || 'Class'}${stu.section ? ` (${stu.section})` : ''}`,
-          code: this.idCardBarcodeValue,
+          code: cardCode,
           guardianOrDept: stu.guardian || 'Guardian',
           phone: stu.guardianPhone || this.printBranding.phone,
           validThrough: this.printBranding.idCardValidThru || 'Mar 2027',
@@ -23401,7 +23822,10 @@ INSTRUCTIONS:
           initials: this.getStaffInitials(stu.name),
           photoDataUrl: stu.image,
           bloodGroup: stu.bloodGroup,
-          cardTypeLabel: this.printBranding.idCardBadgeLabel || 'STUDENT GATE CARD'
+          cardTypeLabel: this.printBranding.idCardBadgeLabel || 'STUDENT GATE CARD',
+          qrPayload: signed.qrToken,
+          printId: signed.printId,
+          generatedBy: this.activeQrActorName
         },
         this.printBranding
       );
@@ -23435,6 +23859,7 @@ INSTRUCTIONS:
     const res = this.selectedDMCResult;
     if (!res || !res.student) return;
     const stu = res.student;
+    const dmcNo = `DMC-2026-${stu.rollNo || stu.id}`;
     const subjects = this.getStudentDMCSubjectBreakdown(res).map((s) => ({
       subject: s.name,
       maxMarks: s.maxTotal,
@@ -23442,9 +23867,21 @@ INSTRUCTIONS:
       grade: s.grade,
       remarks: s.remarks
     }));
+    const signed = await this.registerSignedPrintForDoc({
+      docType: 'result_dmc',
+      docLabel: `Official Result DMC (${dmcNo})`,
+      tableId: 'academics_gradebook_results',
+      tableTitle: 'Academics & Class Result Sheet',
+      portalTab: 'exams',
+      rowKey: stu.rollNo || stu.id,
+      rowLabel: stu.name,
+      subjectName: stu.name,
+      rollOrCode: dmcNo,
+      statusSnapshot: 'EVALUATED'
+    });
     const html = buildResultDmcHtml(
       {
-        dmcNo: `DMC-2026-${stu.rollNo || stu.id}`,
+        dmcNo,
         examTitle: this.printBranding.dmcExamTitle || this.dmcExamTitle || 'Annual Terminal Examinations 2026',
         session: this.printBranding.dmcSessionLabel || this.dmcAcademicYear || '2025 - 2026',
         studentName: stu.name,
@@ -23453,7 +23890,10 @@ INSTRUCTIONS:
         grade: `${stu.grade || 'Class'}${stu.section ? ` (${stu.section})` : ''}`,
         subjects,
         classRank: res.rank ? `#${res.rank}` : 'Evaluated',
-        attendancePercent: stu.attendance || '96%'
+        attendancePercent: stu.attendance || '96%',
+        qrPayload: signed.qrToken,
+        printId: signed.printId,
+        generatedBy: this.activeQrActorName
       },
       this.printBranding
     );
@@ -23597,9 +24037,22 @@ INSTRUCTIONS:
   async printReportCard(): Promise<void> {
     const stu = this.selectedReportStudent;
     if (!stu) return;
+    const dmcNo = `TRC-2026-${stu.rollNo || stu.id}`;
+    const signed = await this.registerSignedPrintForDoc({
+      docType: 'result_dmc',
+      docLabel: `Terminal Progress Report Card (${dmcNo})`,
+      tableId: 'academics_gradebook_results',
+      tableTitle: 'Academics & Class Result Sheet',
+      portalTab: 'exams',
+      rowKey: stu.rollNo || stu.id,
+      rowLabel: stu.name,
+      subjectName: stu.name,
+      rollOrCode: dmcNo,
+      statusSnapshot: 'EVALUATED'
+    });
     const html = buildResultDmcHtml(
       {
-        dmcNo: `TRC-2026-${stu.rollNo || stu.id}`,
+        dmcNo,
         examTitle: this.printBranding.dmcExamTitle || 'Annual Terminal Assessment Report Card',
         session: this.printBranding.dmcSessionLabel || 'Session 2026-27',
         studentName: stu.name,
@@ -23614,7 +24067,10 @@ INSTRUCTIONS:
           { subject: 'English Literature & Syntax', maxMarks: 100, obtainedMarks: 85, grade: 'A', remarks: 'Exemplary' }
         ],
         classRank: '#1 (GPA 3.92)',
-        attendancePercent: stu.attendance || '96%'
+        attendancePercent: stu.attendance || '96%',
+        qrPayload: signed.qrToken,
+        printId: signed.printId,
+        generatedBy: this.activeQrActorName
       },
       this.printBranding
     );
@@ -24331,6 +24787,19 @@ INSTRUCTIONS:
   async printSLCCertificate(slc?: StudentLeavingCertificateRecord): Promise<void> {
     const target = slc || this.selectedSLCForView;
     if (!target) return;
+    const signed = await this.registerSignedPrintForDoc({
+      docType: 'slc_certificate',
+      docLabel: `School Leaving Certificate (${target.certificateNo})`,
+      tableId: 'owner_audit_slc',
+      tableTitle: 'School Leaving Certificates Register',
+      portalTab: 'audit',
+      rowKey: target.certificateNo || target.rollNo,
+      rowLabel: target.studentName,
+      subjectName: target.studentName,
+      rollOrCode: target.certificateNo || target.rollNo,
+      statusSnapshot: 'ISSUED',
+      snapshot: { certificateNo: target.certificateNo, rollNo: target.rollNo, status: 'ISSUED' }
+    });
     const html = buildSlcCertificatePrintHtml(
       {
         certificateNo: target.certificateNo,
@@ -24348,7 +24817,10 @@ INSTRUCTIONS:
         accountsClearance: target.accountsClearance,
         libraryClearance: target.libraryClearance,
         labClearance: target.labClearance,
-        sportsClearance: target.sportsClearance
+        sportsClearance: target.sportsClearance,
+        qrPayload: signed.qrToken,
+        printId: signed.printId,
+        generatedBy: target.issuedBy || this.activeQrActorName
       },
       this.printBranding
     );
@@ -26409,7 +26881,11 @@ INSTRUCTIONS:
     return pts[pts.length - 1];
   }
 
-  setAccountantTab(tab: 'overview' | 'challans' | 'collect' | 'defaulters' | 'daily_closing'): void {
+  setAccountantTab(tab: 'overview' | 'challans' | 'collect' | 'defaulters' | 'daily_closing' | 'qr_scanner'): void {
+    if (tab === 'qr_scanner' && !this.canAccountantUseQrScanner) {
+      this.showToast('QR Scanner access is locked for Accountant Desk by the School Owner.', 'warning');
+      return;
+    }
     this.accountantTab = tab;
     if (!this.isOwnerPortal) {
       void this.tableSchemaService.loadFromBackend();
@@ -28037,9 +28513,22 @@ INSTRUCTIONS:
         : this.certificateType === 'Character'
           ? 'Character & Conduct Certificate'
           : 'Transfer Certificate';
+    const certNo = `CERT-${stu.id || stu.rollNo || '2026'}`;
+    const signed = await this.registerSignedPrintForDoc({
+      docType: 'slc_certificate',
+      docLabel: `${certTitle} (${certNo})`,
+      tableId: 'owner_audit_slc',
+      tableTitle: 'School Leaving Certificates Register',
+      portalTab: 'audit',
+      rowKey: certNo,
+      rowLabel: stu.name,
+      subjectName: stu.name,
+      rollOrCode: String(stu.rollNo || certNo),
+      statusSnapshot: 'ISSUED'
+    });
     const html = buildSlcCertificatePrintHtml(
       {
-        certificateNo: `CERT-${stu.id || stu.rollNo || '2026'}`,
+        certificateNo: certNo,
         securityHash: `SCS-CERT-${stu.rollNo || stu.id || '2026'}`,
         studentName: `${stu.name} (${certTitle})`,
         fatherName: stu.guardian || 'Guardian',
@@ -28054,7 +28543,10 @@ INSTRUCTIONS:
         accountsClearance: true,
         libraryClearance: true,
         labClearance: true,
-        sportsClearance: true
+        sportsClearance: true,
+        qrPayload: signed.qrToken,
+        printId: signed.printId,
+        generatedBy: this.activeQrActorName
       },
       this.printBranding
     );
@@ -28232,6 +28724,45 @@ INSTRUCTIONS:
     try {
       const norm = code.toLowerCase();
       const sourceLabel = source === 'usb_hid' ? 'USB Scanner' : (source === 'camera' ? 'Camera Scanner' : 'Manual Scan');
+
+      // 0. Cryptographically Signed Print Verification Token (SCS1|...)
+      if (code.toUpperCase().startsWith('SCS1|')) {
+        const res = await this.backend.verifySchoolQrCode(
+          {
+            rawCode: code,
+            scanSource: source === 'usb_hid' ? 'usb_gun' : (source === 'camera' ? 'camera' : 'manual'),
+            scannerName: this.activeQrActorName,
+            scannerRole: this.activeQrPortalRole
+          },
+          this.selectedBranchScope !== 'ALL' ? this.selectedBranchScope : undefined,
+          this.selectedWingScope !== 'ALL' ? this.selectedWingScope : undefined
+        );
+        if (res?.ok && res.isReal) {
+          this.playScanBeep('ok');
+          const gen = res.generator?.generatedBy ? ` · Printed by ${res.generator.generatedBy}` : '';
+          const loc = res.location?.tableTitle ? ` · ${res.location.tableTitle} (${res.location.rowKey || 'Row'})` : '';
+          const msg = `${res.verdict}: ${res.docLabel || 'Verified Print'}${loc}${gen}`;
+          this.recordHardwareScanEvent(code, 'success', res.verdict, msg);
+          this.showToast(`${sourceLabel}: ${msg}`, 'success');
+          if (res.location?.tableId && this.isOwnerPortal) {
+            this.handleQrScannerJump({
+              tableId: res.location.tableId,
+              tableTitle: res.location.tableTitle,
+              portalTab: res.location.portalTab || 'overview',
+              subTab: res.location.subTab,
+              rowKey: res.location.rowKey,
+              rowLabel: res.location.rowLabel,
+              searchHint: res.location.searchHint
+            });
+          }
+        } else {
+          this.playScanBeep('warn');
+          const msg = `${res?.verdict || 'FAKE'}: ${res?.reason || 'Failed cryptographic verification.'}`;
+          this.recordHardwareScanEvent(code, 'warning', res?.verdict || 'FAKE', msg);
+          this.showToast(`${sourceLabel}: ${msg}`, 'warning');
+        }
+        return;
+      }
 
       // 1. Check Library Books / Circulation first if in library mode or clear ISBN match
       const matchedBook = (this.libraryBooks || []).find((b) =>
@@ -29064,6 +29595,22 @@ INSTRUCTIONS:
     const paidAmt = clearance.verifiedTxn
       ? Number(clearance.verifiedTxn.totalAmount || clearance.verifiedTxn.baseAmount || 0)
       : (clearance.verifiedReceipt ? Number(clearance.verifiedReceipt.amount || 0) : 0);
+    const statusLabel: 'PAID' | 'PARTIAL' | 'PENDING' | 'UNPAID' = clearance.isPaid ? 'PAID' : (clearance.isPartial ? 'PARTIAL' : (clearance.hasPendingSlip ? 'PENDING' : 'UNPAID'));
+    const totalPayable = Math.max(0, safeTuition + 1500 + 1200 + 800 + arrears - discount);
+    const signed = await this.registerSignedPrintForDoc({
+      docType: 'bank_challan',
+      docLabel: `A4 3-Copy Bank Fee Challan (${challan})`,
+      tableId: 'fee_challans_invoices',
+      tableTitle: 'Fee Challans & Invoices Ledger',
+      portalTab: 'finance',
+      rowKey: challan,
+      rowLabel: target.name,
+      subjectName: target.name,
+      rollOrCode: challan,
+      amountPkr: paidAmt > 0 ? paidAmt : totalPayable,
+      statusSnapshot: statusLabel,
+      snapshot: { challanNo: challan, rollNo: target.rollNo, totalAmount: paidAmt > 0 ? paidAmt : totalPayable, status: statusLabel }
+    });
 
     const html = buildA4BankChallanHtml(
       {
@@ -29089,7 +29636,10 @@ INSTRUCTIONS:
         discountAmount: discount,
         paidAmount: paidAmt > 0 ? paidAmt : undefined,
         lateFine: Number(this.schoolGatewaySettings?.lateFeeFinePkr || 500),
-        statusLabel: clearance.isPaid ? 'PAID' : (clearance.isPartial ? 'PARTIAL' : (clearance.hasPendingSlip ? 'PENDING' : 'UNPAID'))
+        statusLabel,
+        qrPayload: signed.qrToken,
+        printId: signed.printId,
+        generatedBy: this.activeQrActorName
       },
       this.printBranding
     );
@@ -29166,6 +29716,21 @@ INSTRUCTIONS:
   async printThermalReceiptForTransaction(tx: SchoolPaymentTransaction, paperOverride?: ThermalPaperWidth): Promise<void> {
     const challan = tx.challanNo || `CH-2026-${tx.rollNo || tx.txnRef}`;
     const cur = this.printBranding?.currencySymbol || tx.currency || 'PKR';
+    const amt = Number(tx.totalAmount || tx.baseAmount || 0);
+    const signed = await this.registerSignedPrintForDoc({
+      docType: 'thermal_receipt',
+      docLabel: `Thermal Fee Receipt (${tx.txnRef})`,
+      tableId: 'owner_payment_gateway',
+      tableTitle: 'Online Fee & Digital Gateway Transactions',
+      portalTab: 'payment_gateway',
+      rowKey: tx.txnRef || challan,
+      rowLabel: tx.studentName,
+      subjectName: tx.studentName,
+      rollOrCode: challan,
+      amountPkr: amt,
+      statusSnapshot: tx.status,
+      snapshot: { txnRef: tx.txnRef, challanNo: challan, totalAmount: amt, status: tx.status }
+    });
     const data: ThermalFeeReceiptData = {
       schoolName: this.printBranding?.schoolName || this.schoolName || 'SoftCode International School',
       branchName: tx.branchName || this.activeScopeSummaryLabel,
@@ -29175,7 +29740,7 @@ INSTRUCTIONS:
       billingMonth: tx.month || new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
       cashierName: tx.verifiedBy || tx.submittedByName || 'Accounts Desk',
       currency: cur,
-      qrPayload: `REC:${tx.txnRef}|CHALLAN:${challan}|NAME:${tx.studentName}|ROLL:${tx.rollNo || ''}|AMT:${cur} ${tx.totalAmount || tx.baseAmount || 0}|STATUS:${tx.status}`,
+      qrPayload: signed.qrToken || `REC:${tx.txnRef}|CHALLAN:${challan}|NAME:${tx.studentName}|ROLL:${tx.rollNo || ''}|AMT:${cur} ${amt}|STATUS:${tx.status}`,
       studentName: tx.studentName,
       rollNo: tx.rollNo || '—',
       grade: tx.grade || 'Campus',
@@ -29183,7 +29748,7 @@ INSTRUCTIONS:
       gatewayName: tx.gatewayName,
       baseAmount: Number(tx.baseAmount || 0),
       gatewayFee: Number(tx.gatewayFee || 0),
-      totalAmount: Number(tx.totalAmount || tx.baseAmount || 0),
+      totalAmount: amt,
       status: tx.status,
       paidAtLabel: new Date(tx.verifiedAt || tx.createdAt || Date.now()).toLocaleString(),
       verifiedBy: tx.verifiedBy || '',
@@ -29198,6 +29763,21 @@ INSTRUCTIONS:
     const recNo = rec.receiptNo || rec.challanNo || rec.id;
     const amt = Number(rec.amount || rec.amountPaid || 0);
     const cur = this.printBranding?.currencySymbol || 'PKR';
+    const signed = await this.registerSignedPrintForDoc({
+      docType: 'thermal_receipt',
+      docLabel: `Counter Fee Receipt (${recNo})`,
+      tableId: 'fee_receipts_cashiering',
+      tableTitle: 'Fee Collection & Cashiering Register',
+      portalTab: 'finance',
+      subTab: 'cashiering',
+      rowKey: rec.challanNo || recNo,
+      rowLabel: rec.studentName,
+      subjectName: rec.studentName,
+      rollOrCode: rec.challanNo || recNo,
+      amountPkr: amt,
+      statusSnapshot: rec.auditStatus || 'PAID',
+      snapshot: { receiptNo: recNo, challanNo: rec.challanNo || recNo, totalAmount: amt, status: rec.auditStatus || 'PAID' }
+    });
     const data: ThermalFeeReceiptData = {
       schoolName: this.printBranding?.schoolName || this.schoolName || 'SoftCode International School',
       branchName: rec.branchName || this.activeScopeSummaryLabel,
@@ -29207,7 +29787,7 @@ INSTRUCTIONS:
       billingMonth: rec.monthsPaid || rec.month || new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
       cashierName: rec.collectedBy || 'Accountant Desk',
       currency: cur,
-      qrPayload: `REC:${recNo}|CHALLAN:${rec.challanNo || recNo}|NAME:${rec.studentName}|ROLL:${rec.rollNo || ''}|AMT:${cur} ${amt}|MODE:${rec.paymentResource || 'Counter'}`,
+      qrPayload: signed.qrToken || `REC:${recNo}|CHALLAN:${rec.challanNo || recNo}|NAME:${rec.studentName}|ROLL:${rec.rollNo || ''}|AMT:${cur} ${amt}|MODE:${rec.paymentResource || 'Counter'}`,
       studentName: rec.studentName,
       rollNo: rec.rollNo || '—',
       grade: rec.grade || 'Campus',
@@ -29238,6 +29818,21 @@ INSTRUCTIONS:
     const arrears = Number((target as any).dueBakaya || 0);
     const discount = Number((target as any).discount || 0);
     const totalAmt = tx ? Number(tx.totalAmount) : Math.max(0, baseFee + arrears - discount);
+    const challanStatus = clearance.isPaid ? 'PAID' : (clearance.isPartial ? 'PARTIAL' : (clearance.hasPendingSlip ? 'PENDING_VERIFICATION' : 'UNPAID CHALLAN'));
+    const signed = await this.registerSignedPrintForDoc({
+      docType: 'thermal_receipt',
+      docLabel: `Thermal Fee Challan (${challan})`,
+      tableId: 'fee_challans_invoices',
+      tableTitle: 'Fee Challans & Invoices Ledger',
+      portalTab: 'finance',
+      rowKey: challan,
+      rowLabel: target.name,
+      subjectName: target.name,
+      rollOrCode: challan,
+      amountPkr: totalAmt,
+      statusSnapshot: challanStatus,
+      snapshot: { challanNo: challan, rollNo: target.rollNo, totalAmount: totalAmt, status: challanStatus }
+    });
     const data: ThermalFeeReceiptData = {
       schoolName: this.printBranding?.schoolName || this.schoolName || 'SoftCode International School',
       branchName: (target as any).branchName || this.activeScopeSummaryLabel,
@@ -29247,7 +29842,7 @@ INSTRUCTIONS:
       billingMonth: new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
       cashierName: tx?.verifiedBy || 'Fee Counter',
       currency: cur,
-      qrPayload: `CHALLAN:${challan}|NAME:${target.name}|ROLL:${target.rollNo || '1030'}|AMT:${cur} ${totalAmt}|STATUS:${clearance.isPaid ? 'PAID' : 'UNPAID'}`,
+      qrPayload: signed.qrToken || `CHALLAN:${challan}|NAME:${target.name}|ROLL:${target.rollNo || '1030'}|AMT:${cur} ${totalAmt}|STATUS:${clearance.isPaid ? 'PAID' : 'UNPAID'}`,
       studentName: target.name,
       rollNo: target.rollNo || '1030',
       grade: target.grade || 'Class 1',
@@ -29259,7 +29854,7 @@ INSTRUCTIONS:
       gatewayFee: tx ? Number(tx.gatewayFee) : 0,
       totalAmount: totalAmt,
       balanceRemaining: clearance.isPartial ? clearance.remainingPayable : 0,
-      status: clearance.isPaid ? 'PAID' : (clearance.isPartial ? 'PARTIAL' : (clearance.hasPendingSlip ? 'PENDING_VERIFICATION' : 'UNPAID CHALLAN')),
+      status: challanStatus,
       paidAtLabel: new Date().toLocaleString(),
       verifiedBy: tx?.verifiedBy || '',
       proofReference: tx?.proofReference || '',

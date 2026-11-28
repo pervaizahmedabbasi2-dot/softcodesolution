@@ -346,6 +346,8 @@ export interface BuildStatementDocumentParams {
   criteria: StatementFilterCriteria;
   branding?: SchoolPrintBrandingConfig;
   statementRef?: string;
+  qrPayload?: string;
+  generatedBy?: string;
 }
 
 function buildFieldLogoChipHtml(
@@ -382,7 +384,9 @@ export function buildSchoolStatementA4Html(params: BuildStatementDocumentParams)
 
   const accent = /^#[0-9a-fA-F]{6}$/.test(b.headerAccentColor || '') ? b.headerAccentColor : '#0f172a';
   const barcodeSvg = buildCode128SvgMarkup(stmtRef, 30, '#0f172a');
-  const qrPayload = `STATEMENT:${stmtRef}|TITLE:${effectiveTitle}|RECORDS:${params.rows.length}|FROM:${params.criteria.fromDate || 'ALL'}|TO:${params.criteria.toDate || 'ALL'}|NET:${cur} ${Math.round(summary.primaryTotal)}`;
+  const qrPayload = (params.qrPayload && params.qrPayload.trim())
+    ? params.qrPayload.trim()
+    : `STATEMENT:${stmtRef}|TITLE:${effectiveTitle}|RECORDS:${params.rows.length}|FROM:${params.criteria.fromDate || 'ALL'}|TO:${params.criteria.toDate || 'ALL'}|NET:${cur} ${Math.round(summary.primaryTotal)}`;
   const qrSvg = buildQrCodeSvgMarkup(qrPayload, 60, accent, 2, 'M');
 
   const a4Radius = b.logoShape === 'circle' ? '9999px' : '10px';
@@ -649,7 +653,9 @@ export function buildSchoolStatementThermalHtml(
   const stampBadge = b.stampLabel && b.stampLabel !== 'NONE' ? b.stampLabel : 'VERIFIED';
 
   const barcodeSvg = buildCode128SvgMarkup(stmtRef, effectivePaper === '58mm' ? 26 : 32, '#000000');
-  const qrPayload = `STM:${stmtRef}|${effectiveTitle}|ROWS:${params.rows.length}|NET:${cur} ${Math.round(summary.primaryTotal)}`;
+  const qrPayload = (params.qrPayload && params.qrPayload.trim())
+    ? params.qrPayload.trim()
+    : `STM:${stmtRef}|${effectiveTitle}|ROWS:${params.rows.length}|NET:${cur} ${Math.round(summary.primaryTotal)}`;
   const qrSvg = buildQrCodeSvgMarkup(qrPayload, effectivePaper === '58mm' ? 40 : 48, '#000000', 2, 'M');
 
   const thermalFrameRadius = b.logoShape === 'circle' ? '9999px' : '7px';
@@ -966,7 +972,9 @@ export function buildSchoolStatementCardHtml(params: BuildStatementDocumentParam
   const stampBadge = b.stampLabel && b.stampLabel !== 'NONE' ? b.stampLabel : 'VERIFIED';
   const accent = /^#[0-9a-fA-F]{6}$/.test(b.headerAccentColor || '') ? b.headerAccentColor : '#0f172a';
   const row = params.rows[0] || [];
-  const qrPayload = `CARD:${stmtRef}|${effectiveTitle}|NET:${cur} ${Math.round(summary.primaryTotal)}`;
+  const qrPayload = (params.qrPayload && params.qrPayload.trim())
+    ? params.qrPayload.trim()
+    : `CARD:${stmtRef}|${effectiveTitle}|NET:${cur} ${Math.round(summary.primaryTotal)}`;
   const qrSvg = buildQrCodeSvgMarkup(qrPayload, 88, accent, 2, 'M');
   const barcodeSvg = buildCode128SvgMarkup(stmtRef, 28, '#0f172a');
 
