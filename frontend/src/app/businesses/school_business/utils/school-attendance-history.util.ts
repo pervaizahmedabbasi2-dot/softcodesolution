@@ -4,6 +4,8 @@ import {
   OwnerAttendancePolicy
 } from '../models/school-attendance.models';
 
+export type AttendanceVerificationChannelKind = 'face' | 'fingerprint' | 'card' | 'manual';
+
 export interface AttendanceDailyLogEntry {
   key: string;
   dateIso: string;
@@ -24,6 +26,8 @@ export interface AttendanceDailyLogEntry {
   lateByLabel: string;
   gateTerminal: string;
   verificationMethod: string;
+  methodChannel: AttendanceVerificationChannelKind;
+  verifiedBy: string;
   confidenceScore: number;
   status: 'Present' | 'Late' | 'Absent' | 'On Leave';
   isLiveLog: boolean;
@@ -114,6 +118,74 @@ export interface ExtraDailyGateLogInput {
   checkOut?: string;
   gate?: string;
   status?: string;
+  verificationMode?: string;
+  confidenceScore?: number;
+  verifiedBy?: string;
+}
+
+export function classifyVerificationChannel(
+  verificationMode?: string,
+  gateTerminal?: string,
+  verifiedBy?: string
+): { channel: AttendanceVerificationChannelKind; label: string } {
+  const modeRaw = String(verificationMode || '').trim();
+  const gateRaw = String(gateTerminal || '').trim();
+  const byRaw = String(verifiedBy || '').trim();
+  const combined = `${modeRaw} ${gateRaw} ${byRaw}`.toLowerCase();
+
+  if (
+    combined.includes('fingerprint') ||
+    combined.includes('webauthn') ||
+    combined.includes('optical') ||
+    combined.includes('finger')
+  ) {
+    return {
+      channel: 'fingerprint',
+      label: modeRaw.toLowerCase().includes('webauthn')
+        ? 'Biometric Fingerprint (Device)'
+        : 'Biometric Fingerprint'
+    };
+  }
+
+  if (
+    combined.includes('barcode') ||
+    combined.includes('rfid') ||
+    combined.includes('turnstile') ||
+    combined.includes('card') ||
+    combined.includes('qr')
+  ) {
+    return {
+      channel: 'card',
+      label: modeRaw.toLowerCase().includes('barcode')
+        ? 'Barcode / ID Card Scan'
+        : 'RFID / Card Scan'
+    };
+  }
+
+  if (
+    combined.includes('manual') ||
+    combined.includes('roll_call') ||
+    combined.includes('roll-call') ||
+    combined.includes('roll call') ||
+    combined.includes('override') ||
+    combined.includes('register')
+  ) {
+    return {
+      channel: 'manual',
+      label: 'Manual Roll Call'
+    };
+  }
+
+  return {
+    channel: 'face',
+    label: modeRaw.toLowerCase().includes('lite')
+      ? 'Face Camera (Lite)'
+      : (modeRaw.toLowerCase().includes('strict')
+        ? 'Face Camera (Strict)'
+        : (modeRaw.toLowerCase().includes('iris')
+          ? 'Iris / Face Biometric'
+          : 'Face Recognition'))
+  };
 }
 
 const MONTH_NAMES = [
@@ -243,10 +315,20 @@ export function buildMemberAttendanceAnalytics(
 
   // 1. Collect live logs belonging to this member
   const memberLiveMap = new Map<string, AttendanceDailyLogEntry>();
+  const normId = member.id.trim().toLowerCase();
+  const normCode = member.code.trim().toLowerCase();
+  const normName = member.name.trim().toLowerCase();
+
   for (const log of verificationLogs || []) {
     if (log.status === 'Rejected') continue;
     if (log.memberCategory !== member.category) continue;
-    const idMatch = log.memberId === member.id || (member.code && log.memberCode === member.code);
+    const logId = String(log.memberId || '').trim().toLowerCase();
+    const logCode = String(log.memberCode || '').trim().toLowerCase();
+    const logName = String(log.memberName || '').trim().toLowerCase();
+    const idMatch =
+      (normId && (logId === normId || logCode === normId)) ||
+      (normCode && (logCode === normCode || logId === normCode)) ||
+      (normName && logName && logName === normName);
     if (!idMatch) continue;
     const dateIso = normalizeDateIso(log.date);
     const key = `${dateIso}:${member.category}:${member.id}`;
@@ -256,12 +338,19 @@ export function buildMemberAttendanceAnalytics(
     const year = Number(dateIso.slice(0, 4)) || currentYear;
     const monthIdx = Math.max(0, Math.min(11, (Number(dateIso.slice(5, 7)) || (currentMonth + 1)) - 1));
     const monthKey = `${year}-${String(monthIdx + 1).padStart(2, '0')}`;
+    const gateName = log.gateName || 'Campus Gate 01';
+    const verifiedByText = String(log.verifiedBy || log.markedByRole || 'Campus Terminal')
+      .replace(/\s*·\s*(IN|OUT)$/i, '')
+      .trim();
+    const classified = classifyVerificationChannel(log.verificationMode, gateName, verifiedByText);
+    const logStatus = normalizeStatusValue(log.status);
 
     if (!existing) {
-      const checkInTime = isOut ? '07:50 AM' : timeFormatted;
-      const checkOutTime = isOut ? timeFormatted : 'In Campus';
-      const inMins = parseMinutesFromTimeString(checkInTime);
-      const outMins = isOut ? parseMinutesFromTimeString(checkOutTime) : null;
+      const hasPunch = logStatus === 'Present' || logStatus === 'Late';
+      const checkInTime = !hasPunch ? '—' : (isOut ? '07:50 AM' : timeFormatted);
+      const checkOutTime = !hasPunch ? '—' : (isOut ? timeFormatted : 'In Campus');
+      const inMins = hasPunch ? parseMinutesFromTimeString(checkInTime) : null;
+      const outMins = hasPunch && isOut ? parseMinutesFromTimeString(checkOutTime) : null;
       memberLiveMap.set(key, {
         key,
         dateIso,
@@ -278,24 +367,33 @@ export function buildMemberAttendanceAnalytics(
         checkInTime,
         checkOutTime,
         scheduledStartTime: scheduledStart,
-        durationLabel: outMins !== null ? formatDurationMinutes(inMins, outMins) : 'On Campus',
-        lateByLabel: log.lateByLabel || (log.status === 'Late' ? 'Late Arrival' : 'On Time'),
-        gateTerminal: log.gateName || 'Campus Gate 01',
-        verificationMethod: log.verificationMode || 'Biometric Camera',
+        durationLabel: !hasPunch ? '—' : (outMins !== null ? formatDurationMinutes(inMins, outMins) : 'On Campus'),
+        lateByLabel: !hasPunch
+          ? (logStatus === 'On Leave' ? 'Approved Leave' : 'Absent')
+          : (log.lateByLabel || (logStatus === 'Late' ? 'Late Arrival' : 'On Time')),
+        gateTerminal: gateName,
+        verificationMethod: classified.label,
+        methodChannel: classified.channel,
+        verifiedBy: verifiedByText,
         confidenceScore: Math.round(Number(log.confidenceScore || 98)),
-        status: normalizeStatusValue(log.status),
+        status: logStatus,
         isLiveLog: true
       });
     } else {
+      // verificationLogs is newest-first: preserve newest method & status while keeping earliest checkIn/latest checkOut
       if (isOut) {
-        existing.checkOutTime = timeFormatted;
+        if (existing.checkOutTime === 'In Campus' || existing.checkOutTime === '—') {
+          existing.checkOutTime = timeFormatted;
+        }
         existing.durationLabel = formatDurationMinutes(
           parseMinutesFromTimeString(existing.checkInTime),
-          parseMinutesFromTimeString(timeFormatted)
+          parseMinutesFromTimeString(existing.checkOutTime)
         );
       } else {
-        existing.checkInTime = timeFormatted;
-        if (log.lateByLabel) existing.lateByLabel = log.lateByLabel;
+        if (logStatus === 'Present' || logStatus === 'Late') {
+          existing.checkInTime = timeFormatted;
+          if (log.lateByLabel) existing.lateByLabel = log.lateByLabel;
+        }
       }
       if (Number(log.confidenceScore || 0) > existing.confidenceScore) {
         existing.confidenceScore = Math.round(Number(log.confidenceScore || 0));
@@ -319,6 +417,8 @@ export function buildMemberAttendanceAnalytics(
     const lateByLabel = status === 'Late'
       ? `+${Math.max(1, diff)}m late`
       : (diff < 0 ? `Early ${Math.abs(diff)}m` : 'On Time');
+    const gateTerminal = ex.gate || member.todayGate || 'Main North Gate (RFID-01)';
+    const classified = classifyVerificationChannel(ex.verificationMode, gateTerminal, ex.verifiedBy);
 
     memberLiveMap.set(key, {
       key,
@@ -338,71 +438,190 @@ export function buildMemberAttendanceAnalytics(
       scheduledStartTime: scheduledStart,
       durationLabel: outMins !== null ? formatDurationMinutes(inMins, outMins) : 'On Campus',
       lateByLabel,
-      gateTerminal: ex.gate || member.todayGate || 'Main North Gate (RFID-01)',
-      verificationMethod: String(ex.gate || '').toLowerCase().includes('rfid') ? 'RFID Turnstile' : 'Biometric Gate',
-      confidenceScore: 99,
+      gateTerminal,
+      verificationMethod: classified.label,
+      methodChannel: classified.channel,
+      verifiedBy: ex.verifiedBy || gateTerminal,
+      confidenceScore: Math.round(Number(ex.confidenceScore || 99)),
       status,
       isLiveLog: true
     });
   }
 
-  // 2. Build 3 academic years of historical monthly summaries (currentYear - 2 .. currentYear)
+  // 2. Build full 3-year daily + monthly + yearly history (currentYear - 2 .. currentYear)
   const years = [currentYear - 2, currentYear - 1, currentYear];
   const baseTarget = Math.min(99.2, Math.max(76, member.baselineRatePct || 95.5));
-  const monthlySummaries: AttendanceMonthSummary[] = [];
+  const dailyMap = new Map<string, AttendanceDailyLogEntry>(memberLiveMap);
 
+  const terminalCatalog: Array<{
+    gate: string;
+    method: string;
+    channel: AttendanceVerificationChannelKind;
+    verifiedBy: string;
+  }> = [
+    {
+      gate: member.todayGate || 'Main North Gate (RFID-01)',
+      method: 'RFID / Card Scan',
+      channel: 'card',
+      verifiedBy: 'Automated Gate Turnstile'
+    },
+    {
+      gate: 'Face Recognition Camera Kiosk 01',
+      method: 'Face Recognition',
+      channel: 'face',
+      verifiedBy: 'AI Face Kiosk'
+    },
+    {
+      gate: 'Biometric Fingerprint Scanner 02',
+      method: 'Biometric Fingerprint',
+      channel: 'fingerprint',
+      verifiedBy: 'Fingerprint Sensor Terminal'
+    },
+    {
+      gate: 'Barcode ID Scanner Desk',
+      method: 'Barcode / ID Card Scan',
+      channel: 'card',
+      verifiedBy: 'Gate Barcode Reader'
+    },
+    {
+      gate: 'Morning Assembly Roll Call',
+      method: 'Manual Roll Call',
+      channel: 'manual',
+      verifiedBy: 'Class Teacher Register'
+    }
+  ];
+
+  const monthlySummaries: AttendanceMonthSummary[] = [];
   let saltCounter = 1;
+  let globalDaySeq = 0;
+
   for (const y of years) {
     const maxM = y === currentYear ? currentMonth : 11;
     for (let mIdx = 0; mIdx <= maxM; mIdx++) {
       saltCounter++;
       const monthKey = `${y}-${String(mIdx + 1).padStart(2, '0')}`;
-      // Skip summer break peak variations nicely (June/July lighter working days)
-      const isSummer = mIdx === 5 || mIdx === 6;
-      const workingDays = isSummer
-        ? 14 + Math.floor(seededUnit(seed, saltCounter * 3) * 4)
-        : 21 + Math.floor(seededUnit(seed, saltCounter * 3) * 3);
+      const monthLabel = `${MONTH_NAMES[mIdx]} ${y}`;
+      const shortLabel = `${SHORT_MONTHS[mIdx]} ${String(y).slice(-2)}`;
+      const daysInCalendarMonth = new Date(y, mIdx + 1, 0).getDate();
+      const maxDay = (y === currentYear && mIdx === currentMonth) ? now.getDate() : daysInCalendarMonth;
 
-      // Realistic month-to-month fluctuation around baseTarget so Min/Max are clearly distinct
+      // Subtle month-level variation so Min/Max extremes are realistic and distinct
       const wave = (seededUnit(seed, saltCounter * 7) - 0.45) * 10.5;
       const seasonalDip = mIdx === 1 || mIdx === 11 ? -2.6 : (mIdx === 9 ? 1.8 : 0);
-      const rawPct = Math.min(100, Math.max(72, baseTarget + wave + seasonalDip));
+      const monthTargetPct = Math.min(100, Math.max(72, baseTarget + wave + seasonalDip));
+      const nonAttendedProb = Math.max(0.008, (100 - monthTargetPct) / 100);
 
-      let attendedDays = Math.min(workingDays, Math.max(0, Math.round((rawPct / 100) * workingDays)));
-      const nonAttended = Math.max(0, workingDays - attendedDays);
-      const leaveDays = nonAttended > 0 ? Math.min(nonAttended, Math.ceil(nonAttended * 0.55)) : 0;
-      const absentDays = Math.max(0, nonAttended - leaveDays);
-      const lateShare = seededUnit(seed, saltCounter * 11) * 0.14;
-      const lateDays = attendedDays > 0 ? Math.min(attendedDays, Math.round(attendedDays * lateShare)) : 0;
-      const presentDays = Math.max(0, attendedDays - lateDays);
+      let workingDays = 0;
+      let presentDays = 0;
+      let lateDays = 0;
+      let absentDays = 0;
+      let leaveDays = 0;
+      let inMinsSum = 0;
+      let inMinsCount = 0;
+      let earliestMins = 24 * 60;
+      let latestMins = 0;
 
-      // Re-count any live logs inside this month to make live punches visible
-      let liveAdjust = 0;
-      for (const entry of memberLiveMap.values()) {
-        if (entry.monthKey === monthKey && entry.dateIso === todayIso) {
-          liveAdjust = 1;
+      for (let dNum = 1; dNum <= maxDay; dNum++) {
+        const dow = new Date(y, mIdx, dNum).getDay();
+        if (dow === 0) continue; // Sunday holiday
+
+        globalDaySeq++;
+        const dateIso = `${monthKey}-${String(dNum).padStart(2, '0')}`;
+        const key = `${dateIso}:${member.category}:${member.id}`;
+        let entry = dailyMap.get(key);
+
+        if (!entry) {
+          const isToday = dateIso === todayIso;
+          let status: 'Present' | 'Late' | 'Absent' | 'On Leave';
+          if (isToday) {
+            status = member.todayStatus;
+          } else {
+            const r = seededUnit(seed, y * 400 + mIdx * 32 + dNum);
+            if (r < nonAttendedProb * 0.45) status = 'Absent';
+            else if (r < nonAttendedProb) status = 'On Leave';
+            else if (r < nonAttendedProb + 0.085) status = 'Late';
+            else status = 'Present';
+          }
+
+          const inDelta = status === 'Late'
+            ? 16 + Math.floor(seededUnit(seed, globalDaySeq * 13) * 18)
+            : -18 + Math.floor(seededUnit(seed, globalDaySeq * 13) * 18);
+          const inMins = startMins + inDelta;
+          const isFriday = dow === 5;
+          const outMins = isFriday
+            ? (12 * 60 + 35 + Math.floor(seededUnit(seed, globalDaySeq * 7) * 15))
+            : (14 * 60 + 10 + Math.floor(seededUnit(seed, globalDaySeq * 7) * 15));
+
+          const hasPunch = status === 'Present' || status === 'Late';
+          const checkInTime = hasPunch
+            ? (isToday && member.todayCheckIn ? member.todayCheckIn : formatMinutesAs12h(inMins))
+            : '—';
+          const checkOutTime = hasPunch
+            ? (isToday ? (member.todayCheckOut || 'Active in Campus') : formatMinutesAs12h(outMins))
+            : '—';
+
+          const lateByLabel = !hasPunch
+            ? (status === 'On Leave' ? 'Approved Leave' : 'Absent')
+            : (inDelta <= 0 ? `Early ${Math.abs(inDelta)}m` : (status === 'Late' ? `+${inDelta}m late` : `+${inDelta}m (Grace)`));
+
+          const pickedTerminal = terminalCatalog[Math.floor(seededUnit(seed, globalDaySeq * 5 + dNum) * terminalCatalog.length)];
+
+          entry = {
+            key,
+            dateIso,
+            displayDate: `${SHORT_MONTHS[mIdx]} ${String(dNum).padStart(2, '0')}, ${y}`,
+            dayName: WEEKDAY_NAMES[dow] || 'School Day',
+            year: y,
+            monthKey,
+            monthLabel,
+            memberId: member.id,
+            memberCode: member.code,
+            memberName: member.name,
+            memberCategory: member.category,
+            gradeOrDept: member.subLabel,
+            checkInTime,
+            checkOutTime,
+            scheduledStartTime: scheduledStart,
+            durationLabel: hasPunch ? (isToday && !member.todayCheckOut ? 'On Campus' : formatDurationMinutes(inMins, outMins)) : '—',
+            lateByLabel,
+            gateTerminal: hasPunch ? pickedTerminal.gate : 'Class Attendance Register',
+            verificationMethod: hasPunch ? pickedTerminal.method : 'Manual Roll Call',
+            methodChannel: hasPunch ? pickedTerminal.channel : 'manual',
+            verifiedBy: hasPunch ? pickedTerminal.verifiedBy : 'Class Teacher Register',
+            confidenceScore: hasPunch ? (pickedTerminal.channel === 'manual' ? 100 : 97 + Math.floor(seededUnit(seed, globalDaySeq * 3) * 3)) : 100,
+            status,
+            isLiveLog: isToday && Boolean(member.todayCheckIn)
+          };
+          dailyMap.set(key, entry);
+        }
+
+        workingDays++;
+        if (entry.status === 'Present') presentDays++;
+        else if (entry.status === 'Late') lateDays++;
+        else if (entry.status === 'On Leave') leaveDays++;
+        else absentDays++;
+
+        const parsedIn = parseMinutesFromTimeString(entry.checkInTime);
+        if (parsedIn !== null) {
+          inMinsSum += parsedIn;
+          inMinsCount++;
+          if (parsedIn < earliestMins) earliestMins = parsedIn;
+          if (parsedIn > latestMins) latestMins = parsedIn;
         }
       }
-      if (liveAdjust > 0 && attendedDays === 0) {
-        attendedDays = 1;
-      }
 
+      const attendedDays = presentDays + lateDays;
       const attendancePct = workingDays > 0
         ? Number(((attendedDays / workingDays) * 100).toFixed(1))
         : 100;
-
-      const avgInOffset = Math.round((seededUnit(seed, saltCounter * 17) * 24) - 18); // -18m early to +6m
-      const avgCheckInTime = formatMinutesAs12h(startMins + avgInOffset);
-      const earliestCheckIn = formatMinutesAs12h(startMins - 22 - Math.floor(seededUnit(seed, saltCounter * 19) * 8));
-      const latestCheckIn = formatMinutesAs12h(startMins + (lateDays > 0 ? 18 + Math.floor(seededUnit(seed, saltCounter * 23) * 20) : 6));
 
       monthlySummaries.push({
         key: `${member.id}-${monthKey}`,
         year: y,
         monthIndex: mIdx,
         monthKey,
-        monthLabel: `${MONTH_NAMES[mIdx]} ${y}`,
-        shortLabel: `${SHORT_MONTHS[mIdx]} ${String(y).slice(-2)}`,
+        monthLabel,
+        shortLabel,
         workingDays,
         presentDays,
         lateDays,
@@ -410,9 +629,9 @@ export function buildMemberAttendanceAnalytics(
         leaveDays,
         attendedDays,
         attendancePct,
-        avgCheckInTime,
-        earliestCheckIn,
-        latestCheckIn,
+        avgCheckInTime: inMinsCount > 0 ? formatMinutesAs12h(inMinsSum / inMinsCount) : formatMinutesAs12h(startMins - 8),
+        earliestCheckIn: earliestMins < 24 * 60 ? formatMinutesAs12h(earliestMins) : formatMinutesAs12h(startMins - 15),
+        latestCheckIn: latestMins > 0 ? formatMinutesAs12h(latestMins) : formatMinutesAs12h(startMins + 5),
         statusBand: computeStatusBand(attendancePct)
       });
     }
@@ -457,91 +676,10 @@ export function buildMemberAttendanceAnalytics(
     };
   });
 
-  // 4. Generate Daily Gate Logs covering recent 45 school days + merged live entries
-  const dailyMap = new Map<string, AttendanceDailyLogEntry>(memberLiveMap);
-  const gates = [
-    member.todayGate || 'Main North Gate (RFID-01)',
-    'Junior Wing Gate (RFID-02)',
-    'Biometric Camera Kiosk 01'
-  ];
-
-  // Walk backwards 75 calendar days (~54 school days) so Daily Gate Log is rich and matches month filters
-  for (let offset = 0; offset < 75; offset++) {
-    const dt = new Date(now.getFullYear(), now.getMonth(), now.getDate() - offset);
-    const dow = dt.getDay();
-    if (dow === 0) continue; // Sunday holiday
-
-    const y = dt.getFullYear();
-    const mIdx = dt.getMonth();
-    const dNum = dt.getDate();
-    const dateIso = `${y}-${String(mIdx + 1).padStart(2, '0')}-${String(dNum).padStart(2, '0')}`;
-    const key = `${dateIso}:${member.category}:${member.id}`;
-    if (dailyMap.has(key)) continue;
-
-    let status: 'Present' | 'Late' | 'Absent' | 'On Leave';
-    if (offset === 0) {
-      status = member.todayStatus;
-    } else {
-      const r = seededUnit(seed, offset * 31 + y + mIdx);
-      const absentThresh = Math.max(0.015, (100 - baseTarget) / 100);
-      if (r < absentThresh * 0.45) status = 'Absent';
-      else if (r < absentThresh) status = 'On Leave';
-      else if (r < absentThresh + 0.085) status = 'Late';
-      else status = 'Present';
-    }
-
-    const inDelta = status === 'Late'
-      ? 16 + Math.floor(seededUnit(seed, offset * 13) * 18)
-      : -18 + Math.floor(seededUnit(seed, offset * 13) * 18);
-    const inMins = startMins + inDelta;
-    const isFriday = dow === 5;
-    const outMins = isFriday ? (12 * 60 + 35 + Math.floor(seededUnit(seed, offset * 7) * 15)) : (14 * 60 + 10 + Math.floor(seededUnit(seed, offset * 7) * 15));
-
-    const hasPunch = status === 'Present' || status === 'Late';
-    const checkInTime = hasPunch
-      ? (offset === 0 && member.todayCheckIn ? member.todayCheckIn : formatMinutesAs12h(inMins))
-      : '—';
-    const checkOutTime = hasPunch
-      ? (offset === 0 ? (member.todayCheckOut || 'Active in Campus') : formatMinutesAs12h(outMins))
-      : '—';
-
-    const lateByLabel = !hasPunch
-      ? (status === 'On Leave' ? 'Approved Leave' : 'Absent')
-      : (inDelta <= 0 ? `Early ${Math.abs(inDelta)}m` : (status === 'Late' ? `+${inDelta}m late` : `+${inDelta}m (Grace)`));
-
-    const gateTerminal = gates[Math.floor(seededUnit(seed, offset * 5) * gates.length)];
-    const method = gateTerminal.includes('Camera') ? 'Face Camera' : (gateTerminal.includes('RFID') ? 'RFID Turnstile' : 'Fingerprint');
-
-    dailyMap.set(key, {
-      key,
-      dateIso,
-      displayDate: formatDisplayDate(dateIso),
-      dayName: WEEKDAY_NAMES[dow] || 'School Day',
-      year: y,
-      monthKey: `${y}-${String(mIdx + 1).padStart(2, '0')}`,
-      monthLabel: `${MONTH_NAMES[mIdx]} ${y}`,
-      memberId: member.id,
-      memberCode: member.code,
-      memberName: member.name,
-      memberCategory: member.category,
-      gradeOrDept: member.subLabel,
-      checkInTime,
-      checkOutTime,
-      scheduledStartTime: scheduledStart,
-      durationLabel: hasPunch ? (offset === 0 && !member.todayCheckOut ? 'On Campus' : formatDurationMinutes(inMins, outMins)) : '—',
-      lateByLabel,
-      gateTerminal,
-      verificationMethod: hasPunch ? method : '—',
-      confidenceScore: hasPunch ? 97 + Math.floor(seededUnit(seed, offset * 3) * 3) : 0,
-      status,
-      isLiveLog: offset === 0 && Boolean(member.todayCheckIn)
-    });
-  }
-
   const dailyLogs = Array.from(dailyMap.values()).sort((a, b) => b.dateIso.localeCompare(a.dateIso));
   const todayLiveEntry = dailyLogs.find((d) => d.dateIso === todayIso) || dailyLogs[0] || null;
 
-  // 5. Overall, 6-Month, Min, Max, Streak
+  // 4. Overall, 6-Month, Min, Max, Streak
   const totalWorkingDays = monthlySummaries.reduce((s, m) => s + m.workingDays, 0);
   const totalPresent = monthlySummaries.reduce((s, m) => s + m.presentDays, 0);
   const totalLate = monthlySummaries.reduce((s, m) => s + m.lateDays, 0);
@@ -617,3 +755,211 @@ export function buildMemberAttendanceAnalytics(
     yearlySummaries
   };
 }
+
+export interface AttendanceRangeBreakdown {
+  workingDays: number;
+  presentDays: number;
+  lateDays: number;
+  absentDays: number;
+  leaveDays: number;
+  attendedDays: number;
+  attendancePct: number;
+  avgCheckInTime: string;
+  longestStreakDays: number;
+  minMonth: AttendanceMonthSummary | null;
+  maxMonth: AttendanceMonthSummary | null;
+  monthlySummaries: AttendanceMonthSummary[];
+  yearlySummaries: AttendanceYearSummary[];
+}
+
+export function computeAttendanceRangeBreakdown(
+  logs: AttendanceDailyLogEntry[],
+  keyPrefix = 'range',
+  fromIso?: string,
+  toIso?: string
+): AttendanceRangeBreakdown {
+  const from = String(fromIso || '').trim();
+  const to = String(toIso || '').trim();
+  const filtered = (logs || []).filter((r) => {
+    if (from && r.dateIso < from) return false;
+    if (to && r.dateIso > to) return false;
+    return true;
+  });
+
+  const monthBuckets = new Map<string, {
+    year: number;
+    monthIndex: number;
+    monthKey: string;
+    monthLabel: string;
+    shortLabel: string;
+    workingDays: number;
+    presentDays: number;
+    lateDays: number;
+    absentDays: number;
+    leaveDays: number;
+    inMinsSum: number;
+    inMinsCount: number;
+    earliestMins: number;
+    latestMins: number;
+  }>();
+
+  let workingDays = 0;
+  let presentDays = 0;
+  let lateDays = 0;
+  let absentDays = 0;
+  let leaveDays = 0;
+  let totalInSum = 0;
+  let totalInCount = 0;
+  let longestStreakDays = 0;
+  let curStreak = 0;
+
+  const sortedAsc = [...filtered].sort((a, b) => a.dateIso.localeCompare(b.dateIso));
+  for (const r of sortedAsc) {
+    workingDays++;
+    if (r.status === 'Present') {
+      presentDays++;
+      curStreak++;
+    } else if (r.status === 'Late') {
+      lateDays++;
+      curStreak++;
+    } else if (r.status === 'On Leave') {
+      leaveDays++;
+      curStreak = 0;
+    } else {
+      absentDays++;
+      curStreak = 0;
+    }
+    if (curStreak > longestStreakDays) longestStreakDays = curStreak;
+
+    const mIdx = Math.max(0, Math.min(11, (Number(r.monthKey.slice(5, 7)) || 1) - 1));
+    let mb = monthBuckets.get(r.monthKey);
+    if (!mb) {
+      mb = {
+        year: r.year,
+        monthIndex: mIdx,
+        monthKey: r.monthKey,
+        monthLabel: r.monthLabel || `${MONTH_NAMES[mIdx]} ${r.year}`,
+        shortLabel: `${SHORT_MONTHS[mIdx]} ${String(r.year).slice(-2)}`,
+        workingDays: 0,
+        presentDays: 0,
+        lateDays: 0,
+        absentDays: 0,
+        leaveDays: 0,
+        inMinsSum: 0,
+        inMinsCount: 0,
+        earliestMins: 24 * 60,
+        latestMins: 0
+      };
+      monthBuckets.set(r.monthKey, mb);
+    }
+
+    mb.workingDays++;
+    if (r.status === 'Present') mb.presentDays++;
+    else if (r.status === 'Late') mb.lateDays++;
+    else if (r.status === 'On Leave') mb.leaveDays++;
+    else mb.absentDays++;
+
+    const inM = parseMinutesFromTimeString(r.checkInTime);
+    if (inM !== null) {
+      totalInSum += inM;
+      totalInCount++;
+      mb.inMinsSum += inM;
+      mb.inMinsCount++;
+      if (inM < mb.earliestMins) mb.earliestMins = inM;
+      if (inM > mb.latestMins) mb.latestMins = inM;
+    }
+  }
+
+  const monthlySummaries: AttendanceMonthSummary[] = Array.from(monthBuckets.values())
+    .map((b) => {
+      const attendedDays = b.presentDays + b.lateDays;
+      const pct = b.workingDays > 0 ? Number(((attendedDays / b.workingDays) * 100).toFixed(1)) : 0;
+      return {
+        key: `${keyPrefix}-${b.monthKey}`,
+        year: b.year,
+        monthIndex: b.monthIndex,
+        monthKey: b.monthKey,
+        monthLabel: b.monthLabel,
+        shortLabel: b.shortLabel,
+        workingDays: b.workingDays,
+        presentDays: b.presentDays,
+        lateDays: b.lateDays,
+        absentDays: b.absentDays,
+        leaveDays: b.leaveDays,
+        attendedDays,
+        attendancePct: pct,
+        avgCheckInTime: b.inMinsCount > 0 ? formatMinutesAs12h(b.inMinsSum / b.inMinsCount) : '07:50 AM',
+        earliestCheckIn: b.earliestMins < 24 * 60 ? formatMinutesAs12h(b.earliestMins) : '07:40 AM',
+        latestCheckIn: b.latestMins > 0 ? formatMinutesAs12h(b.latestMins) : '08:05 AM',
+        statusBand: computeStatusBand(pct)
+      };
+    })
+    .sort((a, b) => b.monthKey.localeCompare(a.monthKey));
+
+  let minMonth: AttendanceMonthSummary | null = null;
+  let maxMonth: AttendanceMonthSummary | null = null;
+  for (const m of monthlySummaries) {
+    if (!minMonth || m.attendancePct < minMonth.attendancePct) minMonth = m;
+    if (!maxMonth || m.attendancePct > maxMonth.attendancePct) maxMonth = m;
+  }
+
+  const yearMap = new Map<number, AttendanceMonthSummary[]>();
+  for (const m of monthlySummaries) {
+    const arr = yearMap.get(m.year) || [];
+    arr.push(m);
+    yearMap.set(m.year, arr);
+  }
+
+  const yearlySummaries: AttendanceYearSummary[] = Array.from(yearMap.entries())
+    .sort((a, b) => b[0] - a[0])
+    .map(([year, ms]) => {
+      const yWorking = ms.reduce((s, m) => s + m.workingDays, 0);
+      const yPresent = ms.reduce((s, m) => s + m.presentDays, 0);
+      const yLate = ms.reduce((s, m) => s + m.lateDays, 0);
+      const yAbsent = ms.reduce((s, m) => s + m.absentDays, 0);
+      const yLeave = ms.reduce((s, m) => s + m.leaveDays, 0);
+      const yAttended = ms.reduce((s, m) => s + m.attendedDays, 0);
+      const yPct = yWorking > 0 ? Number(((yAttended / yWorking) * 100).toFixed(1)) : 0;
+      let best = ms[0] || null;
+      let worst = ms[0] || null;
+      for (const m of ms) {
+        if (best && m.attendancePct > best.attendancePct) best = m;
+        if (worst && m.attendancePct < worst.attendancePct) worst = m;
+      }
+      return {
+        year,
+        workingDays: yWorking,
+        presentDays: yPresent,
+        lateDays: yLate,
+        absentDays: yAbsent,
+        leaveDays: yLeave,
+        attendedDays: yAttended,
+        attendancePct: yPct,
+        bestMonthLabel: best ? best.monthLabel : String(year),
+        bestMonthPct: best ? best.attendancePct : 0,
+        worstMonthLabel: worst ? worst.monthLabel : String(year),
+        worstMonthPct: worst ? worst.attendancePct : 0
+      };
+    });
+
+  const attendedDays = presentDays + lateDays;
+  const attendancePct = workingDays > 0 ? Number(((attendedDays / workingDays) * 100).toFixed(1)) : 0;
+  const avgCheckInTime = totalInCount > 0 ? formatMinutesAs12h(totalInSum / totalInCount) : '07:50 AM';
+
+  return {
+    workingDays,
+    presentDays,
+    lateDays,
+    absentDays,
+    leaveDays,
+    attendedDays,
+    attendancePct,
+    avgCheckInTime,
+    longestStreakDays,
+    minMonth,
+    maxMonth,
+    monthlySummaries,
+    yearlySummaries
+  };
+}
+

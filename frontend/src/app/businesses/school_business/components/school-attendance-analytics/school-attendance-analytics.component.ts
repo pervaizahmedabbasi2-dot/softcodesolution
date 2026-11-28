@@ -8,6 +8,7 @@ import {
   signal
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { MatIconModule } from '@angular/material/icon';
 import { LucideAngularModule } from 'lucide-angular';
 import {
   AttendanceMemberCategory,
@@ -23,9 +24,13 @@ import {
   AttendanceMemberAnalytics,
   AttendanceMonthSummary,
   AttendanceNormalizedMember,
+  AttendanceRangeBreakdown,
+  AttendanceVerificationChannelKind,
   AttendanceYearSummary,
   ExtraDailyGateLogInput,
   buildMemberAttendanceAnalytics,
+  computeAttendanceRangeBreakdown,
+  formatDisplayDate,
   parsePercentageValue
 } from '../../utils/school-attendance-history.util';
 import { SchoolTableDirective } from '../../directives/school-table.directive';
@@ -36,10 +41,13 @@ import { printHtmlInHiddenFrame } from '../../utils/thermal-print.util';
 export type AttendanceAnalyticsPortalContext = AttendancePortalContext | 'parent';
 export type AttendanceAnalyticsViewTab = 'daily' | 'monthly' | 'six_months' | 'yearly' | 'members';
 export type AnalyticsCategoryFilter = 'all' | AttendanceMemberCategory;
+export type VerificationMethodFilter = 'ALL' | AttendanceVerificationChannelKind;
+export type RangePresetKind = 'all' | 'this_month' | 'last_6m' | 'this_year' | 'last_year' | 'prev_2_year' | 'custom';
+export type PageToken = { kind: 'page'; page: number; label: string } | { kind: 'ellipsis'; id: string };
 
 @Component({
   selector: 'app-school-attendance-analytics',
-  imports: [CommonModule, LucideAngularModule, SchoolTableDirective],
+  imports: [CommonModule, MatIconModule, LucideAngularModule, SchoolTableDirective],
   templateUrl: './school-attendance-analytics.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -63,14 +71,26 @@ export class SchoolAttendanceAnalyticsComponent {
   activeBranchLabel = input<string>('All Branches (Group HQ)');
   titleOverride = input<string>('');
 
+  readonly currentYearNum = new Date().getFullYear();
+  readonly lastYearNum = this.currentYearNum - 1;
+  readonly prevTwoYearNum = this.currentYearNum - 2;
+  readonly earliestSelectableDate = `${this.prevTwoYearNum}-01-01`;
+  readonly latestSelectableDate = new Date().toISOString().split('T')[0];
+
   // Local filter & navigation signals
   activeView = signal<AttendanceAnalyticsViewTab>('monthly');
   categoryFilter = signal<AnalyticsCategoryFilter>('all');
   selectedMemberKey = signal<string>('aggregate');
   selectedYearFilter = signal<string>('ALL');
+  dateFrom = signal<string>('');
+  dateTo = signal<string>('');
+  rangePreset = signal<RangePresetKind>('all');
   dailyStatusFilter = signal<'ALL' | 'Present' | 'Late' | 'Absent' | 'On Leave'>('ALL');
+  methodFilter = signal<VerificationMethodFilter>('ALL');
   searchQuery = signal<string>('');
   gradeFilter = signal<string>('All');
+  pageSize = signal<number>(10);
+  currentPage = signal<number>(1);
 
   constructor() {
     effect(() => {
@@ -292,6 +312,35 @@ export class SchoolAttendanceAnalyticsComponent {
     return list.find((a) => `${a.member.category}:${a.member.id}` === key) || null;
   });
 
+  readonly effectiveFromIso = computed<string>(() => {
+    const a = this.dateFrom().trim();
+    const b = this.dateTo().trim();
+    if (a && b && a > b) return b;
+    return a;
+  });
+
+  readonly effectiveToIso = computed<string>(() => {
+    const a = this.dateFrom().trim();
+    const b = this.dateTo().trim();
+    if (a && b && a > b) return a;
+    return b;
+  });
+
+  readonly hasCustomDateRange = computed<boolean>(() =>
+    Boolean(this.effectiveFromIso() || this.effectiveToIso())
+  );
+
+  readonly activeRangeDisplayLabel = computed<string>(() => {
+    const from = this.effectiveFromIso();
+    const to = this.effectiveToIso();
+    if (from && to) return `${formatDisplayDate(from)} → ${formatDisplayDate(to)}`;
+    if (from) return `${formatDisplayDate(from)} → Today`;
+    if (to) return `Start → ${formatDisplayDate(to)}`;
+    const yr = this.selectedYearFilter();
+    if (yr !== 'ALL') return `Year ${yr} Full Record`;
+    return 'All 3 Academic Years';
+  });
+
   readonly availableYears = computed<string[]>(() => {
     const years = new Set<number>();
     for (const a of this.memberAnalyticsList()) {
@@ -300,15 +349,32 @@ export class SchoolAttendanceAnalyticsComponent {
     return ['ALL', ...Array.from(years).sort((a, b) => b - a).map(String)];
   });
 
+  readonly memberRangeBreakdownMap = computed<Map<string, AttendanceRangeBreakdown>>(() => {
+    const map = new Map<string, AttendanceRangeBreakdown>();
+    const from = this.effectiveFromIso();
+    const to = this.effectiveToIso();
+    if (!from && !to) return map;
+    for (const a of this.memberAnalyticsList()) {
+      const key = `${a.member.category}:${a.member.id}`;
+      map.set(key, computeAttendanceRangeBreakdown(a.dailyLogs, `range-${a.member.id}`, from, to));
+    }
+    return map;
+  });
+
   // Unified summary KPIs (works for single child/student, selected member, or campus/class aggregate)
+  // Automatically scopes Total / Selected Period / Min / Max when Start-to-End Date Range is active
   readonly activeSummary = computed(() => {
     const single = this.selectedMemberAnalytics();
     const yearFilter = this.selectedYearFilter();
+    const customRange = this.hasCustomDateRange();
+    const rangeMap = this.memberRangeBreakdownMap();
 
     if (single) {
+      const rb = customRange ? rangeMap.get(`${single.member.category}:${single.member.id}`) || null : null;
+      const baseMonths = rb ? rb.monthlySummaries : single.monthlySummaries;
       const yearMonths = yearFilter === 'ALL'
-        ? single.monthlySummaries
-        : single.monthlySummaries.filter((m) => String(m.year) === yearFilter);
+        ? baseMonths
+        : baseMonths.filter((m) => String(m.year) === yearFilter);
 
       let minM: AttendanceMonthSummary | null = null;
       let maxM: AttendanceMonthSummary | null = null;
@@ -334,13 +400,13 @@ export class SchoolAttendanceAnalyticsComponent {
         sectionOrDept: single.member.sectionOrDept,
         rfidOrTag: single.member.rfidOrTag,
         memberCount: 1,
-        totalWorkingDays: single.totalWorkingDays,
-        totalPresent: single.totalPresent,
-        totalLate: single.totalLate,
-        totalAbsent: single.totalAbsent,
-        totalLeave: single.totalLeave,
-        totalAttended: single.totalAttended,
-        overallPct: single.overallPct,
+        totalWorkingDays: rb ? rb.workingDays : single.totalWorkingDays,
+        totalPresent: rb ? rb.presentDays : single.totalPresent,
+        totalLate: rb ? rb.lateDays : single.totalLate,
+        totalAbsent: rb ? rb.absentDays : single.totalAbsent,
+        totalLeave: rb ? rb.leaveDays : single.totalLeave,
+        totalAttended: rb ? rb.attendedDays : single.totalAttended,
+        overallPct: rb ? rb.attendancePct : single.overallPct,
         sixMonthWorkingDays: single.sixMonthWorkingDays,
         sixMonthAttended: single.sixMonthAttended,
         sixMonthPresent: single.sixMonthPresent,
@@ -356,10 +422,10 @@ export class SchoolAttendanceAnalyticsComponent {
         yearAbsent,
         yearLeave,
         yearPct,
-        minMonth: minM || single.minMonth,
-        maxMonth: maxM || single.maxMonth,
-        longestStreakDays: single.longestStreakDays,
-        avgCheckInTime: single.avgCheckInTime,
+        minMonth: minM || (rb ? rb.minMonth : single.minMonth),
+        maxMonth: maxM || (rb ? rb.maxMonth : single.maxMonth),
+        longestStreakDays: rb ? rb.longestStreakDays : single.longestStreakDays,
+        avgCheckInTime: rb ? rb.avgCheckInTime : single.avgCheckInTime,
         todayLiveEntry: single.todayLiveEntry
       };
     }
@@ -387,8 +453,27 @@ export class SchoolAttendanceAnalyticsComponent {
       latestCheckIn: string;
     }>();
 
+    let aggWorkingRange = 0;
+    let aggPresentRange = 0;
+    let aggLateRange = 0;
+    let aggAbsentRange = 0;
+    let aggLeaveRange = 0;
+    let aggAttendedRange = 0;
+    let maxRangeStreak = 0;
+
     for (const a of list) {
-      for (const m of a.monthlySummaries) {
+      const rb = customRange ? rangeMap.get(`${a.member.category}:${a.member.id}`) || null : null;
+      const sourceMonths = rb ? rb.monthlySummaries : a.monthlySummaries;
+      if (rb) {
+        aggWorkingRange += rb.workingDays;
+        aggPresentRange += rb.presentDays;
+        aggLateRange += rb.lateDays;
+        aggAbsentRange += rb.absentDays;
+        aggLeaveRange += rb.leaveDays;
+        aggAttendedRange += rb.attendedDays;
+        if (rb.longestStreakDays > maxRangeStreak) maxRangeStreak = rb.longestStreakDays;
+      }
+      for (const m of sourceMonths) {
         const cur = monthBucket.get(m.monthKey);
         if (!cur) {
           monthBucket.set(m.monthKey, { ...m });
@@ -441,26 +526,41 @@ export class SchoolAttendanceAnalyticsComponent {
       if (!maxM || m.attendancePct > maxM.attendancePct) maxM = m;
     }
 
-    const totalWorkingDays = allAggMonths.reduce((s, m) => s + m.workingDays, 0);
-    const totalAttended = allAggMonths.reduce((s, m) => s + m.attendedDays, 0);
-    const totalPresent = allAggMonths.reduce((s, m) => s + m.presentDays, 0);
-    const totalLate = allAggMonths.reduce((s, m) => s + m.lateDays, 0);
-    const totalAbsent = allAggMonths.reduce((s, m) => s + m.absentDays, 0);
-    const totalLeave = allAggMonths.reduce((s, m) => s + m.leaveDays, 0);
-    const overallPct = totalWorkingDays > 0 ? Number(((totalAttended / totalWorkingDays) * 100).toFixed(1)) : 0;
-
-    const sixM = allAggMonths.slice(0, 6);
-    const prevSixM = allAggMonths.slice(6, 12);
-    const sixMonthWorkingDays = sixM.reduce((s, m) => s + m.workingDays, 0);
-    const sixMonthAttended = sixM.reduce((s, m) => s + m.attendedDays, 0);
-    const sixMonthPresent = sixM.reduce((s, m) => s + m.presentDays, 0);
-    const sixMonthLate = sixM.reduce((s, m) => s + m.lateDays, 0);
-    const sixMonthAbsent = sixM.reduce((s, m) => s + m.absentDays, 0);
-    const sixMonthLeave = sixM.reduce((s, m) => s + m.leaveDays, 0);
+    // 6-Month Rolling KPIs always come from full history for consistent 6M comparison
+    const fullBucket = new Map<string, { workingDays: number; presentDays: number; lateDays: number; absentDays: number; leaveDays: number; attendedDays: number }>();
+    for (const a of list) {
+      for (const m of a.monthlySummaries) {
+        const cur = fullBucket.get(m.monthKey) || { workingDays: 0, presentDays: 0, lateDays: 0, absentDays: 0, leaveDays: 0, attendedDays: 0 };
+        cur.workingDays += m.workingDays;
+        cur.presentDays += m.presentDays;
+        cur.lateDays += m.lateDays;
+        cur.absentDays += m.absentDays;
+        cur.leaveDays += m.leaveDays;
+        cur.attendedDays += m.attendedDays;
+        fullBucket.set(m.monthKey, cur);
+      }
+    }
+    const sortedFullKeys = Array.from(fullBucket.keys()).sort((a, b) => b.localeCompare(a));
+    const sixKeys = sortedFullKeys.slice(0, 6);
+    const prevSixKeys = sortedFullKeys.slice(6, 12);
+    const sixMonthWorkingDays = sixKeys.reduce((s, k) => s + (fullBucket.get(k)?.workingDays || 0), 0);
+    const sixMonthAttended = sixKeys.reduce((s, k) => s + (fullBucket.get(k)?.attendedDays || 0), 0);
+    const sixMonthPresent = sixKeys.reduce((s, k) => s + (fullBucket.get(k)?.presentDays || 0), 0);
+    const sixMonthLate = sixKeys.reduce((s, k) => s + (fullBucket.get(k)?.lateDays || 0), 0);
+    const sixMonthAbsent = sixKeys.reduce((s, k) => s + (fullBucket.get(k)?.absentDays || 0), 0);
+    const sixMonthLeave = sixKeys.reduce((s, k) => s + (fullBucket.get(k)?.leaveDays || 0), 0);
     const sixMonthPct = sixMonthWorkingDays > 0 ? Number(((sixMonthAttended / sixMonthWorkingDays) * 100).toFixed(1)) : 0;
-    const prevSixW = prevSixM.reduce((s, m) => s + m.workingDays, 0);
-    const prevSixA = prevSixM.reduce((s, m) => s + m.attendedDays, 0);
+    const prevSixW = prevSixKeys.reduce((s, k) => s + (fullBucket.get(k)?.workingDays || 0), 0);
+    const prevSixA = prevSixKeys.reduce((s, k) => s + (fullBucket.get(k)?.attendedDays || 0), 0);
     const prevSixPct = prevSixW > 0 ? (prevSixA / prevSixW) * 100 : sixMonthPct;
+
+    const totalWorkingDays = customRange ? aggWorkingRange : allAggMonths.reduce((s, m) => s + m.workingDays, 0);
+    const totalAttended = customRange ? aggAttendedRange : allAggMonths.reduce((s, m) => s + m.attendedDays, 0);
+    const totalPresent = customRange ? aggPresentRange : allAggMonths.reduce((s, m) => s + m.presentDays, 0);
+    const totalLate = customRange ? aggLateRange : allAggMonths.reduce((s, m) => s + m.lateDays, 0);
+    const totalAbsent = customRange ? aggAbsentRange : allAggMonths.reduce((s, m) => s + m.absentDays, 0);
+    const totalLeave = customRange ? aggLeaveRange : allAggMonths.reduce((s, m) => s + m.leaveDays, 0);
+    const overallPct = totalWorkingDays > 0 ? Number(((totalAttended / totalWorkingDays) * 100).toFixed(1)) : 0;
 
     const yearWorking = yearMonths.reduce((s, m) => s + m.workingDays, 0);
     const yearAttended = yearMonths.reduce((s, m) => s + m.attendedDays, 0);
@@ -505,45 +605,53 @@ export class SchoolAttendanceAnalyticsComponent {
       yearPct,
       minMonth: minM,
       maxMonth: maxM,
-      longestStreakDays: Math.max(...list.map((a) => a.longestStreakDays), 0),
+      longestStreakDays: customRange ? maxRangeStreak : Math.max(...list.map((a) => a.longestStreakDays), 0),
       avgCheckInTime: list[0]?.avgCheckInTime || '07:52 AM',
       todayLiveEntry: list[0]?.todayLiveEntry || null
     };
   });
 
-  readonly monthlyRows = computed<AttendanceMonthSummary[]>(() => {
+  readonly monthlyRowsAllYears = computed<AttendanceMonthSummary[]>(() => {
     const single = this.selectedMemberAnalytics();
-    const yearFilter = this.selectedYearFilter();
-    let list: AttendanceMonthSummary[] = [];
+    const customRange = this.hasCustomDateRange();
+    const rangeMap = this.memberRangeBreakdownMap();
 
     if (single) {
-      list = single.monthlySummaries;
-    } else {
-      const bucket = new Map<string, AttendanceMonthSummary>();
-      for (const a of this.memberAnalyticsList()) {
-        for (const m of a.monthlySummaries) {
-          const cur = bucket.get(m.monthKey);
-          if (!cur) {
-            bucket.set(m.monthKey, { ...m, key: `agg-${m.monthKey}` });
-          } else {
-            cur.workingDays += m.workingDays;
-            cur.presentDays += m.presentDays;
-            cur.lateDays += m.lateDays;
-            cur.absentDays += m.absentDays;
-            cur.leaveDays += m.leaveDays;
-            cur.attendedDays += m.attendedDays;
-          }
+      const rb = customRange ? rangeMap.get(`${single.member.category}:${single.member.id}`) || null : null;
+      return rb ? rb.monthlySummaries : single.monthlySummaries;
+    }
+
+    const bucket = new Map<string, AttendanceMonthSummary>();
+    for (const a of this.memberAnalyticsList()) {
+      const rb = customRange ? rangeMap.get(`${a.member.category}:${a.member.id}`) || null : null;
+      const sourceMonths = rb ? rb.monthlySummaries : a.monthlySummaries;
+      for (const m of sourceMonths) {
+        const cur = bucket.get(m.monthKey);
+        if (!cur) {
+          bucket.set(m.monthKey, { ...m, key: `agg-${m.monthKey}` });
+        } else {
+          cur.workingDays += m.workingDays;
+          cur.presentDays += m.presentDays;
+          cur.lateDays += m.lateDays;
+          cur.absentDays += m.absentDays;
+          cur.leaveDays += m.leaveDays;
+          cur.attendedDays += m.attendedDays;
         }
       }
-      list = Array.from(bucket.values())
-        .map((b) => {
-          const pct = b.workingDays > 0 ? Number(((b.attendedDays / b.workingDays) * 100).toFixed(1)) : 0;
-          const statusBand: AttendanceMonthSummary['statusBand'] =
-            pct >= 95 ? 'Exemplary' : (pct >= 88 ? 'Good' : (pct >= 78 ? 'Watch' : 'Low'));
-          return { ...b, attendancePct: pct, statusBand };
-        })
-        .sort((a, b) => b.monthKey.localeCompare(a.monthKey));
     }
+    return Array.from(bucket.values())
+      .map((b) => {
+        const pct = b.workingDays > 0 ? Number(((b.attendedDays / b.workingDays) * 100).toFixed(1)) : 0;
+        const statusBand: AttendanceMonthSummary['statusBand'] =
+          pct >= 95 ? 'Exemplary' : (pct >= 88 ? 'Good' : (pct >= 78 ? 'Watch' : 'Low'));
+        return { ...b, attendancePct: pct, statusBand };
+      })
+      .sort((a, b) => b.monthKey.localeCompare(a.monthKey));
+  });
+
+  readonly monthlyRows = computed<AttendanceMonthSummary[]>(() => {
+    const yearFilter = this.selectedYearFilter();
+    let list = this.monthlyRowsAllYears();
 
     if (this.activeView() === 'six_months') {
       list = list.slice(0, 6);
@@ -561,13 +669,10 @@ export class SchoolAttendanceAnalyticsComponent {
     );
   });
 
-  readonly chartMonthlyBars = computed<AttendanceMonthSummary[]>(() => {
-    return [...this.monthlyRows()].slice(0, 12).reverse();
-  });
-
   readonly yearlyRows = computed<AttendanceYearSummary[]>(() => {
     const single = this.selectedMemberAnalytics();
-    if (single) return single.yearlySummaries;
+    const customRange = this.hasCustomDateRange();
+    if (single && !customRange) return single.yearlySummaries;
 
     const bucket = new Map<number, { workingDays: number; presentDays: number; lateDays: number; absentDays: number; leaveDays: number; attendedDays: number }>();
     const monthByYear = new Map<number, AttendanceMonthSummary[]>();
@@ -613,65 +718,79 @@ export class SchoolAttendanceAnalyticsComponent {
       });
   });
 
-  readonly monthlyRowsAllYears = computed<AttendanceMonthSummary[]>(() => {
-    const single = this.selectedMemberAnalytics();
-    if (single) return single.monthlySummaries;
-    const bucket = new Map<string, AttendanceMonthSummary>();
-    for (const a of this.memberAnalyticsList()) {
-      for (const m of a.monthlySummaries) {
-        const cur = bucket.get(m.monthKey);
-        if (!cur) {
-          bucket.set(m.monthKey, { ...m, key: `agg-${m.monthKey}` });
-        } else {
-          cur.workingDays += m.workingDays;
-          cur.presentDays += m.presentDays;
-          cur.lateDays += m.lateDays;
-          cur.absentDays += m.absentDays;
-          cur.leaveDays += m.leaveDays;
-          cur.attendedDays += m.attendedDays;
-        }
-      }
-    }
-    return Array.from(bucket.values())
-      .map((b) => ({
-        ...b,
-        attendancePct: b.workingDays > 0 ? Number(((b.attendedDays / b.workingDays) * 100).toFixed(1)) : 0
-      }))
-      .sort((a, b) => b.monthKey.localeCompare(a.monthKey));
-  });
-
-  readonly dailyLogRows = computed<AttendanceDailyLogEntry[]>(() => {
+  readonly dailyLogBaseRows = computed<AttendanceDailyLogEntry[]>(() => {
     const single = this.selectedMemberAnalytics();
     const statusFilter = this.dailyStatusFilter();
     const yearFilter = this.selectedYearFilter();
+    const from = this.effectiveFromIso();
+    const to = this.effectiveToIso();
     const q = this.searchQuery().trim().toLowerCase();
 
-    let allRows: AttendanceDailyLogEntry[] = [];
+    const matchesQueryAndStatus = (r: AttendanceDailyLogEntry) => {
+      if (yearFilter !== 'ALL' && String(r.year) !== yearFilter) return false;
+      if (from && r.dateIso < from) return false;
+      if (to && r.dateIso > to) return false;
+      if (statusFilter !== 'ALL' && r.status !== statusFilter) return false;
+      if (!q) return true;
+      return (
+        r.displayDate.toLowerCase().includes(q) ||
+        r.dayName.toLowerCase().includes(q) ||
+        r.memberName.toLowerCase().includes(q) ||
+        r.memberCode.toLowerCase().includes(q) ||
+        r.gateTerminal.toLowerCase().includes(q) ||
+        r.verificationMethod.toLowerCase().includes(q) ||
+        r.verifiedBy.toLowerCase().includes(q) ||
+        r.status.toLowerCase().includes(q)
+      );
+    };
+
     if (single) {
-      allRows = single.dailyLogs;
-    } else {
-      // Aggregate mode: combine recent gate punches across members
-      allRows = this.memberAnalyticsList()
-        .flatMap((a) => a.dailyLogs.slice(0, 10))
-        .sort((a, b) => b.dateIso.localeCompare(a.dateIso));
+      // Allow browsing the full multi-year range statement in single-member mode
+      return single.dailyLogs.filter(matchesQueryAndStatus).slice(0, 1000);
     }
 
-    return allRows
-      .filter((r) => {
-        if (yearFilter !== 'ALL' && String(r.year) !== yearFilter) return false;
-        if (statusFilter !== 'ALL' && r.status !== statusFilter) return false;
-        if (!q) return true;
-        return (
-          r.displayDate.toLowerCase().includes(q) ||
-          r.dayName.toLowerCase().includes(q) ||
-          r.memberName.toLowerCase().includes(q) ||
-          r.memberCode.toLowerCase().includes(q) ||
-          r.gateTerminal.toLowerCase().includes(q) ||
-          r.verificationMethod.toLowerCase().includes(q) ||
-          r.status.toLowerCase().includes(q)
-        );
-      })
-      .slice(0, 120);
+    // Aggregate mode: filter by date range & criteria BEFORE slicing per member so past years / custom ranges never return empty!
+    const combined: AttendanceDailyLogEntry[] = [];
+    for (const a of this.memberAnalyticsList()) {
+      let addedForMember = 0;
+      for (const r of a.dailyLogs) {
+        if (!matchesQueryAndStatus(r)) continue;
+        combined.push(r);
+        addedForMember++;
+        if (addedForMember >= 25) break;
+      }
+    }
+    return combined
+      .sort((a, b) => b.dateIso.localeCompare(a.dateIso))
+      .slice(0, 500);
+  });
+
+  readonly methodBreakdown = computed(() => {
+    const base = this.dailyLogBaseRows();
+    let face = 0;
+    let fingerprint = 0;
+    let card = 0;
+    let manual = 0;
+    for (const r of base) {
+      if (r.methodChannel === 'face') face++;
+      else if (r.methodChannel === 'fingerprint') fingerprint++;
+      else if (r.methodChannel === 'card') card++;
+      else manual++;
+    }
+    return {
+      total: base.length,
+      face,
+      fingerprint,
+      card,
+      manual
+    };
+  });
+
+  readonly dailyLogRows = computed<AttendanceDailyLogEntry[]>(() => {
+    const mf = this.methodFilter();
+    const base = this.dailyLogBaseRows();
+    if (mf === 'ALL') return base;
+    return base.filter((r) => r.methodChannel === mf);
   });
 
   readonly filteredMemberMatrix = computed<AttendanceMemberAnalytics[]>(() => {
@@ -687,20 +806,265 @@ export class SchoolAttendanceAnalyticsComponent {
     });
   });
 
+  // Pagination Computeds
+  readonly totalRowsCount = computed<number>(() => {
+    const v = this.activeView();
+    if (v === 'daily') return this.dailyLogRows().length;
+    if (v === 'yearly') return this.yearlyRows().length;
+    if (v === 'members') return this.filteredMemberMatrix().length;
+    return this.monthlyRows().length;
+  });
+
+  readonly totalPages = computed<number>(() => {
+    const size = Math.max(1, this.pageSize());
+    return Math.max(1, Math.ceil(this.totalRowsCount() / size));
+  });
+
+  readonly safeCurrentPage = computed<number>(() => {
+    return Math.min(Math.max(1, this.currentPage()), this.totalPages());
+  });
+
+  readonly pageStartItem = computed<number>(() => {
+    const total = this.totalRowsCount();
+    if (total === 0) return 0;
+    return (this.safeCurrentPage() - 1) * this.pageSize() + 1;
+  });
+
+  readonly pageEndItem = computed<number>(() => {
+    return Math.min(this.totalRowsCount(), this.safeCurrentPage() * this.pageSize());
+  });
+
+  readonly visiblePageTokens = computed<PageToken[]>(() => {
+    const total = this.totalPages();
+    const cur = this.safeCurrentPage();
+    const tokens: PageToken[] = [];
+
+    if (total <= 7) {
+      for (let i = 1; i <= total; i++) {
+        tokens.push({ kind: 'page', page: i, label: String(i) });
+      }
+      return tokens;
+    }
+
+    tokens.push({ kind: 'page', page: 1, label: '1' });
+    if (cur > 3) {
+      tokens.push({ kind: 'ellipsis', id: 'left' });
+    }
+    const start = Math.max(2, cur - 1);
+    const end = Math.min(total - 1, cur + 1);
+    for (let i = start; i <= end; i++) {
+      tokens.push({ kind: 'page', page: i, label: String(i) });
+    }
+    if (cur < total - 2) {
+      tokens.push({ kind: 'ellipsis', id: 'right' });
+    }
+    tokens.push({ kind: 'page', page: total, label: String(total) });
+    return tokens;
+  });
+
+  readonly pagedDailyLogRows = computed<AttendanceDailyLogEntry[]>(() => {
+    const start = (this.safeCurrentPage() - 1) * this.pageSize();
+    return this.dailyLogRows().slice(start, start + this.pageSize());
+  });
+
+  readonly pagedMonthlyRows = computed<AttendanceMonthSummary[]>(() => {
+    const start = (this.safeCurrentPage() - 1) * this.pageSize();
+    return this.monthlyRows().slice(start, start + this.pageSize());
+  });
+
+  readonly pagedYearlyRows = computed<AttendanceYearSummary[]>(() => {
+    const start = (this.safeCurrentPage() - 1) * this.pageSize();
+    return this.yearlyRows().slice(start, start + this.pageSize());
+  });
+
+  readonly pagedMemberMatrix = computed<AttendanceMemberAnalytics[]>(() => {
+    const start = (this.safeCurrentPage() - 1) * this.pageSize();
+    return this.filteredMemberMatrix().slice(start, start + this.pageSize());
+  });
+
+  setView(view: AttendanceAnalyticsViewTab): void {
+    this.activeView.set(view);
+    this.currentPage.set(1);
+  }
+
+  setYearFilter(year: string): void {
+    this.selectedYearFilter.set(year);
+    if (year !== 'ALL') {
+      this.dateFrom.set('');
+      this.dateTo.set('');
+      this.rangePreset.set('all');
+    }
+    this.currentPage.set(1);
+  }
+
+  setDateFrom(val: string): void {
+    this.dateFrom.set(String(val || '').trim());
+    this.selectedYearFilter.set('ALL');
+    this.rangePreset.set(this.dateFrom() || this.dateTo() ? 'custom' : 'all');
+    this.currentPage.set(1);
+  }
+
+  setDateTo(val: string): void {
+    this.dateTo.set(String(val || '').trim());
+    this.selectedYearFilter.set('ALL');
+    this.rangePreset.set(this.dateFrom() || this.dateTo() ? 'custom' : 'all');
+    this.currentPage.set(1);
+  }
+
+  applyRangePreset(preset: Exclude<RangePresetKind, 'custom'>): void {
+    const now = new Date();
+    const todayIso = now.toISOString().split('T')[0];
+    this.rangePreset.set(preset);
+    this.selectedYearFilter.set('ALL');
+
+    if (preset === 'all') {
+      this.dateFrom.set('');
+      this.dateTo.set('');
+    } else if (preset === 'this_month') {
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, '0');
+      this.dateFrom.set(`${y}-${m}-01`);
+      this.dateTo.set(todayIso);
+    } else if (preset === 'last_6m') {
+      const d = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      this.dateFrom.set(`${y}-${m}-01`);
+      this.dateTo.set(todayIso);
+    } else if (preset === 'this_year') {
+      this.dateFrom.set(`${this.currentYearNum}-01-01`);
+      this.dateTo.set(todayIso);
+    } else if (preset === 'last_year') {
+      this.dateFrom.set(`${this.lastYearNum}-01-01`);
+      this.dateTo.set(`${this.lastYearNum}-12-31`);
+    } else if (preset === 'prev_2_year') {
+      this.dateFrom.set(`${this.prevTwoYearNum}-01-01`);
+      this.dateTo.set(`${this.prevTwoYearNum}-12-31`);
+    }
+    this.currentPage.set(1);
+  }
+
+  clearDateRange(): void {
+    this.dateFrom.set('');
+    this.dateTo.set('');
+    this.rangePreset.set('all');
+    this.currentPage.set(1);
+  }
+
+  memberEffectiveStats(a: AttendanceMemberAnalytics) {
+    if (this.hasCustomDateRange()) {
+      const rb = this.memberRangeBreakdownMap().get(`${a.member.category}:${a.member.id}`);
+      if (rb) {
+        return {
+          overallPct: rb.attendancePct,
+          attendedDays: rb.attendedDays,
+          workingDays: rb.workingDays,
+          minMonth: rb.minMonth,
+          maxMonth: rb.maxMonth
+        };
+      }
+    }
+    return {
+      overallPct: a.overallPct,
+      attendedDays: a.totalAttended,
+      workingDays: a.totalWorkingDays,
+      minMonth: a.minMonth,
+      maxMonth: a.maxMonth
+    };
+  }
+
+  setStatusFilter(status: 'ALL' | 'Present' | 'Late' | 'Absent' | 'On Leave'): void {
+    this.dailyStatusFilter.set(status);
+    this.currentPage.set(1);
+  }
+
+  setMethodFilter(method: VerificationMethodFilter): void {
+    this.methodFilter.set(method);
+    this.currentPage.set(1);
+  }
+
+  setSearchQuery(query: string): void {
+    this.searchQuery.set(query);
+    this.currentPage.set(1);
+  }
+
+  setPageSize(raw: unknown): void {
+    const n = Number(raw);
+    if (Number.isFinite(n) && n > 0) {
+      this.pageSize.set(n);
+      this.currentPage.set(1);
+    }
+  }
+
+  goToPage(page: number): void {
+    const clamped = Math.min(Math.max(1, page), this.totalPages());
+    this.currentPage.set(clamped);
+  }
+
+  prevPage(): void {
+    if (this.safeCurrentPage() > 1) {
+      this.currentPage.set(this.safeCurrentPage() - 1);
+    }
+  }
+
+  nextPage(): void {
+    if (this.safeCurrentPage() < this.totalPages()) {
+      this.currentPage.set(this.safeCurrentPage() + 1);
+    }
+  }
+
+  resetTableFilters(): void {
+    this.searchQuery.set('');
+    this.selectedYearFilter.set('ALL');
+    this.dateFrom.set('');
+    this.dateTo.set('');
+    this.rangePreset.set('all');
+    this.dailyStatusFilter.set('ALL');
+    this.methodFilter.set('ALL');
+    this.currentPage.set(1);
+  }
+
   setCategory(cat: AnalyticsCategoryFilter): void {
     this.categoryFilter.set(cat);
     this.selectedMemberKey.set('aggregate');
+    this.currentPage.set(1);
+  }
+
+  setGradeFilter(grade: string): void {
+    this.gradeFilter.set(grade);
+    this.currentPage.set(1);
+  }
+
+  setSelectedMember(key: string): void {
+    this.selectedMemberKey.set(key);
+    this.currentPage.set(1);
   }
 
   inspectMember(a: AttendanceMemberAnalytics): void {
     this.selectedMemberKey.set(`${a.member.category}:${a.member.id}`);
-    this.activeView.set('monthly');
+    this.activeView.set('daily');
+    this.currentPage.set(1);
   }
 
   clearSelectedMember(): void {
     if (!this.isSinglePersonPortal()) {
       this.selectedMemberKey.set('aggregate');
+      this.currentPage.set(1);
     }
+  }
+
+  methodIconName(channel: AttendanceVerificationChannelKind): string {
+    if (channel === 'fingerprint') return 'fingerprint';
+    if (channel === 'card') return 'credit-card';
+    if (channel === 'manual') return 'clipboard-check';
+    return 'scan-face';
+  }
+
+  methodBadgeClass(channel: AttendanceVerificationChannelKind): string {
+    if (channel === 'fingerprint') return 'bg-violet-50 text-violet-700 border-violet-200';
+    if (channel === 'card') return 'bg-sky-50 text-sky-700 border-sky-200';
+    if (channel === 'manual') return 'bg-amber-50 text-amber-800 border-amber-200';
+    return 'bg-emerald-50 text-emerald-700 border-emerald-200';
   }
 
   categoryLabel(cat: AnalyticsCategoryFilter): string {
@@ -726,10 +1090,10 @@ export class SchoolAttendanceAnalyticsComponent {
     let rows: string[][] = [];
 
     if (view === 'daily') {
-      headers = ['Date', 'Day', 'Member', 'ID / Roll', 'Class / Dept', 'Check-In', 'Check-Out', 'Late Audit', 'Gate & Method', 'Status'];
+      headers = ['Date', 'Day', 'Member', 'ID / Roll', 'Class / Dept', 'Check-In', 'Check-Out', 'Late Audit', 'Verification Method', 'Gate & Verified By', 'Status'];
       rows = this.dailyLogRows().map((r) => [
         r.displayDate, r.dayName, r.memberName, r.memberCode, r.gradeOrDept,
-        r.checkInTime, r.checkOutTime, r.lateByLabel, `${r.gateTerminal} (${r.verificationMethod})`, r.status
+        r.checkInTime, r.checkOutTime, r.lateByLabel, `${r.verificationMethod} (${r.confidenceScore}%)`, `${r.gateTerminal} · ${r.verifiedBy}`, r.status
       ]);
     } else if (view === 'yearly') {
       headers = ['Year', 'Working Days', 'Present', 'Late', 'Absent', 'Approved Leaves', 'Peak Month (Max)', 'Lowest Month (Min)', 'Overall %'];
@@ -739,14 +1103,18 @@ export class SchoolAttendanceAnalyticsComponent {
         `${y.bestMonthLabel} (${y.bestMonthPct}%)`, `${y.worstMonthLabel} (${y.worstMonthPct}%)`, `${y.attendancePct}%`
       ]);
     } else if (view === 'members') {
-      headers = ['ID / Roll', 'Member Name', 'Role', 'Class / Dept', 'Total %', '6-Month %', 'Min Month', 'Max Month', 'Present / Working'];
-      rows = this.filteredMemberMatrix().map((a) => [
-        a.member.code, a.member.name, this.singleCategoryBadge(a.member.category), a.member.subLabel,
-        `${a.overallPct}%`, `${a.sixMonthPct}%`,
-        a.minMonth ? `${a.minMonth.shortLabel} (${a.minMonth.attendancePct}%)` : '—',
-        a.maxMonth ? `${a.maxMonth.shortLabel} (${a.maxMonth.attendancePct}%)` : '—',
-        `${a.totalAttended} / ${a.totalWorkingDays}`
-      ]);
+      const rangeHeader = this.hasCustomDateRange() ? 'Range Total %' : 'Total %';
+      headers = ['ID / Roll', 'Member Name', 'Role', 'Class / Dept', rangeHeader, '6-Month %', 'Min Month', 'Max Month', 'Present / Working'];
+      rows = this.filteredMemberMatrix().map((a) => {
+        const eff = this.memberEffectiveStats(a);
+        return [
+          a.member.code, a.member.name, this.singleCategoryBadge(a.member.category), a.member.subLabel,
+          `${eff.overallPct}%`, `${a.sixMonthPct}%`,
+          eff.minMonth ? `${eff.minMonth.shortLabel} (${eff.minMonth.attendancePct}%)` : '—',
+          eff.maxMonth ? `${eff.maxMonth.shortLabel} (${eff.maxMonth.attendancePct}%)` : '—',
+          `${eff.attendedDays} / ${eff.workingDays}`
+        ];
+      });
     } else {
       headers = ['Month & Year', 'Working Days', 'Present', 'Late', 'Absent', 'Approved Leaves', 'Avg Check-In', 'Attendance %', 'Standing'];
       rows = this.monthlyRows().map((m) => [
@@ -760,7 +1128,10 @@ export class SchoolAttendanceAnalyticsComponent {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `attendance_${view}_${this.selectedYearFilter().toLowerCase()}.csv`;
+    const suffix = this.hasCustomDateRange()
+      ? `${this.effectiveFromIso() || 'start'}_to_${this.effectiveToIso() || 'today'}`
+      : this.selectedYearFilter().toLowerCase();
+    a.download = `attendance_record_${view}_${suffix}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -769,6 +1140,7 @@ export class SchoolAttendanceAnalyticsComponent {
     if (!this.canExportReports() || typeof document === 'undefined') return;
     const view = this.activeView();
     const summary = this.activeSummary();
+    const rangeLabel = this.activeRangeDisplayLabel();
     const tableId =
       view === 'daily'
         ? 'attendance_history_daily_log'
@@ -782,22 +1154,23 @@ export class SchoolAttendanceAnalyticsComponent {
 
     let headers: string[] = [];
     let rows: string[][] = [];
-    let title = 'Monthly Attendance Record & Historical Statement';
+    let title = `Attendance Record Statement (${rangeLabel})`;
 
     if (view === 'daily') {
-      title = `Daily Gate Attendance Log — ${summary?.title || this.schoolName()}`;
-      headers = ['Date', 'Member', 'Check-In', 'Check-Out', 'Punctuality', 'Gate Terminal', 'Status'];
-      rows = this.dailyLogRows().slice(0, 60).map((r) => [
+      title = `Daily Attendance Statement (${rangeLabel}) — ${summary?.title || this.schoolName()}`;
+      headers = ['Date', 'Member', 'Check-In', 'Check-Out', 'Punctuality', 'Method & Source', 'Gate Terminal', 'Status'];
+      rows = this.dailyLogRows().slice(0, 120).map((r) => [
         `${r.displayDate} (${r.dayName.slice(0, 3)})`,
         `${r.memberName} (${r.memberCode})`,
         r.checkInTime,
         r.checkOutTime,
         r.lateByLabel,
-        r.gateTerminal,
+        `${r.verificationMethod} (${r.confidenceScore}%)`,
+        `${r.gateTerminal} · ${r.verifiedBy}`,
         r.status
       ]);
     } else if (view === 'yearly') {
-      title = `Multi-Year Attendance History — ${summary?.title || this.schoolName()}`;
+      title = `Multi-Year Attendance History (${rangeLabel}) — ${summary?.title || this.schoolName()}`;
       headers = ['Year', 'Working', 'Present', 'Late', 'Absent', 'Leave', 'Best Month (Max)', 'Lowest Month (Min)', 'Overall %'];
       rows = this.yearlyRows().map((y) => [
         String(y.year), String(y.workingDays), String(y.presentDays), String(y.lateDays),
@@ -805,17 +1178,20 @@ export class SchoolAttendanceAnalyticsComponent {
         `${y.bestMonthLabel} (${y.bestMonthPct}%)`, `${y.worstMonthLabel} (${y.worstMonthPct}%)`, `${y.attendancePct}%`
       ]);
     } else if (view === 'members') {
-      title = `Campus Attendance Analytics Matrix — ${this.activeBranchLabel()}`;
-      headers = ['ID', 'Member Name', 'Role', 'Total %', '6M %', 'Min Month', 'Max Month', 'Attended / Days'];
-      rows = this.filteredMemberMatrix().map((a) => [
-        a.member.code, a.member.name, this.singleCategoryBadge(a.member.category),
-        `${a.overallPct}%`, `${a.sixMonthPct}%`,
-        a.minMonth ? `${a.minMonth.shortLabel} (${a.minMonth.attendancePct}%)` : '—',
-        a.maxMonth ? `${a.maxMonth.shortLabel} (${a.maxMonth.attendancePct}%)` : '—',
-        `${a.totalAttended}/${a.totalWorkingDays}`
-      ]);
+      title = `Campus Attendance Record Matrix (${rangeLabel}) — ${this.activeBranchLabel()}`;
+      headers = ['ID', 'Member Name', 'Role', this.hasCustomDateRange() ? 'Range %' : 'Total %', '6M %', 'Min Month', 'Max Month', 'Attended / Days'];
+      rows = this.filteredMemberMatrix().map((a) => {
+        const eff = this.memberEffectiveStats(a);
+        return [
+          a.member.code, a.member.name, this.singleCategoryBadge(a.member.category),
+          `${eff.overallPct}%`, `${a.sixMonthPct}%`,
+          eff.minMonth ? `${eff.minMonth.shortLabel} (${eff.minMonth.attendancePct}%)` : '—',
+          eff.maxMonth ? `${eff.maxMonth.shortLabel} (${eff.maxMonth.attendancePct}%)` : '—',
+          `${eff.attendedDays}/${eff.workingDays}`
+        ];
+      });
     } else {
-      title = `${view === 'six_months' ? '6-Month' : 'Monthly'} Attendance Record — ${summary?.title || this.schoolName()}`;
+      title = `${view === 'six_months' ? '6-Month' : 'Attendance Record'} Statement (${rangeLabel}) — ${summary?.title || this.schoolName()}`;
       headers = ['Month & Year', 'Working', 'Present', 'Late', 'Absent', 'Leave', 'Avg In', 'Rate %', 'Standing'];
       rows = this.monthlyRows().map((m) => [
         m.monthLabel, String(m.workingDays), String(m.presentDays), String(m.lateDays),
@@ -827,17 +1203,18 @@ export class SchoolAttendanceAnalyticsComponent {
       tableId,
       canonicalTableId,
       title,
-      subtitle: `Total: ${summary?.overallPct ?? 0}% · 6-Month: ${summary?.sixMonthPct ?? 0}% · Min: ${summary?.minMonth?.shortLabel || '—'} (${summary?.minMonth?.attendancePct ?? 0}%) · Max: ${summary?.maxMonth?.shortLabel || '—'} (${summary?.maxMonth?.attendancePct ?? 0}%)`,
+      subtitle: `Period: ${rangeLabel} · Statement Total: ${summary?.overallPct ?? 0}% (${summary?.totalAttended ?? 0}/${summary?.totalWorkingDays ?? 0}d) · Min: ${summary?.minMonth?.shortLabel || '—'} (${summary?.minMonth?.attendancePct ?? 0}%) · Max: ${summary?.maxMonth?.shortLabel || '—'} (${summary?.maxMonth?.attendancePct ?? 0}%)`,
       roleLabel: this.portalContext().toUpperCase(),
       headers,
       rows,
       totalUnfilteredCount: rows.length,
       criteria: {
         searchQuery: this.searchQuery(),
-        fromDate: this.selectedYearFilter()
+        fromDate: this.effectiveFromIso() || this.selectedYearFilter(),
+        toDate: this.effectiveToIso() || undefined
       },
       branding,
-      statementRef: `ATT-HIST-${this.portalContext().toUpperCase()}-${new Date().toISOString().slice(0, 10)}`
+      statementRef: `ATT-STMT-${this.portalContext().toUpperCase()}-${new Date().toISOString().slice(0, 10)}`
     });
 
     await printHtmlInHiddenFrame(html);

@@ -15657,7 +15657,7 @@
           [verificationLogs]="scopedFaceVerificationLogs"
           [currentActorName]="'Principal Directorate'"
           [activeBranchLabel]="activeScopeSummaryLabel"
-          [titleOverride]="'Principal Campus Attendance History & Analytics'"
+          [titleOverride]="'Attendance Record'"
         />
       }
 
@@ -16960,7 +16960,7 @@
             [currentTeacherGrade]="currentTeacherProfile.assignedGrade || 'All'"
             [currentActorName]="currentTeacherProfile.name || 'Faculty Operator'"
             [activeBranchLabel]="activeScopeSummaryLabel"
-            [titleOverride]="'Class & Faculty Attendance History & Analytics'"
+            [titleOverride]="'Attendance Record'"
           />
         </div>
       }
@@ -18633,7 +18633,7 @@
             [focusedStudentSummary]="currentStudentProfile"
             [currentActorName]="currentStudentProfile?.name || 'Student'"
             [activeBranchLabel]="activeScopeSummaryLabel"
-            [titleOverride]="'Monthly Attendance Record & Verification History'"
+            [titleOverride]="'Attendance Record'"
           />
         </div>
       }
@@ -19862,7 +19862,7 @@
                     <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors" [class]="parentTab === 'attendance' ? 'bg-white/20 text-white' : 'bg-gradient-to-tr from-teal-600 via-teal-600 to-cyan-500 text-white shadow-2xs group-hover:scale-105'">
                       <lucide-icon [name]="'clock'" class="w-4 h-4"></lucide-icon>
                     </div>
-                    <span class="text-xs truncate">Monthly Attendance Record</span>
+                    <span class="text-xs truncate">Attendance Record</span>
                   </div>
                   @if (parentTab === 'attendance') {
                     <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse shrink-0"></span>
@@ -19989,7 +19989,7 @@
               <button (click)="setParentTab('attendance')" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap"
                 [class]="parentTab === 'attendance' ? 'bg-purple-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'">
                 <lucide-icon [name]="'clock'" class="w-3.5 h-3.5"></lucide-icon>
-                <span>Monthly Attendance Record</span>
+                <span>Attendance Record</span>
               </button>
               <button (click)="setParentTab('academics')" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap"
                 [class]="parentTab === 'academics' ? 'bg-purple-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'">
@@ -20209,7 +20209,7 @@
           [focusedStudentSummary]="selectedParentChild"
           [currentActorName]="currentGuardianProfile?.name || 'Parent Guardian'"
           [activeBranchLabel]="activeScopeSummaryLabel"
-          [titleOverride]="'Monthly Attendance Record'"
+          [titleOverride]="'Attendance Record'"
         />
       }
 

@@ -2913,7 +2913,7 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
     switch (this.parentTab) {
       case 'feed': return 'Campus Notices & Circulars Stream';
       case 'events': return 'School Events & Galas';
-      case 'attendance': return 'Monthly Attendance Record & RFID Log';
+      case 'attendance': return 'Attendance Record';
       case 'academics': return 'Terminal Exam Report Card';
       case 'fee': return 'Tuition Fee & Bank Challan Vouchers';
       case 'leave': return 'Student Leave Applications';
@@ -13928,13 +13928,39 @@ INSTRUCTIONS:
   // --- TEACHER ACTIONS & TWO-WAY ACADEMIC WORKFLOWS ---
   markTeacherAttendance(student: StudentRecord, status: 'Present' | 'Late' | 'Absent') {
     student.status = status;
+    this.pushUnifiedAttendanceVerification({
+      memberCategory: 'student',
+      memberId: student.id,
+      memberName: student.name,
+      memberCode: student.rollNo || student.id,
+      gradeOrDept: student.grade || 'Class 10-A',
+      status,
+      gateName: `Teacher Class Roll Call (${student.grade || 'Classroom'})`,
+      verificationMode: 'manual_teacher_roll_call',
+      confidenceScore: 100,
+      verifiedBy: `${this.activeTeacherName || 'Class Teacher'} (Class Roll Call)`
+    });
     void this.backend.saveSchoolAttendance({ studentId: student.id, status });
     this.saveStateToStorage();
     this.showToast(`Marked ${student.name} as ${status}`, 'success');
   }
 
   markAllTeacherStudents(status: 'Present') {
-    this.activeStudents.forEach(s => s.status = status);
+    this.activeStudents.forEach(s => {
+      s.status = status;
+      this.pushUnifiedAttendanceVerification({
+        memberCategory: 'student',
+        memberId: s.id,
+        memberName: s.name,
+        memberCode: s.rollNo || s.id,
+        gradeOrDept: s.grade || 'Class 10-A',
+        status,
+        gateName: `Teacher Class Roll Call (${s.grade || 'Classroom'})`,
+        verificationMode: 'manual_teacher_roll_call',
+        confidenceScore: 100,
+        verifiedBy: `${this.activeTeacherName || 'Class Teacher'} (Bulk Roll Call)`
+      }, false);
+    });
     void this.backend.markAllSchoolAttendance({ status });
     this.saveStateToStorage();
     this.showToast('All students in class marked Present!', 'success');
@@ -15625,12 +15651,38 @@ INSTRUCTIONS:
 
   markStudentAttendance(student: StudentRecord, status: 'Present' | 'Late' | 'Absent' | 'On Leave') {
     student.status = status;
+    this.pushUnifiedAttendanceVerification({
+      memberCategory: 'student',
+      memberId: student.id,
+      memberName: student.name,
+      memberCode: student.rollNo || student.id,
+      gradeOrDept: student.grade || 'Class 10-A',
+      status,
+      gateName: 'Campus Attendance Register Desk',
+      verificationMode: 'manual_register_entry',
+      confidenceScore: 100,
+      verifiedBy: `${this.currentPortalRole ? this.currentPortalRole.toUpperCase() : 'Campus'} Register`
+    });
     this.saveStateToStorage();
     this.cdr.detectChanges();
   }
 
   markAllStudentsPresent() {
-    this.activeStudents.forEach(s => s.status = 'Present');
+    this.activeStudents.forEach(s => {
+      s.status = 'Present';
+      this.pushUnifiedAttendanceVerification({
+        memberCategory: 'student',
+        memberId: s.id,
+        memberName: s.name,
+        memberCode: s.rollNo || s.id,
+        gradeOrDept: s.grade || 'Class 10-A',
+        status: 'Present',
+        gateName: 'Campus Attendance Register Desk',
+        verificationMode: 'manual_register_entry',
+        confidenceScore: 100,
+        verifiedBy: `${this.currentPortalRole ? this.currentPortalRole.toUpperCase() : 'Campus'} Bulk Register`
+      }, false);
+    });
     this.saveStateToStorage();
     this.showToast('All enrolled students marked Present for today!', 'success');
     this.cdr.detectChanges();
@@ -19717,7 +19769,21 @@ INSTRUCTIONS:
   }
 
   markAllPresent() {
-    this.activeStudents.forEach(s => s.status = 'Present');
+    this.activeStudents.forEach(s => {
+      s.status = 'Present';
+      this.pushUnifiedAttendanceVerification({
+        memberCategory: 'student',
+        memberId: s.id,
+        memberName: s.name,
+        memberCode: s.rollNo || s.id,
+        gradeOrDept: s.grade || 'Class 10-A',
+        status: 'Present',
+        gateName: 'Campus Attendance Register Desk',
+        verificationMode: 'manual_register_entry',
+        confidenceScore: 100,
+        verifiedBy: `${this.currentPortalRole ? this.currentPortalRole.toUpperCase() : 'Admin'} Sync All Present`
+      }, false);
+    });
     this.attendanceSummary.presentToday = this.activeStudents.length;
     this.attendanceSummary.totalStudents = this.activeStudents.length;
     this.attendanceSummary.absent = 0;
@@ -21340,14 +21406,37 @@ INSTRUCTIONS:
       const nowTime = ev.checkInTime || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       const todayLabel = new Date().toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
       const dayLabel = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+      const existingIdx = this.studentAttendanceLog.findIndex((l) => l.date === todayLabel);
       if (punch === 'OUT') {
-        const existingIdx = this.studentAttendanceLog.findIndex((l) => l.date === todayLabel);
         if (existingIdx >= 0) {
           this.studentAttendanceLog = this.studentAttendanceLog.map((l, idx) =>
-            idx === existingIdx ? { ...l, checkOut: nowTime } : l
+            idx === existingIdx
+              ? {
+                  ...l,
+                  checkOut: nowTime,
+                  gate: studentGateLabel,
+                  verificationMode: ev.verificationMode,
+                  verifiedBy: ev.verifiedBy,
+                  confidenceScore: ev.confidenceScore
+                }
+              : l
           );
         }
-      } else if (!this.studentAttendanceLog.some((l) => l.date === todayLabel)) {
+      } else if (existingIdx >= 0) {
+        this.studentAttendanceLog = this.studentAttendanceLog.map((l, idx) =>
+          idx === existingIdx
+            ? {
+                ...l,
+                checkIn: nowTime,
+                gate: studentGateLabel,
+                status: ev.status,
+                verificationMode: ev.verificationMode,
+                verifiedBy: ev.verifiedBy,
+                confidenceScore: ev.confidenceScore
+              }
+            : l
+        );
+      } else {
         this.studentAttendanceLog = [
           {
             date: todayLabel,
@@ -21355,8 +21444,11 @@ INSTRUCTIONS:
             checkIn: nowTime,
             checkOut: 'Active',
             gate: studentGateLabel,
-            status: ev.status
-          },
+            status: ev.status,
+            verificationMode: ev.verificationMode,
+            verifiedBy: ev.verifiedBy,
+            confidenceScore: ev.confidenceScore
+          } as any,
           ...this.studentAttendanceLog
         ];
       }
@@ -22044,6 +22136,24 @@ INSTRUCTIONS:
         });
 
         candidate.status = 'Present';
+        this.pushUnifiedAttendanceVerification({
+          memberCategory: roleLabel === 'Teacher' ? 'teacher' : 'student',
+          memberId: String(candidate.id || candidate.rollNo || 'ST-1001'),
+          memberName: personName,
+          memberCode: String(candidate.rollNo || candidate.empCode || candidate.id || '1001'),
+          gradeOrDept: String(candidate.grade || candidate.designation || 'Campus'),
+          status: 'Present',
+          gateName: activeMode === 'fingerprint'
+            ? 'Biometric Fingerprint Kiosk (GATE-FP-01)'
+            : (activeMode === 'iris' ? 'Biometric Iris / Face Kiosk 01' : 'Smart RFID Turnstile Gate 01'),
+          verificationMode: activeMode === 'fingerprint'
+            ? 'fingerprint_kiosk_sensor'
+            : (activeMode === 'iris' ? 'face_iris_kiosk' : 'rfid_card_scan'),
+          confidenceScore: Number(scoreNum),
+          verifiedBy: activeMode === 'fingerprint'
+            ? 'Biometric Fingerprint Kiosk'
+            : (activeMode === 'iris' ? 'Biometric Camera Kiosk' : 'RFID Gate Turnstile')
+        });
 
         if (this.attendanceSummary) {
           this.attendanceSummary.presentToday = Math.min(this.attendanceSummary.totalStudents, this.attendanceSummary.presentToday + 1);
@@ -22072,8 +22182,125 @@ INSTRUCTIONS:
       ipDevice: 'MANUAL-ADMIN-OVERRIDE'
     });
 
+    const roleLower = String(this.manualAttendanceForm.role || '').toLowerCase();
+    const category: AttendanceMemberCategory = roleLower.includes('teacher')
+      ? 'teacher'
+      : (roleLower.includes('staff') ? 'staff' : (roleLower.includes('principal') ? 'principal' : 'student'));
+    const statusMapped: 'Present' | 'Late' | 'Absent' | 'On Leave' =
+      String(this.manualAttendanceForm.status || '').toLowerCase().includes('late')
+        ? 'Late'
+        : (String(this.manualAttendanceForm.status || '').toLowerCase().includes('absent')
+          ? 'Absent'
+          : (String(this.manualAttendanceForm.status || '').toLowerCase().includes('leave') ? 'On Leave' : 'Present'));
+
+    const matchedStudent = category === 'student'
+      ? (this.activeStudents || []).find(
+          (s) =>
+            String(s.id).toLowerCase() === String(this.manualAttendanceForm.personId || '').trim().toLowerCase() ||
+            String(s.rollNo).toLowerCase() === String(this.manualAttendanceForm.personId || '').trim().toLowerCase() ||
+            String(s.name).toLowerCase().includes(String(this.manualAttendanceForm.personName || '').trim().toLowerCase())
+        )
+      : null;
+    if (matchedStudent) {
+      matchedStudent.status = statusMapped;
+    }
+
+    this.pushUnifiedAttendanceVerification({
+      memberCategory: category,
+      memberId: String(matchedStudent?.id || this.manualAttendanceForm.personId || this.manualAttendanceForm.personName),
+      memberName: matchedStudent?.name || this.manualAttendanceForm.personName,
+      memberCode: String(matchedStudent?.rollNo || this.manualAttendanceForm.personId || 'MANUAL'),
+      gradeOrDept: matchedStudent?.grade || this.manualAttendanceForm.role || 'Campus',
+      status: statusMapped,
+      gateName: 'Admin Manual Roll-Call Override',
+      verificationMode: 'manual_roll_call',
+      confidenceScore: 100,
+      verifiedBy: `${this.currentPortalRole ? this.currentPortalRole.toUpperCase() : 'Admin'} Manual Override`
+    });
+
+    this.saveStateToStorage();
     this.showToast(`Recorded Manual Roll-Call Override for ${this.manualAttendanceForm.personName} (${this.manualAttendanceForm.status})`, 'success');
     this.closeBiometricKioskModal();
+  }
+
+  private pushUnifiedAttendanceVerification(
+    params: {
+      memberCategory: AttendanceMemberCategory;
+      memberId: string;
+      memberName: string;
+      memberCode: string;
+      gradeOrDept: string;
+      status: 'Present' | 'Late' | 'Absent' | 'On Leave';
+      gateName: string;
+      verificationMode: string;
+      confidenceScore: number;
+      verifiedBy: string;
+    },
+    recomputeSummary = true
+  ): void {
+    const todayIso = new Date().toISOString().split('T')[0];
+    const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const entry: FaceVerificationLogRecord = this.resolveBiometricMemberScope(
+      params.memberCategory,
+      params.memberId,
+      params.gradeOrDept,
+      {
+        id: `FLOG-${Date.now().toString(36).slice(-5)}-${Math.floor(Math.random() * 90 + 10)}`,
+        memberCategory: params.memberCategory,
+        memberId: params.memberId,
+        memberName: params.memberName,
+        memberCode: params.memberCode,
+        gradeOrDept: params.gradeOrDept,
+        status: params.status,
+        punchType: 'IN',
+        scheduledStartTime: this.ownerAttendancePolicy.scheduledStartTime || '08:00',
+        lateByLabel: params.status === 'Late' ? 'Late Arrival' : (params.status === 'Present' ? 'On Time' : params.status),
+        gateName: params.gateName,
+        verificationMode: params.verificationMode,
+        confidenceScore: params.confidenceScore,
+        verifiedBy: params.verifiedBy,
+        markedByRole: this.currentPortalRole || 'owner',
+        date: todayIso,
+        timestamp: nowTime
+      }
+    );
+
+    const remaining = (this.faceVerificationLogs || []).filter(
+      (l) => !(l.date === todayIso && l.memberCategory === params.memberCategory && l.memberId === params.memberId && (l.punchType || 'IN') === 'IN')
+    );
+    this.faceVerificationLogs = [entry, ...remaining].slice(0, 150);
+
+    if (params.memberCategory === 'student') {
+      const todayLabel = new Date().toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
+      const dayLabel = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+      const activeStudentMatch =
+        params.memberId === this.activeStudentId ||
+        params.memberId === 'ST-1001' ||
+        params.memberCode === '1001';
+      if (activeStudentMatch) {
+        const existingIdx = this.studentAttendanceLog.findIndex((l) => l.date === todayLabel);
+        const updatedRow = {
+          date: todayLabel,
+          day: dayLabel,
+          checkIn: params.status === 'Present' || params.status === 'Late' ? nowTime : '—',
+          checkOut: params.status === 'Present' || params.status === 'Late' ? 'Active' : '—',
+          gate: params.gateName,
+          status: params.status,
+          verificationMode: params.verificationMode,
+          verifiedBy: params.verifiedBy,
+          confidenceScore: params.confidenceScore
+        };
+        if (existingIdx >= 0) {
+          this.studentAttendanceLog = this.studentAttendanceLog.map((l, idx) => (idx === existingIdx ? updatedRow : l));
+        } else {
+          this.studentAttendanceLog = [updatedRow, ...this.studentAttendanceLog];
+        }
+      }
+    }
+
+    if (recomputeSummary) {
+      this.recomputeAttendanceSummary();
+    }
   }
 
   get studentOverdueCirculationsCount(): number {
