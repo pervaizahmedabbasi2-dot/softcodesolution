@@ -19,6 +19,7 @@ export type PrintSectionKey =
   | 'footer';
 
 export type PrintLogoPlacement = 'left' | 'top' | 'right';
+export type PrintLogoShape = 'square' | 'circle';
 export type PrintHeaderAlign = 'left' | 'center' | 'right';
 export type PrintVerificationOrder = 'barcode_first' | 'qr_first' | 'side_by_side';
 
@@ -89,6 +90,7 @@ export interface TablePrintOverride {
   showFieldLogos?: boolean;
   showWatermark?: boolean;
   logoPlacement?: PrintLogoPlacement;
+  logoShape?: PrintLogoShape;
   headerAlign?: PrintHeaderAlign;
   stampLabel?: 'PAID' | 'VERIFIED' | 'ORIGINAL' | 'NONE';
 }
@@ -115,6 +117,7 @@ export interface SchoolPrintBrandingConfig {
   showBarcodeVerification: boolean;
   logoDataUrl: string;
   logoPlacement: PrintLogoPlacement;
+  logoShape: PrintLogoShape;
   logoSizePx: number;
   headerAlign: PrintHeaderAlign;
   sectionOrder: PrintSectionKey[];
@@ -166,6 +169,7 @@ export const DEFAULT_SCHOOL_PRINT_BRANDING: SchoolPrintBrandingConfig = {
   showBarcodeVerification: true,
   logoDataUrl: '',
   logoPlacement: 'top',
+  logoShape: 'square',
   logoSizePx: 44,
   headerAlign: 'center',
   sectionOrder: [...DEFAULT_PRINT_SECTION_ORDER],
@@ -244,6 +248,9 @@ function normalizeTableOverrides(raw: unknown): Record<string, TablePrintOverrid
     if (obj['logoPlacement'] === 'left' || obj['logoPlacement'] === 'top' || obj['logoPlacement'] === 'right') {
       clean.logoPlacement = obj['logoPlacement'];
     }
+    if (obj['logoShape'] === 'square' || obj['logoShape'] === 'circle') {
+      clean.logoShape = obj['logoShape'];
+    }
     if (obj['headerAlign'] === 'left' || obj['headerAlign'] === 'center' || obj['headerAlign'] === 'right') {
       clean.headerAlign = obj['headerAlign'];
     }
@@ -288,6 +295,8 @@ export function normalizeSchoolPrintBranding(
 
   const placement: PrintLogoPlacement =
     src.logoPlacement === 'left' || src.logoPlacement === 'right' ? src.logoPlacement : 'top';
+  const logoShape: PrintLogoShape =
+    src.logoShape === 'circle' ? 'circle' : 'square';
   const align: PrintHeaderAlign =
     src.headerAlign === 'left' || src.headerAlign === 'right' ? src.headerAlign : 'center';
   const verOrder: PrintVerificationOrder =
@@ -322,6 +331,7 @@ export function normalizeSchoolPrintBranding(
     autoCutThermal: src.autoCutThermal !== false,
     logoDataUrl: sanitizeBrandingLogoUrl(src.logoDataUrl),
     logoPlacement: placement,
+    logoShape,
     logoSizePx,
     headerAlign: align,
     sectionOrder: dedupedOrder,
@@ -381,6 +391,7 @@ export function resolveEffectiveTableBranding(
     ? {
         ...b,
         logoPlacement: ov.logoPlacement || b.logoPlacement,
+        logoShape: ov.logoShape || b.logoShape,
         headerAlign: ov.headerAlign || b.headerAlign,
         stampLabel: ov.stampLabel || b.stampLabel,
         tableDefaultFormat: ov.defaultFormat || b.tableDefaultFormat,
@@ -516,11 +527,12 @@ function renderLogoOrCrestHtml(
   radiusPx = 6
 ): string {
   const safeLogo = sanitizeBrandingLogoUrl(branding.logoDataUrl);
+  const finalRadius = branding.logoShape === 'circle' ? '9999px' : `${radiusPx}px`;
   if (safeLogo) {
-    return `<img src="${safeLogo}" alt="Logo" style="width:${sizePx}px;height:${sizePx}px;object-fit:contain;border-radius:${radiusPx}px;flex-shrink:0;" />`;
+    return `<img src="${safeLogo}" alt="Logo" style="width:${sizePx}px;height:${sizePx}px;object-fit:contain;border-radius:${finalRadius};overflow:hidden;flex-shrink:0;" />`;
   }
   if (!branding.showLogoCrest) return '';
-  return `<div style="width:${sizePx}px;height:${sizePx}px;border-radius:${radiusPx}px;background:${accent};color:#fff;font-weight:900;font-size:${fontPx}px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">${escapeHtml((branding.monogramInitials || 'SC').slice(0, 4))}</div>`;
+  return `<div style="width:${sizePx}px;height:${sizePx}px;border-radius:${finalRadius};background:${accent};color:#fff;font-weight:900;font-size:${fontPx}px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">${escapeHtml((branding.monogramInitials || 'SC').slice(0, 4))}</div>`;
 }
 
 export interface A4ChallanPrintData {
@@ -787,10 +799,12 @@ function buildSingleIdCardPairHtml(
       )
     : '';
   const safeLogo = sanitizeBrandingLogoUrl(branding.logoDataUrl);
+  const cardLogoRadius = branding.logoShape === 'circle' ? '9999px' : '4px';
+  const cardCrestRadius = branding.logoShape === 'circle' ? '9999px' : '5px';
   const cardBadgeHtml = safeLogo
-    ? `<img src="${safeLogo}" alt="Logo" style="width:26px;height:26px;object-fit:contain;border-radius:4px;background:#fff;padding:1px;flex-shrink:0;" />`
+    ? `<img src="${safeLogo}" alt="Logo" style="width:26px;height:26px;object-fit:contain;border-radius:${cardLogoRadius};overflow:hidden;background:#fff;padding:1px;flex-shrink:0;" />`
     : (branding.showLogoCrest
-      ? `<div class="crest">${escapeHtml((branding.monogramInitials || 'SC').slice(0, 4))}</div>`
+      ? `<div class="crest" style="border-radius:${cardCrestRadius};">${escapeHtml((branding.monogramInitials || 'SC').slice(0, 4))}</div>`
       : '');
   const headDirection = branding.logoPlacement === 'right' ? 'row-reverse' : 'row';
   const headTextAlign = branding.logoPlacement === 'right' ? 'right' : 'left';

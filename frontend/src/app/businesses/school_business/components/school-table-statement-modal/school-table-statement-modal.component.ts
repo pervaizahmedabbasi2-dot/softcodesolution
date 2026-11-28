@@ -63,24 +63,33 @@ interface ActionFeedbackState {
           class="flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-[28px] border border-white/80 bg-white shadow-[0_30px_70px_-15px_rgba(15,23,42,0.28)] animate-scale-up"
           (click)="$event.stopPropagation()"
         >
+          <!-- Scrollable Container (Header + Tabs + Filters + Receipt scroll together so receipt has full space) -->
+          <div #previewViewport class="flex-1 min-h-0 overflow-y-auto custom-scroll">
           <!-- Frosted Emerald-Glass Header (Matches SuperAdmin Client Overview Popup) -->
-          <div class="relative shrink-0 border-b border-slate-200/80 bg-gradient-to-br from-white/95 via-emerald-50/40 to-slate-50/90 px-5 py-4 sm:px-6 sm:py-5">
+          <div class="relative border-b border-slate-200/80 bg-gradient-to-br from-white/95 via-emerald-50/40 to-slate-50/90 px-5 py-4 sm:px-6 sm:py-5">
             <div class="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-emerald-200/35 blur-2xl"></div>
 
             <div class="relative z-10 flex items-start justify-between gap-3">
               <div class="flex min-w-0 items-center gap-3.5 sm:gap-4">
                 <div class="relative shrink-0">
                   @if (safeLogoUrl() && branding().showLogoCrest !== false) {
-                    <div class="flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-200/80 bg-white p-1.5 shadow-md sm:h-14 sm:w-14">
+                    <div
+                      class="flex h-12 w-12 items-center justify-center border border-slate-200/80 bg-white p-1.5 shadow-md sm:h-14 sm:w-14 overflow-hidden"
+                      [class]="branding().logoShape === 'circle' ? 'rounded-full' : 'rounded-2xl'"
+                    >
                       <img
                         [src]="safeLogoUrl()"
                         alt="Campus logo"
                         referrerpolicy="no-referrer"
                         class="h-full w-full object-contain"
+                        [class.rounded-full]="branding().logoShape === 'circle'"
                       />
                     </div>
                   } @else {
-                    <div class="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/40 bg-gradient-to-br from-emerald-600 via-teal-600 to-slate-800 text-base font-black uppercase text-white shadow-md shadow-emerald-600/20 sm:h-14 sm:w-14 sm:text-lg">
+                    <div
+                      class="flex h-12 w-12 items-center justify-center border border-white/40 bg-gradient-to-br from-emerald-600 via-teal-600 to-slate-800 text-base font-black uppercase text-white shadow-md shadow-emerald-600/20 sm:h-14 sm:w-14 sm:text-lg"
+                      [class]="branding().logoShape === 'circle' ? 'rounded-full' : 'rounded-2xl'"
+                    >
                       {{ monogramText() }}
                     </div>
                   }
@@ -169,7 +178,7 @@ interface ActionFeedbackState {
                 [class]="activeFormat() === '58mm' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'"
               >
                 <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">receipt_long</mat-icon>
-                <span>58mm</span>
+                <span>58mm Roll</span>
               </button>
               <button
                 type="button"
@@ -194,7 +203,7 @@ interface ActionFeedbackState {
 
           <!-- Multi-Record Search + Date Filter Bar (Hidden for Single Record Cards) -->
           @if (!isSingleDataset()) {
-            <div class="shrink-0 border-b border-slate-200/80 bg-slate-50/70 px-5 py-3 sm:px-6 space-y-2.5">
+            <div class="border-b border-slate-200/80 bg-slate-50/70 px-5 py-3 sm:px-6 space-y-2.5">
               <div class="grid grid-cols-1 md:grid-cols-12 gap-2.5 items-end">
                 <div class="md:col-span-5">
                   <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
@@ -323,7 +332,7 @@ interface ActionFeedbackState {
           <!-- Inline Alert / Feedback Banner (Matches Client Popup) -->
           @if (actionFeedback(); as fb) {
             <div
-              class="border-b px-5 py-2.5 text-xs font-bold shrink-0 transition-all"
+              class="border-b px-5 py-2.5 text-xs font-bold transition-all"
               [class]="fb.tone === 'warn'
                 ? 'bg-amber-50 border-amber-200 text-amber-800'
                 : (fb.tone === 'info' ? 'bg-sky-50 border-sky-200 text-sky-800' : 'bg-emerald-50 border-emerald-200 text-emerald-700')"
@@ -359,8 +368,8 @@ interface ActionFeedbackState {
             </div>
           }
 
-          <!-- Scrollable Modal Body (Matches Client Overview HiOS/iOS 3D White Canvas) -->
-          <main #previewViewport class="flex-1 min-h-0 overflow-y-auto bg-white p-4 sm:p-6 custom-scroll">
+          <!-- Modal Body (Flows inside scrollable container so header scrolls away cleanly) -->
+          <main class="bg-white p-4 sm:p-6">
             @if ((activeFormat() === 'a4' || activeFormat() === 'card') && isSingleRecord()) {
               <!-- SUPERADMIN EYE-CLICK POPUP 2-PANEL DESIGN -->
               <section class="grid gap-5 lg:grid-cols-[1fr_290px]">
@@ -447,14 +456,24 @@ interface ActionFeedbackState {
                         <span>{{ isPrinting() ? 'Printing...' : (activeFormat() === 'card' ? 'Print QR Card' : 'Print Record Card') }}</span>
                       </button>
 
-                      <button
-                        type="button"
-                        (click)="selectFormat('80mm')"
-                        class="w-full rounded-xl bg-emerald-600 hover:bg-emerald-700 px-4 py-2.5 text-xs font-bold text-white shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
-                      >
-                        <mat-icon class="!text-[16px] !w-4 !h-4">receipt</mat-icon>
-                        <span>Open 80mm POS Slip</span>
-                      </button>
+                      <div class="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          (click)="selectFormat('80mm')"
+                          class="w-full rounded-xl bg-emerald-600 hover:bg-emerald-700 px-3 py-2.5 text-xs font-bold text-white shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                        >
+                          <mat-icon class="!text-[16px] !w-4 !h-4">receipt</mat-icon>
+                          <span>80mm Slip</span>
+                        </button>
+                        <button
+                          type="button"
+                          (click)="selectFormat('58mm')"
+                          class="w-full rounded-xl bg-teal-600 hover:bg-teal-700 px-3 py-2.5 text-xs font-bold text-white shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                        >
+                          <mat-icon class="!text-[16px] !w-4 !h-4">receipt_long</mat-icon>
+                          <span>58mm Roll</span>
+                        </button>
+                      </div>
 
                       <button
                         type="button"
@@ -651,41 +670,35 @@ interface ActionFeedbackState {
                                 </div>
                               }
 
-                              <!-- Top Corners Row: Logo in One Corner, QR Scanner in Opposite Top Corner -->
-                              <div
-                                class="flex items-start justify-between gap-2.5"
-                                [class]="branding().logoPlacement === 'right' ? 'flex-row-reverse' : 'flex-row'"
-                              >
-                                @if (safeLogoUrl() && branding().showLogoCrest !== false) {
-                                  <img
-                                    [src]="safeLogoUrl()"
-                                    alt="School logo"
-                                    referrerpolicy="no-referrer"
-                                    [style.width.px]="branding().logoSizePx || 44"
-                                    [style.height.px]="branding().logoSizePx || 44"
-                                    class="object-contain rounded-lg border border-slate-200 bg-white p-0.5 shrink-0 shadow-2xs"
-                                  />
-                                } @else if (branding().showLogoCrest !== false) {
-                                  <div class="w-10 h-10 rounded-lg border border-slate-300 bg-slate-50 text-slate-900 font-black text-[11px] flex items-center justify-center shrink-0 tracking-wider shadow-2xs">
-                                    {{ monogramText() }}
-                                  </div>
-                                } @else {
-                                  <span class="shrink-0"></span>
-                                }
-
-                                @if (branding().showQrVerification !== false) {
-                                  <div class="shrink-0 bg-white p-1 rounded-lg border border-slate-200 shadow-2xs">
-                                    <app-school-qr-code
-                                      [value]="qrPayload()"
-                                      [size]="activeFormat() === '58mm' ? 42 : 48"
+                              <!-- Centered Top Logo / Crest -->
+                              @if (branding().showLogoCrest !== false) {
+                                <div class="flex justify-center pt-4 pb-3">
+                                  @if (safeLogoUrl()) {
+                                    <img
+                                      [src]="safeLogoUrl()"
+                                      alt="School logo"
+                                      referrerpolicy="no-referrer"
+                                      [style.width.px]="activeFormat() === '58mm' ? 60 : 68"
+                                      [style.height.px]="activeFormat() === '58mm' ? 60 : 68"
+                                      class="object-contain border border-slate-200 bg-white p-1 shrink-0 shadow-2xs overflow-hidden"
+                                      [class]="branding().logoShape === 'circle' ? 'rounded-full' : 'rounded-xl'"
                                     />
-                                  </div>
-                                }
-                              </div>
+                                  } @else {
+                                    <div
+                                      [style.width.px]="activeFormat() === '58mm' ? 60 : 68"
+                                      [style.height.px]="activeFormat() === '58mm' ? 60 : 68"
+                                      class="border border-slate-300 bg-slate-50 text-slate-900 font-black text-sm flex items-center justify-center shrink-0 tracking-wider shadow-2xs"
+                                      [class]="branding().logoShape === 'circle' ? 'rounded-full' : 'rounded-xl'"
+                                    >
+                                      {{ monogramText() }}
+                                    </div>
+                                  }
+                                </div>
+                              }
 
                               <!-- Centered Institution Header Below Corners -->
                               <div
-                                class="space-y-0.5 pt-0.5"
+                                class="space-y-0.5 pt-1"
                                 [class]="branding().headerAlign === 'left'
                                   ? 'text-left'
                                   : (branding().headerAlign === 'right' ? 'text-right' : 'text-center')"
@@ -818,18 +831,32 @@ interface ActionFeedbackState {
                           }
 
                           @case ('verification') {
-                            @if (branding().showBarcodeVerification !== false) {
-                              <div class="border-t border-slate-100 pt-2.5 text-center space-y-1.5">
+                            @if (branding().showBarcodeVerification !== false || branding().showQrVerification !== false) {
+                              <div class="border-t border-slate-100 pt-2.5 text-center space-y-2">
                                 <div class="text-[9px] font-black uppercase tracking-widest text-slate-400">
                                   Verification
                                 </div>
-                                <div class="flex justify-center">
-                                  <app-school-barcode
-                                    [value]="statementRef()"
-                                    [label]="statementRef()"
-                                    [height]="activeFormat() === '58mm' ? 28 : 34"
-                                    [barWidth]="activeFormat() === '58mm' ? 1.05 : 1.25"
-                                  />
+                                <div
+                                  class="flex items-center justify-center gap-2.5"
+                                  [class]="branding().verificationOrder === 'side_by_side'
+                                    ? 'flex-row flex-wrap'
+                                    : (branding().verificationOrder === 'qr_first' ? 'flex-col-reverse' : 'flex-col')"
+                                >
+                                  @if (branding().showBarcodeVerification !== false) {
+                                    <app-school-barcode
+                                      [value]="statementRef()"
+                                      [label]="statementRef()"
+                                      [height]="activeFormat() === '58mm' ? 28 : 34"
+                                      [barWidth]="activeFormat() === '58mm' ? 1.05 : 1.25"
+                                    />
+                                  }
+                                  @if (branding().showQrVerification !== false) {
+                                    <app-school-qr-code
+                                      [value]="qrPayload()"
+                                      [size]="activeFormat() === '58mm' ? 48 : 56"
+                                      [label]="'SCAN TO VERIFY'"
+                                    />
+                                  }
                                 </div>
                               </div>
                             }
@@ -861,9 +888,6 @@ interface ActionFeedbackState {
                       }
                     }
                   </div>
-                  <span class="text-[10px] font-mono font-bold text-slate-500">
-                    School POS Thermal Slip · {{ activeFormat().toUpperCase() }} Roll
-                  </span>
                 </div>
 
                 <!-- Compact Quick Export Strip Below Receipt -->
@@ -938,6 +962,7 @@ interface ActionFeedbackState {
               </section>
             }
           </main>
+          </div>
 
           <!-- Clean Minimal Footer (Matches SuperAdmin Client Overview Popup) -->
           <footer class="shrink-0 border-t border-slate-200/80 bg-white px-5 py-3.5 sm:px-6 flex items-center justify-between gap-3">
@@ -1152,7 +1177,7 @@ export class SchoolTableStatementModalComponent {
   readonly primaryPrintLabel = computed(() => {
     const mode = this.activeFormat();
     if (mode === '80mm') return 'Print 80mm Rasheed';
-    if (mode === '58mm') return 'Print 58mm Rasheed';
+    if (mode === '58mm') return 'Print 58mm Roll';
     if (mode === 'card') return 'Print QR Card';
     return this.isSingleRecord() ? 'Print Record Card' : 'Print Statement';
   });

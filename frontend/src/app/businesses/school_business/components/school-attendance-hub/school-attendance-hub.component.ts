@@ -46,16 +46,17 @@ import {
 } from '../../../../services/fingerprint-verification.service';
 import { SchoolTableDirective } from '../../directives/school-table.directive';
 import { SchoolCustomFormFieldsComponent } from '../school-custom-form-fields/school-custom-form-fields.component';
+import { SchoolAttendanceAnalyticsComponent } from '../school-attendance-analytics/school-attendance-analytics.component';
 import { SchoolTableSchemaService } from '../../services/school-table-schema.service';
 import { buildSchoolStatementA4Html } from '../../utils/school-statement-print.util';
 import { printHtmlInHiddenFrame } from '../../utils/thermal-print.util';
 
-export type AttendanceSubTab = 'terminal' | 'students' | 'teachers' | 'staff' | 'principals' | 'enrollment' | 'setup';
+export type AttendanceSubTab = 'terminal' | 'history' | 'students' | 'teachers' | 'staff' | 'principals' | 'enrollment' | 'setup';
 export type ScannerCategoryFilter = 'all' | AttendanceMemberCategory;
 
 @Component({
   selector: 'app-school-attendance-hub',
-  imports: [CommonModule, LucideAngularModule, SchoolTableDirective, SchoolCustomFormFieldsComponent],
+  imports: [CommonModule, LucideAngularModule, SchoolTableDirective, SchoolCustomFormFieldsComponent, SchoolAttendanceAnalyticsComponent],
   templateUrl: './school-attendance-hub.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
@@ -1419,7 +1420,7 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       return;
     }
     const allowed = this.allowedCategories();
-    if (!this.isOwner()) {
+    if (!this.isOwner() && tab !== 'history') {
       if (
         (tab === 'students' && !allowed.includes('student')) ||
         (tab === 'teachers' && !allowed.includes('teacher')) ||

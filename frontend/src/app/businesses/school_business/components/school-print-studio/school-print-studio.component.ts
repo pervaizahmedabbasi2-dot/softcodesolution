@@ -28,6 +28,7 @@ import {
   PrintChallanLogoCorner,
   PrintHeaderAlign,
   PrintLogoPlacement,
+  PrintLogoShape,
   PrintSectionKey,
   PrintSectionMeta,
   PrintVerificationOrder,
@@ -189,6 +190,7 @@ export class SchoolPrintStudioComponent implements OnDestroy {
     showBarcodeVerification: new FormControl<boolean>(DEFAULT_SCHOOL_PRINT_BRANDING.showBarcodeVerification, { nonNullable: true }),
     logoDataUrl: new FormControl<string>(DEFAULT_SCHOOL_PRINT_BRANDING.logoDataUrl, { nonNullable: true }),
     logoPlacement: new FormControl<PrintLogoPlacement>(DEFAULT_SCHOOL_PRINT_BRANDING.logoPlacement, { nonNullable: true }),
+    logoShape: new FormControl<PrintLogoShape>(DEFAULT_SCHOOL_PRINT_BRANDING.logoShape, { nonNullable: true }),
     logoSizePx: new FormControl<number>(DEFAULT_SCHOOL_PRINT_BRANDING.logoSizePx, { nonNullable: true }),
     headerAlign: new FormControl<PrintHeaderAlign>(DEFAULT_SCHOOL_PRINT_BRANDING.headerAlign, { nonNullable: true }),
     verificationOrder: new FormControl<PrintVerificationOrder>(DEFAULT_SCHOOL_PRINT_BRANDING.verificationOrder, { nonNullable: true }),
@@ -252,6 +254,7 @@ export class SchoolPrintStudioComponent implements OnDestroy {
           showBarcodeVerification: normalized.showBarcodeVerification,
           logoDataUrl: normalized.logoDataUrl,
           logoPlacement: normalized.logoPlacement,
+          logoShape: normalized.logoShape,
           logoSizePx: normalized.logoSizePx,
           headerAlign: normalized.headerAlign,
           verificationOrder: normalized.verificationOrder,
@@ -810,6 +813,10 @@ export class SchoolPrintStudioComponent implements OnDestroy {
     this.brandingForm.patchValue({ logoPlacement: placement });
   }
 
+  setLogoShape(shape: PrintLogoShape): void {
+    this.brandingForm.patchValue({ logoShape: shape });
+  }
+
   setHeaderAlign(align: PrintHeaderAlign): void {
     this.brandingForm.patchValue({ headerAlign: align });
   }
@@ -1024,6 +1031,7 @@ export class SchoolPrintStudioComponent implements OnDestroy {
       if (typeof patch.showFieldLogos === 'boolean') formPatch['tableShowFieldLogos'] = patch.showFieldLogos;
       if (typeof patch.showWatermark === 'boolean') formPatch['tableShowWatermark'] = patch.showWatermark;
       if (patch.logoPlacement) formPatch['logoPlacement'] = patch.logoPlacement;
+      if (patch.logoShape) formPatch['logoShape'] = patch.logoShape;
       if (patch.headerAlign) formPatch['headerAlign'] = patch.headerAlign;
       if (patch.stampLabel) formPatch['stampLabel'] = patch.stampLabel;
       if (Object.keys(formPatch).length > 0) {
@@ -1346,6 +1354,7 @@ export class SchoolPrintStudioComponent implements OnDestroy {
         showBarcodeVerification: resetVal.showBarcodeVerification,
         logoDataUrl: '',
         logoPlacement: resetVal.logoPlacement,
+        logoShape: resetVal.logoShape,
         logoSizePx: resetVal.logoSizePx,
         headerAlign: resetVal.headerAlign,
         verificationOrder: resetVal.verificationOrder,
@@ -1404,6 +1413,7 @@ export class SchoolPrintStudioComponent implements OnDestroy {
           monogramInitials: b.showLogoCrest ? b.monogramInitials : '',
           logoDataUrl: b.logoDataUrl,
           logoPlacement: b.logoPlacement,
+          logoShape: b.logoShape,
           logoSizePx: b.logoSizePx,
           headerAlign: b.headerAlign,
           sectionOrder: b.sectionOrder,
@@ -1487,7 +1497,8 @@ export class SchoolPrintStudioComponent implements OnDestroy {
           monogramInitials: b.monogramInitials,
           showLogoCrest: b.showLogoCrest,
           footerNote: b.stickerFooterNote,
-          accentColor: b.headerAccentColor
+          accentColor: b.headerAccentColor,
+          logoShape: b.logoShape
         });
         label = 'A4 Barcode Sticker Sheet';
       } else if (format === 'result_dmc') {

@@ -385,11 +385,12 @@ export function buildSchoolStatementA4Html(params: BuildStatementDocumentParams)
   const qrPayload = `STATEMENT:${stmtRef}|TITLE:${effectiveTitle}|RECORDS:${params.rows.length}|FROM:${params.criteria.fromDate || 'ALL'}|TO:${params.criteria.toDate || 'ALL'}|NET:${cur} ${Math.round(summary.primaryTotal)}`;
   const qrSvg = buildQrCodeSvgMarkup(qrPayload, 60, accent, 2, 'M');
 
+  const a4Radius = b.logoShape === 'circle' ? '9999px' : '10px';
   const logoMarkup = b.showLogoCrest === false
     ? ''
     : (safeLogo
-        ? `<div class="logo-box"><img src="${safeLogo}" alt="School Logo" style="width:${logoSize}px;height:${logoSize}px;object-fit:contain;display:block;" /></div>`
-        : `<div class="crest-box">${escapeHtml(monogram)}</div>`);
+        ? `<div class="logo-box" style="border-radius:${a4Radius};overflow:hidden;"><img src="${safeLogo}" alt="School Logo" style="width:${logoSize}px;height:${logoSize}px;object-fit:contain;border-radius:${a4Radius};display:block;" /></div>`
+        : `<div class="crest-box" style="border-radius:${a4Radius};">${escapeHtml(monogram)}</div>`);
 
   const fieldChip = eff.showFieldLogos ? buildFieldLogoChipHtml(b, safeLogo, monogram, accent) : '';
 
@@ -634,7 +635,7 @@ export function buildSchoolStatementThermalHtml(
   const cur = String(b.currencySymbol || 'PKR').toUpperCase();
   const safeLogo = sanitizeBrandingLogoUrl(b.logoDataUrl);
   const monogram = (b.monogramInitials || 'SPA').trim().slice(0, 4);
-  const logoSize = Math.min(64, Math.max(24, Number(b.logoSizePx || 40)));
+  const logoSize = Math.min(80, Math.max(46, Number(b.logoSizePx || 44) + 14));
   const summary = computeStatementAmounts(params.headers, params.rows, cur);
   const totalCount = params.totalUnfilteredCount ?? params.rows.length;
   const stmtRef = params.statementRef || `STM-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}`;
@@ -651,11 +652,13 @@ export function buildSchoolStatementThermalHtml(
   const qrPayload = `STM:${stmtRef}|${effectiveTitle}|ROWS:${params.rows.length}|NET:${cur} ${Math.round(summary.primaryTotal)}`;
   const qrSvg = buildQrCodeSvgMarkup(qrPayload, effectivePaper === '58mm' ? 40 : 48, '#000000', 2, 'M');
 
+  const thermalFrameRadius = b.logoShape === 'circle' ? '9999px' : '7px';
+  const thermalCrestRadius = b.logoShape === 'circle' ? '9999px' : '8px';
   const logoHtml = b.showLogoCrest === false
     ? ''
     : (safeLogo
-        ? `<div class="logo-frame"><img src="${safeLogo}" alt="Logo" style="width:${logoSize}px;height:${logoSize}px;object-fit:contain;display:block;" /></div>`
-        : `<div class="crest">${escapeHtml(monogram)}</div>`);
+        ? `<div class="logo-frame" style="border-radius:${thermalFrameRadius};overflow:hidden;"><img src="${safeLogo}" alt="Logo" style="width:${logoSize}px;height:${logoSize}px;object-fit:contain;border-radius:${thermalFrameRadius};display:block;" /></div>`
+        : `<div class="crest" style="border-radius:${thermalCrestRadius};">${escapeHtml(monogram)}</div>`);
 
   const fieldDot = eff.showFieldLogos
     ? `<span style="display:inline-block;width:5px;height:5px;border-radius:1px;background:#000;margin-right:4px;vertical-align:middle;"></span>`
@@ -722,17 +725,12 @@ export function buildSchoolStatementThermalHtml(
 
   const showBar = b.showBarcodeVerification !== false;
   const showQr = b.showQrVerification !== false;
-  const cornerCls = b.logoPlacement === 'right' ? 'hdr-corners rev' : 'hdr-corners';
-  const topQrHtml = showQr ? `<div class="hdr-qr">${qrSvg}</div>` : '';
 
   const renderSingleCopy = (copyBadge?: string): string => {
     const subAlign = b.headerAlign || 'center';
     const headerBlock = `
       ${copyBadge ? `<div class="copy-tag">${escapeHtml(copyBadge)}</div>` : ''}
-      <div class="${cornerCls}">
-        ${logoHtml || '<span></span>'}
-        ${topQrHtml}
-      </div>
+      ${logoHtml ? `<div class="hdr-logo-center">${logoHtml}</div>` : ''}
       <div class="hdr-center" style="text-align:${subAlign};">
         <div class="title">${escapeHtml(b.schoolName || DEFAULT_SCHOOL_PRINT_BRANDING.schoolName)}</div>
         ${b.campusTagline ? `<div class="tagline">${escapeHtml(b.campusTagline)}</div>` : ''}
@@ -779,10 +777,20 @@ export function buildSchoolStatementThermalHtml(
       </div>` : '';
 
     const barMarkup = showBar ? `<div>${barcodeSvg}<div class="barcode-label">${escapeHtml(stmtRef)}</div></div>` : '';
-    const verificationBlock = showBar ? `
+    const qrMarkup = showQr ? `<div class="qr-wrap">${qrSvg}<div class="qr-cap">SCAN TO VERIFY</div></div>` : '';
+    const verInner = (() => {
+      if (b.verificationOrder === 'qr_first') {
+        return `<div class="ver-stack">${qrMarkup}${barMarkup}</div>`;
+      }
+      if (b.verificationOrder === 'side_by_side') {
+        return `<div class="ver-row">${barMarkup}${qrMarkup}</div>`;
+      }
+      return `<div class="ver-stack">${barMarkup}${qrMarkup}</div>`;
+    })();
+    const verificationBlock = (showBar || showQr) ? `
       <div class="ver-box">
         <div class="ver-cap">VERIFICATION</div>
-        ${barMarkup}
+        ${verInner}
       </div>` : '';
 
     const footerBlock = `
@@ -821,15 +829,13 @@ export function buildSchoolStatementThermalHtml(
   <style>
     @page { size: ${pageMm} auto; margin: 2mm; }
     * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    body { margin: 0; padding: 8px; width: ${pageMm}; max-width: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: ${effectivePaper === '58mm' ? '9.5px' : '10.5px'}; line-height: 1.4; color: #0f172a; background: #fff; font-variant-numeric: tabular-nums; }
+    body { margin: 0; padding: 14px 8px 8px; width: ${pageMm}; max-width: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: ${effectivePaper === '58mm' ? '9.5px' : '10.5px'}; line-height: 1.4; color: #0f172a; background: #fff; font-variant-numeric: tabular-nums; }
     .copy-tag { display: inline-block; font-size: 8px; font-weight: 900; letter-spacing: 0.7px; padding: 2px 8px; margin-bottom: 6px; border-radius: 5px; background: linear-gradient(90deg, #059669, #0d9488); color: #fff; text-transform: uppercase; }
     .cut-line { text-align: center; font-size: 8px; font-weight: 800; letter-spacing: 0.5px; margin: 12px 0; border-top: 1px dashed #cbd5e1; color: #64748b; padding-top: 6px; }
-    .hdr-corners { display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; }
-    .hdr-corners.rev { flex-direction: row-reverse; }
-    .hdr-qr { border: 1px solid #e2e8f0; border-radius: 7px; padding: 3px; background: #fff; flex-shrink: 0; line-height: 0; }
-    .hdr-center { margin-top: 6px; text-align: center; }
-    .logo-frame { border: 1px solid #e2e8f0; border-radius: 7px; padding: 2px; background: #fff; flex-shrink: 0; }
-    .crest { display: inline-flex; align-items: center; justify-content: center; border: 1px solid #cbd5e1; border-radius: 8px; width: 36px; height: 36px; font-size: 10.5px; font-weight: 900; letter-spacing: 1px; flex-shrink: 0; background: #f8fafc; color: #0f172a; }
+    .hdr-logo-center { display: flex; align-items: center; justify-content: center; padding-top: 14px; margin-bottom: 12px; }
+    .hdr-center { margin-top: 8px; text-align: center; }
+    .logo-frame { border: 1px solid #e2e8f0; border-radius: 7px; padding: 3px; background: #fff; flex-shrink: 0; }
+    .crest { display: inline-flex; align-items: center; justify-content: center; border: 1px solid #cbd5e1; border-radius: 10px; width: ${effectivePaper === '58mm' ? '48px' : '54px'}; height: ${effectivePaper === '58mm' ? '48px' : '54px'}; font-size: ${effectivePaper === '58mm' ? '12px' : '13px'}; font-weight: 900; letter-spacing: 1px; flex-shrink: 0; background: #f8fafc; color: #0f172a; }
     .title { font-size: ${effectivePaper === '58mm' ? '11.5px' : '13px'}; font-weight: 900; text-transform: uppercase; letter-spacing: -0.2px; color: #020617; }
     .tagline { font-size: 8px; font-weight: 700; text-transform: uppercase; color: #64748b; margin-top: 1px; }
     .sub-block { margin-top: 3px; font-size: 8.5px; line-height: 1.35; color: #475569; }
@@ -856,7 +862,10 @@ export function buildSchoolStatementThermalHtml(
     .ver-box { border-top: 1px solid #f1f5f9; padding-top: 7px; margin-top: 7px; text-align: center; }
     .ver-cap { font-size: 8px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; color: #94a3b8; margin-bottom: 4px; }
     .barcode-label { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 8.5px; font-weight: 800; color: #475569; margin-top: 2px; }
-    .qr-wrap { margin-top: 5px; display: flex; flex-direction: column; align-items: center; }
+    .ver-stack { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .ver-row { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
+    .qr-wrap { display: flex; flex-direction: column; align-items: center; }
+    .qr-cap { font-size: 7.5px; font-weight: 800; letter-spacing: 0.5px; margin-top: 2px; color: #64748b; }
     .sign-line { margin-top: 18px; border-top: 1px solid #cbd5e1; padding-top: 3px; font-size: 8px; font-weight: 800; color: #475569; text-align: center; text-transform: uppercase; }
     .footer { font-size: 8px; text-align: center; margin-top: 6px; color: #64748b; }
     .pos-foot { font-size: 7.5px; font-weight: 800; letter-spacing: 0.9px; text-align: center; color: #94a3b8; text-transform: uppercase; margin-top: 3px; }
@@ -961,11 +970,12 @@ export function buildSchoolStatementCardHtml(params: BuildStatementDocumentParam
   const qrSvg = buildQrCodeSvgMarkup(qrPayload, 88, accent, 2, 'M');
   const barcodeSvg = buildCode128SvgMarkup(stmtRef, 28, '#0f172a');
 
+  const cardRadius = b.logoShape === 'circle' ? '9999px' : '10px';
   const logoMarkup = b.showLogoCrest === false
     ? ''
     : (safeLogo
-        ? `<div class="logo-box"><img src="${safeLogo}" alt="School Logo" style="width:${logoSize}px;height:${logoSize}px;object-fit:contain;display:block;" /></div>`
-        : `<div class="crest-box">${escapeHtml(monogram)}</div>`);
+        ? `<div class="logo-box" style="border-radius:${cardRadius};overflow:hidden;"><img src="${safeLogo}" alt="School Logo" style="width:${logoSize}px;height:${logoSize}px;object-fit:contain;border-radius:${cardRadius};display:block;" /></div>`
+        : `<div class="crest-box" style="border-radius:${cardRadius};">${escapeHtml(monogram)}</div>`);
 
   const fieldChip = eff.showFieldLogos ? buildFieldLogoChipHtml(b, safeLogo, monogram, accent) : '';
 

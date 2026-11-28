@@ -235,7 +235,11 @@ export const SCHOOL_TABLE_FAMILY_MAP: Record<string, string> = {
   parent_academics: 'academics_gradebook_results',
   // Attendance & gate logs
   student_attendance_log: 'attendance_gate_logs',
-  parent_gate_logs: 'attendance_gate_logs'
+  parent_gate_logs: 'attendance_gate_logs',
+  attendance_history_daily_log: 'attendance_gate_logs',
+  attendance_history_monthly: 'attendance_period_summary',
+  attendance_history_yearly: 'attendance_yearly_summary',
+  attendance_history_members: 'attendance_member_matrix'
 };
 
 export const SCHOOL_TABLE_CATALOG: TableCatalogItem[] = [
@@ -417,8 +421,29 @@ export const SCHOOL_TABLE_CATALOG: TableCatalogItem[] = [
     tableId: 'attendance_gate_logs',
     canonicalId: 'attendance_gate_logs',
     title: 'Gate & Biometric Attendance Logs',
-    portals: 'Student, Parent',
+    portals: 'Owner, Principal, Teacher, Student, Parent',
     defaultHeaders: ['Date', 'Time', 'Member', 'Status', 'Gate']
+  },
+  {
+    tableId: 'attendance_period_summary',
+    canonicalId: 'attendance_period_summary',
+    title: 'Monthly & 6-Month Attendance Summary',
+    portals: 'Owner, Principal, Teacher, Student, Parent',
+    defaultHeaders: ['Month & Year', 'Working Days', 'Present', 'Late', 'Absent', 'Approved Leaves', 'Avg Check-In', 'Rate %', 'Standing']
+  },
+  {
+    tableId: 'attendance_yearly_summary',
+    canonicalId: 'attendance_yearly_summary',
+    title: 'Multi-Year Attendance History (Min / Max / Total)',
+    portals: 'Owner, Principal, Teacher, Student, Parent',
+    defaultHeaders: ['Academic Year', 'Working Days', 'Present', 'Late', 'Absent', 'Approved Leaves', 'Peak Month (Max)', 'Lowest Month (Min)', 'Overall Rate %']
+  },
+  {
+    tableId: 'attendance_member_matrix',
+    canonicalId: 'attendance_member_matrix',
+    title: 'Campus Role-Scoped Attendance Matrix',
+    portals: 'Owner, Principal, Teacher',
+    defaultHeaders: ['ID / Roll', 'Member Details', 'Role / Class', 'Total %', '6-Month %', 'Min Period', 'Max Period', 'Attended / Days', 'Actions']
   },
   {
     tableId: 'attendance_roster_staff',

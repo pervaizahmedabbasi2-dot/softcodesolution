@@ -68,6 +68,7 @@ import { DomSanitizer, SafeUrl, SafeResourceUrl } from '@angular/platform-browse
 import { FirebaseDbService } from '../../../services/firebase-db.service';
 import { BackendService } from '../../../services/backend.service';
 import { SchoolAttendanceHubComponent } from '../components/school-attendance-hub/school-attendance-hub.component';
+import { SchoolAttendanceAnalyticsComponent } from '../components/school-attendance-analytics/school-attendance-analytics.component';
 import {
   AttendanceMemberCategory,
   AttendanceMemberView,
@@ -1124,7 +1125,7 @@ export interface PrincipalFeeCollectionRecord {
 @Component({
   selector: 'app-school-dashboard',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule, FormsModule, MatIconModule, DataTableComponent, AuditReconciliationTrendsComponent, AnalyticsDashboardComponent, SchoolAttendanceHubComponent, SchoolPrintStudioComponent, SchoolTableDirective, SchoolTableColumnModalComponent, SchoolTableStatementModalComponent, SchoolCustomFormFieldsComponent, SchoolBarcodeComponent, SchoolQrCodeComponent, PasskeyManagerComponent],
+  imports: [CommonModule, LucideAngularModule, FormsModule, MatIconModule, DataTableComponent, AuditReconciliationTrendsComponent, AnalyticsDashboardComponent, SchoolAttendanceHubComponent, SchoolAttendanceAnalyticsComponent, SchoolPrintStudioComponent, SchoolTableDirective, SchoolTableColumnModalComponent, SchoolTableStatementModalComponent, SchoolCustomFormFieldsComponent, SchoolBarcodeComponent, SchoolQrCodeComponent, PasskeyManagerComponent],
   templateUrl: './school-dashboard.component.html',
   host: {
     '(window:keydown)': 'onHardwareScannerKeydown($event)'
@@ -2771,10 +2772,12 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
   }
 
   private syncPortalAttendanceTabAccess(): void {
-    if (this.principalTab === 'biometric_attendance' && !this.canPrincipalUseAttendanceVerification) {
+    const principalEnabled = this.canPrincipalUseAttendanceVerification || Boolean(this.ownerAttendancePolicy?.roleAccess?.principal?.enabled);
+    const teacherEnabled = this.canTeacherUseAttendanceVerification || Boolean(this.ownerAttendancePolicy?.roleAccess?.teacher?.enabled);
+    if (this.principalTab === 'biometric_attendance' && !principalEnabled) {
       this.principalTab = 'overview';
     }
-    if (this.teacherTab === 'attendance' && !this.canTeacherUseAttendanceVerification) {
+    if (this.teacherTab === 'attendance' && !teacherEnabled) {
       this.teacherTab = 'schedule';
     }
   }
@@ -2797,7 +2800,8 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
   }
 
   setPrincipalTab(tab: 'overview' | 'stage_wise' | 'master_registries' | 'supervision' | 'substitutions' | 'syllabus' | 'inspections' | 'discipline' | 'directives' | 'appraisals' | 'exam_moderation' | 'academic_reports' | 'faculty_tasks' | 'teacher_leaves' | 'student_certificates' | 'ptm_interventions' | 'admissions_review' | 'fee_oversight' | 'parent_complaints' | 'safeguarding' | 'facilities_transport' | 'library' | 'biometric_attendance'): void {
-    if (tab === 'biometric_attendance' && !this.canPrincipalUseAttendanceVerification) {
+    const principalAllowed = this.canPrincipalUseAttendanceVerification || Boolean(this.ownerAttendancePolicy?.roleAccess?.principal?.enabled);
+    if (tab === 'biometric_attendance' && !principalAllowed) {
       this.showToast('Attendance Verification access is locked by School Owner Setup.', 'warning');
       return;
     }
@@ -2808,7 +2812,12 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
     if (tab === 'library') {
       this.checkAndUpdateOverdueBooks();
     }
-    this.tabChanged.emit(tab);
+    const emittedTab = `principal-${tab}`;
+    try {
+      localStorage.setItem('activeSchoolRole', 'principal');
+      localStorage.setItem('activeSchoolPortal', emittedTab);
+    } catch {}
+    this.tabChanged.emit(emittedTab);
     this.cdr.detectChanges();
     this.resetScrollToTop();
   }
@@ -2888,7 +2897,14 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
     if (tab === 'library') {
       this.checkAndUpdateOverdueBooks();
     }
-    this.tabChanged.emit(tab);
+    const emittedTab = (tab === 'feed' || tab === 'events')
+      ? tab
+      : (tab === 'overview' ? 'parent-portal' : `parent-${tab}`);
+    try {
+      localStorage.setItem('activeSchoolRole', 'parent');
+      localStorage.setItem('activeSchoolPortal', emittedTab === 'feed' || emittedTab === 'events' ? 'parent-portal' : emittedTab);
+    } catch {}
+    this.tabChanged.emit(emittedTab);
     this.cdr.detectChanges();
     this.resetScrollToTop();
   }
@@ -2897,7 +2913,7 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
     switch (this.parentTab) {
       case 'feed': return 'Campus Notices & Circulars Stream';
       case 'events': return 'School Events & Galas';
-      case 'attendance': return 'Monthly Attendance Calendar & RFID Log';
+      case 'attendance': return 'Monthly Attendance Record & RFID Log';
       case 'academics': return 'Terminal Exam Report Card';
       case 'fee': return 'Tuition Fee & Bank Challan Vouchers';
       case 'leave': return 'Student Leave Applications';
@@ -2929,13 +2945,21 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
     if (tab === 'library') {
       this.checkAndUpdateOverdueBooks();
     }
-    this.tabChanged.emit(tab);
+    const emittedTab = (tab === 'feed' || tab === 'events')
+      ? tab
+      : (tab === 'overview' ? 'student-portal' : (tab === 'routine' ? 'student-timetable' : `student-${tab}`));
+    try {
+      localStorage.setItem('activeSchoolRole', 'student');
+      localStorage.setItem('activeSchoolPortal', emittedTab === 'feed' || emittedTab === 'events' ? 'student-portal' : emittedTab);
+    } catch {}
+    this.tabChanged.emit(emittedTab);
     this.cdr.detectChanges();
     this.resetScrollToTop();
   }
 
   setTeacherTab(tab: 'schedule' | 'feed' | 'events' | 'attendance' | 'marks' | 'lessons' | 'homework' | 'students' | 'duties' | 'communication' | 'library'): void {
-    if (tab === 'attendance' && !this.canTeacherUseAttendanceVerification) {
+    const teacherAllowed = this.canTeacherUseAttendanceVerification || Boolean(this.ownerAttendancePolicy?.roleAccess?.teacher?.enabled);
+    if (tab === 'attendance' && !teacherAllowed) {
       this.showToast('Class Attendance Verification access is disabled by School Owner Setup.', 'warning');
       return;
     }
@@ -2946,7 +2970,14 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
     if (tab === 'library') {
       this.checkAndUpdateOverdueBooks();
     }
-    this.tabChanged.emit(tab);
+    const emittedTab = (tab === 'feed' || tab === 'events')
+      ? tab
+      : (tab === 'schedule' ? 'teacher-portal' : `teacher-${tab}`);
+    try {
+      localStorage.setItem('activeSchoolRole', 'teacher');
+      localStorage.setItem('activeSchoolPortal', emittedTab === 'feed' || emittedTab === 'events' ? 'teacher-portal' : emittedTab);
+    } catch {}
+    this.tabChanged.emit(emittedTab);
     this.cdr.detectChanges();
     this.resetScrollToTop();
   }
@@ -3205,7 +3236,7 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
       this.currentPortalRole = 'student';
     } else if (v.startsWith('parent-') || v === 'parent-portal' || v === 'parent') {
       this.currentPortalRole = 'parent';
-    } else if (v === 'owner' || v === 'owner-portal' || (ownerExplicitTabs.has(v) && this.isOwnerSession && this.currentPortalRole !== 'principal')) {
+    } else if (v === 'owner' || v === 'owner-portal' || (ownerExplicitTabs.has(v) && this.isOwnerSession && this.currentPortalRole === 'owner')) {
       if (this.isOwnerSession) {
         this.currentPortalRole = 'owner';
       }
@@ -3217,9 +3248,12 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
 
     // 2. Route tabs cleanly within the resolved active portal role!
     if (this.currentPortalRole === 'principal') {
-      if (v.includes('biometric')) {
-        if (this.canPrincipalUseAttendanceVerification) this.principalTab = 'biometric_attendance';
-        else this.principalTab = 'overview';
+      if (v.includes('biometric') || v.includes('attendance')) {
+        if (this.canPrincipalUseAttendanceVerification || this.ownerAttendancePolicy?.roleAccess?.principal?.enabled) {
+          this.principalTab = 'biometric_attendance';
+        } else {
+          this.principalTab = 'overview';
+        }
       } else if (v.includes('stage')) this.principalTab = 'stage_wise';
       else if (v.includes('master')) this.principalTab = 'master_registries';
       else if (v.includes('library')) { this.principalTab = 'library'; this.checkAndUpdateOverdueBooks(); }
@@ -3254,7 +3288,9 @@ export class SchoolDashboardComponent implements OnInit, OnDestroy {
       if (v.includes('feed') || v.includes('notice')) this.teacherTab = 'feed';
       else if (v.includes('event')) this.teacherTab = 'events';
       else if (v.includes('attendance')) {
-        if (this.canTeacherUseAttendanceVerification) this.teacherTab = 'attendance';
+        if (this.canTeacherUseAttendanceVerification || this.ownerAttendancePolicy?.roleAccess?.teacher?.enabled) {
+          this.teacherTab = 'attendance';
+        }
       } else if (v.includes('mark') || v.includes('grade')) this.teacherTab = 'marks';
       else if (v.includes('lesson')) this.teacherTab = 'lessons';
       else if (v.includes('homework')) this.teacherTab = 'homework';
@@ -10007,7 +10043,7 @@ INSTRUCTIONS:
 
     // 3. Teacher & Faculty Portal
     const isTeacherSub = this.currentPortalRole === 'teacher' && (
-      a === 'feed' || a === 'events' || a === 'schedule' || a === 'attendance' ||
+      a === 'feed' || a === 'events' || a === 'schedule' || a.includes('attendance') ||
       a === 'marks' || a === 'lessons' || a === 'homework' || a === 'students' ||
       a === 'communication' || a === 'library'
     );
@@ -10043,7 +10079,7 @@ INSTRUCTIONS:
     const isStudentSub = this.currentPortalRole === 'student' && (
       a === 'feed' || a === 'events' || a === 'overview' || a === 'routine' ||
       a === 'timetable' || a === 'academics' || a === 'homework' ||
-      a === 'attendance' || a === 'fee' || a === 'library'
+      a.includes('attendance') || a === 'fee' || a === 'library'
     );
     if (a === 'student' || a === 'student-portal' || a.startsWith('student-') || isStudentSub) {
       this.currentPortalRole = 'student';
@@ -10074,7 +10110,7 @@ INSTRUCTIONS:
     // 5. Parent & Guardian Portal
     const isParentSub = this.currentPortalRole === 'parent' && (
       a === 'feed' || a === 'events' || a === 'overview' || a === 'academics' ||
-      a === 'attendance' || a === 'fee' || a === 'leave' || a === 'communication' ||
+      a.includes('attendance') || a === 'fee' || a === 'leave' || a === 'communication' ||
       a === 'library'
     );
     if (a === 'parent' || a === 'parent-portal' || a.startsWith('parent-') || isParentSub) {
@@ -10146,7 +10182,13 @@ INSTRUCTIONS:
       this.openFeeDeletionLogModal();
     }
     else if (a === 'payment_gateway') this.setTab('payment_gateway');
-    else if (a === 'attendance' || a === 'attendance_report' || a === 'attendance-report') this.setTab('attendance');
+    else if (a === 'attendance' || a === 'attendance_report' || a === 'attendance-report') {
+      if (this.currentPortalRole === 'parent') this.setParentTab('attendance');
+      else if (this.currentPortalRole === 'student') this.setStudentTab('attendance');
+      else if (this.currentPortalRole === 'teacher') this.setTeacherTab('attendance');
+      else if (this.currentPortalRole === 'principal') this.setPrincipalTab('biometric_attendance');
+      else this.setTab('attendance');
+    }
     else if (a === 'exams') {
       this.examsSubTab = 'schedules';
       this.setTab('exams');
@@ -15181,6 +15223,25 @@ INSTRUCTIONS:
       return;
     }
     const nextTab = tab as SchoolDashboardTab;
+    const storedRole = typeof localStorage !== 'undefined' ? localStorage.getItem('activeSchoolRole') : null;
+    if (this.currentPortalRole !== 'owner' && storedRole && storedRole !== 'owner' && nextTab === 'attendance') {
+      if (this.currentPortalRole === 'parent') {
+        this.setParentTab('attendance');
+        return;
+      }
+      if (this.currentPortalRole === 'student') {
+        this.setStudentTab('attendance');
+        return;
+      }
+      if (this.currentPortalRole === 'teacher') {
+        this.setTeacherTab('attendance');
+        return;
+      }
+      if (this.currentPortalRole === 'principal') {
+        this.setPrincipalTab('biometric_attendance');
+        return;
+      }
+    }
     if (this.currentPortalRole !== 'owner' && this.isOwnerSession) {
       this.currentPortalRole = 'owner';
       this.tableSchemaService.setPortalRole('owner');
@@ -26130,7 +26191,8 @@ INSTRUCTIONS:
       this.populateAccountantClosingFromReceipts();
       this.syncClosingPettyExpensesFromVouchers();
     }
-    this.tabChanged.emit(tab);
+    const emittedTab = tab === 'overview' ? 'accountant-portal' : `accountant-${tab}`;
+    this.tabChanged.emit(emittedTab);
     this.cdr.detectChanges();
     this.resetScrollToTop();
   }
@@ -28823,6 +28885,7 @@ INSTRUCTIONS:
       campusWebsite: b.website,
       monogramInitials: b.showLogoCrest ? b.monogramInitials : '',
       logoDataUrl: b.logoDataUrl,
+      logoShape: b.logoShape,
       logoPlacement: b.logoPlacement,
       logoSizePx: b.logoSizePx,
       headerAlign: b.headerAlign,
@@ -29036,6 +29099,7 @@ INSTRUCTIONS:
     const stickerOpts = {
       monogramInitials: this.printBranding?.monogramInitials,
       showLogoCrest: this.printBranding?.showLogoCrest,
+      logoShape: this.printBranding?.logoShape,
       footerNote: this.printBranding?.stickerFooterNote,
       accentColor: this.printBranding?.headerAccentColor
     };
@@ -29080,6 +29144,7 @@ INSTRUCTIONS:
     const html = buildBarcodeStickerSheetHtml(brandName, items, this.printBranding?.logoDataUrl, {
       monogramInitials: this.printBranding?.monogramInitials,
       showLogoCrest: this.printBranding?.showLogoCrest,
+      logoShape: this.printBranding?.logoShape,
       footerNote: this.printBranding?.stickerFooterNote,
       accentColor: this.printBranding?.headerAccentColor
     });
@@ -29106,6 +29171,7 @@ INSTRUCTIONS:
     const html = buildBarcodeStickerSheetHtml(brandName, items, this.printBranding?.logoDataUrl, {
       monogramInitials: this.printBranding?.monogramInitials,
       showLogoCrest: this.printBranding?.showLogoCrest,
+      logoShape: this.printBranding?.logoShape,
       footerNote: this.printBranding?.stickerFooterNote,
       accentColor: this.printBranding?.headerAccentColor
     });

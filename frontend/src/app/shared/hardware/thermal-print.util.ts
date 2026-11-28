@@ -21,6 +21,7 @@ export interface ThermalFeeReceiptData {
   logoDataUrl?: string;
   logoRasterBitmap?: EscPosRasterBitmap | null;
   logoPlacement?: 'left' | 'top' | 'right';
+  logoShape?: 'square' | 'circle';
   logoSizePx?: number;
   headerAlign?: 'left' | 'center' | 'right';
   sectionOrder?: Array<'header' | 'meta' | 'person' | 'amounts' | 'verification' | 'footer'>;
@@ -331,8 +332,10 @@ function buildSingleThermalCopyHtml(
   const monogram = (data.monogramInitials || '').trim().slice(0, 4);
   const stamp = (data.stampLabel || '').trim();
   const safeLogo = sanitizePrintImageDataUrl(data.logoDataUrl);
-  const logoPlacement = data.logoPlacement || 'top';
-  const logoSize = Math.min(72, Math.max(24, Number(data.logoSizePx || 44)));
+  const logoShape = data.logoShape === 'circle' ? 'circle' : 'square';
+  const frameRadius = logoShape === 'circle' ? '9999px' : '7px';
+  const crestRadius = logoShape === 'circle' ? '9999px' : '10px';
+  const logoSize = Math.min(82, Math.max(46, Number(data.logoSizePx || 44) + 14));
   const align = data.headerAlign || 'center';
   const verifOrder = data.verificationOrder || 'barcode_first';
   const hidden = new Set(data.hiddenSections || []);
@@ -343,17 +346,11 @@ function buildSingleThermalCopyHtml(
   const effectiveCopyBadge = copyBadge || data.copyLabel || '';
 
   const badgeHtml = safeLogo
-    ? `<div class="logo-frame"><img src="${safeLogo}" alt="Logo" style="width:${logoSize}px;height:${logoSize}px;object-fit:contain;display:block;" /></div>`
-    : (monogram ? `<div class="crest">${escapeHtml(monogram)}</div>` : '');
-
-  const topQrHtml = showQr ? `<div class="hdr-qr">${svgQr}</div>` : '';
-  const cornerCls = logoPlacement === 'right' ? 'hdr-corners rev' : 'hdr-corners';
+    ? `<div class="logo-frame" style="border-radius:${frameRadius};overflow:hidden;"><img src="${safeLogo}" alt="Logo" style="width:${logoSize}px;height:${logoSize}px;object-fit:contain;border-radius:${frameRadius};display:block;" /></div>`
+    : (monogram ? `<div class="crest" style="border-radius:${crestRadius};">${escapeHtml(monogram)}</div>` : '');
 
   const headerLayoutHtml = `
-    <div class="${cornerCls}">
-      ${badgeHtml || '<span></span>'}
-      ${topQrHtml}
-    </div>
+    ${badgeHtml ? `<div class="hdr-logo-center">${badgeHtml}</div>` : ''}
     <div class="hdr-center" style="text-align:${align};">
       <div class="title">${escapeHtml(data.schoolName || 'SoftCode Premier Academy')}</div>
       ${data.campusTagline ? `<div class="tagline">${escapeHtml(data.campusTagline)}</div>` : ''}
@@ -430,10 +427,28 @@ function buildSingleThermalCopyHtml(
         ${data.verifiedBy ? `<div class="kv-row"><span class="lbl">Authorized By</span><span class="val">${escapeHtml(data.verifiedBy)}</span></div>` : ''}
       </div>`,
     verification: (() => {
-      if (!showBarcode) return '';
+      if (!showBarcode && !showQr) return '';
+      const barBlock = showBarcode
+        ? `<div class="barcode-wrap">${svgBarcode}<div class="barcode-label">${escapeHtml(barcodeCode)}</div></div>`
+        : '';
+      const qrBlock = showQr
+        ? `<div class="qr-wrap">${svgQr}<div class="qr-cap">SCAN TO VERIFY</div></div>`
+        : '';
+      if (verifOrder === 'qr_first') {
+        return `<div class="ver-box">
+          <div class="ver-cap">VERIFICATION</div>
+          <div class="ver-stack">${qrBlock}${barBlock}</div>
+        </div>`;
+      }
+      if (verifOrder === 'side_by_side') {
+        return `<div class="ver-box">
+          <div class="ver-cap">VERIFICATION</div>
+          <div class="ver-row">${barBlock}${qrBlock}</div>
+        </div>`;
+      }
       return `<div class="ver-box">
         <div class="ver-cap">VERIFICATION</div>
-        <div class="barcode-wrap">${svgBarcode}<div class="barcode-label">${escapeHtml(barcodeCode)}</div></div>
+        <div class="ver-stack">${barBlock}${qrBlock}</div>
       </div>`;
     })(),
     footer: `
@@ -471,15 +486,13 @@ export function buildThermalFeeReceiptHtml(data: ThermalFeeReceiptData, paperWid
   <style>
     @page { size: ${pageMm} auto; margin: 2mm; }
     * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    body { margin: 0; padding: 8px; width: ${pageMm}; max-width: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: ${bodyFontPx}; line-height: 1.4; color: #0f172a; background: #fff; font-variant-numeric: tabular-nums; }
+    body { margin: 0; padding: 14px 8px 8px; width: ${pageMm}; max-width: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: ${bodyFontPx}; line-height: 1.4; color: #0f172a; background: #fff; font-variant-numeric: tabular-nums; }
     .sec-header { margin-bottom: 6px; }
     .copy-strip { display: inline-block; font-size: 8px; font-weight: 900; letter-spacing: 0.8px; padding: 2px 8px; margin-bottom: 6px; border-radius: 5px; text-transform: uppercase; background: linear-gradient(90deg, #059669, #0d9488); color: #fff; }
-    .hdr-corners { display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; }
-    .hdr-corners.rev { flex-direction: row-reverse; }
-    .hdr-qr { border: 1px solid #e2e8f0; border-radius: 7px; padding: 3px; background: #fff; flex-shrink: 0; line-height: 0; }
-    .hdr-center { margin-top: 6px; text-align: center; }
-    .logo-frame { border: 1px solid #e2e8f0; border-radius: 7px; padding: 2px; background: #fff; flex-shrink: 0; }
-    .crest { display: inline-flex; align-items: center; justify-content: center; border: 1px solid #cbd5e1; border-radius: 8px; width: 36px; height: 36px; font-size: 10.5px; font-weight: 900; letter-spacing: 1px; flex-shrink: 0; background: #f8fafc; color: #0f172a; }
+    .hdr-logo-center { display: flex; align-items: center; justify-content: center; padding-top: 14px; margin-bottom: 12px; }
+    .hdr-center { margin-top: 8px; text-align: center; }
+    .logo-frame { border: 1px solid #e2e8f0; border-radius: 7px; padding: 3px; background: #fff; flex-shrink: 0; }
+    .crest { display: inline-flex; align-items: center; justify-content: center; border: 1px solid #cbd5e1; border-radius: 10px; width: ${effectivePaper === '58mm' ? '48px' : '54px'}; height: ${effectivePaper === '58mm' ? '48px' : '54px'}; font-size: ${effectivePaper === '58mm' ? '12px' : '13px'}; font-weight: 900; letter-spacing: 1px; flex-shrink: 0; background: #f8fafc; color: #0f172a; }
     .title { font-size: ${effectivePaper === '58mm' ? '11.5px' : '13px'}; font-weight: 900; text-transform: uppercase; letter-spacing: -0.2px; line-height: 1.2; color: #020617; }
     .tagline { font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.25px; margin-top: 2px; color: #64748b; }
     .contact-block { margin-top: 4px; line-height: 1.35; }
@@ -505,8 +518,10 @@ export function buildThermalFeeReceiptHtml(data: ThermalFeeReceiptData, paperWid
     .ver-cap { font-size: 8px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; color: #94a3b8; margin-bottom: 4px; }
     .barcode-wrap { text-align: center; }
     .barcode-label { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 9px; font-weight: 800; color: #475569; letter-spacing: 1px; margin-top: 2px; }
-    .qr-wrap { margin-top: 5px; display: flex; flex-direction: column; align-items: center; }
-    .qr-cap { font-size: 7.5px; font-weight: 800; letter-spacing: 0.5px; margin-top: 2px; }
+    .ver-stack { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .ver-row { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
+    .qr-wrap { display: flex; flex-direction: column; align-items: center; }
+    .qr-cap { font-size: 7.5px; font-weight: 800; letter-spacing: 0.5px; margin-top: 2px; color: #64748b; }
     .sec-footer { border-top: 1px solid #f1f5f9; padding-top: 6px; margin-top: 7px; }
     .sign-line { margin-top: 18px; border-top: 1px solid #cbd5e1; padding-top: 3px; font-size: 8.5px; font-weight: 800; color: #475569; text-align: center; text-transform: uppercase; letter-spacing: 0.4px; }
     .footer { font-size: 8px; text-align: center; margin-top: 6px; line-height: 1.35; color: #64748b; }
@@ -776,6 +791,7 @@ export interface BarcodeStickerSheetOptions {
   showLogoCrest?: boolean;
   footerNote?: string;
   accentColor?: string;
+  logoShape?: 'square' | 'circle';
 }
 
 export function buildBarcodeStickerSheetHtml(
@@ -791,13 +807,15 @@ export function buildBarcodeStickerSheetHtml(
   const showCrest = options?.showLogoCrest !== false;
   const monogram = String(options?.monogramInitials || 'SPA').trim().slice(0, 4) || 'SPA';
   const stickerFooter = String(options?.footerNote || '').trim();
+  const stickerRadius = options?.logoShape === 'circle' ? '9999px' : '2px';
+  const stickerCrestRadius = options?.logoShape === 'circle' ? '9999px' : '3px';
   const cards = items
     .map((item) => {
       const svg = buildCode128SvgMarkup(item.code, 40, '#000000');
       const crestHtml = safeLogo
-        ? `<img src="${safeLogo}" alt="" style="width:14px;height:14px;object-fit:contain;border-radius:2px;flex-shrink:0;" />`
+        ? `<img src="${safeLogo}" alt="" style="width:14px;height:14px;object-fit:contain;border-radius:${stickerRadius};overflow:hidden;flex-shrink:0;" />`
         : (showCrest
-          ? `<span style="display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:3px;background:${accent};color:#fff;font-size:6.5px;font-weight:900;flex-shrink:0;">${escapeHtml(monogram)}</span>`
+          ? `<span style="display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:${stickerCrestRadius};background:${accent};color:#fff;font-size:6.5px;font-weight:900;flex-shrink:0;">${escapeHtml(monogram)}</span>`
           : '');
       return `<div class="sticker">
         <div style="display:flex;align-items:center;justify-content:center;gap:4px;">

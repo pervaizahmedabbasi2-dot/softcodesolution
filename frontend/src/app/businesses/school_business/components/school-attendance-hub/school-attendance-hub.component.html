@@ -77,6 +77,14 @@
           <span>{{ kioskFullscreen() ? 'Exit Full Screen' : 'Full Screen' }}</span>
         </button>
 
+        @if (!kioskFullscreen()) {
+          <button type="button" (click)="setSubTab('history')"
+            class="px-3.5 py-2 rounded-xl border text-xs font-bold shadow-2xs cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 active:scale-[0.98] transition-all"
+            [class]="activeSubTab() === 'history' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white/90 hover:bg-white border-slate-200/90 text-slate-700'">
+            <lucide-icon [name]="'bar-chart-2'" class="w-3.5 h-3.5" [class]="activeSubTab() === 'history' ? 'text-white' : 'text-indigo-600'"></lucide-icon>
+            <span>History &amp; Analytics</span>
+          </button>
+        }
 
         @if (canExportCurrentPortal() && !kioskFullscreen()) {
           <button type="button" (click)="absentAlertRequested.emit({ category: activeCategory() === 'all' ? 'student' : $any(activeCategory()) })"
@@ -230,6 +238,13 @@
             <span>Live Scanner</span>
           </button>
         }
+
+        <button type="button" (click)="setSubTab('history')"
+          class="px-3.5 py-2 rounded-xl text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 transition-all"
+          [class]="activeSubTab() === 'history' ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-600/20' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'">
+          <lucide-icon [name]="'bar-chart-2'" class="w-3.5 h-3.5" [class]="activeSubTab() === 'history' ? 'text-white' : 'text-indigo-600'"></lucide-icon>
+          <span>History &amp; Analytics</span>
+        </button>
 
         @if (portalContext() !== 'student') {
           @if (isOwner() || allowedCategories().includes('student')) {
@@ -2902,6 +2917,26 @@
           </div>
         </div>
       </div>
+    }
+
+    <!-- ================================================================ -->
+    <!-- SUB-TAB: MULTI-PERIOD ATTENDANCE HISTORY & ANALYTICS PLATFORM    -->
+    <!-- ================================================================ -->
+    @if (!kioskFullscreen() && activeSubTab() === 'history') {
+      <app-school-attendance-analytics
+        [portalContext]="portalContext()"
+        [schoolName]="schoolName()"
+        [students]="students()"
+        [teachers]="teachers()"
+        [staff]="staff()"
+        [principals]="principals()"
+        [policy]="policy()"
+        [verificationLogs]="verificationLogs()"
+        [focusedStudentId]="currentStudentId()"
+        [currentTeacherGrade]="currentTeacherGrade()"
+        [currentActorName]="currentActorName()"
+        [activeBranchLabel]="activeBranchLabel()"
+      />
     }
   }
 </div>

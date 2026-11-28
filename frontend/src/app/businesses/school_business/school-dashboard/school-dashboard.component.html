@@ -15645,6 +15645,20 @@
           (switchToOwnerPortal)="switchPortal('owner')"
           (syncRequested)="flushOfflineSyncQueue()"
         />
+      } @else if (principalTab === 'biometric_attendance' && ownerAttendancePolicy.roleAccess.principal.enabled) {
+        <app-school-attendance-analytics
+          [portalContext]="'principal'"
+          [schoolName]="schoolName"
+          [students]="scopedActiveStudents"
+          [teachers]="scopedTeachers"
+          [staff]="scopedStaff"
+          [principals]="scopedPrincipals"
+          [policy]="ownerAttendancePolicy"
+          [verificationLogs]="scopedFaceVerificationLogs"
+          [currentActorName]="'Principal Directorate'"
+          [activeBranchLabel]="activeScopeSummaryLabel"
+          [titleOverride]="'Principal Campus Attendance History & Analytics'"
+        />
       }
 
       <!-- PRINCIPAL TAB: LIBRARY RESOURCE MANAGER & BOOK CIRCULATION -->
@@ -16930,6 +16944,23 @@
             (toast)="onAttendanceHubToast($event)"
             (switchToOwnerPortal)="switchPortal('owner')"
             (syncRequested)="flushOfflineSyncQueue()"
+          />
+        </div>
+      } @else if (teacherTab === 'attendance' && ownerAttendancePolicy.roleAccess.teacher.enabled) {
+        <div id="teacher-workspace-attendance" class="scroll-mt-24">
+          <app-school-attendance-analytics
+            [portalContext]="'teacher'"
+            [schoolName]="schoolName"
+            [students]="scopedActiveStudents"
+            [teachers]="scopedTeachers"
+            [staff]="[]"
+            [principals]="[]"
+            [policy]="ownerAttendancePolicy"
+            [verificationLogs]="scopedFaceVerificationLogs"
+            [currentTeacherGrade]="currentTeacherProfile.assignedGrade || 'All'"
+            [currentActorName]="currentTeacherProfile.name || 'Faculty Operator'"
+            [activeBranchLabel]="activeScopeSummaryLabel"
+            [titleOverride]="'Class & Faculty Attendance History & Analytics'"
           />
         </div>
       }
@@ -18588,44 +18619,22 @@
             />
           }
 
-          <div class="apple-card scs-surface-3d rounded-2xl p-5 space-y-4">
-            <div class="flex items-center justify-between">
-              <h3 class="font-black text-slate-900 text-base">Monthly Attendance Streak &amp; Camera Verification Log</h3>
-              <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full">{{ currentStudentProfile.attendance || '98.5%' }} Attendance Rate</span>
-            </div>
-
-            <div class="overflow-x-auto custom-scrollbar border border-slate-200 rounded-xl">
-              <table appSchoolTable="student_attendance_log" tableTitle="Student Attendance Log" class="w-full text-left border-collapse text-xs">
-                <thead class="bg-white text-slate-600 uppercase font-black text-[10px] border-b border-slate-200">
-                  <tr>
-                    <th class="px-4 py-3">Date</th>
-                    <th class="px-4 py-3">Day</th>
-                    <th class="px-4 py-3">Check-In Time</th>
-                    <th class="px-4 py-3">Check-Out Time</th>
-                    <th class="px-4 py-3">Verification Method</th>
-                    <th class="px-4 py-3">Status</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 font-medium">
-                  @for (log of studentAttendanceLog; track log.date) {
-                    <tr [attr.data-row-key]="log.date" class="hover:bg-slate-50/60 transition-colors">
-                      <td class="px-4 py-3 font-mono font-bold text-slate-900">{{ log.date }}</td>
-                      <td class="px-4 py-3 text-slate-600">{{ log.day }}</td>
-                      <td class="px-4 py-3 font-mono font-bold text-emerald-600">{{ log.checkIn }}</td>
-                      <td class="px-4 py-3 font-mono text-slate-500">{{ log.checkOut }}</td>
-                      <td class="px-4 py-3 text-slate-700">{{ log.gate }}</td>
-                      <td class="px-4 py-3">
-                        <span class="px-2 py-0.5 rounded-full text-[10px] font-black"
-                          [class]="log.status === 'Present' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'">
-                          {{ log.status }}
-                        </span>
-                      </td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <app-school-attendance-analytics
+            [portalContext]="'student'"
+            [schoolName]="schoolName"
+            [students]="scopedActiveStudents"
+            [teachers]="[]"
+            [staff]="[]"
+            [principals]="[]"
+            [policy]="ownerAttendancePolicy"
+            [verificationLogs]="scopedFaceVerificationLogs"
+            [extraDailyLogs]="studentAttendanceLog"
+            [focusedStudentId]="currentStudentProfile?.id || activeStudentId"
+            [focusedStudentSummary]="currentStudentProfile"
+            [currentActorName]="currentStudentProfile?.name || 'Student'"
+            [activeBranchLabel]="activeScopeSummaryLabel"
+            [titleOverride]="'Monthly Attendance Record & Verification History'"
+          />
         </div>
       }
 
@@ -20184,20 +20193,24 @@
         </div>
       }
 
-      <!-- PARENT TAB 2: ATTENDANCE -->
+      <!-- PARENT TAB 2: MONTHLY ATTENDANCE RECORD & LIVE RFID GATE LOG -->
       @if (parentTab === 'attendance') {
-        <div class="apple-card scs-surface-3d rounded-2xl p-5 space-y-4">
-          <div class="flex items-center justify-between">
-            <h3 class="font-black text-slate-900 text-base">Monthly Attendance Calendar</h3>
-            <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full">{{ selectedParentChild?.id === 'ST-1002' ? '138 Days Present, 3 Approved Leaves' : '142 Days Present, 2 Approved Leaves' }}</span>
-          </div>
-          <div class="p-4 rounded-xl bg-white border border-slate-200 text-xs space-y-2">
-            <p class="font-bold text-slate-900">Attendance Percentage: <strong>{{ selectedParentChild?.attendanceRate || '98.5%' }}</strong></p>
-            <div class="w-full h-3 rounded-full bg-slate-200 overflow-hidden">
-              <div class="h-full bg-emerald-500 rounded-full" [style.width]="selectedParentChild?.attendanceRate || '98.5%'"></div>
-            </div>
-          </div>
-        </div>
+        <app-school-attendance-analytics
+          [portalContext]="'parent'"
+          [schoolName]="schoolName"
+          [students]="scopedActiveStudents"
+          [teachers]="[]"
+          [staff]="[]"
+          [principals]="[]"
+          [policy]="ownerAttendancePolicy"
+          [verificationLogs]="scopedFaceVerificationLogs"
+          [extraDailyLogs]="activeChildAttendanceLog"
+          [focusedStudentId]="selectedParentChild?.id || activeParentChildId"
+          [focusedStudentSummary]="selectedParentChild"
+          [currentActorName]="currentGuardianProfile?.name || 'Parent Guardian'"
+          [activeBranchLabel]="activeScopeSummaryLabel"
+          [titleOverride]="'Monthly Attendance Record'"
+        />
       }
 
       <!-- PARENT TAB 3: ACADEMICS -->
@@ -23866,9 +23879,14 @@
                           [src]="safeVoucherLogoUrl"
                           alt="School logo"
                           referrerpolicy="no-referrer"
-                          class="w-10 h-10 object-contain rounded-lg border border-slate-200 bg-white p-0.5 shrink-0" />
+                          class="w-10 h-10 object-contain border border-slate-200 bg-white p-0.5 shrink-0 overflow-hidden"
+                          [class.rounded-full]="printBranding.logoShape === 'circle'"
+                          [class.rounded-lg]="printBranding.logoShape !== 'circle'" />
                       } @else {
-                        <div class="w-10 h-10 rounded-lg border border-slate-300 bg-white text-slate-900 font-black text-xs flex items-center justify-center shrink-0">
+                        <div
+                          class="w-10 h-10 border border-slate-300 bg-white text-slate-900 font-black text-xs flex items-center justify-center shrink-0"
+                          [class.rounded-full]="printBranding.logoShape === 'circle'"
+                          [class.rounded-lg]="printBranding.logoShape !== 'circle'">
                           {{ printBranding.monogramInitials || 'SPA' }}
                         </div>
                       }
@@ -24112,9 +24130,14 @@
                                 referrerpolicy="no-referrer"
                                 [style.width.px]="(printBranding.logoSizePx || 44) * 0.85"
                                 [style.height.px]="(printBranding.logoSizePx || 44) * 0.85"
-                                class="object-contain rounded-lg border border-slate-200 bg-white p-0.5 shrink-0" />
+                                class="object-contain border border-slate-200 bg-white p-0.5 shrink-0 overflow-hidden"
+                                [class.rounded-full]="printBranding.logoShape === 'circle'"
+                                [class.rounded-lg]="printBranding.logoShape !== 'circle'" />
                             } @else if (printBranding.showLogoCrest) {
-                              <div class="w-9 h-9 rounded-xl border border-slate-300 bg-slate-50 text-slate-900 font-black text-[10.5px] flex items-center justify-center shrink-0 tracking-wider shadow-2xs">
+                              <div
+                                class="w-9 h-9 border border-slate-300 bg-slate-50 text-slate-900 font-black text-[10.5px] flex items-center justify-center shrink-0 tracking-wider shadow-2xs"
+                                [class.rounded-full]="printBranding.logoShape === 'circle'"
+                                [class.rounded-xl]="printBranding.logoShape !== 'circle'">
                                 {{ printBranding.monogramInitials || 'SPA' }}
                               </div>
                             }
@@ -24138,9 +24161,14 @@
                                 referrerpolicy="no-referrer"
                                 [style.width.px]="(printBranding.logoSizePx || 44) * 0.78"
                                 [style.height.px]="(printBranding.logoSizePx || 44) * 0.78"
-                                class="object-contain rounded-lg border border-slate-200 bg-white p-0.5 shrink-0" />
+                                class="object-contain border border-slate-200 bg-white p-0.5 shrink-0 overflow-hidden"
+                                [class.rounded-full]="printBranding.logoShape === 'circle'"
+                                [class.rounded-lg]="printBranding.logoShape !== 'circle'" />
                             } @else if (printBranding.showLogoCrest) {
-                              <div class="w-8 h-8 rounded-lg border border-slate-300 bg-slate-50 text-slate-900 font-black text-[10px] flex items-center justify-center shrink-0 tracking-wider">
+                              <div
+                                class="w-8 h-8 border border-slate-300 bg-slate-50 text-slate-900 font-black text-[10px] flex items-center justify-center shrink-0 tracking-wider"
+                                [class.rounded-full]="printBranding.logoShape === 'circle'"
+                                [class.rounded-lg]="printBranding.logoShape !== 'circle'">
                                 {{ printBranding.monogramInitials || 'SPA' }}
                               </div>
                             }
@@ -24169,11 +24197,15 @@
                                 referrerpolicy="no-referrer"
                                 [style.width.px]="(printBranding.logoSizePx || 44) * 0.78"
                                 [style.height.px]="(printBranding.logoSizePx || 44) * 0.78"
-                                class="object-contain rounded-lg border border-slate-200 bg-white p-0.5 shrink-0 shadow-2xs" />
+                                class="object-contain border border-slate-200 bg-white p-0.5 shrink-0 shadow-2xs overflow-hidden"
+                                [class.rounded-full]="printBranding.logoShape === 'circle'"
+                                [class.rounded-lg]="printBranding.logoShape !== 'circle'" />
                             } @else if (printBranding.showLogoCrest) {
                               <div
                                 title="Dummy School Logo — Customize in Owner Designer"
-                                class="w-8 h-8 rounded-lg border border-slate-300 bg-slate-50 text-slate-900 font-black text-[10px] flex items-center justify-center shrink-0 tracking-wider shadow-2xs">
+                                class="w-8 h-8 border border-slate-300 bg-slate-50 text-slate-900 font-black text-[10px] flex items-center justify-center shrink-0 tracking-wider shadow-2xs"
+                                [class.rounded-full]="printBranding.logoShape === 'circle'"
+                                [class.rounded-lg]="printBranding.logoShape !== 'circle'">
                                 {{ printBranding.monogramInitials || 'SPA' }}
                               </div>
                             }
@@ -24285,9 +24317,7 @@
                             </div>
                           }
                           @if (printBranding.showQrVerification) {
-                            <div class="shrink-0 bg-white p-1 rounded-lg border border-slate-200">
-                              <app-school-qr-code [value]="voucherQrPayload" [size]="50" [label]="'VERIFY QR'" />
-                            </div>
+                            <app-school-qr-code class="shrink-0" [value]="voucherQrPayload" [size]="50" [label]="'VERIFY QR'" />
                           }
                         </div>
                       }
