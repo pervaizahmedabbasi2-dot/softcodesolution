@@ -871,7 +871,7 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
     return td;
   }
 
-  private createToolbarIcon(kind: 'csv' | 'table' | 'cards' | 'statement' | 'dossier' | 'qr', sizeClass = 'w-3.5 h-3.5'): SVGSVGElement {
+  private createToolbarIcon(kind: 'csv' | 'table' | 'cards' | 'statement' | 'dossier' | 'qr' | 'columns', sizeClass = 'w-3.5 h-3.5'): SVGSVGElement {
     const ns = 'http://www.w3.org/2000/svg';
     const svg = document.createElementNS(ns, 'svg');
     svg.setAttribute('viewBox', '0 0 24 24');
@@ -891,7 +891,9 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
             ? ['M6 9V2h12v7', 'M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2', 'M6 14h12v8H6z']
             : kind === 'qr'
               ? ['M3 3h7v7H3z', 'M14 3h7v7h-7z', 'M3 14h7v7H3z', 'M14 14h3v3h-3z', 'M19 14h2v2h-2z', 'M14 19h2v2h-2z', 'M18 18h3v3h-3z']
-              : ['M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z', 'M4 12h16', 'M12 4v16'];
+              : kind === 'columns'
+                ? ['M9 3v18', 'M15 3v18', 'M3 9h18', 'M3 15h18', 'M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z']
+                : ['M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z', 'M4 12h16', 'M12 4v16'];
 
     for (const d of paths) {
       const p = document.createElementNS(ns, 'path');
@@ -1258,6 +1260,23 @@ export class SchoolTableDirective implements AfterViewInit, OnDestroy {
         this.schemaService.exportTableCardsPdf(tableId, title);
       });
       right.appendChild(cardsPdfBtn);
+    }
+
+    if (isOwner) {
+      const colMgrBtn = document.createElement('button');
+      colMgrBtn.type = 'button';
+      colMgrBtn.className =
+        'px-3 py-1.5 rounded-xl bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 text-indigo-800 font-bold text-[11px] inline-flex items-center gap-1.5 shadow-2xs active:scale-95 transition-all cursor-pointer whitespace-nowrap';
+      colMgrBtn.title = 'Owner Customizer: Rename/Hide Columns, Add Custom Fields, Edit Title & Add Custom Rows';
+      colMgrBtn.appendChild(this.createToolbarIcon('columns'));
+      const colTxt = document.createElement('span');
+      colTxt.textContent = 'Columns & Rows';
+      colMgrBtn.appendChild(colTxt);
+      colMgrBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.schemaService.openColumnManager(tableId, title, detectedHeaders, 'columns');
+      });
+      right.appendChild(colMgrBtn);
     }
 
     if (showAddBtn) {

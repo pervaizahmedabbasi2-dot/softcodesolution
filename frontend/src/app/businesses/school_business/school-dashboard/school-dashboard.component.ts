@@ -64,6 +64,7 @@ import {
   MessageSquareWarning
 } from 'lucide-angular';
 import { MatIconModule } from '@angular/material/icon';
+import jsQR from 'jsqr';
 import { DomSanitizer, SafeUrl, SafeResourceUrl } from '@angular/platform-browser';
 import { FirebaseDbService } from '../../../services/firebase-db.service';
 import { BackendService } from '../../../services/backend.service';
@@ -93,9 +94,12 @@ import {
   EscPosRasterBitmap,
   ThermalFeeReceiptData,
   ThermalPaperWidth,
+  ThermalPosReceiptData,
   buildBarcodeStickerSheetHtml,
+  buildEscPosPosReceiptBytes,
   buildEscPosReceiptBytes,
   buildThermalFeeReceiptHtml,
+  buildThermalPosReceiptHtml,
   imageDataUrlToEscPosRaster,
   printHtmlInHiddenFrame
 } from '../utils/thermal-print.util';
@@ -1055,6 +1059,28 @@ export interface SchoolAssetRecord {
   condition: 'Excellent' | 'Good' | 'Needs Repair' | 'Retired';
   custodian: string;
   lastServiced: string;
+}
+
+export interface StockInventoryLogRecord {
+  id: string;
+  refNo: string;
+  assetId: string;
+  assetCode: string;
+  assetName: string;
+  category: string;
+  location: string;
+  direction: 'IN' | 'OUT';
+  qtyChange: number;
+  previousQty: number;
+  newQty: number;
+  unitValue: number;
+  totalValue: number;
+  handledBy: string;
+  source: 'camera' | 'file' | 'manual' | 'quick';
+  notes: string;
+  timestamp: string;
+  branchId?: string;
+  branchName?: string;
 }
 
 export interface StaffPayrollRecord {
@@ -6257,13 +6283,22 @@ INSTRUCTIONS:
   selectedCirculationSlip: LibraryCirculationRecord | null = null;
   isBorrowSlipModalOpen: boolean = false;
 
-  // Barcode / ISBN Scanner Modal State
+  // Barcode / ISBN Scanner & Printer In/Out State
   isBarcodeScannerModalOpen: boolean = false;
   isCameraActive: boolean = false;
   cameraStream: MediaStream | null = null;
   scannedIsbnResult: string = '';
   barcodeScanTargetMode: 'checkout' | 'checkin' | 'search' = 'checkout';
   manualIsbnInput: string = '';
+  libraryCameraFacing: 'environment' | 'user' = 'environment';
+  libraryScannerUploadedPreview: string = '';
+  libraryAutoPrintSlip: boolean = true;
+  libraryPrintFormat: 'thermal' | 'a4' = 'thermal';
+  private barcodeScanRafId: number | null = null;
+  private barcodeDetectorInstance: any = null;
+  private barcodeScanBusy = false;
+  private barcodeLastDecoded = '';
+  private barcodeLastDecodedAt = 0;
 
   // Automated Overdue Reminder Modal State
   isLibraryPDFModalOpen: boolean = false;
@@ -6407,6 +6442,26 @@ INSTRUCTIONS:
   studentMedicalRecords: StudentMedicalRecord[] = [];
   disciplinaryIncidents: DisciplinaryIncidentRecord[] = [];
   schoolAssets: SchoolAssetRecord[] = [];
+  stockInOutLogs: StockInventoryLogRecord[] = [];
+  isAssetScannerModalOpen: boolean = false;
+  assetScanTargetMode: 'in' | 'out' | 'search' = 'out';
+  stockScanQty: number = 1;
+  stockScanNotes: string = '';
+  manualAssetCodeInput: string = '';
+  assetCameraActive: boolean = false;
+  assetCameraStarting: boolean = false;
+  assetCameraError: string = '';
+  assetCameraFacing: 'environment' | 'user' = 'environment';
+  assetScannerUploadedPreview: string = '';
+  lastMatchedAssetLog: StockInventoryLogRecord | null = null;
+  stockAutoPrintSlip: boolean = true;
+  stockPrintFormat: 'thermal' | 'a4' = 'thermal';
+  private assetCameraStream: MediaStream | null = null;
+  private assetScanRafId: number | null = null;
+  private assetBarcodeDetector: any = null;
+  private assetScanBusy = false;
+  private assetLastDecoded = '';
+  private assetLastDecodedAt = 0;
   staffPayrolls: StaffPayrollRecord[] = [];
   staffLeaveRequests: StaffLeaveRecord[] = [];
   studentFeeDefaulters: StudentFeeDefaulterRecord[] = [];
@@ -9967,6 +10022,8 @@ INSTRUCTIONS:
       } catch {}
       this.serialThermalPort = null;
     }
+    this.stopCameraStream();
+    this.stopAssetCameraStream();
     if (typeof window !== 'undefined') {
       window.removeEventListener('online', this.boundOnlineSyncHandler);
     }
@@ -10678,6 +10735,18 @@ INSTRUCTIONS:
       if (savedAssets) this.schoolAssets = JSON.parse(savedAssets);
       else this.schoolAssets = this.getInitialAssets();
 
+      const savedStockLogs = this.getScopedItem('scs_school_stock_logs_v1');
+      if (savedStockLogs) {
+        try {
+          const parsedLogs = JSON.parse(savedStockLogs);
+          this.stockInOutLogs = Array.isArray(parsedLogs) ? parsedLogs : this.getInitialStockInOutLogs();
+        } catch {
+          this.stockInOutLogs = this.getInitialStockInOutLogs();
+        }
+      } else {
+        this.stockInOutLogs = this.getInitialStockInOutLogs();
+      }
+
       if (savedPayrolls) this.staffPayrolls = JSON.parse(savedPayrolls);
       else this.staffPayrolls = this.getInitialPayrolls();
 
@@ -11055,6 +11124,7 @@ INSTRUCTIONS:
       this.studentMedicalRecords = this.getInitialMedicals();
       this.disciplinaryIncidents = this.getInitialDisciplinary();
       this.schoolAssets = this.getInitialAssets();
+      this.stockInOutLogs = this.getInitialStockInOutLogs();
       this.staffPayrolls = this.getInitialPayrolls();
       this.staffLeaveRequests = this.getInitialStaffLeaves();
       this.studentFeeDefaulters = this.getInitialDefaulters();
@@ -11131,6 +11201,7 @@ INSTRUCTIONS:
         if (Array.isArray(w.studentMedicalRecords) && w.studentMedicalRecords.length > 0) this.studentMedicalRecords = w.studentMedicalRecords;
         if (Array.isArray(w.disciplinaryIncidents) && w.disciplinaryIncidents.length > 0) this.disciplinaryIncidents = w.disciplinaryIncidents;
         if (Array.isArray(w.schoolAssets) && w.schoolAssets.length > 0) this.schoolAssets = w.schoolAssets;
+        if (Array.isArray(w.stockInOutLogs) && w.stockInOutLogs.length > 0) this.stockInOutLogs = w.stockInOutLogs;
         if (Array.isArray(w.staffPayrolls) && w.staffPayrolls.length > 0) this.staffPayrolls = w.staffPayrolls;
         if (Array.isArray(w.staffLeaveRequests) && w.staffLeaveRequests.length > 0) this.staffLeaveRequests = w.staffLeaveRequests;
         if (Array.isArray(w.schoolExpenses) && w.schoolExpenses.length > 0) this.schoolExpenses = w.schoolExpenses;
@@ -11151,6 +11222,13 @@ INSTRUCTIONS:
         if (Array.isArray(w.dailyInspectionLogs) && w.dailyInspectionLogs.length > 0) this.dailyInspectionLogs = w.dailyInspectionLogs;
         if (w.selectedBranchScope) this.selectedBranchScope = w.selectedBranchScope;
         if (w.selectedWingScope) this.selectedWingScope = w.selectedWingScope;
+      } else if (brandingRes?.ok && brandingRes.printBranding) {
+        this.printBranding = normalizeSchoolPrintBranding(brandingRes.printBranding, this.schoolName);
+        if (this.printBranding.defaultPaperWidth === '58mm' || this.printBranding.defaultPaperWidth === '80mm') {
+          this.hardwarePrinterPaper = this.printBranding.defaultPaperWidth;
+        }
+        void this.refreshEscPosLogoBitmap();
+        this.tableSchemaService.setPrintBranding(this.printBranding);
       }
 
       if (stuRes?.ok && Array.isArray(stuRes.students) && stuRes.students.length > 0) {
@@ -11717,6 +11795,7 @@ INSTRUCTIONS:
       this.setScopedItem('scs_school_medicals_v1', JSON.stringify(this.studentMedicalRecords));
       this.setScopedItem('scs_school_disciplinary_v1', JSON.stringify(this.disciplinaryIncidents));
       this.setScopedItem('scs_school_assets_v1', JSON.stringify(this.schoolAssets));
+      this.setScopedItem('scs_school_stock_logs_v1', JSON.stringify(this.stockInOutLogs));
       this.setScopedItem('scs_school_payrolls_v1', JSON.stringify(this.staffPayrolls));
       this.setScopedItem('scs_school_library_books_v1', JSON.stringify(this.libraryBooks));
       this.setScopedItem('scs_school_library_circulations_v1', JSON.stringify(this.libraryCirculations));
@@ -11793,6 +11872,7 @@ INSTRUCTIONS:
         studentMedicalRecords: this.studentMedicalRecords,
         disciplinaryIncidents: this.disciplinaryIncidents,
         schoolAssets: this.schoolAssets,
+        stockInOutLogs: this.stockInOutLogs,
         staffPayrolls: this.staffPayrolls,
         staffLeaveRequests: this.staffLeaveRequests,
         schoolExpenses: this.schoolExpenses,
@@ -13572,6 +13652,49 @@ INSTRUCTIONS:
       { id: 'AST-402', assetCode: 'AST-CL-045', name: 'Ergonomic Wooden Student Dual Desks', category: 'Classroom Furniture', location: 'Block B - Rooms 201-210', quantity: 150, unitValue: 18000, condition: 'Good', custodian: 'Admin Office', lastServiced: 'Aug 15, 2026' },
       { id: 'AST-403', assetCode: 'AST-LB-102', name: 'Digital Microscopes & Chemistry Sets', category: 'Lab Equipment', location: 'Physics & Chemistry Lab', quantity: 25, unitValue: 45000, condition: 'Needs Repair', custodian: 'Dr. Rehan Alvi', lastServiced: 'May 10, 2026' },
       { id: 'AST-404', assetCode: 'AST-SP-008', name: 'Professional Cricket Kits & TT Tables', category: 'Sports Gear', location: 'Sports Complex Store', quantity: 10, unitValue: 35000, condition: 'Good', custodian: 'Coach Imran Khan', lastServiced: 'Sep 01, 2026' }
+    ];
+  }
+
+  getInitialStockInOutLogs(): StockInventoryLogRecord[] {
+    return [
+      {
+        id: 'STKLOG-1001',
+        refNo: 'STK-IN-1001',
+        assetId: 'AST-401',
+        assetCode: 'AST-IT-001',
+        assetName: 'Dell i7 OptiPlex Desktop Computers (30 Units)',
+        category: 'IT Hardware',
+        location: 'Computer AI Lab 1',
+        direction: 'IN',
+        qtyChange: 5,
+        previousQty: 25,
+        newQty: 30,
+        unitValue: 125000,
+        totalValue: 625000,
+        handledBy: 'Engr. Bilal Hashmi',
+        source: 'manual',
+        notes: 'Lab workstation batch received & barcoded',
+        timestamp: 'Sep 30, 2026 · 10:15 AM'
+      },
+      {
+        id: 'STKLOG-1002',
+        refNo: 'STK-OUT-1002',
+        assetId: 'AST-403',
+        assetCode: 'AST-LB-102',
+        assetName: 'Digital Microscopes & Chemistry Sets',
+        category: 'Lab Equipment',
+        location: 'Physics & Chemistry Lab',
+        direction: 'OUT',
+        qtyChange: 2,
+        previousQty: 27,
+        newQty: 25,
+        unitValue: 45000,
+        totalValue: 90000,
+        handledBy: 'Dr. Rehan Alvi',
+        source: 'quick',
+        notes: 'Issued for Science Practical Hall B',
+        timestamp: 'Oct 02, 2026 · 09:05 AM'
+      }
     ];
   }
 
@@ -20791,6 +20914,9 @@ INSTRUCTIONS:
     this.checkAndUpdateOverdueBooks();
     this.closeCheckoutModal();
     this.showToast('Book "' + bk.title + '" checked out to ' + newCirculation.borrowerName + ' successfully!', 'success');
+    if (this.libraryAutoPrintSlip) {
+      void this.printLibraryInOutReceipt(newCirculation, 'OUT');
+    }
   }
 
   returnCirculationBook(rec: LibraryCirculationRecord): void {
@@ -20807,6 +20933,9 @@ INSTRUCTIONS:
     this.saveStateToStorage();
     this.checkAndUpdateOverdueBooks();
     this.showToast('Marked "' + rec.bookTitle + '" as returned by ' + rec.borrowerName + '. Inventory updated!', 'success');
+    if (this.libraryAutoPrintSlip) {
+      void this.printLibraryInOutReceipt(rec, 'IN');
+    }
   }
 
   renewCirculationBook(rec: LibraryCirculationRecord): void {
@@ -20971,15 +21100,158 @@ INSTRUCTIONS:
     await printHtmlInHiddenFrame(html);
   }
 
+  // --- LIBRARY PRINTER IN/OUT & STICKER HELPERS ---
+  async printLibraryInOutReceipt(
+    rec: LibraryCirculationRecord,
+    direction: 'OUT' | 'IN',
+    formatOverride?: 'thermal' | 'a4'
+  ): Promise<void> {
+    const slipId = rec.issueNo || rec.id;
+    const fmt = formatOverride || this.libraryPrintFormat || 'thermal';
+    const signed = await this.registerSignedPrintForDoc({
+      docType: 'borrow_slip',
+      docLabel: `Library Book ${direction} Slip (${slipId})`,
+      tableId: 'library_circulation',
+      tableTitle: 'Library Book Circulation Ledger',
+      portalTab: 'library',
+      rowKey: slipId,
+      rowLabel: rec.borrowerName,
+      subjectName: rec.borrowerName,
+      rollOrCode: rec.isbn || slipId,
+      amountPkr: Number(rec.fineAmount || 0),
+      statusSnapshot: direction === 'IN' ? 'RETURNED (IN)' : 'ISSUED (OUT)',
+      snapshot: { slipId, direction, bookTitle: rec.bookTitle, isbn: rec.isbn, borrowerName: rec.borrowerName, status: rec.status }
+    });
+
+    if (fmt === 'a4') {
+      const html = buildBorrowSlipPrintHtml(
+        {
+          slipId,
+          bookTitle: rec.bookTitle,
+          bookIsbn: rec.isbn || 'N/A',
+          accessionCode: rec.bookId || rec.isbn,
+          borrowerName: rec.borrowerName,
+          borrowerRole: rec.borrowerType,
+          borrowerId: rec.borrowerId,
+          issueDate: rec.issueDate,
+          dueDate: rec.dueDate,
+          status: direction === 'IN' ? `Returned (IN) · ${rec.returnDate || 'Today'}` : 'Issued (OUT)',
+          fineAmount: Number(rec.fineAmount || 0),
+          dailyFineRate: Number(this.dailyFineRatePKR || 50),
+          qrPayload: signed.qrToken,
+          printId: signed.printId,
+          generatedBy: this.activeQrActorName
+        },
+        this.printBranding
+      );
+      const ok = await printHtmlInHiddenFrame(html);
+      this.showToast(
+        ok ? `Opened A5 Library ${direction} Slip (${slipId}).` : 'Print dialog blocked by browser.',
+        ok ? 'success' : 'warning'
+      );
+      return;
+    }
+
+    const pb = normalizeSchoolPrintBranding(this.printBranding, this.schoolName);
+    const paper: ThermalPaperWidth = pb.defaultPaperWidth === '58mm' ? '58mm' : (this.hardwarePrinterPaper === '58mm' ? '58mm' : '80mm');
+    const cur = pb.currencySymbol || 'PKR';
+    const posData: ThermalPosReceiptData = {
+      businessName: pb.schoolName || this.schoolName || 'Central School Library',
+      branchName: rec.branchName || this.activeScopeSummaryLabel,
+      campusAddress: pb.address,
+      campusPhone: pb.phone,
+      receiptTitle: direction === 'IN' ? 'LIBRARY BOOK CHECK-IN (RETURN)' : 'LIBRARY BOOK CHECK-OUT (ISSUE)',
+      receiptNo: slipId,
+      customerName: `${rec.borrowerName} (${rec.borrowerId})`,
+      cashierName: this.activeQrActorName || this.activeLibraryStaffRole,
+      paymentMethod: direction === 'IN' ? 'Book Returned to Shelf' : `Issued (${rec.gradeOrDept})`,
+      currency: cur,
+      items: [
+        {
+          name: `${rec.bookTitle}`,
+          qty: 1,
+          unitPrice: Number(rec.fineAmount || 0),
+          meta: `ISBN: ${rec.isbn} · Due: ${rec.dueDate}${rec.returnDate ? ' · Ret: ' + rec.returnDate : ''}`
+        }
+      ],
+      subtotal: Number(rec.fineAmount || 0),
+      total: Number(rec.fineAmount || 0),
+      timestampLabel: new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+      barcodeValue: rec.isbn || slipId,
+      qrPayload: signed.qrToken || `LIB:${slipId}|DIR:${direction}|ISBN:${rec.isbn}|BORROWER:${rec.borrowerId}`,
+      footerNote: direction === 'IN' ? (pb.footerNote || 'Book Received & Stock Restored') : `Return Due: ${rec.dueDate} · Fine ${cur} ${this.dailyFineRatePKR}/day`,
+      logoDataUrl: pb.logoDataUrl,
+      monogramInitials: pb.monogramInitials,
+      showLogoCrest: pb.showLogoCrest,
+      logoShape: pb.logoShape,
+      stampLabel: pb.stampLabel,
+      showBarcode: pb.showBarcodeVerification,
+      showQr: pb.showQrVerification,
+      dualCopy: pb.thermalDualCopy
+    };
+
+    if (this.serialThermalConnected && this.serialThermalPort?.writable) {
+      try {
+        const writer = this.serialThermalPort.writable.getWriter();
+        await writer.write(buildEscPosPosReceiptBytes(posData, false));
+        writer.releaseLock();
+        this.showToast(`Sent Library ${direction} receipt (${slipId}) to ${this.serialThermalLabel || 'Thermal Printer'}.`, 'success');
+        return;
+      } catch {
+        this.serialThermalConnected = false;
+      }
+    }
+
+    const html = buildThermalPosReceiptHtml(posData, paper);
+    const ok = await printHtmlInHiddenFrame(html);
+    this.showToast(
+      ok ? `Opened ${paper} Thermal Library ${direction} Slip (${slipId}).` : 'Print dialog blocked by browser.',
+      ok ? 'success' : 'warning'
+    );
+  }
+
+  async printLibraryBookStickers(books?: LibraryBookRecord[]): Promise<void> {
+    const source = (books && books.length > 0 ? books : this.filteredCatalogBooks).slice(0, 60);
+    if (!source.length) {
+      this.showToast('No catalog books available to print barcode stickers.', 'warning');
+      return;
+    }
+    const items: BarcodeStickerItem[] = source.map((bk) => ({
+      title: bk.title,
+      subtitle: `${bk.category} · Rack ${bk.rackNo}`,
+      code: bk.isbn || bk.id,
+      meta: `${bk.availableCopies}/${bk.totalCopies} Copies · ${bk.author}`
+    }));
+    const b = normalizeSchoolPrintBranding(this.printBranding, this.schoolName);
+    const html = buildBarcodeStickerSheetHtml(
+      `${b.schoolName} · Library`,
+      items,
+      b.logoDataUrl,
+      {
+        monogramInitials: b.monogramInitials,
+        showLogoCrest: b.showLogoCrest,
+        accentColor: b.headerAccentColor,
+        logoShape: b.logoShape,
+        footerNote: 'Scan with Library QR/Barcode Scanner'
+      }
+    );
+    const ok = await printHtmlInHiddenFrame(html);
+    this.showToast(
+      ok ? `Prepared ${items.length} printable Library Book Barcode Sticker(s).` : 'Print dialog blocked by browser.',
+      ok ? 'success' : 'warning'
+    );
+  }
+
   // --- BARCODE / ISBN SCANNER METHODS ---
   openBarcodeScannerModal(mode: 'checkout' | 'checkin' | 'search' = 'checkout'): void {
     this.barcodeScanTargetMode = mode;
     this.isBarcodeScannerModalOpen = true;
     this.scannedIsbnResult = '';
     this.manualIsbnInput = '';
+    this.libraryScannerUploadedPreview = '';
     this.isCameraActive = false;
     this.cdr.detectChanges();
-    this.startCameraScanner();
+    this.startCameraScanner(this.libraryCameraFacing || 'environment', 'barcode-video-feed');
   }
 
   closeBarcodeScannerModal(): void {
@@ -20993,7 +21265,14 @@ INSTRUCTIONS:
     this.cdr.detectChanges();
   }
 
-  startCameraScanner(targetMode: 'user' | 'environment' = 'user', elementId: string = 'kiosk-iris-video-feed'): void {
+  flipLibraryScannerCamera(): void {
+    this.libraryCameraFacing = this.libraryCameraFacing === 'environment' ? 'user' : 'environment';
+    if (this.isBarcodeScannerModalOpen) {
+      this.startCameraScanner(this.libraryCameraFacing, 'barcode-video-feed');
+    }
+  }
+
+  startCameraScanner(targetMode: 'user' | 'environment' = 'environment', elementId: string = 'kiosk-iris-video-feed'): void {
     this.cameraFacingMode = targetMode;
     this.cameraPermissionError = '';
     if (typeof navigator !== 'undefined' && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
@@ -21007,17 +21286,20 @@ INSTRUCTIONS:
         const tryAttach = (attemptsLeft: number) => {
           const videoEl = (
             document.getElementById(elementId) ||
+            document.getElementById('barcode-video-feed') ||
             document.getElementById('face-enrollment-video-feed') ||
             document.getElementById('secure-eye-overlay-video-feed') ||
             document.getElementById('kiosk-iris-video-feed') ||
-            document.getElementById('enrollment-iris-video-feed') ||
-            document.getElementById('barcode-video-feed')
+            document.getElementById('enrollment-iris-video-feed')
           ) as HTMLVideoElement;
 
           if (videoEl) {
+            videoEl.muted = true;
+            videoEl.playsInline = true;
+            videoEl.autoplay = true;
             videoEl.srcObject = stream;
             videoEl.play().catch(() => {});
-            if (targetMode === 'environment') {
+            if (elementId === 'barcode-video-feed' || this.isBarcodeScannerModalOpen) {
               this.attachBarcodeDetectionLoop(videoEl);
             }
           } else if (attemptsLeft > 0) {
@@ -21028,7 +21310,7 @@ INSTRUCTIONS:
         tryAttach(8);
       };
 
-      navigator.mediaDevices.getUserMedia({ video: { facingMode: targetMode } })
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: targetMode } } })
         .then((stream) => bindStreamToElement(stream))
         .catch((err) => {
           console.warn('Camera facingMode constraints failed, retrying standard video:', err);
@@ -21037,13 +21319,13 @@ INSTRUCTIONS:
             .catch((cameraErr) => {
               console.warn('Camera permission unavailable or denied in frame:', cameraErr);
               this.isCameraActive = false;
-              this.cameraPermissionError = 'Device camera access is restricted or awaiting permission. Biometric sensor simulation active.';
+              this.cameraPermissionError = 'Device camera access unavailable. Upload a QR/Barcode image or enter ISBN below.';
               this.cdr.detectChanges();
             });
         });
     } else {
       this.isCameraActive = false;
-      this.cameraPermissionError = 'Web camera API not supported on this browser. Interactive biometric sensor simulation active.';
+      this.cameraPermissionError = 'Web camera API not supported in this browser. Upload a QR photo or type ISBN below.';
       this.cdr.detectChanges();
     }
   }
@@ -21053,35 +21335,177 @@ INSTRUCTIONS:
     this.startCameraScanner(newMode, elementId);
   }
 
-  attachBarcodeDetectionLoop(videoEl: HTMLVideoElement): void {
-    if (typeof window !== 'undefined' && 'BarcodeDetector' in window) {
-      try {
-        const detector = new (window as any).BarcodeDetector({ formats: ['ean_13', 'ean_8', 'code_128', 'qr_code'] });
-        const interval = setInterval(() => {
-          if (!this.isCameraActive || !this.isBarcodeScannerModalOpen) {
-            clearInterval(interval);
-            return;
-          }
-          detector.detect(videoEl).then((barcodes: any[]) => {
-            if (barcodes && barcodes.length > 0) {
-              const rawValue = barcodes[0].rawValue;
-              if (rawValue) {
-                const matchedBk = this.libraryBooks.find(b => b.isbn.replace(/[^0-9]/g, '').includes(rawValue.replace(/[^0-9]/g, '')) || b.isbn === rawValue);
-                if (matchedBk) {
-                  clearInterval(interval);
-                  this.simulateBarcodeScan(matchedBk);
-                }
-              }
-            }
-          }).catch(() => {});
-        }, 600);
-      } catch (e) {
-        console.warn('BarcodeDetector API fallback active.');
+  private ensureLibraryBarcodeDetector(): void {
+    if (this.barcodeDetectorInstance) return;
+    try {
+      const BD = (globalThis as any)?.BarcodeDetector;
+      if (typeof BD === 'function') {
+        this.barcodeDetectorInstance = new BD({ formats: ['ean_13', 'ean_8', 'code_128', 'code_39', 'qr_code', 'data_matrix'] });
       }
+    } catch {
+      this.barcodeDetectorInstance = null;
     }
   }
 
+  attachBarcodeDetectionLoop(videoEl: HTMLVideoElement): void {
+    this.ensureLibraryBarcodeDetector();
+    if (this.barcodeScanRafId !== null && typeof cancelAnimationFrame !== 'undefined') {
+      cancelAnimationFrame(this.barcodeScanRafId);
+      this.barcodeScanRafId = null;
+    }
+    const canvas = typeof document !== 'undefined' ? document.createElement('canvas') : null;
+    if (!canvas || typeof requestAnimationFrame === 'undefined') return;
+    let lastSampleMs = 0;
+
+    const step = async (ts: number) => {
+      if (!this.isCameraActive || !this.isBarcodeScannerModalOpen) {
+        this.barcodeScanRafId = null;
+        return;
+      }
+      if (ts - lastSampleMs >= 200 && !this.barcodeScanBusy && videoEl.readyState >= 2 && videoEl.videoWidth > 0) {
+        lastSampleMs = ts;
+        this.barcodeScanBusy = true;
+        try {
+          const maxW = 720;
+          const scale = Math.min(1, maxW / videoEl.videoWidth);
+          const w = Math.max(160, Math.round(videoEl.videoWidth * scale));
+          const h = Math.max(160, Math.round(videoEl.videoHeight * scale));
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d', { willReadFrequently: true });
+          if (ctx) {
+            ctx.drawImage(videoEl, 0, 0, w, h);
+            let decoded = '';
+            if (this.barcodeDetectorInstance) {
+              try {
+                const hits = await this.barcodeDetectorInstance.detect(canvas);
+                if (Array.isArray(hits) && hits[0]?.rawValue) {
+                  decoded = String(hits[0].rawValue);
+                }
+              } catch {}
+            }
+            if (!decoded) {
+              const imgData = ctx.getImageData(0, 0, w, h);
+              const qr = jsQR(imgData.data, w, h, { inversionAttempts: 'attemptBoth' });
+              if (qr?.data) decoded = qr.data;
+            }
+            if (decoded) {
+              await this.handleDecodedLibraryScan(decoded, 'camera');
+            }
+          }
+        } finally {
+          this.barcodeScanBusy = false;
+        }
+      }
+      this.barcodeScanRafId = requestAnimationFrame(step);
+    };
+
+    this.barcodeScanRafId = requestAnimationFrame(step);
+  }
+
+  async onLibraryBarcodeFileSelected(event: Event): Promise<void> {
+    const inputEl = event.target as HTMLInputElement;
+    const file = inputEl?.files?.[0];
+    if (!file) return;
+    inputEl.value = '';
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const dataUrl = String(reader.result || '');
+      this.libraryScannerUploadedPreview = dataUrl;
+      this.cdr.detectChanges();
+      const decoded = await this.decodeQrFromImageDataUrl(dataUrl);
+      if (decoded) {
+        await this.handleDecodedLibraryScan(decoded, 'file');
+      } else {
+        this.showToast('No QR or barcode detected in that image. Try cropping closer or type the ISBN below.', 'warning');
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  private async decodeQrFromImageDataUrl(dataUrl: string): Promise<string> {
+    if (typeof document === 'undefined' || !dataUrl) return '';
+    this.ensureLibraryBarcodeDetector();
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = async () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        if (!ctx) {
+          resolve('');
+          return;
+        }
+        const tryRegion = async (sx: number, sy: number, sw: number, sh: number, tw: number, th: number): Promise<string> => {
+          canvas.width = tw;
+          canvas.height = th;
+          ctx.clearRect(0, 0, tw, th);
+          ctx.drawImage(img, sx, sy, sw, sh, 0, 0, tw, th);
+          if (this.barcodeDetectorInstance) {
+            try {
+              const hits = await this.barcodeDetectorInstance.detect(canvas);
+              if (Array.isArray(hits) && hits[0]?.rawValue) return String(hits[0].rawValue);
+            } catch {}
+          }
+          const imgData = ctx.getImageData(0, 0, tw, th);
+          const qr = jsQR(imgData.data, tw, th, { inversionAttempts: 'attemptBoth' });
+          return qr?.data || '';
+        };
+        const iw = img.naturalWidth || img.width;
+        const ih = img.naturalHeight || img.height;
+        const scale = Math.min(1, 1200 / Math.max(1, iw, ih));
+        let found = await tryRegion(0, 0, iw, ih, Math.max(160, Math.round(iw * scale)), Math.max(160, Math.round(ih * scale)));
+        if (!found) {
+          const crops = [
+            [0, 0, iw / 2, ih / 2],
+            [iw / 2, 0, iw / 2, ih / 2],
+            [0, ih / 2, iw / 2, ih / 2],
+            [iw / 2, ih / 2, iw / 2, ih / 2],
+            [iw * 0.25, ih * 0.25, iw * 0.5, ih * 0.5]
+          ];
+          for (const [sx, sy, sw, sh] of crops) {
+            found = await tryRegion(sx, sy, sw, sh, 640, Math.max(320, Math.round((640 * sh) / Math.max(1, sw))));
+            if (found) break;
+          }
+        }
+        resolve(found);
+      };
+      img.onerror = () => resolve('');
+      img.src = dataUrl;
+    });
+  }
+
+  private async handleDecodedLibraryScan(rawCode: string, source: 'camera' | 'file'): Promise<void> {
+    const clean = String(rawCode || '').trim();
+    if (!clean) return;
+    const now = Date.now();
+    if (source === 'camera' && clean === this.barcodeLastDecoded && now - this.barcodeLastDecodedAt < 2200) {
+      return;
+    }
+    this.barcodeLastDecoded = clean;
+    this.barcodeLastDecodedAt = now;
+
+    let lookup = clean;
+    if (clean.startsWith('SCS1|')) {
+      try {
+        const res = await this.backend.verifySchoolQrCode(
+          { rawCode: clean, scanSource: source, scannerRole: this.currentPortalRole, scannerName: this.activeQrActorName },
+          this.selectedBranchScope,
+          this.selectedWingScope
+        );
+        const rec = res?.liveRecord || res?.printedSnapshot || {};
+        lookup = String(rec.isbn || rec.issueNo || rec.bookId || res?.location?.searchHint || res?.location?.rowKey || clean).trim();
+      } catch {}
+    }
+
+    this.manualIsbnInput = lookup;
+    this.processManualIsbnScan(lookup);
+  }
+
   stopCameraStream(): void {
+    if (this.barcodeScanRafId !== null && typeof cancelAnimationFrame !== 'undefined') {
+      cancelAnimationFrame(this.barcodeScanRafId);
+      this.barcodeScanRafId = null;
+    }
     if (this.cameraStream) {
       this.cameraStream.getTracks().forEach(track => track.stop());
       this.cameraStream = null;
@@ -21089,21 +21513,28 @@ INSTRUCTIONS:
     this.isCameraActive = false;
   }
 
-  processManualIsbnScan(): void {
-    const raw = (this.manualIsbnInput || '').trim();
+  processManualIsbnScan(overrideCode?: string): void {
+    const raw = String(overrideCode ?? this.manualIsbnInput ?? '').trim();
     if (!raw) {
       this.showToast('Please enter an ISBN barcode or circulation ID.', 'warning');
       return;
     }
-    const bk = this.libraryBooks.find(b => 
-      b.isbn.toLowerCase().includes(raw.toLowerCase()) || 
-      b.id.toLowerCase() === raw.toLowerCase() ||
-      b.title.toLowerCase().includes(raw.toLowerCase())
-    );
+    const rawNorm = raw.toLowerCase();
+    const rawDigits = raw.replace(/[^0-9]/g, '');
+    const bk = this.libraryBooks.find(b => {
+      const bDigits = String(b.isbn || '').replace(/[^0-9]/g, '');
+      return (
+        String(b.isbn || '').toLowerCase() === rawNorm ||
+        String(b.isbn || '').toLowerCase().includes(rawNorm) ||
+        (rawDigits.length >= 6 && bDigits.includes(rawDigits)) ||
+        String(b.id || '').toLowerCase() === rawNorm ||
+        String(b.title || '').toLowerCase().includes(rawNorm)
+      );
+    });
     if (bk) {
       this.simulateBarcodeScan(bk);
     } else {
-      const circ = this.libraryCirculations.find(c => c.issueNo.toLowerCase() === raw.toLowerCase() || c.id.toLowerCase() === raw.toLowerCase());
+      const circ = this.libraryCirculations.find(c => c.issueNo.toLowerCase() === rawNorm || c.id.toLowerCase() === rawNorm);
       if (circ && this.barcodeScanTargetMode === 'checkin') {
         this.returnCirculationBook(circ);
         this.closeBarcodeScannerModal();
@@ -21115,31 +21546,32 @@ INSTRUCTIONS:
 
   simulateBarcodeScan(bk: LibraryBookRecord): void {
     this.scannedIsbnResult = bk.isbn;
-    
+    this.playSuccessChime();
+
     if (this.barcodeScanTargetMode === 'checkout') {
       this.checkoutForm.bookId = bk.id;
-      this.showToast(`📷 Camera Barcode Matched: "${bk.title}" (ISBN: ${bk.isbn})`, 'success');
+      this.showToast(`Barcode Matched: "${bk.title}" (ISBN: ${bk.isbn})`, 'success');
       setTimeout(() => {
         this.closeBarcodeScannerModal();
-        this.openCheckoutModal();
-      }, 450);
+        this.openCheckoutModal(bk);
+      }, 350);
     } else if (this.barcodeScanTargetMode === 'checkin') {
       const activeCirc = this.libraryCirculations.find(c => (c.bookId === bk.id || c.bookTitle.toLowerCase() === bk.title.toLowerCase() || c.isbn === bk.isbn) && c.status !== 'Returned');
       if (activeCirc) {
         this.returnCirculationBook(activeCirc);
-        this.showToast(`📷 Camera Barcode Check-In Success: "${bk.title}" returned by ${activeCirc.borrowerName}.`, 'success');
+        this.showToast(`Barcode Check-In Success: "${bk.title}" returned by ${activeCirc.borrowerName}.`, 'success');
       } else {
-        this.showToast(`📷 ISBN Barcode "${bk.title}" matched, but no active borrowed copy found.`, 'info');
+        this.showToast(`ISBN Barcode "${bk.title}" matched, but no active borrowed copy found.`, 'info');
       }
       setTimeout(() => {
         this.closeBarcodeScannerModal();
-      }, 450);
+      }, 350);
     } else {
       this.librarySearchQuery = bk.title;
-      this.showToast(`📷 Camera Barcode Catalog Filter: "${bk.title}"`, 'info');
+      this.showToast(`Barcode Catalog Filter: "${bk.title}"`, 'info');
       setTimeout(() => {
         this.closeBarcodeScannerModal();
-      }, 450);
+      }, 350);
     }
   }
 
@@ -23047,6 +23479,482 @@ INSTRUCTIONS:
     this.tableSchemaService.clearRowCustomData('owner_assets', [a.id, a.assetCode].filter(Boolean));
     this.saveStateToStorage();
     this.showToast(`Removed asset '${a.name}' from inventory`, 'warning');
+  }
+
+  // --- STOCK & ASSET INVENTORY SCANNER + PRINTER IN/OUT ---
+  openAssetScannerModal(mode: 'in' | 'out' | 'search' = 'out'): void {
+    this.assetScanTargetMode = mode;
+    this.isAssetScannerModalOpen = true;
+    this.manualAssetCodeInput = '';
+    this.stockScanQty = 1;
+    this.stockScanNotes = '';
+    this.assetScannerUploadedPreview = '';
+    this.assetCameraError = '';
+    this.lastMatchedAssetLog = null;
+    this.cdr.detectChanges();
+    void this.startAssetCameraScanner();
+  }
+
+  closeAssetScannerModal(): void {
+    this.stopAssetCameraStream();
+    this.isAssetScannerModalOpen = false;
+    this.cdr.detectChanges();
+  }
+
+  setAssetScanTargetMode(mode: 'in' | 'out' | 'search'): void {
+    this.assetScanTargetMode = mode;
+    this.cdr.detectChanges();
+  }
+
+  private ensureAssetBarcodeDetector(): void {
+    if (this.assetBarcodeDetector) return;
+    try {
+      const BD = (globalThis as any)?.BarcodeDetector;
+      if (typeof BD === 'function') {
+        this.assetBarcodeDetector = new BD({ formats: ['qr_code', 'code_128', 'code_39', 'ean_13', 'ean_8', 'data_matrix'] });
+      }
+    } catch {
+      this.assetBarcodeDetector = null;
+    }
+  }
+
+  async startAssetCameraScanner(): Promise<void> {
+    if (this.assetCameraActive || this.assetCameraStarting) return;
+    if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
+      this.assetCameraError = 'Camera API unavailable in this browser. Upload a sticker image or type Asset Code below.';
+      return;
+    }
+    this.ensureAssetBarcodeDetector();
+    this.assetCameraStarting = true;
+    this.assetCameraError = '';
+    this.cdr.detectChanges();
+    try {
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: this.assetCameraFacing }, width: { ideal: 1280 }, height: { ideal: 720 } },
+          audio: false
+        });
+      } catch {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      }
+      this.assetCameraStream = stream;
+      this.assetCameraActive = true;
+      this.cdr.detectChanges();
+
+      const bindVideo = (retries: number) => {
+        const videoEl = document.getElementById('asset-scanner-video-feed') as HTMLVideoElement | null;
+        if (videoEl && this.assetCameraStream) {
+          videoEl.muted = true;
+          videoEl.playsInline = true;
+          videoEl.autoplay = true;
+          videoEl.srcObject = this.assetCameraStream;
+          void videoEl.play().catch(() => {});
+          this.scheduleAssetScanLoop(videoEl);
+        } else if (retries > 0) {
+          setTimeout(() => bindVideo(retries - 1), 80);
+        }
+      };
+      bindVideo(8);
+    } catch (err: any) {
+      this.assetCameraError = String(err?.message || 'Camera permission denied. You can upload QR photo or enter Asset Code below.');
+      this.assetCameraActive = false;
+    } finally {
+      this.assetCameraStarting = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  stopAssetCameraStream(): void {
+    if (this.assetScanRafId !== null && typeof cancelAnimationFrame !== 'undefined') {
+      cancelAnimationFrame(this.assetScanRafId);
+      this.assetScanRafId = null;
+    }
+    if (this.assetCameraStream) {
+      this.assetCameraStream.getTracks().forEach(t => { try { t.stop(); } catch {} });
+      this.assetCameraStream = null;
+    }
+    const videoEl = typeof document !== 'undefined' ? (document.getElementById('asset-scanner-video-feed') as HTMLVideoElement | null) : null;
+    if (videoEl) {
+      videoEl.srcObject = null;
+    }
+    this.assetCameraActive = false;
+    this.assetCameraStarting = false;
+  }
+
+  async flipAssetCamera(): Promise<void> {
+    this.assetCameraFacing = this.assetCameraFacing === 'environment' ? 'user' : 'environment';
+    if (this.assetCameraActive) {
+      this.stopAssetCameraStream();
+      await this.startAssetCameraScanner();
+    }
+  }
+
+  private scheduleAssetScanLoop(videoEl: HTMLVideoElement): void {
+    if (!this.assetCameraActive || typeof requestAnimationFrame === 'undefined') return;
+    const canvas = typeof document !== 'undefined' ? document.createElement('canvas') : null;
+    if (!canvas) return;
+    let lastSampleMs = 0;
+
+    const step = async (ts: number) => {
+      if (!this.assetCameraActive || !this.isAssetScannerModalOpen) {
+        this.assetScanRafId = null;
+        return;
+      }
+      if (ts - lastSampleMs >= 200 && !this.assetScanBusy && videoEl.readyState >= 2 && videoEl.videoWidth > 0) {
+        lastSampleMs = ts;
+        this.assetScanBusy = true;
+        try {
+          const maxW = 720;
+          const scale = Math.min(1, maxW / videoEl.videoWidth);
+          const w = Math.max(160, Math.round(videoEl.videoWidth * scale));
+          const h = Math.max(160, Math.round(videoEl.videoHeight * scale));
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d', { willReadFrequently: true });
+          if (ctx) {
+            ctx.drawImage(videoEl, 0, 0, w, h);
+            let decoded = '';
+            if (this.assetBarcodeDetector) {
+              try {
+                const hits = await this.assetBarcodeDetector.detect(canvas);
+                if (Array.isArray(hits) && hits[0]?.rawValue) decoded = String(hits[0].rawValue);
+              } catch {}
+            }
+            if (!decoded) {
+              const imgData = ctx.getImageData(0, 0, w, h);
+              const qr = jsQR(imgData.data, w, h, { inversionAttempts: 'attemptBoth' });
+              if (qr?.data) decoded = qr.data;
+            }
+            if (decoded) {
+              await this.processAssetScanCode(decoded, 'camera');
+            }
+          }
+        } finally {
+          this.assetScanBusy = false;
+        }
+      }
+      this.assetScanRafId = requestAnimationFrame(step);
+    };
+    this.assetScanRafId = requestAnimationFrame(step);
+  }
+
+  async onAssetQrFileSelected(event: Event): Promise<void> {
+    const inputEl = event.target as HTMLInputElement;
+    const file = inputEl?.files?.[0];
+    if (!file) return;
+    inputEl.value = '';
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const dataUrl = String(reader.result || '');
+      this.assetScannerUploadedPreview = dataUrl;
+      this.cdr.detectChanges();
+      const decoded = await this.decodeQrFromImageDataUrl(dataUrl);
+      if (decoded) {
+        await this.processAssetScanCode(decoded, 'file');
+      } else {
+        this.showToast('No QR or barcode found in image. Try cropping closer or type Asset Code below.', 'warning');
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async processManualAssetScan(): Promise<void> {
+    const code = (this.manualAssetCodeInput || '').trim();
+    if (!code) {
+      this.showToast('Enter or scan an Asset Code (e.g. AST-IT-001) or asset name.', 'warning');
+      return;
+    }
+    await this.processAssetScanCode(code, 'manual');
+  }
+
+  async processAssetScanCode(rawCode: string, source: 'camera' | 'file' | 'manual' | 'quick'): Promise<void> {
+    const clean = String(rawCode || '').trim();
+    if (!clean) return;
+    const now = Date.now();
+    if (source === 'camera' && clean === this.assetLastDecoded && now - this.assetLastDecodedAt < 2200) {
+      return;
+    }
+    this.assetLastDecoded = clean;
+    this.assetLastDecodedAt = now;
+
+    let lookup = clean;
+    if (clean.startsWith('SCS1|')) {
+      try {
+        const res = await this.backend.verifySchoolQrCode(
+          { rawCode: clean, scanSource: source === 'quick' ? 'manual' : source, scannerRole: this.currentPortalRole, scannerName: this.activeQrActorName },
+          this.selectedBranchScope,
+          this.selectedWingScope
+        );
+        const rec = res?.liveRecord || res?.printedSnapshot || {};
+        lookup = String(rec.assetCode || rec.assetId || res?.location?.rowKey || res?.location?.searchHint || clean).trim();
+      } catch {}
+    }
+
+    const q = lookup.toLowerCase();
+    const asset = this.schoolAssets.find((a) =>
+      String(a.assetCode || '').toLowerCase() === q ||
+      String(a.id || '').toLowerCase() === q ||
+      String(a.name || '').toLowerCase().includes(q)
+    );
+    if (!asset) {
+      this.showToast(`No inventory asset matched code "${lookup}".`, 'warning');
+      return;
+    }
+
+    this.playSuccessChime();
+    if (this.assetScanTargetMode === 'search') {
+      this.assetSearchQuery = asset.assetCode;
+      this.showToast(`Inventory Matched: ${asset.name} (${asset.quantity} units in ${asset.location})`, 'info');
+      this.closeAssetScannerModal();
+      return;
+    }
+
+    const direction: 'IN' | 'OUT' = this.assetScanTargetMode === 'in' ? 'IN' : 'OUT';
+    const qty = Math.max(1, Math.round(Number(this.stockScanQty) || 1));
+    this.adjustAssetStock(asset, direction, qty, this.stockScanNotes || '', source);
+    this.manualAssetCodeInput = asset.assetCode;
+    this.cdr.detectChanges();
+  }
+
+  adjustAssetStock(
+    asset: SchoolAssetRecord,
+    direction: 'IN' | 'OUT',
+    qty: number = 1,
+    notes: string = '',
+    source: 'camera' | 'file' | 'manual' | 'quick' = 'quick'
+  ): void {
+    const delta = Math.max(1, Math.round(Number(qty) || 1));
+    const prevQty = Number(asset.quantity || 0);
+    if (direction === 'OUT' && prevQty <= 0) {
+      this.showToast(`Stock OUT blocked: "${asset.name}" currently has 0 units available.`, 'warning');
+      return;
+    }
+    const effectiveDelta = direction === 'OUT' ? Math.min(prevQty, delta) : delta;
+    const nextQty = direction === 'IN' ? prevQty + effectiveDelta : Math.max(0, prevQty - effectiveDelta);
+    asset.quantity = nextQty;
+    asset.lastServiced = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+    const nowLabel = `${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} · ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    const refNo = `STK-${direction}-${String(1000 + this.stockInOutLogs.length + 1)}`;
+    const log: StockInventoryLogRecord = {
+      id: `STKLOG-${Date.now()}-${Math.floor(100 + Math.random() * 899)}`,
+      refNo,
+      assetId: asset.id,
+      assetCode: asset.assetCode,
+      assetName: asset.name,
+      category: asset.category,
+      location: asset.location,
+      direction,
+      qtyChange: effectiveDelta,
+      previousQty: prevQty,
+      newQty: nextQty,
+      unitValue: Number(asset.unitValue || 0),
+      totalValue: effectiveDelta * Number(asset.unitValue || 0),
+      handledBy: this.activeQrActorName || asset.custodian || 'Store Keeper',
+      source,
+      notes: notes || (direction === 'IN' ? 'Stock Received via Inventory Desk' : 'Stock Issued / Dispatched'),
+      timestamp: nowLabel
+    };
+
+    this.stockInOutLogs.unshift(log);
+    if (this.stockInOutLogs.length > 200) {
+      this.stockInOutLogs = this.stockInOutLogs.slice(0, 200);
+    }
+    this.lastMatchedAssetLog = log;
+    this.saveStateToStorage();
+    this.showToast(
+      `Stock ${direction} (${effectiveDelta}x): ${asset.name} (${prevQty} -> ${nextQty} units).`,
+      direction === 'IN' ? 'success' : 'info'
+    );
+    if (this.stockAutoPrintSlip) {
+      void this.printStockInOutReceipt(log);
+    }
+    this.cdr.detectChanges();
+  }
+
+  async printStockInOutReceipt(log: StockInventoryLogRecord, formatOverride?: 'thermal' | 'a4'): Promise<void> {
+    const fmt = formatOverride || this.stockPrintFormat || 'thermal';
+    const signed = await this.registerSignedPrintForDoc({
+      docType: 'thermal_receipt',
+      docLabel: `Stock ${log.direction} Slip (${log.refNo})`,
+      tableId: 'owner_stock_movements',
+      tableTitle: 'Stock IN / OUT Movement Ledger',
+      portalTab: 'assets',
+      rowKey: log.id || log.assetCode,
+      rowLabel: log.assetName,
+      subjectName: log.assetName,
+      rollOrCode: log.assetCode,
+      amountPkr: Number(log.totalValue || 0),
+      statusSnapshot: `${log.direction} (${log.qtyChange}x)`,
+      snapshot: {
+        refNo: log.refNo,
+        assetCode: log.assetCode,
+        assetName: log.assetName,
+        direction: log.direction,
+        qtyChange: log.qtyChange,
+        previousQty: log.previousQty,
+        newQty: log.newQty
+      }
+    });
+
+    const pb = normalizeSchoolPrintBranding(this.printBranding, this.schoolName);
+    const cur = pb.currencySymbol || 'PKR';
+    if (fmt === 'a4') {
+      const html = buildSchoolStatementA4Html({
+        tableId: 'owner_stock_movements',
+        canonicalTableId: 'owner_stock_movements',
+        title: log.direction === 'IN' ? 'STOCK RECEIVE VOUCHER (IN)' : 'STOCK DISPATCH / ISSUE VOUCHER (OUT)',
+        subtitle: `Ref: ${log.refNo} · ${log.timestamp} · Location: ${log.location}`,
+        roleLabel: this.currentPortalRole?.toUpperCase(),
+        headers: ['Voucher #', 'Asset Code', 'Item Name', 'Movement', 'Qty Delta', 'Stock Balance', 'Unit Value', 'Total Value', 'Handled By'],
+        rows: [[
+          log.refNo,
+          log.assetCode,
+          log.assetName,
+          log.direction === 'IN' ? 'STOCK IN (+)' : 'STOCK OUT (-)',
+          `${log.direction === 'IN' ? '+' : '-'}${log.qtyChange}`,
+          `${log.previousQty} -> ${log.newQty}`,
+          `${cur} ${this.formatCurrency(log.unitValue)}`,
+          `${cur} ${this.formatCurrency(log.totalValue)}`,
+          log.handledBy
+        ]],
+        totalUnfilteredCount: 1,
+        criteria: {},
+        branding: this.printBranding,
+        statementRef: log.refNo
+      });
+      const ok = await printHtmlInHiddenFrame(html);
+      this.showToast(
+        ok ? `Opened A4 Stock ${log.direction} Voucher (${log.refNo}).` : 'Print dialog blocked by browser.',
+        ok ? 'success' : 'warning'
+      );
+      return;
+    }
+
+    const paper: ThermalPaperWidth = pb.defaultPaperWidth === '58mm' ? '58mm' : (this.hardwarePrinterPaper === '58mm' ? '58mm' : '80mm');
+    const posData: ThermalPosReceiptData = {
+      businessName: pb.schoolName || this.schoolName || 'Campus Store & Inventory',
+      branchName: log.location || this.activeScopeSummaryLabel,
+      campusAddress: pb.address,
+      campusPhone: pb.phone,
+      receiptTitle: log.direction === 'IN' ? 'STOCK RECEIVE SLIP (IN)' : 'STOCK ISSUE SLIP (OUT)',
+      receiptNo: log.refNo,
+      customerName: `${log.location} (${log.handledBy})`,
+      cashierName: this.activeQrActorName || log.handledBy,
+      paymentMethod: `Inventory ${log.direction} (${log.source.toUpperCase()})`,
+      currency: cur,
+      items: [
+        {
+          name: `${log.assetCode} · ${log.assetName}`,
+          qty: log.qtyChange,
+          unitPrice: log.unitValue,
+          meta: `Stock: ${log.previousQty} -> ${log.newQty} · ${log.notes}`
+        }
+      ],
+      subtotal: log.totalValue,
+      total: log.totalValue,
+      timestampLabel: log.timestamp,
+      barcodeValue: log.assetCode,
+      qrPayload: signed.qrToken || `STK:${log.refNo}|CODE:${log.assetCode}|DIR:${log.direction}|QTY:${log.qtyChange}|BAL:${log.newQty}`,
+      footerNote: pb.footerNote || `${log.direction === 'IN' ? 'Received in Store' : 'Issued from Store'} · Verified Print`,
+      logoDataUrl: pb.logoDataUrl,
+      monogramInitials: pb.monogramInitials,
+      showLogoCrest: pb.showLogoCrest,
+      logoShape: pb.logoShape,
+      stampLabel: pb.stampLabel,
+      showBarcode: pb.showBarcodeVerification,
+      showQr: pb.showQrVerification,
+      dualCopy: pb.thermalDualCopy
+    };
+
+    if (this.serialThermalConnected && this.serialThermalPort?.writable) {
+      try {
+        const writer = this.serialThermalPort.writable.getWriter();
+        await writer.write(buildEscPosPosReceiptBytes(posData, false));
+        writer.releaseLock();
+        this.showToast(`Sent Stock ${log.direction} receipt (${log.refNo}) to ${this.serialThermalLabel || 'Thermal Printer'}.`, 'success');
+        return;
+      } catch {
+        this.serialThermalConnected = false;
+      }
+    }
+
+    const html = buildThermalPosReceiptHtml(posData, paper);
+    const ok = await printHtmlInHiddenFrame(html);
+    this.showToast(
+      ok ? `Opened ${paper} Thermal Stock ${log.direction} Slip (${log.refNo}).` : 'Print dialog blocked by browser.',
+      ok ? 'success' : 'warning'
+    );
+  }
+
+  async printAssetBarcodeStickers(assets?: SchoolAssetRecord[]): Promise<void> {
+    const source = (assets && assets.length > 0 ? assets : this.filteredSchoolAssets).slice(0, 60);
+    if (!source.length) {
+      this.showToast('No inventory assets available to print barcode labels.', 'warning');
+      return;
+    }
+    const items: BarcodeStickerItem[] = source.map((a) => ({
+      title: a.name,
+      subtitle: `${a.category} · ${a.location}`,
+      code: a.assetCode || a.id,
+      meta: `Qty: ${a.quantity} · ${a.custodian}`
+    }));
+    const b = normalizeSchoolPrintBranding(this.printBranding, this.schoolName);
+    const html = buildBarcodeStickerSheetHtml(
+      `${b.schoolName} · Store`,
+      items,
+      b.logoDataUrl,
+      {
+        monogramInitials: b.monogramInitials,
+        showLogoCrest: b.showLogoCrest,
+        accentColor: b.headerAccentColor,
+        logoShape: b.logoShape,
+        footerNote: 'Scan for Stock IN / OUT'
+      }
+    );
+    const ok = await printHtmlInHiddenFrame(html);
+    this.showToast(
+      ok ? `Prepared ${items.length} printable Asset Barcode Sticker(s).` : 'Print dialog blocked by browser.',
+      ok ? 'success' : 'warning'
+    );
+  }
+
+  async printStockInOutLedgerReport(): Promise<void> {
+    const logs = this.stockInOutLogs || [];
+    if (!logs.length) {
+      this.showToast('No Stock IN/OUT movements recorded yet to print.', 'warning');
+      return;
+    }
+    const cur = this.printBranding?.currencySymbol || 'PKR';
+    const html = buildSchoolStatementA4Html({
+      tableId: 'owner_stock_movements',
+      canonicalTableId: 'owner_stock_movements',
+      title: 'Stock IN / OUT Movement Ledger',
+      subtitle: `${this.activeScopeSummaryLabel} · ${logs.length} Stock Transactions`,
+      roleLabel: this.currentPortalRole?.toUpperCase(),
+      headers: ['Ref #', 'Asset Code', 'Item Name', 'Type', 'Qty', 'Prev -> New', 'Total Value', 'Handled By', 'Timestamp'],
+      rows: logs.map((l) => [
+        l.refNo,
+        l.assetCode,
+        l.assetName,
+        l.direction,
+        `${l.direction === 'IN' ? '+' : '-'}${l.qtyChange}`,
+        `${l.previousQty} -> ${l.newQty}`,
+        `${cur} ${this.formatCurrency(l.totalValue)}`,
+        l.handledBy,
+        l.timestamp
+      ]),
+      totalUnfilteredCount: logs.length,
+      criteria: {},
+      branding: this.printBranding,
+      statementRef: `STK-LEDGER-${new Date().toISOString().slice(0, 10)}`
+    });
+    const ok = await printHtmlInHiddenFrame(html);
+    this.showToast(
+      ok ? `Prepared A4 Stock IN/OUT Ledger (${logs.length} entries).` : 'Print dialog blocked by browser.',
+      ok ? 'success' : 'warning'
+    );
   }
 
   // --- STAFF PAYROLL & SALARY SLIPS CRUD ---
@@ -27493,6 +28401,7 @@ INSTRUCTIONS:
         studentMedicalRecords: this.studentMedicalRecords,
         disciplinaryIncidents: this.disciplinaryIncidents,
         schoolAssets: this.schoolAssets,
+        stockInOutLogs: this.stockInOutLogs,
         staffPayrolls: this.staffPayrolls,
         staffLeaveRequests: this.staffLeaveRequests,
         schoolExpenses: this.schoolExpenses,
@@ -27643,6 +28552,9 @@ INSTRUCTIONS:
         if (Array.isArray(cloudData.schoolAssets) && cloudData.schoolAssets.length > 0) {
           this.schoolAssets = cloudData.schoolAssets;
         }
+        if (Array.isArray(cloudData.stockInOutLogs) && cloudData.stockInOutLogs.length > 0) {
+          this.stockInOutLogs = cloudData.stockInOutLogs;
+        }
         if (Array.isArray(cloudData.staffPayrolls) && cloudData.staffPayrolls.length > 0) {
           this.staffPayrolls = cloudData.staffPayrolls;
         }
@@ -27697,6 +28609,9 @@ INSTRUCTIONS:
           const currentLocal = this.tableSchemaService.exportSchemas();
           if (!this.isOwnerPortal || Object.keys(currentLocal).length === 0) {
             this.tableSchemaService.importSchemas(cloudData.tableSchemas, true);
+          } else {
+            const merged = { ...cloudData.tableSchemas, ...currentLocal };
+            this.tableSchemaService.importSchemas(merged, true);
           }
         }
         this.normalizeBranchWingAssignments();
@@ -29196,7 +30111,8 @@ INSTRUCTIONS:
     'owner_payroll',
     'owner_invoices',
     'owner_payment_gateway',
-    'owner_audit_trail'
+    'owner_audit_trail',
+    'owner_stock_movements'
   ];
 
   private unregisterStatementProviders(): void {
@@ -29209,41 +30125,49 @@ INSTRUCTIONS:
     const fmtPkr = (n: number | undefined | null) => `PKR ${this.formatCurrency(Number(n || 0))}`;
 
     // 1. Master Cash Book & Ledger
-    this.tableSchemaService.registerStatementDataProvider('owner_finance_ledger', (): StatementDataset => ({
-      tableId: 'owner_finance_ledger',
-      title: `Master Cash Book & Ledger (${this.activeScopeSummaryLabel})`,
-      headers: ['Challan / Ref #', 'Particulars / Student', 'Category', 'Date', 'Channel', 'Credit / Income', 'Debit / Expense', 'Status'],
-      dateColHint: 3,
-      rows: (this.filteredFinances || []).map((fin) => [
-        fin.challanNo || fin.id,
-        fin.studentName ? `${fin.title} (${fin.studentName})` : fin.title,
-        fin.category,
-        fin.date,
-        fin.paymentMethod || 'Counter / Bank',
-        fin.type === 'Income' ? fmtPkr(fin.amount) : '-',
-        fin.type === 'Expense' ? fmtPkr(fin.amount) : '-',
-        fin.status
-      ])
-    }));
+    this.tableSchemaService.registerStatementDataProvider('owner_finance_ledger', (): StatementDataset => {
+      const list = this.filteredFinances || [];
+      return {
+        tableId: 'owner_finance_ledger',
+        title: `Master Cash Book & Ledger (${this.activeScopeSummaryLabel})`,
+        headers: ['Challan / Ref #', 'Particulars / Student', 'Category', 'Date', 'Channel', 'Credit / Income', 'Debit / Expense', 'Status'],
+        dateColHint: 3,
+        rowKeys: list.map((fin) => String(fin.id || fin.challanNo)),
+        rows: list.map((fin) => [
+          fin.challanNo || fin.id,
+          fin.studentName ? `${fin.title} (${fin.studentName})` : fin.title,
+          fin.category,
+          fin.date,
+          fin.paymentMethod || 'Counter / Bank',
+          fin.type === 'Income' ? fmtPkr(fin.amount) : '-',
+          fin.type === 'Expense' ? fmtPkr(fin.amount) : '-',
+          fin.status
+        ])
+      };
+    });
 
     // 2. Cashiering & Fee Receipts Registers (Owner / Principal / Accountant)
-    const cashieringProvider = (id: string, title: string) => (): StatementDataset => ({
-      tableId: id,
-      title,
-      headers: ['Receipt #', 'Student Name', 'Roll / ID', 'Class', 'Collector Desk', 'Channel', 'Timestamp', 'Paid Amount', 'Audit Status'],
-      dateColHint: 6,
-      rows: (this.scopedPrincipalFeeCollections || []).map((rec) => [
-        rec.receiptNo,
-        rec.studentName,
-        rec.rollNo,
-        rec.grade,
-        rec.collectedBy,
-        rec.paymentResource,
-        rec.timestamp,
-        fmtPkr(rec.amount),
-        rec.auditStatus
-      ])
-    });
+    const cashieringProvider = (id: string, title: string) => (): StatementDataset => {
+      const list = this.scopedPrincipalFeeCollections || [];
+      return {
+        tableId: id,
+        title,
+        headers: ['Receipt #', 'Student Name', 'Roll / ID', 'Class', 'Collector Desk', 'Channel', 'Timestamp', 'Paid Amount', 'Audit Status'],
+        dateColHint: 6,
+        rowKeys: list.map((rec) => String(rec.id || rec.receiptNo)),
+        rows: list.map((rec) => [
+          rec.receiptNo,
+          rec.studentName,
+          rec.rollNo,
+          rec.grade,
+          rec.collectedBy,
+          rec.paymentResource,
+          rec.timestamp,
+          fmtPkr(rec.amount),
+          rec.auditStatus
+        ])
+      };
+    };
     this.tableSchemaService.registerStatementDataProvider(
       'owner_overview_fee_cashiering',
       cashieringProvider('owner_overview_fee_cashiering', 'Principal Desk Cashiering & Fee Receipts Register')
@@ -29263,13 +30187,14 @@ INSTRUCTIONS:
 
     // 3. Fee Defaulters Khata
     const defaultersProvider = (id: string, title: string) => (): StatementDataset => {
-      const list = id === 'accountant_defaulters' ? this.filteredAccountantDefaulters : this.filteredFeeDefaulters;
+      const list = (id === 'accountant_defaulters' ? this.filteredAccountantDefaulters : this.filteredFeeDefaulters) || [];
       return {
         tableId: id,
         title,
         headers: ['Roll #', 'Student Name', 'Class', 'Guardian & Phone', 'Unpaid Months', 'Last Paid Date', 'Remaining Bakaya', 'Alert Status'],
         dateColHint: 5,
-        rows: (list || []).map((d) => [
+        rowKeys: list.map((d) => String(d.studentId || d.rollNo)),
+        rows: list.map((d) => [
           d.rollNo,
           d.studentName,
           d.grade,
@@ -29291,73 +30216,89 @@ INSTRUCTIONS:
     );
 
     // 4. Teacher Salary & Tenure
-    this.tableSchemaService.registerStatementDataProvider('owner_teacher_arrears', (): StatementDataset => ({
-      tableId: 'owner_teacher_arrears',
-      title: 'Teacher Salary & Tenure Statement',
-      headers: ['Teacher / Faculty', 'Subject', 'Joined Date', 'Tenure', 'Monthly Salary', 'Unpaid Months', 'Remaining Arrears', 'Salary Status'],
-      dateColHint: 2,
-      rows: (this.scopedTeachers || []).map((t) => [
-        t.name,
-        t.subject,
-        t.appointmentDate || '-',
-        t.tenureDuration || '-',
-        fmtPkr(t.monthlySalary),
-        String(t.unpaidSalaryMonths || 0),
-        fmtPkr(t.remainingSalaryArrears || 0),
-        t.salaryStatus
-      ])
-    }));
+    this.tableSchemaService.registerStatementDataProvider('owner_teacher_arrears', (): StatementDataset => {
+      const list = this.scopedTeachers || [];
+      return {
+        tableId: 'owner_teacher_arrears',
+        title: 'Teacher Salary & Tenure Statement',
+        headers: ['Teacher / Faculty', 'Subject', 'Joined Date', 'Tenure', 'Monthly Salary', 'Unpaid Months', 'Remaining Arrears', 'Salary Status'],
+        dateColHint: 2,
+        rowKeys: list.map((t) => String(t.id || t.empCode || t.name)),
+        rows: list.map((t) => [
+          t.name,
+          t.subject,
+          t.appointmentDate || '-',
+          t.tenureDuration || '-',
+          fmtPkr(t.monthlySalary),
+          String(t.unpaidSalaryMonths || 0),
+          fmtPkr(t.remainingSalaryArrears || 0),
+          t.salaryStatus
+        ])
+      };
+    });
 
     // 5. Profit & Loss Khata
-    this.tableSchemaService.registerStatementDataProvider('owner_profit_loss', (): StatementDataset => ({
-      tableId: 'owner_profit_loss',
-      title: 'Monthly Profit & Loss Khata Statement',
-      headers: ['Month & Year', 'Tuition Income', 'Other & Transport', 'Gross Income', 'Operating Expense', 'Net Profit / Loss', 'Status'],
-      dateColHint: 0,
-      rows: (this.profitLossLedger || []).map((pl) => [
-        pl.monthYear,
-        fmtPkr(pl.tuitionFeeIncome),
-        fmtPkr(Number(pl.transportFeeIncome || 0) + Number(pl.otherIncome || 0)),
-        fmtPkr(pl.totalGrossIncome),
-        fmtPkr(pl.totalOperatingExpense),
-        fmtPkr(pl.netProfitOrLoss),
-        pl.status
-      ])
-    }));
+    this.tableSchemaService.registerStatementDataProvider('owner_profit_loss', (): StatementDataset => {
+      const list = this.profitLossLedger || [];
+      return {
+        tableId: 'owner_profit_loss',
+        title: 'Monthly Profit & Loss Khata Statement',
+        headers: ['Month & Year', 'Tuition Income', 'Other & Transport', 'Gross Income', 'Operating Expense', 'Net Profit / Loss', 'Status'],
+        dateColHint: 0,
+        rowKeys: list.map((pl) => String(pl.id || pl.monthYear)),
+        rows: list.map((pl) => [
+          pl.monthYear,
+          fmtPkr(pl.tuitionFeeIncome),
+          fmtPkr(Number(pl.transportFeeIncome || 0) + Number(pl.otherIncome || 0)),
+          fmtPkr(pl.totalGrossIncome),
+          fmtPkr(pl.totalOperatingExpense),
+          fmtPkr(pl.netProfitOrLoss),
+          pl.status
+        ])
+      };
+    });
 
     // 6. Alerts History
-    this.tableSchemaService.registerStatementDataProvider('owner_alerts_log', (): StatementDataset => ({
-      tableId: 'owner_alerts_log',
-      title: 'Dispatched WhatsApp & SMS Alerts History',
-      headers: ['Alert Ref #', 'Recipient', 'Phone', 'Channel', 'Message Summary', 'Sent Timestamp', 'Delivery Status'],
-      dateColHint: 5,
-      rows: (this.dispatchAlertLogs || []).map((log) => [
-        log.id,
-        `${log.recipientName} (${log.targetRole})`,
-        log.recipientPhone,
-        log.channel,
-        log.messageText,
-        log.sentAt,
-        log.deliveryStatus
-      ])
-    }));
+    this.tableSchemaService.registerStatementDataProvider('owner_alerts_log', (): StatementDataset => {
+      const list = this.dispatchAlertLogs || [];
+      return {
+        tableId: 'owner_alerts_log',
+        title: 'Dispatched WhatsApp & SMS Alerts History',
+        headers: ['Alert Ref #', 'Recipient', 'Phone', 'Channel', 'Message Summary', 'Sent Timestamp', 'Delivery Status'],
+        dateColHint: 5,
+        rowKeys: list.map((log) => String(log.id)),
+        rows: list.map((log) => [
+          log.id,
+          `${log.recipientName} (${log.targetRole})`,
+          log.recipientPhone,
+          log.channel,
+          log.messageText,
+          log.sentAt,
+          log.deliveryStatus
+        ])
+      };
+    });
 
     // 7. Petty Cash Vouchers
-    const pettyProvider = (id: string) => (): StatementDataset => ({
-      tableId: id,
-      title: 'Fee Counter Petty Cash Vouchers Statement',
-      headers: ['Voucher #', 'Date', 'Category', 'Description', 'Paid To', 'Recorded By', 'Voucher Amount'],
-      dateColHint: 1,
-      rows: (this.scopedAccountantPettyVouchers || []).map((pv) => [
-        pv.voucherNo || pv.id,
-        pv.date,
-        pv.category,
-        pv.description,
-        pv.paidTo,
-        pv.recordedBy,
-        fmtPkr(pv.amount)
-      ])
-    });
+    const pettyProvider = (id: string) => (): StatementDataset => {
+      const list = this.scopedAccountantPettyVouchers || [];
+      return {
+        tableId: id,
+        title: 'Fee Counter Petty Cash Vouchers Statement',
+        headers: ['Voucher #', 'Date', 'Category', 'Description', 'Paid To', 'Recorded By', 'Voucher Amount'],
+        dateColHint: 1,
+        rowKeys: list.map((pv) => String(pv.id || pv.voucherNo)),
+        rows: list.map((pv) => [
+          pv.voucherNo || pv.id,
+          pv.date,
+          pv.category,
+          pv.description,
+          pv.paidTo,
+          pv.recordedBy,
+          fmtPkr(pv.amount)
+        ])
+      };
+    };
     this.tableSchemaService.registerStatementDataProvider('owner_petty_vouchers', pettyProvider('owner_petty_vouchers'));
     this.tableSchemaService.registerStatementDataProvider('accountant_petty_vouchers', pettyProvider('accountant_petty_vouchers'));
 
@@ -29369,6 +30310,7 @@ INSTRUCTIONS:
         title: `Daily Cash Closing (Rooznama) Statement (${this.activeScopeSummaryLabel})`,
         headers: ['Date', 'Category / Head', 'Description', 'Payment Channel', 'Inflow (PKR)', 'Outflow (PKR)'],
         dateColHint: 0,
+        rowKeys: ['opening', 'tuition', 'admissions', 'online_bank', 'digital_wallet', 'petty', 'bank_deposit', 'closing'],
         rows: [
           [d, 'Opening Vault Balance', 'Carried forward from yesterday closing', 'Physical Vault', fmtPkr(this.dailyOpeningVaultCash), '-'],
           [d, 'Student Tuition Fees', 'Monthly Tuition Vouchers (Accountant + Principal)', 'Counter Cash', fmtPkr(this.todayFeeCashCollections), '-'],
@@ -29383,188 +30325,247 @@ INSTRUCTIONS:
     });
 
     // 9. Bank Reconciliation & Accountant Closings
-    const closingQueueProvider = (id: string, title: string) => (): StatementDataset => ({
-      tableId: id,
-      title,
-      headers: ['Closing ID', 'Date', 'Campus / Cashier', 'Counter Cash', 'Meezan Bank', 'HBL Bank', 'Digital Wallets', 'Total Collected', 'Variance', 'Owner Status'],
-      dateColHint: 1,
-      rows: (this.scopedFeeReconciliations || []).map((rec) => [
-        rec.id,
-        rec.date,
-        `${rec.branchName || 'Main'} · ${rec.cashierName}`,
-        fmtPkr(rec.counterCashReceived),
-        fmtPkr(rec.bankDepositedMeezan),
-        fmtPkr(rec.bankDepositedHBL),
-        fmtPkr(rec.onlineDigitalKuickPay),
-        fmtPkr(rec.actualCollected),
-        fmtPkr(rec.varianceAmount),
-        rec.ownerApprovalStatus || rec.reconciliationStatus
-      ])
-    });
+    const closingQueueProvider = (id: string, title: string) => (): StatementDataset => {
+      const list = this.scopedFeeReconciliations || [];
+      return {
+        tableId: id,
+        title,
+        headers: ['Closing ID', 'Date', 'Campus / Cashier', 'Counter Cash', 'Meezan Bank', 'HBL Bank', 'Digital Wallets', 'Total Collected', 'Variance', 'Owner Status'],
+        dateColHint: 1,
+        rowKeys: list.map((rec) => String(rec.id)),
+        rows: list.map((rec) => [
+          rec.id,
+          rec.date,
+          `${rec.branchName || 'Main'} · ${rec.cashierName}`,
+          fmtPkr(rec.counterCashReceived),
+          fmtPkr(rec.bankDepositedMeezan),
+          fmtPkr(rec.bankDepositedHBL),
+          fmtPkr(rec.onlineDigitalKuickPay),
+          fmtPkr(rec.actualCollected),
+          fmtPkr(rec.varianceAmount),
+          rec.ownerApprovalStatus || rec.reconciliationStatus
+        ])
+      };
+    };
     this.tableSchemaService.registerStatementDataProvider('owner_audit_reconciliation', closingQueueProvider('owner_audit_reconciliation', 'Cash & Bank Reconciliation Statement'));
     this.tableSchemaService.registerStatementDataProvider('accountant_closings', closingQueueProvider('accountant_closings', 'Accountant Day-End Closings Statement'));
 
     // 10. Accountant Challans Register
-    this.tableSchemaService.registerStatementDataProvider('accountant_challans', (): StatementDataset => ({
-      tableId: 'accountant_challans',
-      title: 'Fee Challans Register Statement',
-      headers: ['Challan #', 'Student', 'Roll #', 'Class', 'Billing Month', 'Due Date', 'Total Payable', 'Status'],
-      dateColHint: 5,
-      rows: (this.filteredAccountantChallans || []).map((c) => [
-        c.challanNo,
-        c.studentName,
-        c.rollNo,
-        c.grade,
-        c.month,
-        c.dueDate,
-        fmtPkr(c.total),
-        c.status
-      ])
-    }));
+    this.tableSchemaService.registerStatementDataProvider('accountant_challans', (): StatementDataset => {
+      const list = this.filteredAccountantChallans || [];
+      return {
+        tableId: 'accountant_challans',
+        title: 'Fee Challans Register Statement',
+        headers: ['Challan #', 'Student', 'Roll #', 'Class', 'Billing Month', 'Due Date', 'Total Payable', 'Status'],
+        dateColHint: 5,
+        rowKeys: list.map((c) => String(c.id || c.challanNo)),
+        rows: list.map((c) => [
+          c.challanNo,
+          c.studentName,
+          c.rollNo,
+          c.grade,
+          c.month,
+          c.dueDate,
+          fmtPkr(c.total),
+          c.status
+        ])
+      };
+    });
 
     // 11. Students Master Roster
-    this.tableSchemaService.registerStatementDataProvider('owner_students_roster', (): StatementDataset => ({
-      tableId: 'owner_students_roster',
-      title: 'Students Master Directory Statement',
-      headers: ['Roll #', 'Student Name', 'Class / Section', 'Father / Guardian', 'Phone', 'Admission Date', 'Monthly Fee', 'Due Bakaya', 'Fee Status'],
-      dateColHint: 5,
-      rows: (this.filteredStudents || []).map((s) => [
-        s.rollNo,
-        s.name,
-        `${s.grade}${s.section ? ' - ' + s.section : ''}`,
-        s.guardian,
-        s.guardianPhone,
-        s.admissionDate,
-        fmtPkr(s.feeAmount),
-        fmtPkr(s.dueBakaya || 0),
-        s.feeStatus
-      ])
-    }));
+    this.tableSchemaService.registerStatementDataProvider('owner_students_roster', (): StatementDataset => {
+      const list = this.filteredStudents || [];
+      return {
+        tableId: 'owner_students_roster',
+        title: 'Students Master Directory Statement',
+        headers: ['Roll #', 'Student Name', 'Class / Section', 'Father / Guardian', 'Phone', 'Admission Date', 'Monthly Fee', 'Due Bakaya', 'Fee Status'],
+        dateColHint: 5,
+        rowKeys: list.map((s) => String(s.id || s.rollNo)),
+        rows: list.map((s) => [
+          s.rollNo,
+          s.name,
+          `${s.grade}${s.section ? ' - ' + s.section : ''}`,
+          s.guardian,
+          s.guardianPhone,
+          s.admissionDate,
+          fmtPkr(s.feeAmount),
+          fmtPkr(s.dueBakaya || 0),
+          s.feeStatus
+        ])
+      };
+    });
 
     // 12. Teachers Faculty Roster
-    this.tableSchemaService.registerStatementDataProvider('owner_teachers_faculty', (): StatementDataset => ({
-      tableId: 'owner_teachers_faculty',
-      title: 'Faculty & Staff Directory Statement',
-      headers: ['Emp ID', 'Name', 'Designation / Subject', 'Phone', 'Appointment Date', 'Monthly Salary', 'Remaining Arrears', 'Salary Status'],
-      dateColHint: 4,
-      rows: (this.scopedTeachers || []).map((t) => [
-        t.empCode || t.id,
-        t.name,
-        t.designation || t.subject,
-        t.phone,
-        t.appointmentDate || '-',
-        fmtPkr(t.monthlySalary),
-        fmtPkr(t.remainingSalaryArrears || 0),
-        t.salaryStatus
-      ])
-    }));
+    this.tableSchemaService.registerStatementDataProvider('owner_teachers_faculty', (): StatementDataset => {
+      const list = this.scopedTeachers || [];
+      return {
+        tableId: 'owner_teachers_faculty',
+        title: 'Faculty & Staff Directory Statement',
+        headers: ['Emp ID', 'Name', 'Designation / Subject', 'Phone', 'Appointment Date', 'Monthly Salary', 'Remaining Arrears', 'Salary Status'],
+        dateColHint: 4,
+        rowKeys: list.map((t) => String(t.id || t.empCode)),
+        rows: list.map((t) => [
+          t.empCode || t.id,
+          t.name,
+          t.designation || t.subject,
+          t.phone,
+          t.appointmentDate || '-',
+          fmtPkr(t.monthlySalary),
+          fmtPkr(t.remainingSalaryArrears || 0),
+          t.salaryStatus
+        ])
+      };
+    });
 
     // 13. Admissions Pipeline
-    this.tableSchemaService.registerStatementDataProvider('owner_admissions', (): StatementDataset => ({
-      tableId: 'owner_admissions',
-      title: 'Admissions & Registration Statement',
-      headers: ['App ID', 'Applicant Name', 'Class Applied', 'Guardian', 'Phone', 'Date', 'Admission Fee', 'Tuition Fee', 'Status'],
-      dateColHint: 5,
-      rows: (this.filteredAdmissions || []).map((a) => [
-        a.id,
-        a.applicant,
-        a.appliedFor,
-        a.fatherName,
-        a.phone,
-        a.date,
-        fmtPkr(a.admissionFee || 0),
-        fmtPkr(a.tuitionFee || 0),
-        a.status
-      ])
-    }));
+    this.tableSchemaService.registerStatementDataProvider('owner_admissions', (): StatementDataset => {
+      const list = this.filteredAdmissions || [];
+      return {
+        tableId: 'owner_admissions',
+        title: 'Admissions & Registration Statement',
+        headers: ['App ID', 'Applicant Name', 'Class Applied', 'Guardian', 'Phone', 'Date', 'Admission Fee', 'Tuition Fee', 'Status'],
+        dateColHint: 5,
+        rowKeys: list.map((a) => String(a.id)),
+        rows: list.map((a) => [
+          a.id,
+          a.applicant,
+          a.appliedFor,
+          a.fatherName,
+          a.phone,
+          a.date,
+          fmtPkr(a.admissionFee || 0),
+          fmtPkr(a.tuitionFee || 0),
+          a.status
+        ])
+      };
+    });
 
     // 14. Expenses, Payroll & Invoices
-    this.tableSchemaService.registerStatementDataProvider('owner_expenses', (): StatementDataset => ({
-      tableId: 'owner_expenses',
-      title: 'School Expenses & Vendor Bills Statement',
-      headers: ['Receipt #', 'Title & Purpose', 'Category', 'Vendor / Payee', 'Date', 'Mode', 'Amount (PKR)'],
-      dateColHint: 4,
-      rows: (this.filteredExpenses || []).map((e) => [
-        e.receiptNo,
-        e.title,
-        e.category,
-        e.vendor,
-        e.date,
-        e.paymentMode,
-        fmtPkr(e.amount)
-      ])
-    }));
+    this.tableSchemaService.registerStatementDataProvider('owner_expenses', (): StatementDataset => {
+      const list = this.filteredExpenses || [];
+      return {
+        tableId: 'owner_expenses',
+        title: 'School Expenses & Vendor Bills Statement',
+        headers: ['Receipt #', 'Title & Purpose', 'Category', 'Vendor / Payee', 'Date', 'Mode', 'Amount (PKR)'],
+        dateColHint: 4,
+        rowKeys: list.map((e) => String(e.id || e.receiptNo)),
+        rows: list.map((e) => [
+          e.receiptNo,
+          e.title,
+          e.category,
+          e.vendor,
+          e.date,
+          e.paymentMode,
+          fmtPkr(e.amount)
+        ])
+      };
+    });
 
-    this.tableSchemaService.registerStatementDataProvider('owner_payroll', (): StatementDataset => ({
-      tableId: 'owner_payroll',
-      title: 'Staff Payroll Register Statement',
-      headers: ['Staff Name', 'Role', 'Payroll Month', 'Disbursed Date', 'Base Salary', 'Allowances', 'Deductions', 'Net Payable', 'Status'],
-      dateColHint: 3,
-      rows: (this.filteredStaffPayrolls || []).map((p) => [
-        p.staffName,
-        p.role,
-        p.month,
-        p.disbursedDate || 'Pending',
-        fmtPkr(p.baseSalary),
-        fmtPkr(p.allowances),
-        fmtPkr(p.deductions),
-        fmtPkr(p.netPayable),
-        p.status
-      ])
-    }));
+    this.tableSchemaService.registerStatementDataProvider('owner_payroll', (): StatementDataset => {
+      const list = this.filteredStaffPayrolls || [];
+      return {
+        tableId: 'owner_payroll',
+        title: 'Staff Payroll Register Statement',
+        headers: ['Staff Name', 'Role', 'Payroll Month', 'Disbursed Date', 'Base Salary', 'Allowances', 'Deductions', 'Net Payable', 'Status'],
+        dateColHint: 3,
+        rowKeys: list.map((p) => String(p.id || p.staffName)),
+        rows: list.map((p) => [
+          p.staffName,
+          p.role,
+          p.month,
+          p.disbursedDate || 'Pending',
+          fmtPkr(p.baseSalary),
+          fmtPkr(p.allowances),
+          fmtPkr(p.deductions),
+          fmtPkr(p.netPayable),
+          p.status
+        ])
+      };
+    });
 
-    this.tableSchemaService.registerStatementDataProvider('owner_invoices', (): StatementDataset => ({
-      tableId: 'owner_invoices',
-      title: 'Master Invoices & Billing Statement',
-      headers: ['Invoice #', 'Type', 'Recipient', 'Issue Date', 'Due Date', 'Subtotal', 'Discount', 'Net Payable', 'Status'],
-      dateColHint: 3,
-      rows: (this.filteredMasterInvoices || []).map((inv) => [
-        inv.invoiceNo,
-        inv.type,
-        inv.recipientName,
-        inv.issueDate,
-        inv.dueDate,
-        fmtPkr(inv.amount),
-        fmtPkr(inv.discount),
-        fmtPkr(inv.netPayable),
-        inv.status
-      ])
-    }));
+    this.tableSchemaService.registerStatementDataProvider('owner_invoices', (): StatementDataset => {
+      const list = this.filteredMasterInvoices || [];
+      return {
+        tableId: 'owner_invoices',
+        title: 'Master Invoices & Billing Statement',
+        headers: ['Invoice #', 'Type', 'Recipient', 'Issue Date', 'Due Date', 'Subtotal', 'Discount', 'Net Payable', 'Status'],
+        dateColHint: 3,
+        rowKeys: list.map((inv) => String(inv.id || inv.invoiceNo)),
+        rows: list.map((inv) => [
+          inv.invoiceNo,
+          inv.type,
+          inv.recipientName,
+          inv.issueDate,
+          inv.dueDate,
+          fmtPkr(inv.amount),
+          fmtPkr(inv.discount),
+          fmtPkr(inv.netPayable),
+          inv.status
+        ])
+      };
+    });
 
-    // 15. Payment Gateway & Audit Trail
-    this.tableSchemaService.registerStatementDataProvider('owner_payment_gateway', (): StatementDataset => ({
-      tableId: 'owner_payment_gateway',
-      title: 'Online Fee & Digital Gateway Statement',
-      headers: ['TXN Ref', 'Challan #', 'Student', 'Class', 'Gateway Channel', 'Proof TID', 'Timestamp', 'Total Amount', 'Status'],
-      dateColHint: 6,
-      rows: (this.schoolPaymentTransactions || []).map((tx) => [
-        tx.txnRef,
-        tx.challanNo,
-        tx.studentName,
-        tx.grade,
-        tx.gatewayName,
-        tx.proofReference || '-',
-        tx.createdAt || '-',
-        fmtPkr(tx.totalAmount),
-        tx.status
-      ])
-    }));
+    // 15. Payment Gateway, Audit Trail & Stock IN/OUT Movements
+    this.tableSchemaService.registerStatementDataProvider('owner_payment_gateway', (): StatementDataset => {
+      const list = this.schoolPaymentTransactions || [];
+      return {
+        tableId: 'owner_payment_gateway',
+        title: 'Online Fee & Digital Gateway Statement',
+        headers: ['TXN Ref', 'Challan #', 'Student', 'Class', 'Gateway Channel', 'Proof TID', 'Timestamp', 'Total Amount', 'Status'],
+        dateColHint: 6,
+        rowKeys: list.map((tx) => String(tx.txnRef || tx.id)),
+        rows: list.map((tx) => [
+          tx.txnRef,
+          tx.challanNo,
+          tx.studentName,
+          tx.grade,
+          tx.gatewayName,
+          tx.proofReference || '-',
+          tx.createdAt || '-',
+          fmtPkr(tx.totalAmount),
+          tx.status
+        ])
+      };
+    });
 
-    this.tableSchemaService.registerStatementDataProvider('owner_audit_trail', (): StatementDataset => ({
-      tableId: 'owner_audit_trail',
-      title: 'System Security & Audit Trail Log',
-      headers: ['Timestamp', 'Operator', 'Action Type', 'Category', 'Entity Details', 'Severity', 'Verified By'],
-      dateColHint: 0,
-      rows: (this.filteredAuditLogs || []).map((log) => [
-        log.timestamp,
-        `${log.operatorName} (${log.operatorRole})`,
-        log.actionType,
-        log.category,
-        `${log.entityDescription} - ${log.details}`,
-        log.severity,
-        log.verifiedBy
-      ])
-    }));
+    this.tableSchemaService.registerStatementDataProvider('owner_audit_trail', (): StatementDataset => {
+      const list = this.filteredAuditLogs || [];
+      return {
+        tableId: 'owner_audit_trail',
+        title: 'System Security & Audit Trail Log',
+        headers: ['Timestamp', 'Operator', 'Action Type', 'Category', 'Entity Details', 'Severity', 'Verified By'],
+        dateColHint: 0,
+        rowKeys: list.map((log) => String(log.id)),
+        rows: list.map((log) => [
+          log.timestamp,
+          `${log.operatorName} (${log.operatorRole})`,
+          log.actionType,
+          log.category,
+          `${log.entityDescription} - ${log.details}`,
+          log.severity,
+          log.verifiedBy
+        ])
+      };
+    });
+
+    this.tableSchemaService.registerStatementDataProvider('owner_stock_movements', (): StatementDataset => {
+      const list = this.stockInOutLogs || [];
+      return {
+        tableId: 'owner_stock_movements',
+        title: 'Stock IN / OUT Movement Ledger',
+        headers: ['Voucher Ref', 'Asset & Code', 'Direction', 'Qty & Stock Balance', 'Total Value', 'Handled By & Time'],
+        dateColHint: 5,
+        rowKeys: list.map((log) => String(log.id || log.refNo)),
+        rows: list.map((log) => [
+          log.refNo,
+          `${log.assetName} (${log.assetCode} · ${log.location})`,
+          log.direction === 'IN' ? 'STOCK IN (+)' : 'STOCK OUT (-)',
+          `${log.direction === 'IN' ? '+' : '-'}${log.qtyChange} (${log.previousQty} -> ${log.newQty})`,
+          fmtPkr(log.totalValue),
+          `${log.handledBy} · ${log.timestamp}`
+        ])
+      };
+    });
   }
 
   onStudioPaperSizeChange(paper: 'a4' | '80mm' | '58mm'): void {

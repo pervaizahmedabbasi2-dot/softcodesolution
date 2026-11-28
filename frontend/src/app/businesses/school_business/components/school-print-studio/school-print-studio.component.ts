@@ -959,6 +959,7 @@ export class SchoolPrintStudioComponent implements OnDestroy {
           categoryLabel: 'Attendance & HR'
         };
 
+      case 'owner_stock_movements':
       case 'owner_assets':
         return {
           categoryKey: 'operations_audit',

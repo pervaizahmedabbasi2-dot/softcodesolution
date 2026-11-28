@@ -11,14 +11,14 @@
     <main class="max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 pt-6 space-y-5">
 
       <!-- Executive 3D iOS / hi-OS School Hero Card Widget -->
-      <div class="rounded-[28px] p-5 sm:p-6 border border-white/80 shadow-[0_20px_50px_-12px_rgba(16,185,129,0.18),0_8px_20px_-6px_rgba(0,0,0,0.06),inset_0_1px_2px_rgba(255,255,255,0.95)] bg-gradient-to-br from-white/95 via-emerald-50/40 to-slate-50/90 backdrop-blur-2xl relative overflow-hidden flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all duration-300 group max-w-full min-w-0 pr-14 sm:pr-16">
+      <div class="rounded-2xl sm:rounded-[28px] p-4 sm:p-5 lg:p-6 border border-white/80 shadow-[0_20px_50px_-12px_rgba(16,185,129,0.18),0_8px_20px_-6px_rgba(0,0,0,0.06),inset_0_1px_2px_rgba(255,255,255,0.95)] bg-gradient-to-br from-white/95 via-emerald-50/40 to-slate-50/90 backdrop-blur-2xl relative overflow-hidden flex flex-col xl:flex-row xl:items-center justify-between gap-4 sm:gap-5 transition-all duration-300 group max-w-full min-w-0">
         <!-- 3D Architectural Soft Ambient Glow & Specular Edge Highlight -->
         <div class="absolute inset-0 bg-[radial-gradient(#8080800c_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none"></div>
         <div class="absolute -right-16 -top-16 w-80 h-80 bg-gradient-to-br from-emerald-200/40 via-teal-100/30 to-transparent rounded-full blur-3xl pointer-events-none group-hover:scale-110 transition-transform duration-700"></div>
         <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent"></div>
 
         <!-- Notification Bell: Positioned in Top-Right Corner -->
-        <div class="absolute top-4 right-4 sm:top-5 sm:right-6 z-30">
+        <div class="absolute top-3.5 right-3.5 sm:top-5 sm:right-6 z-30">
           <button (click)="openCampusUpdatesDirectly()"
                   title="Click to view latest campus notices, circulars & updates"
                   class="relative flex items-center justify-center p-2.5 rounded-2xl bg-white/90 hover:bg-white text-slate-800 backdrop-blur-md border border-white/80 shadow-[0_4px_12px_rgba(0,0,0,0.08),inset_0_1px_1px_rgba(255,255,255,0.9)] cursor-pointer active:scale-95 transition-all group">
@@ -32,25 +32,27 @@
         </div>
 
         <!-- Left Branding & Identity -->
-        <div class="flex items-center gap-4 min-w-0 flex-1 relative z-10 max-w-full">
-          <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-[20px] bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 text-white flex items-center justify-center font-black shadow-[0_12px_28px_-6px_rgba(79,70,229,0.45),inset_0_2px_4px_rgba(255,255,255,0.4)] border border-white/30 shrink-0 transform group-hover:rotate-1 transition-transform duration-300">
-            <lucide-icon [name]="'graduation-cap'" class="w-6 h-6 sm:w-7 sm:h-7 drop-shadow-sm"></lucide-icon>
+        <div class="flex items-start sm:items-center gap-3 sm:gap-4 min-w-0 flex-1 w-full relative z-10 max-w-full">
+          <div class="w-11 h-11 sm:w-14 sm:h-14 rounded-2xl sm:rounded-[20px] bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 text-white flex items-center justify-center font-black shadow-[0_12px_28px_-6px_rgba(79,70,229,0.45),inset_0_2px_4px_rgba(255,255,255,0.4)] border border-white/30 shrink-0 transform group-hover:rotate-1 transition-transform duration-300">
+            <lucide-icon [name]="'graduation-cap'" class="w-5 h-5 sm:w-7 sm:h-7 drop-shadow-sm"></lucide-icon>
           </div>
           <div class="min-w-0 flex-1 space-y-1 max-w-full">
-            <div class="flex items-center gap-2 flex-wrap min-w-0 max-w-full">
-              <h1 class="text-base sm:text-lg md:text-xl font-black text-slate-900 leading-snug tracking-tight break-words min-w-0 max-w-full">{{ schoolName }}</h1>
-              <span class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-700 border border-emerald-300/60 shadow-[inset_0_1px_1px_rgba(255,255,255,0.8)] backdrop-blur-md shrink-0">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                Session 2026-27
-              </span>
+            <div class="pr-12 sm:pr-14 xl:pr-0 space-y-1">
+              <div class="flex items-center gap-2 flex-wrap min-w-0 max-w-full">
+                <h1 class="text-base sm:text-lg md:text-xl font-black text-slate-900 leading-snug tracking-tight break-words min-w-0 max-w-full">{{ schoolName }}</h1>
+                <span class="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-700 border border-emerald-300/60 shadow-[inset_0_1px_1px_rgba(255,255,255,0.8)] backdrop-blur-md shrink-0">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                  Session 2026-27
+                </span>
+              </div>
+              <p class="text-[11px] sm:text-xs text-slate-600 font-medium leading-snug break-words max-w-full">
+                Administrative Access &amp; Executive Management · Scope: <strong class="text-slate-900">{{ activeScopeSummaryLabel }}</strong>
+              </p>
             </div>
-            <p class="text-[11px] sm:text-xs text-slate-600 font-medium leading-tight break-words max-w-full">
-              Administrative Access &amp; Executive Management · Scope: <strong class="text-slate-900">{{ activeScopeSummaryLabel }}</strong>
-            </p>
-            <div class="flex items-center gap-2 flex-wrap pt-1.5">
+            <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 pt-2 w-full">
               <select [(ngModel)]="selectedBranchScope" (ngModelChange)="setBranchScope($event)"
                 aria-label="Filter by Campus Branch"
-                class="px-2.5 py-1.5 rounded-xl bg-white/95 border border-slate-200/90 text-[11px] font-bold text-slate-800 cursor-pointer shadow-2xs focus:outline-indigo-600">
+                class="w-full sm:w-auto max-w-full min-w-0 px-2.5 py-2 sm:py-1.5 rounded-xl bg-white/95 border border-slate-200/90 text-[11px] font-bold text-slate-800 cursor-pointer shadow-2xs focus:outline-indigo-600">
                 <option value="ALL">All Branches ({{ schoolBranchRecords.length }} Campuses)</option>
                 @for (br of schoolBranchRecords; track br.id) {
                   <option [value]="br.id">{{ br.name }} ({{ br.city }})</option>
@@ -58,47 +60,47 @@
               </select>
               <select [(ngModel)]="selectedWingScope" (ngModelChange)="setWingScope($event)"
                 aria-label="Filter by Academic Wing"
-                class="px-2.5 py-1.5 rounded-xl bg-white/95 border border-slate-200/90 text-[11px] font-bold text-slate-800 cursor-pointer shadow-2xs focus:outline-indigo-600">
+                class="w-full sm:w-auto max-w-full min-w-0 px-2.5 py-2 sm:py-1.5 rounded-xl bg-white/95 border border-slate-200/90 text-[11px] font-bold text-slate-800 cursor-pointer shadow-2xs focus:outline-indigo-600">
                 <option value="ALL">All Wings ({{ availableWingsForSelectedBranch.length }})</option>
                 @for (wg of availableWingsForSelectedBranch; track wg.id) {
                   <option [value]="wg.id">{{ wg.name }}</option>
                 }
               </select>
               <button type="button" (click)="openBranchWingModal('branches')"
-                class="px-2.5 py-1.5 rounded-xl bg-white/95 hover:bg-white border border-slate-200/90 text-indigo-700 font-bold text-[11px] cursor-pointer shadow-2xs inline-flex items-center gap-1 transition-all active:scale-95">
-                <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">account_tree</mat-icon>
-                <span>Branches &amp; Wings</span>
+                class="w-full sm:w-auto justify-center px-2.5 py-2 sm:py-1.5 rounded-xl bg-white/95 hover:bg-white border border-slate-200/90 text-indigo-700 font-bold text-[11px] cursor-pointer shadow-2xs inline-flex items-center gap-1 transition-all active:scale-95 whitespace-nowrap">
+                <mat-icon class="!text-[14px] !w-[14px] !h-[14px] shrink-0">account_tree</mat-icon>
+                <span class="truncate">Branches &amp; Wings</span>
               </button>
               <button type="button" (click)="openHardwareTerminalModal('auto')"
-                class="px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-white font-bold text-[11px] cursor-pointer shadow-2xs inline-flex items-center gap-1.5 transition-all active:scale-95">
-                <mat-icon class="!text-[14px] !w-[14px] !h-[14px] text-emerald-400">qr_code_scanner</mat-icon>
-                <span>Printer &amp; Scanner</span>
+                class="w-full sm:w-auto justify-center px-2.5 py-2 sm:py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-white font-bold text-[11px] cursor-pointer shadow-2xs inline-flex items-center gap-1.5 transition-all active:scale-95 whitespace-nowrap">
+                <mat-icon class="!text-[14px] !w-[14px] !h-[14px] text-emerald-400 shrink-0">qr_code_scanner</mat-icon>
+                <span class="truncate">Printer &amp; Scanner</span>
               </button>
             </div>
           </div>
         </div>
 
         <!-- Right Telemetry Highlights -->
-        <div class="flex items-center gap-2.5 shrink-0 flex-wrap sm:flex-nowrap w-full sm:w-auto relative z-10">
-          <div class="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-white/90 backdrop-blur-md border border-white/80 shadow-[0_4px_12px_rgba(0,0,0,0.03),inset_0_1px_1px_rgba(255,255,255,0.9)] text-[11px] sm:text-xs font-bold text-slate-700 whitespace-nowrap">
+        <div class="grid grid-cols-2 sm:grid-cols-4 xl:flex xl:flex-wrap 2xl:flex-nowrap items-stretch xl:items-center gap-2 sm:gap-2.5 w-full xl:w-auto xl:shrink-0 xl:pr-14 relative z-10">
+          <div class="flex items-center justify-center xl:justify-start gap-2 px-3 sm:px-3.5 py-2 rounded-xl sm:rounded-2xl bg-white/90 backdrop-blur-md border border-white/80 shadow-[0_4px_12px_rgba(0,0,0,0.03),inset_0_1px_1px_rgba(255,255,255,0.9)] text-[11px] sm:text-xs font-bold text-slate-700 whitespace-nowrap min-w-0">
             <lucide-icon [name]="'users'" class="w-3.5 h-3.5 text-indigo-600 shrink-0"></lucide-icon>
-            <span><strong class="text-slate-900 font-black">{{ formatCurrency(liveEnrolledCount) }}</strong> Enrolled</span>
+            <span class="truncate"><strong class="text-slate-900 font-black">{{ formatCurrency(liveEnrolledCount) }}</strong> Enrolled</span>
           </div>
-          <div class="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-white/90 backdrop-blur-md border border-white/80 shadow-[0_4px_12px_rgba(0,0,0,0.03),inset_0_1px_1px_rgba(255,255,255,0.9)] text-[11px] sm:text-xs font-bold text-slate-700 whitespace-nowrap">
+          <div class="flex items-center justify-center xl:justify-start gap-2 px-3 sm:px-3.5 py-2 rounded-xl sm:rounded-2xl bg-white/90 backdrop-blur-md border border-white/80 shadow-[0_4px_12px_rgba(0,0,0,0.03),inset_0_1px_1px_rgba(255,255,255,0.9)] text-[11px] sm:text-xs font-bold text-slate-700 whitespace-nowrap min-w-0">
             <lucide-icon [name]="'graduation-cap'" class="w-3.5 h-3.5 text-emerald-600 shrink-0"></lucide-icon>
-            <span><strong class="text-slate-900 font-black">{{ liveFacultyCount }}</strong> Faculty</span>
+            <span class="truncate"><strong class="text-slate-900 font-black">{{ liveFacultyCount }}</strong> Faculty</span>
           </div>
-          <div class="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-emerald-500/10 backdrop-blur-md border border-emerald-200/80 shadow-[0_4px_12px_rgba(16,185,129,0.06),inset_0_1px_1px_rgba(255,255,255,0.9)] text-[11px] sm:text-xs font-bold text-emerald-800 whitespace-nowrap">
+          <div class="flex items-center justify-center xl:justify-start gap-2 px-3 sm:px-3.5 py-2 rounded-xl sm:rounded-2xl bg-emerald-500/10 backdrop-blur-md border border-emerald-200/80 shadow-[0_4px_12px_rgba(16,185,129,0.06),inset_0_1px_1px_rgba(255,255,255,0.9)] text-[11px] sm:text-xs font-bold text-emerald-800 whitespace-nowrap min-w-0">
             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
-            <span><strong class="font-black">{{ liveAttendanceRateLabel }}</strong> Present</span>
+            <span class="truncate"><strong class="font-black">{{ liveAttendanceRateLabel }}</strong> Present</span>
           </div>
           <button (click)="syncToCloud(true)"
                   [disabled]="isCloudSyncing"
-                  class="flex items-center gap-2 px-3.5 py-2 rounded-2xl transition-all cursor-pointer shadow-[0_4px_12px_rgba(0,0,0,0.04),inset_0_1px_1px_rgba(255,255,255,0.9)] text-[11px] sm:text-xs font-black active:scale-95 whitespace-nowrap border border-slate-200/90"
+                  class="flex items-center justify-center xl:justify-start gap-2 px-3 sm:px-3.5 py-2 rounded-xl sm:rounded-2xl transition-all cursor-pointer shadow-[0_4px_12px_rgba(0,0,0,0.04),inset_0_1px_1px_rgba(255,255,255,0.9)] text-[11px] sm:text-xs font-black active:scale-95 whitespace-nowrap border border-slate-200/90 min-w-0"
                   [class]="isCloudSyncing ? 'bg-slate-100 text-slate-500' : 'bg-white/80 hover:bg-white text-indigo-700'"
                   title="Click to sync school data with Cloud Firestore">
-            <span class="w-2 h-2 rounded-full" [class]="isCloudSyncing ? 'bg-amber-500 animate-ping' : 'bg-indigo-600'"></span>
-            <span>{{ isCloudSyncing ? 'Syncing...' : '☁️ Cloud Synced' }}</span>
+            <span class="w-2 h-2 rounded-full shrink-0" [class]="isCloudSyncing ? 'bg-amber-500 animate-ping' : 'bg-indigo-600'"></span>
+            <span class="truncate">{{ isCloudSyncing ? 'Syncing...' : '☁️ Cloud Synced' }}</span>
           </button>
         </div>
       </div>
@@ -922,7 +924,7 @@
                 </thead>
                 <tbody class="divide-y divide-slate-100 bg-white">
                   @for (row of branchComparisonRows; track row.branch.id) {
-                    <tr class="hover:bg-slate-50/80 transition-colors" [class.bg-indigo-50/40]="row.isSelected">
+                    <tr [attr.data-row-key]="row.branch.id" class="hover:bg-slate-50/80 transition-colors" [class.bg-indigo-50/40]="row.isSelected">
                       <td class="px-4 py-3">
                         <div class="font-black text-slate-900">{{ row.branch.name }}</div>
                         <div class="text-[11px] text-slate-500 font-medium">{{ row.branch.code }} · {{ row.branch.city }}</div>
@@ -6441,7 +6443,8 @@
                       </thead>
                       <tbody class="divide-y divide-slate-100 font-medium">
                         @for (row of branchDailyClosingAuditSummary.rows; track row.branch.id) {
-                          <tr (click)="selectedBranchScope = row.branch.id; selectedWingScope = 'ALL'"
+                          <tr [attr.data-row-key]="row.branch.id"
+                              (click)="selectedBranchScope = row.branch.id; selectedWingScope = 'ALL'"
                               class="cursor-pointer transition-colors"
                               [class]="selectedBranchScope === row.branch.id ? 'bg-indigo-50/70' : 'hover:bg-slate-50'">
                             <td class="px-3 py-2.5">
@@ -7563,6 +7566,28 @@
                   <span>PKR {{ dailyFineRatePKR }}/Day Rate</span>
                 </button>
 
+                <!-- Auto-Print Printer In/Out Switch + Sticker Sheet -->
+                <div class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700">
+                  <label class="flex items-center gap-1.5 cursor-pointer select-none">
+                    <input type="checkbox" [(ngModel)]="libraryAutoPrintSlip" class="rounded accent-indigo-600 cursor-pointer" />
+                    <span class="text-[11px] font-black text-slate-800">Auto-Print IN/OUT</span>
+                  </label>
+                  <button type="button" (click)="libraryPrintFormat = 'thermal'"
+                    [class]="libraryPrintFormat === 'thermal' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                    class="px-2 py-0.5 rounded-md text-[10px] font-black cursor-pointer transition-all">
+                    Thermal
+                  </button>
+                  <button type="button" (click)="libraryPrintFormat = 'a4'"
+                    [class]="libraryPrintFormat === 'a4' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                    class="px-2 py-0.5 rounded-md text-[10px] font-black cursor-pointer transition-all">
+                    A5/A4
+                  </button>
+                </div>
+
+                <button (click)="printLibraryBookStickers()" class="px-3.5 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 text-xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs">
+                  <mat-icon class="!text-[16px] !w-4 !h-4 text-indigo-600">qr_code_2</mat-icon>
+                  <span>Print Book Stickers</span>
+                </button>
                 <button (click)="openLibraryPDFReportModal()" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs">
                   <lucide-icon [name]="'file-text'" class="w-3.5 h-3.5 text-emerald-50"></lucide-icon>
                   <span>Export PDF Report</span>
@@ -7898,8 +7923,12 @@
                               +7 Days
                             </button>
                           }
-                          <button (click)="openBorrowSlipModal(rec)" title="Print Official Borrow Slip" class="px-2 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs transition-all cursor-pointer">
+                          <button (click)="openBorrowSlipModal(rec)" title="Print Official A5/A4 Borrow Slip" class="px-2 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs transition-all cursor-pointer">
                             Slip
+                          </button>
+                          <button (click)="printLibraryInOutReceipt(rec, rec.status === 'Returned' ? 'IN' : 'OUT', 'thermal')" title="Print Thermal IN/OUT Slip" class="px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition-all cursor-pointer inline-flex items-center gap-1">
+                            <mat-icon class="!text-[13px] !w-3.5 !h-3.5">print</mat-icon>
+                            <span>{{ rec.status === 'Returned' ? 'IN Slip' : 'OUT Slip' }}</span>
                           </button>
                           @if (isOwnerPortal) {
                             <button (click)="openOwnerRecordCrudModal('circulation', 'edit', rec)" title="Edit Circulation Record" class="px-2 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold text-xs transition-all cursor-pointer">
@@ -7972,6 +8001,10 @@
                     </select>
                   </div>
 
+                  <button (click)="printLibraryBookStickers()" class="px-3 py-1.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 font-extrabold text-xs flex items-center gap-1.5 shadow-2xs cursor-pointer">
+                    <mat-icon class="!text-[15px] !w-4 !h-4 text-indigo-600">qr_code_2</mat-icon>
+                    <span>Print All Stickers</span>
+                  </button>
                   <button (click)="openAddLibraryModal()" [disabled]="activeLibraryStaffRole === 'Assistant Librarian'" class="px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-black text-xs flex items-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50">
                     <lucide-icon [name]="'plus'" class="w-3.5 h-3.5"></lucide-icon>
                     <span>+ Catalog New Title</span>
@@ -8024,6 +8057,10 @@
                         </td>
                         <td class="px-4 py-3 text-right">
                           <div class="flex items-center justify-end gap-1.5">
+                            <button (click)="printLibraryBookStickers([bk])" class="px-2 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-[11px] transition-all cursor-pointer inline-flex items-center gap-1" title="Print Barcode Sticker for Book">
+                              <mat-icon class="!text-[13px] !w-3.5 !h-3.5">qr_code_2</mat-icon>
+                              <span>Sticker</span>
+                            </button>
                             <button (click)="openOwnerRecordCrudModal('library_book', 'edit', bk)" class="p-1 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 transition-all cursor-pointer" title="Edit Book">
                               <lucide-icon [name]="'pencil'" class="w-3.5 h-3.5 text-indigo-600"></lucide-icon>
                             </button>
@@ -9374,7 +9411,7 @@
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 font-semibold">
-                  <tr class="hover:bg-slate-50/70">
+                  <tr data-row-key="principals" class="hover:bg-slate-50/70">
                     <td class="px-4 py-3 font-black text-slate-900">Principals &amp; Executive Heads</td>
                     <td class="px-4 py-3 font-mono">{{ campusDirectorySummary.principals.total }}</td>
                     <td class="px-4 py-3 text-emerald-700">{{ campusDirectorySummary.principals.present }} On Duty</td>
@@ -9383,7 +9420,7 @@
                       <button (click)="openRegistryDirectory('principals')" class="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold text-[10px] cursor-pointer">Open Table</button>
                     </td>
                   </tr>
-                  <tr class="hover:bg-slate-50/70">
+                  <tr data-row-key="accountants" class="hover:bg-slate-50/70">
                     <td class="px-4 py-3 font-black text-slate-900">Accountants &amp; Fee Desk Clerks</td>
                     <td class="px-4 py-3 font-mono">{{ campusDirectorySummary.accountants.total }}</td>
                     <td class="px-4 py-3 text-emerald-700">{{ campusDirectorySummary.accountants.present }} On Desk</td>
@@ -9392,7 +9429,7 @@
                       <button (click)="openRegistryDirectory('accountants')" class="px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-800 font-bold text-[10px] cursor-pointer">Open Table</button>
                     </td>
                   </tr>
-                  <tr class="hover:bg-slate-50/70">
+                  <tr data-row-key="teachers" class="hover:bg-slate-50/70">
                     <td class="px-4 py-3 font-black text-slate-900">Teaching Faculty</td>
                     <td class="px-4 py-3 font-mono">{{ campusDirectorySummary.teachers.total }}</td>
                     <td class="px-4 py-3 text-emerald-700">{{ campusDirectorySummary.teachers.present }} Active</td>
@@ -9401,7 +9438,7 @@
                       <button (click)="openRegistryDirectory('teachers')" class="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-800 font-bold text-[10px] cursor-pointer">Open Table</button>
                     </td>
                   </tr>
-                  <tr class="hover:bg-slate-50/70">
+                  <tr data-row-key="support_staff" class="hover:bg-slate-50/70">
                     <td class="px-4 py-3 font-black text-slate-900">Support &amp; Admin Staff</td>
                     <td class="px-4 py-3 font-mono">{{ campusDirectorySummary.supportStaff.total }}</td>
                     <td class="px-4 py-3 text-emerald-700">{{ campusDirectorySummary.supportStaff.present }} Present</td>
@@ -9410,7 +9447,7 @@
                       <button (click)="openRegistryDirectory('support_staff')" class="px-2.5 py-1 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-800 font-bold text-[10px] cursor-pointer">Open Table</button>
                     </td>
                   </tr>
-                  <tr class="hover:bg-slate-50/70">
+                  <tr data-row-key="students" class="hover:bg-slate-50/70">
                     <td class="px-4 py-3 font-black text-slate-900">Enrolled Students</td>
                     <td class="px-4 py-3 font-mono">{{ campusDirectorySummary.students.total }}</td>
                     <td class="px-4 py-3 text-emerald-700">{{ campusDirectorySummary.students.present }} Present</td>
@@ -9419,7 +9456,7 @@
                       <button (click)="openRegistryDirectory('students')" class="px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-800 font-bold text-[10px] cursor-pointer">Open Table</button>
                     </td>
                   </tr>
-                  <tr class="hover:bg-slate-50/70">
+                  <tr data-row-key="parents" class="hover:bg-slate-50/70">
                     <td class="px-4 py-3 font-black text-slate-900">Parents &amp; Guardian Families</td>
                     <td class="px-4 py-3 font-mono">{{ campusDirectorySummary.parents.total }}</td>
                     <td class="px-4 py-3 text-emerald-700">{{ campusDirectorySummary.parents.clear }} All Clear</td>
@@ -9462,7 +9499,7 @@
                   </thead>
                   <tbody class="divide-y divide-slate-100 bg-white">
                     @for (row of branchComparisonRows; track row.branch.id) {
-                      <tr class="hover:bg-slate-50/70">
+                      <tr [attr.data-row-key]="row.branch.id" class="hover:bg-slate-50/70">
                         <td class="px-3.5 py-2.5 font-bold text-slate-900">{{ row.branch.name }}</td>
                         <td class="px-3 py-2.5 font-mono">{{ row.studentsCount }}</td>
                         <td class="px-3 py-2.5 font-mono text-emerald-700 font-bold">PKR {{ formatCurrency(row.revenue) }}</td>
@@ -9508,7 +9545,7 @@
                   </thead>
                   <tbody class="divide-y divide-slate-100 bg-white">
                     @for (wRow of wingComparisonRows; track wRow.wing.id) {
-                      <tr class="hover:bg-slate-50/70">
+                      <tr [attr.data-row-key]="wRow.wing.id" class="hover:bg-slate-50/70">
                         <td class="px-3.5 py-2.5">
                           <div class="font-bold text-slate-900">{{ wRow.wing.name }}</div>
                           <div class="text-[10px] text-slate-500">{{ wRow.branchName }} · {{ wRow.wing.gradeRange }}</div>
@@ -11603,10 +11640,40 @@
               <h2 class="text-xl font-black text-slate-900 tracking-tight">Campus Assets &amp; Inventory Register</h2>
               <p class="text-xs text-slate-500 font-medium mt-0.5">Track IT hardware, laboratory instruments, classroom furniture, custodians, valuation, and repair status.</p>
             </div>
-            <button (click)="openAddAssetModal()" class="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs cursor-pointer shadow-md flex items-center gap-1.5 shrink-0">
-              <lucide-icon [name]="'layers'" class="w-4 h-4"></lucide-icon>
-              <span>+ Add Campus Asset</span>
-            </button>
+            <div class="flex items-center gap-2 flex-wrap">
+              <div class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700">
+                <label class="flex items-center gap-1.5 cursor-pointer select-none">
+                  <input type="checkbox" [(ngModel)]="stockAutoPrintSlip" class="rounded accent-indigo-600 cursor-pointer" />
+                  <span class="text-[11px] font-black text-slate-800">Auto-Print IN/OUT</span>
+                </label>
+                <button type="button" (click)="stockPrintFormat = 'thermal'"
+                  [class]="stockPrintFormat === 'thermal' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                  class="px-2 py-0.5 rounded-md text-[10px] font-black cursor-pointer transition-all">
+                  Thermal
+                </button>
+                <button type="button" (click)="stockPrintFormat = 'a4'"
+                  [class]="stockPrintFormat === 'a4' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                  class="px-2 py-0.5 rounded-md text-[10px] font-black cursor-pointer transition-all">
+                  A4
+                </button>
+              </div>
+              <button (click)="openAssetScannerModal('out')" class="px-3.5 py-2.5 rounded-xl bg-[#1D8EFF] hover:bg-[#0D7CEB] text-white font-black text-xs cursor-pointer shadow-md flex items-center gap-1.5 shrink-0">
+                <mat-icon class="!text-[16px] !w-4 !h-4">qr_code_scanner</mat-icon>
+                <span>Scan Stock IN / OUT</span>
+              </button>
+              <button (click)="printAssetBarcodeStickers()" class="px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 font-black text-xs cursor-pointer shadow-xs flex items-center gap-1.5 shrink-0">
+                <mat-icon class="!text-[16px] !w-4 !h-4 text-indigo-600">qr_code_2</mat-icon>
+                <span>Print Stickers</span>
+              </button>
+              <button (click)="printStockInOutLedgerReport()" class="px-3.5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs cursor-pointer shadow-xs flex items-center gap-1.5 shrink-0">
+                <mat-icon class="!text-[16px] !w-4 !h-4">print</mat-icon>
+                <span>Print IN/OUT Ledger</span>
+              </button>
+              <button (click)="openAddAssetModal()" class="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs cursor-pointer shadow-md flex items-center gap-1.5 shrink-0">
+                <lucide-icon [name]="'layers'" class="w-4 h-4"></lucide-icon>
+                <span>+ Add Campus Asset</span>
+              </button>
+            </div>
           </div>
 
           <!-- KPI Summary Strip -->
@@ -11685,8 +11752,18 @@
                       </td>
                       <td class="px-4 py-3 font-mono text-[11px] text-slate-500">{{ a.lastServiced }}</td>
                       <td class="px-4 py-3 text-right">
-                        <div class="flex items-center justify-end gap-1.5">
-                          <button (click)="toggleAssetRepairStatus(a)" class="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold text-[10px] cursor-pointer">
+                        <div class="flex items-center justify-end gap-1.5 flex-wrap">
+                          <button (click)="adjustAssetStock(a, 'IN', 1, 'Quick Stock IN', 'quick')" title="Receive +1 Unit (Stock IN & Print)" class="px-2 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-black text-[10px] cursor-pointer">
+                            + IN
+                          </button>
+                          <button (click)="adjustAssetStock(a, 'OUT', 1, 'Quick Stock OUT', 'quick')" title="Issue -1 Unit (Stock OUT & Print)" class="px-2 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 font-black text-[10px] cursor-pointer">
+                            - OUT
+                          </button>
+                          <button (click)="printAssetBarcodeStickers([a])" title="Print Asset Barcode Sticker" class="px-2 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-[10px] cursor-pointer inline-flex items-center gap-0.5">
+                            <mat-icon class="!text-[12px] !w-3 !h-3">qr_code_2</mat-icon>
+                            <span>Sticker</span>
+                          </button>
+                          <button (click)="toggleAssetRepairStatus(a)" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[10px] cursor-pointer">
                             {{ a.condition === 'Needs Repair' ? 'Mark Good' : 'Flag Repair' }}
                           </button>
                           <button (click)="deleteAsset(a)" title="Delete Asset" class="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 cursor-pointer">
@@ -11698,6 +11775,80 @@
                   } @empty {
                     <tr>
                       <td colspan="8" class="px-4 py-8 text-center text-slate-400 font-bold">No assets found matching your criteria.</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Stock IN / OUT Movement & Printer Slip Ledger -->
+          <div class="apple-card scs-surface-3d rounded-2xl overflow-hidden">
+            <div class="px-5 py-4 border-b border-slate-200/80 bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <h3 class="text-sm font-black text-slate-900">Stock IN / OUT Movement &amp; Printer Slip Ledger</h3>
+                <p class="text-[11px] text-slate-500 font-medium">Real-time scan &amp; counter movements with instant Thermal 80mm / A4 slip printing.</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <button (click)="openAssetScannerModal('in')" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[11px] cursor-pointer inline-flex items-center gap-1">
+                  <mat-icon class="!text-[14px] !w-3.5 !h-3.5">qr_code_scanner</mat-icon>
+                  <span>Scan Stock IN</span>
+                </button>
+                <button (click)="openAssetScannerModal('out')" class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-[11px] cursor-pointer inline-flex items-center gap-1">
+                  <mat-icon class="!text-[14px] !w-3.5 !h-3.5">qr_code_scanner</mat-icon>
+                  <span>Scan Stock OUT</span>
+                </button>
+              </div>
+            </div>
+            <div data-scs-table-scroll="1" class="overflow-x-auto custom-scrollbar">
+              <table appSchoolTable="owner_stock_movements" tableTitle="Stock IN / OUT Movement Ledger" class="w-full text-left border-collapse text-xs tabular-nums">
+                <thead class="bg-slate-50 text-slate-600 uppercase font-black tracking-wider text-[10px] border-b border-slate-200">
+                  <tr>
+                    <th class="px-4 py-3">Voucher Ref</th>
+                    <th class="px-4 py-3">Asset &amp; Code</th>
+                    <th class="px-4 py-3">Direction</th>
+                    <th class="px-4 py-3">Qty &amp; Stock Balance</th>
+                    <th class="px-4 py-3 text-right">Total Value</th>
+                    <th class="px-4 py-3">Handled By &amp; Time</th>
+                    <th class="px-4 py-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 bg-white font-medium">
+                  @for (log of stockInOutLogs.slice(0, 20); track log.id) {
+                    <tr [attr.data-row-key]="log.id" class="hover:bg-slate-50/70 transition-colors">
+                      <td class="px-4 py-3 font-mono font-black text-slate-900">{{ log.refNo }}</td>
+                      <td class="px-4 py-3">
+                        <div class="font-black text-slate-900">{{ log.assetName }}</div>
+                        <div class="text-[10px] font-mono text-indigo-700 font-bold">{{ log.assetCode }} · {{ log.location }}</div>
+                      </td>
+                      <td class="px-4 py-3">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase"
+                          [class]="log.direction === 'IN' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-amber-100 text-amber-800 border border-amber-200'">
+                          {{ log.direction === 'IN' ? '+ STOCK IN' : '- STOCK OUT' }}
+                        </span>
+                      </td>
+                      <td class="px-4 py-3 font-mono font-bold text-slate-800">
+                        <span [class]="log.direction === 'IN' ? 'text-emerald-700' : 'text-amber-700'">{{ log.direction === 'IN' ? '+' : '-' }}{{ log.qtyChange }}</span>
+                        <span class="text-slate-400 mx-1">({{ log.previousQty }} &rarr; {{ log.newQty }})</span>
+                      </td>
+                      <td class="px-4 py-3 text-right font-mono font-bold text-slate-800">PKR {{ formatCurrency(log.totalValue) }}</td>
+                      <td class="px-4 py-3">
+                        <div class="font-bold text-slate-800">{{ log.handledBy }}</div>
+                        <div class="text-[10px] text-slate-400">{{ log.timestamp }}</div>
+                      </td>
+                      <td class="px-4 py-3 text-right whitespace-nowrap space-x-1">
+                        <button (click)="printStockInOutReceipt(log, 'thermal')" class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-bold text-[10px] cursor-pointer inline-flex items-center gap-1">
+                          <mat-icon class="!text-[12px] !w-3 !h-3">print</mat-icon>
+                          <span>Thermal</span>
+                        </button>
+                        <button (click)="printStockInOutReceipt(log, 'a4')" class="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-[10px] cursor-pointer">
+                          A4
+                        </button>
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr>
+                      <td colspan="7" class="px-4 py-6 text-center text-slate-400 font-bold">No Stock IN/OUT movements recorded yet.</td>
                     </tr>
                   }
                 </tbody>
@@ -11719,48 +11870,48 @@
     <main class="max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 pt-6 space-y-6">
       
       <!-- Principal 3D Executive Hero Card -->
-      <div class="rounded-[28px] p-5 sm:p-6 border border-white/80 shadow-[0_20px_50px_-12px_rgba(16,185,129,0.18),0_8px_20px_-6px_rgba(0,0,0,0.06),inset_0_1px_2px_rgba(255,255,255,0.95)] bg-gradient-to-br from-white/95 via-emerald-50/40 to-slate-50/90 backdrop-blur-2xl relative overflow-hidden flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all duration-300 group max-w-full min-w-0 pr-14 sm:pr-16">
+      <div class="rounded-2xl sm:rounded-[28px] p-4 sm:p-5 lg:p-6 border border-white/80 shadow-[0_20px_50px_-12px_rgba(16,185,129,0.18),0_8px_20px_-6px_rgba(0,0,0,0.06),inset_0_1px_2px_rgba(255,255,255,0.95)] bg-gradient-to-br from-white/95 via-emerald-50/40 to-slate-50/90 backdrop-blur-2xl relative overflow-hidden flex flex-col xl:flex-row xl:items-center justify-between gap-4 sm:gap-5 transition-all duration-300 group max-w-full min-w-0">
         <div class="absolute inset-0 bg-[radial-gradient(#8080800c_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none"></div>
         <div class="absolute -right-16 -top-16 w-80 h-80 bg-gradient-to-br from-emerald-200/40 via-teal-100/30 to-transparent rounded-full blur-3xl pointer-events-none group-hover:scale-110 transition-transform duration-700"></div>
         <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent"></div>
 
-        <div class="flex items-center gap-4 z-10">
-          <div class="relative">
-            <img [src]="safeAvatar(principalPersona.image, principalPersona.name)" alt="Principal Persona" referrerpolicy="no-referrer" class="w-16 h-16 sm:w-18 sm:h-18 rounded-2xl object-cover border-2 border-indigo-200 shadow-md">
+        <div class="flex items-start sm:items-center gap-3.5 sm:gap-4 min-w-0 flex-1 w-full z-10">
+          <div class="relative shrink-0">
+            <img [src]="safeAvatar(principalPersona.image, principalPersona.name)" alt="Principal Persona" referrerpolicy="no-referrer" class="w-14 h-14 sm:w-18 sm:h-18 rounded-2xl object-cover border-2 border-indigo-200 shadow-md">
             <span class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-2 border-white flex items-center justify-center text-white text-[9px] font-black" title="On-Duty Principal">✓</span>
           </div>
-          <div>
+          <div class="min-w-0 flex-1">
             <div class="flex items-center gap-2 flex-wrap">
               <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-600 text-white shadow-xs">
                 Executive Directorate
               </span>
               <span class="text-xs text-slate-500 font-mono font-bold">ID: {{ principalPersona.office || 'DIR-AHA-001' }}</span>
             </div>
-            <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight mt-1">
+            <h1 class="text-lg sm:text-xl lg:text-2xl font-black text-slate-900 tracking-tight mt-1 break-words">
               {{ principalPersona.name }}
             </h1>
-            <p class="text-xs font-bold text-indigo-700 mt-0.5">
+            <p class="text-[11px] sm:text-xs font-bold text-indigo-700 mt-0.5 break-words">
               {{ principalPersona.title }} · {{ principalPersona.qualification }}
             </p>
-            <p class="text-[11px] font-semibold text-slate-600 mt-0.5">
+            <p class="text-[11px] font-semibold text-slate-600 mt-0.5 break-words">
               Campus Branch &amp; Wing Scope: <strong class="text-slate-900">{{ activePersonaBranchLabel }}</strong>
             </p>
           </div>
         </div>
 
-        <div class="flex items-center gap-2.5 z-10 flex-wrap">
+        <div class="grid grid-cols-1 sm:flex sm:flex-wrap items-stretch sm:items-center gap-2.5 w-full xl:w-auto xl:shrink-0 xl:justify-end z-10">
           @if (isOwnerSession) {
-            <button (click)="exitToOwner()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 hover:from-emerald-100 hover:to-teal-100 text-emerald-900 border border-emerald-200 font-black text-xs cursor-pointer shadow-md flex items-center gap-1.5 active:scale-95 transition-all">
-              <lucide-icon [name]="'arrow-left'" class="w-4 h-4"></lucide-icon>
+            <button (click)="exitToOwner()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 hover:from-emerald-100 hover:to-teal-100 text-emerald-900 border border-emerald-200 font-black text-xs cursor-pointer shadow-md flex items-center justify-center gap-1.5 active:scale-95 transition-all whitespace-nowrap">
+              <lucide-icon [name]="'arrow-left'" class="w-4 h-4 shrink-0"></lucide-icon>
               <span>Return to School Owner ERP</span>
             </button>
           }
-          <button (click)="openPasskeyProfileModal()" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 font-extrabold text-xs cursor-pointer shadow-xs flex items-center gap-1.5 active:scale-95 transition-all">
-            <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-indigo-600">fingerprint</mat-icon>
+          <button (click)="openPasskeyProfileModal()" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 font-extrabold text-xs cursor-pointer shadow-xs flex items-center justify-center gap-1.5 active:scale-95 transition-all whitespace-nowrap">
+            <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-indigo-600 shrink-0">fingerprint</mat-icon>
             <span>Passkey Security</span>
           </button>
-          <button (click)="syncToCloud(true)" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs cursor-pointer shadow-md flex items-center gap-1.5 active:scale-95 transition-all">
-            <lucide-icon [name]="'cloud'" class="w-4 h-4"></lucide-icon>
+          <button (click)="syncToCloud(true)" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs cursor-pointer shadow-md flex items-center justify-center gap-1.5 active:scale-95 transition-all whitespace-nowrap">
+            <lucide-icon [name]="'cloud'" class="w-4 h-4 shrink-0"></lucide-icon>
             <span>Cloud Sync State</span>
           </button>
         </div>
@@ -15254,7 +15405,7 @@
                   </thead>
                   <tbody class="divide-y divide-slate-100 bg-white">
                     @for (tx of pendingVerificationGatewayTransactions; track tx.id) {
-                      <tr class="hover:bg-slate-50/70">
+                      <tr [attr.data-row-key]="tx.txnRef || tx.id" class="hover:bg-slate-50/70">
                         <td class="px-3 py-2.5">
                           <span class="font-mono font-bold text-slate-800 block">{{ tx.txnRef }} · {{ tx.challanNo }}</span>
                           <span class="text-[10px] text-slate-400">{{ formatTxnDate(tx.createdAt) }}</span>
@@ -15822,14 +15973,14 @@
     <main class="max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 pt-6 space-y-6">
       
       <!-- Teacher 3D iOS / hi-OS Hero Card -->
-      <div class="rounded-[28px] p-5 sm:p-6 border border-white/80 shadow-[0_20px_50px_-12px_rgba(16,185,129,0.18),0_8px_20px_-6px_rgba(0,0,0,0.06),inset_0_1px_2px_rgba(255,255,255,0.95)] bg-gradient-to-br from-white/95 via-emerald-50/40 to-slate-50/90 backdrop-blur-2xl relative overflow-hidden flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all duration-300 group max-w-full min-w-0 pr-14 sm:pr-16">
+      <div class="rounded-2xl sm:rounded-[28px] p-4 sm:p-5 lg:p-6 border border-white/80 shadow-[0_20px_50px_-12px_rgba(16,185,129,0.18),0_8px_20px_-6px_rgba(0,0,0,0.06),inset_0_1px_2px_rgba(255,255,255,0.95)] bg-gradient-to-br from-white/95 via-emerald-50/40 to-slate-50/90 backdrop-blur-2xl relative overflow-hidden flex flex-col xl:flex-row xl:items-center justify-between gap-4 sm:gap-5 transition-all duration-300 group max-w-full min-w-0">
         <!-- 3D Architectural Soft Ambient Glow & Specular Lighting -->
         <div class="absolute inset-0 bg-[radial-gradient(#8080800c_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none"></div>
         <div class="absolute -right-16 -top-16 w-80 h-80 bg-gradient-to-br from-emerald-200/40 via-teal-100/30 to-transparent rounded-full blur-3xl pointer-events-none group-hover:scale-110 transition-transform duration-700"></div>
         <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent"></div>
 
         <!-- Notification Bell: Positioned in Top-Right Corner -->
-        <div class="absolute top-4 right-4 sm:top-5 sm:right-6 z-30">
+        <div class="absolute top-3.5 right-3.5 sm:top-5 sm:right-6 z-30">
           <button (click)="toggleNotificationsDropdown()"
                   title="Faculty Notifications Center"
                   class="relative flex items-center justify-center p-2.5 rounded-2xl bg-white/90 hover:bg-white text-slate-800 backdrop-blur-md border border-white/80 shadow-[0_4px_12px_rgba(0,0,0,0.08),inset_0_1px_1px_rgba(255,255,255,0.9)] cursor-pointer active:scale-95 transition-all group">
@@ -15878,51 +16029,51 @@
         </div>
 
         <!-- Left Branding & Identity -->
-        <div class="flex items-center gap-4 min-w-0 flex-1 relative z-10">
-          <img [src]="safeAvatar(currentTeacherProfile.image, currentTeacherProfile.name)" [alt]="currentTeacherProfile.name" referrerpolicy="no-referrer" class="w-12 h-12 sm:w-14 sm:h-14 rounded-[20px] object-cover border-2 border-white shadow-[0_10px_22px_-4px_rgba(16,185,129,0.35)] ring-4 ring-emerald-50/80 shrink-0">
+        <div class="flex items-start sm:items-center gap-3.5 sm:gap-4 min-w-0 flex-1 w-full pr-12 sm:pr-14 xl:pr-0 relative z-10">
+          <img [src]="safeAvatar(currentTeacherProfile.image, currentTeacherProfile.name)" [alt]="currentTeacherProfile.name" referrerpolicy="no-referrer" class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl sm:rounded-[20px] object-cover border-2 border-white shadow-[0_10px_22px_-4px_rgba(16,185,129,0.35)] ring-4 ring-emerald-50/80 shrink-0">
           <div class="min-w-0 flex-1 space-y-1">
             <div class="flex items-center gap-2 flex-wrap">
-              <h2 class="text-base sm:text-lg md:text-xl font-black text-slate-900 leading-snug tracking-tight truncate">{{ currentTeacherProfile.name }}</h2>
+              <h2 class="text-base sm:text-lg md:text-xl font-black text-slate-900 leading-snug tracking-tight break-words">{{ currentTeacherProfile.name }}</h2>
               <span class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-700 border border-emerald-300/60 shadow-[inset_0_1px_1px_rgba(255,255,255,0.8)] backdrop-blur-md shrink-0">
                 Faculty Active
               </span>
             </div>
-            <p class="text-[11px] sm:text-xs text-slate-600 font-medium leading-tight">
+            <p class="text-[11px] sm:text-xs text-slate-600 font-medium leading-snug break-words">
               <span class="text-emerald-700 font-bold">{{ currentTeacherProfile.subject }}</span> • Section In-Charge: <strong>{{ currentTeacherProfile.assignedGrade }}</strong>
             </p>
-            <p class="text-[11px] font-semibold text-slate-500 leading-tight">
+            <p class="text-[11px] font-semibold text-slate-500 leading-snug break-words">
               Campus &amp; Wing: <strong class="text-slate-800">{{ activePersonaBranchLabel }}</strong>
             </p>
           </div>
         </div>
 
         <!-- Right Telemetry Highlights & Actions -->
-        <div class="flex items-center gap-2.5 shrink-0 flex-wrap sm:flex-nowrap w-full sm:w-auto relative z-10">
-          <div class="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-white/90 backdrop-blur-md border border-white/80 shadow-[0_4px_12px_rgba(0,0,0,0.03),inset_0_1px_1px_rgba(255,255,255,0.9)] text-[11px] sm:text-xs font-bold text-slate-700 whitespace-nowrap">
+        <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-stretch sm:items-center gap-2 sm:gap-2.5 w-full xl:w-auto xl:shrink-0 xl:justify-end xl:pr-14 relative z-10">
+          <div class="flex items-center justify-center sm:justify-start gap-2 px-3 sm:px-3.5 py-2 rounded-xl sm:rounded-2xl bg-white/90 backdrop-blur-md border border-white/80 shadow-[0_4px_12px_rgba(0,0,0,0.03),inset_0_1px_1px_rgba(255,255,255,0.9)] text-[11px] sm:text-xs font-bold text-slate-700 whitespace-nowrap min-w-0">
             <lucide-icon [name]="'clock'" class="w-3.5 h-3.5 text-emerald-600 shrink-0"></lucide-icon>
-            <span><strong class="text-slate-900 font-black">{{ teacherAllTodayPeriodsCount }} Periods</strong> ({{ teacherHeldPeriodsCount }} Held)</span>
+            <span class="truncate"><strong class="text-slate-900 font-black">{{ teacherAllTodayPeriodsCount }} Periods</strong> ({{ teacherHeldPeriodsCount }} Held)</span>
           </div>
-          <div class="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-emerald-500/10 backdrop-blur-md border border-emerald-200/80 shadow-[0_4px_12px_rgba(16,185,129,0.06),inset_0_1px_1px_rgba(255,255,255,0.9)] text-[11px] sm:text-xs font-bold text-emerald-800 whitespace-nowrap">
+          <div class="flex items-center justify-center sm:justify-start gap-2 px-3 sm:px-3.5 py-2 rounded-xl sm:rounded-2xl bg-emerald-500/10 backdrop-blur-md border border-emerald-200/80 shadow-[0_4px_12px_rgba(16,185,129,0.06),inset_0_1px_1px_rgba(255,255,255,0.9)] text-[11px] sm:text-xs font-bold text-emerald-800 whitespace-nowrap min-w-0">
             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
-            <span>Roll Call <strong class="font-black">{{ teacherRosterPresentCounts.rate }} Present</strong></span>
+            <span class="truncate">Roll Call <strong class="font-black">{{ teacherRosterPresentCounts.rate }} Present</strong></span>
           </div>
 
           <button (click)="openPasskeyProfileModal()"
-            class="flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl bg-white/90 hover:bg-white text-slate-800 border border-slate-200 font-black text-[11px] sm:text-xs cursor-pointer shadow-xs transition-all active:scale-95 whitespace-nowrap">
-            <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-indigo-600">fingerprint</mat-icon>
+            class="flex items-center justify-center gap-1.5 px-3 sm:px-3.5 py-2 rounded-xl sm:rounded-2xl bg-white/90 hover:bg-white text-slate-800 border border-slate-200 font-black text-[11px] sm:text-xs cursor-pointer shadow-xs transition-all active:scale-95 whitespace-nowrap">
+            <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-indigo-600 shrink-0">fingerprint</mat-icon>
             <span>Passkey</span>
           </button>
 
           <button (click)="openProfileEditModal('teacher')" 
-            class="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-b from-emerald-600 via-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-black text-[11px] sm:text-xs cursor-pointer shadow-[0_10px_20px_-5px_rgba(16,185,129,0.4),inset_0_1px_1px_rgba(255,255,255,0.4)] border border-emerald-400/30 transition-all active:scale-95 whitespace-nowrap">
-            <lucide-icon [name]="'pencil'" class="w-3.5 h-3.5"></lucide-icon>
+            class="flex items-center justify-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl sm:rounded-2xl bg-gradient-to-b from-emerald-600 via-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-black text-[11px] sm:text-xs cursor-pointer shadow-[0_10px_20px_-5px_rgba(16,185,129,0.4),inset_0_1px_1px_rgba(255,255,255,0.4)] border border-emerald-400/30 transition-all active:scale-95 whitespace-nowrap">
+            <lucide-icon [name]="'pencil'" class="w-3.5 h-3.5 shrink-0"></lucide-icon>
             <span>Edit Profile</span>
           </button>
 
           @if (isOwnerSession) {
             <button (click)="exitToOwner()" 
-              class="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-black text-[11px] sm:text-xs cursor-pointer shadow-md shadow-amber-500/25 border border-amber-300/40 transition-all active:scale-95 whitespace-nowrap">
-              <lucide-icon [name]="'arrow-left'" class="w-3.5 h-3.5"></lucide-icon>
+              class="col-span-2 sm:col-auto flex items-center justify-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl sm:rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-black text-[11px] sm:text-xs cursor-pointer shadow-md shadow-amber-500/25 border border-amber-300/40 transition-all active:scale-95 whitespace-nowrap">
+              <lucide-icon [name]="'arrow-left'" class="w-3.5 h-3.5 shrink-0"></lucide-icon>
               <span>Exit to School Owner</span>
             </button>
           }
@@ -18047,14 +18198,14 @@
     <main class="max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 pt-6 space-y-6">
 
       <!-- Student 3D iOS / hi-OS Hero Card -->
-      <div class="rounded-[28px] p-5 sm:p-6 border border-white/80 shadow-[0_20px_50px_-12px_rgba(16,185,129,0.18),0_8px_20px_-6px_rgba(0,0,0,0.06),inset_0_1px_2px_rgba(255,255,255,0.95)] bg-gradient-to-br from-white/95 via-emerald-50/40 to-slate-50/90 backdrop-blur-2xl relative overflow-hidden flex items-center justify-between flex-wrap gap-5 transition-all duration-300 group pr-14 sm:pr-16">
+      <div class="rounded-2xl sm:rounded-[28px] p-4 sm:p-5 lg:p-6 border border-white/80 shadow-[0_20px_50px_-12px_rgba(16,185,129,0.18),0_8px_20px_-6px_rgba(0,0,0,0.06),inset_0_1px_2px_rgba(255,255,255,0.95)] bg-gradient-to-br from-white/95 via-emerald-50/40 to-slate-50/90 backdrop-blur-2xl relative overflow-hidden flex flex-col xl:flex-row xl:items-center justify-between gap-4 sm:gap-5 transition-all duration-300 group max-w-full min-w-0">
         <!-- 3D Architectural Soft Ambient Glow & Specular Lighting -->
         <div class="absolute inset-0 bg-[radial-gradient(#8080800c_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none"></div>
         <div class="absolute -right-16 -top-16 w-80 h-80 bg-gradient-to-br from-emerald-200/40 via-teal-100/30 to-transparent rounded-full blur-3xl pointer-events-none group-hover:scale-110 transition-transform duration-700"></div>
         <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent"></div>
 
         <!-- Notification Bell: Positioned in Top-Right Corner -->
-        <div class="absolute top-4 right-4 sm:top-5 sm:right-6 z-30">
+        <div class="absolute top-3.5 right-3.5 sm:top-5 sm:right-6 z-30">
           <button (click)="toggleNotificationsDropdown()"
                   title="Student Notifications"
                   class="relative flex items-center justify-center p-2.5 rounded-2xl bg-white/90 hover:bg-white text-slate-800 backdrop-blur-md border border-white/80 shadow-[0_4px_12px_rgba(0,0,0,0.08),inset_0_1px_1px_rgba(255,255,255,0.9)] cursor-pointer active:scale-95 transition-all group">
@@ -18103,40 +18254,40 @@
           }
         </div>
 
-        <div class="flex items-center gap-4 min-w-0 relative z-10">
-          <img [src]="safeAvatar(currentStudentProfile.image, currentStudentProfile.name)" [alt]="currentStudentProfile.name" referrerpolicy="no-referrer" class="w-14 h-14 sm:w-16 sm:h-16 rounded-[22px] object-cover border-2 border-white shadow-[0_10px_22px_-4px_rgba(14,165,233,0.35)] ring-4 ring-sky-50/80 shrink-0">
-          <div class="min-w-0">
+        <div class="flex items-start sm:items-center gap-3.5 sm:gap-4 min-w-0 flex-1 w-full pr-12 sm:pr-14 xl:pr-0 relative z-10">
+          <img [src]="safeAvatar(currentStudentProfile.image, currentStudentProfile.name)" [alt]="currentStudentProfile.name" referrerpolicy="no-referrer" class="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl sm:rounded-[22px] object-cover border-2 border-white shadow-[0_10px_22px_-4px_rgba(14,165,233,0.35)] ring-4 ring-sky-50/80 shrink-0">
+          <div class="min-w-0 flex-1">
             <div class="flex items-center gap-2 flex-wrap">
-              <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-sky-500/10 text-sky-700 border border-sky-300/60 shadow-[inset_0_1px_1px_rgba(255,255,255,0.8)] backdrop-blur-md">Student Academic Portal</span>
+              <span class="px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-sky-500/10 text-sky-700 border border-sky-300/60 shadow-[inset_0_1px_1px_rgba(255,255,255,0.8)] backdrop-blur-md">Student Academic Portal</span>
               <span class="text-xs text-slate-500 font-mono font-semibold">Roll # {{ currentStudentProfile.rollNo }}</span>
             </div>
-            <h2 class="text-lg sm:text-xl font-black text-slate-900 mt-1 truncate">{{ currentStudentProfile.name }}</h2>
-            <p class="text-xs text-slate-600 font-medium truncate">Class: <strong class="text-slate-800">{{ currentStudentProfile.grade }} ({{ currentStudentProfile.section || 'A' }})</strong> • ID: <strong class="text-slate-800">{{ currentStudentProfile.id }}</strong></p>
-            <p class="text-[11px] font-semibold text-slate-500 truncate mt-0.5">Campus &amp; Wing: <strong class="text-slate-800">{{ activePersonaBranchLabel }}</strong></p>
+            <h2 class="text-base sm:text-lg lg:text-xl font-black text-slate-900 mt-1 break-words">{{ currentStudentProfile.name }}</h2>
+            <p class="text-[11px] sm:text-xs text-slate-600 font-medium break-words">Class: <strong class="text-slate-800">{{ currentStudentProfile.grade }} ({{ currentStudentProfile.section || 'A' }})</strong> • ID: <strong class="text-slate-800">{{ currentStudentProfile.id }}</strong></p>
+            <p class="text-[11px] font-semibold text-slate-500 break-words mt-0.5">Campus &amp; Wing: <strong class="text-slate-800">{{ activePersonaBranchLabel }}</strong></p>
           </div>
         </div>
 
         <!-- Student Actions -->
-        <div class="flex items-center gap-2 sm:gap-2.5 max-w-full overflow-x-auto custom-scrollbar pb-1 sm:pb-0 relative z-10">
+        <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-stretch sm:items-center gap-2 sm:gap-2.5 w-full xl:w-auto xl:shrink-0 xl:justify-end xl:pr-14 relative z-10">
           <button (click)="openIdCardModal()" 
-            class="px-4 py-2.5 rounded-2xl bg-white/80 hover:bg-white text-slate-800 font-black text-xs cursor-pointer flex items-center gap-2 border border-slate-200/90 shadow-[0_4px_12px_rgba(0,0,0,0.04),inset_0_1px_1px_rgba(255,255,255,0.9)] transition-all active:scale-95 shrink-0 whitespace-nowrap">
-            <lucide-icon [name]="'qr-code'" class="w-3.5 h-3.5 text-sky-600"></lucide-icon>
+            class="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl bg-white/80 hover:bg-white text-slate-800 font-black text-[11px] sm:text-xs cursor-pointer flex items-center justify-center gap-2 border border-slate-200/90 shadow-[0_4px_12px_rgba(0,0,0,0.04),inset_0_1px_1px_rgba(255,255,255,0.9)] transition-all active:scale-95 whitespace-nowrap">
+            <lucide-icon [name]="'qr-code'" class="w-3.5 h-3.5 text-sky-600 shrink-0"></lucide-icon>
             <span>View ID Card</span>
           </button>
           <button (click)="openAdmitCardModal()" 
-            class="px-4 py-2.5 rounded-2xl bg-white/80 hover:bg-white text-slate-800 font-black text-xs cursor-pointer flex items-center gap-2 border border-slate-200/90 shadow-[0_4px_12px_rgba(0,0,0,0.04),inset_0_1px_1px_rgba(255,255,255,0.9)] transition-all active:scale-95 shrink-0 whitespace-nowrap">
-            <lucide-icon [name]="'award'" class="w-3.5 h-3.5 text-amber-600"></lucide-icon>
+            class="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl bg-white/80 hover:bg-white text-slate-800 font-black text-[11px] sm:text-xs cursor-pointer flex items-center justify-center gap-2 border border-slate-200/90 shadow-[0_4px_12px_rgba(0,0,0,0.04),inset_0_1px_1px_rgba(255,255,255,0.9)] transition-all active:scale-95 whitespace-nowrap">
+            <lucide-icon [name]="'award'" class="w-3.5 h-3.5 text-amber-600 shrink-0"></lucide-icon>
             <span>Exam Roll Slip</span>
           </button>
           <button (click)="openPasskeyProfileModal()"
-            class="px-4 py-2.5 rounded-2xl bg-white/90 hover:bg-white text-slate-800 font-black text-xs cursor-pointer flex items-center gap-1.5 border border-slate-200/90 shadow-[0_4px_12px_rgba(0,0,0,0.04),inset_0_1px_1px_rgba(255,255,255,0.9)] transition-all active:scale-95 shrink-0 whitespace-nowrap">
-            <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-indigo-600">fingerprint</mat-icon>
+            class="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl bg-white/90 hover:bg-white text-slate-800 font-black text-[11px] sm:text-xs cursor-pointer flex items-center justify-center gap-1.5 border border-slate-200/90 shadow-[0_4px_12px_rgba(0,0,0,0.04),inset_0_1px_1px_rgba(255,255,255,0.9)] transition-all active:scale-95 whitespace-nowrap">
+            <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-indigo-600 shrink-0">fingerprint</mat-icon>
             <span>Passkey</span>
           </button>
           @if (isOwnerSession) {
             <button (click)="exitToOwner()" 
-              class="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-black text-xs cursor-pointer flex items-center gap-2 shadow-md shadow-amber-500/25 border border-amber-300/40 transition-all active:scale-95 shrink-0 whitespace-nowrap">
-              <lucide-icon [name]="'arrow-left'" class="w-3.5 h-3.5"></lucide-icon>
+              class="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-black text-[11px] sm:text-xs cursor-pointer flex items-center justify-center gap-2 shadow-md shadow-amber-500/25 border border-amber-300/40 transition-all active:scale-95 whitespace-nowrap">
+              <lucide-icon [name]="'arrow-left'" class="w-3.5 h-3.5 shrink-0"></lucide-icon>
               <span>Exit to School Owner</span>
             </button>
           }
@@ -18928,7 +19079,7 @@
                 </thead>
                 <tbody class="divide-y divide-slate-100 bg-white">
                   @for (tx of studentPortalPaymentTransactions; track tx.id) {
-                    <tr>
+                    <tr [attr.data-row-key]="tx.txnRef || tx.id">
                       <td class="px-3 py-2.5">
                         <span class="font-mono font-bold text-slate-800 block">{{ tx.txnRef }}</span>
                         <span class="text-[10px] text-slate-400">{{ formatTxnDate(tx.createdAt) }}</span>
@@ -19821,14 +19972,14 @@
     <main class="max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 pt-6 space-y-6">
 
       <!-- Parent 3D iOS / hi-OS Hero Card -->
-      <div class="rounded-[28px] p-5 sm:p-6 border border-white/80 shadow-[0_20px_50px_-12px_rgba(16,185,129,0.18),0_8px_20px_-6px_rgba(0,0,0,0.06),inset_0_1px_2px_rgba(255,255,255,0.95)] bg-gradient-to-br from-white/95 via-emerald-50/40 to-slate-50/90 backdrop-blur-2xl relative overflow-hidden flex items-center justify-between flex-wrap gap-5 transition-all duration-300 group pr-14 sm:pr-16">
+      <div class="rounded-2xl sm:rounded-[28px] p-4 sm:p-5 lg:p-6 border border-white/80 shadow-[0_20px_50px_-12px_rgba(16,185,129,0.18),0_8px_20px_-6px_rgba(0,0,0,0.06),inset_0_1px_2px_rgba(255,255,255,0.95)] bg-gradient-to-br from-white/95 via-emerald-50/40 to-slate-50/90 backdrop-blur-2xl relative overflow-hidden flex flex-col xl:flex-row xl:items-center justify-between gap-4 sm:gap-5 transition-all duration-300 group max-w-full min-w-0">
         <!-- 3D Architectural Soft Ambient Glow & Specular Lighting -->
         <div class="absolute inset-0 bg-[radial-gradient(#8080800c_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none"></div>
         <div class="absolute -right-16 -top-16 w-80 h-80 bg-gradient-to-br from-emerald-200/40 via-teal-100/30 to-transparent rounded-full blur-3xl pointer-events-none group-hover:scale-110 transition-transform duration-700"></div>
         <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent"></div>
 
         <!-- Notification Bell: Positioned in Top-Right Corner -->
-        <div class="absolute top-4 right-4 sm:top-5 sm:right-6 z-30">
+        <div class="absolute top-3.5 right-3.5 sm:top-5 sm:right-6 z-30">
           <button (click)="openCampusUpdatesDirectly()"
                   class="relative flex items-center justify-center p-2.5 rounded-2xl bg-white/90 hover:bg-white text-slate-800 backdrop-blur-md border border-white/80 shadow-[0_4px_12px_rgba(0,0,0,0.08),inset_0_1px_1px_rgba(255,255,255,0.9)] cursor-pointer active:scale-95 transition-all group"
                   title="Click to view latest circulars & updates">
@@ -19841,46 +19992,46 @@
           </button>
         </div>
 
-        <div class="flex items-center gap-4 min-w-0 relative z-10">
-          <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-[22px] bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800 text-white flex items-center justify-center font-black text-lg sm:text-xl shadow-[0_12px_28px_-6px_rgba(147,51,234,0.45),inset_0_2px_4px_rgba(255,255,255,0.4)] ring-4 ring-white/90 border border-white/50 shrink-0 transform group-hover:rotate-1 transition-transform duration-300">
+        <div class="flex items-start sm:items-center gap-3.5 sm:gap-4 min-w-0 flex-1 w-full pr-12 sm:pr-14 xl:pr-0 relative z-10">
+          <div class="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl sm:rounded-[22px] bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800 text-white flex items-center justify-center font-black text-base sm:text-xl shadow-[0_12px_28px_-6px_rgba(147,51,234,0.45),inset_0_2px_4px_rgba(255,255,255,0.4)] ring-4 ring-white/90 border border-white/50 shrink-0 transform group-hover:rotate-1 transition-transform duration-300">
             {{ currentGuardianProfile.initials }}
           </div>
-          <div class="min-w-0">
+          <div class="min-w-0 flex-1">
             <div class="flex items-center gap-2 flex-wrap">
-              <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-500/10 text-purple-700 border border-purple-300/60 shadow-[inset_0_1px_1px_rgba(255,255,255,0.8)] backdrop-blur-md">Connected Guardian Portal</span>
-              <span class="text-xs text-emerald-600 font-extrabold bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-300/60 shadow-[inset_0_1px_1px_rgba(255,255,255,0.8)]">CNIC Verified</span>
+              <span class="px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-500/10 text-purple-700 border border-purple-300/60 shadow-[inset_0_1px_1px_rgba(255,255,255,0.8)] backdrop-blur-md">Connected Guardian Portal</span>
+              <span class="text-[11px] sm:text-xs text-emerald-600 font-extrabold bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-300/60 shadow-[inset_0_1px_1px_rgba(255,255,255,0.8)]">CNIC Verified</span>
             </div>
-            <h2 class="text-lg sm:text-xl font-black text-slate-900 mt-1 truncate">{{ currentGuardianProfile.name }}</h2>
-            <p class="text-xs text-slate-600 font-medium truncate">Guardian Phone: <strong class="text-slate-800">{{ currentGuardianProfile.phone }}</strong> • {{ currentGuardianProfile.childrenCount }} {{ currentGuardianProfile.childrenCount === 1 ? 'Child' : 'Children' }} Enrolled</p>
-            <p class="text-[11px] font-semibold text-slate-500 truncate mt-0.5">Campus &amp; Wing: <strong class="text-slate-800">{{ activePersonaBranchLabel }}</strong></p>
+            <h2 class="text-base sm:text-lg lg:text-xl font-black text-slate-900 mt-1 break-words">{{ currentGuardianProfile.name }}</h2>
+            <p class="text-[11px] sm:text-xs text-slate-600 font-medium break-words">Guardian Phone: <strong class="text-slate-800">{{ currentGuardianProfile.phone }}</strong> • {{ currentGuardianProfile.childrenCount }} {{ currentGuardianProfile.childrenCount === 1 ? 'Child' : 'Children' }} Enrolled</p>
+            <p class="text-[11px] font-semibold text-slate-500 break-words mt-0.5">Campus &amp; Wing: <strong class="text-slate-800">{{ activePersonaBranchLabel }}</strong></p>
           </div>
         </div>
 
         <!-- Child Selector Pills & Actions for Parent -->
-        <div class="flex items-center gap-2 max-w-full overflow-x-auto custom-scrollbar pb-1 sm:pb-0 relative z-10">
-          <div class="flex items-center gap-1.5 p-1 bg-white/80 backdrop-blur-md rounded-2xl border border-slate-200/90 shadow-[inset_0_1px_1px_rgba(255,255,255,0.9)] shrink-0">
+        <div class="flex flex-wrap items-center gap-2 sm:gap-2.5 w-full xl:w-auto xl:justify-end xl:pr-14 relative z-10">
+          <div class="flex flex-wrap items-center gap-1.5 p-1 bg-white/80 backdrop-blur-md rounded-2xl border border-slate-200/90 shadow-[inset_0_1px_1px_rgba(255,255,255,0.9)] w-full sm:w-auto">
             @for (child of parentChildren; track child.id) {
               <button (click)="selectParentChild(child.id)" 
-                class="px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap shrink-0 max-w-[170px] sm:max-w-none truncate"
+                class="flex-1 sm:flex-initial px-3 py-1.5 rounded-xl text-[11px] sm:text-xs font-black transition-all cursor-pointer whitespace-nowrap truncate"
                 [class]="activeParentChildId === child.id ? 'bg-purple-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100/80'">
                 {{ child.name }} ({{ child.grade }})
               </button>
             }
           </div>
           <button (click)="openCertificateModal(undefined, 'SLC')" 
-            class="px-4 py-2.5 rounded-2xl bg-white/80 hover:bg-white text-slate-800 font-black text-xs cursor-pointer flex items-center gap-2 border border-slate-200/90 shadow-[0_4px_12px_rgba(0,0,0,0.04),inset_0_1px_1px_rgba(255,255,255,0.9)] transition-all active:scale-95 shrink-0 whitespace-nowrap">
-            <lucide-icon [name]="'award'" class="w-3.5 h-3.5 text-amber-600"></lucide-icon>
+            class="flex-1 sm:flex-initial px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl bg-white/80 hover:bg-white text-slate-800 font-black text-[11px] sm:text-xs cursor-pointer flex items-center justify-center gap-2 border border-slate-200/90 shadow-[0_4px_12px_rgba(0,0,0,0.04),inset_0_1px_1px_rgba(255,255,255,0.9)] transition-all active:scale-95 whitespace-nowrap">
+            <lucide-icon [name]="'award'" class="w-3.5 h-3.5 text-amber-600 shrink-0"></lucide-icon>
             <span>Request Certificate</span>
           </button>
           <button (click)="openPasskeyProfileModal()"
-            class="px-4 py-2.5 rounded-2xl bg-white/90 hover:bg-white text-slate-800 font-black text-xs cursor-pointer flex items-center gap-1.5 border border-slate-200/90 shadow-[0_4px_12px_rgba(0,0,0,0.04),inset_0_1px_1px_rgba(255,255,255,0.9)] transition-all active:scale-95 shrink-0 whitespace-nowrap">
-            <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-indigo-600">fingerprint</mat-icon>
+            class="flex-1 sm:flex-initial px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl bg-white/90 hover:bg-white text-slate-800 font-black text-[11px] sm:text-xs cursor-pointer flex items-center justify-center gap-1.5 border border-slate-200/90 shadow-[0_4px_12px_rgba(0,0,0,0.04),inset_0_1px_1px_rgba(255,255,255,0.9)] transition-all active:scale-95 whitespace-nowrap">
+            <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-indigo-600 shrink-0">fingerprint</mat-icon>
             <span>Passkey</span>
           </button>
           @if (isOwnerSession) {
             <button (click)="exitToOwner()" 
-              class="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-black text-xs cursor-pointer flex items-center gap-2 shadow-md shadow-amber-500/25 border border-amber-300/40 transition-all active:scale-95 shrink-0 whitespace-nowrap">
-              <lucide-icon [name]="'arrow-left'" class="w-3.5 h-3.5"></lucide-icon>
+              class="w-full sm:w-auto px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-black text-[11px] sm:text-xs cursor-pointer flex items-center justify-center gap-2 shadow-md shadow-amber-500/25 border border-amber-300/40 transition-all active:scale-95 whitespace-nowrap">
+              <lucide-icon [name]="'arrow-left'" class="w-3.5 h-3.5 shrink-0"></lucide-icon>
               <span>Exit to School Owner</span>
             </button>
           }
@@ -20634,7 +20785,7 @@
                 </thead>
                 <tbody class="divide-y divide-slate-100 bg-white">
                   @for (tx of parentChildPaymentTransactions; track tx.id) {
-                    <tr>
+                    <tr [attr.data-row-key]="tx.txnRef || tx.id">
                       <td class="px-3 py-2.5">
                         <span class="font-mono font-bold text-slate-800 block">{{ tx.txnRef }}</span>
                         <span class="text-[10px] text-slate-400">{{ formatTxnDate(tx.createdAt) }}</span>
@@ -21329,47 +21480,47 @@
     <main class="max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 pt-6 space-y-6">
 
       <!-- Accountant 3D Hero Bar -->
-      <div class="rounded-[28px] p-5 sm:p-6 border border-white/80 shadow-[0_20px_50px_-12px_rgba(16,185,129,0.18),0_8px_20px_-6px_rgba(0,0,0,0.06),inset_0_1px_2px_rgba(255,255,255,0.95)] bg-gradient-to-br from-white/95 via-emerald-50/40 to-slate-50/90 backdrop-blur-2xl relative overflow-hidden flex items-center justify-between flex-wrap gap-5 transition-all duration-300 group">
+      <div class="rounded-2xl sm:rounded-[28px] p-4 sm:p-5 lg:p-6 border border-white/80 shadow-[0_20px_50px_-12px_rgba(16,185,129,0.18),0_8px_20px_-6px_rgba(0,0,0,0.06),inset_0_1px_2px_rgba(255,255,255,0.95)] bg-gradient-to-br from-white/95 via-emerald-50/40 to-slate-50/90 backdrop-blur-2xl relative overflow-hidden flex flex-col xl:flex-row xl:items-center justify-between gap-4 sm:gap-5 transition-all duration-300 group max-w-full min-w-0">
         <!-- 3D Architectural Soft Ambient Glow & Specular Lighting -->
         <div class="absolute inset-0 bg-[radial-gradient(#8080800c_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none"></div>
         <div class="absolute -right-16 -top-16 w-80 h-80 bg-gradient-to-br from-emerald-200/40 via-teal-100/30 to-transparent rounded-full blur-3xl pointer-events-none group-hover:scale-110 transition-transform duration-700"></div>
         <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent"></div>
-        <div class="flex items-center gap-4 min-w-0 relative z-10">
-          <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-[22px] bg-gradient-to-br from-teal-600 via-emerald-600 to-cyan-700 text-white flex items-center justify-center font-black text-lg sm:text-xl shadow-[0_12px_28px_-6px_rgba(13,148,136,0.45)] ring-4 ring-white/90 border border-white/50 shrink-0">
+        <div class="flex items-start sm:items-center gap-3.5 sm:gap-4 min-w-0 flex-1 w-full relative z-10">
+          <div class="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl sm:rounded-[22px] bg-gradient-to-br from-teal-600 via-emerald-600 to-cyan-700 text-white flex items-center justify-center font-black text-base sm:text-xl shadow-[0_12px_28px_-6px_rgba(13,148,136,0.45)] ring-4 ring-white/90 border border-white/50 shrink-0">
             {{ activeAccountantProfile.initials }}
           </div>
-          <div class="min-w-0">
+          <div class="min-w-0 flex-1">
             <div class="flex items-center gap-2 flex-wrap">
-              <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-teal-500/10 text-teal-800 border border-teal-300/60">Accountant / Fee Clerk Desk</span>
-              <span class="text-xs text-emerald-700 font-extrabold bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-300/60">Fee Counter &amp; Closing Only</span>
+              <span class="px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-teal-500/10 text-teal-800 border border-teal-300/60">Accountant / Fee Clerk Desk</span>
+              <span class="text-[11px] sm:text-xs text-emerald-700 font-extrabold bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-300/60">Fee Counter &amp; Closing Only</span>
             </div>
-            <h2 class="text-lg sm:text-xl font-black text-slate-900 mt-1 truncate">{{ activeAccountantProfile.name }} — {{ activeAccountantProfile.title }}</h2>
-            <p class="text-xs text-slate-600 font-medium truncate">
+            <h2 class="text-base sm:text-lg lg:text-xl font-black text-slate-900 mt-1 break-words">{{ activeAccountantProfile.name }} — {{ activeAccountantProfile.title }}</h2>
+            <p class="text-[11px] sm:text-xs text-slate-600 font-medium break-words">
               Branch Scope: <strong class="text-slate-900">{{ activePersonaBranchLabel }}</strong> · Generate challans, receive receipts &amp; submit Daily Closing to School Owner.
             </p>
           </div>
         </div>
 
-        <div class="flex items-center gap-2 flex-wrap relative z-10">
-          <button (click)="setAccountantTab('collect')" class="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white font-black text-xs cursor-pointer flex items-center gap-2 shadow-md shadow-teal-600/20 active:scale-95">
-            <lucide-icon [name]="'wallet'" class="w-4 h-4"></lucide-icon>
+        <div class="grid grid-cols-1 sm:flex sm:flex-wrap items-stretch sm:items-center gap-2 w-full xl:w-auto xl:shrink-0 xl:justify-end relative z-10">
+          <button (click)="setAccountantTab('collect')" class="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white font-black text-[11px] sm:text-xs cursor-pointer flex items-center justify-center gap-2 shadow-md shadow-teal-600/20 active:scale-95 whitespace-nowrap">
+            <lucide-icon [name]="'wallet'" class="w-4 h-4 shrink-0"></lucide-icon>
             <span>Receive Fee Payment</span>
           </button>
-          <button (click)="setAccountantTab('daily_closing')" class="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs cursor-pointer flex items-center gap-2 shadow-md active:scale-95">
-            <lucide-icon [name]="'shield-check'" class="w-4 h-4 text-white"></lucide-icon>
+          <button (click)="setAccountantTab('daily_closing')" class="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-[11px] sm:text-xs cursor-pointer flex items-center justify-center gap-2 shadow-md active:scale-95 whitespace-nowrap">
+            <lucide-icon [name]="'shield-check'" class="w-4 h-4 text-white shrink-0"></lucide-icon>
             <span>Submit Daily Closing to Owner</span>
           </button>
-          <button (click)="openPasskeyProfileModal()" class="px-4 py-2.5 rounded-2xl bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 font-black text-xs cursor-pointer flex items-center gap-1.5 shadow-xs active:scale-95">
-            <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-indigo-600">fingerprint</mat-icon>
+          <button (click)="openPasskeyProfileModal()" class="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 font-black text-[11px] sm:text-xs cursor-pointer flex items-center justify-center gap-1.5 shadow-xs active:scale-95 whitespace-nowrap">
+            <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-indigo-600 shrink-0">fingerprint</mat-icon>
             <span>Passkey</span>
           </button>
-          <button (click)="openHardwareTerminalModal('fee')" class="px-4 py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs cursor-pointer flex items-center gap-1.5 shadow-xs active:scale-95">
-            <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-emerald-400">qr_code_scanner</mat-icon>
+          <button (click)="openHardwareTerminalModal('fee')" class="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-black text-[11px] sm:text-xs cursor-pointer flex items-center justify-center gap-1.5 shadow-xs active:scale-95 whitespace-nowrap">
+            <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-emerald-400 shrink-0">qr_code_scanner</mat-icon>
             <span>Printer &amp; Scanner</span>
           </button>
           @if (isOwnerSession) {
-            <button (click)="exitToOwner()" class="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-black text-xs cursor-pointer flex items-center gap-2 shadow-md active:scale-95">
-              <lucide-icon [name]="'arrow-left'" class="w-3.5 h-3.5"></lucide-icon>
+            <button (click)="exitToOwner()" class="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-black text-[11px] sm:text-xs cursor-pointer flex items-center justify-center gap-2 shadow-md active:scale-95 whitespace-nowrap">
+              <lucide-icon [name]="'arrow-left'" class="w-3.5 h-3.5 shrink-0"></lucide-icon>
               <span>Exit to School Owner</span>
             </button>
           }
@@ -22028,7 +22179,7 @@
                         </thead>
                         <tbody class="divide-y divide-slate-100 bg-white">
                           @for (tx of pendingVerificationGatewayTransactions; track tx.id) {
-                            <tr>
+                            <tr [attr.data-row-key]="tx.txnRef || tx.id">
                               <td class="px-3 py-2">
                                 <span class="font-mono font-bold text-slate-800 block">{{ tx.txnRef }}</span>
                                 <span class="text-[10px] text-slate-400">{{ formatTxnDate(tx.createdAt) }}</span>
@@ -33809,36 +33960,83 @@
           </button>
         </div>
 
-        <!-- Camera Viewfinder & Laser Animation Box -->
-        <div class="relative w-full h-56 rounded-2xl bg-slate-950 overflow-hidden border-2 shadow-inner flex flex-col items-center justify-center text-white"
-          [class]="barcodeScanTargetMode === 'checkin' ? 'border-emerald-500' : 'border-indigo-500'">
-          @if (isCameraActive) {
-            <video id="barcode-video-feed" class="w-full h-full object-cover" autoplay playsinline muted></video>
-          } @else {
-            <div class="p-4 text-center space-y-2">
-              <lucide-icon [name]="'camera'" class="w-8 h-8 text-indigo-400 mx-auto animate-pulse"></lucide-icon>
-              <div class="text-xs font-bold text-slate-300">Camera Optical Feed Running</div>
-              <p class="text-[10px] text-slate-400">Position book barcode inside laser target frame</p>
+        <!-- Dark Laser Scanner Box (Matches App Scanner Frame & Top-to-Bottom Laser Sweep) -->
+        <div class="rounded-3xl bg-[#101216] p-4 sm:p-5 text-white border border-white/10 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-sm font-bold tracking-tight text-white">Scanner</span>
+            <div class="flex items-center gap-2">
+              <button type="button" (click)="flipLibraryScannerCamera()" title="Switch Front / Rear Camera"
+                class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-slate-200 cursor-pointer transition-colors">
+                <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">cameraswitch</mat-icon>
+              </button>
+              <input #libQrFileEl type="file" accept="image/*" (change)="onLibraryBarcodeFileSelected($event)" class="hidden" />
+              <button type="button" (click)="libQrFileEl.click()" title="Upload Book QR / Barcode Image"
+                class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-slate-200 cursor-pointer transition-colors">
+                <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">photo_library</mat-icon>
+              </button>
             </div>
-          }
-
-          <!-- HUD Mode Overlay Badge -->
-          <div class="absolute top-3 left-3 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-slate-900/80 backdrop-blur-xs text-white border border-white/20 shadow-xs">
-            Target Mode: {{ barcodeScanTargetMode === 'checkout' ? 'Check-Out Book' : (barcodeScanTargetMode === 'checkin' ? 'Check-In / Return' : 'Search Catalog') }}
           </div>
 
-          <!-- Laser Scanner Overlay Frame -->
-          <div class="absolute inset-6 border-2 border-dashed border-indigo-400/70 rounded-xl pointer-events-none flex flex-col justify-between p-2">
-            <div class="flex justify-between">
-              <div class="w-4 h-4 border-t-2 border-l-2 border-indigo-400"></div>
-              <div class="w-4 h-4 border-t-2 border-r-2 border-indigo-400"></div>
+          <div class="relative mx-auto w-full max-w-[300px] aspect-square rounded-2xl bg-[#1c2026] overflow-hidden flex items-center justify-center">
+            <video id="barcode-video-feed"
+              [class.hidden]="!isCameraActive"
+              class="w-full h-full object-cover" autoplay playsinline muted></video>
+            @if (!isCameraActive && libraryScannerUploadedPreview) {
+              <img [src]="libraryScannerUploadedPreview" alt="Uploaded barcode preview" referrerpolicy="no-referrer"
+                class="w-full h-full object-contain opacity-90" />
+            }
+
+            <!-- Electric-Blue Corner Reticle -->
+            <div class="pointer-events-none absolute inset-4">
+              <span class="absolute top-0 left-0 w-7 h-7 border-t-[4px] border-l-[4px] border-[#1D8EFF] rounded-tl-xl"></span>
+              <span class="absolute top-0 right-0 w-7 h-7 border-t-[4px] border-r-[4px] border-[#1D8EFF] rounded-tr-xl"></span>
+              <span class="absolute bottom-0 left-0 w-7 h-7 border-b-[4px] border-l-[4px] border-[#1D8EFF] rounded-bl-xl"></span>
+              <span class="absolute bottom-0 right-0 w-7 h-7 border-b-[4px] border-r-[4px] border-[#1D8EFF] rounded-br-xl"></span>
+              <!-- Top-to-Bottom Sweeping Laser Line -->
+              <div
+                class="absolute inset-x-3 h-[3px] rounded-full bg-gradient-to-r from-transparent via-[#33B5FF] to-transparent shadow-[0_0_16px_4px_rgba(29,142,255,0.7)]"
+                [class]="isCameraActive ? 'scs-scan-laser-sweep' : 'bottom-5'"></div>
             </div>
-            <div class="w-full h-0.5 shadow-[0_0_12px_#f43f5e] animate-pulse my-auto"
-              [class]="barcodeScanTargetMode === 'checkin' ? 'bg-emerald-400' : 'bg-rose-500'"></div>
-            <div class="flex justify-between">
-              <div class="w-4 h-4 border-b-2 border-l-2 border-indigo-400"></div>
-              <div class="w-4 h-4 border-b-2 border-r-2 border-indigo-400"></div>
-            </div>
+
+            @if (!isCameraActive) {
+              <button type="button" (click)="startCameraScanner(libraryCameraFacing, 'barcode-video-feed')"
+                class="relative z-10 px-4 py-2.5 rounded-full bg-[#1D8EFF] hover:bg-[#0D7CEB] text-white font-extrabold text-xs shadow-[0_6px_22px_rgba(29,142,255,0.5)] flex items-center gap-1.5 cursor-pointer">
+                <mat-icon class="!text-[16px] !w-4 !h-4">videocam</mat-icon>
+                <span>Start Camera Scan</span>
+              </button>
+            } @else {
+              <button type="button" (click)="stopCameraStream()"
+                class="absolute bottom-2.5 right-2.5 z-10 px-2.5 py-1 rounded-full bg-black/70 hover:bg-black/90 text-white text-[10px] font-bold border border-white/15 cursor-pointer">
+                Stop
+              </button>
+            }
+          </div>
+
+          <p class="text-[11px] text-center text-slate-400 font-medium">
+            Align book QR or ISBN barcode inside the frame — auto-detects and prints IN/OUT slip
+          </p>
+          @if (cameraPermissionError) {
+            <p class="text-[11px] text-center text-amber-300 font-bold">{{ cameraPermissionError }}</p>
+          }
+        </div>
+
+        <!-- Printer In/Out Strip inside Modal -->
+        <div class="p-2.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between flex-wrap gap-2 text-xs">
+          <label class="flex items-center gap-2 font-black text-slate-800 cursor-pointer">
+            <input type="checkbox" [(ngModel)]="libraryAutoPrintSlip" class="rounded accent-indigo-600 cursor-pointer" />
+            <span>Auto-Print IN/OUT Slip on Scan</span>
+          </label>
+          <div class="flex items-center gap-1">
+            <button type="button" (click)="libraryPrintFormat = 'thermal'"
+              [class]="libraryPrintFormat === 'thermal' ? 'bg-slate-900 text-white' : 'bg-white border border-slate-200 text-slate-700'"
+              class="px-2.5 py-1 rounded-lg text-[10px] font-black cursor-pointer">
+              Thermal 80/58mm
+            </button>
+            <button type="button" (click)="libraryPrintFormat = 'a4'"
+              [class]="libraryPrintFormat === 'a4' ? 'bg-slate-900 text-white' : 'bg-white border border-slate-200 text-slate-700'"
+              class="px-2.5 py-1 rounded-lg text-[10px] font-black cursor-pointer">
+              A5/A4 Slip
+            </button>
           </div>
         </div>
 
@@ -33877,6 +34075,188 @@
         <div class="pt-2 flex items-center justify-between border-t border-slate-100">
           <button (click)="closeBarcodeScannerModal()" type="button" class="px-4 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs cursor-pointer">
             Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- MODAL: STOCK & ASSET INVENTORY SCANNER + PRINTER IN/OUT -->
+  @if (isAssetScannerModalOpen) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-xs animate-fade-in">
+      <div class="bg-white rounded-3xl p-5 sm:p-6 max-w-lg w-full space-y-4 shadow-2xl border border-slate-200 max-h-[92vh] overflow-y-auto custom-scrollbar">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase bg-[#1D8EFF] text-white shadow-2xs">
+              Inventory Scanner
+            </span>
+            <h3 class="text-base font-black text-slate-900">Stock &amp; Asset IN / OUT Scanner</h3>
+          </div>
+          <button (click)="closeAssetScannerModal()" type="button" class="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer">
+            <lucide-icon [name]="'x'" class="w-4 h-4"></lucide-icon>
+          </button>
+        </div>
+
+        <!-- Mode Selector Tabs -->
+        <div class="p-1 rounded-2xl bg-slate-100 border border-slate-200 flex items-center gap-1 text-xs">
+          <button (click)="setAssetScanTargetMode('in')" type="button" class="flex-1 py-1.5 rounded-xl font-black transition-all cursor-pointer text-center"
+            [class]="assetScanTargetMode === 'in' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-700 hover:bg-white'">
+            + Stock IN
+          </button>
+          <button (click)="setAssetScanTargetMode('out')" type="button" class="flex-1 py-1.5 rounded-xl font-black transition-all cursor-pointer text-center"
+            [class]="assetScanTargetMode === 'out' ? 'bg-amber-500 text-slate-950 shadow-xs' : 'text-slate-700 hover:bg-white'">
+            - Stock OUT
+          </button>
+          <button (click)="setAssetScanTargetMode('search')" type="button" class="flex-1 py-1.5 rounded-xl font-black transition-all cursor-pointer text-center"
+            [class]="assetScanTargetMode === 'search' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-700 hover:bg-white'">
+            Lookup Asset
+          </button>
+        </div>
+
+        <!-- Dark Scanner Card with Top-to-Bottom Sweeping Laser -->
+        <div class="rounded-3xl bg-[#101216] p-4 sm:p-5 text-white border border-white/10 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-sm font-bold tracking-tight text-white">Scanner</span>
+            <div class="flex items-center gap-2">
+              <button type="button" (click)="flipAssetCamera()" title="Flip Camera"
+                class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-slate-200 cursor-pointer transition-colors">
+                <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">cameraswitch</mat-icon>
+              </button>
+              <input #assetQrFileEl type="file" accept="image/*" (change)="onAssetQrFileSelected($event)" class="hidden" />
+              <button type="button" (click)="assetQrFileEl.click()" title="Upload Asset QR / Barcode Image"
+                class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-slate-200 cursor-pointer transition-colors">
+                <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">photo_library</mat-icon>
+              </button>
+            </div>
+          </div>
+
+          <div class="relative mx-auto w-full max-w-[300px] aspect-square rounded-2xl bg-[#1c2026] overflow-hidden flex items-center justify-center">
+            <video id="asset-scanner-video-feed"
+              [class.hidden]="!assetCameraActive"
+              class="w-full h-full object-cover" autoplay playsinline muted></video>
+            @if (!assetCameraActive && assetScannerUploadedPreview) {
+              <img [src]="assetScannerUploadedPreview" alt="Uploaded asset barcode preview" referrerpolicy="no-referrer"
+                class="w-full h-full object-contain opacity-90" />
+            }
+
+            <div class="pointer-events-none absolute inset-4">
+              <span class="absolute top-0 left-0 w-7 h-7 border-t-[4px] border-l-[4px] border-[#1D8EFF] rounded-tl-xl"></span>
+              <span class="absolute top-0 right-0 w-7 h-7 border-t-[4px] border-r-[4px] border-[#1D8EFF] rounded-tr-xl"></span>
+              <span class="absolute bottom-0 left-0 w-7 h-7 border-b-[4px] border-l-[4px] border-[#1D8EFF] rounded-bl-xl"></span>
+              <span class="absolute bottom-0 right-0 w-7 h-7 border-b-[4px] border-r-[4px] border-[#1D8EFF] rounded-br-xl"></span>
+              <div
+                class="absolute inset-x-3 h-[3px] rounded-full bg-gradient-to-r from-transparent via-[#33B5FF] to-transparent shadow-[0_0_16px_4px_rgba(29,142,255,0.7)]"
+                [class]="assetCameraActive ? 'scs-scan-laser-sweep' : 'bottom-5'"></div>
+            </div>
+
+            @if (!assetCameraActive) {
+              <button type="button" (click)="startAssetCameraScanner()" [disabled]="assetCameraStarting"
+                class="relative z-10 px-4 py-2.5 rounded-full bg-[#1D8EFF] hover:bg-[#0D7CEB] text-white font-extrabold text-xs shadow-[0_6px_22px_rgba(29,142,255,0.5)] flex items-center gap-1.5 cursor-pointer disabled:opacity-60">
+                <mat-icon class="!text-[16px] !w-4 !h-4">videocam</mat-icon>
+                <span>{{ assetCameraStarting ? 'Starting...' : 'Start Camera Scan' }}</span>
+              </button>
+            } @else {
+              <button type="button" (click)="stopAssetCameraStream()"
+                class="absolute bottom-2.5 right-2.5 z-10 px-2.5 py-1 rounded-full bg-black/70 hover:bg-black/90 text-white text-[10px] font-bold border border-white/15 cursor-pointer">
+                Stop
+              </button>
+            }
+          </div>
+
+          <p class="text-[11px] text-center text-slate-400 font-medium">
+            Scan an Asset Barcode Sticker or upload sticker image to update store stock
+          </p>
+          @if (assetCameraError) {
+            <p class="text-[11px] text-center text-amber-300 font-bold">{{ assetCameraError }}</p>
+          }
+        </div>
+
+        <!-- Qty, Notes & Printer Options -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+          <div>
+            <label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Quantity</label>
+            <input type="number" min="1" [(ngModel)]="stockScanQty"
+              class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-mono font-black text-slate-900 text-xs focus:outline-indigo-600" />
+          </div>
+          <div class="sm:col-span-2">
+            <label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Room / Handover Note</label>
+            <input type="text" [(ngModel)]="stockScanNotes" placeholder="e.g. Issued to Computer Lab 2"
+              class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold text-slate-900 text-xs focus:outline-indigo-600" />
+          </div>
+        </div>
+
+        <div class="p-2.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between flex-wrap gap-2 text-xs">
+          <label class="flex items-center gap-2 font-black text-slate-800 cursor-pointer">
+            <input type="checkbox" [(ngModel)]="stockAutoPrintSlip" class="rounded accent-indigo-600 cursor-pointer" />
+            <span>Auto-Print IN/OUT Slip</span>
+          </label>
+          <div class="flex items-center gap-1">
+            <button type="button" (click)="stockPrintFormat = 'thermal'"
+              [class]="stockPrintFormat === 'thermal' ? 'bg-slate-900 text-white' : 'bg-white border border-slate-200 text-slate-700'"
+              class="px-2.5 py-1 rounded-lg text-[10px] font-black cursor-pointer">
+              Thermal 80/58mm
+            </button>
+            <button type="button" (click)="stockPrintFormat = 'a4'"
+              [class]="stockPrintFormat === 'a4' ? 'bg-slate-900 text-white' : 'bg-white border border-slate-200 text-slate-700'"
+              class="px-2.5 py-1 rounded-lg text-[10px] font-black cursor-pointer">
+              A4 Voucher
+            </button>
+          </div>
+        </div>
+
+        <!-- Manual / USB Scanner Input -->
+        <div class="space-y-1 text-xs">
+          <label class="block font-bold text-slate-700">Or Enter / USB-Scan Asset Code:</label>
+          <div class="flex gap-2">
+            <input type="text" [(ngModel)]="manualAssetCodeInput" (keyup.enter)="processManualAssetScan()"
+              placeholder="e.g. AST-IT-001 or Projector"
+              class="flex-1 px-3 py-2 rounded-xl bg-white border border-slate-200 font-mono font-bold text-slate-900 text-xs focus:outline-indigo-600">
+            <button (click)="processManualAssetScan()" type="button" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs cursor-pointer">
+              ✓ Process
+            </button>
+          </div>
+        </div>
+
+        @if (lastMatchedAssetLog) {
+          <div class="p-3 rounded-2xl border flex items-center justify-between gap-3 text-xs"
+            [class]="lastMatchedAssetLog.direction === 'IN' ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-amber-50 border-amber-200 text-amber-900'">
+            <div class="min-w-0">
+              <div class="font-black truncate">{{ lastMatchedAssetLog.refNo }} · {{ lastMatchedAssetLog.assetName }}</div>
+              <div class="text-[11px] font-mono font-bold">
+                {{ lastMatchedAssetLog.direction }} {{ lastMatchedAssetLog.qtyChange }}x &middot; Stock: {{ lastMatchedAssetLog.previousQty }} &rarr; {{ lastMatchedAssetLog.newQty }}
+              </div>
+            </div>
+            <button type="button" (click)="printStockInOutReceipt(lastMatchedAssetLog)"
+              class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-[11px] shrink-0 cursor-pointer inline-flex items-center gap-1">
+              <mat-icon class="!text-[14px] !w-3.5 !h-3.5">print</mat-icon>
+              <span>Reprint Slip</span>
+            </button>
+          </div>
+        }
+
+        <!-- Quick-Tap Asset Stickers -->
+        <div class="space-y-2">
+          <div class="text-[11px] font-bold text-slate-600 flex items-center justify-between">
+            <span>Quick-Tap Store Assets:</span>
+            <span class="text-[10px] text-indigo-600 font-extrabold">Instant IN/OUT</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            @for (a of schoolAssets.slice(0, 4); track a.id) {
+              <button (click)="processAssetScanCode(a.assetCode, 'quick')" type="button"
+                class="p-2.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-left transition-all cursor-pointer">
+                <div class="font-black text-slate-900 truncate text-[11px]">{{ a.name }}</div>
+                <div class="text-[10px] font-mono text-slate-500 font-bold flex items-center justify-between mt-0.5">
+                  <span>{{ a.assetCode }}</span>
+                  <span class="text-[9px] px-1.5 py-0.2 rounded bg-indigo-100 text-indigo-800 font-black">Qty {{ a.quantity }}</span>
+                </div>
+              </button>
+            }
+          </div>
+        </div>
+
+        <div class="pt-2 flex items-center justify-end border-t border-slate-100">
+          <button (click)="closeAssetScannerModal()" type="button" class="px-4 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs cursor-pointer">
+            Close
           </button>
         </div>
       </div>

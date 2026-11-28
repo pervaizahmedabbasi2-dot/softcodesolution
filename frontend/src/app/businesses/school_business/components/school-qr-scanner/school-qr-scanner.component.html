@@ -244,8 +244,8 @@
 
               <!-- Animated Blue Laser Sweep -->
               <div
-                class="absolute left-3 right-3 h-[3px] rounded-full bg-[#1D8EFF] shadow-[0_0_16px_3px_rgba(29,142,255,0.85)] pointer-events-none transition-all duration-700"
-                [class]="cameraActive() ? 'animate-bounce top-1/2' : 'bottom-6'"></div>
+                class="absolute left-3 right-3 h-[3px] rounded-full bg-[#1D8EFF] shadow-[0_0_16px_3px_rgba(29,142,255,0.85)] pointer-events-none"
+                [class]="cameraActive() ? 'scs-scan-laser-sweep' : 'bottom-6'"></div>
 
               @if (!cameraActive()) {
                 <div class="relative z-10 text-center px-4 space-y-3">

@@ -12,33 +12,33 @@
   } @else {
   <!-- Unified Attendance Workspace Hero (HiOS / iOS Apple Standard) -->
   @if (!kioskFullscreen()) {
-  <div class="rounded-[28px] p-5 sm:p-6 border border-white/80 shadow-[0_20px_50px_-12px_rgba(16,185,129,0.18),0_8px_20px_-6px_rgba(0,0,0,0.06),inset_0_1px_2px_rgba(255,255,255,0.95)] bg-gradient-to-br from-white/95 via-emerald-50/40 to-slate-50/90 backdrop-blur-2xl relative overflow-hidden space-y-5 group">
+  <div class="rounded-2xl sm:rounded-[28px] p-4 sm:p-5 lg:p-6 border border-white/80 shadow-[0_20px_50px_-12px_rgba(16,185,129,0.18),0_8px_20px_-6px_rgba(0,0,0,0.06),inset_0_1px_2px_rgba(255,255,255,0.95)] bg-gradient-to-br from-white/95 via-emerald-50/40 to-slate-50/90 backdrop-blur-2xl relative overflow-hidden space-y-4 sm:space-y-5 group min-w-0 max-w-full">
     <div class="absolute inset-0 bg-[radial-gradient(#8080800c_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none"></div>
     <div class="absolute -right-16 -top-16 w-80 h-80 bg-gradient-to-br from-emerald-200/40 via-teal-100/30 to-transparent rounded-full blur-3xl pointer-events-none group-hover:scale-110 transition-transform duration-700"></div>
     <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent pointer-events-none"></div>
 
-    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 relative z-10">
-      <div class="flex items-start sm:items-center gap-3.5 min-w-0">
-        <div class="w-12 h-12 rounded-[18px] bg-gradient-to-tr from-emerald-500 via-emerald-600 to-teal-600 text-white flex items-center justify-center shrink-0 shadow-[0_10px_24px_-6px_rgba(16,185,129,0.42),inset_0_1px_2px_rgba(255,255,255,0.4)] border border-white/30">
-          <lucide-icon [name]="'scan-face'" class="w-6 h-6"></lucide-icon>
+    <div class="flex flex-col 2xl:flex-row 2xl:items-center justify-between gap-4 2xl:gap-6 relative z-10 min-w-0">
+      <div class="flex items-start sm:items-center gap-3 sm:gap-3.5 min-w-0 flex-1">
+        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-[18px] bg-gradient-to-tr from-emerald-500 via-emerald-600 to-teal-600 text-white flex items-center justify-center shrink-0 shadow-[0_10px_24px_-6px_rgba(16,185,129,0.42),inset_0_1px_2px_rgba(255,255,255,0.4)] border border-white/30">
+          <lucide-icon [name]="'scan-face'" class="w-5 h-5 sm:w-6 sm:h-6"></lucide-icon>
         </div>
 
-        <div class="min-w-0 space-y-1">
-          <div class="flex items-center gap-2 flex-wrap text-xs text-slate-600 font-medium">
+        <div class="min-w-0 flex-1 space-y-1.5 sm:space-y-1">
+          <div class="flex items-center gap-x-2 gap-y-1.5 flex-wrap text-[11px] sm:text-xs text-slate-600 font-medium">
             <span class="font-semibold text-emerald-700 inline-flex items-center gap-1.5">
-              <lucide-icon [name]="isBrowserOnline() ? 'wifi' : 'wifi-off'" class="w-3.5 h-3.5"></lucide-icon>
+              <lucide-icon [name]="isBrowserOnline() ? 'wifi' : 'wifi-off'" class="w-3.5 h-3.5 shrink-0"></lucide-icon>
               <span>{{ isBrowserOnline() ? 'Online · SQLite + Cloud Sync' : 'Offline · Local SQLite Active' }}</span>
             </span>
-            <span aria-hidden="true" class="text-slate-300">·</span>
+            <span aria-hidden="true" class="hidden sm:inline text-slate-300">·</span>
             <span class="font-mono font-semibold text-slate-700 tabular-nums">{{ totalEnrolledCount() }} Faces · {{ totalFingerprintEnrolledCount() }} Fingerprints</span>
-            <span aria-hidden="true" class="text-slate-300">·</span>
-            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold"
+            <span aria-hidden="true" class="hidden sm:inline text-slate-300">·</span>
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold max-w-full"
               [class]="activeBranchScope() === 'ALL' ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' : 'bg-emerald-100/80 text-emerald-800 border border-emerald-200'">
-              <lucide-icon [name]="'shield-check'" class="w-3 h-3"></lucide-icon>
-              <span>{{ activeBranchScope() === 'ALL' ? 'Group HQ Kiosk · All Branches' : ('Terminal Locked: ' + activeBranchLabel()) }}</span>
+              <lucide-icon [name]="'shield-check'" class="w-3 h-3 shrink-0"></lucide-icon>
+              <span class="truncate">{{ activeBranchScope() === 'ALL' ? 'Group HQ Kiosk · All Branches' : ('Terminal Locked: ' + activeBranchLabel()) }}</span>
             </span>
             @if (pendingSyncCount() > 0) {
-              <span aria-hidden="true" class="text-slate-300">·</span>
+              <span aria-hidden="true" class="hidden sm:inline text-slate-300">·</span>
               <button type="button" (click)="syncRequested.emit()"
                 class="text-xs font-bold text-amber-700 hover:text-amber-800 underline underline-offset-2 cursor-pointer inline-flex items-center gap-1 whitespace-nowrap shrink-0">
                 <lucide-icon [name]="'cloud'" class="w-3.5 h-3.5"></lucide-icon>
@@ -47,58 +47,58 @@
             }
           </div>
 
-          <h2 class="text-lg sm:text-xl font-black text-slate-900 tracking-tight leading-snug">
+          <h2 class="text-base sm:text-lg lg:text-xl font-black text-slate-900 tracking-tight leading-snug break-words">
             {{ schoolName() }} — Face &amp; Biometric Attendance Hub
           </h2>
-          <p class="text-xs text-slate-500 leading-relaxed">
+          <p class="text-[11px] sm:text-xs text-slate-500 leading-relaxed break-words">
             Walk-up continuous face camera &amp; fingerprint biometric scanner with offline-first SQLite recording, anti-duplicate guard, and automatic cloud sync.
           </p>
         </div>
       </div>
 
-      <div class="flex items-center gap-2 flex-wrap shrink-0">
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:flex lg:flex-wrap 2xl:justify-end items-stretch sm:items-center gap-2 w-full 2xl:w-auto 2xl:max-w-[540px] 2xl:shrink-0">
         @if (canEnrollCurrentPortal()) {
           <button type="button" (click)="openQuickEnrollPanel(cameraActive())"
-            class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold shadow-[0_6px_16px_-4px_rgba(16,185,129,0.38)] cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 active:scale-[0.98] transition-all">
-            <lucide-icon [name]="scannerChannel() === 'fingerprint' ? 'fingerprint' : 'user-plus'" class="w-3.5 h-3.5"></lucide-icon>
-            <span>{{ scannerChannel() === 'fingerprint' ? 'Quick Finger Enroll' : 'Quick Selfie Enroll' }}</span>
+            class="w-full lg:w-auto px-3 sm:px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-[11px] sm:text-xs font-bold shadow-[0_6px_16px_-4px_rgba(16,185,129,0.38)] cursor-pointer inline-flex items-center justify-center gap-1.5 whitespace-nowrap active:scale-[0.98] transition-all">
+            <lucide-icon [name]="scannerChannel() === 'fingerprint' ? 'fingerprint' : 'user-plus'" class="w-3.5 h-3.5 shrink-0"></lucide-icon>
+            <span class="truncate">{{ scannerChannel() === 'fingerprint' ? 'Quick Finger Enroll' : 'Quick Selfie Enroll' }}</span>
           </button>
         }
 
         <button type="button" (click)="activateGateKioskBarcodeFullscreen()"
-          class="px-3.5 py-2 rounded-xl bg-white/90 hover:bg-white border border-slate-200/90 text-slate-800 text-xs font-bold shadow-2xs cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 active:scale-[0.98] transition-all">
-          <lucide-icon [name]="'qr-code'" class="w-3.5 h-3.5 text-emerald-600"></lucide-icon>
-          <span>Gate Kiosk Fullscreen</span>
+          class="w-full lg:w-auto px-3 sm:px-3.5 py-2 rounded-xl bg-white/90 hover:bg-white border border-slate-200/90 text-slate-800 text-[11px] sm:text-xs font-bold shadow-2xs cursor-pointer inline-flex items-center justify-center gap-1.5 whitespace-nowrap active:scale-[0.98] transition-all">
+          <lucide-icon [name]="'qr-code'" class="w-3.5 h-3.5 text-emerald-600 shrink-0"></lucide-icon>
+          <span class="truncate">Gate Kiosk Fullscreen</span>
         </button>
 
         <button type="button" (click)="toggleKioskFullscreen()"
-          class="px-3.5 py-2 rounded-xl bg-white/90 hover:bg-white border border-slate-200/90 text-slate-700 text-xs font-semibold shadow-2xs cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 active:scale-[0.98] transition-all">
-          <lucide-icon [name]="kioskFullscreen() ? 'x' : 'maximize-2'" class="w-3.5 h-3.5 text-slate-600"></lucide-icon>
-          <span>{{ kioskFullscreen() ? 'Exit Full Screen' : 'Full Screen' }}</span>
+          class="w-full lg:w-auto px-3 sm:px-3.5 py-2 rounded-xl bg-white/90 hover:bg-white border border-slate-200/90 text-slate-700 text-[11px] sm:text-xs font-semibold shadow-2xs cursor-pointer inline-flex items-center justify-center gap-1.5 whitespace-nowrap active:scale-[0.98] transition-all">
+          <lucide-icon [name]="kioskFullscreen() ? 'x' : 'maximize-2'" class="w-3.5 h-3.5 text-slate-600 shrink-0"></lucide-icon>
+          <span class="truncate">{{ kioskFullscreen() ? 'Exit Full Screen' : 'Full Screen' }}</span>
         </button>
 
         @if (!kioskFullscreen()) {
           <button type="button" (click)="setSubTab('history')"
-            class="px-3.5 py-2 rounded-xl border text-xs font-bold shadow-2xs cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 active:scale-[0.98] transition-all"
+            class="w-full lg:w-auto px-3 sm:px-3.5 py-2 rounded-xl border text-[11px] sm:text-xs font-bold shadow-2xs cursor-pointer inline-flex items-center justify-center gap-1.5 whitespace-nowrap active:scale-[0.98] transition-all"
             [class]="activeSubTab() === 'history' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white/90 hover:bg-white border-slate-200/90 text-slate-700'">
-            <lucide-icon [name]="'bar-chart-2'" class="w-3.5 h-3.5" [class]="activeSubTab() === 'history' ? 'text-white' : 'text-indigo-600'"></lucide-icon>
-            <span>Attendance Record</span>
+            <lucide-icon [name]="'bar-chart-2'" class="w-3.5 h-3.5 shrink-0" [class]="activeSubTab() === 'history' ? 'text-white' : 'text-indigo-600'"></lucide-icon>
+            <span class="truncate">Attendance Record</span>
           </button>
         }
 
         @if (canExportCurrentPortal() && !kioskFullscreen()) {
           <button type="button" (click)="absentAlertRequested.emit({ category: activeCategory() === 'all' ? 'student' : $any(activeCategory()) })"
-            class="px-3.5 py-2 rounded-xl bg-white/90 hover:bg-white border border-slate-200/90 text-slate-700 text-xs font-semibold shadow-2xs cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 active:scale-[0.98] transition-all">
-            <lucide-icon [name]="'bell'" class="w-3.5 h-3.5 text-rose-600"></lucide-icon>
-            <span>Notify Absent</span>
+            class="w-full lg:w-auto px-3 sm:px-3.5 py-2 rounded-xl bg-white/90 hover:bg-white border border-slate-200/90 text-slate-700 text-[11px] sm:text-xs font-semibold shadow-2xs cursor-pointer inline-flex items-center justify-center gap-1.5 whitespace-nowrap active:scale-[0.98] transition-all">
+            <lucide-icon [name]="'bell'" class="w-3.5 h-3.5 text-rose-600 shrink-0"></lucide-icon>
+            <span class="truncate">Notify Absent</span>
           </button>
         }
 
         @if (isOwner() && !kioskFullscreen()) {
           <button type="button" (click)="setSubTab('setup')"
-            class="px-3.5 py-2 rounded-xl bg-white/90 hover:bg-white border border-slate-200/90 text-slate-700 text-xs font-semibold shadow-2xs cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 active:scale-[0.98] transition-all">
-            <lucide-icon [name]="'sliders-horizontal'" class="w-3.5 h-3.5 text-indigo-600"></lucide-icon>
-            <span>Setup</span>
+            class="w-full lg:w-auto px-3 sm:px-3.5 py-2 rounded-xl bg-white/90 hover:bg-white border border-slate-200/90 text-slate-700 text-[11px] sm:text-xs font-semibold shadow-2xs cursor-pointer inline-flex items-center justify-center gap-1.5 whitespace-nowrap active:scale-[0.98] transition-all">
+            <lucide-icon [name]="'sliders-horizontal'" class="w-3.5 h-3.5 text-indigo-600 shrink-0"></lucide-icon>
+            <span class="truncate">Setup</span>
           </button>
         }
       </div>
@@ -108,20 +108,20 @@
 
     <!-- 3D HiOS Category Summary Strip (Students · Teachers · Staff · Principal) -->
     @if (portalContext() !== 'student' && !kioskFullscreen() && allowedCategories().length > 0) {
-      <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3.5 relative z-10">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5 relative z-10">
         @if (isOwner() || allowedCategories().includes('student')) {
           <!-- Students KPI Card -->
           <button type="button" (click)="setSubTab('students')"
-            class="text-left rounded-2xl p-4 scs-tile-3d cursor-pointer group space-y-3">
-            <div class="flex items-center gap-3.5">
-              <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-600 via-blue-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-500/25 group-hover:scale-105 transition-transform border border-white/30">
-                <lucide-icon [name]="'graduation-cap'" class="w-5 h-5"></lucide-icon>
+            class="text-left rounded-2xl p-3 sm:p-4 scs-tile-3d cursor-pointer group space-y-2.5 sm:space-y-3 min-w-0 w-full">
+            <div class="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
+              <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-blue-600 via-blue-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-500/25 group-hover:scale-105 transition-transform border border-white/30">
+                <lucide-icon [name]="'graduation-cap'" class="w-4 h-4 sm:w-5 sm:h-5"></lucide-icon>
               </div>
               <div class="min-w-0 flex-1">
-                <span class="text-[11px] font-bold text-slate-500 tracking-wide block">Students</span>
-                <div class="flex items-baseline gap-1.5 mt-0.5">
-                  <span class="text-2xl font-black text-slate-900 tabular-nums leading-none">{{ categoryStats().student.present }}</span>
-                  <span class="text-xs font-semibold text-slate-500 tabular-nums">/ {{ categoryStats().student.total }} present</span>
+                <span class="text-[11px] font-bold text-slate-500 tracking-wide block truncate">Students</span>
+                <div class="flex items-baseline flex-wrap gap-x-1.5 gap-y-0.5 mt-0.5">
+                  <span class="text-xl sm:text-2xl font-black text-slate-900 tabular-nums leading-none">{{ categoryStats().student.present }}</span>
+                  <span class="text-[11px] sm:text-xs font-semibold text-slate-500 tabular-nums whitespace-nowrap">/ {{ categoryStats().student.total }} present</span>
                 </div>
               </div>
             </div>
@@ -130,7 +130,7 @@
                 <div class="h-full rounded-full bg-gradient-to-r from-blue-600 to-indigo-500 transition-all duration-500"
                   [style.width.%]="categoryStats().student.total > 0 ? (categoryStats().student.present / categoryStats().student.total) * 100 : 0"></div>
               </div>
-              <div class="flex items-center justify-between text-[11px] text-slate-500 font-medium tabular-nums">
+              <div class="flex items-center justify-between flex-wrap gap-1 text-[10px] sm:text-[11px] text-slate-500 font-medium tabular-nums">
                 <span>{{ categoryStats().student.enrolled }} faces ready</span>
                 <span class="text-blue-600 font-semibold group-hover:underline">Open Roster</span>
               </div>
@@ -141,16 +141,16 @@
         @if (isOwner() || allowedCategories().includes('teacher')) {
           <!-- Teachers KPI Card -->
           <button type="button" (click)="setSubTab('teachers')"
-            class="text-left rounded-2xl p-4 scs-tile-3d cursor-pointer group space-y-3">
-            <div class="flex items-center gap-3.5">
-              <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-emerald-500 via-emerald-600 to-teal-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/25 group-hover:scale-105 transition-transform border border-white/30">
-                <lucide-icon [name]="'users'" class="w-5 h-5"></lucide-icon>
+            class="text-left rounded-2xl p-3 sm:p-4 scs-tile-3d cursor-pointer group space-y-2.5 sm:space-y-3 min-w-0 w-full">
+            <div class="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
+              <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-emerald-500 via-emerald-600 to-teal-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/25 group-hover:scale-105 transition-transform border border-white/30">
+                <lucide-icon [name]="'users'" class="w-4 h-4 sm:w-5 sm:h-5"></lucide-icon>
               </div>
               <div class="min-w-0 flex-1">
-                <span class="text-[11px] font-bold text-slate-500 tracking-wide block">Teachers</span>
-                <div class="flex items-baseline gap-1.5 mt-0.5">
-                  <span class="text-2xl font-black text-slate-900 tabular-nums leading-none">{{ categoryStats().teacher.present }}</span>
-                  <span class="text-xs font-semibold text-slate-500 tabular-nums">/ {{ categoryStats().teacher.total }} present</span>
+                <span class="text-[11px] font-bold text-slate-500 tracking-wide block truncate">Teachers</span>
+                <div class="flex items-baseline flex-wrap gap-x-1.5 gap-y-0.5 mt-0.5">
+                  <span class="text-xl sm:text-2xl font-black text-slate-900 tabular-nums leading-none">{{ categoryStats().teacher.present }}</span>
+                  <span class="text-[11px] sm:text-xs font-semibold text-slate-500 tabular-nums whitespace-nowrap">/ {{ categoryStats().teacher.total }} present</span>
                 </div>
               </div>
             </div>
@@ -159,7 +159,7 @@
                 <div class="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-500"
                   [style.width.%]="categoryStats().teacher.total > 0 ? (categoryStats().teacher.present / categoryStats().teacher.total) * 100 : 0"></div>
               </div>
-              <div class="flex items-center justify-between text-[11px] text-slate-500 font-medium tabular-nums">
+              <div class="flex items-center justify-between flex-wrap gap-1 text-[10px] sm:text-[11px] text-slate-500 font-medium tabular-nums">
                 <span>{{ categoryStats().teacher.enrolled }} faces ready</span>
                 <span class="text-emerald-600 font-semibold group-hover:underline">Open Roster</span>
               </div>
@@ -170,16 +170,16 @@
         @if (isOwner() || allowedCategories().includes('staff')) {
           <!-- Campus Staff KPI Card -->
           <button type="button" (click)="setSubTab('staff')"
-            class="text-left rounded-2xl p-4 scs-tile-3d cursor-pointer group space-y-3">
-            <div class="flex items-center gap-3.5">
-              <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-500 via-amber-600 to-orange-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-amber-500/25 group-hover:scale-105 transition-transform border border-white/30">
-                <lucide-icon [name]="'briefcase'" class="w-5 h-5"></lucide-icon>
+            class="text-left rounded-2xl p-3 sm:p-4 scs-tile-3d cursor-pointer group space-y-2.5 sm:space-y-3 min-w-0 w-full">
+            <div class="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
+              <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-amber-500 via-amber-600 to-orange-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-amber-500/25 group-hover:scale-105 transition-transform border border-white/30">
+                <lucide-icon [name]="'briefcase'" class="w-4 h-4 sm:w-5 sm:h-5"></lucide-icon>
               </div>
               <div class="min-w-0 flex-1">
-                <span class="text-[11px] font-bold text-slate-500 tracking-wide block">Campus Staff</span>
-                <div class="flex items-baseline gap-1.5 mt-0.5">
-                  <span class="text-2xl font-black text-slate-900 tabular-nums leading-none">{{ categoryStats().staff.present }}</span>
-                  <span class="text-xs font-semibold text-slate-500 tabular-nums">/ {{ categoryStats().staff.total }} present</span>
+                <span class="text-[11px] font-bold text-slate-500 tracking-wide block truncate">Campus Staff</span>
+                <div class="flex items-baseline flex-wrap gap-x-1.5 gap-y-0.5 mt-0.5">
+                  <span class="text-xl sm:text-2xl font-black text-slate-900 tabular-nums leading-none">{{ categoryStats().staff.present }}</span>
+                  <span class="text-[11px] sm:text-xs font-semibold text-slate-500 tabular-nums whitespace-nowrap">/ {{ categoryStats().staff.total }} present</span>
                 </div>
               </div>
             </div>
@@ -188,7 +188,7 @@
                 <div class="h-full rounded-full bg-gradient-to-r from-amber-500 to-orange-500 transition-all duration-500"
                   [style.width.%]="categoryStats().staff.total > 0 ? (categoryStats().staff.present / categoryStats().staff.total) * 100 : 0"></div>
               </div>
-              <div class="flex items-center justify-between text-[11px] text-slate-500 font-medium tabular-nums">
+              <div class="flex items-center justify-between flex-wrap gap-1 text-[10px] sm:text-[11px] text-slate-500 font-medium tabular-nums">
                 <span>{{ categoryStats().staff.enrolled }} faces ready</span>
                 <span class="text-amber-700 font-semibold group-hover:underline">Open Roster</span>
               </div>
@@ -199,16 +199,16 @@
         @if (isOwner() || allowedCategories().includes('principal')) {
           <!-- Principal & VP KPI Card -->
           <button type="button" (click)="setSubTab('principals')"
-            class="text-left rounded-2xl p-4 scs-tile-3d cursor-pointer group space-y-3">
-            <div class="flex items-center gap-3.5">
-              <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-violet-600 via-purple-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-violet-500/25 group-hover:scale-105 transition-transform border border-white/30">
-                <lucide-icon [name]="'shield-check'" class="w-5 h-5"></lucide-icon>
+            class="text-left rounded-2xl p-3 sm:p-4 scs-tile-3d cursor-pointer group space-y-2.5 sm:space-y-3 min-w-0 w-full">
+            <div class="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
+              <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-violet-600 via-purple-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-violet-500/25 group-hover:scale-105 transition-transform border border-white/30">
+                <lucide-icon [name]="'shield-check'" class="w-4 h-4 sm:w-5 sm:h-5"></lucide-icon>
               </div>
               <div class="min-w-0 flex-1">
-                <span class="text-[11px] font-bold text-slate-500 tracking-wide block">Principal &amp; VP</span>
-                <div class="flex items-baseline gap-1.5 mt-0.5">
-                  <span class="text-2xl font-black text-slate-900 tabular-nums leading-none">{{ categoryStats().principal.present }}</span>
-                  <span class="text-xs font-semibold text-slate-500 tabular-nums">/ {{ categoryStats().principal.total }} present</span>
+                <span class="text-[11px] font-bold text-slate-500 tracking-wide block truncate">Principal &amp; VP</span>
+                <div class="flex items-baseline flex-wrap gap-x-1.5 gap-y-0.5 mt-0.5">
+                  <span class="text-xl sm:text-2xl font-black text-slate-900 tabular-nums leading-none">{{ categoryStats().principal.present }}</span>
+                  <span class="text-[11px] sm:text-xs font-semibold text-slate-500 tabular-nums whitespace-nowrap">/ {{ categoryStats().principal.total }} present</span>
                 </div>
               </div>
             </div>
@@ -217,7 +217,7 @@
                 <div class="h-full rounded-full bg-gradient-to-r from-violet-600 to-purple-500 transition-all duration-500"
                   [style.width.%]="categoryStats().principal.total > 0 ? (categoryStats().principal.present / categoryStats().principal.total) * 100 : 0"></div>
               </div>
-              <div class="flex items-center justify-between text-[11px] text-slate-500 font-medium tabular-nums">
+              <div class="flex items-center justify-between flex-wrap gap-1 text-[10px] sm:text-[11px] text-slate-500 font-medium tabular-nums">
                 <span>{{ categoryStats().principal.enrolled }} faces ready</span>
                 <span class="text-violet-700 font-semibold group-hover:underline">Open Roster</span>
               </div>
@@ -229,7 +229,7 @@
 
     <!-- Segmented HiOS Sub-Navigation -->
     @if (!kioskFullscreen()) {
-      <div class="p-1.5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs flex items-center gap-1 overflow-x-auto custom-scrollbar relative z-10">
+      <div class="p-1.5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs flex items-center sm:flex-wrap gap-1 sm:gap-1.5 overflow-x-auto custom-scrollbar relative z-10">
         @if (canVerifyCameraCurrentPortal()) {
           <button type="button" (click)="setSubTab('terminal')"
             class="px-3.5 py-2 rounded-xl text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 transition-all"
@@ -311,14 +311,14 @@
     <div [class]="kioskFullscreen() ? 'w-full h-full' : 'grid grid-cols-1 lg:grid-cols-12 gap-5 items-start'">
 
       <!-- Left 7 cols: Open-Once Continuous Face Camera Studio -->
-      <div [class]="kioskFullscreen() ? 'w-full h-full relative' : 'lg:col-span-7 apple-card scs-surface-3d rounded-[24px] p-5 sm:p-6 space-y-4'">
+      <div [class]="kioskFullscreen() ? 'w-full h-full relative' : 'lg:col-span-7 apple-card scs-surface-3d rounded-2xl sm:rounded-[24px] p-3.5 sm:p-5 lg:p-6 space-y-4 min-w-0'">
         @if (!kioskFullscreen()) {
-          <div class="flex items-center justify-between flex-wrap gap-3">
-            <div>
-              <h3 class="text-base font-black text-slate-900 tracking-tight">
+          <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-3">
+            <div class="min-w-0">
+              <h3 class="text-sm sm:text-base font-black text-slate-900 tracking-tight break-words">
                 {{ scannerChannel() === 'fingerprint' ? 'Biometric Fingerprint Scanner' : (scannerChannel() === 'barcode' ? 'Gate Kiosk — Barcode & RFID Auto-Scan' : 'Selfie & Walk-Up Face Scanner') }}
               </h3>
-              <p class="text-xs text-slate-500 mt-0.5">
+              <p class="text-[11px] sm:text-xs text-slate-500 mt-0.5 leading-relaxed">
                 {{ scannerChannel() === 'fingerprint'
                   ? 'Scan via built-in fingerprint sensor or optical USB scanner using identical IN/OUT & duplicate rules.'
                   : (scannerChannel() === 'barcode'
@@ -327,24 +327,24 @@
               </p>
             </div>
 
-            <div class="flex items-center gap-2 flex-wrap">
-              <div class="inline-flex p-1 rounded-xl bg-slate-100 border border-slate-200/90 gap-1 flex-wrap">
+            <div class="flex flex-col sm:flex-row sm:items-center flex-wrap gap-2 w-full xl:w-auto">
+              <div class="inline-flex w-full sm:w-auto p-1 rounded-xl bg-slate-100 border border-slate-200/90 gap-1 flex-wrap">
                 <button type="button" (click)="setScannerChannel('face')"
-                  class="px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 transition-all whitespace-nowrap shrink-0"
+                  class="flex-1 sm:flex-initial justify-center px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 transition-all whitespace-nowrap shrink-0"
                   [class]="scannerChannel() === 'face' ? 'bg-white text-slate-900 shadow-xs border border-slate-200/80' : 'text-slate-600 hover:text-slate-900'">
                   <lucide-icon [name]="'scan-face'" class="w-3.5 h-3.5 text-emerald-600"></lucide-icon>
                   <span>Face Camera</span>
                 </button>
                 @if (canUseFingerprint()) {
                   <button type="button" (click)="setScannerChannel('fingerprint')"
-                    class="px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 transition-all whitespace-nowrap shrink-0"
+                    class="flex-1 sm:flex-initial justify-center px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 transition-all whitespace-nowrap shrink-0"
                     [class]="scannerChannel() === 'fingerprint' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'">
                     <lucide-icon [name]="'fingerprint'" class="w-3.5 h-3.5"></lucide-icon>
                     <span>Fingerprint Biometric</span>
                   </button>
                 }
                 <button type="button" (click)="setScannerChannel('barcode')"
-                  class="px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 transition-all whitespace-nowrap shrink-0"
+                  class="flex-1 sm:flex-initial justify-center px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 transition-all whitespace-nowrap shrink-0"
                   [class]="scannerChannel() === 'barcode' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'">
                   <lucide-icon [name]="'qr-code'" class="w-3.5 h-3.5" [class]="scannerChannel() === 'barcode' ? 'text-white' : 'text-emerald-600'"></lucide-icon>
                   <span>Barcode / RFID Gate</span>
@@ -352,17 +352,17 @@
               </div>
 
               <!-- Category Filter (All Campus | Students | Teachers | Staff | Principal) -->
-              <div class="inline-flex p-1 rounded-xl bg-white border border-slate-200/80 gap-1 flex-wrap">
+              <div class="inline-flex w-full sm:w-auto p-1 rounded-xl bg-white border border-slate-200/80 gap-1 flex-wrap">
                 @if (isOwner() || allowedCategories().length > 1) {
                   <button type="button" (click)="setCategory('all')"
-                    class="px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all whitespace-nowrap shrink-0"
+                    class="flex-1 sm:flex-initial justify-center px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-bold cursor-pointer transition-all whitespace-nowrap shrink-0"
                     [class]="activeCategory() === 'all' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'">
                     All Campus
                   </button>
                 }
                 @for (cat of allowedCategories(); track cat) {
                   <button type="button" (click)="setCategory(cat)"
-                    class="px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all whitespace-nowrap shrink-0"
+                    class="flex-1 sm:flex-initial justify-center px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-bold cursor-pointer transition-all whitespace-nowrap shrink-0"
                     [class]="activeCategory() === cat ? 'bg-white text-slate-900 shadow-xs border border-slate-200/60' : 'text-slate-600 hover:text-slate-900'">
                     {{ categoryLabel(cat) }}
                   </button>
@@ -452,6 +452,15 @@
                   } @else {
                     <lucide-icon [name]="'fingerprint'" class="w-8 h-8"></lucide-icon>
                   }
+                  <div class="pointer-events-none absolute inset-1.5">
+                    <span class="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-[#1D8EFF] rounded-tl-md"></span>
+                    <span class="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-[#1D8EFF] rounded-tr-md"></span>
+                    <span class="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-[#1D8EFF] rounded-bl-md"></span>
+                    <span class="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-[#1D8EFF] rounded-br-md"></span>
+                    <div
+                      class="absolute left-1.5 right-1.5 h-[2px] rounded-full bg-gradient-to-r from-[#1D8EFF]/30 via-[#38BDF8] to-[#1D8EFF]/30 shadow-[0_0_10px_2px_rgba(29,142,255,0.65)]"
+                      [class]="isCapturingQuickFinger() ? 'scs-scan-laser-sweep-sm' : 'bottom-1.5'"></div>
+                  </div>
                 </div>
                 <div class="flex-1 min-w-0 space-y-2.5 w-full">
                   <div class="flex items-center gap-2 flex-wrap">
@@ -544,12 +553,21 @@
           <div
             [class]="kioskFullscreen()
               ? 'relative w-full h-full bg-slate-50 overflow-hidden'
-              : 'relative w-full h-80 sm:h-96 rounded-[22px] scs-tile-3d bg-gradient-to-b from-white via-slate-50/70 to-emerald-50/35 overflow-hidden border border-slate-200/90 transition-all'">
+              : 'relative w-full h-72 sm:h-80 md:h-96 rounded-2xl sm:rounded-[22px] scs-tile-3d bg-gradient-to-b from-white via-slate-50/70 to-emerald-50/35 overflow-hidden border border-slate-200/90 transition-all'">
 
             <div class="absolute inset-0 flex flex-col items-center justify-center p-5 text-center text-slate-900 space-y-4">
               <button type="button" (click)="verifyFingerprintScan()" [disabled]="isProcessingFingerScan()"
-                class="w-24 h-24 rounded-[26px] bg-emerald-50 hover:bg-emerald-100 border-2 border-emerald-200 text-emerald-600 flex items-center justify-center shadow-sm cursor-pointer transition-all active:scale-95 disabled:opacity-60">
-                <lucide-icon [name]="isProcessingFingerScan() ? 'loader-2' : 'fingerprint'" class="w-12 h-12" [class.animate-spin]="isProcessingFingerScan()"></lucide-icon>
+                class="relative overflow-hidden w-24 h-24 rounded-[26px] bg-emerald-50 hover:bg-emerald-100 border-2 border-emerald-200 text-emerald-600 flex items-center justify-center shadow-sm cursor-pointer transition-all active:scale-95 disabled:opacity-60">
+                <lucide-icon [name]="isProcessingFingerScan() ? 'loader-2' : 'fingerprint'" class="w-12 h-12 relative z-[1]" [class.animate-spin]="isProcessingFingerScan()"></lucide-icon>
+                <div class="pointer-events-none absolute inset-1.5 z-10">
+                  <span class="absolute top-0 left-0 w-3.5 h-3.5 border-t-2 border-l-2 border-[#1D8EFF] rounded-tl-lg"></span>
+                  <span class="absolute top-0 right-0 w-3.5 h-3.5 border-t-2 border-r-2 border-[#1D8EFF] rounded-tr-lg"></span>
+                  <span class="absolute bottom-0 left-0 w-3.5 h-3.5 border-b-2 border-l-2 border-[#1D8EFF] rounded-bl-lg"></span>
+                  <span class="absolute bottom-0 right-0 w-3.5 h-3.5 border-b-2 border-r-2 border-[#1D8EFF] rounded-br-lg"></span>
+                  <div
+                    class="absolute left-1.5 right-1.5 h-[2.5px] rounded-full bg-gradient-to-r from-[#1D8EFF]/30 via-[#38BDF8] to-[#1D8EFF]/30 shadow-[0_0_12px_3px_rgba(29,142,255,0.65)]"
+                    [class]="isProcessingFingerScan() ? 'scs-scan-laser-sweep-sm' : 'bottom-2'"></div>
+                </div>
               </button>
 
               <div class="space-y-1.5 max-w-md">
@@ -681,24 +699,24 @@
           </div>
 
           @if (!kioskFullscreen()) {
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div class="grid grid-cols-2 gap-2.5">
               <button type="button" (click)="verifyFingerprintScan()" [disabled]="isProcessingFingerScan()"
-                class="py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold shadow-md shadow-emerald-600/20 cursor-pointer inline-flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all disabled:opacity-50 whitespace-nowrap">
-                <lucide-icon [name]="isProcessingFingerScan() ? 'loader-2' : 'fingerprint'" class="w-4 h-4" [class.animate-spin]="isProcessingFingerScan()"></lucide-icon>
-                <span>{{ isProcessingFingerScan() ? 'Scanning Sensor...' : 'Scan Fingerprint' }}</span>
+                class="py-2.5 px-3 sm:px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-[11px] sm:text-xs font-bold shadow-md shadow-emerald-600/20 cursor-pointer inline-flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all disabled:opacity-50 whitespace-nowrap">
+                <lucide-icon [name]="isProcessingFingerScan() ? 'loader-2' : 'fingerprint'" class="w-4 h-4 shrink-0" [class.animate-spin]="isProcessingFingerScan()"></lucide-icon>
+                <span class="truncate">{{ isProcessingFingerScan() ? 'Scanning Sensor...' : 'Scan Fingerprint' }}</span>
               </button>
 
               @if (canEnrollCurrentPortal()) {
                 <button type="button" (click)="openQuickEnrollPanel(false)"
-                  class="py-2.5 px-4 rounded-xl bg-white hover:bg-slate-50 border border-slate-200/90 text-slate-800 text-xs font-bold shadow-2xs cursor-pointer inline-flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all whitespace-nowrap">
-                  <lucide-icon [name]="'user-plus'" class="w-4 h-4 text-emerald-600"></lucide-icon>
-                  <span>Enroll Finger</span>
+                  class="py-2.5 px-3 sm:px-4 rounded-xl bg-white hover:bg-slate-50 border border-slate-200/90 text-slate-800 text-[11px] sm:text-xs font-bold shadow-2xs cursor-pointer inline-flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all whitespace-nowrap">
+                  <lucide-icon [name]="'user-plus'" class="w-4 h-4 text-emerald-600 shrink-0"></lucide-icon>
+                  <span class="truncate">Enroll Finger</span>
                 </button>
               } @else {
                 <button type="button" (click)="fallbackScanToFaceCamera()"
-                  class="py-2.5 px-4 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-bold shadow-2xs cursor-pointer inline-flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all whitespace-nowrap">
-                  <lucide-icon [name]="'scan-face'" class="w-4 h-4 text-emerald-600"></lucide-icon>
-                  <span>Use Face Camera</span>
+                  class="py-2.5 px-3 sm:px-4 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-[11px] sm:text-xs font-bold shadow-2xs cursor-pointer inline-flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all whitespace-nowrap">
+                  <lucide-icon [name]="'scan-face'" class="w-4 h-4 text-emerald-600 shrink-0"></lucide-icon>
+                  <span class="truncate">Use Face Camera</span>
                 </button>
               }
             </div>
@@ -708,7 +726,7 @@
           <div (click)="focusGateBarcodeInput()"
             [class]="kioskFullscreen()
               ? 'relative w-full h-full bg-slate-50 text-slate-900 flex flex-col justify-between p-4 sm:p-8 overflow-y-auto'
-              : 'relative w-full min-h-[21rem] rounded-[22px] scs-tile-3d bg-white text-slate-900 flex flex-col justify-between p-4 sm:p-6 overflow-hidden border border-slate-200/90'">
+              : 'relative w-full min-h-[19rem] sm:min-h-[21rem] rounded-2xl sm:rounded-[22px] scs-tile-3d bg-white text-slate-900 flex flex-col justify-between p-3.5 sm:p-6 overflow-hidden border border-slate-200/90'">
 
             <!-- Top Kiosk Header Bar -->
             <div class="flex items-start sm:items-center justify-between gap-3 flex-wrap">
@@ -756,6 +774,58 @@
                   [class]="gateMode() === 'out' ? 'bg-amber-500 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'">
                   Force Gate OUT
                 </button>
+              </div>
+
+              <!-- Live Card QR / Barcode Camera Frame -->
+              <div (click)="$event.stopPropagation()" class="mx-auto max-w-sm rounded-2xl bg-[#101216] p-3 border border-slate-800 shadow-lg space-y-2.5 text-white">
+                <div class="flex items-center justify-between gap-2 text-[11px]">
+                  <span class="font-bold text-slate-200 inline-flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full" [class]="gateCameraActive() ? 'bg-emerald-400 animate-pulse' : 'bg-sky-400'"></span>
+                    <span>{{ gateCameraActive() ? 'Live Student / Staff Card QR Scan' : 'Card QR & Barcode Camera' }}</span>
+                  </span>
+                  @if (gateCameraActive()) {
+                    <div class="flex items-center gap-1.5">
+                      <button type="button" (click)="flipGateQrCamera()"
+                        class="px-2 py-1 rounded-lg bg-[#242830] hover:bg-[#313744] text-white font-semibold cursor-pointer inline-flex items-center gap-1">
+                        <lucide-icon [name]="'refresh-cw'" class="w-3 h-3"></lucide-icon>
+                        <span>Flip</span>
+                      </button>
+                      <button type="button" (click)="stopGateQrCamera()"
+                        class="px-2 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-semibold cursor-pointer inline-flex items-center gap-1">
+                        <lucide-icon [name]="'video-off'" class="w-3 h-3"></lucide-icon>
+                        <span>Stop</span>
+                      </button>
+                    </div>
+                  }
+                </div>
+
+                <div class="relative mx-auto w-full h-44 rounded-2xl bg-[#1c2026] overflow-hidden flex items-center justify-center">
+                  <video #gateQrVideoEl [class.hidden]="!gateCameraActive()" class="w-full h-full object-cover" autoplay playsinline muted></video>
+                  <canvas #gateQrCanvasEl class="hidden"></canvas>
+
+                  <!-- Electric-Blue Corner Brackets -->
+                  <span class="pointer-events-none absolute top-2 left-2 w-6 h-6 border-t-[3px] border-l-[3px] border-[#1D8EFF] rounded-tl-xl z-10"></span>
+                  <span class="pointer-events-none absolute top-2 right-2 w-6 h-6 border-t-[3px] border-r-[3px] border-[#1D8EFF] rounded-tr-xl z-10"></span>
+                  <span class="pointer-events-none absolute bottom-2 left-2 w-6 h-6 border-b-[3px] border-l-[3px] border-[#1D8EFF] rounded-bl-xl z-10"></span>
+                  <span class="pointer-events-none absolute bottom-2 right-2 w-6 h-6 border-b-[3px] border-r-[3px] border-[#1D8EFF] rounded-br-xl z-10"></span>
+
+                  <!-- Sweeping Blue Laser Line (top -> bottom while active) -->
+                  <div
+                    class="pointer-events-none absolute left-4 right-4 h-[3px] rounded-full bg-gradient-to-r from-[#1D8EFF]/30 via-[#38BDF8] to-[#1D8EFF]/30 shadow-[0_0_16px_4px_rgba(29,142,255,0.65)] z-10"
+                    [class]="gateCameraActive() ? 'scs-scan-laser-sweep' : 'bottom-4'"></div>
+
+                  @if (!gateCameraActive()) {
+                    <button type="button" (click)="startGateQrCamera()" [disabled]="gateCameraStarting()"
+                      class="relative z-20 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#1D8EFF] hover:bg-[#197be0] text-white text-xs font-bold shadow-[0_6px_22px_rgba(29,142,255,0.45)] cursor-pointer transition-all disabled:opacity-60">
+                      <lucide-icon [name]="'camera'" class="w-4 h-4"></lucide-icon>
+                      <span>{{ gateCameraStarting() ? 'Starting...' : 'Start Card QR Scan' }}</span>
+                    </button>
+                  }
+                </div>
+
+                @if (gateCameraError()) {
+                  <p class="text-[11px] text-amber-300 font-medium text-center">{{ gateCameraError() }}</p>
+                }
               </div>
 
               <div class="space-y-1.5 px-1">
@@ -826,7 +896,7 @@
           (drop)="onViewportDrop($event)"
           [class]="(kioskFullscreen()
             ? 'relative w-full h-full bg-slate-50 overflow-hidden '
-            : 'relative w-full h-80 sm:h-96 rounded-[22px] scs-tile-3d bg-white overflow-hidden border border-slate-200/90 transition-all ')
+            : 'relative w-full h-72 sm:h-80 md:h-96 rounded-2xl sm:rounded-[22px] scs-tile-3d bg-white overflow-hidden border border-slate-200/90 transition-all ')
             + fillLightFrameClass() + (isDraggingFiles() ? ' ring-4 ring-emerald-400' : '')">
 
           <video #verifyVideoEl
@@ -887,11 +957,22 @@
               </span>
             </div>
           } @else if (cameraActive() && !scanOverlay()) {
-            <div class="absolute bottom-3.5 left-1/2 -translate-x-1/2 pointer-events-none">
+            <div class="absolute bottom-3.5 left-1/2 -translate-x-1/2 pointer-events-none z-10">
               <span class="px-3.5 py-1.5 rounded-xl bg-slate-950/75 backdrop-blur-md text-slate-100 border border-white/15 text-[11px] font-semibold inline-flex items-center gap-2 shadow-lg whitespace-nowrap">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
                 <span>Waiting for face — step in front of camera</span>
               </span>
+            </div>
+          }
+
+          <!-- Precision Optical Laser Reticle (sweeps top-to-bottom while live face camera is active) -->
+          @if (cameraActive()) {
+            <div class="pointer-events-none absolute inset-6 sm:inset-10 z-10">
+              <span class="absolute top-0 left-0 w-7 h-7 border-t-[3px] border-l-[3px] border-[#1D8EFF] rounded-tl-xl"></span>
+              <span class="absolute top-0 right-0 w-7 h-7 border-t-[3px] border-r-[3px] border-[#1D8EFF] rounded-tr-xl"></span>
+              <span class="absolute bottom-0 left-0 w-7 h-7 border-b-[3px] border-l-[3px] border-[#1D8EFF] rounded-bl-xl"></span>
+              <span class="absolute bottom-0 right-0 w-7 h-7 border-b-[3px] border-r-[3px] border-[#1D8EFF] rounded-br-xl"></span>
+              <div class="absolute left-3 right-3 h-[3px] rounded-full bg-gradient-to-r from-[#1D8EFF]/30 via-[#38BDF8] to-[#1D8EFF]/30 shadow-[0_0_16px_4px_rgba(29,142,255,0.65)] scs-scan-laser-sweep"></div>
             </div>
           }
 
@@ -1017,16 +1098,16 @@
 
         @if (!kioskFullscreen()) {
           <!-- Primary Scanner Action Strip -->
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
             @if (!cameraActive()) {
               <button type="button" (click)="startCamera('verify')"
-                class="py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold shadow-md shadow-emerald-600/20 cursor-pointer inline-flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all whitespace-nowrap">
+                class="col-span-2 sm:col-span-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold shadow-md shadow-emerald-600/20 cursor-pointer inline-flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all whitespace-nowrap">
                 <lucide-icon [name]="'video'" class="w-4 h-4"></lucide-icon>
                 <span>Open Live Camera</span>
               </button>
             } @else {
               <button type="button" (click)="verifyLiveCameraFrame()" [disabled]="isProcessingScan()"
-                class="py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold shadow-md shadow-emerald-600/20 cursor-pointer inline-flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all disabled:opacity-50 whitespace-nowrap">
+                class="col-span-2 sm:col-span-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold shadow-md shadow-emerald-600/20 cursor-pointer inline-flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all disabled:opacity-50 whitespace-nowrap">
                 <lucide-icon [name]="isProcessingScan() ? 'loader-2' : 'scan-face'" class="w-4 h-4" [class.animate-spin]="isProcessingScan()"></lucide-icon>
                 <span>{{ isProcessingScan() ? 'Scanning...' : 'Scan Now' }}</span>
               </button>
@@ -1034,23 +1115,23 @@
 
             @if (canEnrollCurrentPortal()) {
               <button type="button" (click)="openQuickEnrollPanel(true)"
-                class="py-2.5 px-4 rounded-xl bg-white hover:bg-slate-50 border border-slate-200/90 text-slate-800 text-xs font-bold shadow-2xs cursor-pointer inline-flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all whitespace-nowrap">
-                <lucide-icon [name]="'user-plus'" class="w-4 h-4 text-emerald-600"></lucide-icon>
-                <span>Snap &amp; Enroll Face</span>
+                class="py-2.5 px-3 sm:px-4 rounded-xl bg-white hover:bg-slate-50 border border-slate-200/90 text-slate-800 text-[11px] sm:text-xs font-bold shadow-2xs cursor-pointer inline-flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all whitespace-nowrap">
+                <lucide-icon [name]="'user-plus'" class="w-4 h-4 text-emerald-600 shrink-0"></lucide-icon>
+                <span class="truncate">Snap &amp; Enroll Face</span>
               </button>
             }
 
             @if (cameraActive()) {
               <button type="button" (click)="stopCamera()"
-                class="py-2.5 px-4 rounded-xl bg-white hover:bg-rose-50/60 border border-slate-200/90 text-slate-700 hover:text-rose-700 text-xs font-bold shadow-2xs cursor-pointer inline-flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all whitespace-nowrap">
-                <lucide-icon [name]="'video-off'" class="w-4 h-4 text-rose-600"></lucide-icon>
-                <span>Pause Camera</span>
+                class="py-2.5 px-3 sm:px-4 rounded-xl bg-white hover:bg-rose-50/60 border border-slate-200/90 text-slate-700 hover:text-rose-700 text-[11px] sm:text-xs font-bold shadow-2xs cursor-pointer inline-flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all whitespace-nowrap">
+                <lucide-icon [name]="'video-off'" class="w-4 h-4 text-rose-600 shrink-0"></lucide-icon>
+                <span class="truncate">Pause Camera</span>
               </button>
             } @else {
               <button type="button" (click)="switchCameraFacing()"
-                class="py-2.5 px-4 rounded-xl bg-white hover:bg-slate-50 border border-slate-200/90 text-slate-800 text-xs font-bold shadow-2xs cursor-pointer inline-flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all whitespace-nowrap">
-                <lucide-icon [name]="'refresh-cw'" class="w-4 h-4 text-indigo-600"></lucide-icon>
-                <span>{{ cameraFacingMode() === 'user' ? 'Front Camera' : 'Rear Camera' }}</span>
+                class="py-2.5 px-3 sm:px-4 rounded-xl bg-white hover:bg-slate-50 border border-slate-200/90 text-slate-800 text-[11px] sm:text-xs font-bold shadow-2xs cursor-pointer inline-flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all whitespace-nowrap">
+                <lucide-icon [name]="'refresh-cw'" class="w-4 h-4 text-indigo-600 shrink-0"></lucide-icon>
+                <span class="truncate">{{ cameraFacingMode() === 'user' ? 'Front Camera' : 'Rear Camera' }}</span>
               </button>
             }
           </div>
@@ -1077,10 +1158,10 @@
 
       <!-- Right 5 cols: Verification Target, Match Card & Live Attendance Feed -->
       @if (!kioskFullscreen()) {
-      <div class="lg:col-span-5 space-y-5">
+      <div class="lg:col-span-5 space-y-4 sm:space-y-5 min-w-0">
 
         <!-- Recognition Match Engine Card (HiOS) -->
-        <div class="apple-card scs-surface-3d rounded-[24px] p-5 sm:p-6 space-y-4">
+        <div class="apple-card scs-surface-3d rounded-2xl sm:rounded-[24px] p-3.5 sm:p-5 lg:p-6 space-y-4 min-w-0">
           <div class="flex items-center justify-between gap-2 flex-wrap">
             <div class="flex items-center gap-2.5 min-w-0">
               <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-blue-600 text-white flex items-center justify-center shadow-sm shadow-indigo-500/25 shrink-0">
@@ -1181,7 +1262,7 @@
         </div>
 
         <!-- Live Attendance Ledger Card (HiOS) -->
-        <div class="apple-card scs-surface-3d rounded-[24px] p-5 sm:p-6 space-y-3.5">
+        <div class="apple-card scs-surface-3d rounded-2xl sm:rounded-[24px] p-3.5 sm:p-5 lg:p-6 space-y-3.5 min-w-0">
           <div class="flex items-center justify-between gap-2 pb-2 border-b border-slate-100">
             <div class="flex items-center gap-2.5">
               <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-sm shadow-emerald-500/25">
@@ -1229,7 +1310,7 @@
 
     <!-- Marked Attendance Details Table (Strictly inside Attendance Hub, separate from Admissions) -->
     @if (!kioskFullscreen()) {
-      <div class="apple-card scs-surface-3d rounded-[24px] p-5 sm:p-6 space-y-4">
+      <div class="apple-card scs-surface-3d rounded-2xl sm:rounded-[24px] p-3.5 sm:p-5 lg:p-6 space-y-4 min-w-0">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3.5">
           <div class="flex items-center gap-3">
             <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-sm border border-white/30 shrink-0">
@@ -1335,7 +1416,7 @@
     <!-- SUB-TABS 2-5: SEPARATE ROSTERS (STUDENTS / TEACHERS / STAFF / PRINCIPAL) -->
     <!-- ====================================================================== -->
     @if (!kioskFullscreen() && ((activeSubTab() === 'students' && (isOwner() || allowedCategories().includes('student'))) || (activeSubTab() === 'teachers' && (isOwner() || allowedCategories().includes('teacher'))) || (activeSubTab() === 'staff' && (isOwner() || allowedCategories().includes('staff'))) || (activeSubTab() === 'principals' && (isOwner() || allowedCategories().includes('principal'))))) {
-      <div class="apple-card scs-surface-3d rounded-[24px] p-5 sm:p-6 space-y-5">
+      <div class="apple-card scs-surface-3d rounded-2xl sm:rounded-[24px] p-3.5 sm:p-5 lg:p-6 space-y-5 min-w-0">
 
         <!-- Section Header + Toolbar -->
         <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-4 border-b border-slate-100 pb-4">
@@ -2088,7 +2169,7 @@
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
 
         <!-- Left 7 cols: Live Camera / Biometric Fingerprint Capture -->
-        <div class="lg:col-span-7 apple-card scs-surface-3d rounded-[24px] p-5 sm:p-6 space-y-4">
+        <div class="lg:col-span-7 apple-card scs-surface-3d rounded-2xl sm:rounded-[24px] p-3.5 sm:p-5 lg:p-6 space-y-4 min-w-0">
           <div class="flex items-center justify-between flex-wrap gap-3 border-b border-slate-100 pb-4">
             <div class="flex items-center gap-3">
               <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-500 text-white flex items-center justify-center shadow-sm border border-white/30 shrink-0">
@@ -2377,7 +2458,7 @@
         </div>
 
         <!-- Right 5 cols: Enrolled Profiles Registry -->
-        <div class="lg:col-span-5 apple-card scs-surface-3d rounded-[24px] p-5 sm:p-6 space-y-4">
+        <div class="lg:col-span-5 apple-card scs-surface-3d rounded-2xl sm:rounded-[24px] p-3.5 sm:p-5 lg:p-6 space-y-4 min-w-0">
           <div class="flex items-center justify-between border-b border-slate-100 pb-3.5">
             <div class="flex items-center gap-2.5">
               <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-sky-500 to-blue-600 text-white flex items-center justify-center shadow-xs border border-white/30 shrink-0">
@@ -2472,7 +2553,7 @@
       <div class="space-y-5">
 
         <!-- Section A: Verification Engine, Lite Mode & Camera Illumination -->
-        <div class="apple-card scs-surface-3d rounded-[24px] p-5 sm:p-6 space-y-5">
+        <div class="apple-card scs-surface-3d rounded-2xl sm:rounded-[24px] p-3.5 sm:p-5 lg:p-6 space-y-5 min-w-0">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
             <div class="flex items-center gap-3">
               <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-500 text-white flex items-center justify-center shadow-sm border border-white/30 shrink-0">
@@ -2693,7 +2774,7 @@
         </div>
 
         <!-- Section B: Category Setup (Students | Teachers | Staff | Principal) -->
-        <div class="apple-card scs-surface-3d rounded-[24px] p-5 sm:p-6 space-y-4">
+        <div class="apple-card scs-surface-3d rounded-2xl sm:rounded-[24px] p-3.5 sm:p-5 lg:p-6 space-y-4 min-w-0">
           <div class="flex items-center gap-3 border-b border-slate-100 pb-3.5">
             <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-sky-500 to-blue-600 text-white flex items-center justify-center shadow-sm border border-white/30 shrink-0">
               <lucide-icon [name]="'users'" class="w-4 h-4"></lucide-icon>
@@ -2761,7 +2842,7 @@
         </div>
 
         <!-- Section C: Role Access Control Matrix & Individual Operator Lite Toggles -->
-        <div class="apple-card scs-surface-3d rounded-[24px] p-5 sm:p-6 space-y-5">
+        <div class="apple-card scs-surface-3d rounded-2xl sm:rounded-[24px] p-3.5 sm:p-5 lg:p-6 space-y-5 min-w-0">
           <div class="flex items-center gap-3 border-b border-slate-100 pb-3.5">
             <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-violet-500 to-indigo-600 text-white flex items-center justify-center shadow-sm border border-white/30 shrink-0">
               <lucide-icon [name]="'shield-check'" class="w-4 h-4"></lucide-icon>
@@ -2853,19 +2934,19 @@
                 <h5 class="text-xs font-black text-slate-900 uppercase tracking-wider">Individual Lite &amp; Operator Access</h5>
                 <p class="text-[11px] font-medium text-slate-500">Enable or restrict individual teachers, staff, or principals for attendance camera operations &amp; Lite Mode.</p>
               </div>
-              <div class="inline-flex p-1 rounded-2xl bg-white border border-slate-200/70 gap-1 text-xs font-bold">
+              <div class="inline-flex flex-wrap w-full sm:w-auto p-1 rounded-2xl bg-white border border-slate-200/70 gap-1 text-xs font-bold">
                 <button type="button" (click)="operatorFilterCategory.set('teacher')"
-                  class="px-3 py-1.5 rounded-xl cursor-pointer transition-all"
+                  class="flex-1 sm:flex-initial px-3 py-1.5 rounded-xl cursor-pointer transition-all"
                   [class]="operatorFilterCategory() === 'teacher' ? 'bg-white text-slate-900 shadow-xs border border-slate-200/70' : 'text-slate-600 hover:text-slate-900'">
                   Teachers
                 </button>
                 <button type="button" (click)="operatorFilterCategory.set('staff')"
-                  class="px-3 py-1.5 rounded-xl cursor-pointer transition-all"
+                  class="flex-1 sm:flex-initial px-3 py-1.5 rounded-xl cursor-pointer transition-all"
                   [class]="operatorFilterCategory() === 'staff' ? 'bg-white text-slate-900 shadow-xs border border-slate-200/70' : 'text-slate-600 hover:text-slate-900'">
                   Campus Staff
                 </button>
                 <button type="button" (click)="operatorFilterCategory.set('principal')"
-                  class="px-3 py-1.5 rounded-xl cursor-pointer transition-all"
+                  class="flex-1 sm:flex-initial px-3 py-1.5 rounded-xl cursor-pointer transition-all"
                   [class]="operatorFilterCategory() === 'principal' ? 'bg-white text-slate-900 shadow-xs border border-slate-200/70' : 'text-slate-600 hover:text-slate-900'">
                   Principal
                 </button>

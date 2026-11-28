@@ -764,6 +764,13 @@ export const SCHOOL_TABLE_CATALOG: TableCatalogItem[] = [
     title: 'QR Verification Scan Audit Logs',
     portals: 'Owner, Principal, Teacher, Accountant',
     defaultHeaders: ['Scanned At', 'Verdict', 'Source', 'Scanned Code / Print Ref', 'Table & Row', 'Creator', 'Verified By', 'Verification Details']
+  },
+  {
+    tableId: 'owner_stock_movements',
+    canonicalId: 'owner_stock_movements',
+    title: 'Stock IN / OUT Movement Ledger',
+    portals: 'Owner',
+    defaultHeaders: ['Voucher Ref', 'Asset & Code', 'Direction', 'Qty & Stock Balance', 'Total Value', 'Handled By & Time']
   }
 ];
 
@@ -1115,6 +1122,14 @@ export const SCHOOL_FORM_FIELD_ANCHORS: Record<string, FormFieldAnchorOption[]> 
     { key: 'as_value', label: 'Unit Value (PKR)' },
     { key: 'as_custodian', label: 'Custodian / Assigned Staff' },
     { key: 'as_condition', label: 'Condition' }
+  ],
+  owner_stock_movements: [
+    { key: 'stk_ref', label: 'Voucher Reference #' },
+    { key: 'stk_item', label: 'Asset Name & Code' },
+    { key: 'stk_dir', label: 'Movement Direction (IN / OUT)' },
+    { key: 'stk_qty', label: 'Quantity & Stock Balance' },
+    { key: 'stk_val', label: 'Total Value (PKR)' },
+    { key: 'stk_handler', label: 'Handled By & Timestamp' }
   ],
   events_calendar: [
     { key: 'ev_title', label: 'Event Title' },
@@ -3326,15 +3341,81 @@ export class SchoolTableSchemaService {
       if (supplied && supplied.headers.length > 0) {
         const schema = this.getSchema(tableId);
         const title = (schema.customTitle || supplied.title || fallbackTitle || tableId.replace(/_/g, ' ')).trim();
+        const detectedBuiltIns: DetectedBuiltInHeader[] = supplied.headers.map((h, i) => ({
+          index: i,
+          originalLabel: String(h || '')
+        }));
+        const ordered = this.resolveOrderedColumns(tableId, detectedBuiltIns, schema);
+        const visibleCols = ordered.filter((c) => c.kind === 'custom' || !c.hidden);
+        const effectiveCols = visibleCols.length > 0 ? visibleCols : ordered;
+
+        const mergedHeaders = effectiveCols.map((c) =>
+          c.kind === 'builtin' ? c.displayLabel : c.col.label
+        );
+        const remappedDateHint =
+          supplied.dateColHint !== undefined
+            ? (() => {
+                const idx = effectiveCols.findIndex(
+                  (c) => c.kind === 'builtin' && c.header.index === supplied.dateColHint
+                );
+                return idx >= 0 ? idx : undefined;
+              })()
+            : undefined;
+
+        const keyedRows: Array<{ rowKey: string; cells: string[] }> = (supplied.rows || []).map((row, rIdx) => {
+          const rk = String(supplied.rowKeys?.[rIdx] ?? row[0] ?? rIdx);
+          const cells = effectiveCols.map((c) => {
+            if (c.kind === 'builtin') {
+              return String(row[c.header.index] ?? '');
+            }
+            const customVal = schema.customCells?.[rk]?.[c.col.id];
+            return String(customVal !== undefined && customVal !== '' ? customVal : (c.col.defaultValue ?? '—'));
+          });
+          return { rowKey: rk, cells };
+        });
+
+        const customRows = schema.customRows || [];
+        if (customRows.length > 0) {
+          for (const cr of customRows) {
+            const crCells = effectiveCols.map((c) => {
+              if (c.kind === 'builtin') {
+                const orig = c.header.originalLabel;
+                const val =
+                  cr.values?.[`built:${orig}`] ??
+                  cr.values?.[`col_${c.header.index}`] ??
+                  cr.values?.[orig] ??
+                  cr.values?.[c.displayLabel] ??
+                  (c.header.index === 0 ? cr.rowLabel : '');
+                return String(val || '—');
+              }
+              const val = cr.values?.[c.col.id] ?? schema.customCells?.[cr.rowKey]?.[c.col.id] ?? c.col.defaultValue ?? '—';
+              return String(val || '—');
+            });
+            const pos = (cr.insertAfterRowKey || '__last__').trim();
+            if (pos === '__first__') {
+              keyedRows.unshift({ rowKey: cr.rowKey, cells: crCells });
+            } else if (!pos || pos === '__last__') {
+              keyedRows.push({ rowKey: cr.rowKey, cells: crCells });
+            } else {
+              const targetIdx = keyedRows.findIndex((entry) => entry.rowKey === pos);
+              if (targetIdx >= 0) {
+                keyedRows.splice(targetIdx + 1, 0, { rowKey: cr.rowKey, cells: crCells });
+              } else {
+                keyedRows.push({ rowKey: cr.rowKey, cells: crCells });
+              }
+            }
+          }
+        }
+
         return {
           tableId,
           title,
           subtitle: supplied.subtitle || roleLabel,
           roleLabel: supplied.roleLabel || roleLabel,
           safeBaseName: buildBaseName(title, tableId),
-          headers: supplied.headers,
-          rows: supplied.rows,
-          dateColHint: supplied.dateColHint
+          headers: mergedHeaders,
+          rows: keyedRows.map((entry) => entry.cells),
+          dateColHint: remappedDateHint
         };
       }
     }

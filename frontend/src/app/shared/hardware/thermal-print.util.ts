@@ -96,6 +96,16 @@ export interface ThermalPosReceiptData {
   barcodeValue?: string;
   qrPayload?: string;
   footerNote?: string;
+  logoDataUrl?: string;
+  monogramInitials?: string;
+  showLogoCrest?: boolean;
+  logoShape?: 'square' | 'circle';
+  stampLabel?: 'PAID' | 'VERIFIED' | 'ORIGINAL' | 'NONE';
+  showBarcode?: boolean;
+  showQr?: boolean;
+  dualCopy?: boolean;
+  campusAddress?: string;
+  campusPhone?: string;
 }
 
 export interface ThermalKotTicketData {
@@ -537,13 +547,30 @@ export function buildThermalFeeReceiptHtml(data: ThermalFeeReceiptData, paperWid
 
 export function buildThermalPosReceiptHtml(data: ThermalPosReceiptData, paperWidth: ThermalPaperWidth = '80mm'): string {
   const cur = data.currency || 'USD';
-  const curSymbol = cur === 'PKR' ? 'PKR ' : '$';
+  const curSymbol = cur === 'USD' ? '$' : `${escapeHtml(cur)} `;
   const barcodeCode = data.barcodeValue || data.receiptNo || `POS-${Date.now()}`;
   const svgBarcode = buildCode128SvgMarkup(barcodeCode, paperWidth === '58mm' ? 28 : 34, '#000000');
   const qrText = data.qrPayload || `RECEIPT:${data.receiptNo}|TOTAL:${cur}${Number(data.total || 0).toFixed(2)}|METHOD:${data.paymentMethod}|CUSTOMER:${data.customerName}`;
   const svgQr = buildQrCodeSvgMarkup(qrText, paperWidth === '58mm' ? 58 : 70, '#000000', 2, 'M');
   const pageMm = paperWidth === '58mm' ? '58mm' : '80mm';
   const bodyFontPx = paperWidth === '58mm' ? '10px' : '11px';
+
+  const safeLogoSrc =
+    data.logoDataUrl && /^data:image\/(?:png|jpeg|jpg|webp|gif);base64,[A-Za-z0-9+/=]+$/i.test(data.logoDataUrl.trim())
+      ? data.logoDataUrl.trim()
+      : '';
+  const showCrest = data.showLogoCrest !== false && (Boolean(safeLogoSrc) || Boolean(data.monogramInitials));
+  const crestShapeStyle = data.logoShape === 'circle' ? 'border-radius:9999px;' : 'border-radius:8px;';
+  const initials = escapeHtml((data.monogramInitials || data.businessName?.slice(0, 2) || 'SC').toUpperCase().slice(0, 4));
+  const crestHtml = showCrest
+    ? safeLogoSrc
+      ? `<div style="display:flex;justify-content:center;margin-bottom:5px;"><img src="${safeLogoSrc}" alt="Logo" referrerpolicy="no-referrer" style="width:40px;height:40px;object-fit:contain;border:1px solid #cbd5e1;padding:2px;background:#fff;${crestShapeStyle}" /></div>`
+      : `<div style="display:flex;justify-content:center;margin-bottom:5px;"><div style="width:36px;height:36px;border:1.5px solid #000;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:12px;${crestShapeStyle}">${initials}</div></div>`
+    : '';
+  const stampBadge =
+    data.stampLabel && data.stampLabel !== 'NONE'
+      ? `<div style="display:inline-block;margin-top:3px;padding:1.5px 6px;border:1.5px solid #000;font-size:9px;font-weight:900;letter-spacing:0.8px;">${escapeHtml(data.stampLabel)}</div>`
+      : '';
 
   const itemRows = (data.items || [])
     .map((it) => {
@@ -557,6 +584,48 @@ export function buildThermalPosReceiptHtml(data: ThermalPosReceiptData, paperWid
       </div>`;
     })
     .join('');
+
+  const buildSingleSlip = (copyLabel?: string): string => `
+  <div class="center">
+    ${copyLabel ? `<div style="font-size:8.5px;font-weight:900;letter-spacing:0.7px;text-transform:uppercase;margin-bottom:4px;border:1px solid #000;display:inline-block;padding:1px 6px;">${escapeHtml(copyLabel)}</div>` : ''}
+    ${crestHtml}
+    <div class="title">${escapeHtml(data.businessName)}</div>
+    ${data.branchName ? `<div class="sub">${escapeHtml(data.branchName)}</div>` : ''}
+    ${data.campusAddress ? `<div class="sub">${escapeHtml(data.campusAddress)}</div>` : ''}
+    ${data.campusPhone ? `<div class="sub">Tel: ${escapeHtml(data.campusPhone)}</div>` : ''}
+    <div class="sub" style="margin-top:2px;"><strong>${escapeHtml(data.receiptTitle || 'SALES TAX INVOICE / RECEIPT')}</strong></div>
+    ${stampBadge}
+  </div>
+  <div class="hr"></div>
+  <div class="row"><span>Receipt #:</span><span>${escapeHtml(data.receiptNo)}</span></div>
+  <div class="row"><span>Date/Time:</span><span>${escapeHtml(data.timestampLabel)}</span></div>
+  <div class="row"><span>Customer:</span><span>${escapeHtml(data.customerName || 'Walk-in Customer')}</span></div>
+  ${data.cashierName ? `<div class="row"><span>Cashier:</span><span>${escapeHtml(data.cashierName)}</span></div>` : ''}
+  <div class="row"><span>Method:</span><span>${escapeHtml(data.paymentMethod)}</span></div>
+  <div class="hr"></div>
+  ${itemRows}
+  <div class="hr"></div>
+  <div class="row"><span>Subtotal:</span><span>${curSymbol}${formatMoney(data.subtotal, cur)}</span></div>
+  ${data.discount ? `<div class="row"><span>Discount:</span><span>-${curSymbol}${formatMoney(data.discount, cur)}</span></div>` : ''}
+  ${data.tax ? `<div class="row"><span>GST / Tax:</span><span>${curSymbol}${formatMoney(data.tax, cur)}</span></div>` : ''}
+  <div class="total-box">
+    <div class="total-row">
+      <span>TOTAL PAID</span>
+      <span>${curSymbol}${formatMoney(data.total, cur)}</span>
+    </div>
+  </div>
+  ${data.cashTendered !== undefined && data.cashTendered > 0 ? `<div class="row"><span>Cash Tendered:</span><span>${curSymbol}${formatMoney(data.cashTendered, cur)}</span></div>` : ''}
+  ${data.changeDue !== undefined && data.changeDue > 0 ? `<div class="row"><span>Change Return:</span><span>${curSymbol}${formatMoney(data.changeDue, cur)}</span></div>` : ''}
+  ${data.showBarcode !== false ? `<div class="barcode-wrap">${svgBarcode}<div class="barcode-label">${escapeHtml(barcodeCode)}</div></div>` : ''}
+  ${data.showQr !== false ? `<div class="qr-wrap">${svgQr}</div>` : ''}
+  <div class="footer">
+    ${escapeHtml(data.footerNote || '*** THANK YOU FOR YOUR BUSINESS ***')}<br/>
+    SoftCode POS Hardware Engine (${paperWidth})
+  </div>`;
+
+  const bodyHtml = data.dualCopy
+    ? `${buildSingleSlip('STUDENT / CUSTOMER COPY')}<div class="hr" style="margin:12px 0;border-top:1.5px dashed #000;"></div><div class="center sub" style="margin-bottom:8px;">✂ TEAR / OFFICE RECORD COPY</div>${buildSingleSlip('OFFICE / COUNTER COPY')}`
+    : buildSingleSlip();
 
   return `<!doctype html>
 <html>
@@ -584,42 +653,7 @@ export function buildThermalPosReceiptHtml(data: ThermalPosReceiptData, paperWid
   </style>
 </head>
 <body>
-  <div class="center">
-    <div class="title">${escapeHtml(data.businessName)}</div>
-    ${data.branchName ? `<div class="sub">${escapeHtml(data.branchName)}</div>` : ''}
-    <div class="sub"><strong>${escapeHtml(data.receiptTitle || 'SALES TAX INVOICE / RECEIPT')}</strong></div>
-  </div>
-  <div class="hr"></div>
-  <div class="row"><span>Receipt #:</span><span>${escapeHtml(data.receiptNo)}</span></div>
-  <div class="row"><span>Date/Time:</span><span>${escapeHtml(data.timestampLabel)}</span></div>
-  <div class="row"><span>Customer:</span><span>${escapeHtml(data.customerName || 'Walk-in Customer')}</span></div>
-  ${data.cashierName ? `<div class="row"><span>Cashier:</span><span>${escapeHtml(data.cashierName)}</span></div>` : ''}
-  <div class="row"><span>Method:</span><span>${escapeHtml(data.paymentMethod)}</span></div>
-  <div class="hr"></div>
-  ${itemRows}
-  <div class="hr"></div>
-  <div class="row"><span>Subtotal:</span><span>${curSymbol}${formatMoney(data.subtotal, cur)}</span></div>
-  ${data.discount ? `<div class="row"><span>Discount:</span><span>-${curSymbol}${formatMoney(data.discount, cur)}</span></div>` : ''}
-  ${data.tax ? `<div class="row"><span>GST / Tax:</span><span>${curSymbol}${formatMoney(data.tax, cur)}</span></div>` : ''}
-  <div class="total-box">
-    <div class="total-row">
-      <span>TOTAL PAID</span>
-      <span>${curSymbol}${formatMoney(data.total, cur)}</span>
-    </div>
-  </div>
-  ${data.cashTendered !== undefined && data.cashTendered > 0 ? `<div class="row"><span>Cash Tendered:</span><span>${curSymbol}${formatMoney(data.cashTendered, cur)}</span></div>` : ''}
-  ${data.changeDue !== undefined && data.changeDue > 0 ? `<div class="row"><span>Change Return:</span><span>${curSymbol}${formatMoney(data.changeDue, cur)}</span></div>` : ''}
-  <div class="barcode-wrap">
-    ${svgBarcode}
-    <div class="barcode-label">${escapeHtml(barcodeCode)}</div>
-  </div>
-  <div class="qr-wrap">
-    ${svgQr}
-  </div>
-  <div class="footer">
-    ${escapeHtml(data.footerNote || '*** THANK YOU FOR YOUR BUSINESS ***')}<br/>
-    SoftCode POS Hardware Engine (${paperWidth})
-  </div>
+  ${bodyHtml}
 </body>
 </html>`;
 }

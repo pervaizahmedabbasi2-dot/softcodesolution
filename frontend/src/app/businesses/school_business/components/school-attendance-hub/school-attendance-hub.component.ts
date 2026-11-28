@@ -14,6 +14,8 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LucideAngularModule } from 'lucide-angular';
+import jsQR from 'jsqr';
+import { BackendService } from '../../../../services/backend.service';
 import {
   ATTENDANCE_COLUMN_DEFINITIONS,
   AttendanceColumnDefinition,
@@ -68,6 +70,7 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   private readonly faceVerifier = inject(FaceVerificationService);
   private readonly fingerprintVerifier = inject(FingerprintVerificationService);
   private readonly tableSchemaService = inject(SchoolTableSchemaService);
+  private readonly backend = inject(BackendService);
 
   @ViewChild('verifyVideoEl') verifyVideoEl?: ElementRef<HTMLVideoElement>;
   @ViewChild('enrollVideoEl') enrollVideoEl?: ElementRef<HTMLVideoElement>;
@@ -75,6 +78,8 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   @ViewChild('phoneEnrollInputEl') phoneEnrollInputEl?: ElementRef<HTMLInputElement>;
   @ViewChild('quickSelfieFileEl') quickSelfieFileEl?: ElementRef<HTMLInputElement>;
   @ViewChild('gateBarcodeInputEl') gateBarcodeInputEl?: ElementRef<HTMLInputElement>;
+  @ViewChild('gateQrVideoEl') gateQrVideoEl?: ElementRef<HTMLVideoElement>;
+  @ViewChild('gateQrCanvasEl') gateQrCanvasEl?: ElementRef<HTMLCanvasElement>;
 
   // Inputs
   portalContext = input<AttendancePortalContext>('owner');
@@ -286,6 +291,10 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   scannerChannel = signal<AttendanceVerificationChannel>('face');
   enrollChannel = signal<'face' | 'fingerprint'>('face');
   barcodeScanInput = signal<string>('');
+  gateCameraActive = signal<boolean>(false);
+  gateCameraStarting = signal<boolean>(false);
+  gateCameraError = signal<string>('');
+  gateCameraFacing = signal<'environment' | 'user'>('environment');
   gateKioskClock = signal<string>(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
   gateKioskDate = signal<string>(new Date().toLocaleDateString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' }));
   fingerScanStatus = signal<string>('');
@@ -337,6 +346,12 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
   operatorFilterCategory = signal<'teacher' | 'staff' | 'principal'>('teacher');
 
   private mediaStream: MediaStream | null = null;
+  private gateQrStream: MediaStream | null = null;
+  private gateQrRafId: number | null = null;
+  private gateBarcodeDetector: any = null;
+  private gateLastDecoded = '';
+  private gateLastDecodedAt = 0;
+  private gateQrResolving = false;
   private activeCameraSlot: 'verify' | 'enroll' | null = null;
   private autoScanTimerId: ReturnType<typeof setInterval> | null = null;
   private overlayTimerId: ReturnType<typeof setTimeout> | null = null;
@@ -550,6 +565,7 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       clearTimeout(this.hidResetTimerId);
       this.hidResetTimerId = null;
     }
+    this.stopGateQrCamera();
     this.stopCamera(false);
   }
 
@@ -1432,6 +1448,7 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       }
     }
 
+    this.stopGateQrCamera();
     this.stopCamera(false);
     this.activeSubTab.set(tab);
     if (tab === 'students') this.activeCategory.set('student');
@@ -1470,13 +1487,17 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
     this.lastVerificationResult.set(null);
     this.scanOverlay.set(null);
     if (channel === 'fingerprint') {
+      this.stopGateQrCamera();
       this.stopCamera(false);
       void this.refreshFingerprintCapabilities();
     } else if (channel === 'barcode') {
       this.stopCamera(false);
       setTimeout(() => this.focusGateBarcodeInput(), 80);
     } else if (this.activeSubTab() === 'terminal' && this.keepCameraOn() && this.canVerifyCameraCurrentPortal()) {
+      this.stopGateQrCamera();
       setTimeout(() => void this.startCamera('verify', true), 60);
+    } else {
+      this.stopGateQrCamera();
     }
   }
 
@@ -1682,6 +1703,181 @@ export class SchoolAttendanceHubComponent implements AfterViewInit, OnDestroy {
       isAutoScan: false
     });
     setTimeout(() => this.focusGateBarcodeInput(), 30);
+  }
+
+  private ensureGateBarcodeDetector(): void {
+    if (this.gateBarcodeDetector) return;
+    try {
+      const BD = (globalThis as any)?.BarcodeDetector;
+      if (typeof BD === 'function') {
+        this.gateBarcodeDetector = new BD({
+          formats: ['qr_code', 'code_128', 'code_39', 'ean_13', 'ean_8', 'data_matrix']
+        });
+      }
+    } catch {
+      this.gateBarcodeDetector = null;
+    }
+  }
+
+  async startGateQrCamera(): Promise<void> {
+    if (this.gateCameraActive() || this.gateCameraStarting()) return;
+    if (this.isPortalLocked() || !this.canVerifyCameraCurrentPortal()) {
+      this.emitToast('Gate camera scanner is disabled by School Owner permissions.', 'warning');
+      return;
+    }
+    if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
+      this.gateCameraError.set('Camera API unavailable here — use the USB/RFID input below.');
+      return;
+    }
+
+    this.ensureGateBarcodeDetector();
+    this.gateCameraStarting.set(true);
+    this.gateCameraError.set('');
+    try {
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: this.gateCameraFacing() }, width: { ideal: 1280 }, height: { ideal: 720 } },
+          audio: false
+        });
+      } catch {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      }
+      this.gateQrStream = stream;
+      this.gateCameraActive.set(true);
+      setTimeout(() => {
+        const video = this.gateQrVideoEl?.nativeElement;
+        if (video && this.gateQrStream) {
+          video.muted = true;
+          video.playsInline = true;
+          video.autoplay = true;
+          video.srcObject = this.gateQrStream;
+          void video.play().catch(() => {});
+          this.scheduleGateQrLoop();
+        }
+      }, 40);
+    } catch (err: any) {
+      this.gateCameraError.set(String(err?.message || 'Camera permission denied. USB/manual ID scan still works below.'));
+      this.gateCameraActive.set(false);
+    } finally {
+      this.gateCameraStarting.set(false);
+    }
+  }
+
+  stopGateQrCamera(): void {
+    if (this.gateQrRafId !== null && typeof cancelAnimationFrame !== 'undefined') {
+      cancelAnimationFrame(this.gateQrRafId);
+      this.gateQrRafId = null;
+    }
+    if (this.gateQrStream) {
+      for (const t of this.gateQrStream.getTracks()) {
+        try { t.stop(); } catch {}
+      }
+      this.gateQrStream = null;
+    }
+    const video = this.gateQrVideoEl?.nativeElement;
+    if (video) {
+      video.srcObject = null;
+    }
+    this.gateCameraActive.set(false);
+    this.gateCameraStarting.set(false);
+  }
+
+  async flipGateQrCamera(): Promise<void> {
+    this.gateCameraFacing.set(this.gateCameraFacing() === 'environment' ? 'user' : 'environment');
+    if (this.gateCameraActive()) {
+      this.stopGateQrCamera();
+      await this.startGateQrCamera();
+    }
+  }
+
+  private scheduleGateQrLoop(): void {
+    if (!this.gateCameraActive() || typeof requestAnimationFrame === 'undefined') return;
+    let lastSampleMs = 0;
+    const step = async (ts: number) => {
+      if (!this.gateCameraActive()) return;
+      if (ts - lastSampleMs >= 180 && !this.gateQrResolving) {
+        lastSampleMs = ts;
+        await this.scanGateQrFrame();
+      }
+      this.gateQrRafId = requestAnimationFrame(step);
+    };
+    this.gateQrRafId = requestAnimationFrame(step);
+  }
+
+  private async scanGateQrFrame(): Promise<void> {
+    const video = this.gateQrVideoEl?.nativeElement;
+    const canvas = this.gateQrCanvasEl?.nativeElement;
+    if (!video || !canvas || video.readyState < 2 || !video.videoWidth || !video.videoHeight) return;
+
+    const maxW = 720;
+    const scale = Math.min(1, maxW / video.videoWidth);
+    const w = Math.max(160, Math.round(video.videoWidth * scale));
+    const h = Math.max(160, Math.round(video.videoHeight * scale));
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    if (!ctx) return;
+    ctx.drawImage(video, 0, 0, w, h);
+
+    if (this.gateBarcodeDetector) {
+      try {
+        const hits = await this.gateBarcodeDetector.detect(canvas);
+        if (Array.isArray(hits) && hits[0]?.rawValue) {
+          await this.handleGateQrDecoded(String(hits[0].rawValue));
+          return;
+        }
+      } catch {}
+    }
+
+    try {
+      const imgData = ctx.getImageData(0, 0, w, h);
+      const qr = jsQR(imgData.data, w, h, { inversionAttempts: 'attemptBoth' });
+      if (qr?.data) {
+        await this.handleGateQrDecoded(qr.data);
+      }
+    } catch {}
+  }
+
+  private async handleGateQrDecoded(rawCode: string): Promise<void> {
+    const clean = String(rawCode || '').trim();
+    if (!clean) return;
+    const now = Date.now();
+    if (clean === this.gateLastDecoded && now - this.gateLastDecodedAt < 2500) {
+      return;
+    }
+    this.gateLastDecoded = clean;
+    this.gateLastDecodedAt = now;
+
+    let resolvedCode = clean;
+    if (clean.startsWith('SCS1|')) {
+      this.gateQrResolving = true;
+      try {
+        const res = await this.backend.verifySchoolQrCode(
+          {
+            rawCode: clean,
+            scanSource: 'camera',
+            scannerRole: this.portalContext(),
+            scannerName: this.currentActorName()
+          },
+          this.activeBranchScope(),
+          this.activeWingScope()
+        );
+        const rec = res?.liveRecord || res?.printedSnapshot || {};
+        resolvedCode = String(
+          rec.rollNo ||
+          rec.empCode ||
+          rec.id ||
+          res?.location?.searchHint ||
+          res?.location?.rowKey ||
+          clean
+        ).trim();
+      } catch {} finally {
+        this.gateQrResolving = false;
+      }
+    }
+
+    this.submitBarcodeGateScan(resolvedCode);
   }
 
   onEscapeKey(): void {

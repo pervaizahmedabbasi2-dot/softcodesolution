@@ -1397,6 +1397,7 @@ export class SchoolTableStatementModalComponent {
   }
 
   openPrintStudioForTable(): void {
+    if (!this.isOwner()) return;
     const data = this.dataset();
     const tid = this.canonicalTableId() || data?.tableId || this.modalState().tableId;
     this.schemaService.requestOpenPrintStudio('table_statement', tid);

@@ -16,6 +16,7 @@ export interface StatementDataset {
   roleLabel?: string;
   headers: string[];
   rows: string[][];
+  rowKeys?: string[];
   dateColHint?: number;
 }
 

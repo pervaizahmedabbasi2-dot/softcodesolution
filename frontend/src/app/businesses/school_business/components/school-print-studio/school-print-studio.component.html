@@ -1826,6 +1826,408 @@
 
         </div>
         }
+
+        <!-- LIVE TABLE & ROW STATEMENT / SLIP / THERMAL / QR CARD PREVIEW -->
+        @if (selectedFormat() === 'table_statement') {
+          @let tPrev = effectiveTablePreview();
+          @let tBrand = tPrev.branding;
+          @let tData = sampleTableDataset();
+          @let tSum = sampleTableSummary();
+          @let tTitle = tPrev.customHeading || tData.title;
+          <div class="rounded-2xl bg-slate-100 border border-slate-200 p-5 sm:p-8 flex justify-center overflow-x-auto">
+
+            <!-- A. 80mm / 58mm TABLE & ROW SLIP THERMAL PREVIEW -->
+            @if (tablePreviewSubMode() === '80mm' || tablePreviewSubMode() === '58mm') {
+              <div class="flex flex-col items-center gap-2.5 w-full">
+                <div
+                  class="p-4 sm:p-5 rounded-2xl bg-white flex flex-col justify-between text-slate-900 space-y-3 scs-tile-3d border border-slate-200/90 transition-all tabular-nums relative font-sans"
+                  [class]="tablePreviewSubMode() === '58mm' ? 'w-full max-w-[276px] text-[10px]' : 'w-full max-w-[356px] text-[11px]'">
+                  @for (secKey of tBrand.sectionOrder; track secKey) {
+                    @if (!isTableSectionHidden(secKey)) {
+                      @switch (secKey) {
+                        @case ('header') {
+                          <div class="space-y-2">
+                            @if (tBrand.thermalDualCopy) {
+                              <div class="flex items-center justify-between gap-2">
+                                <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-emerald-600 text-white tracking-wide">
+                                  RECORD COPY
+                                </span>
+                                <span class="text-[9px] font-mono font-bold text-slate-500 uppercase">
+                                  {{ tablePreviewSubMode().toUpperCase() }} RASHEED
+                                </span>
+                              </div>
+                            }
+                            @if (tBrand.showLogoCrest || safeLogoUrl()) {
+                              <div class="flex pt-1 pb-1"
+                                [class]="tBrand.logoPlacement === 'left' ? 'justify-start' : (tBrand.logoPlacement === 'right' ? 'justify-end' : 'justify-center')">
+                                @if (safeLogoUrl()) {
+                                  <img
+                                    [src]="safeLogoUrl()"
+                                    alt="School logo"
+                                    referrerpolicy="no-referrer"
+                                    [style.width.px]="(tBrand.logoSizePx || 44) + 6"
+                                    [style.height.px]="(tBrand.logoSizePx || 44) + 6"
+                                    class="object-contain border border-slate-200 bg-white p-1 shrink-0"
+                                    [class]="tBrand.logoShape === 'circle' ? 'rounded-full' : 'rounded-xl'" />
+                                } @else {
+                                  <div
+                                    class="w-11 h-11 border border-slate-300 bg-slate-50 text-slate-900 font-black text-xs flex items-center justify-center shrink-0"
+                                    [class]="tBrand.logoShape === 'circle' ? 'rounded-full' : 'rounded-xl'">
+                                    {{ tBrand.monogramInitials }}
+                                  </div>
+                                }
+                              </div>
+                            }
+                            <div class="space-y-0.5"
+                              [class]="tBrand.headerAlign === 'left' ? 'text-left' : (tBrand.headerAlign === 'right' ? 'text-right' : 'text-center')">
+                              <div class="font-black text-[12.5px] uppercase tracking-tight text-slate-950">{{ tBrand.schoolName }}</div>
+                              <div class="text-[9.5px] font-semibold text-slate-600">{{ branchLabel() }}</div>
+                              <div class="text-[9.5px] font-mono font-bold text-slate-700">Tel: {{ tBrand.phone }}</div>
+                            </div>
+                            <div class="flex items-center justify-between gap-2 pt-1.5 border-t border-slate-100">
+                              <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded text-white truncate"
+                                [style.background]="tBrand.headerAccentColor">
+                                {{ tTitle }}
+                              </span>
+                              @if (tBrand.stampLabel !== 'NONE') {
+                                <span class="text-[9px] font-mono font-black text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded uppercase shrink-0">
+                                  {{ tBrand.stampLabel }}
+                                </span>
+                              }
+                            </div>
+                          </div>
+                        }
+
+                        @case ('meta') {
+                          <div class="space-y-1 text-[10.5px] border-t border-slate-100 pt-2">
+                            <div class="flex justify-between gap-2">
+                              <span class="text-slate-500 font-bold">Slip Ref #:</span>
+                              <span class="font-mono font-black text-slate-900">{{ resolvedTransaction().txnRef }}</span>
+                            </div>
+                            <div class="flex justify-between gap-2">
+                              <span class="text-slate-500 font-bold">Register:</span>
+                              <span class="font-bold text-slate-900 text-right truncate max-w-[170px]">{{ tTitle }}</span>
+                            </div>
+                            <div class="flex justify-between gap-2">
+                              <span class="text-slate-500 font-bold">Printed:</span>
+                              <span class="font-mono font-bold text-emerald-700">{{ resolvedTransaction().paidAtLabel }}</span>
+                            </div>
+                          </div>
+                        }
+
+                        @case ('person') {
+                          <div class="border-t border-slate-100 pt-2 space-y-1 text-[10.5px]">
+                            <div class="text-[9.5px] font-black uppercase tracking-wider text-slate-400">Record Particulars</div>
+                            @for (fld of sampleTableTextFields().slice(0, 6); track $index) {
+                              <div class="flex justify-between items-start gap-2"
+                                [class]="isLongThermalText(fld.value) ? 'flex-col' : 'flex-row'">
+                                <span class="text-slate-500 font-bold inline-flex items-center gap-1 shrink-0">
+                                  @if (tPrev.showFieldLogos) {
+                                    <span class="w-1.5 h-1.5 rounded-full inline-block" [style.background]="tBrand.headerAccentColor"></span>
+                                  }
+                                  <span>{{ fld.label }}:</span>
+                                </span>
+                                <span class="font-black text-slate-900 break-words"
+                                  [class]="isLongThermalText(fld.value) ? 'text-left' : 'text-right'">
+                                  {{ fld.value }}
+                                </span>
+                              </div>
+                            }
+                          </div>
+                        }
+
+                        @case ('amounts') {
+                          <div class="border-t border-slate-100 pt-2 space-y-1.5">
+                            @if (tSum.amountColumns.length > 0) {
+                              <div class="rounded-xl p-2.5 bg-gradient-to-r from-indigo-50 via-emerald-50/70 to-rose-50/60 border border-emerald-100/80 flex justify-between items-center gap-2">
+                                <span class="font-black text-[10.5px] text-slate-900">Verified Amount:</span>
+                                <span class="font-mono font-black text-xs text-indigo-950">
+                                  {{ tBrand.currencySymbol }} {{ formatCurrency(tSum.primaryTotal) }}
+                                </span>
+                              </div>
+                            } @else {
+                              <div class="rounded-xl p-2 bg-slate-50 border border-slate-200 flex justify-between items-center text-[10px] font-bold text-slate-700">
+                                <span>Records Included:</span>
+                                <span class="font-mono font-black text-slate-900">{{ tData.rows.length }} Row(s)</span>
+                              </div>
+                            }
+                            @if (tBrand.thermalDualCopy) {
+                              <div class="text-center text-[8.5px] font-bold uppercase tracking-wider text-slate-500 border-t border-dashed border-slate-300 pt-1.5">
+                                ✂ Tear / Cut — Office Copy Below
+                              </div>
+                            }
+                          </div>
+                        }
+
+                        @case ('verification') {
+                          @if (tBrand.showBarcodeVerification || tBrand.showQrVerification) {
+                            <div class="border-t border-slate-100 pt-2 text-center space-y-1.5">
+                              <div class="flex items-center justify-center gap-2"
+                                [class]="tBrand.verificationOrder === 'side_by_side'
+                                  ? 'flex-row flex-wrap'
+                                  : (tBrand.verificationOrder === 'qr_first' ? 'flex-col-reverse' : 'flex-col')">
+                                @if (tBrand.showBarcodeVerification) {
+                                  <app-school-barcode
+                                    [value]="resolvedTransaction().challanNo"
+                                    [label]="resolvedTransaction().challanNo"
+                                    [height]="tablePreviewSubMode() === '58mm' ? 24 : 30"
+                                    [barWidth]="tablePreviewSubMode() === '58mm' ? 0.95 : 1.15" />
+                                }
+                                @if (tBrand.showQrVerification) {
+                                  <app-school-qr-code
+                                    [value]="'TBL:' + tData.tableId + '|REF:' + resolvedTransaction().txnRef"
+                                    [size]="tablePreviewSubMode() === '58mm' ? 44 : 52"
+                                    [label]="'SCAN VERIFY'" />
+                                }
+                              </div>
+                            </div>
+                          }
+                        }
+
+                        @case ('footer') {
+                          <div class="border-t border-slate-100 pt-2 text-center space-y-1">
+                            <div class="pt-1">
+                              <span class="inline-block min-w-[140px] border-t border-slate-300 pt-1 text-[8.5px] font-bold text-slate-600 uppercase">
+                                {{ tBrand.signatoryTitle }}
+                              </span>
+                            </div>
+                            <div class="text-[8.5px] text-slate-500 font-medium">{{ tBrand.footerNote }}</div>
+                          </div>
+                        }
+                      }
+                    }
+                  }
+                </div>
+                <div class="text-[11px] font-semibold text-slate-500 text-center">
+                  Table Scope Preview: <strong>{{ selectedTableScope() === '__global__' ? 'Global Default' : selectedTableMeta().title }}</strong> · {{ tablePreviewSubMode().toUpperCase() }}
+                </div>
+              </div>
+            }
+
+            <!-- B. QR VERIFICATION CARD PREVIEW -->
+            @if (tablePreviewSubMode() === 'card') {
+              <div class="w-full max-w-xl bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6 space-y-4 relative overflow-hidden">
+                @if (tPrev.showWatermark) {
+                  <div class="pointer-events-none select-none absolute inset-0 flex items-center justify-center opacity-[0.045]">
+                    <span class="text-4xl font-black uppercase tracking-widest -rotate-12 text-slate-900 text-center px-6">{{ tBrand.schoolName }}</span>
+                  </div>
+                }
+                <div class="relative z-10 flex items-center justify-between gap-3 pb-3 border-b border-slate-200">
+                  <div class="flex items-center gap-3 min-w-0">
+                    @if (tBrand.showLogoCrest || safeLogoUrl()) {
+                      @if (safeLogoUrl()) {
+                        <img [src]="safeLogoUrl()" alt="Logo" referrerpolicy="no-referrer"
+                          class="w-11 h-11 object-contain border border-slate-200 bg-white p-1 shrink-0"
+                          [class]="tBrand.logoShape === 'circle' ? 'rounded-full' : 'rounded-xl'" />
+                      } @else {
+                        <div class="w-11 h-11 flex items-center justify-center font-black text-white text-xs shrink-0"
+                          [class]="tBrand.logoShape === 'circle' ? 'rounded-full' : 'rounded-xl'"
+                          [style.background]="tBrand.headerAccentColor">
+                          {{ tBrand.monogramInitials }}
+                        </div>
+                      }
+                    }
+                    <div class="min-w-0">
+                      <div class="text-[10px] font-black uppercase tracking-widest text-sky-700">{{ tBrand.schoolName }} · Digital Pass</div>
+                      <h4 class="font-black text-slate-950 text-base truncate">{{ tTitle }}</h4>
+                    </div>
+                  </div>
+                  @if (tBrand.stampLabel !== 'NONE') {
+                    <span class="px-2.5 py-1 rounded-lg border-2 text-[10px] font-black uppercase tracking-wider shrink-0"
+                      [style.borderColor]="tBrand.headerAccentColor" [style.color]="tBrand.headerAccentColor">
+                      {{ tBrand.stampLabel }}
+                    </span>
+                  }
+                </div>
+
+                <div class="relative z-10 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  @for (fld of sampleTableSingleFields(); track $index) {
+                    <div class="rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2.5">
+                      <div class="text-[9.5px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-1">
+                        @if (tPrev.showFieldLogos) {
+                          <span class="w-1.5 h-1.5 rounded-full inline-block" [style.background]="tBrand.headerAccentColor"></span>
+                        }
+                        <span>{{ fld.label }}</span>
+                      </div>
+                      @if (fld.isStatus) {
+                        <div class="mt-1"><span [class]="getTableFieldPillClass(fld.value)">{{ fld.value }}</span></div>
+                      } @else {
+                        <div class="mt-0.5 text-xs break-words" [class]="fld.isAmount ? 'font-mono font-black text-emerald-700' : 'font-bold text-slate-900'">
+                          {{ fld.value }}
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+
+                @if (tBrand.showQrVerification || tBrand.showBarcodeVerification) {
+                  <div class="relative z-10 pt-3 border-t border-slate-100 flex items-center justify-between gap-4 flex-wrap"
+                    [class]="tBrand.verificationOrder === 'qr_first' ? 'flex-row-reverse' : 'flex-row'">
+                    @if (tBrand.showBarcodeVerification) {
+                      <app-school-barcode [value]="resolvedTransaction().challanNo" [label]="resolvedTransaction().challanNo" [height]="26" [barWidth]="1.05" />
+                    }
+                    @if (tBrand.showQrVerification) {
+                      <app-school-qr-code [value]="'CARD:' + tData.tableId + '|' + resolvedTransaction().txnRef" [size]="58" [label]="'VERIFIED QR'" />
+                    }
+                  </div>
+                }
+
+                <div class="relative z-10 pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-500 gap-2">
+                  <span>{{ tBrand.footerNote }}</span>
+                  <span class="font-bold text-slate-700 shrink-0">{{ tBrand.signatoryTitle }}</span>
+                </div>
+              </div>
+            }
+
+            <!-- C. A4 SINGLE ROW ACTION SLIP OR FULL STATEMENT PREVIEW -->
+            @if (tablePreviewSubMode() === 'a4_slip' || tablePreviewSubMode() === 'a4_statement') {
+              <div
+                class="w-full bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-7 space-y-4 relative overflow-hidden tabular-nums transition-all"
+                [class]="tPrev.a4Orientation === 'landscape' ? 'max-w-4xl' : 'max-w-2xl'">
+                @if (tPrev.showWatermark) {
+                  <div class="pointer-events-none select-none absolute inset-0 flex items-center justify-center opacity-[0.045]">
+                    <span class="text-5xl font-black uppercase tracking-widest -rotate-12 text-slate-900 text-center px-8">{{ tBrand.schoolName }}</span>
+                  </div>
+                }
+                <div class="h-2 -mx-5 sm:-mx-7 -mt-5 sm:-mt-7 mb-1" [style.background]="tBrand.headerAccentColor"></div>
+
+                <!-- Header -->
+                <div class="relative z-10 flex items-start justify-between gap-4 pb-3 border-b-2" [style.borderColor]="tBrand.headerAccentColor">
+                  <div class="flex items-center gap-3 flex-1 min-w-0"
+                    [class]="tBrand.logoPlacement === 'right' ? 'flex-row-reverse text-right' : (tBrand.logoPlacement === 'top' ? 'flex-col text-center w-full' : 'flex-row')">
+                    @if (tBrand.showLogoCrest || safeLogoUrl()) {
+                      @if (safeLogoUrl()) {
+                        <img [src]="safeLogoUrl()" alt="School logo" referrerpolicy="no-referrer"
+                          [style.width.px]="tBrand.logoSizePx || 44"
+                          [style.height.px]="tBrand.logoSizePx || 44"
+                          class="object-contain border border-slate-200 bg-white p-1 shrink-0"
+                          [class]="tBrand.logoShape === 'circle' ? 'rounded-full' : 'rounded-xl'" />
+                      } @else {
+                        <div class="w-12 h-12 flex items-center justify-center text-white font-black text-sm shrink-0"
+                          [class]="tBrand.logoShape === 'circle' ? 'rounded-full' : 'rounded-xl'"
+                          [style.background]="tBrand.headerAccentColor">
+                          {{ tBrand.monogramInitials }}
+                        </div>
+                      }
+                    }
+                    <div class="min-w-0 flex-1"
+                      [class]="tBrand.headerAlign === 'center' ? 'text-center' : (tBrand.headerAlign === 'right' ? 'text-right' : 'text-left')">
+                      <div class="font-black text-base text-slate-950 uppercase tracking-tight">{{ tBrand.schoolName }}</div>
+                      <div class="text-[11px] font-semibold text-slate-600">{{ branchLabel() }} · {{ tBrand.address }}</div>
+                      <div class="mt-1 inline-flex items-center gap-2 flex-wrap">
+                        <span class="px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase text-white" [style.background]="tBrand.headerAccentColor">
+                          {{ tTitle }}
+                        </span>
+                        <span class="text-[10px] font-bold text-slate-500">
+                          {{ tablePreviewSubMode() === 'a4_slip' ? 'Single Row Action Slip' : 'Official Statement Register' }} ({{ tPrev.a4Orientation | uppercase }})
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  @if (tBrand.stampLabel !== 'NONE') {
+                    <div class="px-3 py-1 rounded-lg border-2 font-black text-[11px] uppercase tracking-wider shrink-0"
+                      [style.borderColor]="tBrand.headerAccentColor" [style.color]="tBrand.headerAccentColor">
+                      {{ tBrand.stampLabel }}
+                    </div>
+                  }
+                </div>
+
+                <!-- Body: Row Action Slip (Voucher Grid or Ledger Row) vs Full Statement Table -->
+                @if (tablePreviewSubMode() === 'a4_slip') {
+                  @if (tPrev.slipLayout === 'voucher_grid') {
+                    <div class="relative z-10 grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                      @for (fld of sampleTableSingleFields(); track $index) {
+                        <div class="rounded-xl border border-slate-200 bg-slate-50/70 p-3">
+                          <div class="text-[9.5px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-1">
+                            @if (tPrev.showFieldLogos) {
+                              <span class="w-1.5 h-1.5 rounded-full inline-block" [style.background]="tBrand.headerAccentColor"></span>
+                            }
+                            <span>{{ fld.label }}</span>
+                          </div>
+                          @if (fld.isStatus) {
+                            <div class="mt-1"><span [class]="getTableFieldPillClass(fld.value)">{{ fld.value }}</span></div>
+                          } @else {
+                            <div class="mt-0.5 text-xs break-words" [class]="fld.isAmount ? 'font-mono font-black text-emerald-700' : 'font-bold text-slate-900'">
+                              {{ fld.value }}
+                            </div>
+                          }
+                        </div>
+                      }
+                    </div>
+                  } @else {
+                    <div class="relative z-10 overflow-x-auto rounded-xl border border-slate-200">
+                      <table class="w-full text-left border-collapse text-[11px]">
+                        <thead>
+                          <tr class="text-white text-[10px] uppercase font-black tracking-wider" [style.background]="tBrand.headerAccentColor">
+                            @for (hdr of tData.headers; track $index) {
+                              <th class="px-3 py-2">{{ hdr }}</th>
+                            }
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr class="bg-white font-semibold text-slate-800">
+                            @for (cell of (tData.rows[0] || []); track $index) {
+                              <td class="px-3 py-2.5 border-t border-slate-100">{{ cell }}</td>
+                            }
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  }
+                } @else {
+                  <div class="relative z-10 flex items-center justify-between gap-3 flex-wrap rounded-xl bg-slate-50 border border-slate-200 px-3.5 py-2 text-[11px]">
+                    <span class="font-bold text-slate-700">Showing <strong>{{ tData.rows.length }}</strong> sample record(s) · Default Paper: <strong class="uppercase">{{ tPrev.defaultFormat }}</strong></span>
+                    @if (tSum.amountColumns.length > 0) {
+                      <span class="font-mono font-black text-emerald-700">Verified Sum: {{ tBrand.currencySymbol }} {{ formatCurrency(tSum.primaryTotal) }}</span>
+                    }
+                  </div>
+                  <div class="relative z-10 overflow-x-auto rounded-xl border border-slate-200">
+                    <table class="w-full text-left border-collapse text-[11px]">
+                      <thead>
+                        <tr class="text-white text-[10px] uppercase font-black tracking-wider" [style.background]="tBrand.headerAccentColor">
+                          @for (hdr of tData.headers; track $index) {
+                            <th class="px-3 py-2">{{ hdr }}</th>
+                          }
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y divide-slate-100">
+                        @for (r of tData.rows; track $index) {
+                          <tr class="bg-white even:bg-slate-50/70 font-medium text-slate-800">
+                            @for (cell of r; track $index) {
+                              <td class="px-3 py-2">{{ cell }}</td>
+                            }
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                }
+
+                <!-- Verification & Signatory Footer -->
+                @if (tBrand.showBarcodeVerification || tBrand.showQrVerification) {
+                  <div class="relative z-10 pt-2 border-t border-slate-100 flex items-center justify-between gap-4"
+                    [class]="tBrand.verificationOrder === 'qr_first' ? 'flex-row-reverse' : 'flex-row'">
+                    @if (tBrand.showBarcodeVerification) {
+                      <app-school-barcode [value]="resolvedTransaction().challanNo" [label]="resolvedTransaction().challanNo" [height]="26" [barWidth]="1.05" />
+                    }
+                    @if (tBrand.showQrVerification) {
+                      <app-school-qr-code [value]="'STMT:' + tData.tableId + '|' + resolvedTransaction().txnRef" [size]="52" />
+                    }
+                  </div>
+                }
+                <div class="relative z-10 flex items-end justify-between pt-2 border-t border-slate-100 gap-4">
+                  <div class="text-[9.5px] text-slate-500 max-w-sm">{{ tBrand.footerNote }}</div>
+                  <div class="w-44 text-center text-[10px] shrink-0">
+                    <div class="h-5 border-b border-slate-700 mb-1"></div>
+                    <strong>{{ tBrand.signatoryTitle }}</strong>
+                  </div>
+                </div>
+              </div>
+            }
+
+          </div>
+        }
       </div>
     </div>
   }

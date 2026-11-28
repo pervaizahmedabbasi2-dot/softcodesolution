@@ -1816,3 +1816,49 @@ input[type="password"]::-webkit-contacts-auto-fill-button {
 .school-white-theme app-pagination-bar > div {
   background-color: #ffffff !important;
 }
+
+/* ==========================================================================
+   Scanner Laser Sweep Animation (Top-to-Bottom Continuous Optical Sweep)
+   ========================================================================== */
+@keyframes scs-scan-laser-sweep {
+  0% {
+    top: 10px;
+    opacity: 0.25;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    top: calc(100% - 14px);
+    opacity: 0.25;
+  }
+}
+
+@keyframes scs-scan-laser-sweep-sm {
+  0% {
+    top: 6px;
+    opacity: 0.25;
+  }
+  12% {
+    opacity: 1;
+  }
+  88% {
+    opacity: 1;
+  }
+  100% {
+    top: calc(100% - 9px);
+    opacity: 0.25;
+  }
+}
+
+.scs-scan-laser-sweep {
+  animation: scs-scan-laser-sweep 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.scs-scan-laser-sweep-sm {
+  animation: scs-scan-laser-sweep-sm 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
